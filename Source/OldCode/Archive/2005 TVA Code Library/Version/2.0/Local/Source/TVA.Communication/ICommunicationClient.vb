@@ -53,17 +53,17 @@ Public Interface ICommunicationClient
     ''' <summary>
     ''' Occurs when the client begins sending data to the server.
     ''' </summary>
-    Event SendDataBegin As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
+    Event SendDataBegin As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
 
     ''' <summary>
     ''' Occurs when the client has successfully send data to the server.
     ''' </summary>
-    Event SendDataComplete As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
+    Event SendDataComplete As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
 
     ''' <summary>
     ''' Occurs when the client receives data from the server.
     ''' </summary>
-    Event ReceivedData As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
+    Event ReceivedData As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
 
     ''' <summary>
     ''' Occurs when no data is received from the server after waiting for the specified time.

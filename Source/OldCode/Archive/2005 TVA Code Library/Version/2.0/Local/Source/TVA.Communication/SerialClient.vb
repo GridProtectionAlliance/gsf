@@ -105,9 +105,9 @@ Public Class SerialClient
     Protected Overrides Sub SendPreparedData(ByVal data As Byte())
 
         If MyBase.Enabled And MyBase.IsConnected Then
-            OnSendDataBegin(New IdentifiableItemEventArgs(Of Byte())(ClientID, data))
+            OnSendDataBegin(New IdentifiableItem(Of Guid, Byte())(ClientID, data))
             m_serialClient.Write(data, 0, data.Length())
-            OnSendDataComplete(New IdentifiableItemEventArgs(Of Byte())(ClientID, data))
+            OnSendDataComplete(New IdentifiableItem(Of Guid, Byte())(ClientID, data))
         End If
 
     End Sub
@@ -188,7 +188,7 @@ Public Class SerialClient
                 m_totalBytesReceived += received
             Else
                 ' Unpack data and make available via event
-                OnReceivedData(New IdentifiableItemEventArgs(Of Byte())(ServerID, CopyBuffer(m_buffer, 0, received)))
+                OnReceivedData(New IdentifiableItem(Of Guid, Byte())(ServerID, CopyBuffer(m_buffer, 0, received)))
             End If
         Next
 

@@ -2,13 +2,13 @@
 
 Public Class ClientRequestInfo
 
-    Public Sub New(ByVal request As ClientRequest, ByVal sender As ClientInfo)
+    Public Sub New(ByVal sender As ClientInfo, ByVal request As ClientRequest)
 
-        MyClass.New(request, sender, Date.Now)
+        MyClass.New(sender, request, Date.Now)
 
     End Sub
 
-    Public Sub New(ByVal request As ClientRequest, ByVal sender As ClientInfo, ByVal receivedAt As Date)
+    Public Sub New(ByVal sender As ClientInfo, ByVal request As ClientRequest, ByVal receivedAt As Date)
 
         MyBase.New()
         Me.Request = request

@@ -41,17 +41,17 @@ Public Interface ICommunicationServer
     ''' <summary>
     ''' Occurs when a client is connected to the server.
     ''' </summary>
-    Event ClientConnected As EventHandler(Of IdentifiableSourceEventArgs)
+    Event ClientConnected As EventHandler(Of GenericEventArgs(Of Guid))
 
     ''' <summary>
     ''' Occurs when a client is disconnected from the server.
     ''' </summary>
-    Event ClientDisconnected As EventHandler(Of IdentifiableSourceEventArgs)
+    Event ClientDisconnected As EventHandler(Of GenericEventArgs(Of Guid))
 
     ''' <summary>
     ''' Occurs when data is received from a client.
     ''' </summary>
-    Event ReceivedClientData As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
+    Event ReceivedClientData As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
 
     ''' <summary>
     ''' Gets or sets the data that is required by the server to initialize.

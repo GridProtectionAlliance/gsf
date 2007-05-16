@@ -1,17 +1,11 @@
 ' 03/12/2007
 
-Public Class IdentifiableItem(Of T)
+Public Class IdentifiableItem(Of TIdentifier, TItem)
 
-    Private m_source As Guid
-    Private m_item As T
+    Private m_source As TIdentifier
+    Private m_item As TItem
 
-    Public Sub New(ByVal item As T)
-
-        MyClass.New(Guid.Empty, item)
-
-    End Sub
-
-    Public Sub New(ByVal source As Guid, ByVal item As T)
+    Public Sub New(ByVal source As TIdentifier, ByVal item As TItem)
 
         MyBase.New()
         m_source = source
@@ -19,20 +13,20 @@ Public Class IdentifiableItem(Of T)
 
     End Sub
 
-    Public Property Source() As Guid
+    Public Property Source() As TIdentifier
         Get
             Return m_source
         End Get
-        Set(ByVal value As Guid)
+        Set(ByVal value As TIdentifier)
             m_source = value
         End Set
     End Property
 
-    Public Property Item() As T
+    Public Property Item() As TItem
         Get
             Return m_item
         End Get
-        Set(ByVal value As T)
+        Set(ByVal value As TItem)
             m_item = value
         End Set
     End Property

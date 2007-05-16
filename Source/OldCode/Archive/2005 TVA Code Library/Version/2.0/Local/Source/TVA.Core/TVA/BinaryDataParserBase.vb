@@ -23,14 +23,14 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
     Private Delegate Function DefaultConstructor() As TResult
 
-    Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Byte()))
+    Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Guid, Byte()))
 
 #End Region
 
 #Region " Event Declaration "
 
-    Public Event DataParsed As EventHandler(Of IdentifiableItemEventArgs(Of List(Of TResult)))
-    Public Event DataDiscarded As EventHandler(Of IdentifiableItemEventArgs(Of Byte()))
+    Public Event DataParsed As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TResult))))
+    Public Event DataDiscarded As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
 
 #End Region
 
@@ -145,7 +145,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
     Public Sub Add(ByVal source As Guid, ByVal data As Byte())
 
-        m_dataQueue.Add(New IdentifiableItem(Of Byte())(source, data))
+        m_dataQueue.Add(New IdentifiableItem(Of Guid, Byte())(source, data))
 
     End Sub
 
@@ -241,7 +241,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
 #Region " Code Scope: Private "
 
-    Private Sub ParseData(ByVal item As IdentifiableItem(Of Byte())())
+    Private Sub ParseData(ByVal item As IdentifiableItem(Of Guid, Byte())())
 
         For i As Integer = 0 To item.Length - 1
             If item(i).Item IsNot Nothing AndAlso item(i).Item.Length > 0 Then
@@ -263,9 +263,9 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
                         End Try
                     Loop
 
-                    RaiseEvent DataParsed(Me, New IdentifiableItemEventArgs(Of List(Of TResult))(item(i).Source, parsedData))
+                    RaiseEvent DataParsed(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TResult)))(New IdentifiableItem(Of Guid, List(Of TResult))(item(i).Source, parsedData)))
                 Else
-                    RaiseEvent DataDiscarded(Me, New IdentifiableItemEventArgs(Of Byte())(item(i).Source, item(i).Item))
+                    RaiseEvent DataDiscarded(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(New IdentifiableItem(Of Guid, Byte())(item(i).Source, item(i).Item)))
                 End If
             End If
         Next

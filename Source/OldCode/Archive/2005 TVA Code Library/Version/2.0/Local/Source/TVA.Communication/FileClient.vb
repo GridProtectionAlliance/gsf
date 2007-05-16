@@ -334,7 +334,7 @@ Public Class FileClient
                         m_totalBytesReceived += received
                     Else
                         ' Unpack data and make available via event
-                        OnReceivedData(New IdentifiableItemEventArgs(Of Byte())(ServerID, CopyBuffer(m_buffer, 0, received)))
+                        OnReceivedData(New IdentifiableItem(Of Guid, Byte())(ServerID, CopyBuffer(m_buffer, 0, received)))
                     End If
 
                     ' We'll re-read the file if the user wants to repeat when we're done reading the file.

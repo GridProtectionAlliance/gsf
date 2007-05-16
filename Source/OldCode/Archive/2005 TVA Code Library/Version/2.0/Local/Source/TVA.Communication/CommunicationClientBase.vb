@@ -100,19 +100,19 @@ Public MustInherit Class CommunicationClientBase
     ''' Occurs when the client begins sending data to the server.
     ''' </summary>
     <Description("Occurs when the client begins sending data to the server."), Category("Data")> _
-    Public Event SendDataBegin(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Implements ICommunicationClient.SendDataBegin
+    Public Event SendDataBegin(ByVal sender As Object, ByVal e As GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))) Implements ICommunicationClient.SendDataBegin
 
     ''' <summary>
     ''' Occurs when the client has successfully send data to the server.
     ''' </summary>
     <Description("Occurs when the client has successfully send data to the server."), Category("Data")> _
-    Public Event SendDataComplete(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Implements ICommunicationClient.SendDataComplete
+    Public Event SendDataComplete(ByVal sender As Object, ByVal e As GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))) Implements ICommunicationClient.SendDataComplete
 
     ''' <summary>
     ''' Occurs when the client receives data from the server.
     ''' </summary>
     <Description("Occurs when the client receives data from the server."), Category("Data")> _
-    Public Event ReceivedData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Implements ICommunicationClient.ReceivedData
+    Public Event ReceivedData(ByVal sender As Object, ByVal e As GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))) Implements ICommunicationClient.ReceivedData
 
     ''' <summary>
     ''' Occurs when no data is received from the server after waiting for the specified time.
@@ -914,9 +914,9 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="e">A TVA.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client begins sending data to the server.</remarks>
-    Protected Overridable Sub OnSendDataBegin(ByVal e As IdentifiableItemEventArgs(Of Byte()))
+    Protected Overridable Sub OnSendDataBegin(ByVal e As IdentifiableItem(Of Guid, Byte()))
 
-        RaiseEvent SendDataBegin(Me, e)
+        RaiseEvent SendDataBegin(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(e))
 
     End Sub
 
@@ -925,10 +925,10 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="e">A TVA.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client has finished sending data to the server.</remarks>
-    Protected Overridable Sub OnSendDataComplete(ByVal e As IdentifiableItemEventArgs(Of Byte()))
+    Protected Overridable Sub OnSendDataComplete(ByVal e As IdentifiableItem(Of Guid, Byte()))
 
         m_totalBytesSent += e.Item.Length()
-        RaiseEvent SendDataComplete(Me, e)
+        RaiseEvent SendDataComplete(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(e))
 
     End Sub
 
@@ -937,7 +937,7 @@ Public MustInherit Class CommunicationClientBase
     ''' </summary>
     ''' <param name="e">A TVA.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the client receives data from the server.</remarks>
-    Protected Overridable Sub OnReceivedData(ByVal e As IdentifiableItemEventArgs(Of Byte()))
+    Protected Overridable Sub OnReceivedData(ByVal e As IdentifiableItem(Of Guid, Byte()))
 
         m_totalBytesReceived += e.Item.Length()
 
@@ -946,7 +946,7 @@ Public MustInherit Class CommunicationClientBase
         Catch ex As Exception
             ' We'll just pass on the data that we received.
         End Try
-        RaiseEvent ReceivedData(Me, e)
+        RaiseEvent ReceivedData(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(e))
 
     End Sub
 

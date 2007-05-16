@@ -707,13 +707,13 @@ Namespace Phasors
 
 #Region " Communications Server Event Handlers "
 
-        Private Sub m_communicationServer_ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientConnected
+        Private Sub m_communicationServer_ClientConnected(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Guid)) Handles m_communicationServer.ClientConnected
 
             ClientConnected()
 
         End Sub
 
-        Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Handles m_communicationServer.ClientDisconnected
+        Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Guid)) Handles m_communicationServer.ClientDisconnected
 
             RaiseEvent Disconnected()
 

@@ -85,19 +85,19 @@ Public MustInherit Class CommunicationServerBase
     ''' Occurs when a client is connected to the server.
     ''' </summary>
     <Description("Occurs when a client is connected to the server."), Category("Client")> _
-    Public Event ClientConnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Implements ICommunicationServer.ClientConnected
+    Public Event ClientConnected(ByVal sender As Object, ByVal e As GenericEventArgs(Of Guid)) Implements ICommunicationServer.ClientConnected
 
     ''' <summary>
     ''' Occurs when a client is disconnected from the server.
     ''' </summary>
     <Description("Occurs when a client is disconnected from the server."), Category("Client")> _
-    Public Event ClientDisconnected(ByVal sender As Object, ByVal e As IdentifiableSourceEventArgs) Implements ICommunicationServer.ClientDisconnected
+    Public Event ClientDisconnected(ByVal sender As Object, ByVal e As GenericEventArgs(Of Guid)) Implements ICommunicationServer.ClientDisconnected
 
     ''' <summary>
     ''' Occurs when data is received from a client.
     ''' </summary>
     <Description("Occurs when data is received from a client."), Category("Data")> _
-    Public Event ReceivedClientData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Implements ICommunicationServer.ReceivedClientData
+    Public Event ReceivedClientData(ByVal sender As Object, ByVal e As GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))) Implements ICommunicationServer.ReceivedClientData
 
 #End Region
 
@@ -807,10 +807,10 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     ''' <param name="e">A TVA.IdentifiableSourceEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
-    Protected Overridable Sub OnClientConnected(ByVal e As IdentifiableSourceEventArgs)
+    Protected Overridable Sub OnClientConnected(ByVal e As Guid)
 
-        m_clientIDs.Add(e.Source)
-        RaiseEvent ClientConnected(Me, e)
+        m_clientIDs.Add(e)
+        RaiseEvent ClientConnected(Me, New GenericEventArgs(Of Guid)(e))
 
     End Sub
 
@@ -819,10 +819,10 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     ''' <param name="e">A TVA.IdentifiableSourceEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
-    Protected Overridable Sub OnClientDisconnected(ByVal e As IdentifiableSourceEventArgs)
+    Protected Overridable Sub OnClientDisconnected(ByVal e As Guid)
 
-        m_clientIDs.Remove(e.Source)
-        RaiseEvent ClientDisconnected(Me, e)
+        m_clientIDs.Remove(e)
+        RaiseEvent ClientDisconnected(Me, New GenericEventArgs(Of Guid)(e))
 
     End Sub
 
@@ -831,14 +831,14 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     ''' <param name="e">A TVA.DataEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called when the server receives data from a client.</remarks>
-    Protected Overridable Sub OnReceivedClientData(ByVal e As IdentifiableItemEventArgs(Of Byte()))
+    Protected Overridable Sub OnReceivedClientData(ByVal e As IdentifiableItem(Of Guid, Byte()))
 
         Try
             e.Item = GetActualData(e.Item)
         Catch ex As Exception
             ' We'll just pass on the data that we received.
         End Try
-        RaiseEvent ReceivedClientData(Me, e)
+        RaiseEvent ReceivedClientData(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(e))
 
     End Sub
 

@@ -23,7 +23,7 @@ Partial Class BinaryDataParserBase(Of TIdentifier, TResult)
         m_optimizeParsing = True
         m_settingsCategoryName = Me.GetType().Name
         m_parserTypes = New Dictionary(Of TIdentifier, ParserTypeInfo)
-        m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Byte())).CreateRealTimeQueue(AddressOf ParseData)
+        m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Guid, Byte())).CreateRealTimeQueue(AddressOf ParseData)
 
     End Sub
 

@@ -46,7 +46,7 @@ Public Class ClientHelper
     ''' <summary>
     ''' Occurs when a response is received from the service.
     ''' </summary>
-    Public Event ReceivedServiceResponse(ByVal sender As Object, ByVal e As ServiceResponseEventArgs)
+    Public Event ReceivedServiceResponse(ByVal sender As Object, ByVal e As GenericEventArgs(Of ServiceResponse))
 
     ''' <summary>
     ''' Occurs when the service state changes.
@@ -97,7 +97,16 @@ Public Class ClientHelper
     Public Sub Connect()
 
         If m_communicationClient IsNot Nothing Then
-            UpdateStatus(String.Format("Connecting to {0} [{1}]", m_serviceName, Date.Now.ToString()), 2)
+            With New StringBuilder()
+                .AppendFormat("Connecting to {0} [{1}]", m_serviceName, Date.Now.ToString())
+                .AppendLine()
+                .Append(".")
+                .AppendLine()
+                .Append(".")
+                .AppendLine()
+
+                UpdateStatus(.ToString())
+            End With
 
             ' We'll always use handshaking to ensure the availability of SecureSession.
             m_communicationClient.Handshake = True
@@ -123,7 +132,7 @@ Public Class ClientHelper
         If requestInstance IsNot Nothing Then
             SendRequest(requestInstance)
         Else
-            UpdateStatus(String.Format("Request command ""{0}"" is invalid", request), 2)
+            UpdateStatus(String.Format("Request command ""{0}"" is invalid", request), 3)
         End If
 
     End Sub
@@ -140,7 +149,7 @@ Public Class ClientHelper
 
     Public Sub UpdateStatus(ByVal message As String)
 
-        UpdateStatus(message, 1)
+        UpdateStatus(message, 0)
 
     End Sub
 
@@ -266,7 +275,7 @@ Public Class ClientHelper
 
     Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
 
-        UpdateStatus(".")
+        UpdateStatus(".", 1)
 
     End Sub
 
@@ -283,11 +292,11 @@ Public Class ClientHelper
 
     End Sub
 
-    Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As IdentifiableItemEventArgs(Of Byte())) Handles m_communicationClient.ReceivedData
+    Private Sub m_communicationClient_ReceivedData(ByVal sender As Object, ByVal e As GenericEventArgs(Of IdentifiableItem(Of System.Guid, Byte()))) Handles m_communicationClient.ReceivedData
 
-        Dim response As ServiceResponse = GetObject(Of ServiceResponse)(e.Item)
+        Dim response As ServiceResponse = GetObject(Of ServiceResponse)(e.Argument.Item)
         If response IsNot Nothing Then
-            RaiseEvent ReceivedServiceResponse(Me, New ServiceResponseEventArgs(response))
+            RaiseEvent ReceivedServiceResponse(Me, New GenericEventArgs(Of ServiceResponse)(response))
             Select Case response.Type
                 Case "UPDATECLIENTSTATUS"
                     UpdateStatus(response.Message)

@@ -171,7 +171,7 @@ Public Class UdpServer
                             udpClient.Client = GetIpEndPoint(clientStringSegments(0), clientPort)
                             m_udpClients.Add(udpClient.ID, udpClient)
 
-                            OnClientConnected(New IdentifiableSourceEventArgs(udpClient.ID))
+                            OnClientConnected(udpClient.ID)
                         Catch ex As Exception
                             ' Ignore invalid client entries.
                         End Try
@@ -194,7 +194,7 @@ Public Class UdpServer
                     m_udpServer.Client.SendTo(goodbye, m_udpClients(udpClientID).Client)
                 End If
 
-                OnClientDisconnected(New IdentifiableSourceEventArgs(udpClientID))
+                OnClientDisconnected(udpClientID)
             Next
             m_udpClients.Clear()
 
@@ -402,7 +402,7 @@ Public Class UdpServer
                         m_udpClients.Add(udpClient.ID, udpClient)
                     End SyncLock
 
-                    OnClientConnected(New IdentifiableSourceEventArgs(udpClient.ID))
+                    OnClientConnected(udpClient.ID)
                 End If
             ElseIf TypeOf clientMessage Is GoodbyeMessage Then
                 Dim disconnectedClient As GoodbyeMessage = DirectCast(clientMessage, GoodbyeMessage)
@@ -411,7 +411,7 @@ Public Class UdpServer
                     m_udpClients.Remove(disconnectedClient.ID)
                 End SyncLock
 
-                OnClientDisconnected(New IdentifiableSourceEventArgs(disconnectedClient.ID))
+                OnClientDisconnected(disconnectedClient.ID)
             End If
         Else
             Dim senderIPEndPoint As IPEndPoint = CType(senderEndPoint, IPEndPoint)
@@ -420,11 +420,11 @@ Public Class UdpServer
                     If senderIPEndPoint.Equals(udpClient.Client) Then
                         If MyBase.SecureSession Then data = DecryptData(data, udpClient.Passphrase, MyBase.Encryption)
 
-                        OnReceivedClientData(New IdentifiableItemEventArgs(Of Byte())(udpClient.ID, data))
+                        OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(udpClient.ID, data))
                         Exit Sub
                     End If
                 Next
-                OnReceivedClientData(New IdentifiableItemEventArgs(Of Byte())(data))
+                OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(Guid.Empty, data))
             End If
         End If
 

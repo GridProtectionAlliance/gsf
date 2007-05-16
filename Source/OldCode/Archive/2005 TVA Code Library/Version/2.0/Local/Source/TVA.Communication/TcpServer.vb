@@ -297,7 +297,7 @@ Public Class TcpServer
                         m_tcpClients.Add(.ID, .This)
                     End SyncLock
 
-                    OnClientConnected(New IdentifiableSourceEventArgs(.ID))
+                    OnClientConnected(.ID)
                 End If
 
                 ' Used to count the number of bytes received in a single receive.
@@ -388,7 +388,7 @@ Public Class TcpServer
                 clientDisconnected = m_tcpClients.ContainsKey(tcpClient.ID)
                 m_tcpClients.Remove(tcpClient.ID)
             End SyncLock
-            If clientDisconnected Then OnClientDisconnected(New IdentifiableSourceEventArgs(tcpClient.ID))
+            If clientDisconnected Then OnClientDisconnected(tcpClient.ID)
         End Try
 
     End Sub
@@ -427,7 +427,7 @@ Public Class TcpServer
                     m_tcpClients.Add(tcpClient.ID, tcpClient)
                 End SyncLock
 
-                OnClientConnected(New IdentifiableSourceEventArgs(tcpClient.ID))
+                OnClientConnected(tcpClient.ID)
             Else
                 ' The first response from the client is either not information about itself, or
                 ' the information provided by the client is invalid.
@@ -438,7 +438,7 @@ Public Class TcpServer
             If MyBase.SecureSession Then data = DecryptData(data, tcpClient.Passphrase, MyBase.Encryption)
 
             ' We'll pass the received data along to the consumer via event.
-            OnReceivedClientData(New IdentifiableItemEventArgs(Of Byte())(tcpClient.ID, data))
+            OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(tcpClient.ID, data))
         End If
 
     End Sub
