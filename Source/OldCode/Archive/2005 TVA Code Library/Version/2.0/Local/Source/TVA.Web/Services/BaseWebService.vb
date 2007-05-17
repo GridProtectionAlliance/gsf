@@ -14,7 +14,7 @@ Namespace Services
     '<WebService(Namespace:="http://troweb/DataServices/")> _
     '<WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
     '<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-    Public Class BaseWebService
+    Public MustInherit Class BaseWebService
         Inherits System.Web.Services.WebService
         Implements IBusinessObjectsAdapter
 
