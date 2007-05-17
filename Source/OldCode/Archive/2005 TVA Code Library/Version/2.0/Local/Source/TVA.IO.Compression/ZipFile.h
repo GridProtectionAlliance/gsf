@@ -34,7 +34,7 @@ namespace TVA
 
 			public __delegate void CurrentFileEventHandler(String* fullFileName, String* relativeFileName);
 
-			[ToolboxBitmap(__typeof(System::Object), S"TVA.IO.Compression.ZipFile.bmp"), DefaultProperty(S"FileName"), DefaultMember(S"Files")]
+			[ToolboxBitmap(__typeof(System::Object), S"TVA.IO.Compression.ZipFile.bmp"), DisplayName(S"Zip File"), DefaultProperty(S"FileName"), DefaultMember(S"Files"), Description(S"Allows manipulation of compressed files in Zip format")]
 			public __gc class ZipFile :  public Component
 			{
 				public:
