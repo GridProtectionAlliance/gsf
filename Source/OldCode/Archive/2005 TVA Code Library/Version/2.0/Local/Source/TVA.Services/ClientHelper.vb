@@ -41,22 +41,32 @@ Public Class ClientHelper
     ''' <summary>
     ''' Occurs when the service client must update its status.
     ''' </summary>
-    Public Event UpdateClientStatus(ByVal sender As Object, ByVal e As UpdateClientStatusEventArgs)
+    Public Event UpdateClientStatus As EventHandler(Of UpdateClientStatusEventArgs)
 
     ''' <summary>
     ''' Occurs when a response is received from the service.
     ''' </summary>
-    Public Event ReceivedServiceResponse(ByVal sender As Object, ByVal e As GenericEventArgs(Of ServiceResponse))
+    Public Event ReceivedServiceResponse As EventHandler(Of GenericEventArgs(Of ServiceResponse))
 
     ''' <summary>
     ''' Occurs when the service state changes.
     ''' </summary>
-    Public Event ServiceStateChanged(ByVal sender As Object, ByVal e As ObjectStateChangedEventArgs(Of ServiceState))
+    Public Event ServiceStateChanged As EventHandler(Of ObjectStateChangedEventArgs(Of ServiceState))
 
     ''' <summary>
     ''' Occurs when the state of a process changes.
     ''' </summary>
-    Public Event ProcessStateChanged(ByVal sender As Object, ByVal e As ObjectStateChangedEventArgs(Of ProcessState))
+    Public Event ProcessStateChanged As EventHandler(Of ObjectStateChangedEventArgs(Of ProcessState))
+
+    ''' <summary>
+    ''' Occurs when a remote command session has been established.
+    ''' </summary>
+    Public Event CommandSessionEstablished As EventHandler
+
+    ''' <summary>
+    ''' Occurs when a remote command session has been terminated.
+    ''' </summary>
+    Public Event CommandSessionTerminated As EventHandler
 
 #End Region
 
@@ -318,6 +328,13 @@ Public Class ClientHelper
 
                         UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}"".", messageSegments(0), messageSegments(1)), 3)
                     End If
+                Case "COMMANDSESSION"
+                    Select Case response.Message.ToUpper()
+                        Case "ESTABLISHED"
+                            RaiseEvent CommandSessionEstablished(Me, EventArgs.Empty)
+                        Case "TERMINATED"
+                            RaiseEvent CommandSessionTerminated(Me, EventArgs.Empty)
+                    End Select
             End Select
         End If
 

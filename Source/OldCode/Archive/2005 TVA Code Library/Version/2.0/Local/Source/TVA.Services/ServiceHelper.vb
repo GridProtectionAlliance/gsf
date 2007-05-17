@@ -27,10 +27,11 @@ Public Class ServiceHelper
     Private m_persistsettings As Boolean
     Private m_settingsCategoryName As String
 
+    Private m_pursip As String
+    Private m_remoteCommandClientID As Guid
     Private m_connectedClients As List(Of ClientInfo)
     Private m_clientRequestHistory As List(Of ClientRequestInfo)
     Private m_clientRequestHandlers As List(Of ClientRequestHandlerInfo)
-    Private m_remoteCommandClientID As Guid
 
     Private WithEvents m_communicationServer As ICommunicationServer
     Private WithEvents m_remoteCommandProcess As Process
@@ -232,7 +233,7 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", AddressOf SaveSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", AddressOf LoadSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Remote", "Establishes a remote command session", AddressOf RemoteCommandSession, False))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Command", "Allows for a telnet-like remote command session", AddressOf RemoteCommandSession, False))
 
             m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
@@ -548,6 +549,7 @@ Public Class ServiceHelper
         Try
             With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                 If .Count > 0 Then
+                    m_pursip = .Item("Pursip").GetTypedValue(m_pursip)
                     LogStatusUpdates = .Item("LogStatusUpdates").GetTypedValue(m_logStatusUpdates)
                     RequestHistoryLimit = .Item("RequestHistoryLimit").GetTypedValue(m_requestHistoryLimit)
                     QueryableSettingsCategories = .Item("QueryableSettingsCategories").GetTypedValue(m_queryableSettingsCategories)
@@ -565,6 +567,11 @@ Public Class ServiceHelper
             Try
                 With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     .Clear()
+                    With .Item("Pursip", True)
+                        .Value = m_pursip
+                        .Description = ""
+                        .Encrypted = True
+                    End With
                     With .Item("LogStatusUpdates", True)
                         .Value = m_logStatusUpdates.ToString()
                         .Description = ""
@@ -779,6 +786,8 @@ Public Class ServiceHelper
     Private Sub ListProcesses(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
+            Dim showAdvancedHelp As Boolean = requestInfo.Request.Arguments.Exists("advanced")
+
             With New StringBuilder()
                 .Append("Displays a list of defined service processes or running system processes.")
                 .AppendLine()
@@ -792,9 +801,11 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
-                .AppendLine()
-                .Append("       -system".PadRight(20))
-                .Append("Displays system processes instead of service processes")
+                If showAdvancedHelp Then
+                    .AppendLine()
+                    .Append("       -system".PadRight(20))
+                    .Append("Displays system processes instead of service processes")
+                End If
 
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
             End With
@@ -1031,6 +1042,8 @@ Public Class ServiceHelper
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
             End With
         Else
+            Dim showAdvancedHelp As Boolean = requestInfo.Request.Arguments.Exists("advanced")
+
             With New StringBuilder()
                 .AppendFormat("Commands supported by {0}:", m_service.ServiceName)
                 .AppendLine()
@@ -1043,7 +1056,7 @@ Public Class ServiceHelper
                 .Append(" ")
                 .Append(New String("-"c, 55))
                 For Each handler As ClientRequestHandlerInfo In m_clientRequestHandlers
-                    If handler.IsAdvertised Then
+                    If handler.IsAdvertised OrElse showAdvancedHelp Then
                         .AppendLine()
                         .Append(handler.Command.PadRight(20))
                         .Append(" ")
@@ -1205,12 +1218,14 @@ Public Class ServiceHelper
 
                 If doReloadSettings Then
                     ' The user has requested to reload settings for all the components.
-                    ReloadSettings(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse(String.Format("ReloadSettings {0}", categoryName))))
+                    requestInfo.Request = ClientRequest.Parse(String.Format("ReloadSettings {0}", categoryName))
+                    ReloadSettings(requestInfo)
                 End If
 
                 If doListSettings Then
                     ' The user has requested to list all of the queryable settings.
-                    ListSettings(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("Settings")))
+                    requestInfo.Request = ClientRequest.Parse("Settings")
+                    ListSettings(requestInfo)
                 End If
             Else
                 ' The specified category is not one of the defined queryable categories.
@@ -1223,6 +1238,8 @@ Public Class ServiceHelper
     Private Sub StartProcess(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
+            Dim showAdvancedHelp As Boolean = requestInfo.Request.Arguments.Exists("advanced")
+
             With New StringBuilder()
                 .Append("Starts execution of the specified service or system process.")
                 .AppendLine()
@@ -1237,14 +1254,16 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -system".PadRight(20))
-                .Append("Treats the specified process as a system process")
-                .AppendLine()
                 .Append("       -restart".PadRight(20))
                 .Append("Aborts the process if executing and start it again")
                 .AppendLine()
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all service or system processes")
+                If showAdvancedHelp Then
+                    .AppendLine()
+                    .Append("       -system".PadRight(20))
+                    .Append("Treats the specified process as a system process")
+                End If
 
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
             End With
@@ -1255,7 +1274,8 @@ Public Class ServiceHelper
             Dim doListProcesses As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             If doRestartProcess Then
-                AbortProcess(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse(String.Format("Abort ""{0}"" {1}", processName, IIf(isSystemProcess, "-system", "")))))
+                requestInfo.Request = ClientRequest.Parse(String.Format("Abort ""{0}"" {1}", processName, IIf(isSystemProcess, "-system", "")))
+                AbortProcess(requestInfo)
             End If
 
             If Not isSystemProcess Then
@@ -1287,7 +1307,8 @@ Public Class ServiceHelper
             End If
 
             If doListProcesses Then
-                ListProcesses(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", "")))))
+                requestInfo.Request = ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", "")))
+                ListProcesses(requestInfo)
             End If
         End If
 
@@ -1296,6 +1317,8 @@ Public Class ServiceHelper
     Private Sub AbortProcess(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
+            Dim showAdvancedHelp As Boolean = requestInfo.Request.Arguments.Exists("advanced")
+
             With New StringBuilder()
                 .Append("Aborts the specified service or system process if executing.")
                 .AppendLine()
@@ -1310,11 +1333,13 @@ Public Class ServiceHelper
                 .Append("       -?".PadRight(20))
                 .Append("Displays this help message")
                 .AppendLine()
-                .Append("       -system".PadRight(20))
-                .Append("Treats the specified process as a system process")
-                .AppendLine()
                 .Append("       -list".PadRight(20))
                 .Append("Displays list of all service or system processes")
+                If showAdvancedHelp Then
+                    .AppendLine()
+                    .Append("       -system".PadRight(20))
+                    .Append("Treats the specified process as a system process")
+                End If
 
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
             End With
@@ -1377,7 +1402,8 @@ Public Class ServiceHelper
             End If
 
             If doListProcesses Then
-                ListProcesses(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", "")))))
+                requestInfo.Request = ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", "")))
+                ListProcesses(requestInfo)
             End If
         End If
 
@@ -1467,14 +1493,16 @@ Public Class ServiceHelper
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully scheduled process ""{0}"" with rule ""{1}"".", processName, scheduleRule), 3)
 
                 If doSaveSchedules Then
-                    SaveSchedules(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("SaveSchedules")))
+                    requestInfo.Request = ClientRequest.Parse("SaveSchedules")
+                    SaveSchedules(requestInfo)
                 End If
             Catch ex As Exception
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to schedule process ""{0}"" - {1}", processName, ex.Message), 3)
             End Try
 
             If doListSchedules Then
-                ListSchedules(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("Schedules")))
+                requestInfo.Request = ClientRequest.Parse("Schedules")
+                ListSchedules(requestInfo)
             End If
         End If
 
@@ -1517,14 +1545,16 @@ Public Class ServiceHelper
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully unscheduled process ""{0}"".", processName), 3)
 
                 If doSaveSchedules Then
-                    SaveSchedules(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("SaveSchedules")))
+                    requestInfo.Request = ClientRequest.Parse("SaveSchedules")
+                    SaveSchedules(requestInfo)
                 End If
             Else
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Failed to unschedule process ""{0}"" - Process is not scheduled."), 3)
             End If
 
             If doListSchedules Then
-                ListSchedules(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("Schedules")))
+                requestInfo.Request = ClientRequest.Parse("Schedules")
+                ListSchedules(requestInfo)
             End If
         End If
 
@@ -1560,7 +1590,8 @@ Public Class ServiceHelper
             UpdateStatus(requestInfo.Sender.ClientID, "Successfully saved process schedules to the config file.", 3)
 
             If doListSchedules Then
-                ListSchedules(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("Schedules")))
+                requestInfo.Request = ClientRequest.Parse("Schedules")
+                ListSchedules(requestInfo)
             End If
         End If
 
@@ -1596,7 +1627,8 @@ Public Class ServiceHelper
             UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded process schedules from the config file.", 3)
 
             If doListSchedules Then
-                ListSchedules(New ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse("Schedules")))
+                requestInfo.Request = ClientRequest.Parse("Schedules")
+                ListSchedules(requestInfo)
             End If
         End If
 
@@ -1625,12 +1657,12 @@ Public Class ServiceHelper
 
         If m_remoteCommandProcess Is Nothing AndAlso requestinfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
-                .Append("Allows for a remote telnet-like command session.")
+                .Append("Allows for a telnet-like remote command session.")
                 .AppendLine()
                 .AppendLine()
                 .Append("   Usage:")
                 .AppendLine()
-                .Append("       Remote ""Admin Password"" -options")
+                .Append("       Command -options")
                 .AppendLine()
                 .AppendLine()
                 .Append("   Options:")
@@ -1643,44 +1675,59 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("       -disconnect".PadRight(20))
                 .Append("Terminates established remote command session")
+                .AppendLine()
+                .Append("       -password".PadRight(20))
+                .Append("Password required to establish a remote command session")
 
                 UpdateStatus(requestinfo.Sender.ClientID, .ToString(), 3)
             End With
         Else
-            Dim password As String = requestinfo.Request.Arguments("orderedarg1")
             Dim connectSession As Boolean = requestinfo.Request.Arguments.Exists("connect")
             Dim disconnectSession As Boolean = requestinfo.Request.Arguments.Exists("disconnect")
+            Dim passwordProvided As Boolean = requestinfo.Request.Arguments.Exists("password")
 
-            Select Case True
-                Case String.Compare(requestinfo.Request.Command, "Remote", True) = 0 AndAlso connectSession
-                    If password = m_service.ServiceName Then
-                        m_remoteCommandProcess = New Process()
-                        m_remoteCommandProcess.StartInfo.FileName = "cmd.exe"
-                        m_remoteCommandProcess.StartInfo.UseShellExecute = False
-                        m_remoteCommandProcess.StartInfo.RedirectStandardInput = True
-                        m_remoteCommandProcess.StartInfo.RedirectStandardOutput = True
-                        m_remoteCommandProcess.StartInfo.RedirectStandardError = True
+            If String.Compare(requestinfo.Request.Command, "Command", True) = 0 AndAlso _
+                    m_remoteCommandProcess Is Nothing AndAlso connectSession AndAlso passwordProvided Then
+                ' User wants to establish a remote command session.
+                Dim password As String = requestinfo.Request.Arguments("password")
+                If password = m_pursip Then
+                    m_remoteCommandProcess = New Process()
+                    m_remoteCommandProcess.StartInfo.FileName = "cmd.exe"
+                    m_remoteCommandProcess.StartInfo.UseShellExecute = False
+                    m_remoteCommandProcess.StartInfo.RedirectStandardInput = True
+                    m_remoteCommandProcess.StartInfo.RedirectStandardOutput = True
+                    m_remoteCommandProcess.StartInfo.RedirectStandardError = True
+                    m_remoteCommandProcess.Start()
+                    m_remoteCommandProcess.BeginOutputReadLine()
+                    m_remoteCommandProcess.BeginErrorReadLine()
 
-                        m_remoteCommandProcess.Start()
-                        m_remoteCommandProcess.BeginOutputReadLine()
-                        m_remoteCommandProcess.BeginErrorReadLine()
+                    m_remoteCommandClientID = requestinfo.Sender.ClientID
 
-                        m_remoteCommandClientID = requestinfo.Sender.ClientID
-                    Else
+                    UpdateStatus(requestinfo.Sender.ClientID, "Remote command session established - Future commands will be redirected.", 3)
 
-                    End If
-                Case String.Compare(requestinfo.Request.Command, "Remote", True) = 0 AndAlso disconnectSession
-                    If m_remoteCommandProcess IsNot Nothing Then
-                        m_remoteCommandProcess.Kill()
-                        m_remoteCommandProcess = Nothing
-                        m_remoteCommandClientID = Guid.Empty
-                    End If
-                Case m_remoteCommandProcess IsNot Nothing
-                    Dim input As String = requestinfo.Request.Command & " " & requestinfo.Request.Arguments.ToString()
-                    m_remoteCommandProcess.StandardInput.WriteLine(input)
-                Case Else
+                    SendResponse(requestinfo.Sender.ClientID, New ServiceResponse("CommandSession", "Established"))
+                Else
+                    UpdateStatus(requestinfo.Sender.ClientID, "Failed to establish remote command session - Password is invalid.", 3)
+                End If
+            ElseIf String.Compare(requestinfo.Request.Command, "Command", True) = 0 AndAlso _
+                    m_remoteCommandProcess IsNot Nothing AndAlso disconnectSession Then
+                ' User wants to terminate an established remote command session.
+                m_remoteCommandProcess.Kill()
+                m_remoteCommandProcess = Nothing
+                m_remoteCommandClientID = Guid.Empty
 
-            End Select
+                UpdateStatus(requestinfo.Sender.ClientID, "Remote command session terminated - Future commands will be processed normally.", 3)
+
+                SendResponse(requestinfo.Sender.ClientID, New ServiceResponse("CommandSession", "Terminated"))
+            ElseIf m_remoteCommandProcess IsNot Nothing Then
+                ' User has entered commands that must be redirected to the established command session.
+                Dim input As String = requestinfo.Request.Command & " " & requestinfo.Request.Arguments.ToString()
+                m_remoteCommandProcess.StandardInput.WriteLine(input)
+            Else
+                ' User has provided insufficient information.
+                requestinfo.Request = ClientRequest.Parse("Command /?")
+                RemoteCommandSession(requestinfo)
+            End If
         End If
 
     End Sub
@@ -1696,7 +1743,7 @@ Public Class ServiceHelper
         Dim disconnectedClient As ClientInfo = FindClient(e.Argument)
         If disconnectedClient IsNot Nothing Then
             If e.Argument = m_remoteCommandClientID Then
-                RemoteCommandSession(New ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Remote -disconnect")))
+                RemoteCommandSession(New ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Command -disconnect")))
             End If
 
             m_connectedClients.Remove(FindClient(e.Argument))
@@ -1718,29 +1765,30 @@ Public Class ServiceHelper
             UpdateStatus(String.Format("Remote client connected - {0} from {1}.", client.UserName, client.MachineName), 3)
         ElseIf request IsNot Nothing Then
             Try
-                If m_remoteCommandProcess Is Nothing Then
+                Dim requestInfo As New ClientRequestInfo(requestSender, request)
+                If m_remoteCommandClientID = Guid.Empty OrElse requestSender.ClientID <> m_remoteCommandClientID Then
                     ' Log the received request.
-                    m_clientRequestHistory.Add(New ClientRequestInfo(FindClient(e.Argument.Source), request))
+                    m_clientRequestHistory.Add(requestInfo)
                     If m_clientRequestHistory.Count > m_requestHistoryLimit Then
                         ' We'll remove old request entries if we've exceeded the limit for request history.
                         m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit))
                     End If
 
                     ' Notify the consumer about the incoming request from client.
-                    RaiseEvent ReceivedClientRequest(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, ClientRequest))(New IdentifiableItem(Of Guid, ClientRequest)(e.Argument.Source, request)))
+                    RaiseEvent ReceivedClientRequest(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, ClientRequest))(New IdentifiableItem(Of Guid, ClientRequest)(requestSender.ClientID, request)))
 
                     Dim requestHandler As ClientRequestHandlerInfo = FindRequestHandler(request.Command)
                     If requestHandler IsNot Nothing Then
-                        requestHandler.HandlerMethod(New ClientRequestInfo(requestSender, request))
+                        requestHandler.HandlerMethod(requestInfo)
                     Else
-                        UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - Request is invalid.", request.Command), 3)
+                        UpdateStatus(requestSender.ClientID, String.Format("Failed to process request ""{0}"" - Request is invalid.", request.Command), 3)
                     End If
                 Else
-                    RemoteCommandSession(New ClientRequestInfo(requestSender, request))
+                    RemoteCommandSession(requestInfo)
                 End If
             Catch ex As Exception
                 GlobalExceptionLogger.Log(ex)
-                UpdateStatus(requestSender.ClientID, String.Format("Failed to process request of type ""{0}"" - {1}.", request.Command, ex.Message), 3)
+                UpdateStatus(requestSender.ClientID, String.Format("Failed to process request ""{0}"" - {1}.", request.Command, ex.Message), 3)
             End Try
         Else
             UpdateStatus(requestSender.ClientID, "Failed to process request - Request could not be deserialized.", 3)

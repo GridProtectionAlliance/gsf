@@ -19,6 +19,7 @@ Partial Class ServiceHelper
         'This call is required by the Component Designer.
         InitializeComponent()
 
+        m_pursip = "s3cur3"
         m_logStatusUpdates = True
         m_requestHistoryLimit = 50
         m_queryableSettingsCategories = "SH.General, SH.LogFile, SH.GlobalExceptionLogger"
@@ -27,8 +28,6 @@ Partial Class ServiceHelper
         m_connectedClients = New List(Of ClientInfo)()
         m_clientRequestHistory = New List(Of ClientRequestInfo)()
         m_serviceComponents = New List(Of IServiceComponent)()
-        'm_serviceStartingEventHandlerList = New List(Of ServiceStartingEventHandler)()
-        'm_serviceStoppingEventHandlerList = New List(Of EventHandler)()
         m_clientRequestHandlers = New List(Of ClientRequestHandlerInfo)()
 
     End Sub
