@@ -1824,9 +1824,7 @@ Public Class ServiceHelper
 
 #End Region
 
-#End Region
-
-#End Region
+#Region " m_remoteCommandProcess "
 
     Private Sub m_remoteCommandProcess_ErrorDataReceived(ByVal sender As Object, ByVal e As System.Diagnostics.DataReceivedEventArgs) Handles m_remoteCommandProcess.ErrorDataReceived
 
@@ -1839,4 +1837,11 @@ Public Class ServiceHelper
         UpdateStatus(m_remoteCommandClientID, e.Data, 1)
 
     End Sub
+
+#End Region
+
+#End Region
+
+#End Region
+
 End Class
