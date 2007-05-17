@@ -28,7 +28,7 @@ Namespace Net.Ftp
 
     End Interface
 
-    <ToolboxBitmap(GetType(Session)), DisplayName("FTP Server"), DefaultProperty("Server"), DefaultEvent("FileTransferProgress")> _
+    <ToolboxBitmap(GetType(Session)), DisplayName("FTP Session"), DefaultProperty("Server"), DefaultEvent("FileTransferProgress"), Description("Creates a client connection to an FTP server")> _
     Public Class Session
 
         Inherits Component
