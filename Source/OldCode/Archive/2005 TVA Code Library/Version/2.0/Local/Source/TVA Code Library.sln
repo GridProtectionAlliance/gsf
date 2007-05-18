@@ -48,23 +48,9 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Services", "TVA.Service
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Security", "TVA.Security\TVA.Security.vbproj", "{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{8692C094-012A-490E-9DD1-2B9F2CF41882}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA Code Library Component Installer", "TVA Code Library Component Installer", "{293CA6B0-8ED6-4B3B-87BD-92890765F603}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA Code Library Component Installer", "Tools\TVA Code Library Component Installer\TVA Code Library Component Installer.csproj", "{2FA2B53D-8140-4EA0-93FF-043A89233051}"
-EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Setup", "Tools\TVA Code Library Component Installer\Setup\Setup.vbproj", "{2F96DB77-9B2D-4859-85D9-474FEEF9892C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2FA2B53D-8140-4EA0-93FF-043A89233051} = {2FA2B53D-8140-4EA0-93FF-043A89233051}
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5} = {CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}
-	EndProjectSection
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PackageSetup", "Tools\TVA Code Library Component Installer\PackageSetup\PackageSetup.vdproj", "{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}"
-EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 15
+		SccNumberOfProjects = 12
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -125,21 +111,6 @@ Global
 		SccLocalPath11 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection11 = Source\\TVA.Security\\
-		SccProjectUniqueName12 = Tools\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer.csproj
-		SccProjectTopLevelParentUniqueName12 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath12 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection12 = Source\\Tools\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer\\
-		SccProjectUniqueName13 = Tools\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer\\Setup\\Setup.vbproj
-		SccProjectTopLevelParentUniqueName13 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath13 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection13 = Source\\Tools\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer\\Setup\\
-		SccProjectUniqueName14 = Tools\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer\\PackageSetup\\PackageSetup.vdproj
-		SccProjectTopLevelParentUniqueName14 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath14 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection14 = Source\\Tools\\TVA\u0020Code\u0020Library\u0020Component\u0020Installer\\PackageSetup\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -256,33 +227,6 @@ Global
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}.Release|Win32.ActiveCfg = Release|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Win32.ActiveCfg = Release|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Win32.ActiveCfg = Release|Any CPU
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Debug|Any CPU.ActiveCfg = Debug
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Debug|Any CPU.Build.0 = Debug
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Debug|Mixed Platforms.ActiveCfg = Release
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Debug|Mixed Platforms.Build.0 = Release
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Debug|Win32.ActiveCfg = Debug
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Debug|Win32.Build.0 = Debug
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Release|Any CPU.ActiveCfg = Release
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Release|Any CPU.Build.0 = Release
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Release|Mixed Platforms.ActiveCfg = Release
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Release|Win32.ActiveCfg = Release
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5}.Release|Win32.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -299,12 +243,7 @@ Global
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{072D5E46-0944-48DE-A1E1-C06D145FB366} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{7E20F0D7-CD03-4C51-ADB2-03C522A71A84} = {4F631798-355B-4607-AEEB-742B670AD834}
-		{8692C094-012A-490E-9DD1-2B9F2CF41882} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{2E2A8AA0-A387-4245-A419-496B50CB7939} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
 		{1BFB8969-4479-4EAB-8CCB-1CF0C3DE2DEE} = {CDC349A8-4D7D-4D2F-8D15-8CE2359FBF3D}
-		{293CA6B0-8ED6-4B3B-87BD-92890765F603} = {8692C094-012A-490E-9DD1-2B9F2CF41882}
-		{2FA2B53D-8140-4EA0-93FF-043A89233051} = {293CA6B0-8ED6-4B3B-87BD-92890765F603}
-		{2F96DB77-9B2D-4859-85D9-474FEEF9892C} = {293CA6B0-8ED6-4B3B-87BD-92890765F603}
-		{CF3159D7-F02E-47E5-ADBF-3CCA64C32AA5} = {293CA6B0-8ED6-4B3B-87BD-92890765F603}
 	EndGlobalSection
 EndGlobal
