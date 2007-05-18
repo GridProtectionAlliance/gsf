@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AverageFrequencyCalculator.vb" />
+    <Compile Include="EventDetectTrigger.vb" />
     <Compile Include="ReferenceMagnitudeCalculator.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
