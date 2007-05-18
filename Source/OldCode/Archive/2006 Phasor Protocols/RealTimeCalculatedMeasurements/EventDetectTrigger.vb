@@ -67,7 +67,9 @@ Public Class EventDetectTrigger
     End Structure
 
 #End Region
-    
+
+#Region "Methods"
+
     Public Overrides Sub Initialize(ByVal calculationName As String, ByVal configurationSection As String, ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
         MyBase.Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
@@ -162,6 +164,9 @@ Public Class EventDetectTrigger
             End If
         End If
     End Function
+#End Region
+
+#Region "Property"
     ''' <summary>
     ''' Property of the frequency changing rate threshold
     ''' </summary>
@@ -278,5 +283,7 @@ Public Class EventDetectTrigger
             Return m_tripAmount
         End Get
     End Property
+#End Region
+
 
 End Class
