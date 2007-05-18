@@ -68,7 +68,7 @@ Public Class EventDetectTrigger
 
 #End Region
 
-#Region "Methods"
+#Region "Public Methods"
 
     Public Overrides Sub Initialize(ByVal calculationName As String, ByVal configurationSection As String, ByVal outputMeasurements As IMeasurement(), ByVal inputMeasurementKeys As MeasurementKey(), ByVal minimumMeasurementsToUse As Integer, ByVal expectedMeasurementsPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
