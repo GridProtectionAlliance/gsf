@@ -115,6 +115,7 @@ Public Class EventDetectTrigger
                 End If
                 m_freqElement.freq = averageFreq
                 m_freqElement.timeTick = frame.Ticks
+                m_freqBuffer.Add(m_freqElement)
                 'Prevent multi trigger the same event
                 If New DateTime(frame.Ticks - m_eventTime).Second > m_unCheckInterval Then
                     If checkEvent() Then
