@@ -41,7 +41,7 @@ Public Class ClientHelper
     ''' <summary>
     ''' Occurs when the service client must update its status.
     ''' </summary>
-    Public Event UpdateClientStatus As EventHandler(Of UpdateClientStatusEventArgs)
+    Public Event UpdateClientStatus As EventHandler(Of GenericEventArgs(Of String))
 
     ''' <summary>
     ''' Occurs when a response is received from the service.
@@ -172,7 +172,7 @@ Public Class ClientHelper
                 .Append(Environment.NewLine)
             Next
 
-            RaiseEvent UpdateClientStatus(Me, New UpdateClientStatusEventArgs(.ToString()))
+            RaiseEvent UpdateClientStatus(Me, New GenericEventArgs(Of String)(.ToString()))
         End With
 
     End Sub

@@ -70,7 +70,6 @@
     <Compile Include="ClientRequest.vb" />
     <Compile Include="ServiceProcess.vb" />
     <Compile Include="ServiceResponse.vb" />
-    <Compile Include="UpdateClientStatusEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Communication\TVA.Communication.vbproj">
