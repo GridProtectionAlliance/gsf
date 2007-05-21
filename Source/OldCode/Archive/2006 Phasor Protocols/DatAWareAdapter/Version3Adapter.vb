@@ -91,13 +91,13 @@ Public Class Version3Adapter
 
     Protected Overrides Sub AttemptDisconnection()
 
-        If m_connection.IsConnected Then m_connection.Disconnect()
+        If m_connection IsNot Nothing Then If m_connection.IsConnected Then m_connection.Disconnect()
 
     End Sub
 
     Public Overrides ReadOnly Property Name() As String
         Get
-            Return "DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """"
+            Return "DatAWare Archiver (V3) """ & m_archiverIP & ":" & m_archiverPort & """"
         End Get
     End Property
 

@@ -18,6 +18,7 @@
 Imports System.Text
 Imports System.Security.Principal
 Imports System.Data.SqlClient
+Imports System.Threading
 Imports TVA.Common
 Imports TVA.Assembly
 Imports TVA.IO
@@ -28,6 +29,7 @@ Imports TVA.Data.Common
 Imports TVA.Measurements
 Imports TVA.DateTime.Common
 Imports TVA.Phasors
+Imports TVA.Collections
 Imports InterfaceAdapters
 Imports System.Reflection
 
@@ -43,6 +45,7 @@ Module MainModule
     Private m_displayedMessageCount As Long
     Private m_systemLogEnabled As Boolean
     Private m_systemLogFile As LogFile
+    Private m_statusMessageQueue As ProcessQueue(Of String)
 
     Public Sub Main()
 
@@ -62,6 +65,8 @@ Module MainModule
         SaveSettings()
 
         m_systemLogEnabled = BooleanSetting("EnableLogFile")
+        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 0.25, Timeout.Infinite, False, False)
+        m_statusMessageQueue.Start()
 
         InitializeConfiguration(AddressOf InitializeSystem)
 
@@ -99,13 +104,13 @@ Module MainModule
                     Console.WriteLine(m_calculatedMeasurements(x).Status)
                 Next
 
-                Dim totalWorkerThreads, availableWorkerThreads, totalIOThreads, availableIOThreads As Integer
+                'Dim totalWorkerThreads, availableWorkerThreads, totalIOThreads, availableIOThreads As Integer
 
-                Threading.ThreadPool.GetMaxThreads(totalWorkerThreads, totalIOThreads)
-                Threading.ThreadPool.GetAvailableThreads(availableWorkerThreads, availableIOThreads)
+                'Threading.ThreadPool.GetMaxThreads(totalWorkerThreads, totalIOThreads)
+                'Threading.ThreadPool.GetAvailableThreads(availableWorkerThreads, availableIOThreads)
 
-                Console.WriteLine("Worker Thread Utilization: " & ((totalWorkerThreads - availableWorkerThreads) / totalWorkerThreads * 100.0R).ToString("0.00%"))
-                Console.WriteLine("    IO Thread Utilization: " & ((totalIOThreads - availableIOThreads) / totalIOThreads * 100.0R).ToString("0.00%"))
+                'Console.WriteLine("Worker Thread Utilization: " & ((totalWorkerThreads - availableWorkerThreads) / totalWorkerThreads * 100.0R).ToString("0.00%"))
+                'Console.WriteLine("    IO Thread Utilization: " & ((totalIOThreads - availableIOThreads) / totalIOThreads * 100.0R).ToString("0.00%"))
                 Console.WriteLine()
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 Console.WriteLine()
@@ -389,9 +394,11 @@ Module MainModule
             End If
 
             ' Queue new measurements for archival
-            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-                receiver.QueueMeasurementsForArchival(measurements)
-            Next
+            If m_measurementReceivers IsNot Nothing Then
+                For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                    receiver.QueueMeasurementsForArchival(measurements)
+                Next
+            End If
 
             ' TODO: Provide real-time calculated measurements outside of receiver as needed...
             ' In an "integrated" system, this is where you would provide calculated measurements
@@ -540,6 +547,21 @@ Module MainModule
 
     ' Display status messages bubbled up from phasor measurement receiver and its internal components
     Private Sub DisplayStatusMessage(ByVal status As String)
+
+        ' We queue up status messages for display on a separate thread so we don't slow any important activity
+        m_statusMessageQueue.Add(status)
+
+    End Sub
+
+    Private Sub DisplayStatusMessages(ByVal messages As String())
+
+        For x As Integer = 0 To messages.Length - 1
+            _DisplayStatusMessage(messages(x))
+        Next
+
+    End Sub
+
+    Private Sub _DisplayStatusMessage(ByVal status As String)
 
         Dim displayMessage As Boolean
 

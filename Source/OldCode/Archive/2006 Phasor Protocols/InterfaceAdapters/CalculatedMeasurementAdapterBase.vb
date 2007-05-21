@@ -216,15 +216,17 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         ' We handle publication of new measurements on a new thread since work to be done during
         ' publication can be time consuming (e.g., sorting and queuing) and we don't want to slow
         ' up calculation process which is being called at rates of, or over, 30 times per second
-        ThreadPool.UnsafeQueueUserWorkItem(AddressOf PublishNewCalculatedMeasurements, measurements)
+        'ThreadPool.UnsafeQueueUserWorkItem(AddressOf PublishNewCalculatedMeasurements, measurements)
+
+        RaiseEvent NewCalculatedMeasurements(measurements)
 
     End Sub
 
-    Private Sub PublishNewCalculatedMeasurements(ByVal state As Object)
+    'Private Sub PublishNewCalculatedMeasurements(ByVal state As Object)
 
-        RaiseEvent NewCalculatedMeasurements(DirectCast(state, IList(Of IMeasurement)))
+    '    RaiseEvent NewCalculatedMeasurements(DirectCast(state, IList(Of IMeasurement)))
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)
