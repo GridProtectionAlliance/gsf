@@ -33,7 +33,7 @@ Namespace Application
         Public Event AfterAuthenticate As EventHandler
         Public Event AccessGranted As EventHandler(Of CancelEventArgs)
         Public Event AccessDenied As EventHandler(Of CancelEventArgs)
-        Public Event DbConnectionException As EventHandler(Of ExceptionEventArgs)
+        Public Event DbConnectionException As EventHandler(Of GenericEventArgs(Of Exception))
 
 #End Region
 
@@ -256,7 +256,7 @@ Namespace Application
                 If m_enableCaching Then CacheUserData()
             Catch ex As SqlException
                 ' We'll notifying about the excountered SQL exception by rasing an event.
-                RaiseEvent DbConnectionException(Me, New ExceptionEventArgs(ex))
+                RaiseEvent DbConnectionException(Me, New GenericEventArgs(Of Exception)(ex))
             Catch ex As Exception
                 ' We'll just ignore all other exceptions.
             Finally

@@ -634,20 +634,20 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub SendServiceStateChangedResponse(ByVal serviceState As ServiceState)
+    Private Sub SendServiceStateChangedResponse(ByVal currentState As ServiceState)
 
-        Dim serviceResponse As New ServiceResponse()
-        serviceResponse.Type = "SERVICESTATECHANGED"
-        serviceResponse.Message = m_service.ServiceName & ">" & serviceState.ToString()
+        Dim serviceResponse As New ServiceResponse("SERVICESTATECHANGED")
+        serviceResponse.Attachments.Add(New ObjectState(Of ServiceState)(m_service.ServiceName, currentState))
+
         SendResponse(serviceResponse)
 
     End Sub
 
-    Private Sub SendProcessStateChangedResponse(ByVal processName As String, ByVal processState As ProcessState)
+    Private Sub SendProcessStateChangedResponse(ByVal processName As String, ByVal currentState As ProcessState)
 
-        Dim serviceResponse As New ServiceResponse()
-        serviceResponse.Type = "PROCESSSTATECHANGED"
-        serviceResponse.Message = processName & ">" & processState.ToString()
+        Dim serviceResponse As New ServiceResponse("PROCESSSTATECHANGED")
+        serviceResponse.Attachments.Add(New ObjectState(Of ProcessState)(processName, currentState))
+
         SendResponse(serviceResponse)
 
     End Sub
@@ -1813,11 +1813,11 @@ Public Class ServiceHelper
 
 #Region " LogFile "
 
-    Private Sub LogFile_LogException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles LogFile.LogException
+    Private Sub LogFile_LogException(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Exception)) Handles LogFile.LogException
 
         ' We'll let the connected clients know that we encountered an exception while logging the status update.
         m_logStatusUpdates = False
-        UpdateStatus(String.Format("Error occurred while logging status update - {0}", e.Exception.ToString()), 3)
+        UpdateStatus(String.Format("Error occurred while logging status update - {0}", e.Argument.ToString()), 3)
         m_logStatusUpdates = True
 
     End Sub

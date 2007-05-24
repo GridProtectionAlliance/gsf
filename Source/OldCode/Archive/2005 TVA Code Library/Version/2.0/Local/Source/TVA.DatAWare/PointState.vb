@@ -23,7 +23,6 @@ Public Class PointState
     Private m_lastArchivedValue As ExtendedPointData
     Private m_previousValue As ExtendedPointData
     Private m_currentValue As ExtendedPointData
-    Private m_activeDataBlock As Files.ArchiveDataBlock
     Private m_activeDataBlockIndex As Integer
     Private m_activeDataBlockSlotNumber As Integer
     Private m_slope1 As Double
@@ -42,6 +41,8 @@ Public Class PointState
         m_lastArchivedValue = New ExtendedPointData()
         m_previousValue = New ExtendedPointData()
         m_currentValue = New ExtendedPointData()
+        m_activeDataBlockIndex = -1
+        m_activeDataBlockSlotNumber = -1
 
     End Sub
 
@@ -106,23 +107,12 @@ Public Class PointState
         End Set
     End Property
 
-    'Public Property ActiveDataBlock() As Files.ArchiveDataBlock
-    '    Get
-    '        Return m_activeDataBlock
-    '    End Get
-    '    Set(ByVal value As Files.ArchiveDataBlock)
-    '        m_activeDataBlock = value
-    '    End Set
-    'End Property
-
     <Obsolete("This property is here for legacy purpose only and is not to be used.")> _
     Public Property ActiveDataBlockIndex() As Integer
         Get
-            Return m_activeDataBlockIndex - 1
+            Return m_activeDataBlockIndex
         End Get
         Set(ByVal value As Integer)
-            ' Convert the 0-based index to 1-based (for legacy purpose).
-            value += 1
             m_activeDataBlockIndex = value
         End Set
     End Property

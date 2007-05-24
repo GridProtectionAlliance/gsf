@@ -55,16 +55,9 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
     End Property
 
     <Browsable(False)> _
-    Public ReadOnly Property ParsedDataCount() As Long
+    Public ReadOnly Property DataQueue() As ProcessQueue(Of IdentifiableItem(Of Guid, Byte()))
         Get
-            Return m_dataQueue.TotalProcessedItems
-        End Get
-    End Property
-
-    <Browsable(False)> _
-    Public ReadOnly Property UnparsedDataCount() As Integer
-        Get
-            Return m_dataQueue.Count
+            Return m_dataQueue
         End Get
     End Property
 
@@ -128,24 +121,6 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
         m_dataQueue.Stop()      ' Stop processing of queued data.
         m_parserTypes.Clear()   ' Clear the cached packet type available.
-
-    End Sub
-
-    Public Sub Finish()
-
-        m_dataQueue.Flush()     ' Make sure all of the data is parsed.
-
-    End Sub
-
-    Public Sub Add(ByVal data As Byte())
-
-        Add(Guid.Empty, data)
-
-    End Sub
-
-    Public Sub Add(ByVal source As Guid, ByVal data As Byte())
-
-        m_dataQueue.Add(New IdentifiableItem(Of Guid, Byte())(source, data))
 
     End Sub
 

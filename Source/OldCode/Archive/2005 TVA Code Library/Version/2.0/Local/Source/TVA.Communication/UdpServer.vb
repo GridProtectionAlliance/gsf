@@ -25,6 +25,7 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Security.Cryptography.Common
+Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a UDP-based communication server.
@@ -178,7 +179,7 @@ Public Class UdpServer
                     Next
                 End If
             Catch ex As Exception
-                OnServerStartupException(New ExceptionEventArgs(ex))
+                OnServerStartupException(ex)
             End Try
         End If
 

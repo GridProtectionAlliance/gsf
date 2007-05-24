@@ -51,12 +51,12 @@ Public Class ClientHelper
     ''' <summary>
     ''' Occurs when the service state changes.
     ''' </summary>
-    Public Event ServiceStateChanged As EventHandler(Of ObjectStateChangedEventArgs(Of ServiceState))
+    Public Event ServiceStateChanged As EventHandler(Of GenericEventArgs(Of ObjectState(Of ServiceState)))
 
     ''' <summary>
     ''' Occurs when the state of a process changes.
     ''' </summary>
-    Public Event ProcessStateChanged As EventHandler(Of ObjectStateChangedEventArgs(Of ProcessState))
+    Public Event ProcessStateChanged As EventHandler(Of GenericEventArgs(Of ObjectState(Of ProcessState)))
 
     ''' <summary>
     ''' Occurs when a remote command session has been established.
@@ -311,22 +311,26 @@ Public Class ClientHelper
                 Case "UPDATECLIENTSTATUS"
                     UpdateStatus(response.Message)
                 Case "SERVICESTATECHANGED"
-                    Dim messageSegments As String() = response.Message.Split(">"c)
-                    If messageSegments.Length = 2 Then
-                        ' Notify change in service state by raising the ServiceStateChanged event.
-                        Dim newServiceState As ServiceState = DirectCast(System.Enum.Parse(GetType(ServiceState), messageSegments(1)), ServiceState)
-                        RaiseEvent ServiceStateChanged(Me, New ObjectStateChangedEventArgs(Of ServiceState)(messageSegments(0), newServiceState))
+                    If response.Attachments.Count > 0 Then
+                        Dim state As ObjectState(Of ServiceState) = TryCast(response.Attachments(0), ObjectState(Of ServiceState))
 
-                        UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}"".", messageSegments(0), messageSegments(1)), 3)
+                        If state IsNot Nothing Then
+                            ' Notify change in service state by raising the ServiceStateChanged event.
+                            RaiseEvent ServiceStateChanged(Me, New GenericEventArgs(Of ObjectState(Of ServiceState))(state))
+
+                            UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}"".", state.ObjectName, state.CurrentState), 3)
+                        End If
                     End If
                 Case "PROCESSSTATECHANGED"
-                    Dim messageSegments As String() = response.Message.Split(">"c)
-                    If messageSegments.Length = 2 Then
-                        ' Notify change in process state by raising the ProcessStateChanged event.
-                        Dim newProcessState As ProcessState = DirectCast(System.Enum.Parse(GetType(ProcessState), messageSegments(1)), ProcessState)
-                        RaiseEvent ProcessStateChanged(Me, New ObjectStateChangedEventArgs(Of ProcessState)(messageSegments(0), newProcessState))
+                    If response.Attachments.Count > 0 Then
+                        Dim state As ObjectState(Of ProcessState) = TryCast(response.Attachments(0), ObjectState(Of ProcessState))
 
-                        UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}"".", messageSegments(0), messageSegments(1)), 3)
+                        If state IsNot Nothing Then
+                            ' Notify change in process state by raising the ProcessStateChanged event.
+                            RaiseEvent ProcessStateChanged(Me, New GenericEventArgs(Of ObjectState(Of ProcessState))(state))
+
+                            UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}"".", state.ObjectName, state.CurrentState), 3)
+                        End If
                     End If
                 Case "COMMANDSESSION"
                     Select Case response.Message.ToUpper()

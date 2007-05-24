@@ -22,6 +22,7 @@ Imports System.IO.Ports
 Imports System.Threading
 Imports TVA.Common
 Imports TVA.IO.Common
+Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a serial port communication client.
@@ -164,7 +165,7 @@ Public Class SerialClient
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts + 1))
+                OnConnectingException(ex)
             End Try
         Loop
 

@@ -36,7 +36,7 @@ Public Interface ICommunicationServer
     ''' <summary>
     ''' Occurs when an exception is encountered while starting up the server.
     ''' </summary>
-    Event ServerStartupException As EventHandler(Of ExceptionEventArgs)
+    Event ServerStartupException As EventHandler(Of GenericEventArgs(Of Exception))
 
     ''' <summary>
     ''' Occurs when a client is connected to the server.

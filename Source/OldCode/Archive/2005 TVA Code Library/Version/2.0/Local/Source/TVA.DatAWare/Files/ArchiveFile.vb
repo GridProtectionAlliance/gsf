@@ -34,9 +34,10 @@ Namespace Files
         Private m_settingsCategoryName As String
         Private m_pointsDiscarded As Integer
         Private m_pointsCompressed As Integer
-        Private m_pointsHistorical As Integer
+        Private m_pointsHistoric As Integer
         Private m_pointsOutOfSequence As Integer
 
+        Private m_environmentData As EnvironmentData
         Private m_fileStream As FileStream
         Private m_dataBlockList As List(Of ArchiveDataBlock)
         Private m_historicArchiveFileList As List(Of ArchiveFileInfo)
@@ -61,35 +62,35 @@ Namespace Files
         Public Event FileClosed As EventHandler
         Public Event RolloverStart As EventHandler
         Public Event RolloverComplete As EventHandler
-        Public Event RolloverException As EventHandler(Of ExceptionEventArgs)
+        Public Event RolloverException As EventHandler(Of GenericEventArgs(Of Exception))
         Public Event OffloadStart As EventHandler
         Public Event OffloadComplete As EventHandler
-        Public Event OffloadException As EventHandler(Of ExceptionEventArgs)
-        Public Event OffloadProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event OffloadException As EventHandler(Of GenericEventArgs(Of Exception))
+        Public Event OffloadProgress As EventHandler(Of GenericEventArgs(Of ProcessProgress(Of Integer)))
         Public Event RolloverPreparationStart As EventHandler
         Public Event RolloverPreparationComplete As EventHandler
-        Public Event RolloverPreparationException As EventHandler(Of ExceptionEventArgs)
+        Public Event RolloverPreparationException As EventHandler(Of GenericEventArgs(Of Exception))
         Public Event HistoricFileListBuildStart As EventHandler
         Public Event HistoricFileListBuildComplete As EventHandler
-        Public Event HistoricFileListBuildException As EventHandler(Of ExceptionEventArgs)
+        Public Event HistoricFileListBuildException As EventHandler(Of GenericEventArgs(Of Exception))
         Public Event HistoricFileListUpdated As EventHandler
         Public Event CurrentPointReceived As EventHandler
         Public Event CurrentPointWritten As EventHandler
         Public Event CurrentPointCompressed As EventHandler
         Public Event CurrentPointDiscarded As EventHandler
-        Public Event HistoricPointReceived As EventHandler
+        Public Event HistoricPointReceived As EventHandler(Of GenericEventArgs(Of Integer))
         Public Event HistoricPointQueued As EventHandler
         Public Event HistoricPointsWriteStart As EventHandler
         Public Event HistoricPointsWriteComplete As EventHandler
-        Public Event HistoricPointsWriteException As EventHandler(Of ExceptionEventArgs)
-        Public Event HistoricPointsWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
-        Public Event OutOfSequencePointReceived As EventHandler
+        Public Event HistoricPointsWriteException As EventHandler(Of GenericEventArgs(Of Exception))
+        Public Event HistoricPointsWriteProgress As EventHandler(Of GenericEventArgs(Of ProcessProgress(Of Integer)))
+        Public Event OutOfSequencePointReceived As EventHandler(Of GenericEventArgs(Of Integer))
         Public Event OutOfSequencePointDiscarded As EventHandler
         Public Event OutOfSequencePointQueued As EventHandler
         Public Event OutOfSequencePointsWriteStart As EventHandler
         Public Event OutOfSequencePointsWriteComplete As EventHandler
-        Public Event OutOfSequencePointsWriteException As EventHandler(Of ExceptionEventArgs)
-        Public Event OutOfSequencePointsWriteProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event OutOfSequencePointsWriteException As EventHandler(Of GenericEventArgs(Of Exception))
+        Public Event OutOfSequencePointsWriteProgress As EventHandler(Of GenericEventArgs(Of ProcessProgress(Of Integer)))
 
 #End Region
 
@@ -274,9 +275,9 @@ Namespace Files
         End Property
 
         <Browsable(False)> _
-        Public ReadOnly Property PointsHistorical() As Integer
+        Public ReadOnly Property PointsHistoric() As Integer
             Get
-                Return m_pointsHistorical
+                Return m_pointsHistoric
             End Get
         End Property
 
@@ -329,13 +330,16 @@ Namespace Files
                     If Not m_stateFile.IsOpen Then m_stateFile.Open()
                     If Not m_intercomFile.IsOpen Then m_intercomFile.Open()
 
-                    m_dataBlockList = New List(Of ArchiveDataBlock)(CreateArray(Of ArchiveDataBlock)(m_stateFile.Records.Count))
+                    ' This intercom message will be used for communicating with DW Server.
+                    m_environmentData = m_intercomFile.Read(1)
+
+                    m_dataBlockList = New List(Of ArchiveDataBlock)(CreateArray(Of ArchiveDataBlock)(m_stateFile.InMemoryRecordCount))
 
                     If m_type = ArchiveFileType.Active Then
                         ' We'll make sure that the intercom file has the right information. This is done to ensure
                         ' that the server is able to read this file because the server will not read the "active"
                         ' archive file if the file is being rolled over.
-                        m_intercomFile.Records(0).RolloverInProgress = False
+                        m_environmentData.RolloverInProgress = False
 
                         ' Start preparing the list of historic files on a seperate thread.
                         m_buildHistoricFileListThread = New Thread(AddressOf BuildHistoricFileList)
@@ -355,7 +359,7 @@ Namespace Files
                             ' of the latest value from the intercom file. This latest value timetag will be 0 only 
                             ' when the archiver is being run for the first time and if that's the case, the file's 
                             ' start time will be set when the very first point data is written.
-                            m_fat.FileStartTime = m_intercomFile.Records(0).LastestCurrentValueTimeTag
+                            m_fat.FileStartTime = m_environmentData.LastestCurrentValueTimeTag
                         End If
                     End If
 
@@ -418,8 +422,9 @@ Namespace Files
 
                 m_pointsDiscarded = 0
                 m_pointsCompressed = 0
-                m_pointsHistorical = 0
+                m_pointsHistoric = 0
                 m_pointsOutOfSequence = 0
+                m_environmentData = Nothing
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
             End If
@@ -450,7 +455,7 @@ Namespace Files
                     Dim standbyFileName As String = StandbyArchiveFileName
 
                     ' Notify DW Server that rollover is in progress.
-                    m_intercomFile.Records(0).RolloverInProgress = True
+                    m_environmentData.RolloverInProgress = True
                     m_intercomFile.Save()
                     Close()
 
@@ -480,7 +485,7 @@ Namespace Files
                     Try
                         Open()
                         ' Notify DW Server that rollover is complete.
-                        m_intercomFile.Records(0).RolloverInProgress = False
+                        m_environmentData.RolloverInProgress = False
                         m_intercomFile.Save()
 
                         ' Notify other threads that rollover is complete.
@@ -493,7 +498,7 @@ Namespace Files
                         Throw   ' Rethrow the exception so that the exception event can be raised.
                     End Try
                 Catch ex As Exception
-                    RaiseEvent RolloverException(Me, New ExceptionEventArgs(ex))
+                    RaiseEvent RolloverException(Me, New GenericEventArgs(Of Exception)(ex))
                 End Try
             End If
 
@@ -510,24 +515,42 @@ Namespace Files
 
                 m_fat.PointsReceived += 1
 
-                If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
-                    ' The data belongs to this file.
+                If pointData.Definition IsNot Nothing AndAlso pointData.Definition.GeneralFlags.Archived Then
+                    ' The received data has a corresponding definition and is marked for archival.
                     Dim pointID As Integer = pointData.Definition.PointID
                     Dim pointIndex As Integer = pointID - 1
                     Dim pointState As PointState = m_stateFile.Read(pointID)
-                    If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
-                        ' The data is in sequence.
-                        RaiseEvent CurrentPointReceived(Me, EventArgs.Empty)
+                    If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
+                        ' The data belongs to this file.
+                        If pointData.TimeTag.CompareTo(PointState.LastArchivedValue.TimeTag) >= 0 Then
+                            ' The data is in sequence.
+                            RaiseEvent CurrentPointReceived(Me, EventArgs.Empty)
 
-                        If pointData.Definition IsNot Nothing AndAlso pointData.Definition.GeneralFlags.Archived Then
-                            ' The received data has a corresponding definition and is marked for archival.
-                            If ToBeArchived(pointData, pointState) Then
+                            If ToBeArchived(pointData, PointState) Then
                                 ' Data failed compression test - write it to current file.
+
+                                If m_dataBlockList(pointIndex) Is Nothing Then
+                                    ' This is the first time we're writing data for this point since this file opened,
+                                    ' so we'll check if this point's data has been written in this file previously. We
+                                    ' do so by requesting the last data block for this point and scanning it if one is
+                                    ' found. The result of the code below can be wither one of the following:
+                                    ' 1) No data block is found - Data for this point has never been written to this 
+                                    '    file previously. 
+                                    ' 2) Data block is found but full - Data for this point has been written to this
+                                    '    file previously.
+                                    ' 3) Data block is found and not full - Data for this point has been written to 
+                                    '    this file previously.
+                                    m_dataBlockList(pointIndex) = m_fat.FindLastDataBlock(pointID)
+                                    If m_dataBlockList(pointIndex) IsNot Nothing Then
+                                        m_dataBlockList(pointIndex).Scan()
+                                    End If
+                                End If
+
                                 If m_dataBlockList(pointIndex) Is Nothing OrElse _
                                         (m_dataBlockList(pointIndex) IsNot Nothing AndAlso m_dataBlockList(pointIndex).SlotsAvailable <= 0) Then
-                                    ' We either don't have a active data block where we can archive the point data or we 
-                                    ' have a active data block but it is full. So, we have to request a new data block 
-                                    ' from the FAT in order to write the data.
+                                    ' We either don't have a active data block where we can archive the point data or 
+                                    ' we have a active data block but it is full. So, we have to request a new data 
+                                    ' block from the FAT in order to write the data.
 
                                     If m_dataBlockList(pointIndex) IsNot Nothing Then
                                         ' Release the previously used data block before requesting a new one.
@@ -541,9 +564,9 @@ Namespace Files
 
                                             If Not File.Exists(StandbyArchiveFileName) AndAlso Not m_rolloverPreparationThread.IsAlive AndAlso _
                                                     m_fat.DataBlocksAvailable < m_fat.DataBlockCount * (1 - (m_rolloverPreparationThreshold / 100)) Then
-                                                ' We've requested the specified percent of the total number of data blocks 
-                                                ' in the file, so we must now prepare for the rollover process since it 
-                                                ' has not been done yet and it is not already in progress.
+                                                ' We've requested the specified percent of the total number of data 
+                                                ' blocks in the file, so we must now prepare for the rollover process 
+                                                ' since it has not been done yet and it is not already in progress.
                                                 m_rolloverPreparationThread = New Thread(AddressOf PrepareForRollover)
                                                 m_rolloverPreparationThread.Priority = ThreadPriority.Lowest
                                                 m_rolloverPreparationThread.Start()
@@ -579,31 +602,31 @@ Namespace Files
                                 RaiseEvent CurrentPointCompressed(Me, EventArgs.Empty)
                             End If
                         Else
-                            ' We'll discard the data if it doesn't has a corresponding definition or is not
-                            ' marked for archival in the metadata file.
-                            m_pointsDiscarded += 1
-                            RaiseEvent CurrentPointDiscarded(Me, EventArgs.Empty)
+                            ' The data is out-of-sequence.
+                            m_pointsOutOfSequence += 1
+                            RaiseEvent OutOfSequencePointReceived(Me, New GenericEventArgs(Of Integer)(pointID))
+                            If Not m_discardOutOfSequencePoints Then
+                                ' Insert the data into the current file.
+                                m_outOfSequenceDataQueue.Add(pointData)
+                                RaiseEvent OutOfSequencePointQueued(Me, EventArgs.Empty)
+                            Else
+                                RaiseEvent OutOfSequencePointDiscarded(Me, EventArgs.Empty)
+                            End If
                         End If
                     Else
-                        ' The data is out-of-sequence.
-                        m_pointsOutOfSequence += 1
-                        RaiseEvent OutOfSequencePointReceived(Me, EventArgs.Empty)
-                        If Not m_discardOutOfSequencePoints Then
-                            ' Insert the data into the current file.
-                            m_outOfSequenceDataQueue.Add(pointData)
-                            RaiseEvent OutOfSequencePointQueued(Me, EventArgs.Empty)
-                        Else
-                            RaiseEvent OutOfSequencePointDiscarded(Me, EventArgs.Empty)
+                        ' The data is historic.
+                        m_pointsHistoric += 1
+                        RaiseEvent HistoricPointReceived(Me, New GenericEventArgs(Of Integer)(pointID))
+                        If m_type = ArchiveFileType.Active Then
+                            m_historicDataQueue.Add(pointData)
+                            RaiseEvent HistoricPointQueued(Me, EventArgs.Empty)
                         End If
                     End If
                 Else
-                    ' The data is historic.
-                    m_pointsHistorical += 1
-                    RaiseEvent HistoricPointReceived(Me, EventArgs.Empty)
-                    If m_type = ArchiveFileType.Active Then
-                        m_historicDataQueue.Add(pointData)
-                        RaiseEvent HistoricPointQueued(Me, EventArgs.Empty)
-                    End If
+                    ' We'll discard the data if it doesn't has a corresponding definition or is not
+                    ' marked for archival in the metadata file.
+                    m_pointsDiscarded += 1
+                    RaiseEvent CurrentPointDiscarded(Me, EventArgs.Empty)
                 End If
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
@@ -890,7 +913,7 @@ Namespace Files
             Catch ex As ThreadAbortException
                 ' This thread must die now...
             Catch ex As Exception
-                RaiseEvent HistoricFileListBuildException(Me, New ExceptionEventArgs(ex))
+                RaiseEvent HistoricFileListBuildException(Me, New GenericEventArgs(Of Exception)(ex))
             End Try
 
         End Sub
@@ -935,7 +958,7 @@ Namespace Files
             Catch ex As ThreadAbortException
                 ' This thread must die now...
             Catch ex As Exception
-                RaiseEvent RolloverPreparationException(Me, New ExceptionEventArgs(ex))
+                RaiseEvent RolloverPreparationException(Me, New GenericEventArgs(Of Exception)(ex))
             End Try
 
         End Sub
@@ -964,8 +987,13 @@ Namespace Files
                     ' We'll offload the specified number of oldest historic files to the offload location if the 
                     ' number of historic files is more than the offload count or all of the historic files if the 
                     ' offload count is smaller the available number of historic files.
-                    Dim offloadCount As Integer = IIf(newHistoricFiles.Count < m_offloadCount, newHistoricFiles.Count, m_offloadCount)
-                    For i As Integer = 0 To offloadCount - 1
+                    Dim offloadProgress As New ProcessProgress(Of Integer)("FileOffload")
+                    offloadProgress.Total = IIf(newHistoricFiles.Count < m_offloadCount, newHistoricFiles.Count, m_offloadCount)
+                    For i As Integer = 0 To offloadProgress.Total - 1
+                        offloadProgress.ProgressMessage = JustFileName(newHistoricFiles(i).FileName)
+
+                        RaiseEvent OffloadProgress(Me, New GenericEventArgs(Of ProcessProgress(Of Integer))(offloadProgress))
+
                         Dim destinationFileName As String = AddPathSuffix(m_offloadPath) & JustFileName(newHistoricFiles(i).FileName)
                         If File.Exists(destinationFileName) Then
                             ' Delete the destination file is it already exists.
@@ -974,14 +1002,14 @@ Namespace Files
 
                         File.Move(newHistoricFiles(i).FileName, destinationFileName)
 
-                        RaiseEvent OffloadProgress(Me, New ProgressEventArgs(Of Integer)(offloadCount, i + 1))
+                        offloadProgress.Complete += 1
                     Next
 
                     RaiseEvent OffloadComplete(Me, EventArgs.Empty)
                 Catch ex As ThreadAbortException
                     Throw ' Bubble up the ThreadAbortException.
                 Catch ex As Exception
-                    RaiseEvent OffloadException(Me, New ExceptionEventArgs(ex))
+                    RaiseEvent OffloadException(Me, New GenericEventArgs(Of Exception)(ex))
                 End Try
             End If
 
@@ -1050,9 +1078,6 @@ Namespace Files
 
             If pointData.Definition.GeneralFlags.PointType = PointType.Digital Then compressionLimit = 0.000000001
 
-            'pointState.PreviousValue = pointState.CurrentValue  ' Promote old CurrentValue to PreviousValue.
-            'pointState.CurrentValue = pointData.ToExtended()    ' Promote new value received to CurrentValue.
-
             If pointData.Quality = 31 Then
                 ' We have to check the quality of this data since the sender didn't provide it. Here we're 
                 ' checking if the Quality is 31 instead of -1 because the quality value is stored in the first
@@ -1091,8 +1116,8 @@ Namespace Files
                 .CurrentValue = pointData.ToExtended()
 
                 ' Update the environment data that is periodically written to the Intercom File.
-                m_intercomFile.Records(0).LastestCurrentValueTimeTag = .CurrentValue.TimeTag
-                m_intercomFile.Records(0).LatestCurrentValuePointID = .CurrentValue.Definition.PointID
+                m_environmentData.LastestCurrentValueTimeTag = .CurrentValue.TimeTag
+                m_environmentData.LatestCurrentValuePointID = .CurrentValue.Definition.PointID
 
                 If .LastArchivedValue.IsEmpty Then
                     ' This is the first time data is received for the point.
@@ -1213,7 +1238,8 @@ Namespace Files
                 End If
             Next
 
-            Dim progressCount As Integer = 0
+            Dim historicWriteProgress As New ProcessProgress(Of Integer)("HistoricWrite")
+            historicWriteProgress.Total = sortedPointData.Count
             For Each pointID As Integer In sortedPointData.Keys
                 ' We'll sort the point data for the current point ID by time.
                 sortedPointData(pointID).Sort()
@@ -1259,12 +1285,15 @@ Namespace Files
                             historicArchiveFile.StateFile = m_stateFile
                             historicArchiveFile.IntercomFile = m_intercomFile
                             Try
+                                historicWriteProgress.ProgressMessage = pointID.ToString()
+
+                                RaiseEvent HistoricPointsWriteProgress(Me, New GenericEventArgs(Of ProcessProgress(Of Integer))(historicWriteProgress))
+
                                 ' Write all data to the historic file in which it belongs.
                                 historicArchiveFile.Open()
                                 historicArchiveFile.Write(pointData.ToArray())
-                                progressCount += 1
 
-                                RaiseEvent HistoricPointsWriteProgress(Me, New ProgressEventArgs(Of Integer)(sortedPointData.Count, progressCount))
+                                historicWriteProgress.Complete += 1
                             Catch ex As Exception
 
                             Finally
@@ -1296,7 +1325,7 @@ Namespace Files
 
         Private Sub m_historicDataQueue_ProcessException(ByVal ex As System.Exception) Handles m_historicDataQueue.ProcessException
 
-            RaiseEvent HistoricPointsWriteException(Me, New ExceptionEventArgs(ex))
+            RaiseEvent HistoricPointsWriteException(Me, New GenericEventArgs(Of Exception)(ex))
 
         End Sub
 
@@ -1306,7 +1335,7 @@ Namespace Files
 
         Private Sub m_outOfSequenceDataQueue_ProcessException(ByVal ex As System.Exception) Handles m_outOfSequenceDataQueue.ProcessException
 
-            RaiseEvent OutOfSequencePointsWriteException(Me, New ExceptionEventArgs(ex))
+            RaiseEvent OutOfSequencePointsWriteException(Me, New GenericEventArgs(Of Exception)(ex))
 
         End Sub
 

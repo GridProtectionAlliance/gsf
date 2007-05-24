@@ -23,6 +23,7 @@ Imports System.Threading
 Imports System.ComponentModel
 Imports TVA.Common
 Imports TVA.IO.Common
+Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a File-based communication client.
@@ -307,7 +308,7 @@ Public Class FileClient
                 Exit Do ' We must abort connecting to the file.
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts + 1))
+                OnConnectingException(ex)
             End Try
         Loop
 

@@ -27,6 +27,7 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Security.Cryptography.Common
+Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a TCP-based communication server.
@@ -256,11 +257,11 @@ Public Class TcpServer
         Catch ex As SocketException
             If ex.SocketErrorCode <> SocketError.Interrupted Then
                 ' If we encounter a socket exception other than SocketError.Interrupt, we'll report it as an exception.
-                OnServerStartupException(New ExceptionEventArgs(ex))
+                OnServerStartupException(ex)
             End If
         Catch ex As Exception
             ' We will gracefully exit when an exception occurs.
-            OnServerStartupException(New ExceptionEventArgs(ex))
+            OnServerStartupException(ex)
         Finally
             If m_tcpServer IsNot Nothing Then
                 m_tcpServer.Close()

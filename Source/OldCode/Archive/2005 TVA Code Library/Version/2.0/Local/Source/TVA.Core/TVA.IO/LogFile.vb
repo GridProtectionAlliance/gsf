@@ -67,7 +67,7 @@ Namespace IO
         ''' Occurs when an exception is encountered while writing entries to the log file.
         ''' </summary>
         <Description("Occurs when an exception is encountered while writing entries to the log file.")> _
-        Public Event LogException As EventHandler(Of ExceptionEventArgs)
+        Public Event LogException As EventHandler(Of GenericEventArgs(Of Exception))
 
 #End Region
 
@@ -475,7 +475,7 @@ Namespace IO
 
         Private Sub m_logEntryQueue_ProcessException(ByVal ex As System.Exception) Handles m_logEntryQueue.ProcessException
 
-            RaiseEvent LogException(Me, New ExceptionEventArgs(ex))
+            RaiseEvent LogException(Me, New GenericEventArgs(Of Exception)(ex))
 
         End Sub
 

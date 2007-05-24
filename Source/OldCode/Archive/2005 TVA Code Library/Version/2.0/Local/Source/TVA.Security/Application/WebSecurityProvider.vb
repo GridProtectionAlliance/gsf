@@ -314,7 +314,7 @@ Namespace Application
 
         End Function
 
-        Private Sub WebSecurityProvider_DbConnectionException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles Me.DbConnectionException
+        Private Sub WebSecurityProvider_DbConnectionException(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Exception)) Handles Me.DbConnectionException
 
             If m_parent IsNot Nothing Then
                 With New StringBuilder()

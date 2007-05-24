@@ -17,7 +17,10 @@
 '  01/31/2007 - J. Ritchie Carroll
 '       Added TCP "server" support to allow listening connections from devices that act as data
 '       clients, e.g., FNET devices
-'
+'  05/23/2007 - Pinal C. Patel
+'       Added member variable 'm_clientConnectionAttempts' to track the number of attempts made for 
+'       connecting to the server since this information is no longer provided by the event raised by 
+'       any of the Communication Client components
 '*******************************************************************************************************
 
 Imports System.IO
@@ -99,6 +102,7 @@ Namespace Phasors
         Private m_deviceSupportsCommands As Boolean
         Private m_enabled As Boolean
         Private m_connectionParameters As IConnectionParameters
+        Private m_clientConnectionAttempts As Integer
 
 #End Region
 
@@ -333,6 +337,7 @@ Namespace Phasors
                         .Handshake = False
                         .Connect()
                     End With
+                    m_clientConnectionAttempts = 0
                 ElseIf m_communicationServer IsNot Nothing Then
                     ' Listening for device connection
                     With m_communicationServer
@@ -686,13 +691,14 @@ Namespace Phasors
 
         Private Sub m_communicationClient_Connecting(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_communicationClient.Connecting
 
+            m_clientConnectionAttempts += 1
             RaiseEvent AttemptingConnection()
 
         End Sub
 
-        Private Sub m_communicationClient_ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles m_communicationClient.ConnectingException
+        Private Sub m_communicationClient_ConnectingException(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Exception)) Handles m_communicationClient.ConnectingException
 
-            RaiseEvent ConnectionException(e.Exception, e.OccurrenceCount)
+            RaiseEvent ConnectionException(e.Argument, m_clientConnectionAttempts)
 
         End Sub
 
@@ -731,9 +737,9 @@ Namespace Phasors
 
         End Sub
 
-        Private Sub m_communicationServer_ServerStartupException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Handles m_communicationServer.ServerStartupException
+        Private Sub m_communicationServer_ServerStartupException(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Exception)) Handles m_communicationServer.ServerStartupException
 
-            RaiseEvent ConnectionException(e.Exception, e.OccurrenceCount)
+            RaiseEvent ConnectionException(e.Argument, 1)
 
         End Sub
 

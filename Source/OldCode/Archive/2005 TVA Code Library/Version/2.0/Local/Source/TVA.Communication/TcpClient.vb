@@ -26,6 +26,7 @@ Imports System.Threading
 Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
+Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a TCP-based communication client.
@@ -254,7 +255,7 @@ Public Class TcpClient
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts))
+                OnConnectingException(ex)
             End Try
         Loop
 

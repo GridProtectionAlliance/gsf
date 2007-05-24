@@ -3,6 +3,7 @@
 Option Strict On
 
 Imports System.IO
+Imports System.Threading
 Imports System.ComponentModel
 Imports TVA.IO.FilePath
 
@@ -17,18 +18,17 @@ Namespace IO
         Private m_loadOnOpen As Boolean
         Private m_reloadOnModify As Boolean
         Private m_saveOnClose As Boolean
-        Private m_alignOnSave As Boolean
         Private m_autoSaveInterval As Integer
-        Private m_autoAlignInterval As Integer
         Private m_minimumRecordCount As Integer
-        Private m_fileRecords As List(Of T)
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
 
         Private m_fileStream As FileStream
+        Private m_fileRecords As List(Of T)
+        Private m_loadWaitHandle As ManualResetEvent
+        Private m_saveWaitHandle As ManualResetEvent
 
         Private WithEvents m_autoSaveTimer As System.Timers.Timer
-        Private WithEvents m_autoAnalyzeTimer As System.Timers.Timer
 
 #End Region
 
@@ -39,15 +39,16 @@ Namespace IO
         Public Event FileClosing As EventHandler
         Public Event FileClosed As EventHandler
         Public Event FileModified As EventHandler
-        Public Event DataLoadStart As EventHandler
-        Public Event DataLoadComplete As EventHandler
-        Public Event DataLoadProgress As EventHandler(Of ProgressEventArgs(Of Integer))
-        Public Event DataSaveStart As EventHandler
-        Public Event DataSaveComplete As EventHandler
-        Public Event DataSaveProgress As EventHandler(Of ProgressEventArgs(Of Integer))
-        Public Event DataAlignStart As EventHandler
-        Public Event DataAlignComplete As EventHandler
-        Public Event DataAlignProgress As EventHandler(Of ProgressEventArgs(Of Integer))
+        Public Event DataLoading As EventHandler
+        Public Event DataLoaded As EventHandler
+        Public Event DataSaving As EventHandler
+        Public Event DataSaved As EventHandler
+        Public Event DataReadStart As EventHandler
+        Public Event DataReadComplete As EventHandler
+        Public Event DataReadProgress As EventHandler(Of GenericEventArgs(Of ProcessProgress(Of Integer)))
+        Public Event DataWriteStart As EventHandler
+        Public Event DataWriteComplete As EventHandler
+        Public Event DataWriteProgress As EventHandler(Of GenericEventArgs(Of ProcessProgress(Of Integer)))
 
 #End Region
 
@@ -103,30 +104,12 @@ Namespace IO
             End Set
         End Property
 
-        Public Property AlignOnSave() As Boolean
-            Get
-                Return m_alignOnSave
-            End Get
-            Set(ByVal value As Boolean)
-                m_alignOnSave = value
-            End Set
-        End Property
-
         Public Property AutoSaveInterval() As Integer
             Get
                 Return m_autoSaveInterval
             End Get
             Set(ByVal value As Integer)
                 m_autoSaveInterval = value
-            End Set
-        End Property
-
-        Public Property AutoAlignInterval() As Integer
-            Get
-                Return m_autoAlignInterval
-            End Get
-            Set(ByVal value As Integer)
-                m_autoAlignInterval = value
             End Set
         End Property
 
@@ -147,9 +130,65 @@ Namespace IO
         End Property
 
         <Browsable(False)> _
-        Public ReadOnly Property Records() As List(Of T)
+        Public ReadOnly Property IsCorrupt() As Boolean
             Get
-                Return m_fileRecords
+                If IsOpen Then
+                    Dim fileLength As Long
+                    SyncLock m_fileStream
+                        fileLength = m_fileStream.Length
+                    End SyncLock
+                    Return (fileLength Mod RecordSize <> 0)
+                Else
+                    Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+                End If
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property IsSynchronized() As Boolean
+            Get
+                Return InMemoryRecordCount = PersistedRecordCount
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>In KB</remarks>
+        <Browsable(False)> _
+        Public ReadOnly Property MemoryUsage() As Long
+            Get
+                Return InMemoryRecordCount * RecordSize \ 1024
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property InMemoryRecordCount() As Integer
+            Get
+                Dim recordCount As Integer = 0
+                If m_fileRecords IsNot Nothing Then
+                    SyncLock m_fileRecords
+                        recordCount = m_fileRecords.Count
+                    End SyncLock
+                End If
+                Return recordCount
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property PersistedRecordCount() As Integer
+            Get
+                If IsOpen Then
+                    Dim fileLength As Long
+                    SyncLock m_fileStream
+                        fileLength = m_fileStream.Length
+                    End SyncLock
+                    Return Convert.ToInt32(fileLength \ RecordSize)
+                Else
+                    Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+                End If
             End Get
         End Property
 
@@ -158,34 +197,17 @@ Namespace IO
             If Not IsOpen Then
                 RaiseEvent FileOpening(Me, EventArgs.Empty)
 
-                ' Initialize the list that will hold the file records in memory.
-                m_fileRecords = New List(Of T)()
-
                 m_name = AbsolutePath(m_name)
                 If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                 If File.Exists(m_name) Then
                     ' File exists, so we'll open it.
                     m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
-
-                    ' Once we have the file open, we'll process the file data.
-                    If m_fileStream.Length Mod RecordSize = 0 Then
-                        ' The file we're working with is a valid one.
-                        If m_loadOnOpen Then Load()
-                    Else
-                        Close(False)
-                        Throw New InvalidOperationException(String.Format("File """"{0}"""" is corrupt.", m_name))
-                    End If
                 Else
                     ' File doesn't exist, so we'll create it.
                     m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
-
-                    ' Since we're working with a new file, we'll populate the in-memory list of records with the default
-                    ' number of records as per the settings. These points will be witten back to the file when Save() is 
-                    ' called or Close() is called and SaveOnClose is set to True.
-                    For i As Integer = 1 To m_minimumRecordCount
-                        m_fileRecords.Add(NewRecord(i))
-                    Next
                 End If
+
+                If m_loadOnOpen Then Load()
 
                 If m_reloadOnModify Then
                     ' Watch for any modifications made to the file.
@@ -193,15 +215,11 @@ Namespace IO
                     FileSystemWatcher.Filter = JustFileName(m_name)
                     FileSystemWatcher.EnableRaisingEvents = True
                 End If
+
                 If m_autoSaveInterval > 0 Then
                     ' Start the timer for saving data automatically.
                     m_autoSaveTimer.Interval = m_autoSaveInterval
                     m_autoSaveTimer.Start()
-                End If
-                If m_autoAlignInterval > 0 Then
-                    ' Start the timer for aligning data automatically.
-                    m_autoAnalyzeTimer.Interval = m_autoAlignInterval
-                    m_autoAnalyzeTimer.Start()
                 End If
 
                 RaiseEvent FileOpened(Me, EventArgs.Empty)
@@ -211,29 +229,30 @@ Namespace IO
 
         Public Sub Close()
 
-            Close(m_saveOnClose)
-
-        End Sub
-
-        Public Sub Close(ByVal saveFile As Boolean)
-
             If IsOpen Then
                 RaiseEvent FileClosing(Me, EventArgs.Empty)
 
                 ' Stop the timers if they are ticking.
                 m_autoSaveTimer.Stop()
-                m_autoAnalyzeTimer.Stop()
 
                 ' Stop monitoring for changes to the file.
                 FileSystemWatcher.EnableRaisingEvents = False
 
                 ' Save records back to the file if specified.
-                If saveFile Then Save()
+                If m_saveOnClose Then Save()
 
                 ' Release all of the used resources.
-                m_fileStream.Dispose()
+                If m_fileStream IsNot Nothing Then
+                    SyncLock m_fileStream
+                        m_fileStream.Dispose()
+                    End SyncLock
+                End If
                 m_fileStream = Nothing
-                m_fileRecords.Clear()
+                If m_fileRecords IsNot Nothing Then
+                    SyncLock m_fileRecords
+                        m_fileRecords.Clear()
+                    End SyncLock
+                End If
                 m_fileRecords = Nothing
 
                 RaiseEvent FileClosed(Me, EventArgs.Empty)
@@ -244,28 +263,37 @@ Namespace IO
         Public Sub Load()
 
             If IsOpen Then
-                RaiseEvent DataLoadStart(Me, EventArgs.Empty)
+                ' We'll wait any pending request to save records to finish executing.
+                m_saveWaitHandle.WaitOne()
+                ' We wait for any prior request to loading records to finish executing.
+                m_loadWaitHandle.WaitOne()
 
-                Dim binaryImage As Byte() = TVA.Common.CreateArray(Of Byte)(RecordSize)
-                Dim recordCount As Integer = Convert.ToInt32(m_fileStream.Length \ binaryImage.Length)
+                m_loadWaitHandle.Reset()
+                Try
+                    RaiseEvent DataLoading(Me, EventArgs.Empty)
 
-                m_fileRecords.Clear()
-                ' Create records from the data in the file.
-                For i As Integer = 1 To recordCount
-                    SyncLock m_fileStream
-                        m_fileStream.Read(binaryImage, 0, binaryImage.Length)
-                        m_fileRecords.Add(NewRecord(i, binaryImage))
+                    If m_fileRecords Is Nothing Then
+                        m_fileRecords = New List(Of T)()
+                    End If
+
+                    Dim records As New List(Of T)(ReadFromDisk())
+
+                    ' Make sure that we have the minimum number of records specified.
+                    For i As Integer = records.Count + 1 To m_minimumRecordCount
+                        records.Add(NewRecord(i))
+                    Next
+
+                    SyncLock m_fileRecords
+                        m_fileRecords.Clear()
+                        m_fileRecords.InsertRange(0, records)
                     End SyncLock
 
-                    RaiseEvent DataLoadProgress(Me, New ProgressEventArgs(Of Integer)(recordCount, i))
-                Next
-
-                ' Make sure that we have the minimum number of records specified.
-                For i As Integer = m_fileRecords.Count + 1 To m_minimumRecordCount
-                    m_fileRecords.Add(NewRecord(i))
-                Next
-
-                RaiseEvent DataLoadComplete(Me, EventArgs.Empty)
+                    RaiseEvent DataLoaded(Me, EventArgs.Empty)
+                Catch ex As Exception
+                    Throw
+                Finally
+                    m_loadWaitHandle.Set()
+                End Try
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
@@ -275,101 +303,82 @@ Namespace IO
         Public Sub Save()
 
             If IsOpen Then
-                ' Align the records before writing them to the file if specified.
-                If m_alignOnSave Then Align()
+                ' We'll wait any pending request to save records to finish executing.
+                m_saveWaitHandle.WaitOne()
+                ' We wait for any prior request to loading records to finish executing.
+                m_loadWaitHandle.WaitOne()
 
-                RaiseEvent DataSaveStart(Me, EventArgs.Empty)
+                m_saveWaitHandle.Reset()
+                Try
+                    RaiseEvent DataSaving(Me, EventArgs.Empty)
 
-                ' Set the cursor to BOF before we start writing to the file.
-                SyncLock m_fileStream
-                    m_fileStream.Seek(0, SeekOrigin.Begin)
-                End SyncLock
+                    ' We have to save (persist) records to the file only if we have them in memory.
+                    If m_fileRecords IsNot Nothing Then
+                        SyncLock m_fileRecords
+                            WriteToDisk(m_fileRecords)
+                        End SyncLock
+                        If InMemoryRecordCount < PersistedRecordCount Then
+                            SyncLock m_fileStream
+                                m_fileStream.SetLength(InMemoryRecordCount * RecordSize)
+                            End SyncLock
+                        End If
+                    End If
 
-                ' Write all of the records to the file.
-                For i As Integer = 0 To m_fileRecords.Count - 1
-                    SyncLock m_fileStream
-                        m_fileStream.Write(m_fileRecords(i).BinaryImage, 0, RecordSize)
-                    End SyncLock
-
-                    RaiseEvent DataSaveProgress(Me, New ProgressEventArgs(Of Integer)(m_fileRecords.Count, i + 1))
-                Next
-                m_fileStream.Flush()    ' Ensure that the data is written to the file.
-
-                RaiseEvent DataSaveComplete(Me, EventArgs.Empty)
+                    RaiseEvent DataSaved(Me, EventArgs.Empty)
+                Catch ex As Exception
+                    Throw
+                Finally
+                    m_saveWaitHandle.Set()
+                End Try
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
 
         End Sub
 
-        Public Sub Align()
-
-            If m_fileRecords IsNot Nothing AndAlso m_fileRecords.Count > 0 Then
-                ' We can proceed with aligning the records since they have been initialized.
-                ' First, we'll make a working copy of the records.
-
-                RaiseEvent DataAlignStart(Me, EventArgs.Empty)
-
-                Dim nonAlignedRecords As New List(Of T)(m_fileRecords)
-                ' Sorting will ensure that the records are in proper order.
-                nonAlignedRecords.Sort()
-                ' Clear the actual record list.
-                m_fileRecords.Clear()
-                For i As Integer = 0 To nonAlignedRecords.Count - 1
-                    ' We'll use the Write() method for adding records, so that we make use of any special record 
-                    ' alignment that may be performed in deriving classes.
-                    Write(nonAlignedRecords(i))
-
-                    RaiseEvent DataAlignProgress(Me, New ProgressEventArgs(Of Integer)(nonAlignedRecords.Count, i + 1))
-                Next
-
-                RaiseEvent DataAlignComplete(Me, EventArgs.Empty)
-            End If
-
-        End Sub
-
-        Public Overridable Function Read() As List(Of T)
+        Public Overridable Sub Write(ByVal records As List(Of T))
 
             If IsOpen Then
-                ' We'll load records from the file if they have not been loaded already.
-                If Not m_loadOnOpen AndAlso m_fileRecords.Count = 0 Then Load()
-
-                Return m_fileRecords
-            Else
-                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
-            End If
-
-        End Function
-
-        Public Overridable Function Read(ByVal id As Integer) As T
-
-            If IsOpen Then
-                ' We'll load records from the file if they have not been loaded already.
-                If Not m_loadOnOpen AndAlso m_fileRecords.Count = 0 Then Load()
-
-                If id <= m_fileRecords.Count Then
-                    Return m_fileRecords(id - 1)
+                If m_fileRecords Is Nothing Then
+                    WriteToDisk(records)
                 Else
-                    Return Nothing
+                    SyncLock m_fileRecords
+                        m_fileRecords.Clear()
+                        m_fileRecords.InsertRange(0, records)
+                    End SyncLock
                 End If
             Else
                 Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
             End If
 
-        End Function
+        End Sub
 
-        Public Overridable Sub Write(ByVal record As T)
+        Public Overridable Sub Write(ByVal recordID As Integer, ByVal record As T)
 
             If IsOpen Then
                 If record IsNot Nothing Then
-                    ' Insert/Update the record in the in-memory list of records.
-                    Dim recordIndex As Integer = m_fileRecords.IndexOf(record)
-                    If recordIndex < 0 Then
-                        ' We have to add the record since it doesn't exist.
-                        m_fileRecords.Add(record)
+                    If m_fileRecords Is Nothing Then
+                        ' We're writing directly to the file.
+                        WriteToDisk(recordID, record)
                     Else
-                        ' We have to update the record since one already exists.
-                        m_fileRecords(recordIndex) = record
+                        ' We're updating the in-memory record list.
+                        Dim lastRecordID As Integer = InMemoryRecordCount
+                        If recordID > lastRecordID Then
+                            If recordID > lastRecordID + 1 Then
+                                For i As Integer = lastRecordID + 1 To recordID - 1
+                                    Write(i, NewRecord(i))
+                                Next
+                            End If
+
+                            SyncLock m_fileRecords
+                                m_fileRecords.Add(record)
+                            End SyncLock
+                        Else
+                            ' Update the existing record with the new one.
+                            SyncLock m_fileRecords
+                                m_fileRecords(recordID - 1) = record
+                            End SyncLock
+                        End If
                     End If
                 Else
                     Throw New ArgumentNullException("record")
@@ -379,6 +388,52 @@ Namespace IO
             End If
 
         End Sub
+
+        Public Overridable Function Read() As List(Of T)
+
+            If IsOpen Then
+                Dim records As New List(Of T)()
+
+                If m_fileRecords Is Nothing Then
+                    ' We don't have any records in memory so, we'll read the persisted records.
+                    records.InsertRange(0, ReadFromDisk())
+                Else
+                    ' We already have records in memory that were read earlier, so we'll just use them.
+                    SyncLock m_fileRecords
+                        records.InsertRange(0, m_fileRecords)
+                    End SyncLock
+                End If
+
+                Return records
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            End If
+
+        End Function
+
+        Public Overridable Function Read(ByVal recordID As Integer) As T
+
+            If IsOpen Then
+                Dim record As T = Nothing
+                If recordID > 0 Then
+                    ' ID of the requested record is valid.
+                    If m_fileRecords Is Nothing AndAlso recordID <= PersistedRecordCount Then
+                        ' The requested record exists in the file so we'll read it.
+                        record = ReadFromDisk(recordID)
+                    ElseIf m_fileRecords IsNot Nothing AndAlso recordID <= InMemoryRecordCount Then
+                        ' We have the request record in memory, so we'll just use it.
+                        SyncLock m_fileRecords
+                            record = m_fileRecords(recordID - 1)
+                        End SyncLock
+                    End If
+                End If
+
+                Return record
+            Else
+                Throw New InvalidOperationException(String.Format("{0} ""{1}"" is not open.", Me.GetType().Name, m_name))
+            End If
+
+        End Function
 
         <Browsable(False)> _
         Public MustOverride ReadOnly Property RecordSize() As Integer
@@ -422,9 +477,7 @@ Namespace IO
                         LoadOnOpen = .Item("LoadOnOpen").GetTypedValue(m_loadOnOpen)
                         ReloadOnModify = .Item("ReloadOnModify").GetTypedValue(m_reloadOnModify)
                         SaveOnClose = .Item("SaveOnClose").GetTypedValue(m_saveOnClose)
-                        AlignOnSave = .Item("AlignOnSave").GetTypedValue(m_alignOnSave)
                         AutoSaveInterval = .Item("AutoSaveInterval").GetTypedValue(m_autoSaveInterval)
-                        AutoAlignInterval = .Item("AutoAlignInterval").GetTypedValue(m_autoAlignInterval)
                         MinimumRecordCount = .Item("MinimumRecordCount").GetTypedValue(m_minimumRecordCount)
                     End If
                 End With
@@ -456,17 +509,9 @@ Namespace IO
                             .Value = m_saveOnClose.ToString()
                             .Description = "True if file is to be saved when closed; otherwise False."
                         End With
-                        With .Item("AlignOnSave", True)
-                            .Value = m_alignOnSave.ToString()
-                            .Description = "True if alignment of file data is to be performed before saving; otherwise False."
-                        End With
                         With .Item("AutoSaveInterval", True)
                             .Value = m_autoSaveInterval.ToString()
                             .Description = "Interval in milliseconds at which the file is to be saved automatically. A value of -1 indicates that automatic saving is disabled."
-                        End With
-                        With .Item("AutoAlignInterval", True)
-                            .Value = m_autoAlignInterval.ToString()
-                            .Description = "Interval in milliseconds at which the file data is to be aligned automatically. A value of -1 indicates that automatic alignment is disabled."
                         End With
                         With .Item("MinimumRecordCount", True)
                             .Value = m_minimumRecordCount.ToString()
@@ -507,6 +552,46 @@ Namespace IO
 
 #Region " Code Scope: Private "
 
+        Private Sub WriteToDisk(ByVal records As List(Of T))
+
+            For i As Integer = 1 To records.Count
+                WriteToDisk(i, records(i - 1))
+            Next
+
+        End Sub
+
+        Private Sub WriteToDisk(ByVal recordID As Integer, ByVal record As T)
+
+            SyncLock m_fileStream
+                m_fileStream.Seek((recordID - 1) * record.BinaryLength, SeekOrigin.Begin)
+                m_fileStream.Write(record.BinaryImage, 0, record.BinaryLength)
+                m_fileStream.Flush()
+            End SyncLock
+
+        End Sub
+
+        Private Function ReadFromDisk() As List(Of T)
+
+            Dim records As New List(Of T)()
+            Dim recordCount As Integer = PersistedRecordCount
+            For i As Integer = 1 To recordCount
+                records.Add(ReadFromDisk(i))
+            Next
+            Return records
+
+        End Function
+
+        Private Function ReadFromDisk(ByVal recordID As Integer) As T
+
+            Dim binaryImage As Byte() = TVA.Common.CreateArray(Of Byte)(RecordSize)
+            SyncLock m_fileStream
+                m_fileStream.Seek((recordID - 1) * RecordSize, SeekOrigin.Begin)
+                m_fileStream.Read(binaryImage, 0, binaryImage.Length)
+            End SyncLock
+            Return NewRecord(recordID, binaryImage)
+
+        End Function
+
 #Region " Event Handlers "
 
 #Region " m_autoSaveTimer "
@@ -519,16 +604,6 @@ Namespace IO
 
 #End Region
 
-#Region " m_autoAnalyzeTimer "
-
-        Private Sub m_autoAnalyzeTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_autoAnalyzeTimer.Elapsed
-
-            Align()   ' Automatically align the records in the list.
-
-        End Sub
-
-#End Region
-
 #Region " FileSystemWatcher "
 
         Private Sub FileSystemWatcher_Changed(ByVal sender As Object, ByVal e As System.IO.FileSystemEventArgs) Handles FileSystemWatcher.Changed
@@ -536,7 +611,7 @@ Namespace IO
             RaiseEvent FileModified(Me, EventArgs.Empty)
 
             ' Reload the file when it is modified externally, but only if it has been loaded once.
-            If m_fileRecords.Count > 0 Then Load()
+            If m_fileRecords IsNot Nothing AndAlso m_reloadOnModify Then Load()
 
         End Sub
 

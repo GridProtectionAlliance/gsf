@@ -38,7 +38,7 @@ Public Interface ICommunicationClient
     ''' <summary>
     ''' Occurs when an exception is encountered while connecting to the server.
     ''' </summary>
-    Event ConnectingException As EventHandler(Of ExceptionEventArgs)
+    Event ConnectingException As EventHandler(Of GenericEventArgs(Of Exception))
 
     ''' <summary>
     ''' Occurs when the client has successfully connected to the server.

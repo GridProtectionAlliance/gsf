@@ -128,7 +128,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TVA\Enumerations.vb" />
-    <Compile Include="TVA\ExceptionEventArgs.vb" />
     <Compile Include="TVA\GenericEventArgs.vb" />
     <Compile Include="TVA\IBinaryDataConsumer.vb" />
     <Compile Include="TVA\IBinaryDataProvider.vb" />
@@ -186,9 +185,9 @@
     <Compile Include="TVA.Xml\Common.vb" />
     <Compile Include="TVA\ByteEncoding.vb" />
     <Compile Include="TVA\IPersistSettings.vb" />
-    <Compile Include="TVA\ProgressEventArgs.vb" />
+    <Compile Include="TVA\ObjectState.vb" />
+    <Compile Include="TVA\ProcessProgress.vb" />
     <Compile Include="TVA\Serialization.vb" />
-    <Compile Include="TVA\ObjectStateChangedEventArgs.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="TVA.Collections\TVA.Collections.cd" />

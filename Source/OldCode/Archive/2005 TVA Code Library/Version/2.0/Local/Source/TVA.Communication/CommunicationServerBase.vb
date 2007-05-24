@@ -79,7 +79,7 @@ Public MustInherit Class CommunicationServerBase
     ''' Occurs when an exception is encountered while starting up the server.
     ''' </summary>
     <Description("Occurs when an exception is encountered while starting up the server."), Category("Server")> _
-    Public Event ServerStartupException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Implements ICommunicationServer.ServerStartupException
+    Public Event ServerStartupException(ByVal sender As Object, ByVal e As GenericEventArgs(Of Exception)) Implements ICommunicationServer.ServerStartupException
 
     ''' <summary>
     ''' Occurs when a client is connected to the server.
@@ -479,12 +479,14 @@ Public MustInherit Class CommunicationServerBase
             If size > 0 Then
                 Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
-                    'SendPreparedDataTo(clientID, dataToSend)
+                    ' PCP: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                    SendPreparedDataTo(clientID, dataToSend)
+
                     ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
                     '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
 
                     ' Begin sending data on a seperate thread.
-                    ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
+                    'ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
@@ -538,12 +540,14 @@ Public MustInherit Class CommunicationServerBase
                 Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
                     For Each clientID As Guid In m_clientIDs
-                        'SendPreparedDataTo(clientID, dataToSend)
+                        ' PCP: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                        SendPreparedDataTo(clientID, dataToSend)
+
                         ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
                         '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
 
                         ' Begin sending data on a seperate thread.
-                        ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
+                        'ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
                     Next
                 Else
                     ' Prepared data is too large to be sent.
@@ -796,9 +800,9 @@ Public MustInherit Class CommunicationServerBase
     ''' </summary>
     ''' <param name="e">A TVA.ExceptionEventArgs that contains the event data.</param>
     ''' <remarks>This method is to be called if the server throws an exception during startup.</remarks>
-    Protected Overridable Sub OnServerStartupException(ByVal e As ExceptionEventArgs)
+    Protected Overridable Sub OnServerStartupException(ByVal e As Exception)
 
-        RaiseEvent ServerStartupException(Me, e)
+        RaiseEvent ServerStartupException(Me, New GenericEventArgs(Of Exception)(e))
 
     End Sub
 
@@ -900,21 +904,21 @@ Public MustInherit Class CommunicationServerBase
 
 #Region " Code Scope: Private "
 
-    ''' <summary>
-    ''' This function proxies data to proper derived class function from thread pool.
-    ''' </summary>
-    ''' <param name="state"></param>
-    Private Sub SendPreparedDataTo(ByVal state As Object)
+    '''' <summary>
+    '''' This function proxies data to proper derived class function from thread pool.
+    '''' </summary>
+    '''' <param name="state"></param>
+    'Private Sub SendPreparedDataTo(ByVal state As Object)
 
-        Try
-            With DirectCast(state, Object())
-                SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
-            End With
-        Catch
-            ' We can safely ignore errors here
-        End Try
+    '    Try
+    '        With DirectCast(state, Object())
+    '            SendPreparedDataTo(DirectCast(.GetValue(0), Guid), DirectCast(.GetValue(1), Byte()))
+    '        End With
+    '    Catch
+    '        ' We can safely ignore errors here
+    '    End Try
 
-    End Sub
+    'End Sub
 
 #End Region
 

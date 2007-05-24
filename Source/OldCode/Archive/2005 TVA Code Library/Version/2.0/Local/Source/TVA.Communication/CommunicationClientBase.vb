@@ -82,7 +82,7 @@ Public MustInherit Class CommunicationClientBase
     ''' Occurs when an exception is encountered while connecting to the server.
     ''' </summary>
     <Description("Occurs when an exception occurs while connecting to the server."), Category("Connection")> _
-    Public Event ConnectingException(ByVal sender As Object, ByVal e As ExceptionEventArgs) Implements ICommunicationClient.ConnectingException
+    Public Event ConnectingException(ByVal sender As Object, ByVal e As GenericEventArgs(Of Exception)) Implements ICommunicationClient.ConnectingException
 
     ''' <summary>
     ''' Occurs when the client has successfully connected to the server.
@@ -559,12 +559,14 @@ Public MustInherit Class CommunicationClientBase
             If size > 0 Then
                 Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
-                    'SendPreparedData(dataToSend)
+                    ' PCP: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                    SendPreparedData(dataToSend)
+
                     ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
                     '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedData", dataToSend)
 
                     ' Begin sending data on a seperate thread.
-                    ThreadPool.QueueUserWorkItem(AddressOf SendPreparedData, dataToSend)
+                    'ThreadPool.QueueUserWorkItem(AddressOf SendPreparedData, dataToSend)
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
@@ -872,9 +874,9 @@ Public MustInherit Class CommunicationClientBase
     ''' This method is to be called when all attempts for connecting to the server have been made but failed 
     ''' due to exceptions.
     ''' </remarks>
-    Protected Overridable Sub OnConnectingException(ByVal e As ExceptionEventArgs)
+    Protected Overridable Sub OnConnectingException(ByVal e As Exception)
 
-        RaiseEvent ConnectingException(Me, e)
+        RaiseEvent ConnectingException(Me, New GenericEventArgs(Of Exception)(e))
 
     End Sub
 
@@ -1022,19 +1024,19 @@ Public MustInherit Class CommunicationClientBase
 
 #Region " Code Scope: Private "
 
-    ''' <summary>
-    ''' This function proxies data to proper derived class function from thread pool.
-    ''' </summary>
-    ''' <param name="state"></param>
-    Private Sub SendPreparedData(ByVal state As Object)
+    '''' <summary>
+    '''' This function proxies data to proper derived class function from thread pool.
+    '''' </summary>
+    '''' <param name="state"></param>
+    'Private Sub SendPreparedData(ByVal state As Object)
 
-        Try
-            SendPreparedData(DirectCast(state, Byte()))
-        Catch
-            ' We can safely ignore errors here
-        End Try
+    '    Try
+    '        SendPreparedData(DirectCast(state, Byte()))
+    '    Catch
+    '        ' We can safely ignore errors here
+    '    End Try
 
-    End Sub
+    'End Sub
 
 #End Region
 

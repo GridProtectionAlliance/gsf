@@ -22,14 +22,15 @@ Namespace IO
             InitializeComponent()
 
             m_name = Me.GetType().Name & Extension
-            m_minimumRecordCount = 100
+            m_minimumRecordCount = 0
             m_loadOnOpen = True
             m_reloadOnModify = True
             m_autoSaveInterval = -1
-            m_autoAlignInterval = -1
             m_settingsCategoryName = Me.GetType().Name
+
             m_autoSaveTimer = New System.Timers.Timer()
-            m_autoAnalyzeTimer = New System.Timers.Timer()
+            m_loadWaitHandle = New System.Threading.ManualResetEvent(True)
+            m_saveWaitHandle = New System.Threading.ManualResetEvent(True)
 
         End Sub
 

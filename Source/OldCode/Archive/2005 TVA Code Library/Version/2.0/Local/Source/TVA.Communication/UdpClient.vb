@@ -25,6 +25,7 @@ Imports System.ComponentModel
 Imports TVA.Common
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
+Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a UDP-based communication client.
@@ -380,7 +381,7 @@ Public Class UdpClient
                 Exit Do
             Catch ex As Exception
                 connectionAttempts += 1
-                OnConnectingException(New ExceptionEventArgs(ex, connectionAttempts))
+                OnConnectingException(ex)
             End Try
         Loop
 
@@ -448,7 +449,7 @@ Public Class UdpClient
                                     Case SocketError.ConnectionReset
                                         ' We'll encounter this exception when we try sending our information to the
                                         ' server and the server is unreachable (or not running). So, keep trying!
-                                        OnConnectingException(New ExceptionEventArgs(ex))
+                                        OnConnectingException(ex)
                                         Exit Do
                                     Case Else
                                         Throw
@@ -511,7 +512,7 @@ Public Class UdpClient
                                     Case SocketError.TimedOut
                                         HandleReceiveTimeout()
                                     Case SocketError.ConnectionReset
-                                        OnConnectingException(New ExceptionEventArgs(ex))
+                                        OnConnectingException(ex)
                                         Exit Do
                                     Case SocketError.MessageSize
                                         ' When in "PayloadAware" mode, we may by receving a payload broken down into
