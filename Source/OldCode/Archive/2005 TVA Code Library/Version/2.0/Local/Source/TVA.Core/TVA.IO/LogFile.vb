@@ -12,7 +12,7 @@ Imports TVA.IO.FilePath
 
 Namespace IO
 
-    <ToolboxBitmap(GetType(LogFile))> _
+    <ToolboxBitmap(GetType(LogFile)), DisplayName("Log File")> _
     Public Class LogFile
         Implements IPersistSettings, ISupportInitialize
 

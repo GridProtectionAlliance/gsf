@@ -12,7 +12,7 @@ Imports TVA.Security.Cryptography.Common
 
 Namespace Application
 
-    <ToolboxBitmap(GetType(WebSecurityProvider))> _
+    <ToolboxBitmap(GetType(WebSecurityProvider)), DisplayName("Web Security Provider")> _
     Public Class WebSecurityProvider
 
 #Region " Member Declaration "

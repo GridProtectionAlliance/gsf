@@ -32,6 +32,7 @@ Imports TVA.ErrorManagement
 ''' <summary>
 ''' Represents a TCP-based communication server.
 ''' </summary>
+<DisplayName("TCP Server")> _
 Public Class TcpServer
 
 #Region " Member Declaration "
@@ -445,5 +446,5 @@ Public Class TcpServer
     End Sub
 
 #End Region
-    
+
 End Class

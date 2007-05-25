@@ -20,6 +20,7 @@
 Imports System.Text
 Imports System.IO.Ports
 Imports System.Threading
+Imports System.ComponentModel
 Imports TVA.Common
 Imports TVA.IO.Common
 Imports TVA.ErrorManagement
@@ -27,6 +28,7 @@ Imports TVA.ErrorManagement
 ''' <summary>
 ''' Represents a serial port communication client.
 ''' </summary>
+<DisplayName("Serial Client")> _
 Public Class SerialClient
 
 #Region " Member Declaration "

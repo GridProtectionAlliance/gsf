@@ -9,7 +9,7 @@ Imports TVA.IO.FilePath
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(ArchiveFile)), DisplayName("DatAWare Archive File")> _
+    <ToolboxBitmap(GetType(ArchiveFile)), DisplayName("DW Archive File")> _
     Public Class ArchiveFile
         Implements IPersistSettings, ISupportInitialize
 
@@ -522,11 +522,11 @@ Namespace Files
                     Dim pointState As PointState = m_stateFile.Read(pointID)
                     If pointData.TimeTag.CompareTo(m_fat.FileStartTime) >= 0 Then
                         ' The data belongs to this file.
-                        If pointData.TimeTag.CompareTo(PointState.LastArchivedValue.TimeTag) >= 0 Then
+                        If pointData.TimeTag.CompareTo(pointState.LastArchivedValue.TimeTag) >= 0 Then
                             ' The data is in sequence.
                             RaiseEvent CurrentPointReceived(Me, EventArgs.Empty)
 
-                            If ToBeArchived(pointData, PointState) Then
+                            If ToBeArchived(pointData, pointState) Then
                                 ' Data failed compression test - write it to current file.
 
                                 If m_dataBlockList(pointIndex) Is Nothing Then
