@@ -22,7 +22,7 @@
 '       them through.  Easy way to cut down on the amount of code.
 '       This code is just for calls to Stored Procedures and will not work for in-line SQL
 '  03/28/2006 - Pinal C. Patel
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.String)
+'       2.0 version of source code migrated from 1.1 source (TVA.Database.Common)
 '
 '*******************************************************************************************************
 
