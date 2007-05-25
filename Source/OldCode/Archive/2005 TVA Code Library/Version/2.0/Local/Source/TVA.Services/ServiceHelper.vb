@@ -1743,7 +1743,12 @@ Public Class ServiceHelper
         Dim disconnectedClient As ClientInfo = FindClient(e.Argument)
         If disconnectedClient IsNot Nothing Then
             If e.Argument = m_remoteCommandClientID Then
-                RemoteCommandSession(New ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Command -disconnect")))
+                Try
+                    RemoteCommandSession(New ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Command -disconnect")))
+                Catch ex As Exception
+                    ' We'll encounter an exception because we'll try to update the status of the client that had the
+                    ' remote command session open and this will fail since the client is disconnected.
+                End Try
             End If
 
             m_connectedClients.Remove(FindClient(e.Argument))
