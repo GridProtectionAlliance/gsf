@@ -9,7 +9,7 @@ Imports TVA.Data.Common
 
 Namespace Application
 
-    <ToolboxBitmap(GetType(WindowsSecurityProvider)), DisplayName("Windows Security Provider")> _
+    <ToolboxBitmap(GetType(WindowsSecurityProvider)), DisplayName("WindowsSecurityProvider")> _
     Public Class WindowsSecurityProvider
 
 #Region " Member Declaration "

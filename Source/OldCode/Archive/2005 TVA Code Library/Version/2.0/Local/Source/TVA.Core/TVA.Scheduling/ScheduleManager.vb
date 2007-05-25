@@ -31,7 +31,7 @@ Imports TVA.Configuration
 
 Namespace Scheduling
 
-    <ToolboxBitmap(GetType(ScheduleManager)), DisplayName("Schedule Manager"), DefaultEvent("ScheduleDue")> _
+    <ToolboxBitmap(GetType(ScheduleManager)), DisplayName("ScheduleManager"), DefaultEvent("ScheduleDue")> _
     Public Class ScheduleManager
         Implements IServiceComponent, IPersistSettings, ISupportInitialize
 

@@ -12,7 +12,7 @@ Imports TVA.Scheduling
 Imports TVA.Configuration
 Imports TVA.Configuration.Common
 
-<ToolboxBitmap(GetType(ServiceHelper)), DisplayName("Service Helper")> _
+<ToolboxBitmap(GetType(ServiceHelper)), DisplayName("ServiceHelper")> _
 Public Class ServiceHelper
     Implements IPersistSettings, ISupportInitialize
 

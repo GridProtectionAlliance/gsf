@@ -22,7 +22,7 @@ Imports TVA.Communication
 Imports TVA.Serialization
 Imports TVA.Configuration.Common
 
-<ToolboxBitmap(GetType(ClientHelper)), DisplayName("Client Helper")> _
+<ToolboxBitmap(GetType(ClientHelper)), DisplayName("ClientHelper")> _
 Public Class ClientHelper
     Implements IPersistSettings, ISupportInitialize
 

@@ -23,7 +23,7 @@ Namespace ErrorManagement
     ''' exception in both windows and web environment by Jeff Atwood are available at The Code Project web site. 
     ''' See: http://www.codeproject.com/script/articles/list_articles.asp?userid=450027
     ''' </remarks>
-    <ToolboxBitmap(GetType(GlobalExceptionLogger)), DisplayName("Global Exception Logger")> _
+    <ToolboxBitmap(GetType(GlobalExceptionLogger)), DisplayName("GlobalExceptionLogger")> _
     Public Class GlobalExceptionLogger
         Implements IPersistSettings, ISupportInitialize
 

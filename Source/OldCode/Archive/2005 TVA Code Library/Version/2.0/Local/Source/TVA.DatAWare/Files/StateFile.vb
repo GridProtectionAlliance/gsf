@@ -5,7 +5,7 @@ Imports System.ComponentModel
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(StateFile)), DisplayName("DW State File")> _
+    <ToolboxBitmap(GetType(StateFile)), DisplayName("DwStateFile")> _
     Public Class StateFile
 
         Public Overrides ReadOnly Property RecordSize() As Integer

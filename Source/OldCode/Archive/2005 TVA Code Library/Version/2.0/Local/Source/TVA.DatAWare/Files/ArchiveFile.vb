@@ -9,7 +9,7 @@ Imports TVA.IO.FilePath
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(ArchiveFile)), DisplayName("DW Archive File")> _
+    <ToolboxBitmap(GetType(ArchiveFile)), DisplayName("DwArchiveFile")> _
     Public Class ArchiveFile
         Implements IPersistSettings, ISupportInitialize
 

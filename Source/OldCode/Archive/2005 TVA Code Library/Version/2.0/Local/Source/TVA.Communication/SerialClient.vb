@@ -28,7 +28,7 @@ Imports TVA.ErrorManagement
 ''' <summary>
 ''' Represents a serial port communication client.
 ''' </summary>
-<DisplayName("Serial Client")> _
+<DisplayName("SerialClient")> _
 Public Class SerialClient
 
 #Region " Member Declaration "

@@ -5,7 +5,7 @@ Imports System.ComponentModel
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(MetadataFile)), DisplayName("DW Metadata File")> _
+    <ToolboxBitmap(GetType(MetadataFile)), DisplayName("DwMetadataFile")> _
     Public Class MetadataFile
 
 #Region " Code Scope: Public "

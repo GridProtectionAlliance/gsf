@@ -5,7 +5,7 @@ Imports System.ComponentModel
 
 Namespace Files
 
-    <ToolboxBitmap(GetType(IntercomFile)), DisplayName("DW Intercom File")> _
+    <ToolboxBitmap(GetType(IntercomFile)), DisplayName("DwIntercomFile")> _
     Public Class IntercomFile
 
 #Region " Code Scope: Public "

@@ -31,7 +31,7 @@ Imports TVA.ErrorManagement
 ''' <summary>
 ''' Represents a TCP-based communication client.
 ''' </summary>
-<DisplayName("TCP Client")> _
+<DisplayName("TcpClient")> _
 Public Class TcpClient
 
 #Region " Member Declaration "
