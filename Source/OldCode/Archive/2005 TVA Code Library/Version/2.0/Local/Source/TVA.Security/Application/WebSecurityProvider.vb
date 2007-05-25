@@ -172,10 +172,10 @@ Namespace Application
                     username = Decrypt(m_parent.Request(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
                 Else
                     If m_parent.Session(UNKey) IsNot Nothing Then
-                        ' Retrieve previouslt saved username from session.
+                        ' Retrieve previously saved username from session.
                         username = Decrypt(m_parent.Session(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
                     ElseIf m_parent.Request.Cookies(CCName) IsNot Nothing Then
-                        ' Retrieve previouslt saved username from cookie.
+                        ' Retrieve previously saved username from cookie.
                         username = Decrypt(m_parent.Request.Cookies(CCName)(UNKey).ToString(), Cryptography.EncryptLevel.Level4)
                     End If
                 End If
@@ -199,10 +199,10 @@ Namespace Application
                     password = Decrypt(m_parent.Request(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
                 Else
                     If m_parent.Session(UNKey) IsNot Nothing Then
-                        ' Retrieve previouslt saved username from session.
+                        ' Retrieve previously saved username from session.
                         password = Decrypt(m_parent.Session(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
                     ElseIf m_parent.Request.Cookies(CCName) IsNot Nothing Then
-                        ' Retrieve previouslt saved username from cookie.
+                        ' Retrieve previously saved username from cookie.
                         password = Decrypt(m_parent.Request.Cookies(CCName)(PWKey).ToString(), Cryptography.EncryptLevel.Level4)
                     End If
                 End If
