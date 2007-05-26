@@ -116,6 +116,9 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Notifiers\Enumerations.vb" />
+    <Compile Include="Notifiers\INotifier.vb" />
+    <Compile Include="Notifiers\NotifierBase.vb" />
     <Compile Include="Packets\DataParser.Designer.vb">
       <DependentUpon>DataParser.vb</DependentUpon>
     </Compile>
@@ -155,11 +158,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Files.MetadataFile.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Relationship Diagrams\Packet Diagram.cd" />
-    <None Include="Relationship Diagrams\Point Definition Diagram.cd" />
-    <None Include="Relationship Diagrams\Point Data Diagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Files.StateFile.bmp" />
