@@ -64,7 +64,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Files\ArchiveFileAllocationTable.vb" />
-    <Compile Include="DataParsedEventArgs.vb" />
     <Compile Include="Enumerations.vb" />
     <Compile Include="Files\Enumerations.vb" />
     <Compile Include="Files\IntercomFile.Designer.vb">
