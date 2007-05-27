@@ -425,7 +425,6 @@ Namespace Collections
 
                     ' Assign translator functions for base class
                     MyBase.ProcessItemFunction = AddressOf ProcessKeyedItem
-                    MyBase.ProcessItemsFunction = Nothing
                 End If
             End Set
         End Property
@@ -449,7 +448,6 @@ Namespace Collections
 
                     ' Assign translator functions for base class
                     MyBase.ProcessItemsFunction = AddressOf ProcessKeyedItems
-                    MyBase.ProcessItemFunction = Nothing
                 End If
             End Set
         End Property
