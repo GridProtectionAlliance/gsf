@@ -139,4 +139,11 @@ Public NotInheritable Class Common
 
     End Function
 
+    ''' <summary>Determines if given item is an object (i.e., a reference type) but not a string</summary>
+    Public Shared Function IsNonStringReference(ByVal item As Object) As Boolean
+
+        Return (IsReference(item) And Not TypeOf item Is String)
+
+    End Function
+
 End Class
