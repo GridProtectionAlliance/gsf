@@ -97,7 +97,7 @@ Public Class Version3Adapter
 
     Public Overrides ReadOnly Property Name() As String
         Get
-            Return "DatAWare Archiver (V3) """ & m_archiverIP & ":" & m_archiverPort & """"
+            Return "DW Archiver V3 """ & m_archiverIP & ":" & m_archiverPort & """"
         End Get
     End Property
 
@@ -145,10 +145,10 @@ Public Class Version3Adapter
 
     End Sub
 
-    Private Sub m_connection_ConnectingException(ByVal sender As Object, ByVal e As TVA.ExceptionEventArgs) Handles m_connection.ConnectingException
+    Private Sub m_connection_ConnectingException(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Exception)) Handles m_connection.ConnectingException
 
         ' Take note of connection exception
-        m_connectionException = e.Exception
+        m_connectionException = e.Argument
 
         ' Signal completion of connection cycle
         m_waitHandle.Set()

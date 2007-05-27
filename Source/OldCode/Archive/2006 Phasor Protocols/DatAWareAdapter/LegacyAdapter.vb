@@ -93,7 +93,7 @@ Public Class LegacyAdapter
 
     Public Overrides ReadOnly Property Name() As String
         Get
-            Return "DatAWare Archiver """ & m_archiverIP & ":" & m_archiverPort & """"
+            Return "DW Archiver """ & m_archiverIP & ":" & m_archiverPort & """"
         End Get
     End Property
 

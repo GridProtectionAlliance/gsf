@@ -19,10 +19,8 @@ Imports System.Text
 Imports System.Security.Principal
 Imports System.Data.SqlClient
 Imports System.Threading
-Imports TVA.Common
 Imports TVA.Assembly
 Imports TVA.IO
-Imports TVA.IO.FilePath
 Imports TVA.Configuration.Common
 Imports TVA.Text.Common
 Imports TVA.Data.Common
@@ -65,7 +63,7 @@ Module MainModule
         SaveSettings()
 
         m_systemLogEnabled = BooleanSetting("EnableLogFile")
-        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 0.25, Timeout.Infinite, False, False)
+        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 10, Timeout.Infinite, False, False)
         m_statusMessageQueue.Start()
 
         InitializeConfiguration(AddressOf InitializeSystem)
@@ -88,45 +86,43 @@ Module MainModule
                     mapper.SendDeviceCommand(ParseDeviceCommand(consoleLine))
                 End If
             ElseIf consoleLine.StartsWith("reload", True, Nothing) Then
-                Console.WriteLine()
                 InitializeConfiguration(AddressOf InitializeSystem)
             ElseIf consoleLine.StartsWith("reconnectall", True, Nothing) Then
-                Console.WriteLine()
                 InitializeConfiguration(AddressOf ReinitializeReceivers)
             ElseIf consoleLine.StartsWith("gc", True, Nothing) Then
                 ForceGarbageCollection()
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
-                Console.WriteLine()
-                For Each receiver In m_measurementReceivers.Values
-                    Console.WriteLine(receiver.Status)
-                Next
-                For x As Integer = 0 To m_calculatedMeasurements.Length - 1
-                    Console.WriteLine(m_calculatedMeasurements(x).Status)
-                Next
+                With New StringBuilder
+                    .Append(Environment.NewLine)
 
-                'Dim totalWorkerThreads, availableWorkerThreads, totalIOThreads, availableIOThreads As Integer
+                    For Each receiver In m_measurementReceivers.Values
+                        .Append(receiver.Status)
+                    Next
 
-                'Threading.ThreadPool.GetMaxThreads(totalWorkerThreads, totalIOThreads)
-                'Threading.ThreadPool.GetAvailableThreads(availableWorkerThreads, availableIOThreads)
+                    For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                        .Append(m_calculatedMeasurements(x).Status)
+                    Next
 
-                'Console.WriteLine("Worker Thread Utilization: " & ((totalWorkerThreads - availableWorkerThreads) / totalWorkerThreads * 100.0R).ToString("0.00%"))
-                'Console.WriteLine("    IO Thread Utilization: " & ((totalIOThreads - availableIOThreads) / totalIOThreads * 100.0R).ToString("0.00%"))
-                Console.WriteLine()
+                    .Append(Environment.NewLine)
+
+                    DisplayStatusMessage(.ToString())
+                End With
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
-                Console.WriteLine()
-                DisplayConnectionList()
+                DisplayStatusMessage(ConnectionList)
             ElseIf consoleLine.StartsWith("version", True, Nothing) Then
-                Console.WriteLine()
-                Console.WriteLine(MonitorInformation)
-            ElseIf consoleLine.StartsWith("help", True, Nothing) OrElse consoleLine = "?" Then
-                Console.WriteLine()
-                DisplayCommandList()
+                DisplayStatusMessage(MonitorInformation)
+            ElseIf consoleLine.StartsWith("help", True, Nothing) OrElse consoleLine.StartsWith("?") Then
+                DisplayStatusMessage(CommandList)
             ElseIf consoleLine.StartsWith("exit", True, Nothing) Then
                 Exit Do
             Else
-                Console.WriteLine()
-                Console.Write("Command unrecognized.  ")
-                DisplayCommandList()
+                With New StringBuilder
+                    .Append(Environment.NewLine)
+                    .Append("Command unrecognized.  ")
+                    .Append(CommandList)
+
+                    DisplayStatusMessage(.ToString())
+                End With
             End If
         Loop
 
@@ -163,7 +159,7 @@ Module MainModule
             m_maximumMessagesToDisplay = IntegerSetting("MaximumMessagesToDisplay")
             m_displayedMessageCount = 0
         Catch ex As Exception
-            DisplayStatusMessage("Failure during initialization: " & ex.Message)
+            DisplayStatusMessage(String.Format("Failure during initialization: {0}", ex.Message))
         Finally
             If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
             DisplayStatusMessage("PMU database connection closed.")
@@ -242,7 +238,7 @@ Module MainModule
 
                     measurementReceivers.Add(archiveSource, measurementReceiver)
                 Catch ex As Exception
-                    DisplayStatusMessage("Failed to load measurement receiver for archive """ & archiveSource & """ from assembly """ & externalAssemblyName & """ due to exception: " & ex.Message)
+                    DisplayStatusMessage(String.Format("Failed to load measurement receiver for archive ""{0}"" from assembly ""{1}"" due to exception: {2}", archiveSource, externalAssemblyName, ex.Message))
                 End Try
             Next
         End With
@@ -306,7 +302,7 @@ Module MainModule
                                 Next
                             End With
                         Catch ex As Exception
-                            DisplayStatusMessage("Failed to load output measurement for """ & calculatedMeasurementName & """: " & ex.Message)
+                            DisplayStatusMessage(String.Format("Failed to load output measurement for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
                         End Try
                     End If
 
@@ -328,7 +324,7 @@ Module MainModule
                                 Next
                             End With
                         Catch ex As Exception
-                            DisplayStatusMessage("Failed to load input measurements for """ & calculatedMeasurementName & """: " & ex.Message)
+                            DisplayStatusMessage(String.Format("Failed to load input measurements for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
                         End Try
                     End If
 
@@ -339,7 +335,7 @@ Module MainModule
                         ' Create a new instance of the adpater
                         calculatedMeasurementAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
                     Catch ex As Exception
-                        DisplayStatusMessage("Failed to load type """ & .Rows(x)("TypeName").ToString() & """ from assembly """ & externalAssemblyName & """ for """ & calculatedMeasurementName & """ due to exception: " & ex.Message)
+                        DisplayStatusMessage(String.Format("Failed to load type ""{0}"" from assembly ""{1}"" for ""{2}"" due to exception: {3}", .Rows(x)("TypeName"), externalAssemblyName, calculatedMeasurementName, ex.Message))
                     End Try
 
                     If calculatedMeasurementAdapter IsNot Nothing Then
@@ -370,10 +366,10 @@ Module MainModule
                         ' Add new adapter to the list
                         calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
 
-                        DisplayStatusMessage("Loaded calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """")
+                        DisplayStatusMessage(String.Format("Loaded calculated measurement ""{0}"" from assembly ""{1}""", calculatedMeasurementName, externalAssemblyName))
                     End If
                 Catch ex As Exception
-                    DisplayStatusMessage("Failed to load calculated measurement """ & calculatedMeasurementName & """ from assembly """ & externalAssemblyName & """ due to exception: " & ex.Message)
+                    DisplayStatusMessage(String.Format("Failed to load calculated measurement ""{0}"" from assembly ""{1}"" due to exception: {2}", calculatedMeasurementName, externalAssemblyName, ex.Message))
                 End Try
             Next
         End With
@@ -409,7 +405,7 @@ Module MainModule
 
     Private Sub CalculationException(ByVal source As String, ByVal ex As Exception)
 
-        DisplayStatusMessage("ERROR: """ & source & """ threw an exception: " & ex.Message)
+        DisplayStatusMessage(String.Format("ERROR: ""{0}"" threw an exception: {1}", source, ex.Message))
 
     End Sub
 
@@ -426,11 +422,11 @@ Module MainModule
                 End If
             Next
 
-            If Not foundMapper Then Console.WriteLine("Failed to find a PMU or PDC in the connection list named """ & pmuID & """, type ""List"" to see avaialable list.")
+            If Not foundMapper Then DisplayStatusMessage(String.Format("Failed to find a PMU or PDC in the connection list named ""{0}"", type ""List"" to see available list.", pmuID))
 
             Return foundMapper
         Catch ex As Exception
-            Console.WriteLine("Failed to lookup specified mapper due to exception: " & ex.Message)
+            DisplayStatusMessage(String.Format("Failed to lookup specified mapper due to exception: {0}", ex.Message))
             Return False
         End Try
 
@@ -483,56 +479,92 @@ Module MainModule
         End Get
     End Property
 
-    Private Sub DisplayConnectionList()
+    Private ReadOnly Property ConnectionList() As String
+        Get
+            With New StringBuilder
+                .Append(Environment.NewLine)
 
-        For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-            Console.WriteLine("Phasor Measurement Retriever for Archive """ & receiver.HistorianName & """")
-            Console.WriteLine(">> PMU/PDC Connection List (" & receiver.Mappers.Count & " Total)")
-            Console.WriteLine()
+                For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                    .Append("Phasor Measurement Retriever for Archive """)
+                    .Append(receiver.HistorianName)
+                    .Append("""")
+                    .Append(Environment.NewLine)
+                    .Append(">> PMU/PDC Connection List (")
+                    .Append(receiver.Mappers.Count)
+                    .Append(" Total)")
+                    .Append(Environment.NewLine)
+                    .Append(Environment.NewLine)
 
-            Console.WriteLine("  Last Data Report Time:   PDC/PMU [PMU list]:")
-            Console.WriteLine("  ------------------------ ----------------------------------------------------")
-            '                    01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
-            '                    >> No data frame has been parsed for SourceName - 00000 bytes received"
+                    .Append("  Last Data Report Time:   PDC/PMU [PMU list]:")
+                    .Append(Environment.NewLine)
+                    .Append("  ------------------------ ----------------------------------------------------")
+                    .Append(Environment.NewLine)
+                    '          01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
+                    '          >> No data frame has been parsed for SourceName - 00000 bytes received"
 
-            For Each mapper As PhasorMeasurementMapper In receiver.Mappers.Values
-                With mapper
-                    Console.Write("  ")
-                    If .LastReportTime > 0 Then
-                        Console.Write((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
-                        Console.Write(" "c)
-                        Console.WriteLine(mapper.Name)
-                    Else
-                        Console.WriteLine(">> No data frame has been parsed for " & mapper.Name & " - " & .TotalBytesReceived & " bytes received")
-                    End If
-                End With
-            Next
+                    For Each mapper As PhasorMeasurementMapper In receiver.Mappers.Values
+                        .Append("  ")
+                        If mapper.LastReportTime > 0 Then
+                            .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                            .Append(" "c)
+                            .Append(mapper.Name)
+                            .Append(Environment.NewLine)
+                        Else
+                            .Append(">> No data frame has been parsed for ")
+                            .Append(mapper.Name)
+                            .Append(" - ")
+                            .Append(mapper.TotalBytesReceived)
+                            .Append(" bytes received")
+                            .Append(Environment.NewLine)
+                        End If
+                    Next
 
-            Console.WriteLine()
-        Next
+                    .Append(Environment.NewLine)
+                Next
 
-    End Sub
+                Return .ToString()
+            End With
+        End Get
+    End Property
 
-    Private Sub DisplayCommandList()
+    Private ReadOnly Property CommandList() As String
+        Get
+            With New StringBuilder
+                .Append("Possible commands:")
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+                .Append("  ""Connect PmuID""                 - Restarts PMU connection cycle")
+                .Append(Environment.NewLine)
+                .Append("  ""Disconnect PmuID""              - Terminates PMU connection")
+                .Append(Environment.NewLine)
+                .Append("  ""SendCommand PmuID DisableData"" - Turns off real-time data")
+                .Append(Environment.NewLine)
+                .Append("  ""SendCommand PmuID EnableData""  - Turns on real-time data")
+                .Append(Environment.NewLine)
+                .Append("  ""SendCommand PmuID GetConfig""   - Requests configuration frame")
+                .Append(Environment.NewLine)
+                .Append("  ""Reload""                        - Reloads the entire service process")
+                .Append(Environment.NewLine)
+                .Append("  ""ReconnectAll""                  - Reconnects archives and phasor devices")
+                .Append(Environment.NewLine)
+                .Append("  ""GC""                            - Force .NET Garbage Collection")
+                .Append(Environment.NewLine)
+                .Append("  ""Status""                        - Returns current service status")
+                .Append(Environment.NewLine)
+                .Append("  ""List""                          - Displays loaded PMU/PDC connections")
+                .Append(Environment.NewLine)
+                .Append("  ""Version""                       - Displays service version information")
+                .Append(Environment.NewLine)
+                .Append("  ""Help""                          - Displays this help information")
+                .Append(Environment.NewLine)
+                .Append("  ""Exit""                          - Exits this console monitor")
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
 
-        Console.WriteLine("Possible commands:")
-        Console.WriteLine()
-        Console.WriteLine("  ""Connect PmuID""                 - Restarts PMU connection cycle")
-        Console.WriteLine("  ""Disconnect PmuID""              - Terminates PMU connection")
-        Console.WriteLine("  ""SendCommand PmuID DisableData"" - Turns off real-time data")
-        Console.WriteLine("  ""SendCommand PmuID EnableData""  - Turns on real-time data")
-        Console.WriteLine("  ""SendCommand PmuID GetConfig""   - Requests configuration frame")
-        Console.WriteLine("  ""Reload""                        - Reloads the entire service process")
-        Console.WriteLine("  ""ReconnectAll""                  - Reconnects archives and phasor devices")
-        Console.WriteLine("  ""GC""                            - Force .NET Garbage Collection")
-        Console.WriteLine("  ""Status""                        - Returns current service status")
-        Console.WriteLine("  ""List""                          - Displays loaded PMU/PDC connections")
-        Console.WriteLine("  ""Version""                       - Displays service version information")
-        Console.WriteLine("  ""Help""                          - Displays this help information")
-        Console.WriteLine("  ""Exit""                          - Exits this console monitor")
-        Console.WriteLine()
-
-    End Sub
+                Return .ToString()
+            End With
+        End Get
+    End Property
 
     Private Sub ForceGarbageCollection()
 
@@ -573,7 +605,7 @@ Module MainModule
             m_displayedMessageCount += 1
         Else
             If m_displayedMessageCount > m_maximumMessagesToDisplay Then
-                Console.WriteLine("WARNING: " & (m_displayedMessageCount - m_maximumMessagesToDisplay) & " error messages discarded to avoid flooding message queue...")
+                Console.WriteLine("WARNING: {0} error messages discarded to avoid flooding message queue...", (m_displayedMessageCount - m_maximumMessagesToDisplay))
                 Console.WriteLine()
             End If
             displayMessage = True
@@ -587,10 +619,14 @@ Module MainModule
         End If
 
         If m_systemLogEnabled Then
-            If m_systemLogFile Is Nothing Then m_systemLogFile = New LogFile()
-            m_systemLogFile.Name = "SystemLog.txt"
-            m_systemLogFile.FileFullOperation = LogFileFullOperation.Rollover
-            m_systemLogFile.Open()
+            ' Initialize system log if this is first call
+            If m_systemLogFile Is Nothing Then
+                m_systemLogFile = New LogFile()
+                m_systemLogFile.Name = "SystemLog.txt"
+                m_systemLogFile.FileFullOperation = LogFileFullOperation.Rollover
+                m_systemLogFile.Open()
+            End If
+
             m_systemLogFile.WriteTimestampedLine(status)
         End If
 
