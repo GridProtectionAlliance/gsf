@@ -120,15 +120,15 @@ Public Class TcpClient
 
         MyBase.LoadSettings()
 
-        If PersistSettings Then
-            Try
-                With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
+        Try
+            With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
+                If .Count > 0 Then
                     PayloadAware = .Item("PayloadAware").GetTypedValue(m_payloadAware)
-                End With
-            Catch ex As Exception
-                ' We'll encounter exceptions if the settings are not present in the config file.
-            End Try
-        End If
+                End If
+            End With
+        Catch ex As Exception
+            ' We'll encounter exceptions if the settings are not present in the config file.
+        End Try
 
     End Sub
 
