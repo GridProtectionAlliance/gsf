@@ -3,6 +3,7 @@
 Namespace Notifiers
 
     Public Interface INotifier
+        Inherits IPersistSettings
 
         Property NotifiesErrors() As Boolean
 

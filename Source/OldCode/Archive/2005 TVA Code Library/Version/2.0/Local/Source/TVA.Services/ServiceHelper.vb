@@ -539,7 +539,7 @@ Public Class ServiceHelper
             If Not String.IsNullOrEmpty(value) Then
                 m_settingsCategoryName = value
             Else
-                Throw New ArgumentNullException("ConfigurationCategory")
+                Throw New ArgumentNullException("SettingsCategoryName")
             End If
         End Set
     End Property

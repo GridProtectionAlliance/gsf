@@ -3,17 +3,27 @@
 Namespace Notifiers
 
     Public MustInherit Class NotifierBase
-        Implements INotifier, IPersistSettings
+        Implements INotifier
 
 #Region " Member Declaration "
 
         Private m_notifiesErrors As Boolean
         Private m_notifiesWarnings As Boolean
         Private m_notifiesInformation As Boolean
+        Private m_persistSettings As Boolean
+        Private m_settingsCategoryName As String
 
 #End Region
 
 #Region " Code Scope: Public "
+
+        Public Sub New()
+
+            MyBase.New()
+            m_persistSettings = True
+            m_settingsCategoryName = Me.GetType().Name
+
+        End Sub
 
         Public Sub New(ByVal notifiesInformation As Boolean, ByVal notifiesWarnings As Boolean, ByVal notifiesErrors As Boolean)
 
@@ -23,6 +33,10 @@ Namespace Notifiers
             m_notifiesErrors = notifiesErrors
 
         End Sub
+
+#Region " Interface Implementation "
+
+#Region " INotifier "
 
         Public Property NotifiesErrors() As Boolean Implements INotifier.NotifiesErrors
             Get
@@ -66,6 +80,79 @@ Namespace Notifiers
 
 #End Region
 
+#Region " IPersistSettings "
+
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
+            Get
+                Return m_settingsCategoryName
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_settingsCategoryName = value
+                Else
+                    Throw New ArgumentNullException("SettingsCategoryName")
+                End If
+            End Set
+        End Property
+
+        Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+            Try
+                With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                    If .Count > 0 Then
+                        NotifiesErrors = .Item("NotifiesErrors").GetTypedValue(m_notifiesErrors)
+                        NotifiesWarnings = .Item("NotifiesWarnings").GetTypedValue(m_notifiesWarnings)
+                        NotifiesInformation = .Item("NotifiesInformation").GetTypedValue(m_notifiesInformation)
+                    End If
+                End With
+            Catch ex As Exception
+                ' We'll encounter exceptions if the settings are not present in the config file.
+            End Try
+
+        End Sub
+
+        Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                        .Clear()
+                        With .Item("NotifiesErrors", True)
+                            .Value = m_notifiesErrors.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("NotifiesWarnings", True)
+                            .Value = m_notifiesWarnings.ToString()
+                            .Description = ""
+                        End With
+                        With .Item("NotifiesInformation", True)
+                            .Value = m_notifiesInformation.ToString()
+                            .Description = ""
+                        End With
+                    End With
+                    TVA.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                End Try
+            End If
+
+        End Sub
+
+#End Region
+
+#End Region
+
+#End Region
+
 #Region " Code Scope: Protected "
 
         Protected MustOverride Sub NotifyError(ByVal subject As String, ByVal message As String)
@@ -75,32 +162,6 @@ Namespace Notifiers
         Protected MustOverride Sub NotifyInformation(ByVal subject As String, ByVal message As String)
 
 #End Region
-
-        Public Sub LoadSettings() Implements IPersistSettings.LoadSettings
-
-        End Sub
-
-        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
-            Get
-
-            End Get
-            Set(ByVal value As Boolean)
-
-            End Set
-        End Property
-
-        Public Sub SaveSettings() Implements IPersistSettings.SaveSettings
-
-        End Sub
-
-        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
-            Get
-
-            End Get
-            Set(ByVal value As String)
-
-            End Set
-        End Property
 
     End Class
 
