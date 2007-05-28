@@ -17,20 +17,14 @@ Namespace Notifiers
 
 #Region " Code Scope: Public "
 
-        Public Sub New()
-
-            MyBase.New()
-            m_persistSettings = True
-            m_settingsCategoryName = Me.GetType().Name
-
-        End Sub
-
         Public Sub New(ByVal notifiesInformation As Boolean, ByVal notifiesWarnings As Boolean, ByVal notifiesErrors As Boolean)
 
             MyBase.New()
             m_notifiesInformation = notifiesInformation
             m_notifiesWarnings = notifiesWarnings
             m_notifiesErrors = notifiesErrors
+            m_persistSettings = True
+            m_settingsCategoryName = Me.GetType().Name
 
         End Sub
 

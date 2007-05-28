@@ -116,6 +116,7 @@
     <Compile Include="Legacy Interfaces\TimeTag.vb">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Notifiers\EmailNotifier.vb" />
     <Compile Include="Notifiers\Enumerations.vb" />
     <Compile Include="Notifiers\INotifier.vb" />
     <Compile Include="Notifiers\NotifierBase.vb" />
