@@ -209,6 +209,11 @@ Namespace IO
 
                 If m_loadOnOpen Then Load()
 
+                ' Make sure that we have the minimum number of records specified.
+                For i As Integer = PersistedRecordCount + 1 To m_minimumRecordCount
+                    Write(i, NewRecord(i))
+                Next
+
                 If m_reloadOnModify Then
                     ' Watch for any modifications made to the file.
                     FileSystemWatcher.Path = JustPath(m_name)
@@ -277,12 +282,6 @@ Namespace IO
                     End If
 
                     Dim records As New List(Of T)(ReadFromDisk())
-
-                    ' Make sure that we have the minimum number of records specified.
-                    For i As Integer = records.Count + 1 To m_minimumRecordCount
-                        records.Add(NewRecord(i))
-                    Next
-
                     SyncLock m_fileRecords
                         m_fileRecords.Clear()
                         m_fileRecords.InsertRange(0, records)
