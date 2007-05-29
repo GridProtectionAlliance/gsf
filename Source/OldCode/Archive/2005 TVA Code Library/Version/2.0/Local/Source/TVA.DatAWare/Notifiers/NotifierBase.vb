@@ -7,7 +7,7 @@ Namespace Notifiers
 
 #Region " Member Declaration "
 
-        Private m_notifiesErrors As Boolean
+        Private m_notifiesAlarms As Boolean
         Private m_notifiesWarnings As Boolean
         Private m_notifiesInformation As Boolean
         Private m_persistSettings As Boolean
@@ -17,12 +17,12 @@ Namespace Notifiers
 
 #Region " Code Scope: Public "
 
-        Public Sub New(ByVal notifiesInformation As Boolean, ByVal notifiesWarnings As Boolean, ByVal notifiesErrors As Boolean)
+        Public Sub New(ByVal notifiesInformation As Boolean, ByVal notifiesWarnings As Boolean, ByVal notifiesAlarms As Boolean)
 
             MyBase.New()
             m_notifiesInformation = notifiesInformation
             m_notifiesWarnings = notifiesWarnings
-            m_notifiesErrors = notifiesErrors
+            m_notifiesAlarms = notifiesAlarms
             m_persistSettings = True
             m_settingsCategoryName = Me.GetType().Name
 
@@ -32,12 +32,12 @@ Namespace Notifiers
 
 #Region " INotifier "
 
-        Public Property NotifiesErrors() As Boolean Implements INotifier.NotifiesErrors
+        Public Property NotifiesAlarms() As Boolean Implements INotifier.NotifiesAlarms
             Get
-                Return m_notifiesErrors
+                Return m_notifiesAlarms
             End Get
             Set(ByVal value As Boolean)
-                m_notifiesErrors = value
+                m_notifiesAlarms = value
             End Set
         End Property
 
@@ -62,8 +62,8 @@ Namespace Notifiers
         Public Sub Notify(ByVal subject As String, ByVal message As String, ByVal notificationType As NotificationType) Implements INotifier.Notify
 
             Select Case True
-                Case m_notifiesErrors AndAlso notificationType = Notifiers.NotificationType.Error
-                    NotifyError(subject, message)
+                Case m_notifiesAlarms AndAlso notificationType = Notifiers.NotificationType.Alarm
+                    NotifyAlarm(subject, message)
                 Case m_notifiesWarnings AndAlso notificationType = Notifiers.NotificationType.Warning
                     NotifyWarning(subject, message)
                 Case m_notifiesInformation AndAlso notificationType = Notifiers.NotificationType.Information
@@ -103,7 +103,7 @@ Namespace Notifiers
             Try
                 With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     If .Count > 0 Then
-                        NotifiesErrors = .Item("NotifiesErrors").GetTypedValue(m_notifiesErrors)
+                        NotifiesAlarms = .Item("NotifiesAlarms").GetTypedValue(m_notifiesAlarms)
                         NotifiesWarnings = .Item("NotifiesWarnings").GetTypedValue(m_notifiesWarnings)
                         NotifiesInformation = .Item("NotifiesInformation").GetTypedValue(m_notifiesInformation)
                     End If
@@ -120,17 +120,17 @@ Namespace Notifiers
                 Try
                     With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                         .Clear()
-                        With .Item("NotifiesErrors", True)
-                            .Value = m_notifiesErrors.ToString()
-                            .Description = ""
+                        With .Item("NotifiesAlarms", True)
+                            .Value = m_notifiesAlarms.ToString()
+                            .Description = "True if alarm notifications are to be sent; otherwise False."
                         End With
                         With .Item("NotifiesWarnings", True)
                             .Value = m_notifiesWarnings.ToString()
-                            .Description = ""
+                            .Description = "True if warning notifications are to be sent; otherwise False."
                         End With
                         With .Item("NotifiesInformation", True)
                             .Value = m_notifiesInformation.ToString()
-                            .Description = ""
+                            .Description = "True if information notifications are to be sent; otherwise False."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
@@ -149,7 +149,7 @@ Namespace Notifiers
 
 #Region " Code Scope: Protected "
 
-        Protected MustOverride Sub NotifyError(ByVal subject As String, ByVal message As String)
+        Protected MustOverride Sub NotifyAlarm(ByVal subject As String, ByVal message As String)
 
         Protected MustOverride Sub NotifyWarning(ByVal subject As String, ByVal message As String)
 

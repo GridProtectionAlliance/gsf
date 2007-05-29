@@ -6,7 +6,7 @@ Namespace Notifiers
 
         Information
         Warning
-        [Error]
+        Alarm
 
     End Enum
 
