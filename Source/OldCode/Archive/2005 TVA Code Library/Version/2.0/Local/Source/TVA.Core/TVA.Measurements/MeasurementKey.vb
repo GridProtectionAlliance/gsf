@@ -49,6 +49,13 @@ Namespace Measurements
 
         End Function
 
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            If TypeOf obj Is MeasurementKey Then Return Equals(DirectCast(obj, MeasurementKey))
+            Throw New ArgumentException("Object is not a MeasurementKey")
+
+        End Function
+
         Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
 
             Return (ID = other.ID AndAlso String.Compare(Source, other.Source, True) = 0)
