@@ -102,7 +102,7 @@ Namespace Phasors
             End Get
         End Property
 
-        Public Overridable ReadOnly Property Measurements() As Dictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
+        Public Overridable ReadOnly Property Measurements() As IDictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
             Get
                 If m_measurements Is Nothing Then m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
                 Return m_measurements

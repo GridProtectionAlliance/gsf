@@ -36,7 +36,7 @@ Namespace Measurements
         End Sub
 
         ''' <summary>Keyed measurements in this frame</summary>
-        Public ReadOnly Property Measurements() As Dictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
+        Public ReadOnly Property Measurements() As IDictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
             Get
                 Return m_measurements
             End Get

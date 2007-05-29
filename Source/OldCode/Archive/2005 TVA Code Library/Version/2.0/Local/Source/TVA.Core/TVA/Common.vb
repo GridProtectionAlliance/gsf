@@ -62,6 +62,7 @@ Public NotInheritable Class Common
     ''' </remarks>
     Public Shared Function CreateArray(Of T)(ByVal length As Integer) As T()
 
+        ' The following provides better performance than "Return New T(length) {}"
         Return DirectCast(Array.CreateInstance(GetType(T), length), T())
 
     End Function
