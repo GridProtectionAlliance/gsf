@@ -59,15 +59,15 @@ Namespace Notifiers
             End Set
         End Property
 
-        Public Sub Notify(ByVal subject As String, ByVal message As String, ByVal notificationType As NotificationType) Implements INotifier.Notify
+        Public Sub Notify(ByVal subject As String, ByVal message As String, ByVal details As String, ByVal notificationType As NotificationType) Implements INotifier.Notify
 
             Select Case True
                 Case m_notifiesAlarms AndAlso notificationType = Notifiers.NotificationType.Alarm
-                    NotifyAlarm(subject, message)
+                    NotifyAlarm(subject, message, details)
                 Case m_notifiesWarnings AndAlso notificationType = Notifiers.NotificationType.Warning
-                    NotifyWarning(subject, message)
+                    NotifyWarning(subject, message, details)
                 Case m_notifiesInformation AndAlso notificationType = Notifiers.NotificationType.Information
-                    NotifyInformation(subject, message)
+                    NotifyInformation(subject, message, details)
             End Select
 
         End Sub
@@ -149,11 +149,11 @@ Namespace Notifiers
 
 #Region " Code Scope: Protected "
 
-        Protected MustOverride Sub NotifyAlarm(ByVal subject As String, ByVal message As String)
+        Protected MustOverride Sub NotifyAlarm(ByVal subject As String, ByVal message As String, ByVal details As String)
 
-        Protected MustOverride Sub NotifyWarning(ByVal subject As String, ByVal message As String)
+        Protected MustOverride Sub NotifyWarning(ByVal subject As String, ByVal message As String, ByVal details As String)
 
-        Protected MustOverride Sub NotifyInformation(ByVal subject As String, ByVal message As String)
+        Protected MustOverride Sub NotifyInformation(ByVal subject As String, ByVal message As String, ByVal details As String)
 
 #End Region
 

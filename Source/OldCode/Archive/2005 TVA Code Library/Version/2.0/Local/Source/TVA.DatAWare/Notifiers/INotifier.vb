@@ -11,7 +11,7 @@ Namespace Notifiers
 
         Property NotifiesInformation() As Boolean
 
-        Sub Notify(ByVal subject As String, ByVal message As String, ByVal notificationType As NotificationType)
+        Sub Notify(ByVal subject As String, ByVal message As String, ByVal details As String, ByVal notificationType As NotificationType)
 
     End Interface
 

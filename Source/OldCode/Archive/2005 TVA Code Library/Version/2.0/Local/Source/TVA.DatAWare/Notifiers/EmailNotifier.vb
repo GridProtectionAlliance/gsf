@@ -77,7 +77,7 @@ Namespace Notifiers
                         End With
                         With .Item("EmailRecipients", True)
                             .Value = m_emailRecipients
-                            .Description = "Email addresses of the recipients for the notifications."
+                            .Description = "Email addresses of the recipients for the email notifications."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
@@ -96,24 +96,24 @@ Namespace Notifiers
 
 #Region " Overrides "
 
-        Protected Overrides Sub NotifyAlarm(ByVal subject As String, ByVal message As String)
+        Protected Overrides Sub NotifyAlarm(ByVal subject As String, ByVal message As String, ByVal details As String)
 
             subject = "ALARM: " & subject
-            SendEmail(subject, message)
+            SendEmail(subject, message, details)
 
         End Sub
 
-        Protected Overrides Sub NotifyWarning(ByVal subject As String, ByVal message As String)
+        Protected Overrides Sub NotifyWarning(ByVal subject As String, ByVal message As String, ByVal details As String)
 
             subject = "WARNING: " & subject
-            SendEmail(subject, message)
+            SendEmail(subject, message, details)
 
         End Sub
 
-        Protected Overrides Sub NotifyInformation(ByVal subject As String, ByVal message As String)
+        Protected Overrides Sub NotifyInformation(ByVal subject As String, ByVal message As String, ByVal details As String)
 
             subject = "INFO: " & subject
-            SendEmail(subject, message)
+            SendEmail(subject, message, details)
 
         End Sub
 
@@ -121,20 +121,32 @@ Namespace Notifiers
 
 #Region " Code Scope: Private "
 
-        Private Sub SendEmail(ByVal subject As String, ByVal message As String)
+        Private Sub SendEmail(ByVal subject As String, ByVal message As String, ByVal details As String)
 
             If Not String.IsNullOrEmpty(m_emailRecipients) Then
-                With New SimpleMailMessage()
-                    ' Prepare the email message.
-                    .MailServer = m_emailServer
-                    .Sender = String.Format("{0}@tva.gov", Environment.MachineName)
-                    .Recipients = m_emailRecipients
-                    .Subject = subject
-                    .Body = message
+                Dim sender As String = String.Format("{0}@tva.gov", Environment.MachineName)
+                Dim briefMessage As New SimpleMailMessage(sender, "", subject, "")
+                Dim detailedMessage As New SimpleMailMessage(sender, "", subject, message & Environment.NewLine & Environment.NewLine & details)
 
-                    ' Send the prepared email message.
-                    .Send()
-                End With
+                briefMessage.MailServer = m_emailServer
+                detailedMessage.MailServer = m_emailServer
+                For Each recipient As String In m_emailRecipients.Replace(" ", "").Split(";"c, ","c)
+                    ' We allow recipient email address in a special format to indicate that the recipient
+                    ' would like to receive short SMS type messages. Following is an example of this format:
+                    ' 123456789@provider.com:sms
+                    Dim addressParts As String() = recipient.Split(":"c)
+                    If addressParts.Length > 1 Then
+                        If String.Compare(addressParts(1), "sms", True) = 0 Then
+                            'We'll send a brief message to the recipient.
+                            briefMessage.Recipients = addressParts(0)
+                            briefMessage.Send()
+                        End If
+                    Else
+                        ' We'll send a detailed message to the recipient.
+                        detailedMessage.Recipients = recipient
+                        detailedMessage.Send()
+                    End If
+                Next
             End If
 
         End Sub

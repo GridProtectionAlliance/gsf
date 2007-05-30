@@ -37,6 +37,7 @@ Namespace Net.Smtp
         Public Sub New(ByVal sender As String, ByVal recipients As String, ByVal subject As String, ByVal body As String)
 
             MyClass.New()
+            m_sender = sender
             m_recipients = recipients
             m_subject = subject
             m_body = body

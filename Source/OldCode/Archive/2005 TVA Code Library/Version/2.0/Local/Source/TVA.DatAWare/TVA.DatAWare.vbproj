@@ -44,6 +44,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Messaging" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +121,7 @@
     <Compile Include="Notifiers\Enumerations.vb" />
     <Compile Include="Notifiers\INotifier.vb" />
     <Compile Include="Notifiers\NotifierBase.vb" />
+    <Compile Include="Notifiers\SpeechNotifier.vb" />
     <Compile Include="Packets\DataParser.Designer.vb">
       <DependentUpon>DataParser.vb</DependentUpon>
     </Compile>
