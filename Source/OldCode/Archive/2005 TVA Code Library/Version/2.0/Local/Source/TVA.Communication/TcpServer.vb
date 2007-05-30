@@ -181,7 +181,8 @@ Public Class TcpServer
                 If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
 
                 ' We'll send data over the wire asynchronously for improved performance.
-                tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
+                tcpClient.Client.Send(data)
+                'tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
             End If

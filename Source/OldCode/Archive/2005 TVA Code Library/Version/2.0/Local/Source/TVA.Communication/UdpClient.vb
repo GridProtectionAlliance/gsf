@@ -273,7 +273,8 @@ Public Class UdpClient
                 If data.Length - i < datagramSize Then datagramSize = data.Length - i
 
                 ' We'll send the data asynchronously for better performance.
-                m_udpClient.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
+                m_udpClient.Client.SendTo(data, i, datagramSize, SocketFlags.None, m_udpServer)
+                'm_udpClient.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
             Next
 
             OnSendDataComplete(New IdentifiableItem(Of Guid, Byte())(ClientID, data))

@@ -273,7 +273,8 @@ Public Class UdpServer
                     If data.Length - i < datagramSize Then datagramSize = data.Length - i
 
                     ' We'll send the data asynchronously for better performance.
-                    m_udpServer.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client, Nothing, Nothing)
+                    m_udpServer.Client.SendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client)
+                    'm_udpServer.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client, Nothing, Nothing)
                 Next
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
