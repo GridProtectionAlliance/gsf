@@ -10,9 +10,9 @@ Namespace Notifiers
 
 #Region " Member Declaration "
 
-        Private m_speechMsmqPath As String
+        Private m_speechServerMsmq As String
         Private m_speechApplicationUrl As String
-        Private m_messageRecipients As String
+        Private m_speechMessageRecipients As String
 
 #End Region
 
@@ -24,12 +24,12 @@ Namespace Notifiers
 
         End Sub
 
-        Public Property SpeechMsmqPath() As String
+        Public Property SpeechServerMsmq() As String
             Get
-                Return m_speechMsmqPath
+                Return m_speechServerMsmq
             End Get
             Set(ByVal value As String)
-                m_speechMsmqPath = value
+                m_speechServerMsmq = value
             End Set
         End Property
 
@@ -42,12 +42,12 @@ Namespace Notifiers
             End Set
         End Property
 
-        Public Property MessageRecipients() As String
+        Public Property SpeechMessageRecipients() As String
             Get
-                Return m_messageRecipients
+                Return m_speechMessageRecipients
             End Get
             Set(ByVal value As String)
-                m_messageRecipients = value
+                m_speechMessageRecipients = value
             End Set
         End Property
 
@@ -60,9 +60,9 @@ Namespace Notifiers
             Try
                 With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
                     If .Count > 0 Then
-                        SpeechMsmqPath = .Item("SpeechMsmqPath").GetTypedValue(m_speechMsmqPath)
+                        SpeechServerMsmq = .Item("SpeechServerMsmq").GetTypedValue(m_speechServerMsmq)
                         SpeechApplicationUrl = .Item("SpeechApplicationUrl").GetTypedValue(m_speechApplicationUrl)
-                        MessageRecipients = .Item("MessageRecipients").GetTypedValue(m_messageRecipients)
+                        SpeechMessageRecipients = .Item("SpeechMessageRecipients").GetTypedValue(m_speechMessageRecipients)
                     End If
                 End With
             Catch ex As Exception
@@ -78,16 +78,16 @@ Namespace Notifiers
             If PersistSettings Then
                 Try
                     With TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName)
-                        With .Item("SpeechMsmqPath", True)
-                            .Value = m_speechMsmqPath
+                        With .Item("SpeechServerMsmq", True)
+                            .Value = m_speechServerMsmq
                             .Description = "Path of the MSMQ that will be used for sending speech notification messages to the speech server."
                         End With
                         With .Item("SpeechApplicationUrl", True)
                             .Value = m_speechApplicationUrl
                             .Description = "URL of the speech application that will be sent to the speech server as speech notification message using MSMQ."
                         End With
-                        With .Item("MessageRecipients", True)
-                            .Value = m_messageRecipients
+                        With .Item("SpeechMessageRecipients", True)
+                            .Value = m_speechMessageRecipients
                             .Description = "Phone numbers of the recipients for the speech notifications."
                         End With
                     End With
@@ -133,17 +133,17 @@ Namespace Notifiers
 
         Private Sub MakeCall(ByVal message As String, ByVal messageType As String)
 
-            If Not String.IsNullOrEmpty(m_speechMsmqPath) AndAlso _
+            If Not String.IsNullOrEmpty(m_speechServerMsmq) AndAlso _
                     Not String.IsNullOrEmpty(m_speechApplicationUrl) AndAlso _
-                    Not String.IsNullOrEmpty(m_messageRecipients) Then
+                    Not String.IsNullOrEmpty(m_speechMessageRecipients) Then
                 Dim finalMessage As New StringBuilder()
                 finalMessage.AppendFormat("The following is an automated {0} message from {1}.", messageType, MachineName)
                 finalMessage.Append("   ")
                 finalMessage.Append(message)
 
-                Dim queue As MessageQueue = New MessageQueue(m_speechMsmqPath) '("Formatname:DIRECT=OS:rgocmsspeech2\acts")
+                Dim queue As MessageQueue = New MessageQueue(m_speechServerMsmq) '"Formatname:DIRECT=OS:rgocmsspeech2\acts"
                 Dim qMessage As String = String.Format(m_speechApplicationUrl, "{0}", finalMessage.ToString()) '"http://localhost/ELCPSpeechTest/Default.aspx?PhNum={0}&Msg={1}"
-                For Each recipient As String In m_messageRecipients.Replace(" ", "").Split(";"c, ","c)
+                For Each recipient As String In m_speechMessageRecipients.Replace(" ", "").Split(";"c, ","c)
                     queue.Send(New Message(String.Format(qMessage, recipient)))
                 Next
                 queue.Dispose()
