@@ -193,21 +193,21 @@ Namespace Net.Smtp
 
                 If Not String.IsNullOrEmpty(CcRecipients) Then
                     ' Specify the CC e-mail addresses for the e-mail message.
-                    For Each ccRecipient As String In CcRecipients.Replace(" ", "").Split(New Char() {";"c, ","c})
+                    For Each ccRecipient As String In CcRecipients.Replace(" ", "").Split(";"c, ","c)
                         email.CC.Add(ccRecipient)
                     Next
                 End If
 
                 If Not String.IsNullOrEmpty(BccRecipients) Then
                     ' Specify the BCC e-mail addresses for the e-mail message.
-                    For Each bccRecipient As String In BccRecipients.Replace(" ", "").Split(New Char() {";"c, ","c})
+                    For Each bccRecipient As String In BccRecipients.Replace(" ", "").Split(";"c, ","c)
                         email.Bcc.Add(bccRecipient)
                     Next
                 End If
 
                 If Not String.IsNullOrEmpty(Attachments) Then
                     ' Attach all of the specified files to the e-mail message.
-                    For Each attachment As String In Attachments.Split(New Char() {";"c, ","c})
+                    For Each attachment As String In Attachments.Split(";"c, ","c)
                         If File.Exists(attachment) Then
                             ' Create the file attachment for the e-mail message.
                             Dim data As New Attachment(attachment, MediaTypeNames.Application.Octet)
