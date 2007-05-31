@@ -180,8 +180,9 @@ Public Class TcpServer
                 ' Add payload header if client-server communication is PayloadAware.
                 If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
 
-                ' We'll send data over the wire asynchronously for improved performance.
+                ' PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
                 tcpClient.Client.Send(data)
+                '' We'll send data over the wire asynchronously for improved performance.
                 'tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
             Else
                 Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")

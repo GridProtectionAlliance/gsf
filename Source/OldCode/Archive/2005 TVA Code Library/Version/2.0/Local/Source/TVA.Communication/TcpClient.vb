@@ -171,8 +171,9 @@ Public Class TcpClient
 
             OnSendDataBegin(New IdentifiableItem(Of Guid, Byte())(ClientID, data))
 
-            ' We'll send data over the wire asynchronously for improved performance.
+            ' PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
             m_tcpClient.Client.Send(data)
+            '' We'll send data over the wire asynchronously for improved performance.
             'm_tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
 
             OnSendDataComplete(New IdentifiableItem(Of Guid, Byte())(ClientID, data))

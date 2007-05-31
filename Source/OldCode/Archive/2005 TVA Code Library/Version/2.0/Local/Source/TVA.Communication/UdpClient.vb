@@ -272,8 +272,9 @@ Public Class UdpClient
                 ' Last or the only datagram in the series.
                 If data.Length - i < datagramSize Then datagramSize = data.Length - i
 
-                ' We'll send the data asynchronously for better performance.
+                ' PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
                 m_udpClient.Client.SendTo(data, i, datagramSize, SocketFlags.None, m_udpServer)
+                '' We'll send the data asynchronously for better performance.
                 'm_udpClient.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, m_udpServer, Nothing, Nothing)
             Next
 

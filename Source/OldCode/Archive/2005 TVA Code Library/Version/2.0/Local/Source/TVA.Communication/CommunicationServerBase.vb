@@ -479,7 +479,7 @@ Public MustInherit Class CommunicationServerBase
             If size > 0 Then
                 Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
-                    ' PCP: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                    ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
                     SendPreparedDataTo(clientID, dataToSend)
 
                     ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
@@ -540,7 +540,7 @@ Public MustInherit Class CommunicationServerBase
                 Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
                     For Each clientID As Guid In m_clientIDs
-                        ' PCP: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                        ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
                         SendPreparedDataTo(clientID, dataToSend)
 
                         ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
