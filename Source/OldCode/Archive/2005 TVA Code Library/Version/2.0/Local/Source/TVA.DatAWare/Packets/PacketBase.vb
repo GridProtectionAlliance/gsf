@@ -3,7 +3,7 @@ Imports TVA.DatAWare.Files
 Namespace Packets
 
     Public MustInherit Class PacketBase
-        Implements IPacket, IBinaryDataConsumer
+        Implements IPacket, IBinaryDataProvider, IBinaryDataConsumer
 
 #Region " Member Declaration "
 
@@ -67,6 +67,14 @@ Namespace Packets
         Public MustOverride ReadOnly Property ReplyData() As Byte() Implements IPacket.ReplyData
 
         Public MustOverride Sub SaveData() Implements IPacket.SaveData
+
+#End Region
+
+#Region " IBinaryDataProvider "
+
+        Public MustOverride ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
+
+        Public MustOverride ReadOnly Property BinaryLength() As Integer Implements IBinaryDataProvider.BinaryLength
 
 #End Region
 

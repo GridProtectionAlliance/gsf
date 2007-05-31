@@ -1,4 +1,5 @@
 Imports System.Text
+Imports TVA.Measurements
 
 Namespace Packets
 
@@ -36,17 +37,13 @@ Namespace Packets
 
         End Sub
 
-        Public Sub New(ByVal binaryImage As Byte())
-
-            MyClass.New(binaryImage, 0)
-
-        End Sub
-
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
+        Public Sub New(ByVal measurement As IMeasurement)
 
             MyClass.New()
-
-            Initialize(binaryImage, startIndex)
+            m_pointID = measurement.ID
+            m_timeTag = New TimeTag(measurement.Timestamp)
+            m_value = Convert.ToSingle(measurement.AdjustedValue)
+            m_quality = IIf(measurement.TimestampQualityIsGood And measurement.ValueQualityIsGood, Quality.Good, Quality.SuspectData)
 
         End Sub
 
@@ -87,6 +84,26 @@ Namespace Packets
         End Property
 
 #Region " Overrides "
+
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
+            Get
+                Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+                Array.Copy(BitConverter.GetBytes(TypeID), 0, image, 0, 2)
+                Array.Copy(BitConverter.GetBytes(m_pointID), 0, image, 2, 4)
+                Array.Copy(BitConverter.GetBytes(m_timeTag.Value), 0, image, 6, 8)
+                Array.Copy(BitConverter.GetBytes(m_quality), 0, image, 14, 4)
+                Array.Copy(BitConverter.GetBytes(m_value), 0, image, 18, 4)
+
+                Return image
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryLength() As Integer
+            Get
+                Return Size
+            End Get
+        End Property
 
         Public Overrides ReadOnly Property ReplyData() As Byte()
             Get

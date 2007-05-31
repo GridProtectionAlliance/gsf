@@ -50,20 +50,6 @@ Namespace Packets
 
         End Sub
 
-        Public Sub New(ByVal binaryImage As Byte())
-
-            MyClass.New(binaryImage, 0)
-
-        End Sub
-
-        Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As Integer)
-
-            MyClass.New()
-
-            Initialize(binaryImage, startIndex)
-
-        End Sub
-
         Public Property PointID() As Integer
             Get
                 Return m_pointID
@@ -164,6 +150,33 @@ Namespace Packets
         End Property
 
 #Region " Overrides "
+
+        Public Overrides ReadOnly Property BinaryImage() As Byte()
+            Get
+                Dim image As Byte() = CreateArray(Of Byte)(Size)
+
+                Array.Copy(BitConverter.GetBytes(TypeID), 0, image, 0, 2)
+                Array.Copy(BitConverter.GetBytes(m_pointID), 0, image, 2, 4)
+                Array.Copy(BitConverter.GetBytes(m_year), 0, image, 6, 2)
+                Array.Copy(BitConverter.GetBytes(m_month), 0, image, 8, 1)
+                Array.Copy(BitConverter.GetBytes(m_day), 0, image, 9, 1)
+                Array.Copy(BitConverter.GetBytes(m_hour), 0, image, 10, 1)
+                Array.Copy(BitConverter.GetBytes(m_minute), 0, image, 11, 1)
+                Array.Copy(BitConverter.GetBytes(m_second), 0, image, 12, 1)
+                Array.Copy(BitConverter.GetBytes(m_quality), 0, image, 13, 1)
+                Array.Copy(BitConverter.GetBytes(m_millisecond), 0, image, 14, 2)
+                Array.Copy(BitConverter.GetBytes(m_gmtOffset), 0, image, 16, 2)
+                Array.Copy(BitConverter.GetBytes(m_value), 0, image, 18, 4)
+
+                Return image
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property BinaryLength() As Integer
+            Get
+                Return Size
+            End Get
+        End Property
 
         Public Overrides ReadOnly Property ReplyData() As Byte()
             Get
