@@ -212,10 +212,10 @@ Module MainModule
         Dim connectionString As String = StringSetting("PMUDatabase")
         Dim archiveSource As String
 
-        With RetrieveData("SELECT * FROM MeasurementArchives WHERE Enabled != 0", connection)
+        With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection)
             For x As Integer = 0 To .Rows.Count - 1
                 Try
-                    archiveSource = .Rows(x)("ArchiveSource").ToString()
+                    archiveSource = .Rows(x)("Acronym").ToString()
                     externalAssemblyName = .Rows(x)("AssemblyName").ToString()
 
                     ' Load the external assembly for the historian adapter
@@ -234,7 +234,7 @@ Module MainModule
                         calculatedMeasurements)
 
                     AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
-                    If Convert.ToBoolean(.Rows(x)("InitializeOnStartup")) Then measurementReceiver.Initialize(connection)
+                    If .Rows(x)("InitializeOnStartup") <> 0 Then measurementReceiver.Initialize(connection)
 
                     measurementReceivers.Add(archiveSource, measurementReceiver)
                 Catch ex As Exception
@@ -273,7 +273,7 @@ Module MainModule
         '   LeadTime                    Double
 
         ' Load all the unique calculated measurement assemlies into the current application domain
-        With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled != 0", connection)
+        With RetrieveData("SELECT * FROM CalculatedMeasurement WHERE Enabled <> 0", connection)
             For x As Integer = 0 To .Rows.Count - 1
                 Try
                     ' Load the external assembly
@@ -409,10 +409,10 @@ Module MainModule
 
     End Sub
 
-    Private Function TryGetMapper(ByVal consoleLine As String, ByRef mapper As PhasorMeasurementMapper) As Boolean
+    Private Function TryGetMapper(ByVal deviceAcronym As String, ByRef mapper As PhasorMeasurementMapper) As Boolean
 
         Try
-            Dim pmuID As String = RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(1).ToUpper()
+            Dim pmuID As String = RemoveDuplicateWhiteSpace(deviceAcronym).Split(" "c)(1).ToUpper()
             Dim foundMapper As Boolean
 
             For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
@@ -485,7 +485,7 @@ Module MainModule
                 .Append(Environment.NewLine)
 
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-                    .Append("Phasor Measurement Retriever for Archive """)
+                    .Append("Phasor Measurement Receiver for Archive """)
                     .Append(receiver.HistorianName)
                     .Append("""")
                     .Append(Environment.NewLine)

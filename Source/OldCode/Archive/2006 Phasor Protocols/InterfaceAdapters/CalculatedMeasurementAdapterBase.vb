@@ -62,11 +62,11 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         m_inputMeasurementKeys = inputMeasurementKeys
 
         ' We create a sorted list of the input keys for quick lookup - we must keep this separate because
-        ' the order of the input measurements may be relevant the calculation
+        ' the order of the input measurements may be relevant to the calculation
         m_inputMeasurementKeysHash = New List(Of MeasurementKey)(inputMeasurementKeys)
         m_inputMeasurementKeysHash.Sort()
 
-        ' Default to all measurements of minimum is not specified
+        ' Default to all measurements if minimum is not specified
         If minimumMeasurementsToUse < 1 Then
             m_minimumMeasurementsToUse = inputMeasurementKeys.Length
         Else

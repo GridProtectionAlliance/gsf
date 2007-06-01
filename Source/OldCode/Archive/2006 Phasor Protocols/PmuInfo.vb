@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports TVA.Common
 Imports TVA.Measurements
 
 Public Class PmuInfo
@@ -22,14 +23,16 @@ Public Class PmuInfo
     Implements IComparable(Of PmuInfo)
 
     Private m_id As UInt16
-    Private m_tag As String
+    Private m_acronym As String
     Private m_lastReportTime As Long
-    Private m_activeMeasurements As Dictionary(Of String, IMeasurement)
+    Private m_signalSynonyms As Dictionary(Of SignalType, String())
+    'Private m_activeMeasurements As Dictionary(Of String, IMeasurement)
 
-    Public Sub New(ByVal id As UInt16, ByVal tag As String)
+    Public Sub New(ByVal id As UInt16, ByVal acronym As String)
 
         m_id = id
-        m_tag = tag
+        m_acronym = acronym
+        m_signalSynonyms = New Dictionary(Of SignalType, String())
 
     End Sub
 
@@ -39,9 +42,70 @@ Public Class PmuInfo
         End Get
     End Property
 
-    Public ReadOnly Property Tag() As String
+    Public ReadOnly Property Acronym() As String
         Get
-            Return m_tag
+            Return m_acronym
+        End Get
+    End Property
+
+    Public ReadOnly Property SignalSynonym(ByVal signal As SignalType) As String
+        Get
+            ' We cache signal reference strings so they don't need to be generated at each mapping call
+            ' This helps with performance since the mappings for each signal occur 30 times per second
+            Dim signalRef As String = Nothing
+            Dim synonyms As String()
+
+            ' Looks up synonym dictionary based on signal type
+            If m_signalSynonyms.TryGetValue(signal, synonyms) Then
+                If synonyms(0) Is Nothing Then
+                    ' Didn't find signal index, create and cache new signal reference
+                    signalRef = SignalReference.ToString(m_acronym, signal)
+                    synonyms(0) = signalRef
+                Else
+                    signalRef = synonyms(0)
+                End If
+            Else
+                ' Create a new indexed signal reference array
+                synonyms = CreateArray(Of String)(1)
+
+                ' Create and cache new signal reference
+                signalRef = SignalReference.ToString(m_acronym, signal)
+                synonyms(0) = signalRef
+            End If
+
+            Return signalRef
+        End Get
+    End Property
+
+    Public ReadOnly Property SignalSynonym(ByVal signal As SignalType, ByVal signalIndex As Integer, ByVal signalCount As Integer) As String
+        Get
+            ' We cache indexed signal reference strings so they don't need to be generated at each mapping call
+            ' This helps with performance since the mappings for each signal occur 30 times per second
+            Dim signalRef As String = Nothing
+            Dim synonyms As String()
+
+            ' Looks up synonym dictionary based on signal type
+            If m_signalSynonyms.TryGetValue(signal, synonyms) Then
+                ' Lookup signal reference "synonym" value of given signal index
+                If signalIndex > -1 AndAlso signalIndex < synonyms.Length Then
+                    If synonyms(signalIndex) Is Nothing Then
+                        ' Didn't find signal index, create and cache new signal reference
+                        signalRef = SignalReference.ToString(m_acronym, signal, signalIndex + 1)
+                        synonyms(signalIndex) = signalRef
+                    Else
+                        signalRef = synonyms(signalIndex)
+                    End If
+                End If
+            Else
+                ' Create a new indexed signal reference array
+                synonyms = CreateArray(Of String)(signalCount)
+
+                ' Create and cache new signal reference
+                signalRef = SignalReference.ToString(m_acronym, signal, signalIndex + 1)
+                synonyms(signalIndex) = signalRef
+            End If
+
+            Return signalRef
         End Get
     End Property
 
@@ -54,12 +118,12 @@ Public Class PmuInfo
         End Set
     End Property
 
-    Public ReadOnly Property Measurements() As Dictionary(Of String, IMeasurement)
-        Get
-            If m_activeMeasurements Is Nothing Then m_activeMeasurements = New Dictionary(Of String, IMeasurement)
-            Return m_activeMeasurements
-        End Get
-    End Property
+    'Public ReadOnly Property Measurements() As Dictionary(Of String, IMeasurement)
+    '    Get
+    '        If m_activeMeasurements Is Nothing Then m_activeMeasurements = New Dictionary(Of String, IMeasurement)
+    '        Return m_activeMeasurements
+    '    End Get
+    'End Property
 
     Public Function CompareTo(ByVal other As PmuInfo) As Integer Implements System.IComparable(Of PmuInfo).CompareTo
 

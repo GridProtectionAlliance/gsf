@@ -38,6 +38,7 @@ Public Class MeasurementExporter
     Private m_exportFileName As String
     Private m_exportCount As Long
     Private m_statusDisplayed As Boolean
+    Private m_sqrtOf3 As Double
 
     Public Sub New()
     End Sub
@@ -75,6 +76,9 @@ Public Class MeasurementExporter
         ' Create new measurement dictionaries
         m_measurementTags = New Dictionary(Of MeasurementKey, String)
         m_signalTypes = New Dictionary(Of MeasurementKey, String)
+
+        ' Calculate the square root of 3
+        m_sqrtOf3 = Math.Sqrt(3.0R)
 
         ' Need to open database connection to load measurement tags and signal types.
         ' Note that data connection string defined in config file of parent process.
@@ -217,6 +221,9 @@ Public Class MeasurementExporter
                                         If String.Compare(signalType, "VPHA", True) = 0 OrElse String.Compare(signalType, "IPHA", True) = 0 Then
                                             ' This is a phase angle measurement, export the value relative to the reference angle
                                             .Write(referenceAngle.AdjustedValue - measurement.AdjustedValue)
+                                        ElseIf String.Compare(signalType, "VPHM", True) = 0 Then
+                                            ' Voltage from PMU's is line-to-neutral volts, we convert this to line-to-line kilovolts
+                                            .Write(referenceAngle.AdjustedValue * m_sqrtOf3 / 1000.0R)
                                         Else
                                             ' All other measurements are exported using their raw value
                                             .Write(measurement.AdjustedValue)

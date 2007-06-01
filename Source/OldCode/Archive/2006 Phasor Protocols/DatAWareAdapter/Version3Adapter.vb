@@ -19,10 +19,11 @@ Imports InterfaceAdapters
 Imports System.IO
 Imports System.Text
 Imports System.Threading
+Imports System.Net
 Imports TVA.Common
 Imports TVA.Collections.Common
 Imports TVA.Measurements
-Imports TVA.DatAWare
+Imports TVA.DatAWare.Packets
 Imports TVA.Text.Common
 Imports TVA.Communication
 
@@ -31,6 +32,7 @@ Public Class Version3Adapter
     Inherits HistorianAdapterBase
 
     Private m_archiverIP As String
+    Private m_archiverHostName As String
     Private m_archiverPort As Integer
     Private m_maximumEvents As Integer
     Private m_bufferSize As Integer
@@ -64,8 +66,16 @@ Public Class Version3Adapter
 
         If String.IsNullOrEmpty(m_archiverIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener connection to DatAWare Archiver without specifing a host IP")
 
-        m_bufferSize = StandardEvent.BinaryLength * m_maximumEvents
+        m_bufferSize = StandardPacket.Size * m_maximumEvents
         m_buffer = CreateArray(Of Byte)(m_bufferSize)
+
+        ' Attempt to lookup DNS host name for given IP
+        Try
+            m_archiverHostName = Dns.GetHostEntry(m_archiverIP).HostName
+            If String.IsNullOrEmpty(m_archiverHostName) Then m_archiverHostName = m_archiverIP
+        Catch
+            m_archiverHostName = m_archiverIP
+        End Try
 
     End Sub
 
@@ -97,37 +107,32 @@ Public Class Version3Adapter
 
     Public Overrides ReadOnly Property Name() As String
         Get
-            Return "DW Archiver V3 """ & m_archiverIP & ":" & m_archiverPort & """"
+            Return "DW Archiver V3 " & m_archiverHostName & ":" & m_archiverPort
         End Get
     End Property
 
     Protected Overrides Sub ArchiveMeasurements()
 
-        Dim x, totalPoints As Integer
+        Dim totalPoints As Integer
+        Dim archiveMeasurements As List(Of IMeasurement) = MyBase.Measurements
 
         ' Retrieve data points to be archived
-        SyncLock Measurements
-            With Measurements
-                totalPoints = Minimum(m_maximumEvents, .Count)
+        SyncLock archiveMeasurements
+            totalPoints = Minimum(m_maximumEvents, archiveMeasurements.Count)
 
-                If totalPoints > 0 Then
-                    ' Load binary standard event images into local buffer
-                    For x = 0 To totalPoints - 1
-                        With New StandardEvent(.Item(x))
-                            System.Buffer.BlockCopy(.BinaryImage, 0, m_buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
-                        End With
-                    Next
+            If totalPoints > 0 Then
+                ' Load binary standard event images into local buffer
+                For x As Integer = 0 To totalPoints - 1
+                    Buffer.BlockCopy((New StandardPacket(archiveMeasurements(x))).BinaryImage, 0, m_buffer, x * StandardPacket.Size, StandardPacket.Size)
+                Next
 
-                    ' Remove measurements being processed
-                    .RemoveRange(0, totalPoints)
-                End If
-            End With
+                ' Remove measurements being processed
+                archiveMeasurements.RemoveRange(0, totalPoints)
+            End If
         End SyncLock
 
-        If totalPoints > 0 Then
-            ' Post data to TCP stream
-            m_connection.Send(m_buffer, 0, totalPoints * StandardEvent.BinaryLength)
-        End If
+        ' Post data to TCP stream
+        If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * StandardPacket.Size)
 
     End Sub
 

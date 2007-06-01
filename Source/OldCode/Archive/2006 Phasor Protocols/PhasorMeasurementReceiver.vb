@@ -23,6 +23,7 @@ Imports TVA.Phasors
 Imports TVA.Phasors.Common
 Imports TVA.Communication
 Imports TVA.Measurements
+Imports TVA.Text.Common
 Imports InterfaceAdapters
 
 Public Class PhasorMeasurementReceiver
@@ -108,98 +109,113 @@ Public Class PhasorMeasurementReceiver
             Dim timezone As String
             Dim timeAdjustmentTicks As Long
             Dim accessID As Integer
-            Dim pmuIDs As PmuInfoCollection
+            Dim pmuIDs As Dictionary(Of UInt16, PmuInfo)
             Dim x, y As Integer
 
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
 
-            ' Initialize complete measurement list for this archive keyed on the synonym field
-            With RetrieveData("SELECT * FROM IEEEDataConnectionMeasurements WHERE PlantCode='" & m_archiverSource & "'", connection)
-                For x = 0 To .Rows.Count - 1
-                    With .Rows(x)
-                        measurementIDs.Add(.Item("Synonym"), _
-                            New Measurement( _
-                                Convert.ToInt32(.Item("ID")), _
-                                m_archiverSource, _
-                                .Item("Synonym").ToString(), _
-                                Convert.ToDouble(.Item("Adder")), _
-                                Convert.ToDouble(.Item("Multiplier"))))
-                    End With
-                Next
-            End With
-
-            UpdateStatus("Loaded " & measurementIDs.Count & " measurement ID's...")
-
             ' Initialize each data connection
-            With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverSource & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverSource & "')", connection)
+            With RetrieveData("SELECT * FROM ActiveDeviceConnections WHERE Historian='" & m_archiverSource & "'", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     row = .Rows(x)
 
                     parser = New MultiProtocolFrameParser
-                    pmuIDs = New PmuInfoCollection
+                    pmuIDs = New Dictionary(Of UInt16, PmuInfo)
 
-                    source = row("SourceID").ToString.Trim.ToUpper
+                    source = row("Acronym").ToString().Trim().ToUpper()
                     timezone = row("TimeZone")
-                    timeAdjustmentTicks = row("TimeAdjustmentTicks")
+                    timeAdjustmentTicks = row("TimeOffsetTicks")
                     accessID = row("AccessID")
 
                     ' Setup phasor frame parser
                     With parser
                         Try
-                            .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"), True)
+                            .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol"), True)
                         Catch ex As ArgumentException
-                            UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("DataID") & " - defaulting to IEEE C37.118 V1.")
+                            UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("PhasorProtocol") & " - defaulting to IEEE C37.118 V1.")
                             .PhasorProtocol = PhasorProtocol.IeeeC37_118V1
                         End Try
 
-                        ' TODO: This will need to modified to execute like the above if serial connections should be allowed
-                        .TransportProtocol = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
+                        Try
+                            .TransportProtocol = [Enum].Parse(GetType(TransportProtocol), row("TransportProtocol"), True)
+                        Catch ex As ArgumentException
+                            UpdateStatus("Unexpected transport protocol encountered for """ & source & """: " & row("TransportProtocol") & " - defaulting to UDP.")
+                            .TransportProtocol = TransportProtocol.Udp
+                        End Try
 
-                        If .TransportProtocol = TransportProtocol.Tcp Then
-                            .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
-                            .DeviceSupportsCommands = True
-                        Else
-                            ' TODO: May need to account for UDP connections supporting remote server commands at some point
-                            ' Note that this will require an extra database field for remote port...
-                            .ConnectionString = "localport=" & row("IPPort")
-                            .DeviceSupportsCommands = False
+                        Dim connectionString As Object = row("ConnectionString")
 
-                            ' Example UDP connect string supporting remote UDP commands
-                            '.ConnectionString = "server=" & row("IPAddress") & "; localport=" & row("IPPort") & "; remoteport=" & row("IPCommandPort")
-                            '.DeviceSupportsCommands = True
-
-                            ' Handle special connection information
-                            If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
-                                ' BPA PDCstream has special connection needs
-                                With DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
-                                    .ConfigurationFileName = TVA.IO.FilePath.GetApplicationPath() & row("IPAddress")
-                                    .RefreshConfigurationFileOnChange = True
-                                    .ParseWordCountFromByte = False
-                                End With
+                        If connectionString Is Nothing OrElse IsDBNull(connectionString) OrElse String.IsNullOrEmpty(connectionString.ToString()) Then
+                            ' Use old fields for connections if connection string is not defined...
+                            If .TransportProtocol = TransportProtocol.Tcp Then
+                                .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                                .DeviceSupportsCommands = True
+                            Else
+                                .ConnectionString = "localport=" & row("IPPort")
+                                .DeviceSupportsCommands = False
                             End If
+                        Else
+                            ' Use connection string if any is defined
+                            .ConnectionString = row("ConnectionString")
+                        End If
+
+                        ' Handle special connection parameters
+                        If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
+                            ' Make sure required INI configuration file parameter gets initialized
+                            Dim parameters As BpaPdcStream.ConnectionParameters = DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
+                            Dim keys As Dictionary(Of String, String) = ParseKeyValuePairs(.ConnectionString)
+                            parameters.ConfigurationFileName = keys("inifilename")
                         End If
 
                         .DeviceID = accessID
                         .SourceName = source
                     End With
 
-                    If row("IsConcentrator") = 1 Then
+                    If row("IsConcentrator") <> 0 Then
                         UpdateStatus("Loading expected PMU list for """ & source & """:")
 
+                        Dim loadedPmuStatus As New StringBuilder
+                        loadedPmuStatus.Append(Environment.NewLine)
                         ' Making a connection to a concentrator - this may support multiple PMU's
-                        With RetrieveData("SELECT PMUIndex, PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverSource & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
+                        With RetrieveData("SELECT AccessID, Acronym FROM PdcPmus WHERE PdcAcronym='" & source & "' AND Historian='" & m_archiverSource & "' ORDER BY IOIndex", connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
-                                    pmuIDs.Add(New PmuInfo(.Item("PMUIndex"), .Item("PMUID")))
+                                    pmuIDs.Add(.Item("AccessID"), New PmuInfo(.Item("AccessID"), .Item("Acronym").ToString().Trim().ToUpper()))
+
+                                    ' Create status display string for loaded PMU
+                                    loadedPmuStatus.Append("   PMU ")
+                                    loadedPmuStatus.Append(y.ToString("00"))
+                                    loadedPmuStatus.Append(": ")
+                                    loadedPmuStatus.Append(.Item("Acronym"))
+                                    loadedPmuStatus.Append(" (")
+                                    loadedPmuStatus.Append(.Item("AccessID"))
+                                    loadedPmuStatus.Append(")"c)
+                                    loadedPmuStatus.Append(Environment.NewLine)
                                 End With
-                                UpdateStatus("   >> " & pmuIDs(y).Tag)
                             Next
                         End With
+                        UpdateStatus(loadedPmuStatus.ToString())
                     Else
                         ' Making a connection to a single device
-                        pmuIDs.Add(New PmuInfo(accessID, source))
+                        pmuIDs.Add(accessID, New PmuInfo(accessID, source))
                     End If
+                    ' Initialize measurement list for this device connection keyed on the signal reference field
+                    With RetrieveData("SELECT * FROM ActiveDeviceMeasurements WHERE Acronym='" & source & "' AND Historian='" & m_archiverSource & "'", connection)
+                        For y = 0 To .Rows.Count - 1
+                            With .Rows(y)
+                                measurementIDs.Add(.Item("SignalReference"), _
+                                    New Measurement( _
+                                        Convert.ToInt32(.Item("PointID")), _
+                                        m_archiverSource, _
+                                        .Item("SignalReference").ToString(), _
+                                        Convert.ToDouble(.Item("Adder")), _
+                                        Convert.ToDouble(.Item("Multiplier"))))
+                            End With
+                        Next
+                    End With
+
+                    UpdateStatus("Loaded " & measurementIDs.Count & " active measurements for " & source & "...")
 
                     With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs, m_dataLossInterval)
                         ' Add timezone mapping if not UTC...
@@ -332,10 +348,10 @@ Public Class PhasorMeasurementReceiver
 
                 ' Check all PMU's for "reporting status"...
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                    For Each pmuID As PmuInfo In mapper.PmuIDs
-                        If Not String.IsNullOrEmpty(pmuID.Tag) Then
+                    For Each pmuID As PmuInfo In mapper.PmuIDs.Values
+                        If Not String.IsNullOrEmpty(pmuID.Acronym) Then
                             isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(pmuID.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
-                            updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmuID.Tag & "'; " & Environment.NewLine)
+                            updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmuID.Acronym & "'; " & Environment.NewLine)
                         End If
                     Next
                 Next
