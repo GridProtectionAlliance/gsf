@@ -109,27 +109,47 @@ Namespace Diagnostics
             End Get
         End Property
 
+        Public Sub Reset()
+
+            Interlocked.Exchange(m_lastProcessorTime, 0)
+            Interlocked.Exchange(m_lastWorkingSet, 0)
+
+            SyncLock m_processorTimeSamples
+                m_processorTimeSamples.Clear()
+            End SyncLock
+            SyncLock m_workingSetSamples
+                m_workingSetSamples.Clear()
+            End SyncLock
+
+        End Sub
+
 #End Region
 
 #Region " Code Scope: Private "
 
         Private Sub m_samplingTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_samplingTimer.Elapsed
 
-            SyncLock m_processorTimeCounter
-                Interlocked.Exchange(m_lastProcessorTime, m_processorTimeCounter.NextValue())
-            End SyncLock
-            SyncLock m_workingSetCounter
-                Interlocked.Exchange(m_lastWorkingSet, m_workingSetCounter.NextValue())
-            End SyncLock
+            Try
+                SyncLock m_processorTimeCounter
+                    Interlocked.Exchange(m_lastProcessorTime, m_processorTimeCounter.NextValue())
+                End SyncLock
+                SyncLock m_workingSetCounter
+                    Interlocked.Exchange(m_lastWorkingSet, m_workingSetCounter.NextValue())
+                End SyncLock
 
-            SyncLock m_processorTimeSamples
-                m_processorTimeSamples.Add(m_lastProcessorTime)
-                If m_processorTimeSamples.Count > m_averagingSampleCount Then m_processorTimeSamples.RemoveAt(0)
-            End SyncLock
-            SyncLock m_workingSetSamples
-                m_workingSetSamples.Add(m_lastWorkingSet)
-                If m_workingSetSamples.Count > m_averagingSampleCount Then m_workingSetSamples.RemoveAt(0)
-            End SyncLock
+                SyncLock m_processorTimeSamples
+                    m_processorTimeSamples.Add(m_lastProcessorTime)
+                    If m_processorTimeSamples.Count > m_averagingSampleCount Then m_processorTimeSamples.RemoveAt(0)
+                End SyncLock
+                SyncLock m_workingSetSamples
+                    m_workingSetSamples.Add(m_lastWorkingSet)
+                    If m_workingSetSamples.Count > m_averagingSampleCount Then m_workingSetSamples.RemoveAt(0)
+                End SyncLock
+            Catch ex As Exception
+                ' We'll encounter an InvalidOperationException if the process whose performance we're monitoring
+                ' does is not running. When this happens we'll reset all of our numbers.
+                Reset()
+            End Try
 
         End Sub
 
