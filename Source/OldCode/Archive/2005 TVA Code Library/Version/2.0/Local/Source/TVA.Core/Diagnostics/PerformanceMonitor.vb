@@ -15,10 +15,10 @@ Namespace Diagnostics
         Private m_processName As String
         Private m_lastProcessorTime As Single
         Private m_lastWorkingSet As Single
-        Private m_accumProcessorTime As Double
-        Private m_accumWorkingSet As Double
-        Private m_averagingSampleCount As Long
+        Private m_averagingSampleCount As Integer
 
+        Private m_processorTimeSamples As List(Of Double)
+        Private m_workingSetSamples As List(Of Double)
         Private m_processorTimeCounter As PerformanceCounter
         Private m_workingSetCounter As PerformanceCounter
 
@@ -29,6 +29,7 @@ Namespace Diagnostics
 #Region " Code Scope: Public "
 
         Public Const DefaultSamplingInterval As Integer = 1000
+        Public Const DefaultAveragingSampleCount As Integer = 120
 
         Public Sub New()
 
@@ -52,8 +53,11 @@ Namespace Diagnostics
 
             MyBase.New()
             m_processName = processName
+            m_averagingSampleCount = DefaultAveragingSampleCount
             m_processorTimeCounter = New PerformanceCounter("Process", "% Processor Time", m_processName)
             m_workingSetCounter = New PerformanceCounter("Process", "Working Set", m_processName)
+            m_processorTimeSamples = New List(Of Double)()
+            m_workingSetSamples = New List(Of Double)()
             m_samplingTimer = New System.Timers.Timer(samplingInterval)
             m_samplingTimer.Start()
 
@@ -71,6 +75,12 @@ Namespace Diagnostics
             End Get
         End Property
 
+        Public ReadOnly Property AveragingSampleCount() As Integer
+            Get
+                Return m_averagingSampleCount
+            End Get
+        End Property
+
         Public ReadOnly Property LastProcessorTime() As Single
             Get
                 Return m_lastProcessorTime
@@ -85,23 +95,19 @@ Namespace Diagnostics
 
         Public ReadOnly Property AverageProcessorTime() As Single
             Get
-                Return Convert.ToSingle(m_accumProcessorTime / m_averagingSampleCount)
+                SyncLock m_processorTimeSamples
+                    Return Convert.ToSingle(Math.Common.Average(m_processorTimeSamples))
+                End SyncLock
             End Get
         End Property
 
         Public ReadOnly Property AverageWorkingSet() As Single
             Get
-                Return Convert.ToSingle(m_accumWorkingSet / m_averagingSampleCount)
+                SyncLock m_workingSetSamples
+                    Return Convert.ToSingle(Math.Common.Average(m_workingSetSamples))
+                End SyncLock
             End Get
         End Property
-
-        Public Sub Reset()
-
-            Interlocked.Exchange(m_accumProcessorTime, 0)
-            Interlocked.Exchange(m_accumWorkingSet, 0)
-            Interlocked.Exchange(m_averagingSampleCount, 0)
-
-        End Sub
 
 #End Region
 
@@ -116,16 +122,14 @@ Namespace Diagnostics
                 Interlocked.Exchange(m_lastWorkingSet, m_workingSetCounter.NextValue())
             End SyncLock
 
-            Try
-                Interlocked.Increment(m_averagingSampleCount)
-                Interlocked.Exchange(m_accumProcessorTime, m_accumProcessorTime + m_lastProcessorTime)
-                Interlocked.Exchange(m_accumWorkingSet, m_accumWorkingSet + m_lastWorkingSet)
-            Catch ex As OverflowException
-                ' We'll reset the valriable used for averaging if we encounter an overflow exception.
-                Reset()
-            Catch ex As Exception
-                Throw
-            End Try
+            SyncLock m_processorTimeSamples
+                m_processorTimeSamples.Add(m_lastProcessorTime)
+                If m_processorTimeSamples.Count > m_averagingSampleCount Then m_processorTimeSamples.RemoveAt(0)
+            End SyncLock
+            SyncLock m_workingSetSamples
+                m_workingSetSamples.Add(m_lastWorkingSet)
+                If m_workingSetSamples.Count > m_averagingSampleCount Then m_workingSetSamples.RemoveAt(0)
+            End SyncLock
 
         End Sub
 
