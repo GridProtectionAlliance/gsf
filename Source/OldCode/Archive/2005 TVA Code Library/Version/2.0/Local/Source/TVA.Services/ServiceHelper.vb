@@ -171,6 +171,18 @@ Public Class ServiceHelper
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets a list of all the components that implement the TVA.Services.IServiceComponent interface.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>An instance of System.Collections.Generic.List(Of TVA.Services.IServiceComponent).</returns>
+    <Browsable(False)> _
+    Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
+        Get
+            Return m_serviceComponents
+        End Get
+    End Property
+
     <Browsable(False)> _
     Public ReadOnly Property Processes() As List(Of ServiceProcess)
         Get
@@ -241,15 +253,10 @@ Public Class ServiceHelper
         End Get
     End Property
 
-    ''' <summary>
-    ''' Gets a list of all the components that implement the TVA.Services.IServiceComponent interface.
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns>An instance of System.Collections.Generic.List(Of TVA.Services.IServiceComponent).</returns>
     <Browsable(False)> _
-    Public ReadOnly Property ServiceComponents() As List(Of IServiceComponent)
+    Public ReadOnly Property PerformanceMonitor() As PerformanceMonitor
         Get
-            Return m_serviceComponents
+            Return m_performanceMonitor
         End Get
     End Property
 
