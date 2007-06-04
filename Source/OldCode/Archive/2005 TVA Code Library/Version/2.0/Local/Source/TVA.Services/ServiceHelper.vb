@@ -11,6 +11,7 @@ Imports TVA.Serialization
 Imports TVA.Scheduling
 Imports TVA.Configuration
 Imports TVA.Configuration.Common
+Imports TVA.Diagnostics
 
 <ToolboxBitmap(GetType(ServiceHelper)), DisplayName("ServiceHelper")> _
 Public Class ServiceHelper
@@ -29,6 +30,7 @@ Public Class ServiceHelper
 
     Private m_pursip As String
     Private m_remoteCommandClientID As Guid
+    Private m_performanceMonitor As PerformanceMonitor
     Private m_connectedClients As List(Of ClientInfo)
     Private m_clientRequestHistory As List(Of ClientRequestInfo)
     Private m_clientRequestHandlers As List(Of ClientRequestHandlerInfo)
@@ -177,9 +179,37 @@ Public Class ServiceHelper
     End Property
 
     <Browsable(False)> _
+    Public ReadOnly Property Processes(ByVal processName As String) As ServiceProcess
+        Get
+            Dim match As ServiceProcess = Nothing
+            For Each process As ServiceProcess In m_processes
+                If String.Compare(process.Name, processName, True) = 0 Then
+                    match = process
+                    Exit For
+                End If
+            Next
+            Return match
+        End Get
+    End Property
+
+    <Browsable(False)> _
     Public ReadOnly Property ConnectedClients() As List(Of ClientInfo)
         Get
             Return m_connectedClients
+        End Get
+    End Property
+
+    <Browsable(False)> _
+    Public ReadOnly Property ConnectedClients(ByVal clientID As Guid) As ClientInfo
+        Get
+            Dim match As ClientInfo = Nothing
+            For Each clientInfo As ClientInfo In m_connectedClients
+                If clientID = clientInfo.ClientID Then
+                    match = clientInfo
+                    Exit For
+                End If
+            Next
+            Return match
         End Get
     End Property
 
@@ -194,6 +224,20 @@ Public Class ServiceHelper
     Public ReadOnly Property ClientRequestHandlers() As List(Of ClientRequestHandlerInfo)
         Get
             Return m_clientRequestHandlers
+        End Get
+    End Property
+
+    <Browsable(False)> _
+    Public ReadOnly Property ClientRequestHandlers(ByVal requestType As String) As ClientRequestHandlerInfo
+        Get
+            Dim match As ClientRequestHandlerInfo = Nothing
+            For Each handler As ClientRequestHandlerInfo In m_clientRequestHandlers
+                If String.Compare(handler.Command, requestType, True) = 0 Then
+                    match = handler
+                    Exit For
+                End If
+            Next
+            Return match
         End Get
     End Property
 
@@ -224,6 +268,8 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", AddressOf ListSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", AddressOf ListRequestHistory))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", AddressOf ListRequestHelp))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("PerfRep", "Displays a resource utilization report for the service", AddressOf ShowPerformanceReport))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Start", "Start a service or system process", AddressOf StartProcess))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Abort", "Aborts a service or system process", AddressOf AbortProcess))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("UpdateSettings", "Updates service setting in the config file", AddressOf UpdateSettings))
@@ -232,11 +278,11 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Unschedule", "Unschedules a process defined in the service", AddressOf UnscheduleProcess))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", AddressOf SaveSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", AddressOf LoadSchedules))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Command", "Allows for a telnet-like remote command session", AddressOf RemoteCommandSession, False))
 
             m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
+            m_performanceMonitor = New TVA.Diagnostics.PerformanceMonitor()
 
             If m_communicationServer IsNot Nothing Then
                 m_communicationServer.Handshake = True
@@ -435,7 +481,7 @@ Public Class ServiceHelper
 
         processName = processName.Trim()
 
-        If FindProcess(processName) Is Nothing Then
+        If Processes(processName) Is Nothing Then
             m_processes.Add(New ServiceProcess(processExecutionMethod, processName, processParameters, Me))
         Else
             Throw New InvalidOperationException(String.Format("Process ""{0}"" is already defined.", processName))
@@ -462,9 +508,9 @@ Public Class ServiceHelper
 
         processName = processName.Trim()
 
-        If FindProcess(processName) IsNot Nothing Then
+        If Processes(processName) IsNot Nothing Then
             ' The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
-            Dim existingSchedule As Schedule = ScheduleManager.FindSchedule(processName)
+            Dim existingSchedule As Schedule = ScheduleManager.Schedules(processName)
 
             If existingSchedule IsNot Nothing Then
                 ' Update the process schedule if it is already exists.
@@ -478,45 +524,6 @@ Public Class ServiceHelper
         End If
 
     End Sub
-
-    Public Function FindProcess(ByVal processName As String) As ServiceProcess
-
-        Dim match As ServiceProcess = Nothing
-        For Each process As ServiceProcess In m_processes
-            If String.Compare(process.Name, processName, True) = 0 Then
-                match = process
-                Exit For
-            End If
-        Next
-        Return match
-
-    End Function
-
-    Public Function FindClient(ByVal clientID As Guid) As ClientInfo
-
-        Dim match As ClientInfo = Nothing
-        For Each clientInfo As ClientInfo In m_connectedClients
-            If clientID = clientInfo.ClientID Then
-                match = clientInfo
-                Exit For
-            End If
-        Next
-        Return match
-
-    End Function
-
-    Public Function FindRequestHandler(ByVal requestType As String) As ClientRequestHandlerInfo
-
-        Dim match As ClientRequestHandlerInfo = Nothing
-        For Each handler As ClientRequestHandlerInfo In m_clientRequestHandlers
-            If String.Compare(handler.Command, requestType, True) = 0 Then
-                match = handler
-                Exit For
-            End If
-        Next
-        Return match
-
-    End Function
 
 #Region " Interface Implementation "
 
@@ -1070,6 +1077,125 @@ Public Class ServiceHelper
 
     End Sub
 
+    Private Sub ShowPerformanceReport(ByVal requestInfo As ClientRequestInfo)
+
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
+            With New StringBuilder()
+                .Append("Displays a resource utilization report for the service.")
+                .AppendLine()
+                .AppendLine()
+                .Append("   Usage:")
+                .AppendLine()
+                .Append("       PerfRep -options")
+                .AppendLine()
+                .AppendLine()
+                .Append("   Options:")
+                .AppendLine()
+                .Append("       -?".PadRight(20))
+                .Append("Displays this help message")
+
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
+            End With
+        Else
+            With New StringBuilder()
+                .AppendFormat("Performance report for {0}:", m_service.ServiceName)
+                .AppendLine()
+                .AppendLine()
+                .Append("Counter".PadRight(20))
+                .Append(" ")
+                .Append("Last".PadRight(13))
+                .Append(" ")
+                .Append("Minimum".PadRight(13))
+                .Append(" ")
+                .Append("Maximum".PadRight(13))
+                .Append(" ")
+                .Append("Average".PadRight(13))
+                .AppendLine()
+                .Append(New String("-"c, 20))
+                .Append(" ")
+                .Append(New String("-"c, 13))
+                .Append(" ")
+                .Append(New String("-"c, 13))
+                .Append(" ")
+                .Append(New String("-"c, 13))
+                .Append(" ")
+                .Append(New String("-"c, 13))
+                .AppendLine()
+                .Append("CPU Usage (%)".PadRight(20))
+                .Append(" ")
+                .Append(m_performanceMonitor.CPUUsage.LastValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.CPUUsage.MinimumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.CPUUsage.MaximumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.CPUUsage.AverageValue.ToString().PadRight(13))
+                .AppendLine()
+                .Append("Memory Usage (KB)".PadRight(20))
+                .Append(" ")
+                .Append((m_performanceMonitor.MemoryUsage.LastValue / 1024).ToString().PadRight(13))
+                .Append(" ")
+                .Append((m_performanceMonitor.MemoryUsage.MinimumValue / 1024).ToString().PadRight(13))
+                .Append(" ")
+                .Append((m_performanceMonitor.MemoryUsage.MaximumValue / 1024).ToString().PadRight(13))
+                .Append(" ")
+                .Append((m_performanceMonitor.MemoryUsage.AverageValue / 1024).ToString().PadRight(13))
+                .AppendLine()
+                .Append("IO Usage (KB)".PadRight(20))
+                .Append(" ")
+                .Append((m_performanceMonitor.IOUsage.LastValue / 1024).ToString().PadRight(13))
+                .Append(" ")
+                .Append((m_performanceMonitor.IOUsage.MinimumValue / 1024).ToString().PadRight(13))
+                .Append(" ")
+                .Append((m_performanceMonitor.IOUsage.MaximumValue / 1024).ToString().PadRight(13))
+                .Append(" ")
+                .Append((m_performanceMonitor.IOUsage.AverageValue / 1024).ToString().PadRight(13))
+                .AppendLine()
+                .Append("Handle Count".PadRight(20))
+                .Append(" ")
+                .Append(m_performanceMonitor.HandleCount.LastValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.HandleCount.MinimumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.HandleCount.MaximumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.HandleCount.AverageValue.ToString().PadRight(13))
+                .AppendLine()
+                .Append("Thread Count".PadRight(20))
+                .Append(" ")
+                .Append(m_performanceMonitor.ThreadCount.LastValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.ThreadCount.MinimumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.ThreadCount.MaximumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.ThreadCount.AverageValue.ToString().PadRight(13))
+
+                UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
+            End With
+        End If
+
+    End Sub
+
+    Private Sub ShowServiceStatus(ByVal requestInfo As ClientRequestInfo)
+
+        With New StringBuilder()
+            .Append(String.Format("Status of components used by {0}:", m_service.ServiceName))
+            .Append(Environment.NewLine)
+            For Each serviceComponent As IServiceComponent In m_serviceComponents
+                If serviceComponent IsNot Nothing Then
+                    .Append(Environment.NewLine)
+                    .Append(String.Format("Status of {0}:", serviceComponent.Name))
+                    .Append(Environment.NewLine)
+                    .Append(serviceComponent.Status)
+                End If
+            Next
+
+            UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
+        End With
+
+    End Sub
+
     Private Sub ReloadSettings(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest OrElse requestInfo.Request.Arguments.OrderedArgCount < 1 Then
@@ -1279,7 +1405,7 @@ Public Class ServiceHelper
             End If
 
             If Not isSystemProcess Then
-                Dim processToStart As ServiceProcess = FindProcess(processName)
+                Dim processToStart As ServiceProcess = Processes(processName)
 
                 If processToStart IsNot Nothing Then
                     If processToStart.CurrentState <> ProcessState.Processing Then
@@ -1349,7 +1475,7 @@ Public Class ServiceHelper
             Dim doListProcesses As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             If Not isSystemProcess Then
-                Dim processToAbort As ServiceProcess = FindProcess(processName)
+                Dim processToAbort As ServiceProcess = Processes(processName)
 
                 If processToAbort IsNot Nothing Then
                     If processToAbort.CurrentState = ProcessState.Processing Then
@@ -1537,7 +1663,7 @@ Public Class ServiceHelper
             Dim processName As String = requestInfo.Request.Arguments("orderedarg1")
             Dim doSaveSchedules As Boolean = requestInfo.Request.Arguments.Exists("save")
             Dim doListSchedules As Boolean = requestInfo.Request.Arguments.Exists("list")
-            Dim scheduleToRemove As Schedule = ScheduleManager.FindSchedule(processName)
+            Dim scheduleToRemove As Schedule = ScheduleManager.Schedules(processName)
 
             If scheduleToRemove IsNot Nothing Then
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to unschedule process ""{0}""...", processName), 3)
@@ -1634,25 +1760,6 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ShowServiceStatus(ByVal requestInfo As ClientRequestInfo)
-
-        With New StringBuilder()
-            .Append(String.Format("Status of components used by {0}:", m_service.ServiceName))
-            .Append(Environment.NewLine)
-            For Each serviceComponent As IServiceComponent In m_serviceComponents
-                If serviceComponent IsNot Nothing Then
-                    .Append(Environment.NewLine)
-                    .Append(String.Format("Status of {0}:", serviceComponent.Name))
-                    .Append(Environment.NewLine)
-                    .Append(serviceComponent.Status)
-                End If
-            Next
-
-            UpdateStatus(requestInfo.Sender.ClientID, .ToString(), 3)
-        End With
-
-    End Sub
-
     Private Sub RemoteCommandSession(ByVal requestinfo As ClientRequestInfo)
 
         If m_remoteCommandProcess Is Nothing AndAlso requestinfo.Request.Arguments.ContainsHelpRequest Then
@@ -1740,7 +1847,7 @@ Public Class ServiceHelper
 
     Private Sub m_communicationServer_ClientDisconnected(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Guid)) Handles m_communicationServer.ClientDisconnected
 
-        Dim disconnectedClient As ClientInfo = FindClient(e.Argument)
+        Dim disconnectedClient As ClientInfo = ConnectedClients(e.Argument)
         If disconnectedClient IsNot Nothing Then
             If e.Argument = m_remoteCommandClientID Then
                 Try
@@ -1751,7 +1858,7 @@ Public Class ServiceHelper
                 End Try
             End If
 
-            m_connectedClients.Remove(FindClient(e.Argument))
+            m_connectedClients.Remove(ConnectedClients(e.Argument))
             UpdateStatus(String.Format("Remote client disconnected - {0} from {1}.", disconnectedClient.UserName, disconnectedClient.MachineName), 3)
         End If
 
@@ -1761,7 +1868,7 @@ Public Class ServiceHelper
 
         Dim client As ClientInfo = GetObject(Of ClientInfo)(e.Argument.Item)
         Dim request As ClientRequest = GetObject(Of ClientRequest)(e.Argument.Item)
-        Dim requestSender As ClientInfo = FindClient(e.Argument.Source)
+        Dim requestSender As ClientInfo = ConnectedClients(e.Argument.Source)
 
         If client IsNot Nothing Then
             ' We've received client information from a recently connected client.
@@ -1782,7 +1889,7 @@ Public Class ServiceHelper
                     ' Notify the consumer about the incoming request from client.
                     RaiseEvent ReceivedClientRequest(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, ClientRequest))(New IdentifiableItem(Of Guid, ClientRequest)(requestSender.ClientID, request)))
 
-                    Dim requestHandler As ClientRequestHandlerInfo = FindRequestHandler(request.Command)
+                    Dim requestHandler As ClientRequestHandlerInfo = ClientRequestHandlers(request.Command)
                     If requestHandler IsNot Nothing Then
                         requestHandler.HandlerMethod(requestInfo)
                     Else
@@ -1807,7 +1914,7 @@ Public Class ServiceHelper
 
     Private Sub ScheduleManager_ScheduleDue(ByVal sender As Object, ByVal e As ScheduleEventArgs) Handles ScheduleManager.ScheduleDue
 
-        Dim scheduledProcess As ServiceProcess = FindProcess(e.Schedule.Name)
+        Dim scheduledProcess As ServiceProcess = Processes(e.Schedule.Name)
         If scheduledProcess IsNot Nothing Then
             scheduledProcess.Start() ' Start the process execution if it exists.
         End If

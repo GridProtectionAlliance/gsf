@@ -138,6 +138,26 @@ Namespace Scheduling
         End Property
 
         ''' <summary>
+        ''' Gets the schedule with the specified schedule name.
+        ''' </summary>
+        ''' <param name="scheduleName">Name of the schedule that is to be found.</param>
+        ''' <value></value>
+        ''' <returns>The TVA.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
+        <Browsable(False)> _
+        Public ReadOnly Property Schedules(ByVal scheduleName As String) As Schedule
+            Get
+                Dim match As Schedule = Nothing
+                For Each schedule As Schedule In m_schedules
+                    If String.Compare(schedule.Name, scheduleName, True) = 0 Then
+                        match = schedule
+                        Exit For
+                    End If
+                Next
+                Return match
+            End Get
+        End Property
+
+        ''' <summary>
         ''' Starts the schedule manager asynchronously.
         ''' </summary>
         Public Sub Start()
@@ -179,24 +199,6 @@ Namespace Scheduling
             End If
 
         End Sub
-
-        ''' <summary>
-        ''' Finds the schedule with the specified schedule name.
-        ''' </summary>
-        ''' <param name="scheduleName">Name of the schedule that is to be found.</param>
-        ''' <returns>The TVA.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
-        Public Function FindSchedule(ByVal scheduleName As String) As Schedule
-
-            Dim match As Schedule = Nothing
-            For Each schedule As Schedule In m_schedules
-                If String.Compare(schedule.Name, scheduleName, True) = 0 Then
-                    match = schedule
-                    Exit For
-                End If
-            Next
-            Return match
-
-        End Function
 
 #End Region
 
@@ -327,7 +329,7 @@ Namespace Scheduling
             Try
                 For Each schedule As CategorizedSettingsElement In TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     ' Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                    Dim existingSchedule As Schedule = FindSchedule(schedule.Name)
+                    Dim existingSchedule As Schedule = Schedules(schedule.Name)
                     If existingSchedule Is Nothing Then
                         ' Schedule doesn't exist, so we'll add it.
                         m_schedules.Add(New Schedule(schedule.Name, schedule.Value, schedule.Description))

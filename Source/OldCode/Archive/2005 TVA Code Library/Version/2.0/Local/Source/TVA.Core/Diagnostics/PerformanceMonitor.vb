@@ -1,10 +1,5 @@
 ' 06/01/2007
 
-Option Strict On
-
-Imports System.Threading
-Imports TVA.Common
-
 Namespace Diagnostics
 
     Public Class PerformanceMonitor
@@ -13,14 +8,7 @@ Namespace Diagnostics
 #Region " Member Declaration "
 
         Private m_processName As String
-        Private m_lastProcessorTime As Single
-        Private m_lastWorkingSet As Single
-        Private m_averagingSampleCount As Integer
-
-        Private m_processorTimeSamples As List(Of Double)
-        Private m_workingSetSamples As List(Of Double)
-        Private m_processorTimeCounter As PerformanceCounter
-        Private m_workingSetCounter As PerformanceCounter
+        Private m_counters As List(Of PerformanceCounter)
 
         Private WithEvents m_samplingTimer As System.Timers.Timer
 
@@ -29,7 +17,6 @@ Namespace Diagnostics
 #Region " Code Scope: Public "
 
         Public Const DefaultSamplingInterval As Integer = 1000
-        Public Const DefaultAveragingSampleCount As Integer = 120
 
         Public Sub New()
 
@@ -53,75 +40,116 @@ Namespace Diagnostics
 
             MyBase.New()
             m_processName = processName
-            m_averagingSampleCount = DefaultAveragingSampleCount
-            m_processorTimeCounter = New PerformanceCounter("Process", "% Processor Time", m_processName)
-            m_workingSetCounter = New PerformanceCounter("Process", "Working Set", m_processName)
-            m_processorTimeSamples = New List(Of Double)()
-            m_workingSetSamples = New List(Of Double)()
+            m_counters = New List(Of PerformanceCounter)
+            m_counters.Add(New PerformanceCounter("Process", "% Processor Time", m_processName))
+            m_counters.Add(New PerformanceCounter("Process", "IO Data Bytes/sec", m_processName))
+            m_counters.Add(New PerformanceCounter("Process", "IO Data Operations/sec", m_processName))
+            m_counters.Add(New PerformanceCounter("Process", "Handle Count", m_processName))
+            m_counters.Add(New PerformanceCounter("Process", "Thread Count", m_processName))
+            m_counters.Add(New PerformanceCounter("Process", "Working Set", m_processName))
+
             m_samplingTimer = New System.Timers.Timer(samplingInterval)
             m_samplingTimer.Start()
 
         End Sub
 
-        Public ReadOnly Property ProcessName() As String
+        Public Property ProcessName() As String
             Get
                 Return m_processName
             End Get
+            Set(ByVal value As String)
+                m_processName = value
+                SyncLock m_counters
+                    For Each counter As PerformanceCounter In m_counters
+                        SyncLock counter.BaseCounter
+                            counter.BaseCounter.InstanceName = m_processName
+                        End SyncLock
+                    Next
+                End SyncLock
+            End Set
         End Property
 
-        Public ReadOnly Property SamplingInterval() As Double
+        Public Property SamplingInterval() As Double
             Get
                 Return m_samplingTimer.Interval
             End Get
+            Set(ByVal value As Double)
+                m_samplingTimer.Interval = value
+            End Set
         End Property
 
-        Public ReadOnly Property AveragingSampleCount() As Integer
+        Public ReadOnly Property Counters() As List(Of PerformanceCounter)
             Get
-                Return m_averagingSampleCount
+                Return m_counters
             End Get
         End Property
 
-        Public ReadOnly Property LastProcessorTime() As Single
+        Public ReadOnly Property Counters(ByVal counterName As String) As PerformanceCounter
             Get
-                Return m_lastProcessorTime
-            End Get
-        End Property
-
-        Public ReadOnly Property LastWorkingSet() As Single
-            Get
-                Return m_lastWorkingSet
-            End Get
-        End Property
-
-        Public ReadOnly Property AverageProcessorTime() As Single
-            Get
-                SyncLock m_processorTimeSamples
-                    Return Convert.ToSingle(Math.Common.Average(m_processorTimeSamples))
+                Dim match As PerformanceCounter = Nothing
+                SyncLock m_counters
+                    For Each counter As PerformanceCounter In m_counters
+                        SyncLock counter.BaseCounter
+                            If String.Compare(counter.BaseCounter.CounterName, counterName, True) = 0 Then
+                                match = counter
+                                Exit For
+                            End If
+                        End SyncLock
+                    Next
                 End SyncLock
+                Return match
             End Get
         End Property
 
-        Public ReadOnly Property AverageWorkingSet() As Single
+        ''' <summary>
+        ''' Gets the counter that monitors the processor utilization of the process.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>
+        ''' The TVA.Diagnostics.PerformanceCounter instance that monitors the processor utilization of the process.
+        ''' </returns>
+        Public ReadOnly Property CPUUsage() As PerformanceCounter
             Get
-                SyncLock m_workingSetSamples
-                    Return Convert.ToSingle(Math.Common.Average(m_workingSetSamples))
-                End SyncLock
+                Return Counters("% Processor Time")
             End Get
         End Property
 
-        Public Sub Reset()
+        ''' <summary>
+        ''' Gets the counter that monitors the memory utilization of the process.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>
+        ''' The TVA.Diagnostics.PerformanceCounter instance that monitors the memory utilization of the process.
+        ''' </returns>
+        Public ReadOnly Property MemoryUsage() As PerformanceCounter
+            Get
+                Return Counters("Working Set")
+            End Get
+        End Property
 
-            Interlocked.Exchange(m_lastProcessorTime, 0)
-            Interlocked.Exchange(m_lastWorkingSet, 0)
+        Public ReadOnly Property IOUsage() As PerformanceCounter
+            Get
+                Return Counters("IO Data Bytes/sec")
+            End Get
+        End Property
 
-            SyncLock m_processorTimeSamples
-                m_processorTimeSamples.Clear()
-            End SyncLock
-            SyncLock m_workingSetSamples
-                m_workingSetSamples.Clear()
-            End SyncLock
+        Public ReadOnly Property IOActivity() As PerformanceCounter
+            Get
+                Return Counters("IO Data Operations/sec")
+            End Get
+        End Property
 
-        End Sub
+        Public ReadOnly Property HandleCount() As PerformanceCounter
+            Get
+                Return Counters("Handle Count")
+            End Get
+        End Property
+
+        Public ReadOnly Property ThreadCount() As PerformanceCounter
+            Get
+                Return Counters("Thread Count")
+            End Get
+        End Property
 
 #End Region
 
@@ -129,27 +157,11 @@ Namespace Diagnostics
 
         Private Sub m_samplingTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_samplingTimer.Elapsed
 
-            Try
-                SyncLock m_processorTimeCounter
-                    Interlocked.Exchange(m_lastProcessorTime, m_processorTimeCounter.NextValue())
-                End SyncLock
-                SyncLock m_workingSetCounter
-                    Interlocked.Exchange(m_lastWorkingSet, m_workingSetCounter.NextValue())
-                End SyncLock
-
-                SyncLock m_processorTimeSamples
-                    m_processorTimeSamples.Add(m_lastProcessorTime)
-                    If m_processorTimeSamples.Count > m_averagingSampleCount Then m_processorTimeSamples.RemoveAt(0)
-                End SyncLock
-                SyncLock m_workingSetSamples
-                    m_workingSetSamples.Add(m_lastWorkingSet)
-                    If m_workingSetSamples.Count > m_averagingSampleCount Then m_workingSetSamples.RemoveAt(0)
-                End SyncLock
-            Catch ex As Exception
-                ' We'll encounter an InvalidOperationException if the process whose performance we're monitoring
-                ' does is not running. When this happens we'll reset all of our numbers.
-                Reset()
-            End Try
+            SyncLock m_counters
+                For Each counter As PerformanceCounter In m_counters
+                    counter.Sample()
+                Next
+            End SyncLock
 
         End Sub
 
@@ -157,16 +169,17 @@ Namespace Diagnostics
 
         Private disposedValue As Boolean = False        ' To detect redundant calls
 
-        ' IDisposable
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
             If Not Me.disposedValue Then
                 If disposing Then
                     m_samplingTimer.Dispose()
-                    m_processorTimeCounter.Dispose()
-                    m_workingSetCounter.Dispose()
+                    SyncLock m_counters
+                        For Each counter As PerformanceCounter In m_counters
+                            counter.Dispose()
+                        Next
+                        m_counters.Clear()
+                    End SyncLock
                 End If
-
-                ' TODO: free shared unmanaged resources
             End If
             Me.disposedValue = True
         End Sub

@@ -61,6 +61,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Diagnostics\PerformanceCounter.vb" />
     <Compile Include="Diagnostics\PerformanceMonitor.vb" />
     <Compile Include="TVA.Collections\DictionaryList.vb" />
     <Compile Include="TVA.Console\Arguments.vb" />
