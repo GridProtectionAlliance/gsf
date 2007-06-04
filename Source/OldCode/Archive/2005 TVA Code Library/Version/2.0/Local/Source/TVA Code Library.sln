@@ -33,8 +33,6 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Phasors", "TVA.Phasors\
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.TRO", "TVA.TRO\TVA.TRO.vbproj", "{150FD25F-8563-4F35-92DA-05754508B192}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.DatAWare", "TVA.DatAWare\TVA.DatAWare.vbproj", "{86D45927-5D18-4A8D-BC5E-31093A800EB4}"
-EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Communication", "TVA.Communication\TVA.Communication.vbproj", "{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Strong Name Key File", "Strong Name Key File", "{9D316AAF-D094-4918-AABB-FE57CF1D2ECF}"
@@ -50,7 +48,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVA.Security", "TVA.Securit
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 12
+		SccNumberOfProjects = 11
 		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local\u0022,\u0020HWHAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -86,31 +84,26 @@ Global
 		SccLocalPath6 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection6 = Source\\TVA.TRO\\
-		SccProjectUniqueName7 = TVA.DatAWare\\TVA.DatAWare.vbproj
+		SccProjectUniqueName7 = TVA.Communication\\TVA.Communication.vbproj
 		SccProjectTopLevelParentUniqueName7 = TVA\u0020Code\u0020Library.sln
-		SccProjectName7 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/TVA.DatAWare\u0022,\u0020WWHAAAAA
-		SccLocalPath7 = TVA.DatAWare
+		SccLocalPath7 = ..
 		CanCheckoutShared = false
-		SccProjectUniqueName8 = TVA.Communication\\TVA.Communication.vbproj
+		SccProjectFilePathRelativizedFromConnection7 = Source\\TVA.Communication\\
+		SccProjectUniqueName8 = Setup\\Setup.vdproj
 		SccProjectTopLevelParentUniqueName8 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath8 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection8 = Source\\TVA.Communication\\
-		SccProjectUniqueName9 = Setup\\Setup.vdproj
+		SccProjectFilePathRelativizedFromConnection8 = Source\\Setup\\
+		SccProjectUniqueName9 = TVA.Services\\TVA.Services.vbproj
 		SccProjectTopLevelParentUniqueName9 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath9 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection9 = Source\\Setup\\
-		SccProjectUniqueName10 = TVA.Services\\TVA.Services.vbproj
+		SccProjectFilePathRelativizedFromConnection9 = Source\\TVA.Services\\
+		SccProjectUniqueName10 = TVA.Security\\TVA.Security.vbproj
 		SccProjectTopLevelParentUniqueName10 = TVA\u0020Code\u0020Library.sln
 		SccLocalPath10 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection10 = Source\\TVA.Services\\
-		SccProjectUniqueName11 = TVA.Security\\TVA.Security.vbproj
-		SccProjectTopLevelParentUniqueName11 = TVA\u0020Code\u0020Library.sln
-		SccLocalPath11 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection11 = Source\\TVA.Security\\
+		SccProjectFilePathRelativizedFromConnection10 = Source\\TVA.Security\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,16 +174,6 @@ Global
 		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{150FD25F-8563-4F35-92DA-05754508B192}.Release|Win32.ActiveCfg = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Debug|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Debug|Mixed Platforms.Build.0 = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4}.Release|Win32.ActiveCfg = Release|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}.Debug|Mixed Platforms.ActiveCfg = Release|Any CPU
@@ -238,7 +221,6 @@ Global
 		{F611B9BA-C69D-449B-B596-FABFB746EA2A} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{150FD25F-8563-4F35-92DA-05754508B192} = {4F631798-355B-4607-AEEB-742B670AD834}
-		{86D45927-5D18-4A8D-BC5E-31093A800EB4} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{4DF64992-FEA6-49B3-BACE-1F11A98A1629} = {4F631798-355B-4607-AEEB-742B670AD834}
 		{072D5E46-0944-48DE-A1E1-C06D145FB366} = {4F631798-355B-4607-AEEB-742B670AD834}
