@@ -275,7 +275,7 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", AddressOf ListSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", AddressOf ListRequestHistory))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", AddressOf ListRequestHelp))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("PerfRep", "Displays a resource utilization report for the service", AddressOf ShowPerformanceReport))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", AddressOf ShowHealthReport))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Start", "Start a service or system process", AddressOf StartProcess))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Abort", "Aborts a service or system process", AddressOf AbortProcess))
@@ -289,7 +289,7 @@ Public Class ServiceHelper
 
             m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
-            m_performanceMonitor = New TVA.Diagnostics.PerformanceMonitor()
+            m_performanceMonitor = New PerformanceMonitor()
 
             If m_communicationServer IsNot Nothing Then
                 m_communicationServer.Handshake = True
@@ -1084,7 +1084,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ShowPerformanceReport(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowHealthReport(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
@@ -1105,7 +1105,7 @@ Public Class ServiceHelper
             End With
         Else
             With New StringBuilder()
-                .AppendFormat("Performance report for {0}:", m_service.ServiceName)
+                .AppendFormat("Health report for {0}:", m_service.ServiceName)
                 .AppendLine()
                 .AppendLine()
                 .Append("Counter".PadRight(20))
@@ -1158,7 +1158,17 @@ Public Class ServiceHelper
                 .Append(" ")
                 .Append((m_performanceMonitor.IOUsage.AverageValue / 1024).ToString().PadRight(13))
                 .AppendLine()
-                .Append("Handle Count".PadRight(20))
+                .Append("IO Activity (Ops)".PadRight(20))
+                .Append(" ")
+                .Append(m_performanceMonitor.IOActivity.LastValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.IOActivity.MinimumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.IOActivity.MaximumValue.ToString().PadRight(13))
+                .Append(" ")
+                .Append(m_performanceMonitor.IOActivity.AverageValue.ToString().PadRight(13))
+                .AppendLine()
+                .Append("Handle Count (#)".PadRight(20))
                 .Append(" ")
                 .Append(m_performanceMonitor.HandleCount.LastValue.ToString().PadRight(13))
                 .Append(" ")
@@ -1168,7 +1178,7 @@ Public Class ServiceHelper
                 .Append(" ")
                 .Append(m_performanceMonitor.HandleCount.AverageValue.ToString().PadRight(13))
                 .AppendLine()
-                .Append("Thread Count".PadRight(20))
+                .Append("Thread Count (#)".PadRight(20))
                 .Append(" ")
                 .Append(m_performanceMonitor.ThreadCount.LastValue.ToString().PadRight(13))
                 .Append(" ")
