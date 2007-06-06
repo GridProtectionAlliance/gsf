@@ -423,16 +423,6 @@ Public MustInherit Class CommunicationServerBase
     End Property
 
     ''' <summary>
-    ''' Starts the server.
-    ''' </summary>
-    Public MustOverride Sub Start() Implements ICommunicationServer.Start
-
-    ''' <summary>
-    ''' Stops the server.
-    ''' </summary>
-    Public MustOverride Sub [Stop]() Implements ICommunicationServer.Stop
-
-    ''' <summary>
     ''' Sends data to the specified client.
     ''' </summary>
     ''' <param name="clientID">ID of the client to which the data is to be sent.</param>
@@ -539,16 +529,18 @@ Public MustInherit Class CommunicationServerBase
             If size > 0 Then
                 Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
                 If dataToSend.Length() <= MaximumDataSize Then
-                    For Each clientID As Guid In m_clientIDs
-                        ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
-                        SendPreparedDataTo(clientID, dataToSend)
+                    SyncLock m_clientIDs
+                        For Each clientID As Guid In m_clientIDs
+                            ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                            SendPreparedDataTo(clientID, dataToSend)
 
-                        ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
-                        '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
+                            ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
+                            '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
 
-                        ' Begin sending data on a seperate thread.
-                        'ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
-                    Next
+                            ' Begin sending data on a seperate thread.
+                            'ThreadPool.QueueUserWorkItem(AddressOf SendPreparedDataTo, New Object() {clientID, dataToSend})
+                        Next
+                    End SyncLock
                 Else
                     ' Prepared data is too large to be sent.
                     Throw New ArgumentException("Size of the data to be sent exceeds the maximum data size of " & MaximumDataSize & " bytes.")
@@ -557,6 +549,38 @@ Public MustInherit Class CommunicationServerBase
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' Disconnects all of the connected clients.
+    ''' </summary>
+    Public Sub DisconnectAll() Implements ICommunicationServer.DisconnectAll
+
+        Dim clientIDs As New List(Of Guid)()
+        SyncLock m_clientIDs
+            clientIDs.AddRange(m_clientIDs)
+        End SyncLock
+
+        For Each clientID As Guid In clientIDs
+            DisconnectOne(clientID)
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' Starts the server.
+    ''' </summary>
+    Public MustOverride Sub Start() Implements ICommunicationServer.Start
+
+    ''' <summary>
+    ''' Stops the server.
+    ''' </summary>
+    Public MustOverride Sub [Stop]() Implements ICommunicationServer.Stop
+
+    ''' <summary>
+    ''' Disconnects a connected client.
+    ''' </summary>
+    ''' <param name="clientID">ID of the client to be disconnected.</param>
+    Public MustOverride Sub DisconnectOne(ByVal clientID As System.Guid) Implements ICommunicationServer.DisconnectOne
 
 #Region " Interface Implementation "
 
@@ -590,7 +614,9 @@ Public MustInherit Class CommunicationServerBase
                 .Append(SecondsToText(RunTime()))
                 .Append(Environment.NewLine)
                 .Append("        Subscribed clients: ")
-                .Append(m_clientIDs.Count())
+                SyncLock m_clientIDs
+                    .Append(m_clientIDs.Count())
+                End SyncLock
                 .Append(Environment.NewLine)
                 .Append("           Maximum clients: ")
                 .Append(IIf(m_maximumClients = -1, "Infinite", m_maximumClients.ToString()))
@@ -813,7 +839,9 @@ Public MustInherit Class CommunicationServerBase
     ''' <remarks>This method is to be called when a client is connected to the server.</remarks>
     Protected Overridable Sub OnClientConnected(ByVal e As Guid)
 
-        m_clientIDs.Add(e)
+        SyncLock m_clientIDs
+            m_clientIDs.Add(e)
+        End SyncLock
         RaiseEvent ClientConnected(Me, New GenericEventArgs(Of Guid)(e))
 
     End Sub
@@ -825,7 +853,9 @@ Public MustInherit Class CommunicationServerBase
     ''' <remarks>This method is to be called when a client has disconnected from the server.</remarks>
     Protected Overridable Sub OnClientDisconnected(ByVal e As Guid)
 
-        m_clientIDs.Remove(e)
+        SyncLock m_clientIDs
+            m_clientIDs.Remove(e)
+        End SyncLock
         RaiseEvent ClientDisconnected(Me, New GenericEventArgs(Of Guid)(e))
 
     End Sub

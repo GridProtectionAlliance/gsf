@@ -269,12 +269,12 @@ Public Class ServiceHelper
         If m_service IsNot Nothing Then
             RaiseEvent ServiceStarting(Me, New GenericEventArgs(Of Object())(args))
 
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", AddressOf ListClients))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", AddressOf ListSettings))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Processes", "Displays list of service or system processes", AddressOf ListProcesses))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", AddressOf ListSchedules))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", AddressOf ListRequestHistory))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", AddressOf ListRequestHelp))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", AddressOf ShowClients))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", AddressOf ShowSettings))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Processes", "Displays list of service or system processes", AddressOf ShowProcesses))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", AddressOf ShowSchedules))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", AddressOf ShowRequestHistory))
+            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", AddressOf ShowRequestHelp))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", AddressOf ShowHealthReport))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Start", "Start a service or system process", AddressOf StartProcess))
@@ -668,7 +668,7 @@ Public Class ServiceHelper
 
 #Region " Request Handlers "
 
-    Private Sub ListClients(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowClients(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
@@ -734,7 +734,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ListSettings(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowSettings(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
@@ -797,7 +797,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ListProcesses(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowProcesses(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             Dim showAdvancedHelp As Boolean = requestInfo.Request.Arguments.Exists("advanced")
@@ -926,7 +926,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ListSchedules(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowSchedules(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
@@ -985,7 +985,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ListRequestHistory(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowRequestHistory(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
@@ -1036,7 +1036,7 @@ Public Class ServiceHelper
 
     End Sub
 
-    Private Sub ListRequestHelp(ByVal requestInfo As ClientRequestInfo)
+    Private Sub ShowRequestHelp(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
@@ -1093,7 +1093,7 @@ Public Class ServiceHelper
                 .AppendLine()
                 .Append("   Usage:")
                 .AppendLine()
-                .Append("       PerfRep -options")
+                .Append("       Health -options")
                 .AppendLine()
                 .AppendLine()
                 .Append("   Options:")
@@ -1368,7 +1368,7 @@ Public Class ServiceHelper
                 If doListSettings Then
                     ' The user has requested to list all of the queryable settings.
                     requestInfo.Request = ClientRequest.Parse("Settings")
-                    ListSettings(requestInfo)
+                    ShowSettings(requestInfo)
                 End If
             Else
                 ' The specified category is not one of the defined queryable categories.
@@ -1451,7 +1451,7 @@ Public Class ServiceHelper
 
             If doListProcesses Then
                 requestInfo.Request = ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", "")))
-                ListProcesses(requestInfo)
+                ShowProcesses(requestInfo)
             End If
         End If
 
@@ -1546,7 +1546,7 @@ Public Class ServiceHelper
 
             If doListProcesses Then
                 requestInfo.Request = ClientRequest.Parse(String.Format("Processes {0}", IIf(isSystemProcess, "-system", "")))
-                ListProcesses(requestInfo)
+                ShowProcesses(requestInfo)
             End If
         End If
 
@@ -1645,7 +1645,7 @@ Public Class ServiceHelper
 
             If doListSchedules Then
                 requestInfo.Request = ClientRequest.Parse("Schedules")
-                ListSchedules(requestInfo)
+                ShowSchedules(requestInfo)
             End If
         End If
 
@@ -1697,7 +1697,7 @@ Public Class ServiceHelper
 
             If doListSchedules Then
                 requestInfo.Request = ClientRequest.Parse("Schedules")
-                ListSchedules(requestInfo)
+                ShowSchedules(requestInfo)
             End If
         End If
 
@@ -1734,7 +1734,7 @@ Public Class ServiceHelper
 
             If doListSchedules Then
                 requestInfo.Request = ClientRequest.Parse("Schedules")
-                ListSchedules(requestInfo)
+                ShowSchedules(requestInfo)
             End If
         End If
 
@@ -1771,7 +1771,7 @@ Public Class ServiceHelper
 
             If doListSchedules Then
                 requestInfo.Request = ClientRequest.Parse("Schedules")
-                ListSchedules(requestInfo)
+                ShowSchedules(requestInfo)
             End If
         End If
 

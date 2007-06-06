@@ -243,4 +243,15 @@ Public Interface ICommunicationServer
     ''' <param name="size">The number of bytes to be sent.</param>
     Sub Multicast(ByVal data As Byte(), ByVal offset As Integer, ByVal size As Integer)
 
+    ''' <summary>
+    ''' Disconnects all of the connected clients.
+    ''' </summary>
+    Sub DisconnectAll()
+
+    ''' <summary>
+    ''' Disconnects a connected client.
+    ''' </summary>
+    ''' <param name="clientID">ID of the client to be disconnected.</param>
+    Sub DisconnectOne(ByVal clientID As Guid)
+
 End Interface

@@ -27,7 +27,6 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Security.Cryptography.Common
-Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a TCP-based communication server.
@@ -77,12 +76,43 @@ Public Class TcpServer
         End Set
     End Property
 
+    Public Function GetServerIPEndPoint() As IPEndPoint
+
+        If Enabled AndAlso IsRunning Then
+            Return CType(m_tcpServer.LocalEndPoint, IPEndPoint)
+        Else
+            Throw New InvalidOperationException("Server is not operational.")
+        End If
+
+    End Function
+
+    Public Function GetClientIPEndPoint(ByVal clientID As Guid) As IPEndPoint
+
+        If Enabled AndAlso IsRunning Then
+            Dim tcpClient As StateKeeper(Of Socket) = Nothing
+            SyncLock m_tcpClients
+                m_tcpClients.TryGetValue(clientID, tcpClient)
+            End SyncLock
+
+            If tcpClient IsNot Nothing Then
+                Return CType(tcpClient.Client.RemoteEndPoint, IPEndPoint)
+            Else
+                Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
+            End If
+        Else
+            Throw New InvalidOperationException("Server is not operational.")
+        End If
+
+    End Function
+
+#Region " Overrides "
+
     ''' <summary>
     ''' Starts the server.
     ''' </summary>
     Public Overrides Sub Start()
 
-        If MyBase.Enabled AndAlso Not MyBase.IsRunning AndAlso ValidConfigurationString(MyBase.ConfigurationString) Then
+        If Enabled AndAlso Not IsRunning AndAlso ValidConfigurationString(ConfigurationString) Then
             ' Start the thread on which the server will listen for incoming connections.
             m_listenerThread = New Thread(AddressOf ListenForConnections)
             m_listenerThread.Start()
@@ -95,22 +125,18 @@ Public Class TcpServer
     ''' </summary>
     Public Overrides Sub [Stop]()
 
-        If MyBase.Enabled AndAlso MyBase.IsRunning Then
+        If Enabled AndAlso IsRunning Then
             ' NOTE: Closing the server and all of the connected client sockets will cause a 
             '       System.Net.Socket.SocketException in the thread using the socket. This in turn will result in 
             '       the thread to exit gracefully because of the exception handling in place in the threads.
 
-            ' *** Stop accepting incoming connections ***
+            ' Stop accepting incoming connections.
             If m_tcpServer IsNot Nothing Then m_tcpServer.Close()
 
-            ' *** Diconnect all of the connected clients ***
-            SyncLock m_tcpClients
-                For Each tcpClient As StateKeeper(Of Socket) In m_tcpClients.Values
-                    If tcpClient IsNot Nothing AndAlso tcpClient.Client IsNot Nothing Then
-                        tcpClient.Client.Close()
-                    End If
-                Next
-            End SyncLock
+            ' Diconnect all of the connected clients.
+            DisconnectAll()
+
+            ' Diconnect all of the pending clients connections.
             SyncLock m_pendingTcpClients
                 For Each pendingTcpClient As StateKeeper(Of Socket) In m_pendingTcpClients
                     If pendingTcpClient IsNot Nothing AndAlso pendingTcpClient.Client IsNot Nothing Then
@@ -118,6 +144,21 @@ Public Class TcpServer
                     End If
                 Next
             End SyncLock
+        End If
+
+    End Sub
+
+    Public Overrides Sub DisconnectOne(ByVal clientID As System.Guid)
+
+        Dim tcpClient As StateKeeper(Of Socket) = Nothing
+        SyncLock m_tcpClients
+            m_tcpClients.TryGetValue(clientID, tcpClient)
+        End SyncLock
+
+        If tcpClient IsNot Nothing Then
+            tcpClient.Client.Close()
+        Else
+            Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
         End If
 
     End Sub
@@ -160,7 +201,11 @@ Public Class TcpServer
 
 #End Region
 
+#End Region
+
 #Region " Code Scope: Protected "
+
+#Region " Overrides "
 
     ''' <summary>
     ''' Sends prepared data to the specified client.
@@ -169,13 +214,15 @@ Public Class TcpServer
     ''' <param name="data">The prepared data that is to be sent to the client.</param>
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As Guid, ByVal data As Byte())
 
-        If MyBase.Enabled AndAlso MyBase.IsRunning Then
-            ' We don't want to synclock 'm_tcpClients' over here because doing so will block all
-            ' all incoming connections (in ListenForConnections) while sending data to client(s). 
+        If Enabled AndAlso IsRunning Then
             Dim tcpClient As StateKeeper(Of Socket) = Nothing
-            If m_tcpClients.TryGetValue(clientID, tcpClient) Then
+            SyncLock m_tcpClients
+                m_tcpClients.TryGetValue(clientID, tcpClient)
+            End SyncLock
+
+            If tcpClient IsNot Nothing Then
                 ' Encrypt the data with private key if SecureSession is enabled.
-                If MyBase.SecureSession Then data = EncryptData(data, tcpClient.Passphrase, Encryption())
+                If SecureSession Then data = EncryptData(data, tcpClient.Passphrase, Encryption())
 
                 ' Add payload header if client-server communication is PayloadAware.
                 If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
@@ -222,6 +269,8 @@ Public Class TcpServer
 
 #End Region
 
+#End Region
+
 #Region " Code Scope: Private"
 
     ''' <summary>
@@ -243,7 +292,7 @@ Public Class TcpServer
 
             Dim connectedClient As Integer = 0
             Do While True
-                If MyBase.MaximumClients = -1 OrElse MyBase.ClientIDs.Count < MyBase.MaximumClients Then
+                If MaximumClients = -1 OrElse ClientIDs.Count < MaximumClients Then
                     ' We can accept incoming client connection requests.
                     Dim tcpClient As New StateKeeper(Of Socket)()
                     tcpClient.Client = m_tcpServer.Accept()  ' Accept client connection.
@@ -284,7 +333,7 @@ Public Class TcpServer
         Dim tcpClient As StateKeeper(Of Socket) = DirectCast(state, StateKeeper(Of Socket))
         Try
             With tcpClient
-                If MyBase.Handshake Then
+                If Handshake Then
                     ' Handshaking is to be performed to authenticate the client, so we'll add the client to the 
                     ' list of client who have not been authenticated and give it 30 seconds to initiate handshaking.
                     .Client.ReceiveTimeout = 30000
@@ -404,18 +453,18 @@ Public Class TcpServer
     ''' <param name="tcpClient">The TCP client who sent the data.</param>
     Private Sub ProcessReceivedClientData(ByVal data As Byte(), ByVal tcpClient As StateKeeper(Of Socket))
 
-        If tcpClient.ID = Guid.Empty AndAlso MyBase.Handshake Then
+        If tcpClient.ID = Guid.Empty AndAlso Handshake Then
             ' Authentication is required, but not performed yet. When authentication is required
             ' the first message from the client must be information about itself.
             Dim clientInfo As HandshakeMessage = GetObject(Of HandshakeMessage)(GetActualData(data))
 
-            If clientInfo IsNot Nothing AndAlso clientInfo.ID <> Guid.Empty AndAlso clientInfo.Passphrase = MyBase.HandshakePassphrase Then
+            If clientInfo IsNot Nothing AndAlso clientInfo.ID <> Guid.Empty AndAlso clientInfo.Passphrase = HandshakePassphrase Then
                 ' We'll generate a private key for the client if SecureSession is enabled.
                 tcpClient.ID = clientInfo.ID
-                If MyBase.SecureSession Then tcpClient.Passphrase = GenerateKey()
+                If SecureSession Then tcpClient.Passphrase = GenerateKey()
 
                 ' We'll send our information to the client which may contain a private crypto key .
-                Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(MyBase.ServerID, tcpClient.Passphrase)))
+                Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID, tcpClient.Passphrase)))
                 If m_payloadAware Then myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo)
                 tcpClient.Client.Send(myInfo)
 
@@ -439,7 +488,7 @@ Public Class TcpServer
             End If
         Else
             ' Decrypt the data usign private key if SecureSession is enabled.
-            If MyBase.SecureSession Then data = DecryptData(data, tcpClient.Passphrase, MyBase.Encryption)
+            If SecureSession Then data = DecryptData(data, tcpClient.Passphrase, Encryption)
 
             ' We'll pass the received data along to the consumer via event.
             OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(tcpClient.ID, data))

@@ -18,7 +18,6 @@
 Imports TVA.Communication.Common
 
 Partial Class UdpServer
-
     Inherits TVA.Communication.CommunicationServerBase
 
     <System.Diagnostics.DebuggerNonUserCode()> _

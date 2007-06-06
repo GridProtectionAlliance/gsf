@@ -25,7 +25,6 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Security.Cryptography.Common
-Imports TVA.ErrorManagement
 
 ''' <summary>
 ''' Represents a UDP-based communication server.
@@ -72,26 +71,6 @@ Public Class UdpServer
     End Sub
 
     ''' <summary>
-    ''' Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
-    ''' </summary>
-    ''' <value>Receive buffer size</value>
-    ''' <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while server is running</exception>
-    ''' <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
-    ''' <returns>The maximum number of bytes that can be received at a time by the server from the clients.</returns>
-    Public Overrides Property ReceiveBufferSize() As Integer
-        Get
-            Return MyBase.ReceiveBufferSize
-        End Get
-        Set(ByVal value As Integer)
-            If value >= UdpClient.MinimumUdpBufferSize AndAlso value <= UdpClient.MaximumUdpDatagramSize Then
-                MyBase.ReceiveBufferSize = value
-            Else
-                Throw New ArgumentOutOfRangeException("ReceiveBufferSize", "ReceiveBufferSize for UDP must be between " & UdpClient.MinimumUdpBufferSize & " and " & UdpClient.MaximumUdpDatagramSize & ".")
-            End If
-        End Set
-    End Property
-
-    ''' <summary>
     ''' Gets or sets a boolean value indicating whether the messages that are broken down into multiple datagram 
     ''' for the purpose of transmission while being sent are to be assembled back when received.
     ''' </summary>
@@ -130,18 +109,69 @@ Public Class UdpServer
         End Set
     End Property
 
+    Public Function GetServerIPEndPoint() As IPEndPoint
+
+        If Enabled AndAlso IsRunning Then
+            Return CType(m_udpServer.Client.LocalEndPoint, IPEndPoint)
+        Else
+            Throw New InvalidOperationException("Server is not operational.")
+        End If
+
+    End Function
+
+    Public Function GetClientIPEndPoint(ByVal clientID As Guid) As IPEndPoint
+
+        If Enabled AndAlso IsRunning Then
+            Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
+            SyncLock m_udpClients
+                m_udpClients.TryGetValue(clientID, udpClient)
+            End SyncLock
+
+            If udpClient IsNot Nothing Then
+                Return udpClient.Client
+            Else
+                Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
+            End If
+        Else
+            Throw New InvalidOperationException("Server is not operational.")
+        End If
+
+    End Function
+
+#Region " Overrides "
+
+    ''' <summary>
+    ''' Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
+    ''' </summary>
+    ''' <value>Receive buffer size</value>
+    ''' <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while server is running</exception>
+    ''' <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
+    ''' <returns>The maximum number of bytes that can be received at a time by the server from the clients.</returns>
+    Public Overrides Property ReceiveBufferSize() As Integer
+        Get
+            Return MyBase.ReceiveBufferSize
+        End Get
+        Set(ByVal value As Integer)
+            If value >= UdpClient.MinimumUdpBufferSize AndAlso value <= UdpClient.MaximumUdpDatagramSize Then
+                MyBase.ReceiveBufferSize = value
+            Else
+                Throw New ArgumentOutOfRangeException("ReceiveBufferSize", "ReceiveBufferSize for UDP must be between " & UdpClient.MinimumUdpBufferSize & " and " & UdpClient.MaximumUdpDatagramSize & ".")
+            End If
+        End Set
+    End Property
+
     Public Overrides Sub Start()
 
-        If MyBase.Enabled AndAlso Not MyBase.IsRunning AndAlso ValidConfigurationString(MyBase.ConfigurationString) Then
+        If Enabled AndAlso Not IsRunning AndAlso ValidConfigurationString(ConfigurationString) Then
             Try
                 Dim serverPort As Integer = 0
                 If m_configurationData.ContainsKey("port") Then serverPort = Convert.ToInt32(m_configurationData("port"))
 
                 m_udpServer = New StateKeeper(Of Socket)()
-                m_udpServer.ID = MyBase.ServerID
-                m_udpServer.Passphrase = MyBase.HandshakePassphrase
+                m_udpServer.ID = ServerID
+                m_udpServer.Passphrase = HandshakePassphrase
                 m_udpServer.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-                If MyBase.Handshake Then
+                If Handshake Then
                     ' We will listen for data only when Handshake is enabled and a valid port has been specified in 
                     ' the configuration string. We do this in order to keep the server stable and besides that, the 
                     ' main purpose of a UDP server is to serve data in most cases.
@@ -158,7 +188,7 @@ Public Class UdpServer
 
                 OnServerStarted(EventArgs.Empty)
 
-                If Not MyBase.Handshake AndAlso m_configurationData.ContainsKey("clients") Then
+                If Not Handshake AndAlso m_configurationData.ContainsKey("clients") Then
                     ' We will ignore the client list in configuration string when Handshake is enabled.
                     For Each clientString As String In m_configurationData("clients").Replace(" ", "").Split(","c)
                         Try
@@ -171,7 +201,9 @@ Public Class UdpServer
                             Dim udpClient As New StateKeeper(Of IPEndPoint)()
                             udpClient.ID = Guid.NewGuid()
                             udpClient.Client = GetIpEndPoint(clientStringSegments(0), clientPort)
-                            m_udpClients.Add(udpClient.ID, udpClient)
+                            SyncLock m_udpClients
+                                m_udpClients.Add(udpClient.ID, udpClient)
+                            End SyncLock
 
                             OnClientConnected(udpClient.ID)
                         Catch ex As Exception
@@ -188,23 +220,42 @@ Public Class UdpServer
 
     Public Overrides Sub [Stop]()
 
-        If MyBase.Enabled AndAlso MyBase.IsRunning Then
-            For Each udpClientID As Guid In m_udpClients.Keys
-                If MyBase.Handshake Then
-                    Dim goodbye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(udpClientID)))
-                    If m_payloadAware Then goodbye = PayloadAwareHelper.AddPayloadHeader(goodbye)
-                    m_udpServer.Client.SendTo(goodbye, m_udpClients(udpClientID).Client)
-                End If
+        If Enabled AndAlso IsRunning Then
+            ' Disconnect all of the clients.
+            DisconnectAll()
 
-                OnClientDisconnected(udpClientID)
-            Next
-            m_udpClients.Clear()
-
+            ' Stop the server after we've disconnected the clients.
             If m_udpServer IsNot Nothing AndAlso m_udpServer.Client IsNot Nothing Then
                 m_udpServer.Client.Close()
             End If
 
             OnServerStopped(EventArgs.Empty)
+        End If
+
+    End Sub
+
+    Public Overrides Sub DisconnectOne(ByVal clientID As System.Guid)
+
+        Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
+        SyncLock m_udpClients
+            m_udpClients.TryGetValue(clientID, udpClient)
+        End SyncLock
+
+        If udpClient IsNot Nothing Then
+            If Handshake Then
+                ' Handshake is enabled so we'll notify the client.
+                Dim goodbye As Byte() = GetPreparedData(GetBytes(New GoodbyeMessage(udpClient.ID)))
+                If m_payloadAware Then goodbye = PayloadAwareHelper.AddPayloadHeader(goodbye)
+
+                m_udpServer.Client.SendTo(goodbye, udpClient.Client)
+            End If
+
+            SyncLock m_udpClients
+                m_udpClients.Remove(udpClient.ID)
+            End SyncLock
+            OnClientDisconnected(udpClient.ID)
+        Else
+            Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
         End If
 
     End Sub
@@ -252,21 +303,29 @@ Public Class UdpServer
 
 #End Region
 
+#End Region
+
 #Region " Code Scope: Protected "
+
+#Region " Overrides "
 
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As System.Guid, ByVal data As Byte())
 
-        If MyBase.Enabled AndAlso MyBase.IsRunning Then
+        If Enabled AndAlso IsRunning Then
             Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
-            If m_udpClients.TryGetValue(clientID, udpClient) Then
+            SyncLock m_udpClients
+                m_udpClients.TryGetValue(clientID, udpClient)
+            End SyncLock
+
+            If udpClient IsNot Nothing Then
                 If m_destinationReachableCheck AndAlso Not IsDestinationReachable(udpClient.Client) Then Exit Sub
 
-                If MyBase.SecureSession Then data = EncryptData(data, udpClient.Passphrase, MyBase.Encryption)
+                If SecureSession Then data = EncryptData(data, udpClient.Passphrase, Encryption)
 
                 If m_payloadAware Then data = PayloadAwareHelper.AddPayloadHeader(data)
 
                 Dim toIndex As Integer = 0
-                Dim datagramSize As Integer = MyBase.ReceiveBufferSize
+                Dim datagramSize As Integer = ReceiveBufferSize
                 If data.Length > datagramSize Then toIndex = data.Length - 1
                 For i As Integer = 0 To toIndex Step datagramSize
                     ' Last or the only datagram in the series.
@@ -316,6 +375,8 @@ Public Class UdpServer
 
 #End Region
 
+#End Region
+
 #Region " Code Scope: Private "
 
     Private Sub ReceiveClientData()
@@ -345,7 +406,7 @@ Public Class UdpServer
                     Dim totalBytesReceived As Integer = 0
                     Do While True
                         If payloadSize = -1 Then
-                            .DataBuffer = TVA.Common.CreateArray(Of Byte)(MyBase.ReceiveBufferSize)
+                            .DataBuffer = TVA.Common.CreateArray(Of Byte)(ReceiveBufferSize)
                         End If
 
                         bytesReceived = .Client.ReceiveFrom(.DataBuffer, totalBytesReceived, (.DataBuffer.Length - totalBytesReceived), SocketFlags.None, clientEndPoint)
@@ -392,13 +453,13 @@ Public Class UdpServer
             ' We were able to deserialize the data to an object.
             If TypeOf clientMessage Is HandshakeMessage Then
                 Dim connectedClient As HandshakeMessage = DirectCast(clientMessage, HandshakeMessage)
-                If connectedClient.ID <> Guid.Empty AndAlso connectedClient.Passphrase = MyBase.HandshakePassphrase Then
+                If connectedClient.ID <> Guid.Empty AndAlso connectedClient.Passphrase = HandshakePassphrase Then
                     Dim udpClient As New StateKeeper(Of IPEndPoint)()
                     udpClient.ID = connectedClient.ID
                     udpClient.Client = CType(senderEndPoint, IPEndPoint)
-                    If MyBase.SecureSession Then udpClient.Passphrase = GenerateKey()
+                    If SecureSession Then udpClient.Passphrase = GenerateKey()
 
-                    Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(MyBase.ServerID, udpClient.Passphrase)))
+                    Dim myInfo As Byte() = GetPreparedData(GetBytes(New HandshakeMessage(ServerID, udpClient.Passphrase)))
                     If m_payloadAware Then myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo)
                     m_udpServer.Client.SendTo(myInfo, udpClient.Client)
 
@@ -418,17 +479,26 @@ Public Class UdpServer
                 OnClientDisconnected(disconnectedClient.ID)
             End If
         Else
+            Dim sender As StateKeeper(Of IPEndPoint) = Nothing
             Dim senderIPEndPoint As IPEndPoint = CType(senderEndPoint, IPEndPoint)
             If Not senderIPEndPoint.Equals(GetIpEndPoint(Dns.GetHostName(), Convert.ToInt32(m_configurationData("port")))) Then
-                For Each udpClient As StateKeeper(Of IPEndPoint) In m_udpClients.Values
-                    If senderIPEndPoint.Equals(udpClient.Client) Then
-                        If MyBase.SecureSession Then data = DecryptData(data, udpClient.Passphrase, MyBase.Encryption)
+                ' The data received is not something that we might have broadcasted.
+                SyncLock m_udpClients
+                    ' So, now we'll find the ID of the client who sent the data.
+                    For Each udpClient As StateKeeper(Of IPEndPoint) In m_udpClients.Values
+                        If senderIPEndPoint.Equals(udpClient.Client) Then
+                            sender = udpClient
+                            Exit For
+                        End If
+                    Next
+                End SyncLock
 
-                        OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(udpClient.ID, data))
-                        Exit Sub
-                    End If
-                Next
-                OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(Guid.Empty, data))
+                If sender IsNot Nothing Then
+                    If SecureSession Then data = DecryptData(data, sender.Passphrase, Encryption)
+                    OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(sender.ID, data))
+                Else
+                    OnReceivedClientData(New IdentifiableItem(Of Guid, Byte())(Guid.Empty, data))
+                End If
             End If
         End If
 

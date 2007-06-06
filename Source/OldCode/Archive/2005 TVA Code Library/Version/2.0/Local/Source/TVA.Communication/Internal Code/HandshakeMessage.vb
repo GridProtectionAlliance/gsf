@@ -7,10 +7,15 @@ Friend Class HandshakeMessage
     Private m_passphrase As String
 
     Public Sub New(ByVal id As Guid, ByVal passphrase As String)
+
         Me.ID = id
         Me.Passphrase = passphrase
+
     End Sub
 
+    ''' <summary>
+    ''' Gets or sets the connecting client's ID.
+    ''' </summary>
     Public Property ID() As Guid
         Get
             Return m_id
@@ -20,6 +25,9 @@ Friend Class HandshakeMessage
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets the passphrase used for authentication.
+    ''' </summary>
     Public Property Passphrase() As String
         Get
             Return m_passphrase

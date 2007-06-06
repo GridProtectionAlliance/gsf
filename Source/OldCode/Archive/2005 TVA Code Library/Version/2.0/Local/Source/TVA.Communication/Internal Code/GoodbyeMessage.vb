@@ -9,6 +9,9 @@ Friend Class GoodbyeMessage
         Me.ID = id
     End Sub
 
+    ''' <summary>
+    ''' Gets or sets the disconnecting client's ID.
+    ''' </summary>
     Public Property ID() As Guid
         Get
             Return m_id
