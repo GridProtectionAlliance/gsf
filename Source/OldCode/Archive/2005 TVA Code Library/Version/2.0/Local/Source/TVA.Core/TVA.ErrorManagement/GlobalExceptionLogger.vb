@@ -1037,7 +1037,7 @@ Namespace ErrorManagement
                 End If
 
                 ' Get general system information.
-                .Append(SystemInfo)
+                .Append(SystemInfo())
                 .AppendLine()
                 ' Get general application information.
                 .Append(ApplicationInfo(parentAssembly))
