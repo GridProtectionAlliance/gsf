@@ -63,151 +63,151 @@
   <ItemGroup>
     <Compile Include="Diagnostics\PerformanceCounter.vb" />
     <Compile Include="Diagnostics\PerformanceMonitor.vb" />
-    <Compile Include="TVA.Collections\DictionaryList.vb" />
-    <Compile Include="TVA.Console\Arguments.vb" />
-    <Compile Include="TVA.Console\Common.vb" />
-    <Compile Include="TVA.Drawing\Image.vb" />
-    <Compile Include="TVA.ErrorManagement\GELDialog.Designer.vb">
+    <Compile Include="Collections\DictionaryList.vb" />
+    <Compile Include="Console\Arguments.vb" />
+    <Compile Include="Console\Common.vb" />
+    <Compile Include="Drawing\Image.vb" />
+    <Compile Include="ErrorManagement\GELDialog.Designer.vb">
       <DependentUpon>GELDialog.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.ErrorManagement\GELDialog.vb">
+    <Compile Include="ErrorManagement\GELDialog.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TVA.ErrorManagement\GELHttpModule.vb" />
-    <Compile Include="TVA.ErrorManagement\GlobalExceptionLogger.Designer.vb">
+    <Compile Include="ErrorManagement\GELHttpModule.vb" />
+    <Compile Include="ErrorManagement\GlobalExceptionLogger.Designer.vb">
       <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.ErrorManagement\GlobalExceptionLogger.vb">
+    <Compile Include="ErrorManagement\GlobalExceptionLogger.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Interop\VBArrayDescriptor.vb" />
-    <Compile Include="TVA.IO\Enumerations.vb" />
-    <Compile Include="TVA.IO\IsamDataFileBase.Designer.vb">
+    <Compile Include="Interop\VBArrayDescriptor.vb" />
+    <Compile Include="IO\Enumerations.vb" />
+    <Compile Include="IO\IsamDataFileBase.Designer.vb">
       <DependentUpon>IsamDataFileBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.IO\IsamDataFileBase.vb">
+    <Compile Include="IO\IsamDataFileBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.IO\LogFile.Designer.vb">
+    <Compile Include="IO\LogFile.Designer.vb">
       <DependentUpon>LogFile.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.IO\LogFile.vb">
+    <Compile Include="IO\LogFile.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Measurements\MeasurementKey.vb" />
-    <Compile Include="TVA.Net\Ftp\AsyncResult.vb" />
-    <Compile Include="TVA.Net\Ftp\ControlChannel.vb" />
-    <Compile Include="TVA.Net\Ftp\DataStream.vb" />
-    <Compile Include="TVA.Net\Ftp\Directory.vb" />
-    <Compile Include="TVA.Net\Ftp\Exception.vb" />
-    <Compile Include="TVA.Net\Ftp\File.vb" />
-    <Compile Include="TVA.Net\Ftp\FileTransferer.vb" />
-    <Compile Include="TVA.Net\Ftp\FileWatcher.vb">
+    <Compile Include="Measurements\MeasurementKey.vb" />
+    <Compile Include="Net\Ftp\AsyncResult.vb" />
+    <Compile Include="Net\Ftp\ControlChannel.vb" />
+    <Compile Include="Net\Ftp\DataStream.vb" />
+    <Compile Include="Net\Ftp\Directory.vb" />
+    <Compile Include="Net\Ftp\Exception.vb" />
+    <Compile Include="Net\Ftp\File.vb" />
+    <Compile Include="Net\Ftp\FileTransferer.vb" />
+    <Compile Include="Net\Ftp\FileWatcher.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Net\Ftp\Response.vb" />
-    <Compile Include="TVA.Net\Ftp\Session.vb">
+    <Compile Include="Net\Ftp\Response.vb" />
+    <Compile Include="Net\Ftp\Session.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Net\Ftp\SessionConnected.vb" />
-    <Compile Include="TVA.Net\Ftp\SessionDisconnected.vb" />
-    <Compile Include="TVA.Net\Smtp\Common.vb" />
-    <Compile Include="TVA.Net\Smtp\SimpleMailMessage.vb" />
-    <Compile Include="TVA.Scheduling\Enumerations.vb" />
-    <Compile Include="TVA.Scheduling\Schedule.vb" />
-    <Compile Include="TVA.Scheduling\ScheduleEventArgs.vb" />
-    <Compile Include="TVA.Scheduling\ScheduleManager.Designer.vb">
+    <Compile Include="Net\Ftp\SessionConnected.vb" />
+    <Compile Include="Net\Ftp\SessionDisconnected.vb" />
+    <Compile Include="Net\Smtp\Common.vb" />
+    <Compile Include="Net\Smtp\SimpleMailMessage.vb" />
+    <Compile Include="Scheduling\Enumerations.vb" />
+    <Compile Include="Scheduling\Schedule.vb" />
+    <Compile Include="Scheduling\ScheduleEventArgs.vb" />
+    <Compile Include="Scheduling\ScheduleManager.Designer.vb">
       <DependentUpon>ScheduleManager.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA.Scheduling\ScheduleManager.vb">
+    <Compile Include="Scheduling\ScheduleManager.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA.Scheduling\SchedulePart.vb" />
-    <Compile Include="TVA\BinaryDataParserBase.Designer.vb">
+    <Compile Include="Scheduling\SchedulePart.vb" />
+    <Compile Include="Root\BinaryDataParserBase.Designer.vb">
       <DependentUpon>BinaryDataParserBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="TVA\BinaryDataParserBase.vb">
+    <Compile Include="Root\BinaryDataParserBase.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TVA\Enumerations.vb" />
-    <Compile Include="TVA\GenericEventArgs.vb" />
-    <Compile Include="TVA\IBinaryDataConsumer.vb" />
-    <Compile Include="TVA\IBinaryDataProvider.vb" />
-    <Compile Include="TVA\IdentifiableItem.vb" />
-    <Compile Include="TVA.Collections\Enumerations.vb" />
-    <Compile Include="TVA.Configuration\Common.vb" />
-    <Compile Include="TVA.Data\Enumerations.vb" />
-    <Compile Include="TVA.DateTime\TimeTagBase.vb" />
-    <Compile Include="TVA.DateTime\Enumerations.vb" />
-    <Compile Include="TVA.Measurements\Frame.vb" />
-    <Compile Include="TVA.Security\Cryptography\Common.vb" />
-    <Compile Include="TVA.Configuration\ConfigurationFile.vb" />
-    <Compile Include="TVA.Configuration\CategorizedSettingsElementCollection.vb" />
-    <Compile Include="TVA.Configuration\CategorizedSettingsElement.vb" />
-    <Compile Include="TVA.Configuration\CategorizedSettingsSection.vb" />
-    <Compile Include="TVA.Measurements\ImmediateMeasurements.vb" />
-    <Compile Include="TVA.Measurements\Sample.vb" />
-    <Compile Include="TVA.Security\Cryptography\Enumerations.vb" />
-    <Compile Include="TVA.Services\Enumerations.vb" />
-    <Compile Include="TVA.Services\IServiceComponent.vb" />
-    <Compile Include="TVA.Threading\QueueThread.vb" />
-    <Compile Include="TVA.Threading\RunThread.vb" />
-    <Compile Include="TVA.Threading\ThreadBase.vb" />
-    <Compile Include="TVA\Common.vb" />
-    <Compile Include="TVA.Data\Common.vb" />
-    <Compile Include="TVA\Assembly.vb" />
-    <Compile Include="TVA.Interop\Bit.vb" />
-    <Compile Include="TVA.Collections\Common.vb" />
-    <Compile Include="TVA.Collections\KeyedProcessQueue.vb">
+    <Compile Include="Root\Enumerations.vb" />
+    <Compile Include="Root\GenericEventArgs.vb" />
+    <Compile Include="Root\IBinaryDataConsumer.vb" />
+    <Compile Include="Root\IBinaryDataProvider.vb" />
+    <Compile Include="Root\IdentifiableItem.vb" />
+    <Compile Include="Collections\Enumerations.vb" />
+    <Compile Include="Configuration\Common.vb" />
+    <Compile Include="Data\Enumerations.vb" />
+    <Compile Include="DateTime\TimeTagBase.vb" />
+    <Compile Include="DateTime\Enumerations.vb" />
+    <Compile Include="Measurements\Frame.vb" />
+    <Compile Include="Security\Cryptography\Common.vb" />
+    <Compile Include="Configuration\ConfigurationFile.vb" />
+    <Compile Include="Configuration\CategorizedSettingsElementCollection.vb" />
+    <Compile Include="Configuration\CategorizedSettingsElement.vb" />
+    <Compile Include="Configuration\CategorizedSettingsSection.vb" />
+    <Compile Include="Measurements\ImmediateMeasurements.vb" />
+    <Compile Include="Measurements\Sample.vb" />
+    <Compile Include="Security\Cryptography\Enumerations.vb" />
+    <Compile Include="Services\Enumerations.vb" />
+    <Compile Include="Services\IServiceComponent.vb" />
+    <Compile Include="Threading\QueueThread.vb" />
+    <Compile Include="Threading\RunThread.vb" />
+    <Compile Include="Threading\ThreadBase.vb" />
+    <Compile Include="Root\Common.vb" />
+    <Compile Include="Data\Common.vb" />
+    <Compile Include="Root\Assembly.vb" />
+    <Compile Include="Interop\Bit.vb" />
+    <Compile Include="Collections\Common.vb" />
+    <Compile Include="Collections\KeyedProcessQueue.vb">
     </Compile>
-    <Compile Include="TVA.Collections\ProcessQueue.vb" />
-    <Compile Include="TVA.Identity\UserInfo.vb" />
-    <Compile Include="TVA.Interop\BitwiseCast.vb" />
-    <Compile Include="TVA.Identity\Common.vb" />
+    <Compile Include="Collections\ProcessQueue.vb" />
+    <Compile Include="Identity\UserInfo.vb" />
+    <Compile Include="Interop\BitwiseCast.vb" />
+    <Compile Include="Identity\Common.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="TVA.DateTime\Common.vb" />
-    <Compile Include="TVA.DateTime\NtpTimeTag.vb" />
-    <Compile Include="TVA.DateTime\Win32TimeZone.vb" />
-    <Compile Include="TVA.Interop\EndianOrder.vb" />
-    <Compile Include="TVA.DateTime\UnixTimeTag.vb" />
-    <Compile Include="TVA.Interop\WindowsApi.vb" />
-    <Compile Include="TVA.Interop\IniFile.vb" />
-    <Compile Include="TVA.IO\Common.vb" />
-    <Compile Include="TVA.IO\FilePath.vb" />
-    <Compile Include="TVA.Math\Common.vb" />
-    <Compile Include="TVA.Math\CompositeValues.vb" />
-    <Compile Include="TVA.Math\RealTimeSlope.vb" />
-    <Compile Include="TVA.Measurements\IFrame.vb" />
-    <Compile Include="TVA.Measurements\IMeasurement.vb" />
-    <Compile Include="TVA.Measurements\Measurement.vb" />
-    <Compile Include="TVA.Measurements\Concentrator.vb" />
-    <Compile Include="TVA.Measurements\TemporalMeasurement.vb" />
-    <Compile Include="TVA.ErrorManagement\SmtpTraceListener.vb" />
-    <Compile Include="TVA.Text\Common.vb" />
-    <Compile Include="TVA.Xml\Common.vb" />
-    <Compile Include="TVA\ByteEncoding.vb" />
-    <Compile Include="TVA\IPersistSettings.vb" />
-    <Compile Include="TVA\ObjectState.vb" />
-    <Compile Include="TVA\ProcessProgress.vb" />
-    <Compile Include="TVA\Serialization.vb" />
+    <Compile Include="DateTime\Common.vb" />
+    <Compile Include="DateTime\NtpTimeTag.vb" />
+    <Compile Include="DateTime\Win32TimeZone.vb" />
+    <Compile Include="Interop\EndianOrder.vb" />
+    <Compile Include="DateTime\UnixTimeTag.vb" />
+    <Compile Include="Interop\WindowsApi.vb" />
+    <Compile Include="Interop\IniFile.vb" />
+    <Compile Include="IO\Common.vb" />
+    <Compile Include="IO\FilePath.vb" />
+    <Compile Include="Math\Common.vb" />
+    <Compile Include="Math\CompositeValues.vb" />
+    <Compile Include="Math\RealTimeSlope.vb" />
+    <Compile Include="Measurements\IFrame.vb" />
+    <Compile Include="Measurements\IMeasurement.vb" />
+    <Compile Include="Measurements\Measurement.vb" />
+    <Compile Include="Measurements\Concentrator.vb" />
+    <Compile Include="Measurements\TemporalMeasurement.vb" />
+    <Compile Include="ErrorManagement\SmtpTraceListener.vb" />
+    <Compile Include="Text\Common.vb" />
+    <Compile Include="Xml\Common.vb" />
+    <Compile Include="Root\ByteEncoding.vb" />
+    <Compile Include="Root\IPersistSettings.vb" />
+    <Compile Include="Root\ObjectState.vb" />
+    <Compile Include="Root\ProcessProgress.vb" />
+    <Compile Include="Root\Serialization.vb" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="TVA.Collections\TVA.Collections.cd" />
+    <None Include="Collections\TVA.Collections.cd" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
-    <EmbeddedResource Include="TVA.ErrorManagement\GELDialog.resx">
+    <EmbeddedResource Include="ErrorManagement\GELDialog.resx">
       <SubType>Designer</SubType>
       <DependentUpon>GELDialog.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="TVA.ErrorManagement\GlobalExceptionLogger.resx">
+    <EmbeddedResource Include="ErrorManagement\GlobalExceptionLogger.resx">
       <SubType>Designer</SubType>
       <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="TVA.IO\IsamDataFileBase.resx">
+    <EmbeddedResource Include="IO\IsamDataFileBase.resx">
       <DependentUpon>IsamDataFileBase.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -216,11 +216,11 @@
     <EmbeddedResource Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="TVA.Exception\" />
-    <Folder Include="TVA.Net\Http\" />
-    <Folder Include="TVA.Remoting\" />
-    <Folder Include="TVA.Web\" />
-    <Folder Include="TVA.Windows\" />
+    <Folder Include="Exception\" />
+    <Folder Include="Net\Http\" />
+    <Folder Include="Remoting\" />
+    <Folder Include="Web\" />
+    <Folder Include="Windows\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
