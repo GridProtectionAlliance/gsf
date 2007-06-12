@@ -67,6 +67,8 @@ Public MustInherit Class HistorianAdapterBase
             UpdateStatus("Starting connection attempt to " & Name & "...")
 
             ' Attempt connection to historian (consumer to call historian API connect function)
+            ' This must happen before aborting data processing thread to keep disconnect from failing
+            ' due to thread abort in case of reconnect caused by a processing exception
             AttemptConnection()
 
             ' Start data processing thread
@@ -86,15 +88,15 @@ Public MustInherit Class HistorianAdapterBase
         Try
             Dim performedDisconnect As Boolean
 
+            ' Attempt disconnection from historian (consumer to call historian API disconnect function)
+            AttemptDisconnection()
+
             ' Stop data processing thread
             If m_dataProcessingThread IsNot Nothing Then
                 m_dataProcessingThread.Abort()
                 performedDisconnect = True
             End If
             m_dataProcessingThread = Nothing
-
-            ' Attempt disconnection from historian (consumer to call historian API disconnect function)
-            AttemptDisconnection()
 
             If performedDisconnect Then UpdateStatus("Disconnected from " & Name)
         Catch ex As Exception

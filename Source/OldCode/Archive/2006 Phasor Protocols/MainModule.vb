@@ -26,7 +26,7 @@ Imports TVA.Text.Common
 Imports TVA.Data.Common
 Imports TVA.Measurements
 Imports TVA.DateTime.Common
-Imports TVA.Phasors
+Imports PhasorProtocols
 Imports TVA.Collections
 Imports InterfaceAdapters
 Imports System.Reflection
@@ -212,10 +212,12 @@ Module MainModule
         Dim connectionString As String = StringSetting("PMUDatabase")
         Dim archiveSource As String
 
-        With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection)
+        'With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection)
+        With RetrieveData("SELECT * FROM MeasurementArchives WHERE Enabled != 0", connection)
             For x As Integer = 0 To .Rows.Count - 1
                 Try
-                    archiveSource = .Rows(x)("Acronym").ToString()
+                    'archiveSource = .Rows(x)("Acronym").ToString()
+                    archiveSource = .Rows(x)("ArchiveSource").ToString()
                     externalAssemblyName = .Rows(x)("AssemblyName").ToString()
 
                     ' Load the external assembly for the historian adapter
@@ -273,7 +275,8 @@ Module MainModule
         '   LeadTime                    Double
 
         ' Load all the unique calculated measurement assemlies into the current application domain
-        With RetrieveData("SELECT * FROM CalculatedMeasurement WHERE Enabled <> 0", connection)
+        'With RetrieveData("SELECT * FROM CalculatedMeasurement WHERE Enabled <> 0", connection)
+        With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled != 0", connection)
             For x As Integer = 0 To .Rows.Count - 1
                 Try
                     ' Load the external assembly
@@ -432,7 +435,7 @@ Module MainModule
 
     End Function
 
-    Private Function ParseDeviceCommand(ByVal consoleLine As String) As TVA.Phasors.DeviceCommand
+    Private Function ParseDeviceCommand(ByVal consoleLine As String) As PhasorProtocols.DeviceCommand
 
         Select Case RemoveDuplicateWhiteSpace(consoleLine).Split(" "c)(2).ToLower()
             Case "disabledata"

@@ -102,6 +102,7 @@ Public Class Version3Adapter
     Protected Overrides Sub AttemptDisconnection()
 
         If m_connection IsNot Nothing Then If m_connection.IsConnected Then m_connection.Disconnect()
+        m_connection = Nothing
 
     End Sub
 
@@ -113,26 +114,29 @@ Public Class Version3Adapter
 
     Protected Overrides Sub ArchiveMeasurements()
 
-        Dim totalPoints As Integer
-        Dim archiveMeasurements As List(Of IMeasurement) = MyBase.Measurements
+        If m_connection IsNot Nothing Then
+            Dim totalPoints As Integer
+            Dim archiveMeasurements As List(Of IMeasurement) = MyBase.Measurements
 
-        ' Retrieve data points to be archived
-        SyncLock archiveMeasurements
-            totalPoints = Minimum(m_maximumEvents, archiveMeasurements.Count)
+            ' Retrieve data points to be archived
+            SyncLock archiveMeasurements
+                totalPoints = Minimum(m_maximumEvents, archiveMeasurements.Count)
 
-            If totalPoints > 0 Then
-                ' Load binary standard event images into local buffer
-                For x As Integer = 0 To totalPoints - 1
-                    Buffer.BlockCopy((New StandardPacket(archiveMeasurements(x))).BinaryImage, 0, m_buffer, x * StandardPacket.Size, StandardPacket.Size)
-                Next
+                If totalPoints > 0 Then
+                    ' Load binary standard event images into local buffer
+                    For x As Integer = 0 To totalPoints - 1
+                        Buffer.BlockCopy((New StandardPacket(archiveMeasurements(x))).BinaryImage, 0, m_buffer, x * StandardPacket.Size, StandardPacket.Size)
+                    Next
 
-                ' Remove measurements being processed
-                archiveMeasurements.RemoveRange(0, totalPoints)
-            End If
-        End SyncLock
+                    ' Remove measurements being processed
+                    archiveMeasurements.RemoveRange(0, totalPoints)
+                End If
+            End SyncLock
 
-        ' Post data to TCP stream
-        If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * StandardPacket.Size)
+            ' Post data to TCP stream
+            If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * StandardPacket.Size)
+
+        End If
 
     End Sub
 

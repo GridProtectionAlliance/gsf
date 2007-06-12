@@ -48,10 +48,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Phasors, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Phasors.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -111,6 +107,10 @@
     <ProjectReference Include="InterfaceAdapters\InterfaceAdapters.vbproj">
       <Project>{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}</Project>
       <Name>InterfaceAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="PhasorProtocols\PhasorProtocols.vbproj">
+      <Project>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</Project>
+      <Name>PhasorProtocols</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />

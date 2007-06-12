@@ -21,7 +21,7 @@ Imports System.IO
 Imports System.Runtime.Serialization.Formatters
 Imports System.Runtime.Serialization.Formatters.Soap
 Imports TVA.DateTime
-Imports TVA.Phasors
+Imports PhasorProtocols
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.IO.FilePath
@@ -163,10 +163,12 @@ Public Class PhasorMeasurementMapper
                 End If
 
                 If displayChildren Then
+                    Dim index As Integer
                     .Append(" [")
-                    For x As Integer = 0 To m_pmuIDs.Count - 1
-                        If x > 0 Then .Append(", ")
-                        .Append(m_pmuIDs(x).Acronym)
+                    For Each pmu As PmuInfo In m_pmuIDs.Values
+                        If index > 0 Then .Append(", ")
+                        .Append(pmu.Acronym)
+                        index += 1
                     Next
                     .Append("]")
                 End If

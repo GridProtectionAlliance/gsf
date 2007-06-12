@@ -251,29 +251,29 @@ Public Class ReferenceAngleCalculator
 
         With m_frameLog
             ' Received frame to publish
-            .AppendLine("***************************************************************************************")
-            .AppendLine("   Frame Time: " & frame.Timestamp.ToString("HH:mm:ss.fff"))
-            .AppendLine("  Frame Index: " & frameIndex)
-            .AppendLine(" Measurement Detail - " & frame.Measurements.Values.Count & " total:")
+            .WriteLine("***************************************************************************************")
+            .WriteLine("   Frame Time: " & frame.Timestamp.ToString("HH:mm:ss.fff"))
+            .WriteLine("  Frame Index: " & frameIndex)
+            .WriteLine(" Measurement Detail - " & frame.Measurements.Values.Count & " total:")
 
-            .Append("        Keys: ")
+            .Write("        Keys: ")
             For Each measurement As IMeasurement In frame.Measurements.Values
-                .Append(measurement.Key.ToString().PadLeft(10) & " ")
+                .Write(measurement.Key.ToString().PadLeft(10) & " ")
             Next
-            .AppendLine("")
+            .WriteLine("")
 
-            .Append("      Values: ")
+            .Write("      Values: ")
             For Each measurement As IMeasurement In frame.Measurements.Values
-                .Append(measurement.Value.ToString("0.000").PadLeft(10) & " ")
+                .Write(measurement.Value.ToString("0.000").PadLeft(10) & " ")
             Next
-            .AppendLine("")
+            .WriteLine("")
         End With
 
     End Sub
 
     Private Sub LogFrameWarning(ByVal warning As String)
 
-        m_frameLog.AppendLine("[" & DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") & "]: " & warning)
+        m_frameLog.WriteLine("[" & DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") & "]: " & warning)
 
     End Sub
 

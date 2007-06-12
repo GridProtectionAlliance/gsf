@@ -2,7 +2,7 @@ Imports System.Data.OleDb
 Imports TVA.Measurements
 Imports TVA.Data.Common
 Imports TVA.Common
-Imports TVA.Phasors
+Imports PhasorProtocols
 
 Public Class PhasorDataConcentrator
 
@@ -20,12 +20,12 @@ Public Class PhasorDataConcentrator
         With RetrieveData("SELECT * FROM Pmu WHERE Enabled <> 0", connection).Rows
             For x As Integer = 0 To .Count - 1
                 With .Item(x)
-                    Dim cell As New IeeeC37_118.ConfigurationCell(m_configurationFrame, Convert.ToUInt16(.Item("AccessID")), LineFrequency.Hz60)
+                    Dim ccell As New IeeeC37_118.ConfigurationCell(m_configurationFrame, Convert.ToUInt16(.Item("AccessID")), LineFrequency.Hz60)
 
-                    cell.AnalogDataFormat = DataFormat.FloatingPoint
-                    cell.PhasorDataFormat = DataFormat.FloatingPoint
-                    cell.PhasorCoordinateFormat = CoordinateFormat.Polar
-                    cell.FrequencyDataFormat = DataFormat.FloatingPoint
+                    ccell.AnalogDataFormat = DataFormat.FloatingPoint
+                    ccell.PhasorDataFormat = DataFormat.FloatingPoint
+                    ccell.PhasorCoordinateFormat = CoordinateFormat.Polar
+                    ccell.FrequencyDataFormat = DataFormat.FloatingPoint
                     'cell.NominalFrequency = LineFrequency.Hz60
 
                     ' Calculated measurements can be added as analogs or digitals in the system
@@ -35,14 +35,14 @@ Public Class PhasorDataConcentrator
                     ' Load all phasors as defined in the database
                     'cell.PhasorDefinitions.Add(New IeeeC37_118.PhasorDefinition(cell, index, label, scale, offset, CoordinateFormat.Polar, PhasorType.Current))
 
-                    cell.FrequencyDefinition = New IeeeC37_118.FrequencyDefinition( _
-                        cell, cell.IDLabel & " Frequency", _
+                    ccell.FrequencyDefinition = New IeeeC37_118.FrequencyDefinition( _
+                        ccell, ccell.IDLabel & " Frequency", _
                         Convert.ToInt32(.Item("FreqScale")), _
                         Convert.ToSingle(.Item("FreqOffset")), _
                         Convert.ToInt32(.Item("DfDtScale")), _
                         Convert.ToSingle(.Item("DfDtOffset")))
 
-                    m_configurationFrame.Cells.Add(cell)
+                    m_configurationFrame.Cells.Add(ccell)
                 End With
             Next
         End With

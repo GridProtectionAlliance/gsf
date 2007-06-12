@@ -5,9 +5,9 @@ Public Structure SignalReference
     Implements IEquatable(Of SignalReference), IComparable(Of SignalReference), IComparable
 
     Public PmuAcronym As String
+    Public PmuCellIndex As Integer
     Public SignalType As SignalType
     Public SignalIndex As Integer
-    Public PmuCellIndex As Integer
 
     ' Parse signal reference
     Public Sub New(ByVal signalReference As String)

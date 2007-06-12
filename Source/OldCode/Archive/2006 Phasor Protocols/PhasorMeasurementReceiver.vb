@@ -19,8 +19,8 @@ Imports System.Text
 Imports System.Data.SqlClient
 Imports TVA.DateTime.Common
 Imports TVA.Data.Common
-Imports TVA.Phasors
-Imports TVA.Phasors.Common
+Imports PhasorProtocols
+Imports PhasorProtocols.Common
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.Text.Common
@@ -115,7 +115,8 @@ Public Class PhasorMeasurementReceiver
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
 
             ' Initialize each data connection
-            With RetrieveData("SELECT * FROM ActiveDeviceConnections WHERE Historian='" & m_archiverSource & "'", connection)
+            'With RetrieveData("SELECT * FROM ActiveDeviceConnections WHERE Historian='" & m_archiverSource & "'", connection)
+            With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverSource & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverSource & "')", connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     row = .Rows(x)
@@ -123,50 +124,81 @@ Public Class PhasorMeasurementReceiver
                     parser = New MultiProtocolFrameParser
                     pmuIDs = New Dictionary(Of UInt16, PmuInfo)
 
-                    source = row("Acronym").ToString().Trim().ToUpper()
+                    'source = row("Acronym").ToString().Trim().ToUpper()
+                    source = row("SourceID").ToString().Trim().ToUpper()
                     timezone = row("TimeZone")
-                    timeAdjustmentTicks = row("TimeOffsetTicks")
+                    'timeAdjustmentTicks = row("TimeOffsetTicks")
+                    timeAdjustmentTicks = row("TimeAdjustmentTicks")
                     accessID = row("AccessID")
 
                     ' Setup phasor frame parser
                     With parser
                         Try
-                            .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol"), True)
+                            '.PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol"), True)
+                            .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"), True)
                         Catch ex As ArgumentException
-                            UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("PhasorProtocol") & " - defaulting to IEEE C37.118 V1.")
+                            'UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("PhasorProtocol") & " - defaulting to IEEE C37.118 V1.")
+                            UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("DataID") & " - defaulting to IEEE C37.118 V1.")
                             .PhasorProtocol = PhasorProtocol.IeeeC37_118V1
                         End Try
 
-                        Try
-                            .TransportProtocol = [Enum].Parse(GetType(TransportProtocol), row("TransportProtocol"), True)
-                        Catch ex As ArgumentException
-                            UpdateStatus("Unexpected transport protocol encountered for """ & source & """: " & row("TransportProtocol") & " - defaulting to UDP.")
-                            .TransportProtocol = TransportProtocol.Udp
-                        End Try
+                        ' TODO: This will need to modified to execute like the above if serial connections should be allowed
+                        .TransportProtocol = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
 
-                        Dim connectionString As Object = row("ConnectionString")
-
-                        If connectionString Is Nothing OrElse IsDBNull(connectionString) OrElse String.IsNullOrEmpty(connectionString.ToString()) Then
-                            ' Use old fields for connections if connection string is not defined...
-                            If .TransportProtocol = TransportProtocol.Tcp Then
-                                .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
-                                .DeviceSupportsCommands = True
-                            Else
-                                .ConnectionString = "localport=" & row("IPPort")
-                                .DeviceSupportsCommands = False
-                            End If
+                        If .TransportProtocol = TransportProtocol.Tcp Then
+                            .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                            .DeviceSupportsCommands = True
                         Else
-                            ' Use connection string if any is defined
-                            .ConnectionString = row("ConnectionString")
+                            ' TODO: May need to account for UDP connections supporting remote server commands at some point
+                            ' Note that this will require an extra database field for remote port...
+                            .ConnectionString = "localport=" & row("IPPort")
+                            .DeviceSupportsCommands = False
+
+                            ' Example UDP connect string supporting remote UDP commands
+                            '.ConnectionString = "server=" & row("IPAddress") & "; localport=" & row("IPPort") & "; remoteport=" & row("IPCommandPort")
+                            '.DeviceSupportsCommands = True
+
+                            ' Handle special connection information
+                            If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
+                                ' BPA PDCstream has special connection needs
+                                With DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
+                                    .ConfigurationFileName = TVA.IO.FilePath.GetApplicationPath() & row("IPAddress")
+                                    .RefreshConfigurationFileOnChange = True
+                                    .ParseWordCountFromByte = False
+                                End With
+                            End If
                         End If
 
-                        ' Handle special connection parameters
-                        If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
-                            ' Make sure required INI configuration file parameter gets initialized
-                            Dim parameters As BpaPdcStream.ConnectionParameters = DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
-                            Dim keys As Dictionary(Of String, String) = ParseKeyValuePairs(.ConnectionString)
-                            parameters.ConfigurationFileName = keys("inifilename")
-                        End If
+                        'Try
+                        '    .TransportProtocol = [Enum].Parse(GetType(TransportProtocol), row("TransportProtocol"), True)
+                        'Catch ex As ArgumentException
+                        '    UpdateStatus("Unexpected transport protocol encountered for """ & source & """: " & row("TransportProtocol") & " - defaulting to UDP.")
+                        '    .TransportProtocol = TransportProtocol.Udp
+                        'End Try
+
+                        'Dim connectionString As Object = row("ConnectionString")
+
+                        'If connectionString Is Nothing OrElse IsDBNull(connectionString) OrElse String.IsNullOrEmpty(connectionString.ToString()) Then
+                        '    ' Use old fields for connections if connection string is not defined...
+                        '    If .TransportProtocol = TransportProtocol.Tcp Then
+                        '        .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                        '        .DeviceSupportsCommands = True
+                        '    Else
+                        '        .ConnectionString = "localport=" & row("IPPort")
+                        '        .DeviceSupportsCommands = False
+                        '    End If
+                        'Else
+                        '    ' Use connection string if any is defined
+                        '    .ConnectionString = row("ConnectionString")
+                        'End If
+
+                        '' Handle special connection parameters
+                        'If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
+                        '    ' Make sure required INI configuration file parameter gets initialized
+                        '    Dim parameters As BpaPdcStream.ConnectionParameters = DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
+                        '    Dim keys As Dictionary(Of String, String) = ParseKeyValuePairs(.ConnectionString)
+                        '    parameters.ConfigurationFileName = keys("inifilename")
+                        'End If
 
                         .DeviceID = accessID
                         .SourceName = source
@@ -178,18 +210,22 @@ Public Class PhasorMeasurementReceiver
                         Dim loadedPmuStatus As New StringBuilder
                         loadedPmuStatus.Append(Environment.NewLine)
                         ' Making a connection to a concentrator - this may support multiple PMU's
-                        With RetrieveData("SELECT AccessID, Acronym FROM PdcPmus WHERE PdcAcronym='" & source & "' AND Historian='" & m_archiverSource & "' ORDER BY IOIndex", connection)
+                        'With RetrieveData("SELECT AccessID, Acronym FROM PdcPmus WHERE PdcAcronym='" & source & "' AND Historian='" & m_archiverSource & "' ORDER BY IOIndex", connection)
+                        With RetrieveData("SELECT PMUIndex, PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverSource & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
-                                    pmuIDs.Add(.Item("AccessID"), New PmuInfo(.Item("AccessID"), .Item("Acronym").ToString().Trim().ToUpper()))
+                                    'pmuIDs.Add(.Item("AccessID"), New PmuInfo(.Item("AccessID"), .Item("Acronym").ToString().Trim().ToUpper()))
+                                    pmuIDs.Add(.Item("PMUIndex"), New PmuInfo(.Item("PMUIndex"), .Item("PMUID").ToString().Trim().ToUpper()))
 
                                     ' Create status display string for loaded PMU
                                     loadedPmuStatus.Append("   PMU ")
                                     loadedPmuStatus.Append(y.ToString("00"))
                                     loadedPmuStatus.Append(": ")
-                                    loadedPmuStatus.Append(.Item("Acronym"))
+                                    'loadedPmuStatus.Append(.Item("Acronym"))
+                                    loadedPmuStatus.Append(.Item("PMUID"))
                                     loadedPmuStatus.Append(" (")
-                                    loadedPmuStatus.Append(.Item("AccessID"))
+                                    'loadedPmuStatus.Append(.Item("AccessID"))
+                                    loadedPmuStatus.Append(.Item("PMUIndex"))
                                     loadedPmuStatus.Append(")"c)
                                     loadedPmuStatus.Append(Environment.NewLine)
                                 End With
@@ -200,6 +236,7 @@ Public Class PhasorMeasurementReceiver
                         ' Making a connection to a single device
                         pmuIDs.Add(accessID, New PmuInfo(accessID, source))
                     End If
+
                     ' Initialize measurement list for this device connection keyed on the signal reference field
                     With RetrieveData("SELECT * FROM ActiveDeviceMeasurements WHERE Acronym='" & source & "' AND Historian='" & m_archiverSource & "'", connection)
                         For y = 0 To .Rows.Count - 1
