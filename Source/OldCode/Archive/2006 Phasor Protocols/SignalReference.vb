@@ -17,6 +17,8 @@ Public Structure SignalReference
 
         PmuAcronym = elements(0).Trim().ToUpper()
 
+        ' If the length of the signal type acronym is greater than 2, then this
+        ' is an indexed signal type (e.g., CORD-PA2)
         If elements(1).Length > 2 Then
             signal = elements(1).Substring(0, 2).Trim().ToUpper()
             SignalIndex = Convert.ToInt32(elements(1).Substring(2))

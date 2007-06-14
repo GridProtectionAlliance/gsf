@@ -23,7 +23,7 @@ Imports TVA.Collections.Common
 
 Public MustInherit Class CalculatedMeasurementAdapterBase
 
-    Inherits Concentrator
+    Inherits ConcentratorBase
     Implements ICalculatedMeasurementAdapter
 
     Public Event StatusMessage(ByVal status As String) Implements IAdapter.StatusMessage
@@ -85,10 +85,6 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         Enabled = False
 
     End Sub
-
-    ' Note that since there may be many hundreds of calculated measurements and each measurement can have hundreds
-    ' of inputs, consumer handling the queuing of input measurements should make sure that queue operations are
-    ' handled on independent threads (as needed) so as to not slow up publishing of new measurements
 
     Public Overridable Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement) Implements ICalculatedMeasurementAdapter.QueueMeasurementForCalculation
 
@@ -213,20 +209,9 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Protected Overridable Sub PublishNewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
-        ' We handle publication of new measurements on a new thread since work to be done during
-        ' publication can be time consuming (e.g., sorting and queuing) and we don't want to slow
-        ' up calculation process which is being called at rates of, or over, 30 times per second
-        'ThreadPool.UnsafeQueueUserWorkItem(AddressOf PublishNewCalculatedMeasurements, measurements)
-
         RaiseEvent NewCalculatedMeasurements(measurements)
 
     End Sub
-
-    'Private Sub PublishNewCalculatedMeasurements(ByVal state As Object)
-
-    '    RaiseEvent NewCalculatedMeasurements(DirectCast(state, IList(Of IMeasurement)))
-
-    'End Sub
 
     ''' <summary>
     ''' Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)

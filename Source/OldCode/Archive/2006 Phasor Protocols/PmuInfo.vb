@@ -50,62 +50,52 @@ Public Class PmuInfo
 
     Public ReadOnly Property SignalSynonym(ByVal signal As SignalType) As String
         Get
-            ' We cache signal reference strings so they don't need to be generated at each mapping call
-            ' This helps with performance since the mappings for each signal occur 30 times per second
-            Dim signalRef As String = Nothing
+            ' We cache non-indexed signal reference strings so they don't need to be generated at each mapping call.
+            ' This helps with performance since the mappings for each signal occur 30 times per second.
             Dim synonyms As String()
 
-            ' Looks up synonym dictionary based on signal type
-            If m_signalSynonyms.TryGetValue(signal, synonyms) Then
-                If synonyms(0) Is Nothing Then
-                    ' Didn't find signal index, create and cache new signal reference
-                    signalRef = SignalReference.ToString(m_acronym, signal)
-                    synonyms(0) = signalRef
-                Else
-                    signalRef = synonyms(0)
-                End If
-            Else
-                ' Create a new indexed signal reference array
-                synonyms = CreateArray(Of String)(1)
+            ' Look up synonym in dictionary based on signal type, if found return single element
+            If m_signalSynonyms.TryGetValue(signal, synonyms) Then Return synonyms(0)
 
-                ' Create and cache new signal reference
-                signalRef = SignalReference.ToString(m_acronym, signal)
-                synonyms(0) = signalRef
-            End If
+            ' Create a new signal reference array (for single element)
+            synonyms = CreateArray(Of String)(1)
 
-            Return signalRef
+            ' Create and cache new non-indexed signal reference
+            synonyms(0) = SignalReference.ToString(m_acronym, signal)
+
+            Return synonyms(0)
         End Get
     End Property
 
     Public ReadOnly Property SignalSynonym(ByVal signal As SignalType, ByVal signalIndex As Integer, ByVal signalCount As Integer) As String
         Get
-            ' We cache indexed signal reference strings so they don't need to be generated at each mapping call
-            ' This helps with performance since the mappings for each signal occur 30 times per second
-            Dim signalRef As String = Nothing
+            ' We cache indexed signal reference strings so they don't need to be generated at each mapping call.
+            ' This helps with performance since the mappings for each signal occur 30 times per second.
+            ' For speed purposes we intentionally do not validate that signalIndex falls within signalCount, be
+            ' sure calling procedures are very careful with parameters...
             Dim synonyms As String()
 
-            ' Looks up synonym dictionary based on signal type
+            ' Look up synonym in dictionary based on signal type
             If m_signalSynonyms.TryGetValue(signal, synonyms) Then
-                ' Lookup signal reference "synonym" value of given signal index
-                If signalIndex > -1 AndAlso signalIndex < synonyms.Length Then
+                ' Verify signal count has not changed (we may have received new configuration from device)
+                If signalCount = synonyms.Length Then
+                    ' Lookup signal reference "synonym" value of given signal index
                     If synonyms(signalIndex) Is Nothing Then
                         ' Didn't find signal index, create and cache new signal reference
-                        signalRef = SignalReference.ToString(m_acronym, signal, signalIndex + 1)
-                        synonyms(signalIndex) = signalRef
-                    Else
-                        signalRef = synonyms(signalIndex)
+                        synonyms(signalIndex) = SignalReference.ToString(m_acronym, signal, signalIndex + 1)
                     End If
-                End If
-            Else
-                ' Create a new indexed signal reference array
-                synonyms = CreateArray(Of String)(signalCount)
 
-                ' Create and cache new signal reference
-                signalRef = SignalReference.ToString(m_acronym, signal, signalIndex + 1)
-                synonyms(signalIndex) = signalRef
+                    Return synonyms(signalIndex)
+                End If
             End If
 
-            Return signalRef
+            ' Create a new indexed signal reference array
+            synonyms = CreateArray(Of String)(signalCount)
+
+            ' Create and cache new signal reference
+            synonyms(signalIndex) = SignalReference.ToString(m_acronym, signal, signalIndex + 1)
+
+            Return synonyms(signalIndex)
         End Get
     End Property
 

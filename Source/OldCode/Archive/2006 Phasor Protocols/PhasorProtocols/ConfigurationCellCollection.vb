@@ -57,4 +57,16 @@ Public Class ConfigurationCellCollection
 
     End Function
 
+    Public Overridable Function IndexOfIDLabel(ByVal label As String) As Integer
+
+        For index As Integer = 0 To Count - 1
+            If String.Compare(Me(index).IDLabel, label, True) = 0 Then
+                Return index
+            End If
+        Next
+
+        Return -1
+
+    End Function
+
 End Class

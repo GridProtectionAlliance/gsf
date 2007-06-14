@@ -17,14 +17,15 @@
 
 Imports System.Text
 Imports System.Data.SqlClient
+Imports TVA.Common
 Imports TVA.DateTime.Common
 Imports TVA.Data.Common
-Imports PhasorProtocols
-Imports PhasorProtocols.Common
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.Text.Common
 Imports InterfaceAdapters
+Imports PhasorProtocols
+Imports PhasorProtocols.Common
 
 Public Class PhasorMeasurementReceiver
 
@@ -115,8 +116,8 @@ Public Class PhasorMeasurementReceiver
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
 
             ' Initialize each data connection
-            'With RetrieveData("SELECT * FROM ActiveDeviceConnections WHERE Historian='" & m_archiverSource & "'", connection)
-            With RetrieveData("SELECT * FROM IEEEDataConnections WHERE PlantCode='" & m_archiverSource & "' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='" & m_archiverSource & "')", connection)
+            'With RetrieveData(String.Format("SELECT * FROM ActiveDeviceConnections WHERE Historian='{0}'", m_archiverSource), connection)
+            With RetrieveData(String.Format("SELECT * FROM IEEEDataConnections WHERE PlantCode='{0}' OR SourceID IN (SELECT PDCID FROM IEEEDataConnectionPDCPMUs WHERE PlantCode='{1}')", m_archiverSource, m_archiverSource), connection)
                 For x = 0 To .Rows.Count - 1
                     ' Get current row
                     row = .Rows(x)
@@ -137,8 +138,8 @@ Public Class PhasorMeasurementReceiver
                             '.PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol"), True)
                             .PhasorProtocol = [Enum].Parse(GetType(PhasorProtocol), row("DataID"), True)
                         Catch ex As ArgumentException
-                            'UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("PhasorProtocol") & " - defaulting to IEEE C37.118 V1.")
-                            UpdateStatus("Unexpected phasor protocol encountered for """ & source & """: " & row("DataID") & " - defaulting to IEEE C37.118 V1.")
+                            'UpdateStatus(String.Format("Unexpected phasor protocol encountered for ""{0}"": {1} - defaulting to IEEE C37.118 V1.", source, row("PhasorProtocol")))
+                            UpdateStatus(String.Format("Unexpected phasor protocol encountered for ""{0}"": {1} - defaulting to IEEE C37.118 V1.", source, row("DataID")))
                             .PhasorProtocol = PhasorProtocol.IeeeC37_118V1
                         End Try
 
@@ -146,12 +147,12 @@ Public Class PhasorMeasurementReceiver
                         .TransportProtocol = IIf(String.Compare(row("NTP"), "UDP", True) = 0, TransportProtocol.Udp, TransportProtocol.Tcp)
 
                         If .TransportProtocol = TransportProtocol.Tcp Then
-                            .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                            .ConnectionString = String.Format("server={0}; port={1}", row("IPAddress"), row("IPPort"))
                             .DeviceSupportsCommands = True
                         Else
                             ' TODO: May need to account for UDP connections supporting remote server commands at some point
                             ' Note that this will require an extra database field for remote port...
-                            .ConnectionString = "localport=" & row("IPPort")
+                            .ConnectionString = String.Format("localport={0}", row("IPPort"))
                             .DeviceSupportsCommands = False
 
                             ' Example UDP connect string supporting remote UDP commands
@@ -162,7 +163,7 @@ Public Class PhasorMeasurementReceiver
                             If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
                                 ' BPA PDCstream has special connection needs
                                 With DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
-                                    .ConfigurationFileName = TVA.IO.FilePath.GetApplicationPath() & row("IPAddress")
+                                    .ConfigurationFileName = Concat(TVA.IO.FilePath.GetApplicationPath(), row("IPAddress"))
                                     .RefreshConfigurationFileOnChange = True
                                     .ParseWordCountFromByte = False
                                 End With
@@ -172,7 +173,7 @@ Public Class PhasorMeasurementReceiver
                         'Try
                         '    .TransportProtocol = [Enum].Parse(GetType(TransportProtocol), row("TransportProtocol"), True)
                         'Catch ex As ArgumentException
-                        '    UpdateStatus("Unexpected transport protocol encountered for """ & source & """: " & row("TransportProtocol") & " - defaulting to UDP.")
+                        '    UpdateStatus(String.Format("Unexpected transport protocol encountered for ""{0}"": {1} - defaulting to UDP.", source, row("TransportProtocol")))
                         '    .TransportProtocol = TransportProtocol.Udp
                         'End Try
 
@@ -181,10 +182,10 @@ Public Class PhasorMeasurementReceiver
                         'If connectionString Is Nothing OrElse IsDBNull(connectionString) OrElse String.IsNullOrEmpty(connectionString.ToString()) Then
                         '    ' Use old fields for connections if connection string is not defined...
                         '    If .TransportProtocol = TransportProtocol.Tcp Then
-                        '        .ConnectionString = "server=" & row("IPAddress") & "; port=" & row("IPPort")
+                        '        .ConnectionString = String.Format("server={0}; port={1}", row("IPAddress"), row("IPPort"))
                         '        .DeviceSupportsCommands = True
                         '    Else
-                        '        .ConnectionString = "localport=" & row("IPPort")
+                        '        .ConnectionString = String.Format("localport={0}", row("IPPort"))
                         '        .DeviceSupportsCommands = False
                         '    End If
                         'Else
@@ -205,13 +206,13 @@ Public Class PhasorMeasurementReceiver
                     End With
 
                     If row("IsConcentrator") <> 0 Then
-                        UpdateStatus("Loading expected PMU list for """ & source & """:")
+                        UpdateStatus(String.Format("Loading expected PMU list for ""{0}"":", source))
 
                         Dim loadedPmuStatus As New StringBuilder
                         loadedPmuStatus.Append(Environment.NewLine)
                         ' Making a connection to a concentrator - this may support multiple PMU's
-                        'With RetrieveData("SELECT AccessID, Acronym FROM PdcPmus WHERE PdcAcronym='" & source & "' AND Historian='" & m_archiverSource & "' ORDER BY IOIndex", connection)
-                        With RetrieveData("SELECT PMUIndex, PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='" & m_archiverSource & "' AND PDCID='" & source & "' ORDER BY PMUIndex", connection)
+                        'With RetrieveData(String.Format("SELECT AccessID, Acronym FROM PdcPmus WHERE PdcAcronym='{0}' AND Historian='{1}' ORDER BY IOIndex", source, m_archiverSource), connection)
+                        With RetrieveData(String.Format("SELECT PMUIndex, PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='{0}' AND PDCID='{1}' ORDER BY PMUIndex", m_archiverSource, source), connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
                                     'pmuIDs.Add(.Item("AccessID"), New PmuInfo(.Item("AccessID"), .Item("Acronym").ToString().Trim().ToUpper()))
@@ -238,7 +239,7 @@ Public Class PhasorMeasurementReceiver
                     End If
 
                     ' Initialize measurement list for this device connection keyed on the signal reference field
-                    With RetrieveData("SELECT * FROM ActiveDeviceMeasurements WHERE Acronym='" & source & "' AND Historian='" & m_archiverSource & "'", connection)
+                    With RetrieveData(String.Format("SELECT * FROM ActiveDeviceMeasurements WHERE Acronym='{0}' AND Historian='{1}'", source, m_archiverSource), connection)
                         For y = 0 To .Rows.Count - 1
                             With .Rows(y)
                                 measurementIDs.Add(.Item("SignalReference"), _
@@ -252,7 +253,7 @@ Public Class PhasorMeasurementReceiver
                         Next
                     End With
 
-                    UpdateStatus("Loaded " & measurementIDs.Count & " active measurements for " & source & "...")
+                    UpdateStatus(String.Format("Loaded {0} active measurements for {1}...", measurementIDs.Count, source))
 
                     With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs, m_dataLossInterval)
                         ' Add timezone mapping if not UTC...
@@ -260,7 +261,7 @@ Public Class PhasorMeasurementReceiver
                             Try
                                 .TimeZone = GetWin32TimeZone(timezone)
                             Catch ex As Exception
-                                UpdateStatus("Failed to assign timezone offset """ & timezone & """ to PDC/PMU """ & source & """ due to exception: " & ex.Message)
+                                UpdateStatus(String.Format("Failed to assign timezone offset ""{0}"" to PDC/PMU ""{1}"" due to exception: {2}", timezone, source, ex.Message))
                             End Try
                         End If
 
@@ -284,7 +285,7 @@ Public Class PhasorMeasurementReceiver
 
             UpdateStatus("Phasor measurement receiver initialized successfully.")
         Catch ex As Exception
-            UpdateStatus("Phasor measurement receiver failed to initialize: " & ex.Message)
+            UpdateStatus(String.Format("Phasor measurement receiver failed to initialize: {0}", ex.Message))
         Finally
             m_intializing = False
         End Try
@@ -306,7 +307,7 @@ Public Class PhasorMeasurementReceiver
     Public ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append("Phasor Measurement Receiver Status for """ & HistorianName & """")
+                .Append(String.Format("Phasor Measurement Receiver Status for ""{0}""", HistorianName))
                 .Append(Environment.NewLine)
                 .Append(Environment.NewLine)
                 .Append(m_historianAdapter.Status)
@@ -350,7 +351,7 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub UpdateStatus(ByVal status As String) Handles m_historianAdapter.StatusMessage
 
-        RaiseEvent StatusMessage("[" & m_archiverSource & "]: " & status)
+        RaiseEvent StatusMessage(String.Format("[{0}]: {1}", m_archiverSource, status))
 
     End Sub
 
@@ -388,7 +389,14 @@ Public Class PhasorMeasurementReceiver
                     For Each pmuID As PmuInfo In mapper.PmuIDs.Values
                         If Not String.IsNullOrEmpty(pmuID.Acronym) Then
                             isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(pmuID.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
-                            updateSqlBatch.Append("UPDATE PMUs SET IsReporting=" & isReporting & ", ReportTime='" & DateTime.UtcNow.ToString() & "' WHERE PMUID_Uniq='" & pmuID.Acronym & "'; " & Environment.NewLine)
+                            updateSqlBatch.Append("UPDATE PMUs SET IsReporting=")
+                            updateSqlBatch.Append(isReporting)
+                            updateSqlBatch.Append(", ReportTime='")
+                            updateSqlBatch.Append(DateTime.UtcNow.ToString())
+                            updateSqlBatch.Append("' WHERE PMUID_Uniq='")
+                            updateSqlBatch.Append(pmuID.Acronym)
+                            updateSqlBatch.Append("'; ")
+                            updateSqlBatch.Append(Environment.NewLine)
                         End If
                     Next
                 Next
@@ -396,7 +404,7 @@ Public Class PhasorMeasurementReceiver
                 ' Update reporting status for each PMU
                 ExecuteNonQuery(updateSqlBatch.ToString(), connection)
             Catch ex As Exception
-                UpdateStatus("[" & Now() & "] ERROR: Failed to update PMU reporting status due to exception: " & ex.Message)
+                UpdateStatus(String.Format("[{0}] ERROR: Failed to update PMU reporting status due to exception: {1}", DateTime.Now, ex.Message))
             Finally
                 If connection IsNot Nothing Then connection.Close()
             End Try
@@ -406,7 +414,7 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub m_historianAdapter_ArchivalException(ByVal source As String, ByVal ex As System.Exception) Handles m_historianAdapter.ArchivalException
 
-        UpdateStatus(source & """ data archival exception: " & ex.Message)
+        UpdateStatus(String.Format("{0} data archival exception: {1}", source, ex.Message))
 
     End Sub
 

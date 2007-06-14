@@ -21,12 +21,11 @@ Imports System.IO
 Imports System.Runtime.Serialization.Formatters
 Imports System.Runtime.Serialization.Formatters.Soap
 Imports TVA.DateTime
-Imports PhasorProtocols
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.IO.FilePath
-
-' TODO: String.Format all concats for strings...
+Imports PhasorProtocols
+Imports PhasorProtocols.Common
 
 ''' <summary>
 ''' <para>This class takes parsed phasor frames and maps measured elements to historian points</para>
@@ -41,6 +40,7 @@ Public Class PhasorMeasurementMapper
 
     Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_frameParser As MultiProtocolFrameParser
+    Private m_mapperName As String
     Private m_archiverSource As String
     Private m_source As String
     Private m_pmuIDs As Dictionary(Of UInt16, PmuInfo)
@@ -53,6 +53,8 @@ Public Class PhasorMeasurementMapper
     Private m_receivedConfigFrame As Boolean
     Private m_timezone As Win32TimeZone
     Private m_timeAdjustmentTicks As Long
+    Private m_attemptingConnection As Boolean
+    Private m_undefinedPmus As Dictionary(Of String, Long)
 
     Public Sub New( _
         ByVal frameParser As MultiProtocolFrameParser, _
@@ -76,6 +78,8 @@ Public Class PhasorMeasurementMapper
             .Enabled = False
         End With
 
+        m_undefinedPmus = New Dictionary(Of String, Long)
+
     End Sub
 
     Public Sub Connect()
@@ -90,11 +94,8 @@ Public Class PhasorMeasurementMapper
 
     Public Sub Disconnect()
 
-        Dim performedDisconnect As Boolean
-
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then
-            performedDisconnect = m_dataStreamMonitor.Enabled
             m_dataStreamMonitor.Enabled = False
         End If
 
@@ -106,14 +107,14 @@ Public Class PhasorMeasurementMapper
         m_errorTime = 0
         m_unknownFramesReceived = 0
 
-        If performedDisconnect Then UpdateStatus("Disconnected from " & Name)
+        If m_attemptingConnection Then UpdateStatus(String.Format("Canceling connection cycle to {0}.", Name))
 
     End Sub
 
     Public Sub SendDeviceCommand(ByVal command As DeviceCommand)
 
         If m_frameParser IsNot Nothing Then m_frameParser.SendDeviceCommand(command)
-        UpdateStatus(">> Sent device command """ & [Enum].GetName(GetType(DeviceCommand), command) & """...")
+        UpdateStatus(String.Format(">> Sent device command ""{0}""...", [Enum].GetName(GetType(DeviceCommand), command)))
 
     End Sub
 
@@ -130,6 +131,18 @@ Public Class PhasorMeasurementMapper
                 .Append(Name)
                 .Append(Environment.NewLine)
                 .Append(m_frameParser.Status)
+                .Append("Undefined PMU's Encountered: ")
+                .Append(m_undefinedPmus.Count)
+                .Append(Environment.NewLine)
+
+                For Each item As KeyValuePair(Of String, Long) In m_undefinedPmus
+                    .Append("    ")
+                    .Append(item.Key)
+                    .Append(" encountered ")
+                    .Append(item.Value)
+                    .Append("times")
+                    .Append(Environment.NewLine)
+                Next
 
                 Return .ToString()
             End With
@@ -150,31 +163,35 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property Name() As String
         Get
-            With New StringBuilder
-                .Append(m_source)
+            If m_mapperName Is Nothing Then
+                With New StringBuilder
+                    .Append(m_source)
 
-                Dim displayChildren As Boolean = (m_pmuIDs.Count > 1)
+                    Dim displayChildren As Boolean = (m_pmuIDs.Count > 1)
 
-                If Not displayChildren Then
-                    ' Could still be a PDC with one child - so we'll compare the names
-                    With m_pmuIDs.Values.GetEnumerator()
-                        If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.Acronym, True) <> 0)
-                    End With
-                End If
+                    If Not displayChildren Then
+                        ' Could still be a PDC with one child - so we'll compare the names
+                        With m_pmuIDs.Values.GetEnumerator()
+                            If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.Acronym, True) <> 0)
+                        End With
+                    End If
 
-                If displayChildren Then
-                    Dim index As Integer
-                    .Append(" [")
-                    For Each pmu As PmuInfo In m_pmuIDs.Values
-                        If index > 0 Then .Append(", ")
-                        .Append(pmu.Acronym)
-                        index += 1
-                    Next
-                    .Append("]")
-                End If
+                    If displayChildren Then
+                        Dim index As Integer
+                        .Append(" [")
+                        For Each pmu As PmuInfo In m_pmuIDs.Values
+                            If index > 0 Then .Append(", ")
+                            .Append(pmu.Acronym)
+                            index += 1
+                        Next
+                        .Append("]")
+                    End If
 
-                Return .ToString()
-            End With
+                    m_mapperName = .ToString()
+                End With
+            End If
+
+            Return m_mapperName
         End Get
     End Property
 
@@ -202,6 +219,12 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
+    Public ReadOnly Property UndefinedPmus() As Dictionary(Of String, Long)
+        Get
+            Return m_undefinedPmus
+        End Get
+    End Property
+
     Private Sub UpdateStatus(ByVal message As String)
 
         RaiseEvent ParsingStatus(message)
@@ -212,6 +235,10 @@ Public Class PhasorMeasurementMapper
     ''' <remarks>This procedure is used to identify a signal value and apply any additional needed measurement attributes</remarks>
     Private Sub MapSignalToMeasurement(ByVal frame As IDataFrame, ByVal signalSynonym As String, ByVal signalValue As IMeasurement)
 
+        ' Coming into this function the signalValue measurement will only have a "value" and a "timestamp";
+        ' the measurement is not yet associated with an actual historian measurement ID as the measurement
+        ' came out of the phasor protocols directly.  We take the generated "Signal Synonym" and use that
+        ' to lookup the actual historian measurement ID, source, adder and multipler.
         Dim measurementID As IMeasurement
 
         ' Lookup synonym value in measurement ID list
@@ -296,8 +323,16 @@ Public Class PhasorMeasurementMapper
                     MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Digital, y, count), digitals(y).Measurements(0))
                 Next
             Else
-                ' TODO: Encountered a new PMU - decide best way to report this...
-                ' Don't report it 30 times a second :)
+                ' Encountered an undefined PMU, track frame counts
+                Dim frameCount As Long
+
+                If m_undefinedPmus.TryGetValue(dataCell.StationName, frameCount) Then
+                    frameCount += 1
+                    m_undefinedPmus(dataCell.StationName) = frameCount
+                Else
+                    m_undefinedPmus.Add(dataCell.StationName, 1)
+                    UpdateStatus(String.Format("WARNING: Encountered an undefined PMU ""{0}"" for {1}.", dataCell.StationName, m_source))
+                End If
             End If
         Next
 
@@ -308,25 +343,25 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_AttemptingConnection() Handles m_frameParser.AttemptingConnection
 
-        With m_frameParser
-            UpdateStatus("Attempting " & [Enum].GetName(GetType(PhasorProtocol), m_frameParser.PhasorProtocol).ToUpper() & " " & [Enum].GetName(GetType(TransportProtocol), .TransportProtocol).ToUpper() & " based connection to " & m_source)
-        End With
+        m_attemptingConnection = True
+        UpdateStatus(String.Format("Attempting {0} {1} based connection to {2}...", GetFormattedProtocolName(m_frameParser.PhasorProtocol), [Enum].GetName(GetType(TransportProtocol), m_frameParser.TransportProtocol).ToUpper(), m_source))
 
     End Sub
 
     Private Sub m_frameParser_Connected() Handles m_frameParser.Connected
 
         ' Enable data stream monitor for non-UDP connections
+        m_attemptingConnection = False
         m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
 
-        UpdateStatus("Connection to " & m_source & " established.")
+        UpdateStatus(String.Format("Connection to {0} established.", m_source))
         RaiseEvent Connected()
 
     End Sub
 
     Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles m_frameParser.ConnectionException
 
-        UpdateStatus(m_source & " connection to """ & m_frameParser.ConnectionName & """ failed: " & ex.Message)
+        UpdateStatus(String.Format("{0} connection to ""{1}"" failed: {2}", m_source, m_frameParser.ConnectionName, ex.Message))
 
         ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
         ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
@@ -341,7 +376,7 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_DataStreamException(ByVal ex As System.Exception) Handles m_frameParser.DataStreamException
 
-        UpdateStatus("WARNING: " & m_source & " data stream exception: " & ex.Message)
+        UpdateStatus(String.Format("WARNING: {0} data stream exception: {1}", m_source, ex.Message))
 
         ' We monitor for exceptions that occur in quick succession
         If Date.Now.Ticks - m_errorTime > 100000000L Then
@@ -353,7 +388,7 @@ Public Class PhasorMeasurementMapper
 
         ' When we get 10 or more exceptions within a ten second timespan, we will then restart connection cycle...
         If m_errorCount >= 10 Then
-            UpdateStatus(m_source & " connection terminated due to excessive exceptions.")
+            UpdateStatus(String.Format("{0} connection terminated due to excessive exceptions.", m_source))
             Connect()
         End If
 
@@ -364,12 +399,12 @@ Public Class PhasorMeasurementMapper
         If m_frameParser.Enabled Then
             ' Communications layer closed connection (close not initiated by system) - so we terminate gracefully...
             Disconnect()
-            UpdateStatus("WARNING: Connection closed by remote device """ & m_source & """, attempting reconnection...")
+            UpdateStatus(String.Format("WARNING: Connection closed by remote device {0}, attempting reconnection...", m_source))
 
             ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
         Else
-            UpdateStatus("Disconnected from " & m_source & ".")
+            UpdateStatus(String.Format("Disconnected from {0}.", m_source))
         End If
 
     End Sub
@@ -378,7 +413,7 @@ Public Class PhasorMeasurementMapper
 
         m_receivedConfigFrame = False
 
-        UpdateStatus("NOTICE: Configuration has changed for """ & m_source & """, requesting new configuration frame...")
+        UpdateStatus(String.Format("NOTICE: Configuration has changed for {0}, requesting new configuration frame...", m_source))
         SendDeviceCommand(DeviceCommand.SendConfigurationFrame2)
 
     End Sub
@@ -394,7 +429,7 @@ Public Class PhasorMeasurementMapper
 
         Dim frame As IConfigurationFrame = DirectCast(state, IConfigurationFrame)
 
-        UpdateStatus("Received " & m_source & " configuration frame at " & Date.Now)
+        UpdateStatus(String.Format("Received {0} configuration frame at {1}", m_source, Date.Now))
 
         Try
             Dim cachePath As String = GetApplicationPath() & "ConfigurationCache\"
@@ -409,7 +444,7 @@ Public Class PhasorMeasurementMapper
 
             configFile.Close()
         Catch ex As Exception
-            UpdateStatus("Failed to serialize configuration frame: " & ex.Message)
+            UpdateStatus(String.Format("Failed to serialize configuration frame: {0}", ex.Message))
         End Try
 
     End Sub
@@ -420,7 +455,7 @@ Public Class PhasorMeasurementMapper
 
         If frameType = FundamentalFrameType.Undetermined Then
             m_unknownFramesReceived += 1
-            If m_unknownFramesReceived Mod 300 = 0 Then UpdateStatus("WARNING: " & m_source & " has received " & m_unknownFramesReceived & " undetermined frame images.")
+            If m_unknownFramesReceived Mod 300 = 0 Then UpdateStatus(String.Format("WARNING: {0} has received {1} undetermined frame images.", m_source, m_unknownFramesReceived))
         End If
 
     End Sub
@@ -429,7 +464,7 @@ Public Class PhasorMeasurementMapper
 
         ' If we've received no data in the last little timespan, we restart connect cycle...
         If m_bytesReceived = 0 Then
-            UpdateStatus(Environment.NewLine & "No data on " & m_source & " received in " & m_dataStreamMonitor.Interval / 1000 & " seconds, restarting connect cycle..." & Environment.NewLine)
+            UpdateStatus(String.Format("{0}No data on {1} received in {2} seconds, restarting connect cycle...{3}", Environment.NewLine, m_source, Convert.ToInt32(m_dataStreamMonitor.Interval / 1000.0R), Environment.NewLine))
             Connect()
             m_dataStreamMonitor.Enabled = False
         End If
