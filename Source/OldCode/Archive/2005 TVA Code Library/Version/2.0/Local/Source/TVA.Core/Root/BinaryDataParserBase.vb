@@ -6,22 +6,24 @@ Imports System.IO
 Imports System.Reflection
 Imports System.Reflection.Emit
 Imports System.ComponentModel
+Imports TVA.Common
 Imports TVA.Collections
 Imports TVA.IO.FilePath
 
 <DefaultEvent("DataParsed")> _
-Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinaryDataConsumer)
+Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinaryDataConsumer)
     Implements IPersistSettings, ISupportInitialize
 
 #Region " Member Declaration "
 
-    Private m_idFieldName As String
+    Private m_idPropertyName As String
     Private m_optimizeParsing As Boolean
+    Private m_discardUnparsedData As Boolean
     Private m_persistSettings As Boolean
     Private m_settingsCategoryName As String
-    Private m_parserTypes As Dictionary(Of TIdentifier, ParserTypeInfo)
+    Private m_outputTypes As Dictionary(Of TIdentifier, TypeInfo)
 
-    Private Delegate Function DefaultConstructor() As TResult
+    Private Delegate Function DefaultConstructor() As TOutput
 
     Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Guid, Byte()))
 
@@ -29,19 +31,24 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
 #Region " Event Declaration "
 
-    Public Event DataParsed As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TResult))))
+    Public Event DataCorrupt As EventHandler
+    Public Event DataParsed As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput))))
     Public Event DataDiscarded As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
 
 #End Region
 
 #Region " Code Scope: Public "
 
-    Public Property IDFieldName() As String
+    Public Property IDPropertyName() As String
         Get
-            Return m_idFieldName
+            Return m_idPropertyName
         End Get
         Set(ByVal value As String)
-            m_idFieldName = value
+            If Not String.IsNullOrEmpty(value) Then
+                m_idPropertyName = value
+            Else
+                Throw New ArgumentNullException("IDPropertyName")
+            End If
         End Set
     End Property
 
@@ -51,6 +58,15 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
         End Get
         Set(ByVal value As Boolean)
             m_optimizeParsing = value
+        End Set
+    End Property
+
+    Public Property DiscardUnparsedData() As Boolean
+        Get
+            Return m_discardUnparsedData
+        End Get
+        Set(ByVal value As Boolean)
+            m_discardUnparsedData = value
         End Set
     End Property
 
@@ -64,24 +80,35 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
     Public Sub Start()
 
         Dim asm As Reflection.Assembly = Nothing
-        Dim idField As FieldInfo = Nothing
         Dim typeCtor As ConstructorInfo = Nothing
         Dim asmBuilder As AssemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(New AssemblyName("InMemory"), AssemblyBuilderAccess.Run)
         Dim modBuilder As ModuleBuilder = asmBuilder.DefineDynamicModule("Helper")
         Dim typeBuilder As TypeBuilder = modBuilder.DefineType("ClassFactory")
+        Dim outputTypes As New List(Of TypeInfo)() ' Temporarily hold output types until their IDs are determined.
+
+        ' Process all assemblies in the application's directory.
         For Each dll As String In Directory.GetFiles(JustPath(TVA.Assembly.EntryAssembly.Location), "*.dll")
+            ' Load the assembly in the curent app domain.
             asm = Reflection.Assembly.LoadFrom(dll)
+
+            ' Process all of the public types in the assembly.
             For Each asmType As Type In asm.GetExportedTypes()
-                idField = asmType.GetField(m_idFieldName)
                 typeCtor = asmType.GetConstructor(Type.EmptyTypes)
-                If idField IsNot Nothing AndAlso typeCtor IsNot Nothing AndAlso _
-                        Not asmType.IsAbstract AndAlso TVA.Common.GetRootType(asmType) Is GetType(TResult) Then
+                If typeCtor IsNot Nothing AndAlso Not asmType.IsAbstract AndAlso _
+                        TVA.Common.GetRootType(asmType) Is GetType(TOutput) Then
+                    ' The type meets the following criteria:
+                    ' - has a default public constructor
+                    ' - is not abstract and can be instantiated.
+                    ' - root type is same as the type specified for the output
 
-                    Dim parserType As New ParserTypeInfo()
-                    parserType.RuntimeType = asmType
-                    parserType.ID = CType(idField.GetValue(Nothing), TIdentifier)
+                    Dim outputType As New TypeInfo()
+                    outputType.RuntimeType = asmType
 
+                    ' We employ 2 of the best peforming ways of instantiating objects using reflection.
+                    ' See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
                     If m_optimizeParsing Then
+                        ' Invokation approach: Reflection.Emit + Delegate
+                        ' This is hands-down that most fastest way of instantiating objects using reflection.
                         Dim dynamicTypeCtor As MethodBuilder = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public Or MethodAttributes.Static, asmType, Type.EmptyTypes)
                         With dynamicTypeCtor.GetILGenerator()
                             .Emit(Emit.OpCodes.Nop)
@@ -89,6 +116,8 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
                             .Emit(Emit.OpCodes.Ret)
                         End With
                     Else
+                        ' Invokation approach: DynamicMethod + Delegate
+                        ' This method is very fast compared to rest of the approaches, but not as fast as the one above.
                         Dim dynamicTypeCtor As New DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, True)
                         With dynamicTypeCtor.GetILGenerator()
                             .Emit(Emit.OpCodes.Nop)
@@ -96,21 +125,40 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
                             .Emit(Emit.OpCodes.Ret)
                         End With
 
-                        parserType.CreateNew = CType(dynamicTypeCtor.CreateDelegate(GetType(DefaultConstructor)), DefaultConstructor)
+                        ' Create a delegate to the constructor that'll be called to create a new instance of the type.
+                        outputType.CreateNew = CType(dynamicTypeCtor.CreateDelegate(GetType(DefaultConstructor)), DefaultConstructor)
                     End If
 
-                    If Not m_parserTypes.ContainsKey(parserType.ID) Then
-                        m_parserTypes.Add(parserType.ID, parserType)
-                    End If
+                    ' We'll hold all of the matching types in this list temporarily until their IDs are determined.
+                    outputTypes.Add(outputType)
                 End If
             Next
         Next
 
-        Dim bakedType As Type = typeBuilder.CreateType()
-        For Each parserTypeID As TIdentifier In m_parserTypes.Keys
-            With m_parserTypes(parserTypeID)
-                .CreateNew = CType(System.Delegate.CreateDelegate(GetType(DefaultConstructor), bakedType.GetMethod(.RuntimeType.Name)), DefaultConstructor)
-            End With
+        If m_optimizeParsing Then
+            ' The reason we have to do this over here is because we can create a type only once. This is the type 
+            ' that has all the constructors created above for the various class matching the requirements for the 
+            ' output type.
+            Dim bakedType As Type = typeBuilder.CreateType()    ' This can be done only once!!!
+            For Each outputType As TypeInfo In outputTypes
+                outputType.CreateNew = CType(System.Delegate.CreateDelegate(GetType(DefaultConstructor), bakedType.GetMethod(outputType.RuntimeType.Name)), DefaultConstructor)
+            Next
+        End If
+
+        Dim idProperty As PropertyInfo
+        For Each outputType As TypeInfo In outputTypes
+            ' Now, we'll go though all of the output types we've found and instantiate an instance of each in order
+            ' to get the identifier for each of the type. This will help lookup of the type to be used when parsing
+            ' the data.
+            Dim instance As TOutput = outputType.CreateNew()
+            idProperty = outputType.RuntimeType.GetProperty(m_idPropertyName, GetType(TIdentifier))
+            If idProperty IsNot Nothing Then
+                ' The output type does expose a property with the specified name and return type.
+                outputType.ID = CType(idProperty.GetValue(instance, Nothing), TIdentifier)
+                If Not m_outputTypes.ContainsKey(outputType.ID) Then
+                    m_outputTypes.Add(outputType.ID, outputType)
+                End If
+            End If
         Next
 
         m_dataQueue.Start()
@@ -120,11 +168,15 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
     Public Sub [Stop]()
 
         m_dataQueue.Stop()      ' Stop processing of queued data.
-        m_parserTypes.Clear()   ' Clear the cached packet type available.
+        m_outputTypes.Clear()   ' Clear the cached packet type available.
 
     End Sub
 
-    Public MustOverride Function GetID(ByVal binaryImage As Byte()) As TIdentifier
+#Region " MustOverride "
+
+    Public MustOverride Function GetTypeID(ByVal binaryImage As Byte()) As TIdentifier
+
+#End Region
 
 #Region " Interface Implementation "
 
@@ -157,7 +209,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
         Try
             With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                 If .Count > 0 Then
-                    IDFieldName = .Item("IDFieldName").GetTypedValue(m_idFieldName)
+                    IDPropertyName = .Item("IDPropertyName").GetTypedValue(m_idPropertyName)
                     OptimizeParsing = .Item("OptimizeParsing").GetTypedValue(m_optimizeParsing)
                 End If
             End With
@@ -173,8 +225,8 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
             Try
                 With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
                     .Clear()
-                    With .Item("IDFieldName", True)
-                        .Value = m_idFieldName
+                    With .Item("IDPropertyName", True)
+                        .Value = m_idPropertyName
                         .Description = ""
                     End With
                     With .Item("OptimizeParsing", True)
@@ -220,25 +272,54 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
         For i As Integer = 0 To item.Length - 1
             If item(i).Item IsNot Nothing AndAlso item(i).Item.Length > 0 Then
-                Dim typeID As TIdentifier = GetID(item(i).Item) 'BitConverter.ToInt16(item(i).Item, m_idValueLocation)
-                Dim parserType As ParserTypeInfo = Nothing
+                Dim typeID As TIdentifier = GetTypeID(item(i).Item)
+                Dim outputType As TypeInfo = Nothing
 
-                If m_parserTypes.TryGetValue(typeID, parserType) Then
-                    Dim parsedData As New List(Of TResult)()
-                    Dim newData As TResult = Nothing
+                If m_outputTypes.TryGetValue(typeID, outputType) Then
+                    ' We have a type we can use to represent this data.
+                    Dim output As New List(Of TOutput)()
+                    Dim newData As TOutput = Nothing
 
                     Dim j As Integer = 0
-                    Do While j < item(i).Item.Length
-                        Try
-                            newData = parserType.CreateNew()
+                    Try
+                        Do While j < item(i).Item.Length
+                            newData = outputType.CreateNew()
                             j += newData.Initialize(item(i).Item, j)
-                            parsedData.Add(newData)
-                        Catch ex As Exception
-                            ' TODO: Raise event...
-                        End Try
-                    Loop
+                            output.Add(newData)
+                        Loop
+                    Catch ex As Exception
+                        ' We might encounter an exception if the data being parsed is corrupt (data image is partial).
+                        If Not m_discardUnparsedData Then
+                            Dim insertUnusedData As Boolean = True
+                            Dim unusedData As Byte() = CreateArray(Of Byte)(item(i).Item.Length - j)
+                            Array.Copy(item(i).Item, j, unusedData, 0, unusedData.Length)
 
-                    RaiseEvent DataParsed(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TResult)))(New IdentifiableItem(Of Guid, List(Of TResult))(item(i).Source, parsedData)))
+                            If i < (item.Length - 1) Then
+                                ' This isn't the last data image in the batch.
+                                For k As Integer = i + 1 To item.Length - 1
+                                    ' We'll for a data image in the batch that is from the same source as this image.
+                                    If item(k).Source.Equals(item(i).Source) Then
+                                        Dim mergedImage As Byte() = CreateArray(Of Byte)(item(k).Item.Length + unusedData.Length)
+                                        Array.Copy(item(k).Item, 0, mergedImage, 0, item(k).Item.Length)
+                                        Array.Copy(unusedData, 0, mergedImage, item(k).Item.Length, unusedData.Length)
+
+                                        item(k).Item = mergedImage
+
+                                        insertUnusedData = False
+                                        Exit For
+                                    End If
+                                Next
+                            End If
+
+                            If insertUnusedData Then
+                                m_dataQueue.Insert(0, New IdentifiableItem(Of Guid, Byte())(item(i).Source, unusedData))
+                            End If
+                        Else
+                            RaiseEvent DataCorrupt(Me, EventArgs.Empty)
+                        End If
+                    End Try
+
+                    RaiseEvent DataParsed(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput)))(New IdentifiableItem(Of Guid, List(Of TOutput))(item(i).Source, output)))
                 Else
                     RaiseEvent DataDiscarded(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(New IdentifiableItem(Of Guid, Byte())(item(i).Source, item(i).Item)))
                 End If
@@ -249,7 +330,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TResult As IBinary
 
 #Region " ParserTypeInfo Class "
 
-    Private Class ParserTypeInfo
+    Private Class TypeInfo
 
         Public ID As TIdentifier
 

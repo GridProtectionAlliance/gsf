@@ -1,4 +1,4 @@
-Partial Class BinaryDataParserBase(Of TIdentifier, TResult)
+Partial Class BinaryDataParserBase(Of TIdentifier, TOutput)
     Inherits System.ComponentModel.Component
 
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -19,10 +19,11 @@ Partial Class BinaryDataParserBase(Of TIdentifier, TResult)
         'This call is required by the Component Designer.
         InitializeComponent()
 
-        m_idFieldName = "ID"
+        m_idPropertyName = "ClassID"
         m_optimizeParsing = True
+        m_discardUnparsedData = True
         m_settingsCategoryName = Me.GetType().Name
-        m_parserTypes = New Dictionary(Of TIdentifier, ParserTypeInfo)
+        m_outputTypes = New Dictionary(Of TIdentifier, TypeInfo)
         m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Guid, Byte())).CreateRealTimeQueue(AddressOf ParseData)
 
     End Sub
