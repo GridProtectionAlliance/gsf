@@ -29,7 +29,7 @@ Namespace Measurements
         Private m_frames As IFrame()            ' Array of frames
         Private m_ticks As Long                 ' Ticks at the beginning of sample
 
-        Friend Sub New(ByVal parent As Concentrator, ByVal ticks As Long)
+        Friend Sub New(ByVal parent As ConcentratorBase, ByVal ticks As Long)
 
             m_ticks = ticks
 

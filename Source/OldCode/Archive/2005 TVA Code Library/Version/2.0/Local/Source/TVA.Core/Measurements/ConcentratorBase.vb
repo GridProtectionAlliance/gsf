@@ -34,7 +34,7 @@ Imports TVA.Math.Common
 
 Namespace Measurements
 
-    Public MustInherit Class Concentrator
+    Public MustInherit Class ConcentratorBase
 
         Implements IDisposable
 
@@ -127,7 +127,7 @@ Namespace Measurements
 #Region " Public Methods Implementation "
 
         ''' <summary>Handy instance reference to self</summary>
-        Public ReadOnly Property This() As Concentrator
+        Public ReadOnly Property This() As ConcentratorBase
             Get
                 Return Me
             End Get

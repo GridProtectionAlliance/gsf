@@ -22,11 +22,11 @@ Namespace Measurements
     ''' <summary>This class represents the absolute latest received measurement values</summary>
     Public Class ImmediateMeasurements
 
-        Private WithEvents m_parent As Concentrator
+        Private WithEvents m_parent As ConcentratorBase
         Private m_measurements As Dictionary(Of MeasurementKey, TemporalMeasurement)
         Private m_taggedMeasurements As Dictionary(Of String, List(Of MeasurementKey))
 
-        Friend Sub New(ByVal parent As Concentrator)
+        Friend Sub New(ByVal parent As ConcentratorBase)
 
             m_parent = parent
             m_measurements = New Dictionary(Of MeasurementKey, TemporalMeasurement)

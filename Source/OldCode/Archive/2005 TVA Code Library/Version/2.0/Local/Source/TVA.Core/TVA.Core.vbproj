@@ -180,7 +180,7 @@
     <Compile Include="Measurements\IFrame.vb" />
     <Compile Include="Measurements\IMeasurement.vb" />
     <Compile Include="Measurements\Measurement.vb" />
-    <Compile Include="Measurements\Concentrator.vb" />
+    <Compile Include="Measurements\ConcentratorBase.vb" />
     <Compile Include="Measurements\TemporalMeasurement.vb" />
     <Compile Include="ErrorManagement\SmtpTraceListener.vb" />
     <Compile Include="Text\Common.vb" />
