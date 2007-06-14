@@ -4,51 +4,24 @@ Imports TVA.Data.Common
 Imports TVA.Common
 Imports PhasorProtocols
 
-Public Class PhasorDataConcentrator
+Public MustInherit Class PhasorDataConcentrator
 
     Inherits Concentrator
 
-    Private m_configurationFrame As IeeeC37_118.ConfigurationFrame
+    Private m_configurationFrame As IConfigurationFrame
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
 
-    Public Sub New(ByVal connection As OleDbConnection, ByVal idCode As UInt16, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Protected Sub New(ByVal connection As OleDbConnection, ByVal idCode As UInt16, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
 
         MyBase.New(framesPerSecond, lagTime, leadTime)
 
-        m_configurationFrame = New IeeeC37_118.ConfigurationFrame(IeeeC37_118.FrameType.ConfigurationFrame2, 16777215, idCode, DateTime.UtcNow.Ticks, framesPerSecond, 1)
-
-        With RetrieveData("SELECT * FROM Pmu WHERE Enabled <> 0", connection).Rows
-            For x As Integer = 0 To .Count - 1
-                With .Item(x)
-                    Dim ccell As New IeeeC37_118.ConfigurationCell(m_configurationFrame, Convert.ToUInt16(.Item("AccessID")), LineFrequency.Hz60)
-
-                    ccell.AnalogDataFormat = DataFormat.FloatingPoint
-                    ccell.PhasorDataFormat = DataFormat.FloatingPoint
-                    ccell.PhasorCoordinateFormat = CoordinateFormat.Polar
-                    ccell.FrequencyDataFormat = DataFormat.FloatingPoint
-                    'cell.NominalFrequency = LineFrequency.Hz60
-
-                    ' Calculated measurements can be added as analogs or digitals in the system
-                    'cell.AnalogDefinitions.Add(
-                    'cell.DigitalDefinitions.Add(
-
-                    ' Load all phasors as defined in the database
-                    'cell.PhasorDefinitions.Add(New IeeeC37_118.PhasorDefinition(cell, index, label, scale, offset, CoordinateFormat.Polar, PhasorType.Current))
-
-                    ccell.FrequencyDefinition = New IeeeC37_118.FrequencyDefinition( _
-                        ccell, ccell.IDLabel & " Frequency", _
-                        Convert.ToInt32(.Item("FreqScale")), _
-                        Convert.ToSingle(.Item("FreqOffset")), _
-                        Convert.ToInt32(.Item("DfDtScale")), _
-                        Convert.ToSingle(.Item("DfDtOffset")))
-
-                    m_configurationFrame.Cells.Add(ccell)
-                End With
-            Next
-        End With
-
         Dim signal As SignalReference
-        Dim cell As IConfigurationCell
+        Dim idLabelCellIndex As New Dictionary(Of String, Integer)
+
+        ' Define configuration frame
+        m_configurationFrame = CreateConfigurationFrame(connection, idCode)
+
+        ' Define measurement to signal cross reference dictionary
         m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
 
         ' Initialize measurement list for each pmu keyed on the signal reference field
@@ -56,20 +29,16 @@ Public Class PhasorDataConcentrator
             For x As Integer = 0 To .Count - 1
                 signal = New SignalReference(.Item("SignalReference").ToString())
 
-                ' TODO: Lookup by acronym - this returns "cell" instance
-                ' What we need is the "index" into the cell collection
-                '   More of an "IndexOfIDLabel" or something similar...
-
-                ' Doing this work upfront will save a huge amount of work during primary measurement sorting
-                'signal.PmuCellIndex = m_configurationFrame.Cells.IndexOfIDLabel(signal.PmuAcronym)
-
-                If m_configurationFrame.Cells.TryGetByIDLabel(signal.PmuAcronym, cell) Then
-                    'signal.PmuCellIndex = cell.Index
+                ' Lookup cell index by acronym. Doing this work upfront will save a huge amount
+                ' of work during primary measurement sorting
+                If Not idLabelCellIndex.TryGetValue(signal.PmuAcronym, signal.PmuCellIndex) Then
+                    ' We cache these indicies locally to speed up initialization - we'll be
+                    ' requesting these indexes for the same PMU's over and over
+                    signal.PmuCellIndex = m_configurationFrame.Cells.IndexOfIDLabel(signal.PmuAcronym)
+                    idLabelCellIndex.Add(signal.PmuAcronym, signal.PmuCellIndex)
                 End If
-                'signal.PmuAcronym
 
-                m_signalReferences.Add( _
-                    New MeasurementKey(Convert.ToInt32(.Item("PointID")), .Item("Historian").ToString()), signal)
+                m_signalReferences.Add(New MeasurementKey(Convert.ToInt32(.Item("PointID")), .Item("Historian").ToString()), signal)
             Next
         End With
 
@@ -78,18 +47,20 @@ Public Class PhasorDataConcentrator
 
     End Sub
 
+    Public ReadOnly Property ConfigurationFrame() As IConfigurationFrame
+        Get
+            Return m_configurationFrame
+        End Get
+    End Property
+
+    Protected MustOverride Function CreateConfigurationFrame(ByVal connection As OleDbConnection, ByVal idCode As UInt16) As IConfigurationFrame
+
+    Protected MustOverride Function CreateDataFrame(ByVal ticks As Long) As IDataFrame
+
     Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As TVA.Measurements.IFrame
 
         ' Create a new data frame to publish
-        Dim dataFrame As New IeeeC37_118.DataFrame(ticks, m_configurationFrame)
-        Dim dataCell As IeeeC37_118.DataCell
-
-        For x As Integer = 0 To m_configurationFrame.Cells.Count - 1
-            dataCell = New IeeeC37_118.DataCell(dataFrame, m_configurationFrame.Cells(x))
-            dataFrame.Cells.Add(dataCell)
-        Next
-
-        Return dataFrame
+        Return CreateDataFrame(ticks)
 
     End Function
 
