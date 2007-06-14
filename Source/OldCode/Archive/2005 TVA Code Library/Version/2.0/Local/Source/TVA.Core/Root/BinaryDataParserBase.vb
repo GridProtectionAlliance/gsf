@@ -23,22 +23,43 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
     Private m_settingsCategoryName As String
     Private m_outputTypes As Dictionary(Of TIdentifier, TypeInfo)
 
-    Private Delegate Function DefaultConstructor() As TOutput
-
     Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Guid, Byte()))
+
+    Private Delegate Function DefaultConstructor() As TOutput
 
 #End Region
 
 #Region " Event Declaration "
 
-    Public Event DataCorrupt As EventHandler
+    ''' <summary>
+    ''' Occurs when a data image has been parsed.
+    ''' </summary>
     Public Event DataParsed As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput))))
-    Public Event DataDiscarded As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, Byte())))
+
+    ''' <summary>
+    ''' Occurs when unused data during parsing is reused and not discarded.
+    ''' </summary>
+    Public Event DataReused As EventHandler(Of GenericEventArgs(Of TIdentifier))
+
+    ''' <summary>
+    ''' Occurs when unused data during parsing is discarded and not re-used.
+    ''' </summary>
+    Public Event DataDiscarded As EventHandler(Of GenericEventArgs(Of TIdentifier))
+
+    ''' <summary>
+    ''' Occurs when a matching output type is not found for parsing the data image.
+    ''' </summary>
+    Public Event OutputTypeNotFound As EventHandler(Of GenericEventArgs(Of TIdentifier))
 
 #End Region
 
 #Region " Code Scope: Public "
 
+    ''' <summary>
+    ''' Gets or sets the name of the property that identifies the output type.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>Name of the property that identifies the output type.</returns>
     Public Property IDPropertyName() As String
         Get
             Return m_idPropertyName
@@ -52,6 +73,11 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating if parsing is to be done in an optimal mode.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if parsing is to be done in an optimal mode; otherwise False.</returns>
     Public Property OptimizeParsing() As Boolean
         Get
             Return m_optimizeParsing
@@ -61,6 +87,11 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets a boolean value indicating if unused data during parsing is to be discarded and not re-used.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if unused data during parsing is to be discarded and not re-used; otherwise False.</returns>
     Public Property DiscardUnparsedData() As Boolean
         Get
             Return m_discardUnparsedData
@@ -70,6 +101,14 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets the queue to which data to be parsed is to be added.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>
+    ''' The TVA.Collections.ProcessQueue(Of TVA.IdentifiableItem(Of Guid, Byte())) to which data to be parsed is 
+    ''' to be added.
+    ''' </returns>
     <Browsable(False)> _
     Public ReadOnly Property DataQueue() As ProcessQueue(Of IdentifiableItem(Of Guid, Byte()))
         Get
@@ -77,6 +116,9 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
         End Get
     End Property
 
+    ''' <summary>
+    ''' Starts the parser.
+    ''' </summary>
     Public Sub Start()
 
         Dim asm As Reflection.Assembly = Nothing
@@ -165,6 +207,9 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
 
     End Sub
 
+    ''' <summary>
+    ''' Stops the parser.
+    ''' </summary>
     Public Sub [Stop]()
 
         m_dataQueue.Stop()      ' Stop processing of queued data.
@@ -271,6 +316,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
     Private Sub ParseData(ByVal item As IdentifiableItem(Of Guid, Byte())())
 
         For i As Integer = 0 To item.Length - 1
+            ' We'll process all of the data images in the batch.
             If item(i).Item IsNot Nothing AndAlso item(i).Item.Length > 0 Then
                 Dim typeID As TIdentifier = GetTypeID(item(i).Item)
                 Dim outputType As TypeInfo = Nothing
@@ -278,17 +324,18 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
                 If m_outputTypes.TryGetValue(typeID, outputType) Then
                     ' We have a type we can use to represent this data.
                     Dim output As New List(Of TOutput)()
-                    Dim newData As TOutput = Nothing
+                    Dim newInstance As TOutput = Nothing
 
                     Dim j As Integer = 0
                     Try
                         Do While j < item(i).Item.Length
-                            newData = outputType.CreateNew()
-                            j += newData.Initialize(item(i).Item, j)
-                            output.Add(newData)
+                            ' Process the entire data image.
+                            newInstance = outputType.CreateNew()
+                            j += newInstance.Initialize(item(i).Item, j)
+                            output.Add(newInstance)
                         Loop
                     Catch ex As Exception
-                        ' We might encounter an exception if the data being parsed is corrupt (data image is partial).
+                        ' We might encounter an exception if the data image being parsed is partial.
                         If Not m_discardUnparsedData Then
                             Dim insertUnusedData As Boolean = True
                             Dim unusedData As Byte() = CreateArray(Of Byte)(item(i).Item.Length - j)
@@ -314,14 +361,17 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
                             If insertUnusedData Then
                                 m_dataQueue.Insert(0, New IdentifiableItem(Of Guid, Byte())(item(i).Source, unusedData))
                             End If
+
+                            RaiseEvent DataReused(Me, New GenericEventArgs(Of TIdentifier)(typeID))
                         Else
-                            RaiseEvent DataCorrupt(Me, EventArgs.Empty)
+                            RaiseEvent DataDiscarded(Me, New GenericEventArgs(Of TIdentifier)(typeID))
                         End If
                     End Try
 
                     RaiseEvent DataParsed(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput)))(New IdentifiableItem(Of Guid, List(Of TOutput))(item(i).Source, output)))
                 Else
-                    RaiseEvent DataDiscarded(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, Byte()))(New IdentifiableItem(Of Guid, Byte())(item(i).Source, item(i).Item)))
+                    ' We'll notify that we didn't find a output type we could use to represent this data image.
+                    RaiseEvent OutputTypeNotFound(Me, New GenericEventArgs(Of TIdentifier)(typeID))
                 End If
             End If
         Next
