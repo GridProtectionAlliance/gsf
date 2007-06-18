@@ -50,7 +50,7 @@ Partial Class CommunicationClientBase
         m_clientID = Guid.NewGuid()
         m_settingsCategoryName = Me.GetType().Name
 
-        m_connectionWaitHandle = New System.Threading.ManualResetEvent(True)
+        m_connectionWaitHandle = New System.Threading.ManualResetEvent(False)
         m_buffer = CreateArray(Of Byte)(m_receiveBufferSize)
 
     End Sub
