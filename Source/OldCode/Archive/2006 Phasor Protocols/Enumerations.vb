@@ -22,5 +22,6 @@ Public Enum SignalType
     dfdt
     Status
     Digital
+    Analog
     Unknown
 End Enum

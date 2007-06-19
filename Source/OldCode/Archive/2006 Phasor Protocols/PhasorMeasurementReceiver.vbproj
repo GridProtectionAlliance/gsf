@@ -79,7 +79,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="PhasorMeasurementMapper.vb" />
-    <Compile Include="PmuInfo.vb" />
+    <Compile Include="Protocol Independent Configuration\AnalogDefinition.vb" />
+    <Compile Include="Protocol Independent Configuration\ConfigurationCell.vb" />
+    <Compile Include="Protocol Independent Configuration\ConfigurationFrame.vb" />
+    <Compile Include="Protocol Independent Configuration\DigitalDefinition.vb" />
+    <Compile Include="Protocol Independent Configuration\FrequencyDefinition.vb" />
+    <Compile Include="Protocol Independent Configuration\PhasorDefinition.vb" />
     <Compile Include="SignalReference.vb" />
   </ItemGroup>
   <ItemGroup>

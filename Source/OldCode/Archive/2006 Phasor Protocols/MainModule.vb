@@ -19,6 +19,7 @@ Imports System.Text
 Imports System.Security.Principal
 Imports System.Data.SqlClient
 Imports System.Threading
+Imports System.Reflection
 Imports TVA.Assembly
 Imports TVA.IO
 Imports TVA.Configuration.Common
@@ -26,10 +27,10 @@ Imports TVA.Text.Common
 Imports TVA.Data.Common
 Imports TVA.Measurements
 Imports TVA.DateTime.Common
-Imports PhasorProtocols
 Imports TVA.Collections
+Imports TVA.ErrorManagement
 Imports InterfaceAdapters
-Imports System.Reflection
+Imports PhasorProtocols
 
 Module MainModule
 
@@ -44,6 +45,7 @@ Module MainModule
     Private m_systemLogEnabled As Boolean
     Private m_systemLogFile As LogFile
     Private m_statusMessageQueue As ProcessQueue(Of String)
+    Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub Main()
 
@@ -63,6 +65,12 @@ Module MainModule
         SaveSettings()
 
         m_systemLogEnabled = BooleanSetting("EnableLogFile")
+
+        m_exceptionLogger = New GlobalExceptionLogger()
+        m_exceptionLogger.LogToFile = True
+        m_exceptionLogger.PersistSettings = True
+        m_exceptionLogger.Register()
+
         m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 10, Timeout.Infinite, False, False)
         m_statusMessageQueue.Start()
 
@@ -160,6 +168,7 @@ Module MainModule
             m_displayedMessageCount = 0
         Catch ex As Exception
             DisplayStatusMessage(String.Format("Failure during initialization: {0}", ex.Message))
+            m_exceptionLogger.Log(ex)
         Finally
             If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
             DisplayStatusMessage("PMU database connection closed.")
@@ -233,7 +242,8 @@ Module MainModule
                         pmuStatusInterval, _
                         connectionString, _
                         dataLossInterval, _
-                        calculatedMeasurements)
+                        calculatedMeasurements, _
+                        m_exceptionLogger)
 
                     AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
                     If .Rows(x)("InitializeOnStartup") <> 0 Then measurementReceiver.Initialize(connection)
@@ -241,6 +251,7 @@ Module MainModule
                     measurementReceivers.Add(archiveSource, measurementReceiver)
                 Catch ex As Exception
                     DisplayStatusMessage(String.Format("Failed to load measurement receiver for archive ""{0}"" from assembly ""{1}"" due to exception: {2}", archiveSource, externalAssemblyName, ex.Message))
+                    m_exceptionLogger.Log(ex)
                 End Try
             Next
         End With
@@ -306,6 +317,7 @@ Module MainModule
                             End With
                         Catch ex As Exception
                             DisplayStatusMessage(String.Format("Failed to load output measurement for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
+                            m_exceptionLogger.Log(ex)
                         End Try
                     End If
 
@@ -328,6 +340,7 @@ Module MainModule
                             End With
                         Catch ex As Exception
                             DisplayStatusMessage(String.Format("Failed to load input measurements for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
+                            m_exceptionLogger.Log(ex)
                         End Try
                     End If
 
@@ -339,6 +352,7 @@ Module MainModule
                         calculatedMeasurementAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
                     Catch ex As Exception
                         DisplayStatusMessage(String.Format("Failed to load type ""{0}"" from assembly ""{1}"" for ""{2}"" due to exception: {3}", .Rows(x)("TypeName"), externalAssemblyName, calculatedMeasurementName, ex.Message))
+                        m_exceptionLogger.Log(ex)
                     End Try
 
                     If calculatedMeasurementAdapter IsNot Nothing Then
@@ -373,6 +387,7 @@ Module MainModule
                     End If
                 Catch ex As Exception
                     DisplayStatusMessage(String.Format("Failed to load calculated measurement ""{0}"" from assembly ""{1}"" due to exception: {2}", calculatedMeasurementName, externalAssemblyName, ex.Message))
+                    m_exceptionLogger.Log(ex)
                 End Try
             Next
         End With
@@ -409,6 +424,7 @@ Module MainModule
     Private Sub CalculationException(ByVal source As String, ByVal ex As Exception)
 
         DisplayStatusMessage(String.Format("ERROR: ""{0}"" threw an exception: {1}", source, ex.Message))
+        m_exceptionLogger.Log(ex)
 
     End Sub
 
@@ -430,6 +446,7 @@ Module MainModule
             Return foundMapper
         Catch ex As Exception
             DisplayStatusMessage(String.Format("Failed to lookup specified mapper due to exception: {0}", ex.Message))
+            m_exceptionLogger.Log(ex)
             Return False
         End Try
 

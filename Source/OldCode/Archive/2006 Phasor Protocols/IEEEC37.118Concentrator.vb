@@ -1,14 +1,21 @@
 Imports System.Data.OleDb
 Imports TVA.Data.Common
+Imports TVA.ErrorManagement
 Imports PhasorProtocols
 
-Public Class IEEEC37_118Concentrator
+Public Class IeeeC37_118Concentrator
 
     Inherits PhasorDataConcentratorBase
 
-    Public Sub New(ByVal connection As OleDbConnection, ByVal idCode As UInt16, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Public Sub New( _
+        ByVal connection As OleDbConnection, _
+        ByVal idCode As UInt16, _
+        ByVal framesPerSecond As Integer, _
+        ByVal lagTime As Double, _
+        ByVal leadTime As Double, _
+        ByVal exceptionLogger As GlobalExceptionLogger)
 
-        MyBase.New(connection, idCode, framesPerSecond, lagTime, leadTime)
+        MyBase.New(connection, idCode, framesPerSecond, lagTime, leadTime, exceptionLogger)
 
     End Sub
 
@@ -52,7 +59,7 @@ Public Class IEEEC37_118Concentrator
 
     End Function
 
-    Protected Overrides Function CreateDataFrame(ByVal ticks As Long) As PhasorProtocols.IDataFrame
+    Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As TVA.Measurements.IFrame
 
         Dim configFrame As IeeeC37_118.ConfigurationFrame = DirectCast(MyBase.ConfigurationFrame, IeeeC37_118.ConfigurationFrame)
         Dim dataFrame As New IeeeC37_118.DataFrame(ticks, configFrame)
@@ -64,5 +71,11 @@ Public Class IEEEC37_118Concentrator
         Return dataFrame
 
     End Function
+
+    Public Overrides ReadOnly Property Name() As String
+        Get
+            Return "C37.118 Concentrator"
+        End Get
+    End Property
 
 End Class

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  ConfigurationCell.vb - Protocol Independent PMU Configuration Definition
+'  ConfigurationCell.vb - Protocol Independent Configuration Cell Definition
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -20,6 +20,7 @@ Imports TVA.Common
 Imports TVA.Measurements
 Imports PhasorProtocols
 
+<CLSCompliant(False), Serializable()> _
 Public Class ConfigurationCell
 
     Inherits ConfigurationCellBase
@@ -58,7 +59,7 @@ Public Class ConfigurationCell
 
         MyClass.New()
         MyBase.IDCode = idCode
-        MyBase.IDLabel = IDLabel
+        MyBase.IDLabel = idLabel
 
     End Sub
 

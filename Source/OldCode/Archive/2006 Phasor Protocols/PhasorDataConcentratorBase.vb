@@ -3,6 +3,7 @@ Imports TVA.Measurements
 Imports TVA.Communication
 Imports TVA.Data.Common
 Imports TVA.Common
+Imports TVA.ErrorManagement
 Imports PhasorProtocols
 
 Public MustInherit Class PhasorDataConcentratorBase
@@ -15,13 +16,22 @@ Public MustInherit Class PhasorDataConcentratorBase
     Private m_configurationFrame As IConfigurationFrame
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
     Private m_sentDescriptor As Boolean
+    Private m_exceptionLogger As GlobalExceptionLogger
 
-    Protected Sub New(ByVal connection As OleDbConnection, ByVal idCode As UInt16, ByVal framesPerSecond As Integer, ByVal lagTime As Double, ByVal leadTime As Double)
+    Protected Sub New( _
+        ByVal connection As OleDbConnection, _
+        ByVal idCode As UInt16, _
+        ByVal framesPerSecond As Integer, _
+        ByVal lagTime As Double, _
+        ByVal leadTime As Double, _
+        ByVal exceptionLogger As GlobalExceptionLogger)
 
         MyBase.New(framesPerSecond, lagTime, leadTime)
 
         Dim signal As SignalReference
         Dim idLabelCellIndex As New Dictionary(Of String, Integer)
+
+        m_exceptionLogger = exceptionLogger
 
         ' Define configuration frame
         m_configurationFrame = CreateConfigurationFrame(connection, idCode)
@@ -64,6 +74,12 @@ Public MustInherit Class PhasorDataConcentratorBase
         End Get
     End Property
 
+    Protected ReadOnly Property ExceptionLogger() As GlobalExceptionLogger
+        Get
+            Return m_exceptionLogger
+        End Get
+    End Property
+
     Protected Overridable Sub UpdateStatus(ByVal status As String)
 
         RaiseEvent StatusMessage(String.Format("[{0}]: {1}", Name, status))
@@ -71,15 +87,6 @@ Public MustInherit Class PhasorDataConcentratorBase
     End Sub
 
     Protected MustOverride Function CreateConfigurationFrame(ByVal connection As OleDbConnection, ByVal idCode As UInt16) As IConfigurationFrame
-
-    Protected MustOverride Function CreateDataFrame(ByVal ticks As Long) As IDataFrame
-
-    Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As IFrame
-
-        ' Create a new data frame to publish
-        Return CreateDataFrame(ticks)
-
-    End Function
 
     Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
@@ -91,7 +98,7 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim signalRef As SignalReference
 
         ' Look up signal reference from measurement key
-        If m_signalReferences.TryGetValue(measurement.Key, signalRef) Then
+        If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.PmuCellIndex > -1 Then
             ' Get associated data cell
             Dim dataCell As IDataCell = DirectCast(frame, IDataFrame).Cells(signalRef.PmuCellIndex)
 
@@ -109,6 +116,8 @@ Public MustInherit Class PhasorDataConcentratorBase
                     dataCell.StatusFlags = Convert.ToInt16(measurement.Value)
                 Case SignalType.Digital
                     dataCell.DigitalValues(signalRef.SignalIndex - 1).Value = Convert.ToInt16(measurement.Value)
+                Case SignalType.Analog
+                    dataCell.AnalogValues(signalRef.SignalIndex - 1).Value = Convert.ToSingle(measurement.Value)
             End Select
         End If
 
@@ -135,6 +144,13 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
+    Public Overrides ReadOnly Property Status() As String
+        Get
+            ' TODO: Add more status detail related to phasor data concentration
+            Return MyBase.Status
+        End Get
+    End Property
+
     Protected Overridable Sub HandleIncomingData(ByVal commandBuffer As Byte())
 
         ' This is optionally overridden to handle incoming data - such as IEEE commands
@@ -144,6 +160,7 @@ Public MustInherit Class PhasorDataConcentratorBase
     Private Sub PhasorDataConcentrator_ProcessException(ByVal ex As System.Exception) Handles Me.ProcessException
 
         UpdateStatus(String.Format("Processing exception: {0}", ex.Message))
+        m_exceptionLogger.Log(ex)
 
     End Sub
 

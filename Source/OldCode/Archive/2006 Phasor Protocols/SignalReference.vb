@@ -34,18 +34,20 @@ Public Structure SignalReference
     Public Shared Function GetSignalType(ByVal acronym As String) As SignalType
 
         Select Case acronym
-            Case "PA"
+            Case "PA"   ' Phase Angle
                 Return SignalType.Angle
-            Case "PM"
+            Case "PM"   ' Phase Magnitude
                 Return SignalType.Magnitude
-            Case "FQ"
+            Case "FQ"   ' Frequency
                 Return SignalType.Frequency
-            Case "DF"
+            Case "DF"   ' df/dt
                 Return SignalType.dfdt
-            Case "SF"
+            Case "SF"   ' Status Flags
                 Return SignalType.Status
-            Case "DV"
+            Case "DV"   ' Digital Value
                 Return SignalType.Digital
+            Case "AV"   ' Analog Value
+                Return SignalType.Analog
             Case Else
                 Return SignalType.Unknown
         End Select
@@ -67,6 +69,8 @@ Public Structure SignalReference
                 Return "SF"
             Case SignalType.Digital
                 Return "DV"
+            Case SignalType.Analog
+                Return "AV"
             Case Else
                 Return "??"
         End Select

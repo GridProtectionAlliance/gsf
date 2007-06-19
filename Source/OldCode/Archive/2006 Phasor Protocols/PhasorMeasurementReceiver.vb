@@ -23,6 +23,7 @@ Imports TVA.Data.Common
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.Text.Common
+Imports TVA.ErrorManagement
 Imports InterfaceAdapters
 Imports PhasorProtocols
 Imports PhasorProtocols.Common
@@ -41,6 +42,7 @@ Public Class PhasorMeasurementReceiver
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
+    Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
         ByVal historianAdapter As IHistorianAdapter, _
@@ -48,7 +50,8 @@ Public Class PhasorMeasurementReceiver
         ByVal statusInterval As Integer, _
         ByVal connectionString As String, _
         ByVal dataLossInterval As Integer, _
-        ByVal calculatedMeasurements As ICalculatedMeasurementAdapter())
+        ByVal calculatedMeasurements As ICalculatedMeasurementAdapter(), _
+        ByVal exceptionLogger As GlobalExceptionLogger)
 
         m_historianAdapter = historianAdapter
         m_archiverSource = archiverSource
@@ -56,6 +59,7 @@ Public Class PhasorMeasurementReceiver
         m_connectionString = connectionString
         m_dataLossInterval = dataLossInterval
         m_calculatedMeasurements = calculatedMeasurements
+        m_exceptionLogger = exceptionLogger
         m_reportingStatus = New Timers.Timer
 
         With m_reportingStatus
@@ -103,6 +107,7 @@ Public Class PhasorMeasurementReceiver
         Try
             m_intializing = True
 
+            Dim configurationCells As Dictionary(Of UInt16, ConfigurationCell)
             Dim measurementIDs As New Dictionary(Of String, IMeasurement)
             Dim row As DataRow
             Dim parser As MultiProtocolFrameParser
@@ -110,7 +115,6 @@ Public Class PhasorMeasurementReceiver
             Dim timezone As String
             Dim timeAdjustmentTicks As Long
             Dim accessID As Integer
-            Dim pmuIDs As Dictionary(Of UInt16, PmuInfo)
             Dim x, y As Integer
 
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)
@@ -123,7 +127,7 @@ Public Class PhasorMeasurementReceiver
                     row = .Rows(x)
 
                     parser = New MultiProtocolFrameParser
-                    pmuIDs = New Dictionary(Of UInt16, PmuInfo)
+                    configurationCells = New Dictionary(Of UInt16, ConfigurationCell)
 
                     'source = row("Acronym").ToString().Trim().ToUpper()
                     source = row("SourceID").ToString().Trim().ToUpper()
@@ -140,6 +144,7 @@ Public Class PhasorMeasurementReceiver
                         Catch ex As ArgumentException
                             'UpdateStatus(String.Format("Unexpected phasor protocol encountered for ""{0}"": {1} - defaulting to IEEE C37.118 V1.", source, row("PhasorProtocol")))
                             UpdateStatus(String.Format("Unexpected phasor protocol encountered for ""{0}"": {1} - defaulting to IEEE C37.118 V1.", source, row("DataID")))
+                            m_exceptionLogger.Log(ex)
                             .PhasorProtocol = PhasorProtocol.IeeeC37_118V1
                         End Try
 
@@ -174,6 +179,7 @@ Public Class PhasorMeasurementReceiver
                         '    .TransportProtocol = [Enum].Parse(GetType(TransportProtocol), row("TransportProtocol"), True)
                         'Catch ex As ArgumentException
                         '    UpdateStatus(String.Format("Unexpected transport protocol encountered for ""{0}"": {1} - defaulting to UDP.", source, row("TransportProtocol")))
+                        '    m_exceptionLogger.Log(ex)
                         '    .TransportProtocol = TransportProtocol.Udp
                         'End Try
 
@@ -216,7 +222,7 @@ Public Class PhasorMeasurementReceiver
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
                                     'pmuIDs.Add(.Item("AccessID"), New PmuInfo(.Item("AccessID"), .Item("Acronym").ToString().Trim().ToUpper()))
-                                    pmuIDs.Add(.Item("PMUIndex"), New PmuInfo(.Item("PMUIndex"), .Item("PMUID").ToString().Trim().ToUpper()))
+                                    configurationCells.Add(.Item("PMUIndex"), New ConfigurationCell(.Item("PMUIndex"), .Item("PMUID").ToString().Trim().ToUpper()))
 
                                     ' Create status display string for loaded PMU
                                     loadedPmuStatus.Append("   PMU ")
@@ -235,7 +241,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus(loadedPmuStatus.ToString())
                     Else
                         ' Making a connection to a single device
-                        pmuIDs.Add(accessID, New PmuInfo(accessID, source))
+                        configurationCells.Add(accessID, New ConfigurationCell(accessID, source))
                     End If
 
                     ' Initialize measurement list for this device connection keyed on the signal reference field
@@ -255,13 +261,14 @@ Public Class PhasorMeasurementReceiver
 
                     UpdateStatus(String.Format("Loaded {0} active measurements for {1}...", measurementIDs.Count, source))
 
-                    With New PhasorMeasurementMapper(parser, m_archiverSource, source, pmuIDs, measurementIDs, m_dataLossInterval)
+                    With New PhasorMeasurementMapper(parser, m_archiverSource, source, configurationCells, measurementIDs, m_dataLossInterval, m_exceptionLogger)
                         ' Add timezone mapping if not UTC...
                         If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
                             Try
                                 .TimeZone = GetWin32TimeZone(timezone)
                             Catch ex As Exception
                                 UpdateStatus(String.Format("Failed to assign timezone offset ""{0}"" to PDC/PMU ""{1}"" due to exception: {2}", timezone, source, ex.Message))
+                                m_exceptionLogger.Log(ex)
                             End Try
                         End If
 
@@ -286,6 +293,7 @@ Public Class PhasorMeasurementReceiver
             UpdateStatus("Phasor measurement receiver initialized successfully.")
         Catch ex As Exception
             UpdateStatus(String.Format("Phasor measurement receiver failed to initialize: {0}", ex.Message))
+            m_exceptionLogger.Log(ex)
         Finally
             m_intializing = False
         End Try
@@ -386,15 +394,15 @@ Public Class PhasorMeasurementReceiver
 
                 ' Check all PMU's for "reporting status"...
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                    For Each pmuID As PmuInfo In mapper.PmuIDs.Values
-                        If Not String.IsNullOrEmpty(pmuID.Acronym) Then
-                            isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(pmuID.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
+                    For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
+                        If Not String.IsNullOrEmpty(cell.IDLabel) Then
+                            isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
                             updateSqlBatch.Append("UPDATE PMUs SET IsReporting=")
                             updateSqlBatch.Append(isReporting)
                             updateSqlBatch.Append(", ReportTime='")
                             updateSqlBatch.Append(DateTime.UtcNow.ToString())
                             updateSqlBatch.Append("' WHERE PMUID_Uniq='")
-                            updateSqlBatch.Append(pmuID.Acronym)
+                            updateSqlBatch.Append(cell.IDLabel)
                             updateSqlBatch.Append("'; ")
                             updateSqlBatch.Append(Environment.NewLine)
                         End If
@@ -405,6 +413,7 @@ Public Class PhasorMeasurementReceiver
                 ExecuteNonQuery(updateSqlBatch.ToString(), connection)
             Catch ex As Exception
                 UpdateStatus(String.Format("[{0}] ERROR: Failed to update PMU reporting status due to exception: {1}", DateTime.Now, ex.Message))
+                m_exceptionLogger.Log(ex)
             Finally
                 If connection IsNot Nothing Then connection.Close()
             End Try
@@ -415,6 +424,7 @@ Public Class PhasorMeasurementReceiver
     Private Sub m_historianAdapter_ArchivalException(ByVal source As String, ByVal ex As System.Exception) Handles m_historianAdapter.ArchivalException
 
         UpdateStatus(String.Format("{0} data archival exception: {1}", source, ex.Message))
+        m_exceptionLogger.Log(ex)
 
     End Sub
 

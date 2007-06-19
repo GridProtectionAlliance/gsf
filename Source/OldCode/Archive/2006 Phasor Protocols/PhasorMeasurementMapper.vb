@@ -24,6 +24,7 @@ Imports TVA.DateTime
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.IO.FilePath
+Imports TVA.ErrorManagement
 Imports PhasorProtocols
 Imports PhasorProtocols.Common
 
@@ -43,7 +44,7 @@ Public Class PhasorMeasurementMapper
     Private m_mapperName As String
     Private m_archiverSource As String
     Private m_source As String
-    Private m_pmuIDs As Dictionary(Of UInt16, PmuInfo)
+    Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
     Private m_measurementIDs As Dictionary(Of String, IMeasurement)
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
@@ -55,20 +56,23 @@ Public Class PhasorMeasurementMapper
     Private m_timeAdjustmentTicks As Long
     Private m_attemptingConnection As Boolean
     Private m_undefinedPmus As Dictionary(Of String, Long)
+    Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
         ByVal frameParser As MultiProtocolFrameParser, _
         ByVal archiverSource As String, _
         ByVal source As String, _
-        ByVal pmuIDs As Dictionary(Of UInt16, PmuInfo), _
+        ByVal configurationCells As Dictionary(Of UInt16, ConfigurationCell), _
         ByVal measurementIDs As Dictionary(Of String, IMeasurement), _
-        ByVal dataLossInterval As Integer)
+        ByVal dataLossInterval As Integer, _
+        ByVal exceptionLogger As GlobalExceptionLogger)
 
         m_frameParser = frameParser
         m_archiverSource = archiverSource
         m_source = source
-        m_pmuIDs = pmuIDs
+        m_configurationCells = configurationCells
         m_measurementIDs = measurementIDs
+        m_exceptionLogger = exceptionLogger
 
         m_dataStreamMonitor = New Timers.Timer
 
@@ -167,21 +171,21 @@ Public Class PhasorMeasurementMapper
                 With New StringBuilder
                     .Append(m_source)
 
-                    Dim displayChildren As Boolean = (m_pmuIDs.Count > 1)
+                    Dim displayChildren As Boolean = (m_configurationCells.Count > 1)
 
                     If Not displayChildren Then
                         ' Could still be a PDC with one child - so we'll compare the names
-                        With m_pmuIDs.Values.GetEnumerator()
-                            If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.Acronym, True) <> 0)
+                        With m_configurationCells.Values.GetEnumerator()
+                            If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.IDLabel, True) <> 0)
                         End With
                     End If
 
                     If displayChildren Then
                         Dim index As Integer
                         .Append(" [")
-                        For Each pmu As PmuInfo In m_pmuIDs.Values
+                        For Each pmu As ConfigurationCell In m_configurationCells.Values
                             If index > 0 Then .Append(", ")
-                            .Append(pmu.Acronym)
+                            .Append(pmu.IDLabel)
                             index += 1
                         Next
                         .Append("]")
@@ -213,9 +217,9 @@ Public Class PhasorMeasurementMapper
         End Set
     End Property
 
-    Public ReadOnly Property PmuIDs() As Dictionary(Of UInt16, PmuInfo)
+    Public ReadOnly Property ConfigurationCells() As Dictionary(Of UInt16, ConfigurationCell)
         Get
-            Return m_pmuIDs
+            Return m_configurationCells
         End Get
     End Property
 
@@ -259,9 +263,10 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
         ' Map data frame measurement instances to their associated point ID's
-        Dim pmu As PmuInfo = Nothing
+        Dim pmu As ConfigurationCell = Nothing
         Dim dataCell As IDataCell
         Dim phasors As PhasorValueCollection
+        Dim analogs As AnalogValueCollection
         Dim digitals As DigitalValueCollection
         Dim measurements As IMeasurement()
         Dim x, y, count As Integer
@@ -282,7 +287,7 @@ Public Class PhasorMeasurementMapper
             dataCell = frame.Cells(x)
 
             ' Lookup PMU information by its ID code
-            If m_pmuIDs.TryGetValue(dataCell.IDCode, pmu) Then
+            If m_configurationCells.TryGetValue(dataCell.IDCode, pmu) Then
                 ' Track lastest reporting time
                 If ticks > pmu.LastReportTime Then pmu.LastReportTime = ticks
                 If ticks > m_lastReportTime Then m_lastReportTime = ticks
@@ -305,7 +310,7 @@ Public Class PhasorMeasurementMapper
                     MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Magnitude, y, count), measurements(CompositePhasorValue.Magnitude))
                 Next
 
-                ' Map frequency (FQ) and delta-frequency (DF)
+                ' Map frequency (FQ) and df/dt (DF)
                 measurements = dataCell.FrequencyValue.Measurements
 
                 ' Map frequency
@@ -313,6 +318,15 @@ Public Class PhasorMeasurementMapper
 
                 ' Map df/dt
                 MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.dfdt), measurements(CompositeFrequencyValue.DfDt))
+
+                ' Map analog values (AVn)
+                analogs = dataCell.AnalogValues
+                count = analogs.Count
+
+                For y = 0 To count - 1
+                    ' Map analog value
+                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Analog, y, count), analogs(y).Measurements(0))
+                Next
 
                 ' Map digital values (DVn)
                 digitals = dataCell.DigitalValues
@@ -362,6 +376,7 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles m_frameParser.ConnectionException
 
         UpdateStatus(String.Format("{0} connection to ""{1}"" failed: {2}", m_source, m_frameParser.ConnectionName, ex.Message))
+        m_exceptionLogger.Log(ex)
 
         ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
         ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
@@ -377,6 +392,7 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_DataStreamException(ByVal ex As System.Exception) Handles m_frameParser.DataStreamException
 
         UpdateStatus(String.Format("WARNING: {0} data stream exception: {1}", m_source, ex.Message))
+        m_exceptionLogger.Log(ex)
 
         ' We monitor for exceptions that occur in quick succession
         If Date.Now.Ticks - m_errorTime > 100000000L Then
@@ -445,6 +461,7 @@ Public Class PhasorMeasurementMapper
             configFile.Close()
         Catch ex As Exception
             UpdateStatus(String.Format("Failed to serialize configuration frame: {0}", ex.Message))
+            m_exceptionLogger.Log(ex)
         End Try
 
     End Sub
