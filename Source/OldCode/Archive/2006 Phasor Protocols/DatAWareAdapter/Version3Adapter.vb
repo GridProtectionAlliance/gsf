@@ -135,7 +135,6 @@ Public Class Version3Adapter
 
             ' Post data to TCP stream
             If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * StandardPacket.Size)
-
         End If
 
     End Sub

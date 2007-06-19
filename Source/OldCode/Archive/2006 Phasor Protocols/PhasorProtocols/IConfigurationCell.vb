@@ -19,7 +19,7 @@
 <CLSCompliant(False)> _
 Public Interface IConfigurationCell
 
-    Inherits IChannelCell, IComparable
+    Inherits IChannelCell, IComparable(Of IConfigurationCell), IComparable
 
     Shadows ReadOnly Property Parent() As IConfigurationFrame
 

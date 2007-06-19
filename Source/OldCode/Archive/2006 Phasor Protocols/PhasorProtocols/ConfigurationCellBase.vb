@@ -229,13 +229,21 @@ Public MustInherit Class ConfigurationCellBase
         End Set
     End Property
 
-    Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
+    Public Overridable Function CompareTo(ByVal other As IConfigurationCell) As Integer Implements System.IComparable(Of IConfigurationCell).CompareTo
 
         ' We sort configuration cells by ID code...
-        If TypeOf obj Is IConfigurationCell Then
-            Return IDCode.CompareTo(DirectCast(obj, IConfigurationCell).IDCode)
-        Else
+        Return IDCode.CompareTo(other.IDCode)
+
+    End Function
+
+    Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
+
+        Dim other As IConfigurationCell = TryCast(obj, IConfigurationCell)
+
+        If other Is Nothing Then
             Throw New ArgumentException("ConfigurationCell can only be compared to other ConfigurationCells")
+        Else
+            Return CompareTo(other)
         End If
 
     End Function
