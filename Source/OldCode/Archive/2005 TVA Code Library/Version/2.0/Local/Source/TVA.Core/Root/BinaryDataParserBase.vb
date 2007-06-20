@@ -88,10 +88,10 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
     End Property
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating if unused data during parsing is to be discarded and not re-used.
+    ''' Gets or sets a boolean value indicating if unparsed data is to be discarded and not re-used.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>True if unused data during parsing is to be discarded and not re-used; otherwise False.</returns>
+    ''' <returns>True if unparsed data is to be discarded and not re-used; otherwise False.</returns>
     Public Property DiscardUnparsedData() As Boolean
         Get
             Return m_discardUnparsedData
@@ -256,6 +256,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
                 If .Count > 0 Then
                     IDPropertyName = .Item("IDPropertyName").GetTypedValue(m_idPropertyName)
                     OptimizeParsing = .Item("OptimizeParsing").GetTypedValue(m_optimizeParsing)
+                    DiscardUnparsedData = .Item("DiscardUnparsedData").GetTypedValue(m_discardUnparsedData)
                 End If
             End With
         Catch ex As Exception
@@ -272,11 +273,15 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
                     .Clear()
                     With .Item("IDPropertyName", True)
                         .Value = m_idPropertyName
-                        .Description = ""
+                        .Description = "Name of the property that identifies the output type."
                     End With
                     With .Item("OptimizeParsing", True)
                         .Value = m_optimizeParsing.ToString()
-                        .Description = ""
+                        .Description = "True if parsing is to be done in an optimal mode; otherwise False."
+                    End With
+                    With .Item("DiscardUnparsedData", True)
+                        .Value = m_discardUnparsedData.ToString()
+                        .Description = "True if unparsed data is to be discarded and not re-used; otherwise False."
                     End With
                 End With
                 TVA.Configuration.Common.SaveSettings()
