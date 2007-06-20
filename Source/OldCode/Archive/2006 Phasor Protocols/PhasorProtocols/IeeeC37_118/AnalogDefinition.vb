@@ -57,9 +57,9 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal analogDefinition As IAnalogDefinition)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal analogDefinition As IAnalogDefinition)
 
-            MyBase.New(analogDefinition)
+            MyBase.New(parent, analogDefinition)
 
         End Sub
 

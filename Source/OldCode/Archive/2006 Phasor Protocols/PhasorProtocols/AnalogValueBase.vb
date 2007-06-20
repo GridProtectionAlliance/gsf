@@ -69,9 +69,9 @@ Public MustInherit Class AnalogValueBase
     End Sub
 
     ' Derived classes are expected expose a Public Sub New(ByVal analogValue As IAnalogValue)
-    Protected Sub New(ByVal analogValue As IAnalogValue)
+    Protected Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal analogValue As IAnalogValue)
 
-        MyClass.New(analogValue.Parent, analogValue.Definition, analogValue.Value)
+        MyClass.New(parent, analogDefinition, analogValue.Value)
 
     End Sub
 

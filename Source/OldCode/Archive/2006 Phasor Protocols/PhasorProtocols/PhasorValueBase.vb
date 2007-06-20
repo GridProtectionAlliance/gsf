@@ -147,9 +147,9 @@ Public MustInherit Class PhasorValueBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
-    Protected Sub New(ByVal phasorValue As IPhasorValue)
+    Protected Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal phasorValue As IPhasorValue)
 
-        MyClass.New(phasorValue.Parent, phasorValue.Definition, phasorValue.Real, phasorValue.Imaginary)
+        MyClass.New(parent, phasorDefinition, phasorValue.Real, phasorValue.Imaginary)
 
     End Sub
 

@@ -53,9 +53,9 @@ Public MustInherit Class DigitalDefinitionBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
-    Protected Sub New(ByVal digitalDefinition As IDigitalDefinition)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal digitalDefinition As IDigitalDefinition)
 
-        MyClass.New(digitalDefinition.Parent, digitalDefinition.Index, digitalDefinition.Label)
+        MyClass.New(parent, digitalDefinition.Index, digitalDefinition.Label)
 
     End Sub
 

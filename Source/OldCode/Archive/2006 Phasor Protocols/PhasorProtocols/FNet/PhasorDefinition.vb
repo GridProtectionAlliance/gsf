@@ -45,9 +45,9 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal phasorDefinition As IPhasorDefinition)
 
-            MyBase.New(phasorDefinition)
+            MyBase.New(parent, phasorDefinition)
 
         End Sub
 

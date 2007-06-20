@@ -75,9 +75,9 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal phasorValue As IPhasorValue)
+        Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal phasorValue As IPhasorValue)
 
-            MyBase.New(phasorValue)
+            MyBase.New(parent, phasorDefinition, phasorValue)
 
         End Sub
 

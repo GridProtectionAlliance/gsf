@@ -54,9 +54,9 @@ Namespace BpaPdcStream
 
         End Sub
 
-        Public Sub New(ByVal analogValue As IAnalogValue)
+        Public Sub New(ByVal parent As IDataCell, ByVal analogDefinition As IAnalogDefinition, ByVal analogValue As IAnalogValue)
 
-            MyBase.New(analogValue)
+            MyBase.New(parent, analogDefinition, analogValue)
 
         End Sub
 

@@ -70,9 +70,9 @@ Public MustInherit Class PhasorDefinitionBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal phasorDefinition As IPhasorDefinition)
-    Protected Sub New(ByVal phasorDefinition As IPhasorDefinition)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal phasorDefinition As IPhasorDefinition)
 
-        MyClass.New(phasorDefinition.Parent, phasorDefinition.Index, phasorDefinition.Label, _
+        MyClass.New(parent, phasorDefinition.Index, phasorDefinition.Label, _
             phasorDefinition.ScalingFactor, phasorDefinition.Offset, phasorDefinition.Type, phasorDefinition.VoltageReference)
 
     End Sub

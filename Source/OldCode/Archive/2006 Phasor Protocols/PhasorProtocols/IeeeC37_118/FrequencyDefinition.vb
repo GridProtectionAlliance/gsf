@@ -56,9 +56,9 @@ Namespace IeeeC37_118
 
         End Sub
 
-        Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
+        Public Sub New(ByVal parent As ConfigurationCell, ByVal frequencyDefinition As IFrequencyDefinition)
 
-            MyBase.New(frequencyDefinition)
+            MyBase.New(parent, frequencyDefinition)
 
         End Sub
 

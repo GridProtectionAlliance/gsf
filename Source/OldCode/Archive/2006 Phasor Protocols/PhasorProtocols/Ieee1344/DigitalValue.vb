@@ -45,9 +45,9 @@ Namespace Ieee1344
 
         End Sub
 
-        Public Sub New(ByVal digitalValue As IDigitalValue)
+        Public Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal digitalValue As IDigitalValue)
 
-            MyBase.New(digitalValue)
+            MyBase.New(parent, digitalDefinition, digitalValue)
 
         End Sub
 

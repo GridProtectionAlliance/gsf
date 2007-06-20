@@ -63,9 +63,9 @@ Public MustInherit Class DigitalValueBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal digitalValue As IDigitalValue)
-    Protected Sub New(ByVal digitalValue As IDigitalValue)
+    Protected Sub New(ByVal parent As IDataCell, ByVal digitalDefinition As IDigitalDefinition, ByVal digitalValue As IDigitalValue)
 
-        MyClass.New(digitalValue.Parent, digitalValue.Definition, digitalValue.Value)
+        MyClass.New(parent, digitalDefinition, digitalValue.Value)
 
     End Sub
 

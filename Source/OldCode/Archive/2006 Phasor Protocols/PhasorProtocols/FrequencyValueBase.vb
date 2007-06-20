@@ -80,9 +80,9 @@ Public MustInherit Class FrequencyValueBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal frequencyValue As IFrequencyValue)
-    Protected Sub New(ByVal frequencyValue As IFrequencyValue)
+    Protected Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequencyValue As IFrequencyValue)
 
-        MyClass.New(frequencyValue.Parent, frequencyValue.Definition, frequencyValue.Frequency, frequencyValue.DfDt)
+        MyClass.New(parent, frequencyDefinition, frequencyValue.Frequency, frequencyValue.DfDt)
 
     End Sub
 

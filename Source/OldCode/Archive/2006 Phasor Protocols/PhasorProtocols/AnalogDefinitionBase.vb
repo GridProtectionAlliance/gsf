@@ -52,9 +52,9 @@ Public MustInherit Class AnalogDefinitionBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal analogDefinition As IAnalogDefinition)
-    Protected Sub New(ByVal analogDefinition As IAnalogDefinition)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal analogDefinition As IAnalogDefinition)
 
-        MyClass.New(analogDefinition.Parent, analogDefinition.Index, analogDefinition.Label, _
+        MyClass.New(parent, analogDefinition.Index, analogDefinition.Label, _
             analogDefinition.ScalingFactor, analogDefinition.Offset)
 
     End Sub

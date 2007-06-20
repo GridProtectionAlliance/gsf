@@ -45,9 +45,9 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal frequencyValue As IFrequencyValue)
+        Public Sub New(ByVal parent As IDataCell, ByVal frequencyDefinition As IFrequencyDefinition, ByVal frequencyValue As IFrequencyValue)
 
-            MyBase.New(frequencyValue)
+            MyBase.New(parent, frequencyDefinition, frequencyValue)
 
         End Sub
 

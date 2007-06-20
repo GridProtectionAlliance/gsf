@@ -64,9 +64,9 @@ Public MustInherit Class FrequencyDefinitionBase
     End Sub
 
     ' Derived classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
-    Protected Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
+    Protected Sub New(ByVal parent As IConfigurationCell, ByVal frequencyDefinition As IFrequencyDefinition)
 
-        MyClass.New(frequencyDefinition.Parent, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
+        MyClass.New(parent, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, _
             frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
 
     End Sub
