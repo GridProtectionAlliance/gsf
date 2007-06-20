@@ -448,9 +448,9 @@ Public Class PhasorMeasurementMapper
         UpdateStatus(String.Format("Received {0} configuration frame at {1}", m_source, Date.Now))
 
         Try
-            Dim cachePath As String = GetApplicationPath() & "ConfigurationCache\"
+            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
             If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
-            Dim configFile As FileStream = File.Create(cachePath & m_source & ".configuration.xml")
+            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.configuration.xml", cachePath, m_source))
 
             With New SoapFormatter
                 .AssemblyFormat = FormatterAssemblyStyle.Simple

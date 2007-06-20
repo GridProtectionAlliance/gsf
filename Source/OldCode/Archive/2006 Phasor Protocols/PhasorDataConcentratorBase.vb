@@ -1,9 +1,15 @@
-Imports System.Data.OleDb
+Imports System.IO
+Imports System.Text
+Imports System.Data.SqlClient
+Imports System.Runtime.Serialization.Formatters
+Imports System.Runtime.Serialization.Formatters.Soap
 Imports TVA.Measurements
 Imports TVA.Communication
 Imports TVA.Data.Common
 Imports TVA.Common
+Imports TVA.IO.FilePath
 Imports TVA.ErrorManagement
+Imports TVA.Text.Common
 Imports PhasorProtocols
 
 Public MustInherit Class PhasorDataConcentratorBase
@@ -15,13 +21,17 @@ Public MustInherit Class PhasorDataConcentratorBase
     Private WithEvents m_communicationServer As ICommunicationServer
     Private m_configurationFrame As IConfigurationFrame
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
+    Private m_publishDescriptor As Boolean
     Private m_sentDescriptor As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
     Protected Sub New( _
-        ByVal connection As OleDbConnection, _
+        ByVal communicationServer As ICommunicationServer, _
+        ByVal connection As SqlConnection, _
+        ByVal pmuFilterSql As String, _
         ByVal idCode As UInt16, _
         ByVal framesPerSecond As Integer, _
+        ByVal nominalFrequency As LineFrequency, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double, _
         ByVal exceptionLogger As GlobalExceptionLogger)
@@ -31,10 +41,81 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim signal As SignalReference
         Dim idLabelCellIndex As New Dictionary(Of String, Integer)
 
+        m_communicationServer = communicationServer
         m_exceptionLogger = exceptionLogger
+        m_publishDescriptor = True
 
-        ' Define configuration frame
-        m_configurationFrame = CreateConfigurationFrame(connection, idCode)
+        ' Define protocol independent configuration frame based on PMU filter expression
+        Dim configurationFrame As New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, framesPerSecond)
+
+        'If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Enabled <> 0"
+        If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM PMUs WHERE IsActive <> 0"
+
+        ' TODO: Will need to allow a way to define digitals and analogs in the ouput stream at some point
+        With RetrieveData(pmuFilterSql, connection).Rows
+            For x As Integer = 0 To .Count - 1
+                With .Item(x)
+                    Dim cell As New ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency)
+
+                    ' To allow rectangular phasors and/or scaled values - make adjustments here...
+                    'cell.AnalogDataFormat = DataFormat.FloatingPoint
+                    'cell.PhasorDataFormat = DataFormat.FloatingPoint
+                    'cell.PhasorCoordinateFormat = CoordinateFormat.Polar
+                    'cell.FrequencyDataFormat = DataFormat.FloatingPoint
+
+                    'cell.IDLabel = .Item("Acronym").ToString()
+                    cell.IDLabel = .Item("PMUID_Uniq").ToString()
+
+                    'cell.StationName = .Item("Name").ToString()
+                    cell.StationName = .Item("PMUName").ToString()
+
+                    ' Load all phasors as defined in the database
+                    'With RetrieveData(String.Format("SELECT Label, Type FROM Phasor WHERE ID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows
+                    With RetrieveData(String.Format("SELECT Label, Type FROM Phasors WHERE PMUID='{0}' ORDER BY PhasorIndex", cell.IDLabel), connection).Rows
+                        For y As Integer = 0 To .Count - 1
+                            cell.PhasorDefinitions.Add( _
+                                New PhasorDefinition(cell, y, .Item("Label").ToString(), 1, 0.0F, _
+                                IIf(.Item("Type").ToString().StartsWith("V", StringComparison.OrdinalIgnoreCase), _
+                                PhasorType.Voltage, PhasorType.Current), Nothing))
+                        Next
+                    End With
+
+                    ' Add frequency definition
+                    cell.FrequencyDefinition = New FrequencyDefinition( _
+                        cell, String.Format("{0} Frequency", cell.IDLabel), _
+                        Convert.ToInt32(.Item("FreqScale")), _
+                        Convert.ToSingle(.Item("FreqOffset")), _
+                        Convert.ToInt32(.Item("DfDtScale")), _
+                        Convert.ToSingle(.Item("DfDtOffset")))
+
+                    configurationFrame.Cells.Add(cell)
+                End With
+            Next
+        End With
+
+        ' Define protocol specific configuration frame - if user doesn't need to broadcast a protocol
+        ' specific configuration frame, they can choose to just return protocol independent configuration
+        m_configurationFrame = CreateNewConfigurationFrame(configurationFrame)
+
+        ' Cache configuration frame for reference
+        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, idCode))
+
+        Try
+            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
+            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
+            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(Name), idCode))
+
+            With New SoapFormatter
+                .AssemblyFormat = FormatterAssemblyStyle.Simple
+                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                .Serialize(configFile, m_configurationFrame)
+            End With
+
+            configFile.Close()
+        Catch ex As Exception
+            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {3}", Name, idCode, ex.Message))
+            m_exceptionLogger.Log(ex)
+        End Try
 
         ' Define measurement to signal cross reference dictionary
         m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
@@ -57,8 +138,8 @@ Public MustInherit Class PhasorDataConcentratorBase
             Next
         End With
 
-        ' TODO: Start Concentrator!
-        'Me.Enabled = True
+        ' Start Concentrator!
+        Me.Enabled = True
 
     End Sub
 
@@ -74,6 +155,38 @@ Public MustInherit Class PhasorDataConcentratorBase
         End Get
     End Property
 
+    Public Overrides ReadOnly Property Status() As String
+        Get
+            With New StringBuilder
+                .Append(MyBase.Status)
+                .Append("Output Communications Channel Detail:")
+                .Append(Environment.NewLine)
+                If m_communicationServer Is Nothing Then
+                    .Append("  >> No communications server was defined")
+                    .Append(Environment.NewLine)
+                Else
+                    .Append(m_communicationServer.Status)
+                End If
+            End With
+            Return MyBase.Status
+        End Get
+    End Property
+
+    Public Overridable Property PublishDescriptor() As Boolean
+        Get
+            Return m_publishDescriptor
+        End Get
+        Set(ByVal value As Boolean)
+            m_publishDescriptor = value
+        End Set
+    End Property
+
+    Protected ReadOnly Property CommunicationServer() As ICommunicationServer
+        Get
+            Return m_communicationServer
+        End Get
+    End Property
+
     Protected ReadOnly Property ExceptionLogger() As GlobalExceptionLogger
         Get
             Return m_exceptionLogger
@@ -86,7 +199,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Protected MustOverride Function CreateConfigurationFrame(ByVal connection As OleDbConnection, ByVal idCode As UInt16) As IConfigurationFrame
+    Protected MustOverride Function CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame) As IConfigurationFrame
 
     Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
@@ -128,7 +241,7 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim dataFrame As IDataFrame = DirectCast(frame, IDataFrame)
 
         ' Send a descriptor packet at the top of each minute...
-        If dataFrame.Timestamp.Second = 0 Then
+        If m_publishDescriptor AndAlso dataFrame.Timestamp.Second = 0 Then
             If Not m_sentDescriptor Then
                 m_sentDescriptor = True
 
@@ -143,13 +256,6 @@ Public MustInherit Class PhasorDataConcentratorBase
         m_communicationServer.Multicast(dataFrame.BinaryImage())
 
     End Sub
-
-    Public Overrides ReadOnly Property Status() As String
-        Get
-            ' TODO: Add more status detail related to phasor data concentration
-            Return MyBase.Status
-        End Get
-    End Property
 
     Protected Overridable Sub HandleIncomingData(ByVal commandBuffer As Byte())
 

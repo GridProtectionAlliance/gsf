@@ -45,7 +45,9 @@ Public Class ConfigurationCell
 
     End Sub
 
-    Public Sub New()
+    Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
+
+        MyBase.New(parent, False, idCode, nominalFrequency, Integer.MaxValue, Integer.MaxValue, Integer.MaxValue)
 
         m_signalSynonyms = New Dictionary(Of SignalType, String())
         m_analogDataFormat = DataFormat.FloatingPoint
@@ -57,9 +59,8 @@ Public Class ConfigurationCell
 
     Public Sub New(ByVal idCode As UInt16, ByVal idLabel As String)
 
-        MyClass.New()
-        MyBase.IDCode = idCode
-        MyBase.IDLabel = idLabel
+        MyClass.New(Nothing, idCode, LineFrequency.Hz60)
+        MyClass.IDLabel = idLabel
 
     End Sub
 

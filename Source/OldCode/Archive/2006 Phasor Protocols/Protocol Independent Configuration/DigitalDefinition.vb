@@ -42,9 +42,9 @@ Public Class DigitalDefinition
 
     End Sub
 
-    Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
+    Public Sub New(ByVal parent As ConfigurationCell, ByVal digitalDefinition As IDigitalDefinition)
 
-        MyBase.New(digitalDefinition)
+        MyBase.New(parent, digitalDefinition)
 
     End Sub
 

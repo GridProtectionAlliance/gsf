@@ -29,7 +29,7 @@ Public Class ConfigurationFrame
 
     End Sub
 
-    Public Sub New(ByVal timeBase As Int32, ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16)
+    Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16)
 
         MyBase.New(idCode, New ConfigurationCellCollection(Integer.MaxValue, False), ticks, frameRate)
 

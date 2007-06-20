@@ -1,5 +1,5 @@
-Imports System.Data.OleDb
-Imports TVA.Data.Common
+Imports System.Data.SqlClient
+Imports TVA.Communication
 Imports TVA.ErrorManagement
 Imports PhasorProtocols
 
@@ -7,65 +7,77 @@ Public Class IeeeC37_118Concentrator
 
     Inherits PhasorDataConcentratorBase
 
+    Private m_configurationFrame As IeeeC37_118.ConfigurationFrame
+    Private m_timeBase As Integer
+    Private m_version As Byte
+
     Public Sub New( _
-        ByVal connection As OleDbConnection, _
+        ByVal communicationServer As ICommunicationServer, _
+        ByVal connection As SqlConnection, _
+        ByVal pmuFilterSql As String, _
         ByVal idCode As UInt16, _
         ByVal framesPerSecond As Integer, _
+        ByVal nominalFrequency As LineFrequency, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double, _
+        ByVal timeBase As Integer, _
+        ByVal version As Byte, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
-        MyBase.New(connection, idCode, framesPerSecond, lagTime, leadTime, exceptionLogger)
+        MyBase.New(communicationServer, connection, pmuFilterSql, idCode, framesPerSecond, nominalFrequency, lagTime, leadTime, exceptionLogger)
+
+        m_timeBase = timeBase
+        m_version = version
 
     End Sub
 
-    Protected Overrides Function CreateConfigurationFrame(ByVal connection As OleDbConnection, ByVal idCode As UShort) As PhasorProtocols.IConfigurationFrame
+    Protected Overrides Function CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame) As PhasorProtocols.IConfigurationFrame
 
-        Dim configurationFrame As New IeeeC37_118.ConfigurationFrame(IeeeC37_118.FrameType.ConfigurationFrame2, 16777215, idCode, DateTime.UtcNow.Ticks, FramesPerSecond, 1)
+        Dim x, y As Integer
 
-        With RetrieveData("SELECT * FROM Pmu WHERE Enabled <> 0", connection).Rows
-            For x As Integer = 0 To .Count - 1
-                With .Item(x)
-                    Dim cell As New IeeeC37_118.ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("AccessID")), LineFrequency.Hz60)
+        ' We create a new IEEE C37.118 configuration frame 2 based on input configuration
+        m_configurationFrame = New IeeeC37_118.ConfigurationFrame(IeeeC37_118.FrameType.ConfigurationFrame2, m_timeBase, baseConfiguration.IDCode, DateTime.UtcNow.Ticks, FramesPerSecond, m_version)
 
-                    ' It will be critical to assign an ID label to the PMU in this virtual configuration
+        For x = 0 To baseConfiguration.Cells.Count - 1
+            Dim baseCell As ConfigurationCell = baseConfiguration.Cells(x)
+            Dim newCell As New IeeeC37_118.ConfigurationCell(m_configurationFrame, baseCell.IDCode, baseCell.NominalFrequency)
 
-                    cell.AnalogDataFormat = DataFormat.FloatingPoint
-                    cell.PhasorDataFormat = DataFormat.FloatingPoint
-                    cell.PhasorCoordinateFormat = CoordinateFormat.Polar
-                    cell.FrequencyDataFormat = DataFormat.FloatingPoint
-                    'cell.NominalFrequency = LineFrequency.Hz60
+            ' Update other cell level attributes
+            newCell.StationName = baseCell.StationName
+            newCell.IDLabel = baseCell.IDLabel
 
-                    ' Calculated measurements can be added as analogs or digitals in the system
-                    'cell.AnalogDefinitions.Add(
-                    'cell.DigitalDefinitions.Add(
-
-                    ' Load all phasors as defined in the database
-                    'cell.PhasorDefinitions.Add(New IeeeC37_118.PhasorDefinition(cell, index, label, scale, offset, CoordinateFormat.Polar, PhasorType.Current))
-
-                    cell.FrequencyDefinition = New IeeeC37_118.FrequencyDefinition( _
-                        cell, cell.IDLabel & " Frequency", _
-                        Convert.ToInt32(.Item("FreqScale")), _
-                        Convert.ToSingle(.Item("FreqOffset")), _
-                        Convert.ToInt32(.Item("DfDtScale")), _
-                        Convert.ToSingle(.Item("DfDtOffset")))
-
-                    configurationFrame.Cells.Add(cell)
-                End With
+            ' Add phasor definitions
+            For y = 0 To baseCell.PhasorDefinitions.Count - 1
+                newCell.PhasorDefinitions.Add(New IeeeC37_118.PhasorDefinition(newCell, baseCell.PhasorDefinitions(y)))
             Next
-        End With
 
-        Return configurationFrame
+            ' Add frequency definition
+            newCell.FrequencyDefinition = New IeeeC37_118.FrequencyDefinition(newCell, baseCell.FrequencyDefinition)
+
+            ' Add analog definitions
+            For y = 0 To baseCell.AnalogDefinitions.Count - 1
+                newCell.AnalogDefinitions.Add(New IeeeC37_118.AnalogDefinition(newCell, baseCell.AnalogDefinitions(y)))
+            Next
+
+            ' Add digital definitions
+            For y = 0 To baseCell.DigitalDefinitions.Count - 1
+                newCell.DigitalDefinitions.Add(New IeeeC37_118.DigitalDefinition(newCell, baseCell.DigitalDefinitions(y)))
+            Next
+
+            ' Add new PMU configuration (cell) to protocol specific configuration frame
+            m_configurationFrame.Cells.Add(newCell)
+        Next
+
+        Return m_configurationFrame
 
     End Function
 
     Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As TVA.Measurements.IFrame
 
-        Dim configFrame As IeeeC37_118.ConfigurationFrame = DirectCast(MyBase.ConfigurationFrame, IeeeC37_118.ConfigurationFrame)
-        Dim dataFrame As New IeeeC37_118.DataFrame(ticks, configFrame)
+        Dim dataFrame As New IeeeC37_118.DataFrame(ticks, m_configurationFrame)
 
-        For x As Integer = 0 To configFrame.Cells.Count - 1
-            dataFrame.Cells.Add(New IeeeC37_118.DataCell(dataFrame, configFrame.Cells(x)))
+        For x As Integer = 0 To m_configurationFrame.Cells.Count - 1
+            dataFrame.Cells.Add(New IeeeC37_118.DataCell(dataFrame, m_configurationFrame.Cells(x)))
         Next
 
         Return dataFrame
@@ -75,6 +87,18 @@ Public Class IeeeC37_118Concentrator
     Public Overrides ReadOnly Property Name() As String
         Get
             Return "C37.118 Concentrator"
+        End Get
+    End Property
+
+    Public ReadOnly Property TimeBase() As Integer
+        Get
+            Return m_timeBase
+        End Get
+    End Property
+
+    Public ReadOnly Property Version() As Byte
+        Get
+            Return m_version
         End Get
     End Property
 
