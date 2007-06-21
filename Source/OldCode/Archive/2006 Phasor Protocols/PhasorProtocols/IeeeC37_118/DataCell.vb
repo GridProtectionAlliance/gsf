@@ -148,19 +148,6 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property PmuErrorDetected() As Boolean
-            Get
-                Return (StatusFlags And IeeeC37_118.StatusFlags.PmuError) > 0
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.PmuError
-                Else
-                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.PmuError
-                End If
-            End Set
-        End Property
-
         Public Overrides Property SynchronizationIsValid() As Boolean
             Get
                 Return (StatusFlags And IeeeC37_118.StatusFlags.PmuSynchronizationError) = 0
@@ -174,12 +161,25 @@ Namespace IeeeC37_118
             End Set
         End Property
 
-        Public Property DataIsSortedByTimestamp() As Boolean
+        Public Overrides Property PmuError() As Boolean
             Get
-                Return (StatusFlags And IeeeC37_118.StatusFlags.DataSortingType) = 0
+                Return (StatusFlags And IeeeC37_118.StatusFlags.PmuError) > 0
             End Get
             Set(ByVal value As Boolean)
                 If value Then
+                    StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.PmuError
+                Else
+                    StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.PmuError
+                End If
+            End Set
+        End Property
+
+        Public Overrides Property DataSortingType() As DataSortingType
+            Get
+                Return IIf((StatusFlags And IeeeC37_118.StatusFlags.DataSortingType) = 0, PhasorProtocols.DataSortingType.ByTimestamp, PhasorProtocols.DataSortingType.ByArrival)
+            End Get
+            Set(ByVal value As DataSortingType)
+                If value = PhasorProtocols.DataSortingType.ByTimestamp Then
                     StatusFlags = StatusFlags And Not IeeeC37_118.StatusFlags.DataSortingType
                 Else
                     StatusFlags = StatusFlags Or IeeeC37_118.StatusFlags.DataSortingType
@@ -217,12 +217,10 @@ Namespace IeeeC37_118
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
-                baseAttributes.Add("Data Is Sorted By Timestamp", DataIsSortedByTimestamp)
                 baseAttributes.Add("Unlocked Time", UnlockedTime & ": " & [Enum].GetName(GetType(UnlockedTime), UnlockedTime))
                 baseAttributes.Add("PMU Trigger Detected", PmuTriggerDetected)
                 baseAttributes.Add("Trigger Reason", TriggerReason & ": " & [Enum].GetName(GetType(TriggerReason), TriggerReason))
                 baseAttributes.Add("Configuration Change Detected", ConfigurationChangeDetected)
-                baseAttributes.Add("PMU Error Detected", PmuErrorDetected)
 
                 Return baseAttributes
             End Get

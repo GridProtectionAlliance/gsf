@@ -98,7 +98,7 @@ Namespace FNet
                 Return ConfigurationCell.NumberOfSatellites > 0
             End Get
             Set(ByVal value As Boolean)
-                Throw (New NotSupportedException("FNet defines synchronization validity as a derived value based on the number of available satellites"))
+                ' We just ignore this value as FNet defines synchronization validity as a derived value based on the number of available satellites
             End Set
         End Property
 
@@ -107,7 +107,25 @@ Namespace FNet
                 Return True
             End Get
             Set(ByVal value As Boolean)
-                Throw New NotSupportedException("FNet defines no flags for data validity")
+                ' We just ignore this value as FNet defines no flags for data validity
+            End Set
+        End Property
+
+        Public Overrides Property DataSortingType() As DataSortingType
+            Get
+                Return IIf(SynchronizationIsValid, PhasorProtocols.DataSortingType.ByTimestamp, PhasorProtocols.DataSortingType.ByArrival)
+            End Get
+            Set(ByVal value As DataSortingType)
+                ' We just ignore this value as we have defined data sorting type as a derived value based on synchronization validity
+            End Set
+        End Property
+
+        Public Overrides Property PmuError() As Boolean
+            Get
+                Return False
+            End Get
+            Set(ByVal value As Boolean)
+                ' We just ignore this value as FNet defines no flags for data errors
             End Set
         End Property
 
@@ -250,6 +268,7 @@ Namespace FNet
         Private Function ParseTimestamp(ByVal fnetDate As String, ByVal fnetTime As String, ByVal sampleIndex As Integer, ByVal frameRate As Integer) As Long
 
             fnetDate = fnetDate.PadLeft(6, "0"c)
+
             If sampleIndex = 10 Then
                 Return New Date( _
                     2000 + Convert.ToInt32(fnetDate.Substring(4, 2)), _
@@ -269,7 +288,6 @@ Namespace FNet
                     Convert.ToInt32(fnetTime.Substring(4, 2)), _
                     Convert.ToInt32(sampleIndex / frameRate * 1000)).Ticks
             End If
-
 
         End Function
 

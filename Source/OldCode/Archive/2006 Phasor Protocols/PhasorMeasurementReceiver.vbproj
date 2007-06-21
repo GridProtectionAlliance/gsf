@@ -48,6 +48,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
     </Reference>
+    <Reference Include="TVA.Services, Version=2.1.98.28813, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Services.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />

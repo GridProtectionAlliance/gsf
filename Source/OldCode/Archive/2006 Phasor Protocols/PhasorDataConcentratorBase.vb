@@ -10,11 +10,13 @@ Imports TVA.Common
 Imports TVA.IO.FilePath
 Imports TVA.ErrorManagement
 Imports TVA.Text.Common
+Imports TVA.Services
 Imports PhasorProtocols
 
 Public MustInherit Class PhasorDataConcentratorBase
 
     Inherits ConcentratorBase
+    Implements IServiceComponent
 
     Public Event StatusMessage(ByVal status As String)
 
@@ -138,8 +140,21 @@ Public MustInherit Class PhasorDataConcentratorBase
             Next
         End With
 
-        ' Start Concentrator!
+        ' Start communications server
+        m_communicationServer.Start()
+
+        ' Start concentrator
         Me.Enabled = True
+
+    End Sub
+
+    Public Overrides Sub Dispose()
+
+        MyBase.Dispose()
+
+        ' Stop concentrator and communications server
+        Me.Enabled = False
+        If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
 
     End Sub
 
@@ -149,13 +164,13 @@ Public MustInherit Class PhasorDataConcentratorBase
         End Get
     End Property
 
-    Public Overridable ReadOnly Property Name() As String
+    Public Overridable ReadOnly Property Name() As String Implements TVA.Services.IServiceComponent.Name
         Get
             Return Me.GetType().Name
         End Get
     End Property
 
-    Public Overrides ReadOnly Property Status() As String
+    Public Overrides ReadOnly Property Status() As String Implements TVA.Services.IServiceComponent.Status
         Get
             With New StringBuilder
                 .Append(MyBase.Status)
@@ -226,7 +241,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                 Case SignalType.dfdt
                     dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.Value)
                 Case SignalType.Status
-                    dataCell.StatusFlags = Convert.ToInt16(measurement.Value)
+                    dataCell.CommonStatusFlags = Convert.ToInt32(measurement.Value)
                 Case SignalType.Digital
                     dataCell.DigitalValues(signalRef.SignalIndex - 1).Value = Convert.ToInt16(measurement.Value)
                 Case SignalType.Analog
@@ -309,6 +324,27 @@ Public MustInherit Class PhasorDataConcentratorBase
     Private Sub m_communicationServer_ReceivedClientData(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of TVA.IdentifiableItem(Of System.Guid, Byte()))) Handles m_communicationServer.ReceivedClientData
 
         HandleIncomingData(e.Argument.Item)
+
+    End Sub
+
+    Protected Overridable Sub ProcessStateChanged(ByVal processName As String, ByVal newState As TVA.Services.ProcessState) Implements TVA.Services.IServiceComponent.ProcessStateChanged
+
+        ' We don't normally handle changes in process state - but dervived classes may choose to...
+
+    End Sub
+
+    Protected Overridable Sub ServiceStateChanged(ByVal newState As TVA.Services.ServiceState) Implements TVA.Services.IServiceComponent.ServiceStateChanged
+
+        Select Case newState
+            Case ServiceState.Paused
+                ' Pause concentrator
+                Me.Enabled = False
+                UpdateStatus("Data concentration paused at the request of service manager...")
+            Case ServiceState.Resumed
+                ' Resume concentrator
+                Me.Enabled = True
+                UpdateStatus("Data concentration resumed...")
+        End Select
 
     End Sub
 

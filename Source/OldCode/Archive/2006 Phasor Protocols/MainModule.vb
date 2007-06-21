@@ -47,6 +47,9 @@ Module MainModule
     Private m_statusMessageQueue As ProcessQueue(Of String)
     Private m_exceptionLogger As GlobalExceptionLogger
 
+    ' TODO: Make this an array of concentrators loaded from database
+    Private m_concentrator As IeeeC37_118Concentrator
+
     Public Sub Main()
 
         Dim consoleLine As String
@@ -135,6 +138,11 @@ Module MainModule
         Loop
 
         ' Attempt an orderly shutdown...
+
+        ' Stop data concentrators
+        m_concentrator.Dispose()
+
+        ' Stop data measurement receivers
         For Each receiver In m_measurementReceivers.Values
             receiver.Disconnect()
         Next
@@ -200,6 +208,15 @@ Module MainModule
         ' Load the phasor measurement receivers (one per each established archive)
         m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
 
+        ' TODO: Change this to load concentrators from database
+        Dim commServer As New TVA.Communication.UdpServer()
+
+        commServer.Handshake = False
+        commServer.PayloadAware = False
+        commServer.ConfigurationString = "clients=152.85.102.99:3060"
+
+        m_concentrator = New IeeeC37_118Concentrator(commServer, connection, Nothing, 235, 30, LineFrequency.Hz60, 2, 1, 100000, 1, m_exceptionLogger)
+
     End Sub
 
     Private Sub ReinitializeReceivers(ByVal connection As SqlConnection)
@@ -246,6 +263,7 @@ Module MainModule
                         m_exceptionLogger)
 
                     AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
+                    AddHandler measurementReceiver.NewMeasurements, AddressOf NewParsedMeasurements
                     If .Rows(x)("InitializeOnStartup") <> 0 Then measurementReceiver.Initialize(connection)
 
                     measurementReceivers.Add(archiveSource, measurementReceiver)
@@ -407,16 +425,28 @@ Module MainModule
                 Next
             End If
 
-            ' Queue new measurements for archival
+            ' Queue new calculated measurements for archival
             If m_measurementReceivers IsNot Nothing Then
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
                     receiver.QueueMeasurementsForArchival(measurements)
                 Next
             End If
 
-            ' TODO: Provide real-time calculated measurements outside of receiver as needed...
-            ' In an "integrated" system, this is where you would provide calculated measurements
-            ' as part of the real-time stream (such as in Analog points in C37.118)
+            ' Provide calculated measurements along to data concentrators
+            For x As Integer = 0 To measurements.Count - 1
+                m_concentrator.SortMeasurement(measurements(x))
+            Next
+        End If
+
+    End Sub
+
+    Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
+
+        ' Provide newly parsed measurements along to data concentrators
+        If measurements IsNot Nothing Then
+            For Each measurement As IMeasurement In measurements.Values
+                m_concentrator.SortMeasurement(measurement)
+            Next
         End If
 
     End Sub

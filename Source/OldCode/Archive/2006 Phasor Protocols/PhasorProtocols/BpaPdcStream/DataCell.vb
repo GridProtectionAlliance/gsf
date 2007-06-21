@@ -229,19 +229,6 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property TransmissionErrors() As Boolean
-            Get
-                Return ((m_flags And ChannelFlags.TransmissionErrors) > 0)
-            End Get
-            Set(ByVal value As Boolean)
-                If value Then
-                    m_flags = m_flags Or ChannelFlags.TransmissionErrors
-                Else
-                    m_flags = m_flags And Not ChannelFlags.TransmissionErrors
-                End If
-            End Set
-        End Property
-
         Public Overrides Property SynchronizationIsValid() As Boolean
             Get
                 Return ((m_flags And ChannelFlags.PMUSynchronized) = 0)
@@ -255,12 +242,12 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        Public Property DataIsSortedByArrival() As Boolean
+        Public Overrides Property DataSortingType() As DataSortingType
             Get
-                Return ((m_flags And ChannelFlags.DataSortedByArrival) > 0)
+                Return IIf((m_flags And ChannelFlags.DataSortedByArrival) > 0, PhasorProtocols.DataSortingType.ByArrival, PhasorProtocols.DataSortingType.ByTimestamp)
             End Get
-            Set(ByVal value As Boolean)
-                If value Then
+            Set(ByVal value As DataSortingType)
+                If value = PhasorProtocols.DataSortingType.ByArrival Then
                     m_flags = m_flags Or ChannelFlags.DataSortedByArrival
                 Else
                     m_flags = m_flags And Not ChannelFlags.DataSortedByArrival
@@ -268,19 +255,44 @@ Namespace BpaPdcStream
             End Set
         End Property
 
-        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
-        Public Property DataIsSortedByTimestamp() As Boolean
+        Public Overrides Property PmuError() As Boolean
             Get
-                Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
+                Return ((m_flags And ChannelFlags.TransmissionErrors) > 0)
             End Get
             Set(ByVal value As Boolean)
                 If value Then
-                    m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
+                    m_flags = m_flags Or ChannelFlags.TransmissionErrors
                 Else
-                    m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
+                    m_flags = m_flags And Not ChannelFlags.TransmissionErrors
                 End If
             End Set
         End Property
+
+        'Public Property TransmissionErrors() As Boolean
+        '    Get
+        '        Return ((m_flags And ChannelFlags.TransmissionErrors) > 0)
+        '    End Get
+        '    Set(ByVal value As Boolean)
+        '        If value Then
+        '            m_flags = m_flags Or ChannelFlags.TransmissionErrors
+        '        Else
+        '            m_flags = m_flags And Not ChannelFlags.TransmissionErrors
+        '        End If
+        '    End Set
+        'End Property
+
+        'Public Property DataIsSortedByArrival() As Boolean
+        '    Get
+        '        Return ((m_flags And ChannelFlags.DataSortedByArrival) > 0)
+        '    End Get
+        '    Set(ByVal value As Boolean)
+        '        If value Then
+        '            m_flags = m_flags Or ChannelFlags.DataSortedByArrival
+        '        Else
+        '            m_flags = m_flags And Not ChannelFlags.DataSortedByArrival
+        '        End If
+        '    End Set
+        'End Property
 
         Public Property UsingPDCExchangeFormat() As Boolean
             Get
@@ -317,6 +329,20 @@ Namespace BpaPdcStream
                     m_flags = m_flags And Not ChannelFlags.MacrodyneFormat
                 Else
                     m_flags = m_flags Or ChannelFlags.MacrodyneFormat
+                End If
+            End Set
+        End Property
+
+        <Obsolete("This bit definition is for obsolete uses that is no longer needed.", False)> _
+        Public Property DataIsSortedByTimestamp() As Boolean
+            Get
+                Return ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0)
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    m_flags = m_flags And Not ChannelFlags.DataSortedByTimestamp
+                Else
+                    m_flags = m_flags Or ChannelFlags.DataSortedByTimestamp
                 End If
             End Set
         End Property
@@ -563,13 +589,11 @@ Namespace BpaPdcStream
                 baseAttributes.Add("Sample Number", m_sampleNumber)
                 baseAttributes.Add("Reserved Flag 0 Is Set", ReservedFlag0IsSet)
                 baseAttributes.Add("Reserved Flag 1 Is Set", ReservedFlag1IsSet)
-                baseAttributes.Add("Transmission Errors", TransmissionErrors)
-                baseAttributes.Add("Data Is Sorted By Arrival", DataIsSortedByArrival)
-                baseAttributes.Add("Data Is Sorted By Timestamp", ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0))
                 baseAttributes.Add("Using PDC Exchange Format", UsingPDCExchangeFormat)
                 baseAttributes.Add("Using Macrodyne Format", UsingMacrodyneFormat)
                 baseAttributes.Add("Using IEEE Format", UsingIEEEFormat)
-                baseAttributes.Add("Timestamp Is Included", ((m_flags And ChannelFlags.TimestampIncluded) = 0))
+                baseAttributes.Add("Data Sorted By Timestamp (Obsolete)", ((m_flags And ChannelFlags.DataSortedByTimestamp) = 0))
+                baseAttributes.Add("Timestamp Is Included (Obsolete)", ((m_flags And ChannelFlags.TimestampIncluded) = 0))
                 baseAttributes.Add("PMU Parsed From PDC Block", m_isPdcBlockPmu)
 
                 Return baseAttributes

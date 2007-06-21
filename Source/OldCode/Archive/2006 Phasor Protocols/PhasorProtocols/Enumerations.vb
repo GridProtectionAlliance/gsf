@@ -67,6 +67,31 @@ Public Enum FundamentalFrameType
     Undetermined
 End Enum
 
+''' <summary>Protocol independent common flag set</summary>
+''' <remarks>These flags are expected to exist in the hi-word of a double-word flag set - this way original word flags remain in-tact</remarks>
+<Flags(), Serializable()> _
+Public Enum CommonStatusFlags As Int32
+    ''' <summary>Data is valid (0 when PMU data is valid, 1 when invalid or PMU is in test mode)</summary>
+    DataIsValid = Bit19
+    ''' <summary>Synchronization is valid (0 when in PMU is in sync, 1 when it is not)</summary>
+    SynchronizationIsValid = Bit18
+    ''' <summary>Data sorting type, 0 by timestamp, 1 by arrival</summary>
+    DataSortingType = Bit17
+    ''' <summary>PMU error including configuration error, 0 when no error</summary>
+    PmuError = Bit16
+    ''' <summary>Reserved bits for future common flags, presently set to 0</summary>
+    ReservedFlags = Bit20 Or Bit21 Or Bit22 Or Bit23 Or Bit24 Or Bit25 Or Bit26 Or Bit27 Or Bit28 Or Bit29 Or Bit30 Or Bit31
+End Enum
+
+''' <summary>Data sorting types</summary>
+<Serializable()> _
+Public Enum DataSortingType
+    ''' <summary>Data sorted by timestamp (typical situation)</summary>
+    ByTimestamp
+    ''' <summary>Data sorted by arrival (bad timestamp)</summary>
+    ByArrival
+End Enum
+
 ''' <summary>Phasor data protocols</summary>
 <Serializable()> _
 Public Enum PhasorProtocol

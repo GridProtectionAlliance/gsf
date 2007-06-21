@@ -35,6 +35,8 @@ Public Interface IDataCell
 
     Property StatusFlags() As Int16
 
+    Property CommonStatusFlags() As Int32
+
     ReadOnly Property AllValuesAreEmpty() As Boolean
 
     ReadOnly Property PhasorValues() As PhasorValueCollection
@@ -45,8 +47,15 @@ Public Interface IDataCell
 
     ReadOnly Property DigitalValues() As DigitalValueCollection
 
-    Property SynchronizationIsValid() As Boolean
+    ' These properties correspond to the CommonStatusFlags enumeration
+    ' allowing all protocols to implement a common set of status flags
 
     Property DataIsValid() As Boolean
+
+    Property SynchronizationIsValid() As Boolean
+
+    Property DataSortingType() As DataSortingType
+
+    Property PmuError() As Boolean
 
 End Interface

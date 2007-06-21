@@ -154,9 +154,35 @@ Public MustInherit Class DataCellBase
         End Set
     End Property
 
+    Public Property CommonStatusFlags() As Int32 Implements IDataCell.CommonStatusFlags
+        Get
+            ' Start with lo-word protocol specific flags
+            Dim commonFlags As Int32 = StatusFlags
+
+            ' Add hi-word protocol independent common flags
+            If Not DataIsValid Then commonFlags = (commonFlags Or PhasorProtocols.CommonStatusFlags.DataIsValid)
+            If Not SynchronizationIsValid Then commonFlags = (commonFlags Or PhasorProtocols.CommonStatusFlags.SynchronizationIsValid)
+            If DataSortingType <> PhasorProtocols.DataSortingType.ByTimestamp Then commonFlags = (commonFlags Or PhasorProtocols.CommonStatusFlags.DataSortingType)
+            If PmuError Then commonFlags = (commonFlags Or PhasorProtocols.CommonStatusFlags.PmuError)
+
+            Return commonFlags
+        End Get
+        Set(ByVal value As Int32)
+            ' Derive common states via common status flags
+            DataIsValid = ((value And PhasorProtocols.CommonStatusFlags.DataIsValid) = 0)
+            SynchronizationIsValid = ((value And PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) = 0)
+            DataSortingType = IIf((value And PhasorProtocols.CommonStatusFlags.DataSortingType) = 0, PhasorProtocols.DataSortingType.ByTimestamp, PhasorProtocols.DataSortingType.ByArrival)
+            PmuError = ((value And PhasorProtocols.CommonStatusFlags.PmuError) > 0)
+        End Set
+    End Property
+
     Public MustOverride Property DataIsValid() As Boolean Implements IDataCell.DataIsValid, IMeasurement.ValueQualityIsGood
 
     Public MustOverride Property SynchronizationIsValid() As Boolean Implements IDataCell.SynchronizationIsValid, IMeasurement.TimestampQualityIsGood
+
+    Public MustOverride Property DataSortingType() As DataSortingType Implements IDataCell.DataSortingType
+
+    Public MustOverride Property PmuError() As Boolean Implements IDataCell.PmuError
 
     Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
         Get
@@ -272,6 +298,8 @@ Public MustInherit Class DataCellBase
             baseAttributes.Add("Status Flags", StatusFlags)
             baseAttributes.Add("Data Is Valid", DataIsValid)
             baseAttributes.Add("Synchronization Is Valid", SynchronizationIsValid)
+            baseAttributes.Add("Data Sorting Type", [Enum].GetName(GetType(DataSortingType), DataSortingType))
+            baseAttributes.Add("PMU Error", PmuError)
             baseAttributes.Add("Total Phasor Values", PhasorValues.Count)
             baseAttributes.Add("Total Analog Values", AnalogValues.Count)
             baseAttributes.Add("Total Digital Values", DigitalValues.Count)
@@ -286,21 +314,21 @@ Public MustInherit Class DataCellBase
     ' We keep the IMeasurement implementation of the DataCell completely private.  Exposing
     ' these properties publically would only stand to add confusion as to where measurements
     ' typically come from (i.e., the IDataCell's values) - the only value the cell itself has
-    ' to offer is the "StatusFlags" property, which we expose below
+    ' to offer is the "CommonStatusFlags" property, which we expose below
 
     Private Property IMeasurementValue() As Double Implements IMeasurement.Value
         Get
-            Return Convert.ToDouble(m_statusFlags)
+            Return Convert.ToDouble(CommonStatusFlags)
         End Get
         Set(ByVal value As Double)
-            m_statusFlags = Convert.ToInt16(value)
+            CommonStatusFlags = Convert.ToInt32(value)
         End Set
     End Property
 
     ' The only "measured value" a data cell exposes is its "StatusFlags"
     Private ReadOnly Property IMeasurementAdjustedValue() As Double Implements IMeasurement.AdjustedValue
         Get
-            Return m_statusFlags * m_multiplier + m_adder
+            Return CommonStatusFlags * m_multiplier + m_adder
         End Get
     End Property
 

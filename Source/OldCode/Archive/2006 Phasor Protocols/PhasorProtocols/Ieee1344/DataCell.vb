@@ -101,6 +101,19 @@ Namespace Ieee1344
             End Set
         End Property
 
+        Public Overrides Property DataIsValid() As Boolean
+            Get
+                Return (StatusFlags And Bit14) = 0
+            End Get
+            Set(ByVal value As Boolean)
+                If value Then
+                    StatusFlags = StatusFlags And Not Bit14
+                Else
+                    StatusFlags = StatusFlags Or Bit14
+                End If
+            End Set
+        End Property
+
         Public Overrides Property SynchronizationIsValid() As Boolean
             Get
                 Return (StatusFlags And Bit15) = 0
@@ -114,16 +127,21 @@ Namespace Ieee1344
             End Set
         End Property
 
-        Public Overrides Property DataIsValid() As Boolean
+        Public Overrides Property DataSortingType() As DataSortingType
             Get
-                Return (StatusFlags And Bit14) = 0
+                Return IIf(SynchronizationIsValid, PhasorProtocols.DataSortingType.ByTimestamp, PhasorProtocols.DataSortingType.ByArrival)
+            End Get
+            Set(ByVal value As DataSortingType)
+                ' We just ignore this value as we have defined data sorting type as a derived value based on synchronization validity
+            End Set
+        End Property
+
+        Public Overrides Property PmuError() As Boolean
+            Get
+                Return False
             End Get
             Set(ByVal value As Boolean)
-                If value Then
-                    StatusFlags = StatusFlags And Not Bit14
-                Else
-                    StatusFlags = StatusFlags Or Bit14
-                End If
+                ' We just ignore this value as IEEE 1344 defines no flags for data errors
             End Set
         End Property
 
