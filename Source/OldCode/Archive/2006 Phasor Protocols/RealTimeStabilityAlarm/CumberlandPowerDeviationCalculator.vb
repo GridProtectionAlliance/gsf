@@ -50,18 +50,18 @@ Public Class CumberlandPowerDeviationCalculator
     Private m_latestMegaWatts As List(Of Double)
     Private m_measurements As IMeasurement()
 
-#If DEBUG Then
-    Private m_frameLog As LogFile
-    Private m_publishedFrames As Long
-#End If
+    '#If DEBUG Then
+    '    Private m_frameLog As LogFile
+    '    Private m_publishedFrames As Long
+    '#End If
 
     Public Sub New()
 
         m_latestMegaWatts = New List(Of Double)
 
-#If DEBUG Then
-        m_frameLog = New LogFile(GetApplicationPath() & "PowerDeviationDetectorLog.txt")
-#End If
+        '#If DEBUG Then
+        '        m_frameLog = New LogFile(GetApplicationPath() & "PowerDeviationDetectorLog.txt")
+        '#End If
 
     End Sub
 
@@ -119,11 +119,11 @@ Public Class CumberlandPowerDeviationCalculator
         Dim bus1VM, bus1VA, bus2VM, bus2VA, marsIM, marsIA, johnIM, johnIA, davdIM, davdIA As IMeasurement
         Dim busVM, busVA, cumbMW As Double
 
-#If DEBUG Then
-        m_publishedFrames += 1
-        LogFrameDetail(frame, index)
-        If m_publishedFrames Mod 300 = 0 Then m_frameLog.Write(Status)
-#End If
+        '#If DEBUG Then
+        '        m_publishedFrames += 1
+        '        LogFrameDetail(frame, index)
+        '        If m_publishedFrames Mod 300 = 0 Then m_frameLog.Write(Status)
+        '#End If
 
         ' Attempt to retrieve all the measurements needed for this calculation from the time-aligned data frame
         With frame.Measurements
@@ -169,10 +169,10 @@ Public Class CumberlandPowerDeviationCalculator
                         End While
                     End With
                 End SyncLock
-#If DEBUG Then
-            Else
-                LogFrameWarning("Not all needed measurements were available to perform calculation")
-#End If
+                '#If DEBUG Then
+                '            Else
+                '                LogFrameWarning("Not all needed measurements were available to perform calculation")
+                '#End If
             End If
         End With
 
@@ -211,38 +211,38 @@ Public Class CumberlandPowerDeviationCalculator
         End Get
     End Property
 
-#If DEBUG Then
+    '#If DEBUG Then
 
-    Private Sub LogFrameDetail(ByVal frame As IFrame, ByVal frameIndex As Integer)
+    '    Private Sub LogFrameDetail(ByVal frame As IFrame, ByVal frameIndex As Integer)
 
-        With m_frameLog
-            ' Received frame to publish
-            .WriteLine("***************************************************************************************")
-            .WriteLine("   Frame Time: " & frame.Timestamp.ToString("HH:mm:ss.fff"))
-            .WriteLine("  Frame Index: " & frameIndex)
-            .WriteLine(" Measurement Detail - " & frame.Measurements.Values.Count & " total:")
+    '        With m_frameLog
+    '            ' Received frame to publish
+    '            .WriteLine("***************************************************************************************")
+    '            .WriteLine("   Frame Time: " & frame.Timestamp.ToString("HH:mm:ss.fff"))
+    '            .WriteLine("  Frame Index: " & frameIndex)
+    '            .WriteLine(" Measurement Detail - " & frame.Measurements.Values.Count & " total:")
 
-            .Write("        Keys: ")
-            For Each measurement As IMeasurement In frame.Measurements.Values
-                .Write(measurement.Key.ToString().PadLeft(10) & " ")
-            Next
-            .WriteLine("")
+    '            .Write("        Keys: ")
+    '            For Each measurement As IMeasurement In frame.Measurements.Values
+    '                .Write(measurement.Key.ToString().PadLeft(10) & " ")
+    '            Next
+    '            .WriteLine("")
 
-            .Write("      Values: ")
-            For Each measurement As IMeasurement In frame.Measurements.Values
-                .Write(measurement.Value.ToString("0.000").PadLeft(10) & " ")
-            Next
-            .WriteLine("")
-        End With
+    '            .Write("      Values: ")
+    '            For Each measurement As IMeasurement In frame.Measurements.Values
+    '                .Write(measurement.Value.ToString("0.000").PadLeft(10) & " ")
+    '            Next
+    '            .WriteLine("")
+    '        End With
 
-    End Sub
+    '    End Sub
 
-    Private Sub LogFrameWarning(ByVal warning As String)
+    '    Private Sub LogFrameWarning(ByVal warning As String)
 
-        m_frameLog.WriteLine("[" & DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") & "] WARNING: " & warning)
+    '        m_frameLog.WriteLine("[" & DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") & "] WARNING: " & warning)
 
-    End Sub
+    '    End Sub
 
-#End If
+    '#End If
 
 End Class

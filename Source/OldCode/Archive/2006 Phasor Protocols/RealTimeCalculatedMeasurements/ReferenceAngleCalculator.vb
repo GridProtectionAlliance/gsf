@@ -42,9 +42,9 @@ Public Class ReferenceAngleCalculator
     Private m_latestCalculatedAngles As List(Of Double)
     Private m_measurements As IMeasurement()
 
-#If DEBUG Then
-    Private m_frameLog As LogFile
-#End If
+    '#If DEBUG Then
+    '    Private m_frameLog As LogFile
+    '#End If
 
     Public Sub New()
 
@@ -52,9 +52,9 @@ Public Class ReferenceAngleCalculator
         m_unwrapOffsets = New Dictionary(Of MeasurementKey, Double)
         m_latestCalculatedAngles = New List(Of Double)
 
-#If DEBUG Then
-        m_frameLog = New LogFile(GetApplicationPath() & "ReferenceAngleLog.txt")
-#End If
+        '#If DEBUG Then
+        '        m_frameLog = New LogFile(GetApplicationPath() & "ReferenceAngleLog.txt")
+        '#End If
 
     End Sub
 
@@ -114,9 +114,9 @@ Public Class ReferenceAngleCalculator
         Dim dataSetChanged As Boolean
         Dim x As Integer
 
-#If DEBUG Then
-        LogFrameDetail(frame, index)
-#End If
+        '#If DEBUG Then
+        '        LogFrameDetail(frame, index)
+        '#End If
 
         ' Attempt to get minimum needed reporting set of composite angles used to calculate reference angle
         If TryGetMinimumNeededMeasurements(frame, m_measurements) Then
@@ -214,10 +214,10 @@ Public Class ReferenceAngleCalculator
             ' We mark quality bad on measurement when we fall back to stack average
             calculatedMeasurement.ValueQualityIsGood = False
 
-#If DEBUG Then
-            'RaiseCalculationException(
-            LogFrameWarning("WARNING: Minimum set of PMU's not available for reference angle calculation - using rolling average")
-#End If
+            '#If DEBUG Then
+            '            'RaiseCalculationException(
+            '            LogFrameWarning("WARNING: Minimum set of PMU's not available for reference angle calculation - using rolling average")
+            '#End If
         End If
 
         ' Slide angle value in range of -179 to +180
@@ -225,9 +225,9 @@ Public Class ReferenceAngleCalculator
         If angleAverage < -179 Then angleAverage += 360
         calculatedMeasurement.Value = angleAverage
 
-#If DEBUG Then
-        LogFrameWarning("Calculated reference angle: " & angleAverage)
-#End If
+        '#If DEBUG Then
+        '        LogFrameWarning("Calculated reference angle: " & angleAverage)
+        '#End If
 
         ' Provide calculated measurement for external consumption
         PublishNewCalculatedMeasurement(calculatedMeasurement)
@@ -245,38 +245,38 @@ Public Class ReferenceAngleCalculator
 
     End Sub
 
-#If DEBUG Then
+    '#If DEBUG Then
 
-    Private Sub LogFrameDetail(ByVal frame As IFrame, ByVal frameIndex As Integer)
+    '    Private Sub LogFrameDetail(ByVal frame As IFrame, ByVal frameIndex As Integer)
 
-        With m_frameLog
-            ' Received frame to publish
-            .WriteLine("***************************************************************************************")
-            .WriteLine("   Frame Time: " & frame.Timestamp.ToString("HH:mm:ss.fff"))
-            .WriteLine("  Frame Index: " & frameIndex)
-            .WriteLine(" Measurement Detail - " & frame.Measurements.Values.Count & " total:")
+    '        With m_frameLog
+    '            ' Received frame to publish
+    '            .WriteLine("***************************************************************************************")
+    '            .WriteLine("   Frame Time: " & frame.Timestamp.ToString("HH:mm:ss.fff"))
+    '            .WriteLine("  Frame Index: " & frameIndex)
+    '            .WriteLine(" Measurement Detail - " & frame.Measurements.Values.Count & " total:")
 
-            .Write("        Keys: ")
-            For Each measurement As IMeasurement In frame.Measurements.Values
-                .Write(measurement.Key.ToString().PadLeft(10) & " ")
-            Next
-            .WriteLine("")
+    '            .Write("        Keys: ")
+    '            For Each measurement As IMeasurement In frame.Measurements.Values
+    '                .Write(measurement.Key.ToString().PadLeft(10) & " ")
+    '            Next
+    '            .WriteLine("")
 
-            .Write("      Values: ")
-            For Each measurement As IMeasurement In frame.Measurements.Values
-                .Write(measurement.Value.ToString("0.000").PadLeft(10) & " ")
-            Next
-            .WriteLine("")
-        End With
+    '            .Write("      Values: ")
+    '            For Each measurement As IMeasurement In frame.Measurements.Values
+    '                .Write(measurement.Value.ToString("0.000").PadLeft(10) & " ")
+    '            Next
+    '            .WriteLine("")
+    '        End With
 
-    End Sub
+    '    End Sub
 
-    Private Sub LogFrameWarning(ByVal warning As String)
+    '    Private Sub LogFrameWarning(ByVal warning As String)
 
-        m_frameLog.WriteLine("[" & DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") & "]: " & warning)
+    '        m_frameLog.WriteLine("[" & DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") & "]: " & warning)
 
-    End Sub
+    '    End Sub
 
-#End If
+    '#End If
 
 End Class

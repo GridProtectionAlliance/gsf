@@ -307,6 +307,10 @@ Module MainModule
                         ' Create new data concentrator
                         Select Case .Item("Type").ToString().Trim.ToUpper()
                             Case "IEEEC37.118"
+                                ' TODO: Load time base and version properties from generic connection parameters
+                                Dim timeBase As Integer = 16777215
+                                Dim version As Byte = 1
+
                                 measurementConcentrator = New IeeeC37_118Concentrator( _
                                         communicationServer, _
                                         .Item("Name").ToString(), _
@@ -317,14 +321,13 @@ Module MainModule
                                         Convert.ToInt32(.Item("NominalFrequency")), _
                                         Convert.ToDouble(.Item("LagTime")), _
                                         Convert.ToDouble(.Item("LeadTime")), _
+                                        timeBase, _
+                                        version, _
                                         m_exceptionLogger)
-
-                                ' TODO: Assign time base and version properties from generic connection parameters
-                                'With DirectCast(measurementConcentrator, IeeeC37_118Concentrator)
-                                '    .TimeBase = 100
-                                '    .Version = 1
-                                'End With
                             Case "BPAPDC"
+                                ' TODO: Load INI file name property from generic connection parameters
+                                Dim iniFileName As String = ""
+
                                 measurementConcentrator = New BpaPdcConcentrator( _
                                     communicationServer, _
                                     .Item("Name").ToString(), _
@@ -336,11 +339,6 @@ Module MainModule
                                     Convert.ToDouble(.Item("LagTime")), _
                                     Convert.ToDouble(.Item("LeadTime")), _
                                     m_exceptionLogger)
-
-                                ' TODO: Assign INI file name property from generic connection parameters
-                                'With DirectCast(measurementConcentrator, BpaPdcConcentrator)
-                                '    .IniFile = ""
-                                'End With
                         End Select
 
                         AddHandler measurementConcentrator.StatusMessage, AddressOf DisplayStatusMessage
@@ -349,7 +347,7 @@ Module MainModule
 
                         measurementConcentrators.Add(measurementConcentrator)
                     Catch ex As Exception
-                        DisplayStatusMessage(String.Format("Failed to load measurement concentrator ""{0}"" due to exception: {2}", .Item("Name").ToString(), ex.Message))
+                        DisplayStatusMessage(String.Format("Failed to load measurement concentrator ""{0}"" due to exception: {1}", .Item("Name").ToString(), ex.Message))
                         m_exceptionLogger.Log(ex)
                     End Try
                 End With

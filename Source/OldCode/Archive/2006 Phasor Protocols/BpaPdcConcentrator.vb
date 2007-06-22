@@ -8,7 +8,7 @@ Public Class BpaPdcConcentrator
     Inherits PhasorDataConcentratorBase
 
     Private m_configurationFrame As BpaPdcStream.ConfigurationFrame
-    Private m_iniFile As String
+    Private m_iniFileName As String
 
     Public Sub New( _
         ByVal communicationServer As ICommunicationServer, _
@@ -20,9 +20,12 @@ Public Class BpaPdcConcentrator
         ByVal nominalFrequency As LineFrequency, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double, _
+        ByVal iniFileName As String, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
         MyBase.New(communicationServer, name, connection, pmuFilterSql, idCode, framesPerSecond, nominalFrequency, lagTime, leadTime, exceptionLogger)
+
+        m_iniFileName = iniFileName
 
     End Sub
 
@@ -80,13 +83,14 @@ Public Class BpaPdcConcentrator
 
     End Function
 
-    Public Property IniFile() As String
+    Public ReadOnly Property IniFileName() As String
         Get
-            Return m_iniFile
+            If m_configurationFrame Is Nothing Then
+                Return m_iniFileName
+            Else
+                Return m_configurationFrame.ConfigurationFileName
+            End If
         End Get
-        Set(ByVal value As String)
-            m_iniFile = value
-        End Set
     End Property
 
 End Class

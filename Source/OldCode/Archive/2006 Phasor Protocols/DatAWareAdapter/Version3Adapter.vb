@@ -23,9 +23,9 @@ Imports System.Net
 Imports TVA.Common
 Imports TVA.Collections.Common
 Imports TVA.Measurements
-Imports TVA.DatAWare.Packets
 Imports TVA.Text.Common
 Imports TVA.Communication
+Imports DatAWare.Packets
 
 Public Class Version3Adapter
 
@@ -66,7 +66,7 @@ Public Class Version3Adapter
 
         If String.IsNullOrEmpty(m_archiverIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener connection to DatAWare Archiver without specifing a host IP")
 
-        m_bufferSize = StandardPacket.Size * m_maximumEvents
+        m_bufferSize = PacketType1.Size * m_maximumEvents
         m_buffer = CreateArray(Of Byte)(m_bufferSize)
 
         ' Attempt to lookup DNS host name for given IP
@@ -125,7 +125,7 @@ Public Class Version3Adapter
                 If totalPoints > 0 Then
                     ' Load binary standard event images into local buffer
                     For x As Integer = 0 To totalPoints - 1
-                        Buffer.BlockCopy((New StandardPacket(archiveMeasurements(x))).BinaryImage, 0, m_buffer, x * StandardPacket.Size, StandardPacket.Size)
+                        Buffer.BlockCopy((New PacketType1(archiveMeasurements(x))).BinaryImage, 0, m_buffer, x * PacketType1.Size, PacketType1.Size)
                     Next
 
                     ' Remove measurements being processed
@@ -134,7 +134,7 @@ Public Class Version3Adapter
             End SyncLock
 
             ' Post data to TCP stream
-            If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * StandardPacket.Size)
+            If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * PacketType1.Size)
         End If
 
     End Sub

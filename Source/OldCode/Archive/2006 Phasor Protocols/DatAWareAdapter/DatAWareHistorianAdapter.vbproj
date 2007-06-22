@@ -34,6 +34,10 @@
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DatAWare, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\DatAWare\Source\DatAWare\bin\Debug\DatAWare.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -44,10 +48,6 @@
     <Reference Include="TVA.Core, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="TVA.DatAWare, Version=2.1.63.53023, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\TVA Code Library\Source\bin\TVA.DatAWare.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

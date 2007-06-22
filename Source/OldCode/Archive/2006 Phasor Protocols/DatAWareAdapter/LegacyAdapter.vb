@@ -22,8 +22,8 @@ Imports System.Net.Sockets
 Imports TVA.Common
 Imports TVA.Collections.Common
 Imports TVA.Measurements
-Imports TVA.DatAWare
 Imports TVA.Text.Common
+Imports DatAWare.Packets
 
 Public Class LegacyAdapter
 
@@ -64,7 +64,7 @@ Public Class LegacyAdapter
 
         If String.IsNullOrEmpty(m_archiverIP) Then Throw New InvalidOperationException("Cannot start TCP stream listener connection to DatAWare Archiver without specifing a host IP")
 
-        m_bufferSize = StandardEvent.BinaryLength * m_maximumEvents
+        m_bufferSize = PacketType1.Size * m_maximumEvents
         m_buffer = CreateArray(Of Byte)(m_bufferSize)
 
     End Sub
@@ -110,8 +110,8 @@ Public Class LegacyAdapter
                 If totalPoints > 0 Then
                     ' Load binary standard event images into local buffer
                     For x = 0 To totalPoints - 1
-                        With New StandardEvent(.Item(x))
-                            System.Buffer.BlockCopy(.BinaryImage, 0, m_buffer, x * StandardEvent.BinaryLength, StandardEvent.BinaryLength)
+                        With New PacketType1(.Item(x))
+                            System.Buffer.BlockCopy(.BinaryImage, 0, m_buffer, x * PacketType1.Size, PacketType1.Size)
                         End With
                     Next
 
@@ -123,7 +123,7 @@ Public Class LegacyAdapter
 
         If totalPoints > 0 Then
             ' Post data to TCP stream
-            m_clientStream.Write(m_buffer, 0, totalPoints * StandardEvent.BinaryLength)
+            m_clientStream.Write(m_buffer, 0, totalPoints * PacketType1.Size)
 
             If m_useTimeout Then
                 Try

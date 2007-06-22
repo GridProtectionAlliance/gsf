@@ -21,12 +21,14 @@ Public Class IeeeC37_118Concentrator
         ByVal nominalFrequency As LineFrequency, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double, _
+        ByVal timeBase As Integer, _
+        ByVal version As Byte, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
         MyBase.New(communicationServer, name, connection, pmuFilterSql, idCode, framesPerSecond, nominalFrequency, lagTime, leadTime, exceptionLogger)
 
-        m_timeBase = 16777215
-        m_version = 1
+        m_timeBase = timeBase
+        m_version = version
 
     End Sub
 
@@ -84,22 +86,16 @@ Public Class IeeeC37_118Concentrator
 
     End Function
 
-    Public Property TimeBase() As Integer
+    Public ReadOnly Property TimeBase() As Integer
         Get
             Return m_timeBase
         End Get
-        Set(ByVal value As Integer)
-            m_timeBase = value
-        End Set
     End Property
 
-    Public Property Version() As Byte
+    Public ReadOnly Property Version() As Byte
         Get
             Return m_version
         End Get
-        Set(ByVal value As Byte)
-            m_version = value
-        End Set
     End Property
 
 End Class

@@ -105,6 +105,30 @@ Public MustInherit Class PhasorDataConcentratorBase
             Next
         End With
 
+        ' Define protocol specific configuration frame - if user doesn't need to broadcast a protocol
+        ' specific configuration frame, they can choose to just return protocol independent configuration
+        m_configurationFrame = CreateNewConfigurationFrame(configurationFrame)
+
+        ' Cache configuration frame for reference
+        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", name, m_configurationFrame.IDCode))
+
+        Try
+            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
+            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
+            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(name), m_configurationFrame.IDCode))
+
+            With New SoapFormatter
+                .AssemblyFormat = FormatterAssemblyStyle.Simple
+                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                .Serialize(configFile, m_configurationFrame)
+            End With
+
+            configFile.Close()
+        Catch ex As Exception
+            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {3}", name, m_configurationFrame.IDCode, ex.Message))
+            m_exceptionLogger.Log(ex)
+        End Try
+
         ' Define measurement to signal cross reference dictionary
         m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
 
@@ -141,30 +165,6 @@ Public MustInherit Class PhasorDataConcentratorBase
     End Sub
 
     Public Sub Start()
-
-        ' Define protocol specific configuration frame - if user doesn't need to broadcast a protocol
-        ' specific configuration frame, they can choose to just return protocol independent configuration
-        m_configurationFrame = CreateNewConfigurationFrame(ConfigurationFrame)
-
-        ' Cache configuration frame for reference
-        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, m_configurationFrame.IDCode))
-
-        Try
-            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
-            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
-            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(Name), m_configurationFrame.IDCode))
-
-            With New SoapFormatter
-                .AssemblyFormat = FormatterAssemblyStyle.Simple
-                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
-                .Serialize(configFile, m_configurationFrame)
-            End With
-
-            configFile.Close()
-        Catch ex As Exception
-            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {3}", Name, m_configurationFrame.IDCode, ex.Message))
-            m_exceptionLogger.Log(ex)
-        End Try
 
         ' Start communications server
         m_communicationServer.Start()

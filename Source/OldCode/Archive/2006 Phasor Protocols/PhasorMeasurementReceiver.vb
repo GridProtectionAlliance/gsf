@@ -387,7 +387,7 @@ Public Class PhasorMeasurementReceiver
                     For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
                         If Not String.IsNullOrEmpty(cell.IDLabel) Then
                             With New StringBuilder
-                                isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
+                                isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_statusInterval, -1, 0)
 
                                 .Append("UPDATE PMUs SET IsReporting=")
                                 .Append(isReporting)
@@ -395,6 +395,7 @@ Public Class PhasorMeasurementReceiver
                                 .Append(DateTime.UtcNow.ToString())
                                 .Append("' WHERE PMUID_Uniq='")
                                 .Append(cell.IDLabel)
+                                .Append("'"c)
 
                                 ExecuteNonQuery(.ToString(), connection)
                             End With
