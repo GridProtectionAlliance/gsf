@@ -1273,7 +1273,7 @@ Namespace Data
                 For i As Integer = 0 To table.Rows().Count() - 1
                     'Convert data table's data to delimited data.
                     For j As Integer = 0 To table.Columns().Count() - 1
-                        .Append(IIf(quoted, """", "") & table.Rows(i)(j) & IIf(quoted, """", ""))
+                        .Append(IIf(quoted, """", "") & table.Rows(i)(j).ToString() & IIf(quoted, """", ""))
 
                         If j < table.Columns.Count() - 1 Then
                             .Append(delimiter)
