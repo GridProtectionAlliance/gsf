@@ -338,6 +338,7 @@ Module MainModule
                                     Convert.ToInt32(.Item("NominalFrequency")), _
                                     Convert.ToDouble(.Item("LagTime")), _
                                     Convert.ToDouble(.Item("LeadTime")), _
+                                    iniFileName, _
                                     m_exceptionLogger)
                         End Select
 

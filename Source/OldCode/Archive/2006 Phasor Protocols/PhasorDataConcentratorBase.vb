@@ -216,6 +216,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         If measurements IsNot Nothing Then
             For x As Integer = 0 To measurements.Count - 1
+                'QueueMeasurementForSorting(measurements(x))
                 SortMeasurement(measurements(x))
             Next
         End If
@@ -226,6 +227,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         If measurements IsNot Nothing Then
             For Each measurement As IMeasurement In measurements.Values
+                'QueueMeasurementForSorting(measurement)
                 SortMeasurement(measurement)
             Next
         End If
@@ -269,9 +271,9 @@ Public MustInherit Class PhasorDataConcentratorBase
             ' Assign value to appropriate cell property based on signal type
             Select Case signalRef.Type
                 Case SignalType.Angle
-                    dataCell.PhasorValues(signalRef.Index - 1).Angle = Convert.ToSingle(measurement.Value)
+                    If dataCell.PhasorValues.Count >= signalRef.Index Then dataCell.PhasorValues(signalRef.Index - 1).Angle = Convert.ToSingle(measurement.Value)
                 Case SignalType.Magnitude
-                    dataCell.PhasorValues(signalRef.Index - 1).Magnitude = Convert.ToSingle(measurement.Value)
+                    If dataCell.PhasorValues.Count >= signalRef.Index Then dataCell.PhasorValues(signalRef.Index - 1).Magnitude = Convert.ToSingle(measurement.Value)
                 Case SignalType.Frequency
                     dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.Value)
                 Case SignalType.dfdt
@@ -279,9 +281,9 @@ Public MustInherit Class PhasorDataConcentratorBase
                 Case SignalType.Status
                     dataCell.CommonStatusFlags = Convert.ToInt32(measurement.Value)
                 Case SignalType.Digital
-                    dataCell.DigitalValues(signalRef.Index - 1).Value = Convert.ToInt16(measurement.Value)
+                    If dataCell.DigitalValues.Count >= signalRef.Index Then dataCell.DigitalValues(signalRef.Index - 1).Value = Convert.ToInt16(measurement.Value)
                 Case SignalType.Analog
-                    dataCell.AnalogValues(signalRef.Index - 1).Value = Convert.ToSingle(measurement.Value)
+                    If dataCell.AnalogValues.Count >= signalRef.Index Then dataCell.AnalogValues(signalRef.Index - 1).Value = Convert.ToSingle(measurement.Value)
             End Select
         End If
 
