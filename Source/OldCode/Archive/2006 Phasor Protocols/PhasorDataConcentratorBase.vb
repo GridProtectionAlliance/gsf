@@ -1,6 +1,6 @@
 Imports System.IO
 Imports System.Text
-Imports System.Data.SqlClient
+Imports System.Data.OleDb
 Imports System.Runtime.Serialization.Formatters
 Imports System.Runtime.Serialization.Formatters.Soap
 Imports TVA.Measurements
@@ -21,6 +21,7 @@ Public MustInherit Class PhasorDataConcentratorBase
     Public Event StatusMessage(ByVal status As String)
 
     Private WithEvents m_communicationServer As ICommunicationServer
+    Private m_name As String
     Private m_configurationFrame As IConfigurationFrame
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
     Private m_publishDescriptor As Boolean
@@ -29,7 +30,8 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Protected Sub New( _
         ByVal communicationServer As ICommunicationServer, _
-        ByVal connection As SqlConnection, _
+        ByVal name As String, _
+        ByVal connection As OleDbConnection, _
         ByVal pmuFilterSql As String, _
         ByVal idCode As UInt16, _
         ByVal framesPerSecond As Integer, _
@@ -46,6 +48,12 @@ Public MustInherit Class PhasorDataConcentratorBase
         m_communicationServer = communicationServer
         m_exceptionLogger = exceptionLogger
         m_publishDescriptor = True
+
+        If String.IsNullOrEmpty(name) Then
+            m_name = Me.GetType().Name
+        Else
+            m_name = name
+        End If
 
         ' Define protocol independent configuration frame based on PMU filter expression
         Dim configurationFrame As New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, framesPerSecond)
@@ -65,20 +73,22 @@ Public MustInherit Class PhasorDataConcentratorBase
                     'cell.PhasorCoordinateFormat = CoordinateFormat.Polar
                     'cell.FrequencyDataFormat = DataFormat.FloatingPoint
 
-                    'cell.IDLabel = .Item("Acronym").ToString()
-                    cell.IDLabel = .Item("PMUID_Uniq").ToString()
+                    'cell.IDLabel = TruncateRight(.Item("Acronym").ToString(), cell.IDLabelLength)
+                    cell.IDLabel = TruncateRight(.Item("PMUID_Uniq").ToString(), cell.IDLabelLength)
 
-                    'cell.StationName = .Item("Name").ToString()
-                    cell.StationName = .Item("PMUName").ToString()
+                    'cell.StationName = TruncateRight(.Item("Name").ToString(), cell.MaximumStationNameLength)
+                    cell.StationName = TruncateRight(.Item("PMUName").ToString(), cell.MaximumStationNameLength)
 
                     ' Load all phasors as defined in the database
                     'With RetrieveData(String.Format("SELECT Label, Type FROM Phasor WHERE ID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows
                     With RetrieveData(String.Format("SELECT Label, Type FROM Phasors WHERE PMUID='{0}' ORDER BY PhasorIndex", cell.IDLabel), connection).Rows
                         For y As Integer = 0 To .Count - 1
-                            cell.PhasorDefinitions.Add( _
-                                New PhasorDefinition(cell, y, .Item("Label").ToString(), 1, 0.0F, _
-                                IIf(.Item("Type").ToString().StartsWith("V", StringComparison.OrdinalIgnoreCase), _
-                                PhasorType.Voltage, PhasorType.Current), Nothing))
+                            With .Item(y)
+                                cell.PhasorDefinitions.Add( _
+                                    New PhasorDefinition(cell, y, TruncateRight(.Item("Label").ToString(), cell.MaximumStationNameLength), _
+                                    1, 0.0F, IIf(.Item("Type").ToString().StartsWith("V", StringComparison.OrdinalIgnoreCase), _
+                                    PhasorType.Voltage, PhasorType.Current), Nothing))
+                            End With
                         Next
                     End With
 
@@ -95,56 +105,28 @@ Public MustInherit Class PhasorDataConcentratorBase
             Next
         End With
 
-        ' Define protocol specific configuration frame - if user doesn't need to broadcast a protocol
-        ' specific configuration frame, they can choose to just return protocol independent configuration
-        m_configurationFrame = CreateNewConfigurationFrame(configurationFrame)
-
-        ' Cache configuration frame for reference
-        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, idCode))
-
-        Try
-            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
-            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
-            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(Name), idCode))
-
-            With New SoapFormatter
-                .AssemblyFormat = FormatterAssemblyStyle.Simple
-                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
-                .Serialize(configFile, m_configurationFrame)
-            End With
-
-            configFile.Close()
-        Catch ex As Exception
-            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {3}", Name, idCode, ex.Message))
-            m_exceptionLogger.Log(ex)
-        End Try
-
         ' Define measurement to signal cross reference dictionary
         m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
 
         ' Initialize measurement list for each pmu keyed on the signal reference field
-        With RetrieveData("SELECT * FROM ActiveMeasurements", connection).Rows
+        With RetrieveData("SELECT * FROM ActiveDeviceMeasurements", connection).Rows
             For x As Integer = 0 To .Count - 1
-                signal = New SignalReference(.Item("SignalReference").ToString())
+                With .Item(x)
+                    signal = New SignalReference(.Item("SignalReference").ToString())
 
-                ' Lookup cell index by acronym. Doing this work upfront will save a huge amount
-                ' of work during primary measurement sorting
-                If Not idLabelCellIndex.TryGetValue(signal.PmuAcronym, signal.PmuCellIndex) Then
-                    ' We cache these indicies locally to speed up initialization - we'll be
-                    ' requesting these indexes for the same PMU's over and over
-                    signal.PmuCellIndex = m_configurationFrame.Cells.IndexOfIDLabel(signal.PmuAcronym)
-                    idLabelCellIndex.Add(signal.PmuAcronym, signal.PmuCellIndex)
-                End If
+                    ' Lookup cell index by acronym. Doing this work upfront will save a huge amount
+                    ' of work during primary measurement sorting
+                    If Not idLabelCellIndex.TryGetValue(signal.Acronym, signal.CellIndex) Then
+                        ' We cache these indicies locally to speed up initialization - we'll be
+                        ' requesting these indexes for the same PMU's over and over
+                        signal.CellIndex = m_configurationFrame.Cells.IndexOfIDLabel(signal.Acronym)
+                        idLabelCellIndex.Add(signal.Acronym, signal.CellIndex)
+                    End If
 
-                m_signalReferences.Add(New MeasurementKey(Convert.ToInt32(.Item("PointID")), .Item("Historian").ToString()), signal)
+                    m_signalReferences.Add(New MeasurementKey(Convert.ToInt32(.Item("PointID")), .Item("Historian").ToString()), signal)
+                End With
             Next
         End With
-
-        ' Start communications server
-        m_communicationServer.Start()
-
-        ' Start concentrator
-        Me.Enabled = True
 
     End Sub
 
@@ -158,6 +140,40 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
+    Public Sub Start()
+
+        ' Define protocol specific configuration frame - if user doesn't need to broadcast a protocol
+        ' specific configuration frame, they can choose to just return protocol independent configuration
+        m_configurationFrame = CreateNewConfigurationFrame(ConfigurationFrame)
+
+        ' Cache configuration frame for reference
+        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, m_configurationFrame.IDCode))
+
+        Try
+            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
+            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
+            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(Name), m_configurationFrame.IDCode))
+
+            With New SoapFormatter
+                .AssemblyFormat = FormatterAssemblyStyle.Simple
+                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                .Serialize(configFile, m_configurationFrame)
+            End With
+
+            configFile.Close()
+        Catch ex As Exception
+            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {3}", Name, m_configurationFrame.IDCode, ex.Message))
+            m_exceptionLogger.Log(ex)
+        End Try
+
+        ' Start communications server
+        m_communicationServer.Start()
+
+        ' Start concentrator
+        Me.Enabled = True
+
+    End Sub
+
     Public ReadOnly Property ConfigurationFrame() As IConfigurationFrame
         Get
             Return m_configurationFrame
@@ -166,7 +182,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Public Overridable ReadOnly Property Name() As String Implements TVA.Services.IServiceComponent.Name
         Get
-            Return Me.GetType().Name
+            Return m_name
         End Get
     End Property
 
@@ -195,6 +211,26 @@ Public MustInherit Class PhasorDataConcentratorBase
             m_publishDescriptor = value
         End Set
     End Property
+
+    Public Overridable Sub SortMeasurements(ByVal measurements As IList(Of IMeasurement))
+
+        If measurements IsNot Nothing Then
+            For x As Integer = 0 To measurements.Count - 1
+                SortMeasurement(measurements(x))
+            Next
+        End If
+
+    End Sub
+
+    Public Overridable Sub SortMeasurements(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
+
+        If measurements IsNot Nothing Then
+            For Each measurement As IMeasurement In measurements.Values
+                SortMeasurement(measurement)
+            Next
+        End If
+
+    End Sub
 
     Protected ReadOnly Property CommunicationServer() As ICommunicationServer
         Get
@@ -226,16 +262,16 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim signalRef As SignalReference
 
         ' Look up signal reference from measurement key
-        If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.PmuCellIndex > -1 Then
+        If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.CellIndex > -1 Then
             ' Get associated data cell
-            Dim dataCell As IDataCell = DirectCast(frame, IDataFrame).Cells(signalRef.PmuCellIndex)
+            Dim dataCell As IDataCell = DirectCast(frame, IDataFrame).Cells(signalRef.CellIndex)
 
             ' Assign value to appropriate cell property based on signal type
-            Select Case signalRef.SignalType
+            Select Case signalRef.Type
                 Case SignalType.Angle
-                    dataCell.PhasorValues(signalRef.SignalIndex - 1).Angle = Convert.ToSingle(measurement.Value)
+                    dataCell.PhasorValues(signalRef.Index - 1).Angle = Convert.ToSingle(measurement.Value)
                 Case SignalType.Magnitude
-                    dataCell.PhasorValues(signalRef.SignalIndex - 1).Magnitude = Convert.ToSingle(measurement.Value)
+                    dataCell.PhasorValues(signalRef.Index - 1).Magnitude = Convert.ToSingle(measurement.Value)
                 Case SignalType.Frequency
                     dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.Value)
                 Case SignalType.dfdt
@@ -243,9 +279,9 @@ Public MustInherit Class PhasorDataConcentratorBase
                 Case SignalType.Status
                     dataCell.CommonStatusFlags = Convert.ToInt32(measurement.Value)
                 Case SignalType.Digital
-                    dataCell.DigitalValues(signalRef.SignalIndex - 1).Value = Convert.ToInt16(measurement.Value)
+                    dataCell.DigitalValues(signalRef.Index - 1).Value = Convert.ToInt16(measurement.Value)
                 Case SignalType.Analog
-                    dataCell.AnalogValues(signalRef.SignalIndex - 1).Value = Convert.ToSingle(measurement.Value)
+                    dataCell.AnalogValues(signalRef.Index - 1).Value = Convert.ToSingle(measurement.Value)
             End Select
         End If
 

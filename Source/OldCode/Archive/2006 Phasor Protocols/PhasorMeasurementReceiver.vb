@@ -16,7 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports System.Data.SqlClient
+Imports System.Data.OleDb
 Imports TVA.Common
 Imports TVA.DateTime.Common
 Imports TVA.Data.Common
@@ -39,7 +39,6 @@ Public Class PhasorMeasurementReceiver
     Private m_connectionString As String
     Private m_dataLossInterval As Integer
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
-    Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
@@ -50,7 +49,6 @@ Public Class PhasorMeasurementReceiver
         ByVal statusInterval As Integer, _
         ByVal connectionString As String, _
         ByVal dataLossInterval As Integer, _
-        ByVal calculatedMeasurements As ICalculatedMeasurementAdapter(), _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
         m_historianAdapter = historianAdapter
@@ -58,7 +56,6 @@ Public Class PhasorMeasurementReceiver
         m_statusInterval = statusInterval
         m_connectionString = connectionString
         m_dataLossInterval = dataLossInterval
-        m_calculatedMeasurements = calculatedMeasurements
         m_exceptionLogger = exceptionLogger
         m_reportingStatus = New Timers.Timer
 
@@ -94,7 +91,7 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Public Sub Initialize(ByVal connection As SqlConnection)
+    Public Sub Initialize(ByVal connection As OleDbConnection)
 
         ' Disconnect archiver and all phasor measurement mappers...
         Disconnect()
@@ -365,13 +362,6 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
 
-        ' Provide parsed measurements "directly" to all calculated measurement modules
-        If m_calculatedMeasurements IsNot Nothing Then
-            For x As Integer = 0 To m_calculatedMeasurements.Length - 1
-                m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
-            Next
-        End If
-
         ' Queue all of the measurements up for archival
         m_historianAdapter.QueueMeasurementsForArchival(measurements)
 
@@ -383,34 +373,34 @@ Public Class PhasorMeasurementReceiver
     Private Sub m_reportingStatus_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_reportingStatus.Elapsed
 
         If Not m_intializing Then
-            Dim connection As New SqlConnection(m_connectionString)
+            Dim connection As New OleDbConnection(m_connectionString)
 
             Try
-                Dim updateSqlBatch As New StringBuilder
                 Dim isReporting As Integer
 
-                connection = New SqlConnection(m_connectionString)
+                connection = New OleDbConnection(m_connectionString)
                 connection.Open()
 
                 ' Check all PMU's for "reporting status"...
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                    ' Update reporting status for each PMU
                     For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
                         If Not String.IsNullOrEmpty(cell.IDLabel) Then
-                            isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
-                            updateSqlBatch.Append("UPDATE PMUs SET IsReporting=")
-                            updateSqlBatch.Append(isReporting)
-                            updateSqlBatch.Append(", ReportTime='")
-                            updateSqlBatch.Append(DateTime.UtcNow.ToString())
-                            updateSqlBatch.Append("' WHERE PMUID_Uniq='")
-                            updateSqlBatch.Append(cell.IDLabel)
-                            updateSqlBatch.Append("'; ")
-                            updateSqlBatch.Append(Environment.NewLine)
+                            With New StringBuilder
+                                isReporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_statusInterval, 1, 0)
+
+                                .Append("UPDATE PMUs SET IsReporting=")
+                                .Append(isReporting)
+                                .Append(", ReportTime='")
+                                .Append(DateTime.UtcNow.ToString())
+                                .Append("' WHERE PMUID_Uniq='")
+                                .Append(cell.IDLabel)
+
+                                ExecuteNonQuery(.ToString(), connection)
+                            End With
                         End If
                     Next
                 Next
-
-                ' Update reporting status for each PMU
-                ExecuteNonQuery(updateSqlBatch.ToString(), connection)
             Catch ex As Exception
                 UpdateStatus(String.Format("[{0}] ERROR: Failed to update PMU reporting status due to exception: {1}", DateTime.Now, ex.Message))
                 m_exceptionLogger.Log(ex)

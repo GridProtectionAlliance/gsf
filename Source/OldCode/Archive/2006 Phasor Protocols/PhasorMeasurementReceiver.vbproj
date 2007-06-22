@@ -62,6 +62,7 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BpaPdcConcentrator.vb" />
     <Compile Include="Enumerations.vb" />
     <Compile Include="IEEEC37.118Concentrator.vb" />
     <Compile Include="PhasorDataConcentratorBase.vb" />

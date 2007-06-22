@@ -17,11 +17,13 @@
 
 Imports System.Text
 Imports System.Security.Principal
-Imports System.Data.SqlClient
+Imports System.Data.OleDb
 Imports System.Threading
 Imports System.Reflection
-Imports TVA.Assembly
 Imports TVA.IO
+Imports TVA.Assembly
+Imports TVA.Communication
+Imports TVA.Communication.Common
 Imports TVA.Configuration.Common
 Imports TVA.Text.Common
 Imports TVA.Data.Common
@@ -34,9 +36,10 @@ Imports PhasorProtocols
 
 Module MainModule
 
-    Private Delegate Sub InitializationFunctionSignature(ByVal connection As SqlConnection)
+    Private Delegate Sub InitializationFunctionSignature(ByVal connection As OleDbConnection)
 
     Private m_measurementReceivers As Dictionary(Of String, PhasorMeasurementReceiver)
+    Private m_measurementConcentrators As PhasorDataConcentratorBase()
     Private m_calculatedMeasurements As ICalculatedMeasurementAdapter()
     Private m_messageDisplayTimepan As Integer
     Private m_maximumMessagesToDisplay As Integer
@@ -47,9 +50,6 @@ Module MainModule
     Private m_statusMessageQueue As ProcessQueue(Of String)
     Private m_exceptionLogger As GlobalExceptionLogger
 
-    ' TODO: Make this an array of concentrators loaded from database
-    Private m_concentrator As IeeeC37_118Concentrator
-
     Public Sub Main()
 
         Dim consoleLine As String
@@ -59,7 +59,9 @@ Module MainModule
         Console.WriteLine(MonitorInformation)
 
         ' Make sure service settings exist
-        Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
+        'Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
+        'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoextsql;Initial Catalog=PMU_SDS;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
+        Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PMU_SDS.mdb", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
@@ -72,7 +74,8 @@ Module MainModule
         m_exceptionLogger = New GlobalExceptionLogger()
         m_exceptionLogger.LogToFile = True
         m_exceptionLogger.PersistSettings = True
-        m_exceptionLogger.Register()
+        m_exceptionLogger.AutoRegister = True
+        m_exceptionLogger.EndInit()
 
         m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 10, Timeout.Infinite, False, False)
         m_statusMessageQueue.Start()
@@ -110,8 +113,12 @@ Module MainModule
                         .Append(receiver.Status)
                     Next
 
-                    For x As Integer = 0 To m_calculatedMeasurements.Length - 1
-                        .Append(m_calculatedMeasurements(x).Status)
+                    For Each calculation As ICalculatedMeasurementAdapter In m_calculatedMeasurements
+                        .Append(calculation.Status)
+                    Next
+
+                    For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
+                        .Append(concentrator.Status)
                     Next
 
                     .Append(Environment.NewLine)
@@ -140,7 +147,9 @@ Module MainModule
         ' Attempt an orderly shutdown...
 
         ' Stop data concentrators
-        m_concentrator.Dispose()
+        For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
+            concentrator.Dispose()
+        Next
 
         ' Stop data measurement receivers
         For Each receiver In m_measurementReceivers.Values
@@ -153,10 +162,10 @@ Module MainModule
 
     Private Sub InitializeConfiguration(ByVal initializationFunction As InitializationFunctionSignature)
 
-        Dim connection As SqlConnection
+        Dim connection As OleDbConnection
 
         Try
-            connection = New SqlConnection(StringSetting("PMUDatabase"))
+            connection = New OleDbConnection(StringSetting("PMUDatabase"))
             connection.Open()
 
             ' To make sure any initialization messages don't get missed, we increase message
@@ -184,7 +193,7 @@ Module MainModule
 
     End Sub
 
-    Private Sub InitializeSystem(ByVal connection As SqlConnection)
+    Private Sub InitializeSystem(ByVal connection As OleDbConnection)
 
         ' If calculated measurements are already defined (i.e., we are "re-initializing" code), we need to dispose
         ' existing calculation instances such that all items can be shut-down in an orderly fashion
@@ -208,18 +217,20 @@ Module MainModule
         ' Load the phasor measurement receivers (one per each established archive)
         m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
 
-        ' TODO: Change this to load concentrators from database
-        Dim commServer As New TVA.Communication.UdpServer()
+        ' If the phasor measurement concentrators are already defined we must be reloading - so we attempt
+        ' an orderly shutdown
+        If m_measurementConcentrators IsNot Nothing Then
+            For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
+                concentrator.Dispose()
+            Next
+        End If
 
-        commServer.Handshake = False
-        commServer.PayloadAware = False
-        commServer.ConfigurationString = "clients=152.85.102.99:3060"
-
-        m_concentrator = New IeeeC37_118Concentrator(commServer, connection, Nothing, 235, 30, LineFrequency.Hz60, 2, 1, 100000, 1, m_exceptionLogger)
+        ' Load the phasor measurement concentrators
+        m_measurementConcentrators = LoadMeasurementConcentrators(connection)
 
     End Sub
 
-    Private Sub ReinitializeReceivers(ByVal connection As SqlConnection)
+    Private Sub ReinitializeReceivers(ByVal connection As OleDbConnection)
 
         ' This reloads active data nodes and reconnects
         For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
@@ -228,7 +239,7 @@ Module MainModule
 
     End Sub
 
-    Private Function LoadMeasurementReceivers(ByVal connection As SqlConnection, ByVal pmuStatusInterval As Integer, ByVal dataLossInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
+    Private Function LoadMeasurementReceivers(ByVal connection As OleDbConnection, ByVal pmuStatusInterval As Integer, ByVal dataLossInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
 
         Dim measurementReceivers As New Dictionary(Of String, PhasorMeasurementReceiver)
         Dim measurementReceiver As PhasorMeasurementReceiver
@@ -239,34 +250,35 @@ Module MainModule
         Dim archiveSource As String
 
         'With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection)
-        With RetrieveData("SELECT * FROM MeasurementArchives WHERE Enabled != 0", connection)
-            For x As Integer = 0 To .Rows.Count - 1
+        With RetrieveData("SELECT * FROM MeasurementArchives WHERE Enabled <> 0", connection).Rows
+            For x As Integer = 0 To .Count - 1
                 Try
-                    'archiveSource = .Rows(x)("Acronym").ToString()
-                    archiveSource = .Rows(x)("ArchiveSource").ToString()
-                    externalAssemblyName = .Rows(x)("AssemblyName").ToString()
+                    With .Item(x)
+                        'archiveSource = .Item("Acronym").ToString()
+                        archiveSource = .Item("ArchiveSource").ToString()
+                        externalAssemblyName = .Item("AssemblyName").ToString()
 
-                    ' Load the external assembly for the historian adapter
-                    externalAssembly = Assembly.LoadFrom(externalAssemblyName)
+                        ' Load the external assembly for the historian adapter
+                        externalAssembly = Assembly.LoadFrom(externalAssemblyName)
 
-                    ' Create a new instance of the historian adpater
-                    historianAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
-                    historianAdapter.Initialize(.Rows(x)("ConnectionString").ToString())
+                        ' Create a new instance of the historian adpater
+                        historianAdapter = Activator.CreateInstance(externalAssembly.GetType(.Item("TypeName").ToString()))
+                        historianAdapter.Initialize(.Item("ConnectionString").ToString())
 
-                    measurementReceiver = New PhasorMeasurementReceiver( _
-                        historianAdapter, _
-                        archiveSource, _
-                        pmuStatusInterval, _
-                        connectionString, _
-                        dataLossInterval, _
-                        calculatedMeasurements, _
-                        m_exceptionLogger)
+                        measurementReceiver = New PhasorMeasurementReceiver( _
+                            historianAdapter, _
+                            archiveSource, _
+                            pmuStatusInterval, _
+                            connectionString, _
+                            dataLossInterval, _
+                            m_exceptionLogger)
 
-                    AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
-                    AddHandler measurementReceiver.NewMeasurements, AddressOf NewParsedMeasurements
-                    If .Rows(x)("InitializeOnStartup") <> 0 Then measurementReceiver.Initialize(connection)
+                        AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
+                        AddHandler measurementReceiver.NewMeasurements, AddressOf NewParsedMeasurements
+                        If .Item("InitializeOnStartup") <> 0 Then measurementReceiver.Initialize(connection)
 
-                    measurementReceivers.Add(archiveSource, measurementReceiver)
+                        measurementReceivers.Add(archiveSource, measurementReceiver)
+                    End With
                 Catch ex As Exception
                     DisplayStatusMessage(String.Format("Failed to load measurement receiver for archive ""{0}"" from assembly ""{1}"" due to exception: {2}", archiveSource, externalAssemblyName, ex.Message))
                     m_exceptionLogger.Log(ex)
@@ -278,7 +290,77 @@ Module MainModule
 
     End Function
 
-    Private Function DefineCalculatedMeasurements(ByVal connection As SqlConnection) As ICalculatedMeasurementAdapter()
+    Private Function LoadMeasurementConcentrators(ByVal connection As OleDbConnection) As PhasorDataConcentratorBase()
+
+        Dim measurementConcentrators As New List(Of PhasorDataConcentratorBase)
+        Dim measurementConcentrator As PhasorDataConcentratorBase
+        Dim communicationServer As ICommunicationServer
+
+        With RetrieveData("SELECT * FROM Concentrator WHERE Enabled <> 0", connection).Rows
+            For x As Integer = 0 To .Count - 1
+                With .Item(x)
+                    Try
+                        ' Create communications server for concentrator
+                        communicationServer = CreateCommunicationServer(.Item("ConnectionString").ToString())
+                        communicationServer.Handshake = False
+
+                        ' Create new data concentrator
+                        Select Case .Item("Type").ToString().Trim.ToUpper()
+                            Case "IEEEC37.118"
+                                measurementConcentrator = New IeeeC37_118Concentrator( _
+                                        communicationServer, _
+                                        .Item("Name").ToString(), _
+                                        connection, _
+                                        .Item("PmuFilterSql").ToString(), _
+                                        Convert.ToUInt16(.Item("IDCode")), _
+                                        Convert.ToInt32(.Item("FrameRate")), _
+                                        Convert.ToInt32(.Item("NominalFrequency")), _
+                                        Convert.ToDouble(.Item("LagTime")), _
+                                        Convert.ToDouble(.Item("LeadTime")), _
+                                        m_exceptionLogger)
+
+                                ' TODO: Assign time base and version properties from generic connection parameters
+                                'With DirectCast(measurementConcentrator, IeeeC37_118Concentrator)
+                                '    .TimeBase = 100
+                                '    .Version = 1
+                                'End With
+                            Case "BPAPDC"
+                                measurementConcentrator = New BpaPdcConcentrator( _
+                                    communicationServer, _
+                                    .Item("Name").ToString(), _
+                                    connection, _
+                                    .Item("PmuFilterSql").ToString(), _
+                                    Convert.ToUInt16(.Item("IDCode")), _
+                                    Convert.ToInt32(.Item("FrameRate")), _
+                                    Convert.ToInt32(.Item("NominalFrequency")), _
+                                    Convert.ToDouble(.Item("LagTime")), _
+                                    Convert.ToDouble(.Item("LeadTime")), _
+                                    m_exceptionLogger)
+
+                                ' TODO: Assign INI file name property from generic connection parameters
+                                'With DirectCast(measurementConcentrator, BpaPdcConcentrator)
+                                '    .IniFile = ""
+                                'End With
+                        End Select
+
+                        AddHandler measurementConcentrator.StatusMessage, AddressOf DisplayStatusMessage
+
+                        measurementConcentrator.Start()
+
+                        measurementConcentrators.Add(measurementConcentrator)
+                    Catch ex As Exception
+                        DisplayStatusMessage(String.Format("Failed to load measurement concentrator ""{0}"" due to exception: {2}", .Item("Name").ToString(), ex.Message))
+                        m_exceptionLogger.Log(ex)
+                    End Try
+                End With
+            Next
+        End With
+
+        Return measurementConcentrators.ToArray()
+
+    End Function
+
+    Private Function DefineCalculatedMeasurements(ByVal connection As OleDbConnection) As ICalculatedMeasurementAdapter()
 
         Dim calculatedMeasurementAdapters As New List(Of ICalculatedMeasurementAdapter)
         Dim calculatedMeasurementAdapter As ICalculatedMeasurementAdapter
@@ -305,77 +387,77 @@ Module MainModule
 
         ' Load all the unique calculated measurement assemlies into the current application domain
         'With RetrieveData("SELECT * FROM CalculatedMeasurement WHERE Enabled <> 0", connection)
-        With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled != 0", connection)
-            For x As Integer = 0 To .Rows.Count - 1
+        With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled <> 0", connection).Rows
+            For x As Integer = 0 To .Count - 1
                 Try
-                    ' Load the external assembly
-                    calculatedMeasurementName = .Rows(x)("Name").ToString()
-                    externalAssemblyName = .Rows(x)("AssemblyName").ToString()
-                    externalAssembly = Assembly.LoadFrom(externalAssemblyName)
+                    With .Item(x)
+                        ' Load the external assembly
+                        calculatedMeasurementName = .Item("Name").ToString()
+                        externalAssemblyName = .Item("AssemblyName").ToString()
+                        externalAssembly = Assembly.LoadFrom(externalAssemblyName)
 
-                    ' Query the output measurements
-                    outputMeasurementsSql = .Rows(x)("OutputMeasurementsSql").ToString()
-                    outputMeasurements = New List(Of IMeasurement)
+                        ' Query the output measurements
+                        outputMeasurementsSql = .Item("OutputMeasurementsSql").ToString()
+                        outputMeasurements = New List(Of IMeasurement)
 
-                    ' Calculated measurements have the option of internally defining the output measurements
-                    If Not String.IsNullOrEmpty(outputMeasurementsSql) Then
+                        ' Calculated measurements have the option of internally defining the output measurements
+                        If Not String.IsNullOrEmpty(outputMeasurementsSql) Then
+                            Try
+                                With RetrieveData(outputMeasurementsSql, connection).Rows
+                                    For y As Integer = 0 To .Count - 1
+                                        With .Item(y)
+                                            outputMeasurements.Add( _
+                                                New Measurement( _
+                                                    Convert.ToInt32(.Item("MeasurementID")), _
+                                                    .Item("ArchiveSource").ToString(), _
+                                                    Double.NaN, _
+                                                    Convert.ToDouble(.Item("Adder")), _
+                                                    Convert.ToDouble(.Item("Multiplier"))))
+                                        End With
+                                    Next
+                                End With
+                            Catch ex As Exception
+                                DisplayStatusMessage(String.Format("Failed to load output measurement for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
+                                m_exceptionLogger.Log(ex)
+                            End Try
+                        End If
+
+                        ' Query the input measurement keys
+                        inputMeasurementsSql = .Item("InputMeasurementsSql").ToString()
+                        inputMeasurementKeys = New List(Of MeasurementKey)
+
+                        ' Calculated measurements have the option of internally defining the input measurements
+                        If Not String.IsNullOrEmpty(inputMeasurementsSql) Then
+                            Try
+                                With RetrieveData(inputMeasurementsSql, connection)
+                                    For y As Integer = 0 To .Rows.Count - 1
+                                        With .Rows(y)
+                                            inputMeasurementKeys.Add( _
+                                                New MeasurementKey( _
+                                                    Convert.ToInt32(.Item("MeasurementID")), _
+                                                    .Item("ArchiveSource").ToString()))
+                                        End With
+                                    Next
+                                End With
+                            Catch ex As Exception
+                                DisplayStatusMessage(String.Format("Failed to load input measurements for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
+                                m_exceptionLogger.Log(ex)
+                            End Try
+                        End If
+
+                        calculatedMeasurementAdapter = Nothing
+
+                        ' Load the specified type from the assembly
                         Try
-                            With RetrieveData(outputMeasurementsSql, connection)
-                                For y As Integer = 0 To .Rows.Count - 1
-                                    With .Rows(y)
-                                        outputMeasurements.Add( _
-                                            New Measurement( _
-                                                Convert.ToInt32(.Item("MeasurementID")), _
-                                                .Item("ArchiveSource").ToString(), _
-                                                Double.NaN, _
-                                                Convert.ToDouble(.Item("Adder")), _
-                                                Convert.ToDouble(.Item("Multiplier"))))
-                                    End With
-                                Next
-                            End With
+                            ' Create a new instance of the adpater
+                            calculatedMeasurementAdapter = Activator.CreateInstance(externalAssembly.GetType(.Item("TypeName").ToString()))
                         Catch ex As Exception
-                            DisplayStatusMessage(String.Format("Failed to load output measurement for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
+                            DisplayStatusMessage(String.Format("Failed to load type ""{0}"" from assembly ""{1}"" for ""{2}"" due to exception: {3}", .Item("TypeName").ToString(), externalAssemblyName, calculatedMeasurementName, ex.Message))
                             m_exceptionLogger.Log(ex)
                         End Try
-                    End If
 
-                    ' Query the input measurement keys
-                    inputMeasurementsSql = .Rows(x)("InputMeasurementsSql").ToString()
-                    inputMeasurementKeys = New List(Of MeasurementKey)
-
-                    ' Calculated measurements have the option of internally defining the input measurements
-                    If Not String.IsNullOrEmpty(inputMeasurementsSql) Then
-                        Try
-                            With RetrieveData(inputMeasurementsSql, connection)
-                                For y As Integer = 0 To .Rows.Count - 1
-                                    With .Rows(y)
-                                        inputMeasurementKeys.Add( _
-                                            New MeasurementKey( _
-                                                Convert.ToInt32(.Item("MeasurementID")), _
-                                                .Item("ArchiveSource").ToString()))
-                                    End With
-                                Next
-                            End With
-                        Catch ex As Exception
-                            DisplayStatusMessage(String.Format("Failed to load input measurements for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
-                            m_exceptionLogger.Log(ex)
-                        End Try
-                    End If
-
-                    calculatedMeasurementAdapter = Nothing
-
-                    ' Load the specified type from the assembly
-                    Try
-                        ' Create a new instance of the adpater
-                        calculatedMeasurementAdapter = Activator.CreateInstance(externalAssembly.GetType(.Rows(x)("TypeName").ToString()))
-                    Catch ex As Exception
-                        DisplayStatusMessage(String.Format("Failed to load type ""{0}"" from assembly ""{1}"" for ""{2}"" due to exception: {3}", .Rows(x)("TypeName"), externalAssemblyName, calculatedMeasurementName, ex.Message))
-                        m_exceptionLogger.Log(ex)
-                    End Try
-
-                    If calculatedMeasurementAdapter IsNot Nothing Then
-                        ' Intialize calculated measurement adapter
-                        With .Rows(x)
+                        If calculatedMeasurementAdapter IsNot Nothing Then
+                            ' Intialize calculated measurement adapter
                             calculatedMeasurementAdapter.Initialize( _
                                 .Item("Name").ToString(), _
                                 .Item("ConfigSection").ToString(), _
@@ -385,24 +467,24 @@ Module MainModule
                                 Convert.ToInt32(.Item("ExpectedFrameRate")), _
                                 Convert.ToDouble(.Item("LagTime")), _
                                 Convert.ToDouble(.Item("LeadTime")))
-                        End With
 
-                        With calculatedMeasurementAdapter
-                            ' Bubble calculation module status messages out to local update status function
-                            AddHandler .StatusMessage, AddressOf DisplayStatusMessage
+                            With calculatedMeasurementAdapter
+                                ' Bubble calculation module status messages out to local update status function
+                                AddHandler .StatusMessage, AddressOf DisplayStatusMessage
 
-                            ' Bubble newly calculated measurement out to functions that need the real-time data
-                            AddHandler .NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
+                                ' Bubble newly calculated measurement out to functions that need the real-time data
+                                AddHandler .NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
 
-                            ' Bubble calculation exceptions out to procedure that can handle these exceptions
-                            AddHandler .CalculationException, AddressOf CalculationException
-                        End With
+                                ' Bubble calculation exceptions out to procedure that can handle these exceptions
+                                AddHandler .CalculationException, AddressOf CalculationException
+                            End With
 
-                        ' Add new adapter to the list
-                        calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
+                            ' Add new adapter to the list
+                            calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
 
-                        DisplayStatusMessage(String.Format("Loaded calculated measurement ""{0}"" from assembly ""{1}""", calculatedMeasurementName, externalAssemblyName))
-                    End If
+                            DisplayStatusMessage(String.Format("Loaded calculated measurement ""{0}"" from assembly ""{1}""", calculatedMeasurementName, externalAssemblyName))
+                        End If
+                    End With
                 Catch ex As Exception
                     DisplayStatusMessage(String.Format("Failed to load calculated measurement ""{0}"" from assembly ""{1}"" due to exception: {2}", calculatedMeasurementName, externalAssemblyName, ex.Message))
                     m_exceptionLogger.Log(ex)
@@ -417,10 +499,12 @@ Module MainModule
     Private Sub NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
         If measurements IsNot Nothing Then
-            ' Provide new calculated measurements "directly" to all calculated measurement modules
-            ' such that calculated measurements can be based on other calculated measurements
+            Dim x As Integer
+
+            ' Provide new calculated measurements to all calculated measurement modules such
+            ' that calculated measurements can be based on other calculated measurements
             If m_calculatedMeasurements IsNot Nothing Then
-                For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                For x = 0 To m_calculatedMeasurements.Length - 1
                     m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
                 Next
             End If
@@ -433,19 +517,28 @@ Module MainModule
             End If
 
             ' Provide calculated measurements along to data concentrators
-            For x As Integer = 0 To measurements.Count - 1
-                m_concentrator.SortMeasurement(measurements(x))
-            Next
+            If m_measurementConcentrators IsNot Nothing Then
+                For x = 0 To m_measurementConcentrators.Length - 1
+                    m_measurementConcentrators(x).SortMeasurements(measurements)
+                Next
+            End If
         End If
 
     End Sub
 
     Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
 
-        ' Provide newly parsed measurements along to data concentrators
-        If measurements IsNot Nothing Then
-            For Each measurement As IMeasurement In measurements.Values
-                m_concentrator.SortMeasurement(measurement)
+        ' Provide newly parsed measurements to all calculated measurement modules
+        If m_calculatedMeasurements IsNot Nothing Then
+            For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
+            Next
+        End If
+
+        ' Provide newly parsed measurements to all data concentrators
+        If measurements IsNot Nothing AndAlso m_measurementConcentrators IsNot Nothing Then
+            For x As Integer = 0 To m_measurementConcentrators.Length - 1
+                m_measurementConcentrators(x).SortMeasurements(measurements)
             Next
         End If
 

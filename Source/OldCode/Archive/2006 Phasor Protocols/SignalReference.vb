@@ -1,33 +1,30 @@
 Imports TVA.Common
+Imports PhasorMeasurementReceiver.SignalType
 
 Public Structure SignalReference
 
     Implements IEquatable(Of SignalReference), IComparable(Of SignalReference), IComparable
 
-    Public PmuAcronym As String
-    Public PmuCellIndex As Integer
-    Public SignalType As SignalType
-    Public SignalIndex As Integer
+    Public Acronym As String
+    Public CellIndex As Integer
+    Public Type As SignalType
+    Public Index As Integer
 
     ' Parse signal reference
     Public Sub New(ByVal signalReference As String)
 
         Dim elements As String() = signalReference.Trim().Split("-"c)
-        Dim signal As String
 
-        PmuAcronym = elements(0).Trim().ToUpper()
+        Acronym = elements(0).Trim().ToUpper()
 
         ' If the length of the signal type acronym is greater than 2, then this
         ' is an indexed signal type (e.g., CORD-PA2)
         If elements(1).Length > 2 Then
-            signal = elements(1).Substring(0, 2).Trim().ToUpper()
-            SignalIndex = Convert.ToInt32(elements(1).Substring(2))
+            Type = GetSignalType(elements(1).Substring(0, 2).Trim().ToUpper())
+            If Type <> Unknown Then Index = Convert.ToInt32(elements(1).Substring(2))
         Else
-            signal = elements(1).Trim().ToUpper()
-            SignalIndex = 0
+            Type = GetSignalType(elements(1).Trim().ToUpper())
         End If
-
-        Me.SignalType = GetSignalType(signal)
 
     End Sub
 
@@ -95,7 +92,7 @@ Public Structure SignalReference
 
     Public Overrides Function ToString() As String
 
-        Return ToString(Me.PmuAcronym, Me.SignalType, Me.SignalIndex)
+        Return ToString(Me.Acronym, Me.Type, Me.Index)
 
     End Function
 
@@ -114,19 +111,19 @@ Public Structure SignalReference
 
     Public Overloads Function Equals(ByVal other As SignalReference) As Boolean Implements System.IEquatable(Of SignalReference).Equals
 
-        Return (String.Compare(Me.PmuAcronym, other.PmuAcronym, True) = 0 AndAlso Me.SignalType = other.SignalType AndAlso Me.SignalIndex = other.SignalIndex)
+        Return (String.Compare(Me.Acronym, other.Acronym, True) = 0 AndAlso Me.Type = other.Type AndAlso Me.Index = other.Index)
 
     End Function
 
     Public Function CompareTo(ByVal other As SignalReference) As Integer Implements System.IComparable(Of SignalReference).CompareTo
 
-        Dim acronymCompare As Integer = String.Compare(Me.PmuAcronym, other.PmuAcronym, True)
+        Dim acronymCompare As Integer = String.Compare(Me.Acronym, other.Acronym, True)
 
         If acronymCompare = 0 Then
-            Dim signalTypeCompare As Integer = IIf(Me.SignalType < other.SignalType, -1, IIf(Me.SignalType > other.SignalType, 1, 0))
+            Dim signalTypeCompare As Integer = IIf(Me.Type < other.Type, -1, IIf(Me.Type > other.Type, 1, 0))
 
             If signalTypeCompare = 0 Then
-                Return Me.SignalIndex.CompareTo(other.SignalIndex)
+                Return Me.Index.CompareTo(other.Index)
             Else
                 Return signalTypeCompare
             End If
