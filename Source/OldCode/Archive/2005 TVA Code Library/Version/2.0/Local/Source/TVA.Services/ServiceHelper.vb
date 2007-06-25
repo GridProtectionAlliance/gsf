@@ -20,6 +20,7 @@ Public Class ServiceHelper
 #Region " Member Declaration "
 
     Private m_service As ServiceBase
+    Private m_pursip As String
     Private m_logStatusUpdates As Boolean
     Private m_requestHistoryLimit As Integer
     Private m_queryableSettingsCategories As String
@@ -28,7 +29,7 @@ Public Class ServiceHelper
     Private m_persistsettings As Boolean
     Private m_settingsCategoryName As String
 
-    Private m_pursip As String
+    Private m_suppressUpdates As Boolean
     Private m_remoteCommandClientID As Guid
     Private m_performanceMonitor As PerformanceMonitor
     Private m_connectedClients As List(Of ClientInfo)
@@ -333,6 +334,9 @@ Public Class ServiceHelper
 
         If LogFile.IsOpen Then LogFile.Close()
 
+        ' We do this to prevent any updates from being posted from other threads as this might cause exceptions.
+        m_suppressUpdates = True
+
         RaiseEvent ServiceStopped(Me, EventArgs.Empty)
 
     End Sub
@@ -455,21 +459,23 @@ Public Class ServiceHelper
 
     Public Sub UpdateStatus(ByVal clientID As Guid, ByVal message As String, ByVal crlfCount As Integer)
 
-        With New StringBuilder()
-            .Append(message)
+        If Not m_suppressUpdates Then
+            With New StringBuilder()
+                .Append(message)
 
-            For i As Integer = 0 To crlfCount - 1
-                .AppendLine()
-            Next
+                For i As Integer = 0 To crlfCount - 1
+                    .AppendLine()
+                Next
 
-            ' Send the status update to all connected clients.
-            SendUpdateClientStatusResponse(clientID, .ToString())
+                ' Send the status update to all connected clients.
+                SendUpdateClientStatusResponse(clientID, .ToString())
 
-            ' Log the status update to the log file if logging is enabled.
-            If m_logStatusUpdates Then
-                LogFile.WriteTimestampedLine(.ToString())
-            End If
-        End With
+                ' Log the status update to the log file if logging is enabled.
+                If m_logStatusUpdates Then
+                    LogFile.WriteTimestampedLine(.ToString())
+                End If
+            End With
+        End If
 
     End Sub
 
