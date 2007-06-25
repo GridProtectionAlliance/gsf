@@ -467,9 +467,6 @@ Public Class ServiceHelper
 
             ' Log the status update to the log file if logging is enabled.
             If m_logStatusUpdates Then
-                If Not LogFile.IsOpen Then
-                    LogFile.Open()
-                End If
                 LogFile.WriteTimestampedLine(.ToString())
             End If
         End With
