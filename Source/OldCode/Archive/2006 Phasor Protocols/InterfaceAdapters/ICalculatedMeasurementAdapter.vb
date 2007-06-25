@@ -49,10 +49,4 @@ Public Interface ICalculatedMeasurementAdapter
 
     Property MinimumMeasurementsToUse() As Integer
 
-    Property ExpectedMeasurementsPerSecond() As Integer
-
-    Property LagTime() As Double
-
-    Property LeadTime() As Double
-
 End Interface

@@ -262,31 +262,4 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     End Sub
 
-    Private Property InternalLagTime() As Double Implements ICalculatedMeasurementAdapter.LagTime
-        Get
-            Return MyBase.LagTime
-        End Get
-        Set(ByVal value As Double)
-            MyBase.LagTime = value
-        End Set
-    End Property
-
-    Private Property InternalLeadTime() As Double Implements ICalculatedMeasurementAdapter.LeadTime
-        Get
-            Return MyBase.LeadTime
-        End Get
-        Set(ByVal value As Double)
-            MyBase.LeadTime = value
-        End Set
-    End Property
-
-    Private Property InternalExpectedMeasurementsPerSecond() As Integer Implements ICalculatedMeasurementAdapter.ExpectedMeasurementsPerSecond
-        Get
-            Return MyBase.FramesPerSecond
-        End Get
-        Set(ByVal value As Integer)
-            MyBase.FramesPerSecond = value
-        End Set
-    End Property
-
 End Class
