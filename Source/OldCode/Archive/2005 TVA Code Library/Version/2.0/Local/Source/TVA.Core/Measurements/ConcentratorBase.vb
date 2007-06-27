@@ -323,23 +323,25 @@ Namespace Measurements
                 Dim currentTime As Date = Date.UtcNow
 
                 With sampleDetail
-                    For x As Integer = 0 To m_sampleQueue.Count - 1
-                        .Append(Environment.NewLine)
-                        .Append("     Sample ")
-                        .Append(x)
-                        .Append(" @ ")
-                        .Append(m_sampleQueue(x).Value.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
-                        .Append(": ")
+                    SyncLock m_sampleQueue.SyncRoot
+                        For x As Integer = 0 To m_sampleQueue.Count - 1
+                            .Append(Environment.NewLine)
+                            .Append("     Sample ")
+                            .Append(x)
+                            .Append(" @ ")
+                            .Append(m_sampleQueue(x).Value.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                            .Append(": ")
 
-                        If x = 0 Then
-                            .Append("publishing...")
-                            publishingSampleTimestamp = m_sampleQueue(x).Value.Timestamp
-                        Else
-                            .Append("concentrating...")
-                        End If
+                            If x = 0 Then
+                                .Append("publishing...")
+                                publishingSampleTimestamp = m_sampleQueue(x).Value.Timestamp
+                            Else
+                                .Append("concentrating...")
+                            End If
 
-                        .Append(Environment.NewLine)
-                    Next
+                            .Append(Environment.NewLine)
+                        Next
+                    End SyncLock
                 End With
 
                 With New StringBuilder
@@ -385,7 +387,8 @@ Namespace Measurements
                     .Append(m_discardedMeasurements)
                     .Append(Environment.NewLine)
                     .Append("Published measurement loss: ")
-                    .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements) * 100.0R).ToString("##0.0000%"))
+                    .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements) * 100.0R).ToString("##0.0000"))
+                    .Append("%"c)
                     .Append(Environment.NewLine)
                     .Append("    Total published frames: ")
                     .Append(m_publishedFrames)
