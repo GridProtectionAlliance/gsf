@@ -224,7 +224,14 @@ Namespace Math
         ''' <summary>Generates a cryptographically strong floating-point random number between zero and one</summary>
         Public Shared ReadOnly Property RandomNumber() As Double
             Get
-                Return BitwiseCast.ToUInt64(RandomInt64) / UInt64.MaxValue
+                Return BitwiseCast.ToUInt32(RandomInt32) / UInt32.MaxValue
+            End Get
+        End Property
+
+        ''' <summary>Generates a cryptographically strong random decimal between zero and one</summary>
+        Public Shared ReadOnly Property RandomDecimal() As Decimal
+            Get
+                Return Convert.ToDecimal(BitwiseCast.ToUInt64(RandomInt64)) / Convert.ToDecimal(UInt64.MaxValue)
             End Get
         End Property
 
