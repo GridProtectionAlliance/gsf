@@ -17,7 +17,7 @@
 
 Imports System.Text
 Imports System.IO
-Imports System.Data.SqlClient
+Imports System.Data.OleDb
 Imports TVA.Measurements
 Imports TVA.Configuration.Common
 Imports TVA.IO.FilePath
@@ -82,7 +82,7 @@ Public Class MeasurementExporter
 
         ' Need to open database connection to load measurement tags and signal types.
         ' Note that data connection string defined in config file of parent process.
-        Dim connection As New SqlConnection(StringSetting("PMUDatabase"))
+        Dim connection As New OleDbConnection(StringSetting("PMUDatabase"))
 
         connection.Open()
 
