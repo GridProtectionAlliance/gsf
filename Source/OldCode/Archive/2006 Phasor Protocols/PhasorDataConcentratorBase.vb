@@ -301,10 +301,10 @@ Public MustInherit Class PhasorDataConcentratorBase
             ' Publish binary image over specified communication layer
             m_configurationFrame.Ticks = dataFrame.Ticks
             m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
-        Else
-            ' Publish binary image over specified communication layer
-            m_communicationServer.Multicast(dataFrame.BinaryImage())
         End If
+
+        ' Publish binary image over specified communication layer
+        m_communicationServer.Multicast(dataFrame.BinaryImage())
 
     End Sub
 
