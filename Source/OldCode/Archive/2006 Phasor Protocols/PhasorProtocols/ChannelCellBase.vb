@@ -96,7 +96,6 @@ Public MustInherit Class ChannelCellBase
             End If
 
             Return length
-
         End Get
     End Property
 
