@@ -52,6 +52,13 @@ Module MainModule
 
     Public Sub Main()
 
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Convert.ToInt32(-1))))
+        'Debug.WriteLine(BitConverter.ToSingle(BitConverter.GetBytes(Convert.ToInt32(-1)), 0))
+        'Debug.WriteLine(Single.IsNaN(BitConverter.ToSingle(BitConverter.GetBytes(Convert.ToInt32(-1)), 0)))
+        'Debug.WriteLine(Single.IsInfinity(BitConverter.ToSingle(BitConverter.GetBytes(Convert.ToInt32(-1)), 0)))
+        ''Debug.WriteLine(BitConverter.ToSingle(, 0))
+        'Stop
+
         Dim consoleLine As String
         Dim receiver As PhasorMeasurementReceiver
         Dim mapper As PhasorMeasurementMapper = Nothing
@@ -314,11 +321,7 @@ Module MainModule
                                 measurementConcentrator = New IeeeC37_118Concentrator( _
                                         communicationServer, _
                                         .Item("Name").ToString(), _
-                                        connection, _
-                                        .Item("PmuFilterSql").ToString(), _
-                                        Convert.ToUInt16(.Item("IDCode")), _
                                         Convert.ToInt32(.Item("FrameRate")), _
-                                        Convert.ToInt32(.Item("NominalFrequency")), _
                                         Convert.ToDouble(.Item("LagTime")), _
                                         Convert.ToDouble(.Item("LeadTime")), _
                                         timeBase, _
@@ -331,19 +334,23 @@ Module MainModule
                                 measurementConcentrator = New BpaPdcConcentrator( _
                                     communicationServer, _
                                     .Item("Name").ToString(), _
-                                    connection, _
-                                    .Item("PmuFilterSql").ToString(), _
-                                    Convert.ToUInt16(.Item("IDCode")), _
                                     Convert.ToInt32(.Item("FrameRate")), _
-                                    Convert.ToInt32(.Item("NominalFrequency")), _
                                     Convert.ToDouble(.Item("LagTime")), _
                                     Convert.ToDouble(.Item("LeadTime")), _
                                     iniFileName, _
                                     m_exceptionLogger)
                         End Select
 
+                        ' Initialize measurement concentrator (sets up signal references and configuration frames)
+                        measurementConcentrator.Initialize( _
+                            connection, _
+                            .Item("PmuFilterSql").ToString(), _
+                            Convert.ToInt32(.Item("NominalFrequency")), _
+                            Convert.ToUInt16(.Item("IDCode")))
+
                         AddHandler measurementConcentrator.StatusMessage, AddressOf DisplayStatusMessage
 
+                        ' Start measurement concentrator
                         measurementConcentrator.Start()
 
                         measurementConcentrators.Add(measurementConcentrator)

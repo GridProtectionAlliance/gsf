@@ -13,17 +13,13 @@ Public Class BpaPdcConcentrator
     Public Sub New( _
         ByVal communicationServer As ICommunicationServer, _
         ByVal name As String, _
-        ByVal connection As OleDbConnection, _
-        ByVal pmuFilterSql As String, _
-        ByVal idCode As UInt16, _
         ByVal framesPerSecond As Integer, _
-        ByVal nominalFrequency As LineFrequency, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double, _
         ByVal iniFileName As String, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
-        MyBase.New(communicationServer, name, connection, pmuFilterSql, idCode, framesPerSecond, nominalFrequency, lagTime, leadTime, exceptionLogger)
+        MyBase.New(communicationServer, name, framesPerSecond, lagTime, leadTime, exceptionLogger)
 
         m_iniFileName = iniFileName
 

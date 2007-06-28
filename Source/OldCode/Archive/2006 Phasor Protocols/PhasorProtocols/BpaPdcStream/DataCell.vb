@@ -59,20 +59,20 @@ Namespace BpaPdcStream
 
             ' Initialize phasor values and frequency value with an empty value
             For x = 0 To configurationCell.PhasorDefinitions.Count - 1
-                PhasorValues.Add(New PhasorValue(Me, configurationCell.PhasorDefinitions(x), 0, 0))
+                PhasorValues.Add(New PhasorValue(Me, configurationCell.PhasorDefinitions(x), Single.NaN, Single.NaN))
             Next
 
             ' Initialize frequency and df/dt
-            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, 0, 0)
+            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, Single.NaN, Single.NaN)
 
             ' Initialize analog values
             For x = 0 To configurationCell.AnalogDefinitions.Count - 1
-                AnalogValues.Add(New AnalogValue(Me, configurationCell.AnalogDefinitions(x), 0))
+                AnalogValues.Add(New AnalogValue(Me, configurationCell.AnalogDefinitions(x), Single.NaN))
             Next
 
             ' Initialize any digital values
             For x = 0 To configurationCell.DigitalDefinitions.Count - 1
-                DigitalValues.Add(New DigitalValue(Me, configurationCell.DigitalDefinitions(x), 0))
+                DigitalValues.Add(New DigitalValue(Me, configurationCell.DigitalDefinitions(x), -1))
             Next
 
         End Sub

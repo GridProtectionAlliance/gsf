@@ -4,10 +4,18 @@
 
 	- From The Shogakukan DICTIONARY OF NEW ENGLISH (Second edition) */
 
+extern "C"
+{
+
 #ifndef F2C_INCLUDE
 #define F2C_INCLUDE
 
-typedef long int integer;
+	int f2c_dgemm(char*, char*, int*, int*, int*, double*, double*, int*, double*, int*, double*, double*, int*);
+	int f2c_dcopy(int*, double*, int*, double*, int*);
+	int zgelsd_(int*, int*, int*, double*, int*, double*, int*, double*, double*, int*, double*, int*, double*, int*, int*);
+
+	//typedef long int integer;
+typedef int integer;
 typedef char *address;
 typedef short int shortint;
 typedef float real;
@@ -216,3 +224,5 @@ typedef doublereal E_f;	/* real function with -R not specified */
 #undef vax
 #endif
 #endif
+
+}

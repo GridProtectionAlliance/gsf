@@ -9,6 +9,6 @@
 #include <math.h>
 #include <conio.h>
 #include <string.h>
-#include "..\CLAPACKlibs\blaswrap.h"
 #include "..\CLAPACKlibs\f2c.h"
 #include "..\CLAPACKlibs\clapack.h"
+#include "..\CLAPACKlibs\blaswrap.h"

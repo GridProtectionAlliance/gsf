@@ -1,3 +1,6 @@
+extern "C"
+{
+
 /* CLAPACK 3.0 BLAS wrapper macros
  * Feb 5, 2000
  */
@@ -156,3 +159,5 @@
 #endif /* NO_BLAS_WRAP */
 
 #endif /* __BLASWRAP_H */
+
+}

@@ -165,9 +165,15 @@ Public MustInherit Class PhasorValueBase
         End Get
     End Property
 
+    Public Overridable ReadOnly Property AngleInRadians() As Single
+        Get
+            Return Convert.ToSingle(System.Math.Atan2(m_imaginary, m_real))
+        End Get
+    End Property
+
     Public Overridable Property Angle() As Single Implements IPhasorValue.Angle
         Get
-            Return System.Math.Atan2(m_imaginary, m_real) * RadiansToDegrees
+            Return AngleInRadians * RadiansToDegrees
         End Get
         Set(ByVal value As Single)
             ' We store angle as one of our required composite values
@@ -324,7 +330,7 @@ Public MustInherit Class PhasorValueBase
                     EndianOrder.BigEndian.CopyBytes(Convert.ToInt16(Angle * DegreesToRadians * 10000), buffer, 2)
                 Else
                     EndianOrder.BigEndian.CopyBytes(Magnitude, buffer, 0)
-                    EndianOrder.BigEndian.CopyBytes(Convert.ToSingle(Angle * DegreesToRadians), buffer, 4)
+                    EndianOrder.BigEndian.CopyBytes(AngleInRadians, buffer, 4)
                 End If
             End If
 

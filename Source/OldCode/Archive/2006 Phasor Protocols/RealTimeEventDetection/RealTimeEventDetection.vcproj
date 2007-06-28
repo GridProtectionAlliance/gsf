@@ -61,8 +61,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="blas.lib clapack.lib libf77.lib libi77.lib"
 				AdditionalDependencies="$(NoInherit)"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;C:\Projects\Applications\Phasor Tools\PhasorMeasurementReceiver\CLAPACKlibs&quot;"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				TargetMachine="1"
@@ -123,6 +125,7 @@
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				CallingConvention="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -135,8 +138,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="blas.lib clapack.lib libf77.lib libi77.lib"
 				AdditionalDependencies="$(NoInherit)"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;C:\Projects\Applications\Phasor Tools\PhasorMeasurementReceiver\CLAPACKlibs&quot;"
+				IgnoreAllDefaultLibraries="false"
+				AddModuleNamesToAssembly=""
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>

@@ -14,18 +14,14 @@ Public Class IeeeC37_118Concentrator
     Public Sub New( _
         ByVal communicationServer As ICommunicationServer, _
         ByVal name As String, _
-        ByVal connection As OleDbConnection, _
-        ByVal pmuFilterSql As String, _
-        ByVal idCode As UInt16, _
         ByVal framesPerSecond As Integer, _
-        ByVal nominalFrequency As LineFrequency, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double, _
         ByVal timeBase As Integer, _
         ByVal version As Byte, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
-        MyBase.New(communicationServer, name, connection, pmuFilterSql, idCode, framesPerSecond, nominalFrequency, lagTime, leadTime, exceptionLogger)
+        MyBase.New(communicationServer, name, framesPerSecond, lagTime, leadTime, exceptionLogger)
 
         m_timeBase = timeBase
         m_version = version
@@ -46,6 +42,10 @@ Public Class IeeeC37_118Concentrator
             ' Update other cell level attributes
             newCell.StationName = baseCell.StationName
             newCell.IDLabel = baseCell.IDLabel
+            newCell.PhasorDataFormat = baseCell.PhasorDataFormat
+            newCell.PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat
+            newCell.FrequencyDataFormat = baseCell.FrequencyDataFormat
+            newCell.AnalogDataFormat = baseCell.AnalogDataFormat
 
             ' Add phasor definitions
             For y = 0 To baseCell.PhasorDefinitions.Count - 1

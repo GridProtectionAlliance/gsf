@@ -45,10 +45,10 @@ Namespace FNet
             MyBase.New(parent, False, configurationCell, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
 
             ' Initialize single phasor value and frequency value with an empty value
-            PhasorValues.Add(New PhasorValue(Me, configurationCell.PhasorDefinitions(0), 0, 0))
+            PhasorValues.Add(New PhasorValue(Me, configurationCell.PhasorDefinitions(0), Single.NaN, Single.NaN))
 
             ' Initialize frequency and df/dt
-            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, 0, 0)
+            FrequencyValue = New FrequencyValue(Me, configurationCell.FrequencyDefinition, Single.NaN, Single.NaN)
 
         End Sub
 

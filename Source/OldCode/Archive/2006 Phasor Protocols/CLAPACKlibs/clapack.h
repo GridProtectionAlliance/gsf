@@ -1,3 +1,6 @@
+extern "C"
+{
+
 #ifndef __CLAPACK_H
 #define __CLAPACK_H
  
@@ -5077,3 +5080,5 @@ integer izmax1_(integer *n, doublecomplex *cx, integer *incx);
 	 integer *ldc, doublecomplex *work, integer *info);
 
 #endif /* __CLAPACK_H */
+
+}
