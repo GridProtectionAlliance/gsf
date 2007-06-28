@@ -133,6 +133,8 @@ Public Class MeasurementExporter
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
+                .Append(Name & " Status:")
+                .Append(Environment.NewLine)
                 .Append("   Total ICCP measurements: ")
                 .Append(m_measurementTags.Count)
                 .Append(Environment.NewLine)

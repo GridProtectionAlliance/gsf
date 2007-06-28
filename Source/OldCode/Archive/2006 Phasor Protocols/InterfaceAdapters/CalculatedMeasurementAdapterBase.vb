@@ -170,8 +170,6 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
             Const MaxMeasurementsToShow As Integer = 6
 
             With New StringBuilder
-                .Append(Name & " Status:")
-                .Append(Environment.NewLine)
                 .Append("   Output measurement ID's: ")
                 If m_outputMeasurements.Length <= MaxMeasurementsToShow Then
                     .Append(ListToString(m_outputMeasurements, ","c))

@@ -135,6 +135,17 @@ Public Class EventDetectTrigger
 
     End Sub
 
+    Public Overrides ReadOnly Property Status() As String
+        Get
+            With New StringBuilder
+                .Append(Name & " Status:")
+                .Append(Environment.NewLine)
+                .Append(MyBase.Status)
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
     Private Function checkEvent() As Boolean
         Dim element1, element2 As freqElement
         Dim DfDt1, DfDt2 As Double

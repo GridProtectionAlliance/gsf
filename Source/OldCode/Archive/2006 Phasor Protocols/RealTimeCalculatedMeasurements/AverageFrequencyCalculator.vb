@@ -31,10 +31,12 @@ Public Class AverageFrequencyCalculator
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(MyBase.Status)
+                .Append(Name & " Status:")
+                .Append(Environment.NewLine)
                 .Append(" Last calculated frequency: ")
                 .Append(m_averageFrequency)
                 .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

@@ -196,7 +196,8 @@ Public Class CumberlandPowerDeviationCalculator
             Const ValuesToShow As Integer = 4
 
             With New StringBuilder
-                .Append(MyBase.Status)
+                .Append(Name & " Status:")
+                .Append(Environment.NewLine)
                 .Append("  Latest " & ValuesToShow & " MegaWatt values: ")
                 SyncLock m_latestMegaWatts
                     If m_latestMegaWatts.Count > ValuesToShow Then
@@ -206,6 +207,7 @@ Public Class CumberlandPowerDeviationCalculator
                     End If
                 End SyncLock
                 .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

@@ -31,10 +31,12 @@ Public Class ReferenceMagnitudeCalculator
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(MyBase.Status)
+                .Append(Name & " Status:")
+                .Append(Environment.NewLine)
                 .Append(" Last calculated magnitude: ")
                 .Append(m_referenceMagnitude)
                 .Append(Environment.NewLine)
+                .Append(MyBase.Status)
                 Return .ToString()
             End With
         End Get

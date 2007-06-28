@@ -197,17 +197,12 @@ Public MustInherit Class PhasorDataConcentratorBase
                 .Append(Name)
                 .Append(":"c)
                 .Append(Environment.NewLine)
-                .Append(MyBase.Status)
-                .Append("Output Communications Channel Detail:")
-                .Append(Environment.NewLine)
-                If m_communicationServer Is Nothing Then
-                    .Append("  >> No communications server was defined")
-                    .Append(Environment.NewLine)
-                Else
+                If m_communicationServer IsNot Nothing Then
                     .Append(m_communicationServer.Status)
                 End If
+                .Append(MyBase.Status)
+                Return .ToString()
             End With
-            Return MyBase.Status
         End Get
     End Property
 
