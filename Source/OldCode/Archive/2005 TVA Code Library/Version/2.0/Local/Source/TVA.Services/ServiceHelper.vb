@@ -480,7 +480,7 @@ Public Class ServiceHelper
     End Sub
 
     Public Sub AddProcess(ByVal processExecutionMethod As ServiceProcess.ExecutionMethodSignature, _
-        ByVal processName As String)
+            ByVal processName As String)
 
         AddProcess(processExecutionMethod, processName, Nothing)
 
