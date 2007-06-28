@@ -36,7 +36,7 @@
   <ItemGroup>
     <Reference Include="DatAWare, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\DatAWare\Source\DatAWare\bin\Debug\DatAWare.dll</HintPath>
+      <HintPath>..\..\..\DatAWare\Source\DatAWare\bin\Release\DatAWare.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
