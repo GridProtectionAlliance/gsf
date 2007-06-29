@@ -26,6 +26,7 @@ Namespace Measurements
 
         Private m_id As Integer
         Private m_source As String
+        Private m_key As MeasurementKey
         Private m_tag As String
         Private m_value As Double
         Private m_adder As Double
@@ -70,6 +71,7 @@ Namespace Measurements
 
             m_id = id
             m_source = source
+            m_key = New MeasurementKey(m_id, m_source)
             m_value = value
             m_adder = adder
             m_multiplier = multiplier
@@ -123,7 +125,10 @@ Namespace Measurements
                 Return m_id
             End Get
             Set(ByVal value As Integer)
-                m_id = value
+                If m_id <> value Then
+                    m_id = value
+                    m_key = New MeasurementKey(m_id, m_source)
+                End If
             End Set
         End Property
 
@@ -138,14 +143,17 @@ Namespace Measurements
                 Return m_source
             End Get
             Set(ByVal value As String)
-                m_source = value
+                If m_source <> value Then
+                    m_source = value
+                    m_key = New MeasurementKey(m_id, m_source)
+                End If
             End Set
         End Property
 
         ''' <summary>Returns the primary key of this measurement</summary>
         Public ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
             Get
-                Return New MeasurementKey(m_id, m_source)
+                Return m_key
             End Get
         End Property
 

@@ -44,7 +44,7 @@ Namespace Measurements
                 Return m_id
             End Get
             Set(ByVal value As Integer)
-                If value <> m_id Then
+                If m_id <> value Then
                     m_id = value
                     Regenerate()
                 End If
@@ -56,7 +56,7 @@ Namespace Measurements
                 Return m_source
             End Get
             Set(ByVal value As String)
-                If value <> m_source Then
+                If m_source <> value Then
                     m_source = value
                     Regenerate()
                 End If
