@@ -259,9 +259,10 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
+        ' !! Removed this step for now to help with speed !!
         ' Base class assigns measurement to frame's measurement dictionary - we go ahead and do this just
         ' in case this measurement collection needs to be used elsewhere (in a more abstract fashion)
-        MyBase.AssignMeasurementToFrame(frame, measurement)
+        'MyBase.AssignMeasurementToFrame(frame, measurement)
 
         ' Assign all time-aligned measurements to their appropriate PMU (i.e., data frame cell)
         Dim signalRef As SignalReference
