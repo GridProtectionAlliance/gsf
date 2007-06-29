@@ -16,7 +16,6 @@
 '*******************************************************************************************************
 
 Imports TVA.Common
-Imports TVA.Text.Common
 
 Namespace Measurements
 
@@ -25,29 +24,65 @@ Namespace Measurements
 
         Implements IEquatable(Of MeasurementKey), IComparable(Of MeasurementKey), IComparable
 
-        Public ID As Integer
-        Public Source As String
+        Private m_id As Integer
+        Private m_source As String
+        Private m_stringImage As String
+        Private m_hashCode As Integer
 
         Public Sub New(ByVal id As Integer, ByVal source As String)
 
-            Me.ID = id
-            Me.Source = source
+            If String.IsNullOrEmpty(source) Then Throw New ArgumentNullException("source", "MeasurementKey source cannot be null")
+
+            m_id = id
+            m_source = source
+            Regenerate()
 
         End Sub
 
+        Public Property ID() As Integer
+            Get
+                Return m_id
+            End Get
+            Set(ByVal value As Integer)
+                If value <> m_id Then
+                    m_id = value
+                    Regenerate()
+                End If
+            End Set
+        End Property
+
+        Public Property Source() As String
+            Get
+                Return m_source
+            End Get
+            Set(ByVal value As String)
+                If value <> m_source Then
+                    m_source = value
+                    Regenerate()
+                End If
+            End Set
+        End Property
+
         Public Overrides Function ToString() As String
 
-            Return Source & ":" & ID.ToString()
+            Return m_stringImage
 
         End Function
 
         Public Overrides Function GetHashCode() As Integer
 
-            ' 1234567890
-            ' 2147483647
-            Return Concat(Source, ID.ToString().PadLeft(10, "0"c)).GetHashCode()
+            Return m_hashCode
 
         End Function
+
+        Private Sub Regenerate()
+
+            ' We cache key elements during construction or after element value change to speed structure usage
+            Dim idImage As String = m_id.ToString()
+            m_hashCode = String.Format("{0}{1}", m_source, idImage.PadLeft(10, "0"c)).GetHashCode()
+            m_stringImage = String.Format("{0}:{1}", m_source, idImage)
+
+        End Sub
 
         Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
@@ -58,16 +93,16 @@ Namespace Measurements
 
         Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
 
-            Return (ID = other.ID AndAlso String.Compare(Source, other.Source, True) = 0)
+            Return (m_hashCode = other.GetHashCode())
 
         End Function
 
         Public Function CompareTo(ByVal other As MeasurementKey) As Integer Implements System.IComparable(Of MeasurementKey).CompareTo
 
-            Dim sourceCompare As Integer = String.Compare(Source, other.Source, True)
+            Dim sourceCompare As Integer = String.Compare(m_source, other.Source, True)
 
             If sourceCompare = 0 Then
-                Return IIf(ID < other.ID, -1, IIf(ID > other.ID, 1, 0))
+                Return IIf(m_id < other.ID, -1, IIf(m_id > other.ID, 1, 0))
             Else
                 Return sourceCompare
             End If
