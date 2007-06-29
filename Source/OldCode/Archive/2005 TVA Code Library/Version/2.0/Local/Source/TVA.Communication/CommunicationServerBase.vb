@@ -25,9 +25,11 @@ Imports TVA.Common
 Imports TVA.Serialization
 Imports TVA.Services
 Imports TVA.IO.Common
+Imports TVA.IO.Compression
 Imports TVA.DateTime.Common
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Communication.Common
+Imports TVA.Security.Cryptography
 
 ''' <summary>
 ''' Represents a server involved in the transportation of data.
@@ -527,12 +529,20 @@ Public MustInherit Class CommunicationServerBase
         If m_enabled AndAlso m_isRunning Then
             If data Is Nothing Then Throw New ArgumentNullException("data")
             If size > 0 Then
-                Dim dataToSend As Byte() = GetPreparedData(CopyBuffer(data, offset, size))
-                If dataToSend.Length() <= MaximumDataSize Then
+                ' JRC - 06/29/2007: Expression evaluation is faster than a function call, so we're only calling "GetPreparedData" if we need to...
+                If m_compression = CompressLevel.NoCompression AndAlso m_encryption = EncryptLevel.None Then
+                    ' We only grab needed portion of buffer - otherwise we use entire buffer
+                    If offset <> 0 OrElse size <> data.Length Then data = CopyBuffer(data, offset, size)
+                Else
+                    ' Pre-condition data as needed (compression, encryption, etc.)
+                    data = GetPreparedData(CopyBuffer(data, offset, size))
+                End If
+
+                If data.Length <= MaximumDataSize Then
                     SyncLock m_clientIDs
                         For Each clientID As Guid In m_clientIDs
                             ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
-                            SendPreparedDataTo(clientID, dataToSend)
+                            SendPreparedDataTo(clientID, data)
 
                             ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
                             '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
