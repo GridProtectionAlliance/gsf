@@ -113,9 +113,8 @@ Public Class ClientHelper
                 .Append(".")
                 .AppendLine()
                 .Append(".")
-                .AppendLine()
 
-                UpdateStatus(.ToString())
+                UpdateStatus(.ToString(), 1)
             End With
 
             ' We'll always use handshaking to ensure the availability of SecureSession.
@@ -142,7 +141,7 @@ Public Class ClientHelper
         If requestInstance IsNot Nothing Then
             SendRequest(requestInstance)
         Else
-            UpdateStatus(String.Format("Request command ""{0}"" is invalid", request), 3)
+            UpdateStatus(String.Format("Request command ""{0}"" is invalid", request), ServiceHelper.UpdateCrlfCount)
         End If
 
     End Sub
@@ -278,7 +277,7 @@ Public Class ClientHelper
             .AppendLine()
             .Append(m_communicationClient.Status)
 
-            UpdateStatus(.ToString(), 2)
+            UpdateStatus(.ToString(), 1)
         End With
 
     End Sub
@@ -297,7 +296,7 @@ Public Class ClientHelper
             .AppendLine()
             .Append(m_communicationClient.Status)
 
-            UpdateStatus(.ToString(), 2)
+            UpdateStatus(.ToString(), 1)
         End With
 
     End Sub
@@ -318,7 +317,7 @@ Public Class ClientHelper
                             ' Notify change in service state by raising the ServiceStateChanged event.
                             RaiseEvent ServiceStateChanged(Me, New GenericEventArgs(Of ObjectState(Of ServiceState))(state))
 
-                            UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}"".", state.ObjectName, state.CurrentState), 3)
+                            UpdateStatus(String.Format("State of service ""{0}"" has changed to ""{1}"".", state.ObjectName, state.CurrentState), ServiceHelper.UpdateCrlfCount)
                         End If
                     End If
                 Case "PROCESSSTATECHANGED"
@@ -329,7 +328,7 @@ Public Class ClientHelper
                             ' Notify change in process state by raising the ProcessStateChanged event.
                             RaiseEvent ProcessStateChanged(Me, New GenericEventArgs(Of ObjectState(Of ProcessState))(state))
 
-                            UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}"".", state.ObjectName, state.CurrentState), 3)
+                            UpdateStatus(String.Format("State of process ""{0}"" has changed to ""{1}"".", state.ObjectName, state.CurrentState), ServiceHelper.UpdateCrlfCount)
                         End If
                     End If
                 Case "COMMANDSESSION"
