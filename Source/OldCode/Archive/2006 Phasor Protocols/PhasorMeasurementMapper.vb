@@ -139,14 +139,16 @@ Public Class PhasorMeasurementMapper
                 .Append(m_undefinedPmus.Count)
                 .Append(Environment.NewLine)
 
-                For Each item As KeyValuePair(Of String, Long) In m_undefinedPmus
-                    .Append("    ")
-                    .Append(item.Key)
-                    .Append(" encountered ")
-                    .Append(item.Value)
-                    .Append("times")
-                    .Append(Environment.NewLine)
-                Next
+                SyncLock m_undefinedPmus
+                    For Each item As KeyValuePair(Of String, Long) In m_undefinedPmus
+                        .Append("    ")
+                        .Append(item.Key)
+                        .Append(" encountered ")
+                        .Append(item.Value)
+                        .Append(" times")
+                        .Append(Environment.NewLine)
+                    Next
+                End SyncLock
 
                 Return .ToString()
             End With
@@ -338,15 +340,17 @@ Public Class PhasorMeasurementMapper
                 Next
             Else
                 ' Encountered an undefined PMU, track frame counts
-                Dim frameCount As Long
+                SyncLock m_undefinedPmus
+                    Dim frameCount As Long
 
-                If m_undefinedPmus.TryGetValue(dataCell.StationName, frameCount) Then
-                    frameCount += 1
-                    m_undefinedPmus(dataCell.StationName) = frameCount
-                Else
-                    m_undefinedPmus.Add(dataCell.StationName, 1)
-                    UpdateStatus(String.Format("WARNING: Encountered an undefined PMU ""{0}"" for {1}.", dataCell.StationName, m_source))
-                End If
+                    If m_undefinedPmus.TryGetValue(dataCell.StationName, frameCount) Then
+                        frameCount += 1
+                        m_undefinedPmus(dataCell.StationName) = frameCount
+                    Else
+                        m_undefinedPmus.Add(dataCell.StationName, 1)
+                        UpdateStatus(String.Format("WARNING: Encountered an undefined PMU ""{0}"" for {1}.", dataCell.StationName, m_source))
+                    End If
+                End SyncLock
             End If
         Next
 

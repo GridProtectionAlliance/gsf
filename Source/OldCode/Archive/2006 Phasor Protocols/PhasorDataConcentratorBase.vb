@@ -259,11 +259,6 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
-        ' !! Removed this step for now to help with speed !!
-        ' Base class assigns measurement to frame's measurement dictionary - we go ahead and do this just
-        ' in case this measurement collection needs to be used elsewhere (in a more abstract fashion)
-        'MyBase.AssignMeasurementToFrame(frame, measurement)
-
         ' Assign all time-aligned measurements to their appropriate PMU (i.e., data frame cell)
         Dim signalRef As SignalReference
 
@@ -271,23 +266,35 @@ Public MustInherit Class PhasorDataConcentratorBase
         If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.CellIndex > -1 Then
             ' Get associated data cell
             Dim dataCell As IDataCell = DirectCast(frame, IDataFrame).Cells(signalRef.CellIndex)
+            Dim signalIndex As Integer = signalRef.Index
 
             ' Assign value to appropriate cell property based on signal type
             Select Case signalRef.Type
                 Case SignalType.Angle
-                    If dataCell.PhasorValues.Count >= signalRef.Index Then dataCell.PhasorValues(signalRef.Index - 1).Angle = Convert.ToSingle(measurement.Value)
+                    ' Assign "phase angle" measurement to data cell
+                    Dim phasorValues As PhasorValueCollection = dataCell.PhasorValues
+                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Angle = Convert.ToSingle(measurement.Value)
                 Case SignalType.Magnitude
-                    If dataCell.PhasorValues.Count >= signalRef.Index Then dataCell.PhasorValues(signalRef.Index - 1).Magnitude = Convert.ToSingle(measurement.Value)
+                    ' Assign "phase magnitude" measurement to data cell
+                    Dim phasorValues As PhasorValueCollection = dataCell.PhasorValues
+                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Magnitude = Convert.ToSingle(measurement.Value)
                 Case SignalType.Frequency
+                    ' Assign "frequency" measurement to data cell
                     dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.Value)
                 Case SignalType.dfdt
+                    ' Assign "df/dt" measurement to data cell
                     dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.Value)
                 Case SignalType.Status
+                    ' Assign "common status flags" measurement to data cell
                     dataCell.CommonStatusFlags = Convert.ToInt32(measurement.Value)
                 Case SignalType.Digital
-                    If dataCell.DigitalValues.Count >= signalRef.Index Then dataCell.DigitalValues(signalRef.Index - 1).Value = Convert.ToInt16(measurement.Value)
+                    ' Assign "digital" measurement to data cell
+                    Dim digitalValues As DigitalValueCollection = dataCell.DigitalValues
+                    If digitalValues.Count >= signalIndex Then digitalValues(signalIndex - 1).Value = Convert.ToInt16(measurement.Value)
                 Case SignalType.Analog
-                    If dataCell.AnalogValues.Count >= signalRef.Index Then dataCell.AnalogValues(signalRef.Index - 1).Value = Convert.ToSingle(measurement.Value)
+                    ' Assign "analog" measurement to data cell
+                    Dim analogValues As AnalogValueCollection = dataCell.AnalogValues
+                    If analogValues.Count >= signalIndex Then analogValues(signalIndex - 1).Value = Convert.ToSingle(measurement.Value)
             End Select
         End If
 
@@ -303,6 +310,11 @@ Public MustInherit Class PhasorDataConcentratorBase
             m_configurationFrame.Ticks = dataFrame.Ticks
             m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
         End If
+
+        ' Prior to publication, set data validity bits based on reception of all data values
+        For Each dataCell As IDataCell In dataFrame.Cells
+            If dataCell.DataIsValid Then dataCell.DataIsValid = dataCell.AllValuesAssigned
+        Next
 
         ' Publish binary image over specified communication layer
         m_communicationServer.Multicast(dataFrame.BinaryImage())
