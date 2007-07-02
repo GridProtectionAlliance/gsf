@@ -68,6 +68,7 @@ Namespace Measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
+        Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
         Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue
         Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
@@ -85,7 +86,6 @@ Namespace Measurements
         ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
         ''' <para>leadTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time) - note that this defines time sensitivity to future timestamps.</para>
         ''' <para>Publish frame function delegate parameter may be initialized to null, but must be defined before concentrator is enabled.</para>
-        ''' <para>If create new frame function delegate is initialized to null, default frame creation function will be used.</para>
         ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
@@ -109,6 +109,7 @@ Namespace Measurements
             m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(framesPerSecond)
             m_lagTime = lagTime
             m_leadTime = leadTime
+            m_trackLatestMeasurements = False
             m_latestMeasurements = New ImmediateMeasurements(Me)
             m_monitorTimer = New Timers.Timer
 
@@ -165,6 +166,17 @@ Namespace Measurements
                 If value <= 0 Then Throw New ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one")
                 m_leadTime = value
                 RaiseEvent LeadTimeUpdated(m_leadTime)
+            End Set
+        End Property
+
+        ''' <summary>Enables tracking of absolute latest received measurement values</summary>
+        ''' <remarks>Enabling this feature will increase required sorting time</remarks>
+        Public Property TrackLatestMeasurements() As Boolean
+            Get
+                Return m_trackLatestMeasurements
+            End Get
+            Set(ByVal value As Boolean)
+                m_trackLatestMeasurements = value
             End Set
         End Property
 
@@ -279,7 +291,7 @@ Namespace Measurements
         End Property
 
         ''' <summary>Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position</summary>
-        Public Sub SortMeasurement(ByVal measurement As IMeasurement)
+        Public Overridable Sub SortMeasurement(ByVal measurement As IMeasurement)
 
             ' Get sample for this timestamp, creating it if needed
             Dim sample As Sample = GetSample(measurement.Ticks)
@@ -297,7 +309,7 @@ Namespace Measurements
 
                 ' Track absolute lastest timestamp and immediate measurement values...
                 RealTimeTicks = measurement.Ticks
-                m_latestMeasurements.UpdateMeasurementValue(measurement)
+                If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
             End If
 
         End Sub
@@ -307,7 +319,7 @@ Namespace Measurements
         ''' Sorting items directly may provide a small speed improvement and will use less resources, however TCP stream processing
         ''' can fall behind under heavy load, so sorting measurements on a thread may be required for high-volume TCP input streams
         ''' </remarks>
-        Public Sub QueueMeasurementForSorting(ByVal measurement As IMeasurement)
+        Public Overridable Sub QueueMeasurementForSorting(ByVal measurement As IMeasurement)
 
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf SortMeasurement, measurement)
 
@@ -430,7 +442,8 @@ Namespace Measurements
 #Region " Protected Methods Implementation "
 
         ''' <summary>Consumers must override this method in order to publish a frame</summary>
-        Protected MustOverride Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
+        ''' <remarks>Implementors are expected to return total published measurements as return value</remarks>
+        Protected MustOverride Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
 
         ''' <summary>Consumers can choose to override this method to create a new custom frame</summary>
         ''' <remarks>Override is optional, the base class will create a basic frame to hold synchronized measurements</remarks>
@@ -451,8 +464,7 @@ Namespace Measurements
 
             SyncLock frame.Measurements
                 If frame.Measurements.TryGetValue(measurement.Key, frameMeasurement) Then
-                    ' Measurement already exists, so we just update with the latest values
-                    frameMeasurement.Ticks = measurement.Ticks
+                    ' Measurement already exists, so we just update with the latest value
                     frameMeasurement.Value = measurement.Value
                 Else
                     ' Create new frame measurement if it doesn't exist
@@ -573,14 +585,13 @@ Namespace Measurements
             If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
                 Try
                     ' Publish a copy of the current frame (this way consumer doesn't have to worry about frame synchronization)
-                    PublishFrame(frame.Clone(), m_frameIndex)
+                    m_publishedMeasurements += PublishFrame(frame.Clone(), m_frameIndex)
                 Catch ex As Exception
                     RaiseEvent ProcessException(ex)
                 End Try
 
                 frame.Published = True
                 m_publishedFrames += 1
-                m_publishedMeasurements += frame.Measurements.Count
 
                 ' Increment frame index
                 m_frameIndex += 1
