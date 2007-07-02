@@ -24,6 +24,7 @@ Public MustInherit Class PhasorDataConcentratorBase
     Private WithEvents m_communicationServer As ICommunicationServer
     Private m_name As String
     Private m_configurationFrame As IConfigurationFrame
+    Private m_measurementCount As Integer
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
     Private m_publishDescriptor As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
@@ -85,6 +86,8 @@ Public MustInherit Class PhasorDataConcentratorBase
         'If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Enabled <> 0"
         If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM PMUs WHERE IsActive <> 0"
 
+        m_measurementCount = 0
+
         ' TODO: Will need to allow a way to define digitals and analogs in the ouput stream at some point
         With RetrieveData(pmuFilterSql, connection).Rows
             For x As Integer = 0 To .Count - 1
@@ -125,6 +128,9 @@ Public MustInherit Class PhasorDataConcentratorBase
                         Convert.ToSingle(.Item("DfDtOffset")))
 
                     configurationFrame.Cells.Add(cell)
+
+                    ' Track total number of measurements in configuration frame
+                    m_measurementCount = 3 + 2 * cell.PhasorDefinitions.Count + cell.AnalogDefinitions.Count + cell.DigitalDefinitions.Count
                 End With
             Next
         End With
@@ -300,7 +306,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
+    Protected Overrides Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
 
         Dim dataFrame As IDataFrame = DirectCast(frame, IDataFrame)
 
@@ -319,7 +325,9 @@ Public MustInherit Class PhasorDataConcentratorBase
         ' Publish binary image over specified communication layer
         m_communicationServer.Multicast(dataFrame.BinaryImage())
 
-    End Sub
+        Return m_measurementCount
+
+    End Function
 
     Protected Overridable Sub HandleIncomingData(ByVal commandBuffer As Byte())
 

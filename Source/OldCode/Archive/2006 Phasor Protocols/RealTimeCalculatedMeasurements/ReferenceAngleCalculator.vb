@@ -108,7 +108,7 @@ Public Class ReferenceAngleCalculator
     ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
-    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
+    Protected Overrides Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
 
         Dim calculatedMeasurement As Measurement = Measurement.Clone(OutputMeasurements(0), frame.Ticks)
         Dim angle, deltaAngle, angleTotal, angleAverage, lastAngle, unwrapOffset As Double
@@ -245,7 +245,10 @@ Public Class ReferenceAngleCalculator
             End With
         End SyncLock
 
-    End Sub
+        ' Return count of measurements handled by calculation
+        Return frame.Measurements.Count
+
+    End Function
 
     '#If DEBUG Then
 

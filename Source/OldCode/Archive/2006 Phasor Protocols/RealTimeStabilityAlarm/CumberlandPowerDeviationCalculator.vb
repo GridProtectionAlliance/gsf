@@ -114,7 +114,7 @@ Public Class CumberlandPowerDeviationCalculator
     ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
-    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
+    Protected Overrides Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
 
         Dim bus1VM, bus1VA, bus2VM, bus2VA, marsIM, marsIA, johnIM, johnIA, davdIM, davdIA As IMeasurement
         Dim busVM, busVA, cumbMW As Double
@@ -189,7 +189,10 @@ Public Class CumberlandPowerDeviationCalculator
             PublishNewCalculatedMeasurement(stdevMeasurement)
         End If
 
-    End Sub
+        ' Return count of measurements handled by calculation
+        Return frame.Measurements.Count
+
+    End Function
 
     Public Overrides ReadOnly Property Status() As String
         Get
