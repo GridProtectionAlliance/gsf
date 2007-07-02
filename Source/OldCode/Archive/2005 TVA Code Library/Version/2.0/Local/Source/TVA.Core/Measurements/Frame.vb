@@ -35,6 +35,20 @@ Namespace Measurements
 
         End Sub
 
+        Public Function Clone() As IFrame Implements IFrame.Clone
+
+            With New Frame(m_ticks)
+                SyncLock m_measurements
+                    For Each measurement As KeyValuePair(Of MeasurementKey, IMeasurement) In m_measurements
+                        .Measurements.Add(measurement.Key, measurement.Value)
+                    Next
+                End SyncLock
+
+                Return .This
+            End With
+
+        End Function
+
         ''' <summary>Keyed measurements in this frame</summary>
         Public ReadOnly Property Measurements() As IDictionary(Of MeasurementKey, IMeasurement) Implements IFrame.Measurements
             Get
@@ -80,11 +94,23 @@ Namespace Measurements
         ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-            If TypeOf obj Is IFrame Then
-                Return m_ticks.CompareTo(DirectCast(obj, IFrame).Ticks)
-            Else
-                Throw New ArgumentException("Frame can only be compared with other IFrames...")
-            End If
+            Dim other As IFrame = TryCast(obj, IFrame)
+            If other IsNot Nothing Then Return CompareTo(other)
+            Throw New ArgumentException("Frame can only be compared with other IFrames...")
+
+        End Function
+
+        ''' <summary>This implementation of a basic measurement compares itself by value</summary>
+        Public Function CompareTo(ByVal other As IFrame) As Integer Implements System.IComparable(Of IFrame).CompareTo
+
+            Return m_ticks.CompareTo(other.Ticks)
+
+        End Function
+
+        ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
+        Public Overloads Function Equals(ByVal other As IFrame) As Boolean Implements System.IEquatable(Of IFrame).Equals
+
+            Return (CompareTo(other) = 0)
 
         End Function
 

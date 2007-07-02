@@ -84,6 +84,18 @@ Namespace Measurements
 
         End Sub
 
+        Public Shared Operator =(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
+
+            Return key1.Equals(key2)
+
+        End Operator
+
+        Public Shared Operator <>(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
+
+            Return Not key1.Equals(key2)
+
+        End Operator
+
         Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
             If TypeOf obj Is MeasurementKey Then Return Equals(DirectCast(obj, MeasurementKey))

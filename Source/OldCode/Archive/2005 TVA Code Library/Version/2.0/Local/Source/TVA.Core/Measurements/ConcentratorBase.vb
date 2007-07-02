@@ -293,9 +293,7 @@ Namespace Measurements
                 Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(measurement.Ticks) / m_ticksPerFrame))
 
                 ' Call user customizable function to assign new measurement to its frame
-                SyncLock frame.Measurements
-                    AssignMeasurementToFrame(frame, measurement)
-                End SyncLock
+                AssignMeasurementToFrame(frame, measurement)
 
                 ' Track absolute lastest timestamp and immediate measurement values...
                 RealTimeTicks = measurement.Ticks
@@ -445,19 +443,22 @@ Namespace Measurements
         ''' <summary>Consumers can choose to override this method to handle customize assignment of a measurement to its frame</summary>
         ''' <remarks>
         ''' <para>Override is optional, a measurement will simply be assigned to frame's measurement list otherwise</para>
-        ''' <para>The frame's measurement dictionary will by synclocked prior to call.  You should still assign measurement to frame's measurement dictionary even if not used (call MyBase.AssignMeasurementToFrame)</para>
+        ''' <para>The frame's measurement dictionary should be synclocked prior to use by consumer</para>
         ''' </remarks>
         Protected Overridable Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
             Dim frameMeasurement As IMeasurement
 
-            If frame.Measurements.TryGetValue(measurement.Key, frameMeasurement) Then
-                ' Measurement already exists, so we just update value with the latest value
-                frameMeasurement.Value = measurement.Value
-            Else
-                ' Create new frame measurement if it doesn't exist
-                frame.Measurements.Add(measurement.Key, measurement)
-            End If
+            SyncLock frame.Measurements
+                If frame.Measurements.TryGetValue(measurement.Key, frameMeasurement) Then
+                    ' Measurement already exists, so we just update with the latest values
+                    frameMeasurement.Ticks = measurement.Ticks
+                    frameMeasurement.Value = measurement.Value
+                Else
+                    ' Create new frame measurement if it doesn't exist
+                    frame.Measurements.Add(measurement.Key, measurement)
+                End If
+            End SyncLock
 
         End Sub
 
@@ -564,30 +565,27 @@ Namespace Measurements
 
             ' This function is executed on a real-time thread, so make sure any work to be done here
             ' is executed as efficiently as possible
+            Dim frame As IFrame = sample.Frames(m_frameIndex)
             Dim allFramesPublished As Boolean
 
             ' Frame timestamps are evenly distributed across their parent sample, so all we need to do
             ' is just wait for the lagtime to pass and begin publishing...
-            With sample.Frames(m_frameIndex)
-                If DistanceFromRealTime(.Ticks) >= m_lagTime Then
-                    Try
-                        SyncLock .Measurements
-                            ' Publish current frame
-                            PublishFrame(.This, m_frameIndex)
-                        End SyncLock
-                    Catch ex As Exception
-                        RaiseEvent ProcessException(ex)
-                    End Try
+            If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
+                Try
+                    ' Publish a copy of the current frame (this way consumer doesn't have to worry about frame synchronization)
+                    PublishFrame(frame.Clone(), m_frameIndex)
+                Catch ex As Exception
+                    RaiseEvent ProcessException(ex)
+                End Try
 
-                    .Published = True
-                    m_publishedFrames += 1
-                    m_publishedMeasurements += .Measurements.Count
+                frame.Published = True
+                m_publishedFrames += 1
+                m_publishedMeasurements += frame.Measurements.Count
 
-                    ' Increment frame index
-                    m_frameIndex += 1
-                    allFramesPublished = (m_frameIndex >= m_framesPerSecond)
-                End If
-            End With
+                ' Increment frame index
+                m_frameIndex += 1
+                allFramesPublished = (m_frameIndex >= m_framesPerSecond)
+            End If
 
             ' We will say sample is ready to be published (i.e., discarded) once all frames have been published
             Return allFramesPublished
