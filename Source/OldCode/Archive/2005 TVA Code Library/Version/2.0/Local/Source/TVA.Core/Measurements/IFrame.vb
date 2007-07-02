@@ -27,7 +27,7 @@ Namespace Measurements
         ReadOnly Property This() As IFrame
 
         ''' <summary>Create a copy of this frame and its measurements</summary>
-        ''' <remarks>The frame's measurement dictionary should be synclocked prior to use by consumer</remarks>
+        ''' <remarks>The frame's measurement dictionary should be synclocked prior to copy</remarks>
         Function Clone() As IFrame
 
         ''' <summary>Keyed measurements in this frame</summary>
