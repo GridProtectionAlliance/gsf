@@ -107,6 +107,14 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
+    Private Function IFrameClone() As IFrame Implements IFrame.Clone
+
+        ' Because of the way we are using frames related to data concentration - we don't need to create a synchronized copy of the
+        ' frame's measurement dictionary - the measurements are distributed among the frame's cell elements
+        Return Me
+
+    End Function
+
     Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
         Get
             Return Me
@@ -249,13 +257,23 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     End Function
 
     ' We sort frames by timestamp
-    Public Overridable Function CompareTo(ByVal obj As Object) As Int32 Implements IComparable.CompareTo
+    Public Function CompareTo(ByVal other As Measurements.IFrame) As Integer Implements System.IComparable(Of Measurements.IFrame).CompareTo
 
-        If TypeOf obj Is IChannelFrame Then
-            Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
-        Else
-            Throw New ArgumentException(DerivedType.Name & " can only be compared with other IChannelFrames...")
-        End If
+        Return m_ticks.CompareTo(other.Ticks)
+
+    End Function
+
+    Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+        Dim other As Measurements.IFrame = TryCast(obj, Measurements.IFrame)
+        If other IsNot Nothing Then Return CompareTo(other)
+        Throw New ArgumentException("Frame can only be compared with other IFrames...")
+
+    End Function
+
+    Public Overloads Function Equals(ByVal other As Measurements.IFrame) As Boolean Implements System.IEquatable(Of Measurements.IFrame).Equals
+
+        Return (CompareTo(other) = 0)
 
     End Function
 

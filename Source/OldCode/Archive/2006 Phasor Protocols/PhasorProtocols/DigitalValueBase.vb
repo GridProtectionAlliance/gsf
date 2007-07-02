@@ -106,7 +106,7 @@ Public MustInherit Class DigitalValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (m_value = 0)
+            Return (m_value = -1)
         End Get
     End Property
 

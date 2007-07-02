@@ -23,10 +23,13 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Implements IMeasurement
 
+    Public Shared UndefinedKey As New MeasurementKey(-1, "__")
+
     Private m_parent As IChannelValue(Of T)
     Private m_id As Integer
-    Private m_tag As String
     Private m_source As String
+    Private m_key As MeasurementKey
+    Private m_tag As String
     Private m_valueIndex As Integer
     Private m_adder As Double
     Private m_multiplier As Double
@@ -39,6 +42,8 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         m_parent = parent
         m_valueIndex = valueIndex
         m_id = -1
+        m_source = "__"
+        m_key = UndefinedKey
 
     End Sub
 
@@ -77,7 +82,8 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Public Overridable ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
         Get
-            Return New MeasurementKey(m_id, m_source)
+            If m_key.Equals(UndefinedKey) Then m_key = New MeasurementKey(m_id, m_source)
+            Return m_key
         End Get
     End Property
 

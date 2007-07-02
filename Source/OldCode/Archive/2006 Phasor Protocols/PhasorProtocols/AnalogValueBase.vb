@@ -114,7 +114,7 @@ Public MustInherit Class AnalogValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (m_value = 0)
+            Return Single.IsNaN(m_value)
         End Get
     End Property
 

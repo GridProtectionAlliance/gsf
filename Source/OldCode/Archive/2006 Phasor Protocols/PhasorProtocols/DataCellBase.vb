@@ -184,9 +184,13 @@ Public MustInherit Class DataCellBase
 
     Public MustOverride Property PmuError() As Boolean Implements IDataCell.PmuError
 
-    Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean Implements IDataCell.AllValuesAreEmpty
+    Public Overridable ReadOnly Property AllValuesAssigned() As Boolean Implements IDataCell.AllValuesAssigned
         Get
-            Return (PhasorValues.AllValuesAreEmpty And FrequencyValue.IsEmpty And AnalogValues.AllValuesAreEmpty And DigitalValues.AllValuesAreEmpty)
+            Return ( _
+                PhasorValues.AllValuesAssigned AndAlso _
+                (Not FrequencyValue.IsEmpty) AndAlso _
+                AnalogValues.AllValuesAssigned AndAlso _
+                DigitalValues.AllValuesAssigned)
         End Get
     End Property
 
@@ -303,7 +307,7 @@ Public MustInherit Class DataCellBase
             baseAttributes.Add("Total Phasor Values", PhasorValues.Count)
             baseAttributes.Add("Total Analog Values", AnalogValues.Count)
             baseAttributes.Add("Total Digital Values", DigitalValues.Count)
-            baseAttributes.Add("All Values Are Empty", AllValuesAreEmpty)
+            baseAttributes.Add("All Values Assigned", AllValuesAssigned)
 
             Return baseAttributes
         End Get

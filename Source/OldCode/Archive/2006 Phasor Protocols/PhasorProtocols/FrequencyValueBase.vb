@@ -169,7 +169,7 @@ Public MustInherit Class FrequencyValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (m_frequency = 0 And m_dfdt = 0)
+            Return (Single.IsNaN(m_frequency) OrElse Single.IsNaN(m_dfdt))
         End Get
     End Property
 

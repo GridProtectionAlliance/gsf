@@ -59,7 +59,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
     Public Overrides ReadOnly Property BinaryLength() As UInt16
         Get
             If Count > 0 Then
-                If m_fixedCount = 0 Or m_floatCount = 0 Then
+                If m_fixedCount = 0 OrElse m_floatCount = 0 Then
                     ' Data types in list are consistent, a simple calculation will derive total binary length
                     Return Item(0).BinaryLength * Count
                 Else
@@ -78,18 +78,18 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
         End Get
     End Property
 
-    Public Overridable ReadOnly Property AllValuesAreEmpty() As Boolean
+    Public Overridable ReadOnly Property AllValuesAssigned() As Boolean
         Get
-            Dim allEmpty As Boolean = True
+            Dim allAssigned As Boolean = True
 
             For x As Int32 = 0 To Count - 1
-                If Not Item(x).IsEmpty Then
-                    allEmpty = False
+                If Item(x).IsEmpty Then
+                    allAssigned = False
                     Exit For
                 End If
             Next
 
-            Return allEmpty
+            Return allAssigned
         End Get
     End Property
 
@@ -107,7 +107,7 @@ Public MustInherit Class ChannelValueCollectionBase(Of TDefinition As IChannelDe
 
             baseAttributes.Add("Fixed Count", m_fixedCount)
             baseAttributes.Add("Float Count", m_floatCount)
-            baseAttributes.Add("All Values Empty", AllValuesAreEmpty)
+            baseAttributes.Add("All Values Assigned", AllValuesAssigned)
 
             Return baseAttributes
         End Get

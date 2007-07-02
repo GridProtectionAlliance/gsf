@@ -298,7 +298,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (m_real = 0 And m_imaginary = 0)
+            Return (Single.IsNaN(m_real) OrElse Single.IsNaN(m_imaginary))
         End Get
     End Property
 

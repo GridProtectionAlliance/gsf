@@ -289,13 +289,30 @@ Namespace Ieee1344
                 End Get
             End Property
 
+            Public Overloads Function Equals(ByVal other As TVA.Measurements.IFrame) As Boolean Implements System.IEquatable(Of Measurements.IFrame).Equals
+
+                Return (CompareTo(other) = 0)
+
+            End Function
+
+            Public Function CompareTo(ByVal other As TVA.Measurements.IFrame) As Integer Implements System.IComparable(Of Measurements.IFrame).CompareTo
+
+                Return m_ticks.CompareTo(other.Ticks)
+
+            End Function
+
             Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-                If TypeOf obj Is IChannelFrame Then
-                    Return m_ticks.CompareTo(DirectCast(obj, IChannelFrame).Ticks)
-                Else
-                    Throw New ArgumentException(DerivedType.Name & " can only be compared with other IChannelFrames...")
-                End If
+                Dim other As Measurements.IFrame = TryCast(obj, Measurements.IFrame)
+                If other IsNot Nothing Then Return CompareTo(other)
+                Throw New ArgumentException("Frame can only be compared with other IFrames...")
+
+            End Function
+
+            Private Function IFrameClone() As Measurements.IFrame Implements TVA.Measurements.IFrame.Clone
+
+                Throw New NotImplementedException()
+
             End Function
 
             Private ReadOnly Property IFrameMeasurements() As IDictionary(Of Measurements.MeasurementKey, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements

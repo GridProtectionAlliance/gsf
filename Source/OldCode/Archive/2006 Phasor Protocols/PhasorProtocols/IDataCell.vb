@@ -37,7 +37,7 @@ Public Interface IDataCell
 
     Property CommonStatusFlags() As Int32
 
-    ReadOnly Property AllValuesAreEmpty() As Boolean
+    ReadOnly Property AllValuesAssigned() As Boolean
 
     ReadOnly Property PhasorValues() As PhasorValueCollection
 
