@@ -62,17 +62,31 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time</summary>
+        Default Public ReadOnly Property AdjustedValue(ByVal measurementID As Integer, ByVal source As String) As Double
+            Get
+                Return Value(New MeasurementKey(measurementID, source))
+            End Get
+        End Property
+
+        ''' <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time</summary>
+        Default Public ReadOnly Property AdjustedValue(ByVal key As MeasurementKey) As Double
+            Get
+                Return Measurement(key)(m_parent.RealTimeTicks)
+            End Get
+        End Property
+
         ''' <summary>We retrieve measurement values within time tolerance of concentrator real-time</summary>
-        Default Public ReadOnly Property Value(ByVal measurementID As Integer, ByVal source As String) As Double
+        Public ReadOnly Property Value(ByVal measurementID As Integer, ByVal source As String) As Double
             Get
                 Return Value(New MeasurementKey(measurementID, source))
             End Get
         End Property
 
         ''' <summary>We retrieve measurement values within time tolerance of concentrator real-time</summary>
-        Default Public ReadOnly Property Value(ByVal key As MeasurementKey) As Double
+        Public ReadOnly Property Value(ByVal key As MeasurementKey) As Double
             Get
-                Return Measurement(key)(m_parent.RealTimeTicks)
+                Return Measurement(key).Value(m_parent.RealTimeTicks)
             End Get
         End Property
 
@@ -80,7 +94,7 @@ Namespace Measurements
         Friend Sub UpdateMeasurementValue(ByVal newMeasurement As IMeasurement)
 
             With newMeasurement
-                Measurement(.Key)(.Ticks) = .Value
+                Measurement(.Key).Value(.Ticks) = .Value
             End With
 
         End Sub

@@ -90,7 +90,7 @@ Namespace Measurements
         ''' <para>Note that returned value will be offset by adder and multiplier</para>
         ''' </remarks>
         ''' <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
-        Public Overloads ReadOnly Property AdjustedValue(ByVal ticks As Long) As Double
+        Default Public Overloads ReadOnly Property AdjustedValue(ByVal ticks As Long) As Double
             Get
                 ' We only return a measurement value that is up-to-date...
                 If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
@@ -101,13 +101,25 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Returns numeric adjusted value of this measurement, constrained within specified timestamp</summary>
+        ''' <remarks>
+        ''' <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
+        ''' <para>Note that returned value will be offset by adder and multiplier</para>
+        ''' </remarks>
+        ''' <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
+        Default Public Overloads ReadOnly Property AdjustedValue(ByVal timestamp As Date) As Double
+            Get
+                Return Me(timestamp.Ticks)
+            End Get
+        End Property
+
         ''' <summary>Gets or sets numeric value of this measurement, constrained within specified ticks</summary>
         ''' <remarks>
         ''' <para>Get operation will return NaN if ticks are outside of time deviation tolerances</para>
         ''' <para>Set operation will only store a value that is newer than the cached value</para>
         ''' </remarks>
         ''' <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
-        Default Public Overloads Property Value(ByVal ticks As Long) As Double
+        Public Overloads Property Value(ByVal ticks As Long) As Double
             Get
                 ' We only return a measurement value that is up-to-date...
                 If TimeIsValid(ticks, Me.Ticks, m_lagTime, m_leadTime) Then
@@ -131,12 +143,12 @@ Namespace Measurements
         ''' <para>Set operation will only store a value that is newer than the cached value</para>
         ''' </remarks>
         ''' <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
-        Default Public Overloads Property Value(ByVal timestamp As Date) As Double
+        Public Overloads Property Value(ByVal timestamp As Date) As Double
             Get
-                Return Me(timestamp.Ticks)
+                Return Me.Value(timestamp.Ticks)
             End Get
             Set(ByVal value As Double)
-                Me(timestamp.Ticks) = value
+                Me.Value(timestamp.Ticks) = value
             End Set
         End Property
 
