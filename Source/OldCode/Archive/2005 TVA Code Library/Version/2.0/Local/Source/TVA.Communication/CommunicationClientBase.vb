@@ -54,7 +54,7 @@ Public MustInherit Class CommunicationClientBase
     Private m_serverID As Guid
     Private m_clientID As Guid
     Private m_isConnected As Boolean
-    Private m_totalBytesSent As Integer
+    Private m_totalBytesSent As Long
     Private m_persistSettings As Boolean
     Private m_settingsCategoryName As String
 
@@ -483,7 +483,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The total number of bytes sent by the client to the server since the connection is established.</returns>
     <Browsable(False)> _
-    Public Overridable ReadOnly Property TotalBytesSent() As Integer Implements ICommunicationClient.TotalBytesSent
+    Public Overridable ReadOnly Property TotalBytesSent() As Long Implements ICommunicationClient.TotalBytesSent
         Get
             Return m_totalBytesSent
         End Get
@@ -495,7 +495,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <value></value>
     ''' <returns>The total number of bytes received by the client from the server since the connection is established.</returns>
     <Browsable(False)> _
-    Public Overridable ReadOnly Property TotalBytesReceived() As Integer Implements ICommunicationClient.TotalBytesReceived
+    Public Overridable ReadOnly Property TotalBytesReceived() As Long Implements ICommunicationClient.TotalBytesReceived
         Get
             Return m_totalBytesReceived
         End Get
@@ -831,7 +831,7 @@ Public MustInherit Class CommunicationClientBase
 #Region " Code Scope: Protected "
 
     ' We expose these two members to derived classes for their own internal use
-    Protected m_totalBytesReceived As Integer
+    Protected m_totalBytesReceived As Long
     Protected m_receiveRawDataFunction As ReceiveRawDataFunctionSignature
     Protected m_buffer As Byte()
 

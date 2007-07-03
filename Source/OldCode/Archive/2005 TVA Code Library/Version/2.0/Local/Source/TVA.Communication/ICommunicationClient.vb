@@ -207,14 +207,14 @@ Public Interface ICommunicationClient
     ''' </summary>
     ''' <value></value>
     ''' <returns>The total number of bytes sent by the client to the server since the connection is established.</returns>
-    ReadOnly Property TotalBytesSent() As Integer
+    ReadOnly Property TotalBytesSent() As Long
 
     ''' <summary>
     ''' Gets the total number of bytes received by the client from the server since the connection is established.
     ''' </summary>
     ''' <value></value>
     ''' <returns>The total number of bytes received by the client from the server since the connection is established.</returns>
-    ReadOnly Property TotalBytesReceived() As Integer
+    ReadOnly Property TotalBytesReceived() As Long
 
     ''' <summary>
     ''' Connects the client to the server.
