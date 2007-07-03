@@ -909,7 +909,7 @@ Public Class ServiceHelper
                     .Append(New String("-"c, 10))
                     .Append(" ")
                     .Append(New String("-"c, 20))
-                    For Each process As Process In process.GetProcesses()
+                    For Each process As System.Diagnostics.Process In System.Diagnostics.Process.GetProcesses()
                         Try
                             .Append(process.StartInfo.UserName)
                             .AppendLine()
@@ -1520,7 +1520,7 @@ Public Class ServiceHelper
                     processName = Process.GetCurrentProcess().ProcessName
                 End If
 
-                For Each process As Process In process.GetProcessesByName(processName)
+                For Each process As System.Diagnostics.Process In System.Diagnostics.Process.GetProcessesByName(processName)
                     ' Lookup for the system process by name.
                     processToAbort = process
                     Exit For
