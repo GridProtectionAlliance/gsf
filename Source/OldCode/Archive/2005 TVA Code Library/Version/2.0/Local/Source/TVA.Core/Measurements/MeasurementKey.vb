@@ -75,15 +75,6 @@ Namespace Measurements
 
         End Function
 
-        Private Sub Regenerate()
-
-            ' We cache key elements during construction or after element value change to speed structure usage
-            Dim idImage As String = m_id.ToString()
-            m_hashCode = String.Format("{0}{1}", m_source, idImage.PadLeft(10, "0"c)).GetHashCode()
-            m_stringImage = String.Format("{0}:{1}", m_source, idImage)
-
-        End Sub
-
         Public Shared Operator =(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
 
             Return key1.Equals(key2)
@@ -93,6 +84,30 @@ Namespace Measurements
         Public Shared Operator <>(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
 
             Return Not key1.Equals(key2)
+
+        End Operator
+
+        Public Shared Operator >(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
+
+            Return key1.CompareTo(key2) > 0
+
+        End Operator
+
+        Public Shared Operator >=(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
+
+            Return key1.CompareTo(key2) >= 0
+
+        End Operator
+
+        Public Shared Operator <(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
+
+            Return key1.CompareTo(key2) < 0
+
+        End Operator
+
+        Public Shared Operator <=(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
+
+            Return key1.CompareTo(key2) <= 0
 
         End Operator
 
@@ -127,6 +142,15 @@ Namespace Measurements
             Throw New ArgumentException("Object is not a MeasurementKey")
 
         End Function
+
+        Private Sub Regenerate()
+
+            ' We cache key elements during construction or after element value change to speed structure usage
+            Dim idImage As String = m_id.ToString()
+            m_hashCode = String.Format("{0}{1}", m_source, idImage.PadLeft(10, "0"c)).GetHashCode()
+            m_stringImage = String.Format("{0}:{1}", m_source, idImage)
+
+        End Sub
 
     End Structure
 

@@ -27,20 +27,31 @@ Namespace Measurements
         Private m_ticks As Long
         Private m_published As Boolean
         Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
+        Private m_publishedMeasurements As Integer
 
         Public Sub New(ByVal ticks As Long)
 
             m_ticks = ticks
             m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
+            m_publishedMeasurements = -1
 
         End Sub
 
+        ''' <summary>Handy instance reference to self</summary>
+        Public ReadOnly Property This() As IFrame Implements IFrame.This
+            Get
+                Return Me
+            End Get
+        End Property
+
+        ''' <summary>Create a copy of this frame and its measurements</summary>
+        ''' <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
         Public Function Clone() As IFrame Implements IFrame.Clone
 
             With New Frame(m_ticks)
                 SyncLock m_measurements
-                    For Each measurement As KeyValuePair(Of MeasurementKey, IMeasurement) In m_measurements
-                        .Measurements.Add(measurement.Key, measurement.Value)
+                    For Each dictionaryElement As KeyValuePair(Of MeasurementKey, IMeasurement) In m_measurements
+                        .Measurements.Add(dictionaryElement.Key, dictionaryElement.Value)
                     Next
                 End SyncLock
 
@@ -66,11 +77,16 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>Handy instance reference to self</summary>
-        Public ReadOnly Property This() As IFrame Implements IFrame.This
+        ''' <summary>Gets or sets total number of measurements that have been published for this frame</summary>
+        ''' <remarks>If this property has not been assigned a value, the property will return measurement count</remarks>
+        Public Property PublishedMeasurements() As Integer Implements IFrame.PublishedMeasurements
             Get
-                Return Me
+                If m_publishedMeasurements = -1 Then Return m_measurements.Count
+                Return m_publishedMeasurements
             End Get
+            Set(ByVal value As Integer)
+                m_publishedMeasurements = value
+            End Set
         End Property
 
         ''' <summary>Exact timestamp of the data represented in this frame</summary>

@@ -85,7 +85,6 @@ Namespace Measurements
         ''' <para>framesPerSecond must be at least one.</para>
         ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
         ''' <para>leadTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time) - note that this defines time sensitivity to future timestamps.</para>
-        ''' <para>Publish frame function delegate parameter may be initialized to null, but must be defined before concentrator is enabled.</para>
         ''' <para>Note that concentration will not begin until consumer sets Enabled = True.</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
@@ -109,7 +108,6 @@ Namespace Measurements
             m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(framesPerSecond)
             m_lagTime = lagTime
             m_leadTime = leadTime
-            m_trackLatestMeasurements = False
             m_latestMeasurements = New ImmediateMeasurements(Me)
             m_monitorTimer = New Timers.Timer
 
@@ -416,6 +414,7 @@ Namespace Measurements
                     .Append("Current sample detail:")
                     .Append(Environment.NewLine)
                     .Append(sampleDetail.ToString)
+                    .Append(Environment.NewLine)
 
                     Return .ToString()
                 End With
@@ -443,7 +442,7 @@ Namespace Measurements
 
         ''' <summary>Consumers must override this method in order to publish a frame</summary>
         ''' <remarks>Implementors are expected to return total published measurements as return value</remarks>
-        Protected MustOverride Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
+        Protected MustOverride Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
         ''' <summary>Consumers can choose to override this method to create a new custom frame</summary>
         ''' <remarks>Override is optional, the base class will create a basic frame to hold synchronized measurements</remarks>
@@ -585,13 +584,14 @@ Namespace Measurements
             If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
                 Try
                     ' Publish a copy of the current frame (this way consumer doesn't have to worry about frame synchronization)
-                    m_publishedMeasurements += PublishFrame(frame.Clone(), m_frameIndex)
+                    PublishFrame(frame.Clone(), m_frameIndex)
                 Catch ex As Exception
                     RaiseEvent ProcessException(ex)
                 End Try
 
                 frame.Published = True
                 m_publishedFrames += 1
+                m_publishedMeasurements += frame.PublishedMeasurements
 
                 ' Increment frame index
                 m_frameIndex += 1

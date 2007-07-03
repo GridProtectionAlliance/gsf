@@ -37,6 +37,9 @@ Namespace Measurements
         ''' <summary>Gets or sets published state of this frame</summary>
         Property Published() As Boolean
 
+        ''' <summary>Gets or sets total number of measurements that have been pubilshed for this frame</summary>
+        Property PublishedMeasurements() As Integer
+
         ''' <summary>Exact timestamp of the data represented in this frame</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Property Ticks() As Long
