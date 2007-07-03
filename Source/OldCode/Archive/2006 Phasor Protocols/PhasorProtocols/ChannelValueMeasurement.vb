@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports TVA.Common
 Imports TVA.Measurements
 
 ''' <summary>This class represents the protocol independent representation of any kind of data value as an abstract measurement.</summary>
@@ -30,6 +31,9 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     Private m_source As String
     Private m_key As MeasurementKey
     Private m_tag As String
+    Private m_ticks As Long
+    Private m_dataQualityIsGood As Integer
+    Private m_timeQualityIsGood As Integer
     Private m_valueIndex As Integer
     Private m_adder As Double
     Private m_multiplier As Double
@@ -44,6 +48,9 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         m_id = -1
         m_source = "__"
         m_key = UndefinedKey
+        m_ticks = parent.Parent.Parent.Ticks
+        m_dataQualityIsGood = -1
+        m_timeQualityIsGood = -1
 
     End Sub
 
@@ -120,6 +127,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Get
     End Property
 
+    ''' <summary>Defines an offset to add to the measurement value</summary>
     Public Overridable Property Adder() As Double Implements IMeasurement.Adder
         Get
             Return m_adder
@@ -129,6 +137,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
+    ''' <summary>Defines a mulplicative offset to add to the measurement value</summary>
     Public Overridable Property Multiplier() As Double Implements IMeasurement.Multiplier
         Get
             Return m_multiplier
@@ -138,30 +147,38 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Set
     End Property
 
+    ''' <summary>Determines if the quality of the timestamp of this measurement is good</summary>
+    ''' <remarks>This value returns timestamp quality of parent data cell unless assigned an alternate value</remarks>
     Public Overridable Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
         Get
-            Return m_parent.Parent.SynchronizationIsValid
+            If m_timeQualityIsGood = -1 Then Return m_parent.Parent.SynchronizationIsValid
+            Return (m_timeQualityIsGood <> 0)
         End Get
         Set(ByVal value As Boolean)
-            Throw New NotImplementedException("Timestamp quality for " & m_parent.DerivedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
+            m_timeQualityIsGood = IIf(value, 1, 0)
         End Set
     End Property
 
+    ''' <summary>Determines if the quality of the numeric value of this measurement is good</summary>
+    ''' <remarks>This value returns data quality of parent data cell unless assigned an alternate value</remarks>
     Public Overridable Property ValueQualityIsGood() As Boolean Implements IMeasurement.ValueQualityIsGood
         Get
-            Return m_parent.Parent.DataIsValid
+            If m_dataQualityIsGood = -1 Then Return m_parent.Parent.DataIsValid
+            Return (m_dataQualityIsGood <> 0)
         End Get
         Set(ByVal value As Boolean)
-            Throw New NotImplementedException("Value quality for " & m_parent.DerivedType.Name & " is derived from parent data cell and is hence read-only for channel value measurements")
+            m_dataQualityIsGood = IIf(value, 1, 0)
         End Set
     End Property
 
+    ''' <summary>Gets or sets exact timestamp of the data represented by this measurement</summary>
+    ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
     Public Overridable Property Ticks() As Long Implements IMeasurement.Ticks
         Get
-            Return m_parent.Parent.Parent.Ticks
+            Return m_ticks
         End Get
         Set(ByVal value As Long)
-            Throw New NotImplementedException("Ticks for " & m_parent.DerivedType.Name & " are derived from parent frame and are hence read-only for channel value measurements")
+            m_ticks = value
         End Set
     End Property
 

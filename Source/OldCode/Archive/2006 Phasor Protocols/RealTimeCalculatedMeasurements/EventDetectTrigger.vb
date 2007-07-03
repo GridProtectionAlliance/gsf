@@ -94,7 +94,7 @@ Public Class EventDetectTrigger
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
 
-    Protected Overrides Function PublishFrame(ByVal frame As TVA.Measurements.IFrame, ByVal index As Integer) As Integer
+    Protected Overrides Sub PublishFrame(ByVal frame As TVA.Measurements.IFrame, ByVal index As Integer)
         Dim averageFreq As Double
 
         With frame.Measurements
@@ -129,14 +129,11 @@ Public Class EventDetectTrigger
                 If m_freqBuffer.Count > m_maxCapacity Then
                     m_freqBuffer.RemoveAt(0)
                 End If
-
-                ' Return count of measurements handled by calculation
-                Return .Count
             End If
 
         End With
 
-    End Function
+    End Sub
 
     Public Overrides ReadOnly Property Status() As String
         Get

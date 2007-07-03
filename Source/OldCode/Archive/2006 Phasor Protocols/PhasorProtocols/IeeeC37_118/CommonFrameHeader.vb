@@ -269,6 +269,15 @@ Namespace IeeeC37_118
                 End Get
             End Property
 
+            Private Property IFramePublishedMeasurements() As Integer Implements Measurements.IFrame.PublishedMeasurements
+                Get
+                    Return 0
+                End Get
+                Set(ByVal value As Integer)
+                    Throw New NotImplementedException()
+                End Set
+            End Property
+
             Public Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
 
                 Throw New NotImplementedException()

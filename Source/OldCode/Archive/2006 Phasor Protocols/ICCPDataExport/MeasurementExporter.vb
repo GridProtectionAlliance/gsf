@@ -18,6 +18,7 @@
 Imports System.Text
 Imports System.IO
 Imports System.Data.OleDb
+Imports System.Threading
 Imports TVA.Measurements
 Imports TVA.Configuration.Common
 Imports TVA.IO.FilePath
@@ -86,8 +87,7 @@ Public Class MeasurementExporter
 
         connection.Open()
 
-        ' NOTE: When you get around to implementing both archive source and ID in the measurements table
-        ' these queries will need to be changed :)
+        ' TODO: When you get around to implementing both archive source and ID in the measurements table these queries will need to be changed :)
 
         ' Populate measurement tag and signal type dictionaries
         For x As Integer = 0 To inputMeasurementKeys.Length - 1
@@ -154,30 +154,10 @@ Public Class MeasurementExporter
         End Get
     End Property
 
-    ' To optimize performance, we only sort the exact measurements that will be needed
-    Public Overrides Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement)
+    Public Overrides Sub SortMeasurement(ByVal measurement As TVA.Measurements.IMeasurement)
 
-        If IsTimeToExport(measurement.Ticks) Then MyBase.QueueMeasurementForCalculation(measurement)
-
-    End Sub
-
-    Public Overrides Sub QueueMeasurementsForCalculation(ByVal measurements As IList(Of IMeasurement))
-
-        If measurements IsNot Nothing Then
-            For x As Integer = 0 To measurements.Count - 1
-                QueueMeasurementForCalculation(measurements(x))
-            Next
-        End If
-
-    End Sub
-
-    Public Overrides Sub QueueMeasurementsForCalculation(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
-
-        If measurements IsNot Nothing Then
-            For Each measurement As IMeasurement In measurements.Values
-                QueueMeasurementForCalculation(measurement)
-            Next
-        End If
+        ' To optimize performance, we only sort the exact measurements that will be needed
+        If IsTimeToExport(measurement.Ticks) Then MyBase.SortMeasurement(measurement)
 
     End Sub
 
@@ -192,11 +172,29 @@ Public Class MeasurementExporter
     ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
-    Protected Overrides Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
+    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
         ' We only export data at the specified interval
         If IsTimeToExport(frame.Ticks) Then
-            ' Note: since this code only gets executed every few seconds we go ahead and publish any error messages as needed
+            ' Measurement export to a file may take more than 1/30 of a second - so we do this work asyncrhonously
+            ThreadPool.QueueUserWorkItem(AddressOf ExportMeasurements, frame)
+        End If
+
+    End Sub
+
+    Private Function IsTimeToExport(ByVal ticks As Long) As Boolean
+
+        Return ((New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0)
+
+    End Function
+
+    Private Sub ExportMeasurements(ByVal state As Object)
+
+        Dim frame As IFrame = DirectCast(state, IFrame)
+
+        ' This code is run on an independent thread so we manually capture exceptions to make sure they get propagated as expected,
+        ' also since this code only gets executed every few seconds we go ahead and publish any error messages as needed
+        Try
             With frame.Measurements
                 ' Make sure there are measurements to export
                 If .Count > 0 Then
@@ -205,9 +203,14 @@ Public Class MeasurementExporter
                     ' We need to get calculated reference angle value in order to export relative phase angles
                     ' If the value is not here, we don't export
                     If .TryGetValue(m_referenceAngleKey, referenceAngle) Then
+                        ' We'll wait on file lock for up to one second - then give up with IO exception
+                        If File.Exists(m_exportFileName) Then WaitForWriteLock(m_exportFileName, 1)
+
                         ' Create a new export file
                         Dim fileStream As StreamWriter = File.CreateText(m_exportFileName)
                         Dim measurementTag, signalType As String
+
+                        ' TODO: Change this to export all tags - regardless of whether point arrived in frame
 
                         ' Write all measurements in this frame to the export file
                         For Each measurement As IMeasurement In .Values
@@ -267,17 +270,14 @@ Public Class MeasurementExporter
                     RaiseCalculationException(New InvalidOperationException("No measurements were available for ICCP data export, possible reasons: system is initializing, receiving no data or lag time is too small.  File creation was skipped."))
                 End If
             End With
-        End If
+        Catch ex As ThreadAbortException
+            ' This exception is normal - no need to report this - we'll just egress gracefully
+            Exit Sub
+        Catch ex As Exception
+            ' Something unexpected happened during export - so we'll report it...
+            RaiseCalculationException(ex)
+        End Try
 
-        ' Return count of measurements handled by calculation
-        Return frame.Measurements.Count
-
-    End Function
-
-    Private Function IsTimeToExport(ByVal ticks As Long) As Boolean
-
-        Return ((New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0)
-
-    End Function
+    End Sub
 
 End Class

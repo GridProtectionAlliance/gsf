@@ -269,7 +269,7 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	m_measurementMatrix = gcnew List<array<IMeasurement^, 1>^>;
 }
 
-int EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int index)
+void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int index)
 {
 	IMeasurement^ measurement;
 	MeasurementKey measurementKey;
@@ -816,8 +816,6 @@ int EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int 
 		free(movingInterAreaFrequency);free(movingInterAreaRatio);
 		fcloseall();
 	}
-
-	return frame->Measurements->Count;
 }
 
 void EventDetectionAlgorithm::data_preprocess(double *prony_data,int N,int m,int m_removeMeanValue,int m_normalizeData)

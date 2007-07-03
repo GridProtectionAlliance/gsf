@@ -170,6 +170,6 @@ namespace RealTimeEventDetection
 	protected:
 
 		// We override this this function to process frames of measurement data
-		virtual int PublishFrame(IFrame^ frame, int index) override;
+		virtual void PublishFrame(IFrame^ frame, int index) override;
 	};
 }

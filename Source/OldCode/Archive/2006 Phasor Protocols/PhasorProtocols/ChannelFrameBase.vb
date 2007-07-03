@@ -34,6 +34,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
     Private m_published As Boolean
+    Private m_publishedMeasurements As Integer
     Private m_parsedBinaryLength As UInt16
     Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
 
@@ -157,6 +158,15 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
         Set(ByVal value As Boolean)
             m_published = value
+        End Set
+    End Property
+
+    Public Property PublishedMeasurements() As Integer Implements IFrame.PublishedMeasurements
+        Get
+            Return m_publishedMeasurements
+        End Get
+        Set(ByVal value As Integer)
+            m_publishedMeasurements = value
         End Set
     End Property
 

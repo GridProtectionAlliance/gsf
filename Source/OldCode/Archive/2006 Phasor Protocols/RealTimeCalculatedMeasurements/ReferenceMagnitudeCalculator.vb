@@ -53,7 +53,7 @@ Public Class ReferenceMagnitudeCalculator
     ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
-    Protected Overrides Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
+    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
         With frame.Measurements
             ' We need at least one reference angle PMU magnitude for this calculation...
@@ -75,11 +75,8 @@ Public Class ReferenceMagnitudeCalculator
                 ' TODO: Raise warning when minimum set of PMU's is not available for reference magnitude calculation - but not 30 times per second :)
                 'RaiseCalculationException(
             End If
-
-            ' Return count of measurements handled by calculation
-            Return .Count
         End With
 
-    End Function
+    End Sub
 
 End Class

@@ -108,9 +108,10 @@ Public Class ReferenceAngleCalculator
     ''' LagTime.  Note that this function will be called with a frequency specified by the ExpectedMeasurementsPerSecond
     ''' property, so make sure all work to be done is executed as efficiently as possible.
     ''' </remarks>
-    Protected Overrides Function PublishFrame(ByVal frame As IFrame, ByVal index As Integer) As Integer
+    Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
         Dim calculatedMeasurement As Measurement = Measurement.Clone(OutputMeasurements(0), frame.Ticks)
+        Dim currentAngle As IMeasurement
         Dim angle, deltaAngle, angleTotal, angleAverage, lastAngle, unwrapOffset As Double
         Dim key As MeasurementKey
         Dim dataSetChanged As Boolean
@@ -124,7 +125,7 @@ Public Class ReferenceAngleCalculator
         If TryGetMinimumNeededMeasurements(frame, m_measurements) Then
             ' See if data set has changed since last run
             If m_lastAngles.Count > 0 AndAlso m_lastAngles.Count = m_measurements.Length Then
-                For x = 0 To MinimumMeasurementsToUse - 1
+                For x = 0 To m_measurements.Length - 1
                     If Not m_lastAngles.ContainsKey(m_measurements(x).Key) Then
                         dataSetChanged = True
                         Exit For
@@ -145,7 +146,7 @@ Public Class ReferenceAngleCalculator
                 ' Calculate new unwrap offsets
                 angleRef = m_measurements(0).AdjustedValue
 
-                For x = 0 To MinimumMeasurementsToUse - 1
+                For x = 0 To m_measurements.Length - 1
                     angleDelta0 = Abs(m_measurements(x).AdjustedValue - angleRef)
                     angleDelta1 = Abs(m_measurements(x).AdjustedValue + 360.0R - angleRef)
                     angleDelta2 = Abs(m_measurements(x).AdjustedValue - 360.0R - angleRef)
@@ -163,7 +164,7 @@ Public Class ReferenceAngleCalculator
             End If
 
             ' Total all phase angles, unwrapping angles if needed
-            For x = 0 To MinimumMeasurementsToUse - 1
+            For x = 0 To m_measurements.Length - 1
                 ' Get current angle value and key
                 With m_measurements(x)
                     angle = .AdjustedValue
@@ -201,13 +202,14 @@ Public Class ReferenceAngleCalculator
             Next
 
             ' We use modulus function to make sure angle is in range of 0 to 359
-            angleAverage = (angleTotal / MinimumMeasurementsToUse) Mod 360
+            angleAverage = (angleTotal / m_measurements.Length) Mod 360
 
             ' Track last angles for next run
             m_lastAngles.Clear()
 
-            For x = 0 To MinimumMeasurementsToUse - 1
-                m_lastAngles(m_measurements(x).Key) = m_measurements(x).AdjustedValue
+            For x = 0 To m_measurements.Length - 1
+                currentAngle = m_measurements(x)
+                m_lastAngles.Add(currentAngle.Key, currentAngle.AdjustedValue)
             Next
         Else
             ' Use stack average when minimum set is below specified angle count
@@ -245,10 +247,7 @@ Public Class ReferenceAngleCalculator
             End With
         End SyncLock
 
-        ' Return count of measurements handled by calculation
-        Return frame.Measurements.Count
-
-    End Function
+    End Sub
 
     '#If DEBUG Then
 

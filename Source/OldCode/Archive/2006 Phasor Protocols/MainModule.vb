@@ -52,11 +52,17 @@ Module MainModule
 
     Public Sub Main()
 
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Single.MinValue)))
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Single.MaxValue)))
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Single.NegativeInfinity)))
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Single.PositiveInfinity)))
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Single.NaN)))
+        'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(UInt16.MaxValue)))
         'Debug.WriteLine(TVA.ByteEncoding.LittleEndianBinary.GetString(BitConverter.GetBytes(Convert.ToInt32(-1))))
         'Debug.WriteLine(BitConverter.ToSingle(BitConverter.GetBytes(Convert.ToInt32(-1)), 0))
         'Debug.WriteLine(Single.IsNaN(BitConverter.ToSingle(BitConverter.GetBytes(Convert.ToInt32(-1)), 0)))
         'Debug.WriteLine(Single.IsInfinity(BitConverter.ToSingle(BitConverter.GetBytes(Convert.ToInt32(-1)), 0)))
-        ''Debug.WriteLine(BitConverter.ToSingle(, 0))
+        'Debug.WriteLine(BitConverter.ToSingle(, 0))
         'Stop
 
         Dim consoleLine As String
