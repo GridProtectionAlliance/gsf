@@ -37,8 +37,10 @@ Public MustInherit Class DataCellBase
 #Region " IMeasurement Implementation Members "
 
     Private m_id As Integer
-    Private m_tag As String
     Private m_source As String
+    Private m_key As MeasurementKey
+    Private m_tag As String
+    Private m_ticks As Long
     Private m_adder As Double
     Private m_multiplier As Double
 
@@ -69,6 +71,14 @@ Public MustInherit Class DataCellBase
         m_phasorValues = New PhasorValueCollection(maximumPhasors)
         m_analogValues = New AnalogValueCollection(maximumAnalogs)
         m_digitalValues = New DigitalValueCollection(maximumDigitals)
+
+        ' Initialize IMeasurement members
+        m_id = -1
+        m_source = "__"
+        m_key = UndefinedKey
+        m_ticks = parent.Ticks
+        m_adder = 0.0R
+        m_multiplier = 1.0R
 
     End Sub
 
@@ -358,10 +368,10 @@ Public MustInherit Class DataCellBase
 
     Private Property IMeasurementTicks() As Long Implements IMeasurement.Ticks
         Get
-            Return Parent.Ticks
+            Return m_ticks
         End Get
         Set(ByVal value As Long)
-            Throw New NotImplementedException("Ticks for " & DerivedType.Name & " are derived from parent frame and are hence read-only for channel cell measurements")
+            m_ticks = value
         End Set
     End Property
 
@@ -391,7 +401,8 @@ Public MustInherit Class DataCellBase
 
     Private ReadOnly Property IMeasurementKey() As MeasurementKey Implements IMeasurement.Key
         Get
-            Return New MeasurementKey(m_id, m_source)
+            If m_key.Equals(UndefinedKey) Then m_key = New MeasurementKey(m_id, m_source)
+            Return m_key
         End Get
     End Property
 

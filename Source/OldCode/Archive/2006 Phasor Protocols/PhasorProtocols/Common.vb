@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Buffer
+Imports TVA.Measurements
 Imports TVA.Text.Common
 
 ''' <summary>Common constants and functions for phasor classes</summary>
@@ -30,6 +31,9 @@ Public NotInheritable Class Common
 
     ''' <summary>Typical data stream synchrnonization byte</summary>
     Public Const SyncByte As Byte = &HAA
+
+    ''' <summary>Undefined measurement key</summary>
+    Public Shared UndefinedKey As New MeasurementKey(-1, "__")
 
     ''' <summary>This is a common optimized block copy function for any kind of data</summary>
     ''' <remarks>This function automatically advances index for convenience</remarks>

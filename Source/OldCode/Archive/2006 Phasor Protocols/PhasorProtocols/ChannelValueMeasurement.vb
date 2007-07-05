@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports PhasorProtocols.Common
 Imports TVA.Common
 Imports TVA.Measurements
 
@@ -24,19 +25,17 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Implements IMeasurement
 
-    Public Shared UndefinedKey As New MeasurementKey(-1, "__")
-
     Private m_parent As IChannelValue(Of T)
     Private m_id As Integer
     Private m_source As String
     Private m_key As MeasurementKey
     Private m_tag As String
     Private m_ticks As Long
-    Private m_dataQualityIsGood As Integer
-    Private m_timeQualityIsGood As Integer
     Private m_valueIndex As Integer
     Private m_adder As Double
     Private m_multiplier As Double
+    Private m_dataQualityIsGood As Integer
+    Private m_timeQualityIsGood As Integer
 
     Protected Sub New()
     End Sub
@@ -49,6 +48,8 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         m_source = "__"
         m_key = UndefinedKey
         m_ticks = parent.Parent.Parent.Ticks
+        m_adder = 0.0R
+        m_multiplier = 1.0R
         m_dataQualityIsGood = -1
         m_timeQualityIsGood = -1
 
