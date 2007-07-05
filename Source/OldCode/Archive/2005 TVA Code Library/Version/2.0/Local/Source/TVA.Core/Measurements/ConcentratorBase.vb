@@ -57,6 +57,8 @@ Namespace Measurements
         Friend Event LeadTimeUpdated(ByVal leadTime As Double)                  ' Raised, for the benefit of dependent classes, when lead time is updated
         Friend Event LagTimeUpdated(ByVal lagTime As Double)                    ' Raised, for the benefit of dependent classes, when lag time is updated
 
+
+        Private m_useLocalClockAsRealTime As Boolean                            ' Determines whether ot not to use local system clock as "real-time"
         Private m_realTimeTicks As Long                                         ' Ticks of the most recently received measurement (i.e., real-time)
         Private m_currentSampleTimestamp As Date                                ' Timestamp of current real-time value baselined at the bottom of the second
         Private m_framesPerSecond As Integer                                    ' Frames per second
@@ -64,6 +66,7 @@ Namespace Measurements
         Private m_leadTime As Double                                            ' Allowed future time deviation tolerance
         Private m_ticksPerFrame As Decimal                                      ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
         Private m_frameIndex As Integer                                         ' Current publishing frame index
+        Private m_measurementsSortedByArrival As Long                           ' Total number of measurements that were sorted by arrival
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
         Private m_publishedFrames As Long                                       ' Total number of published frames
@@ -232,46 +235,57 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Ticks of most recent measurement, or local clock ticks if no measurements are within time deviation tolerances</summary>
+        ''' <summary>Determines whether or not to use the local clock time as real-time</summary>
         ''' <remarks>
-        ''' If real-time (i.e., newest received measurement timestamp) gets too old or creeps too far
-        ''' into the future, we fall back on local system time.  Note that this creates a dependency
-        ''' on an accurate local clock - the smaller the time deviation tolerances the better the needed
-        ''' local clock acuracy.  For example, time deviation tolerances of a few seconds might only
-        ''' require keeping the local clock synchronized to an NTP time source but sub-second tolerances
-        ''' would require that the local clock be synchronized to a GPS time source.
+        ''' You should only use your local system clock as real-time if the time is locally GPS synchronized
+        ''' or the measurement values being sorted were not measured relative to a GPS synchronized clock
         ''' </remarks>
-        Public Property RealTimeTicks() As Long
+        Public Property UseLocalClockAsRealTime() As Boolean
+            Get
+                Return m_useLocalClockAsRealTime
+            End Get
+            Set(ByVal value As Boolean)
+                m_useLocalClockAsRealTime = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' If using local clock as real-time this function will return UtcNow.Ticks, otherwise this function will return
+        ''' ticks of most recent measurement, or local clock ticks if no measurements are within time deviation tolerances
+        ''' </summary>
+        ''' <remarks>
+        ''' Because the measurements being received by remote devices are often measured relative to GPS time these timestamps
+        ''' are typically more accurate than the local clock, as a result we can use the latest received timestamp as the best
+        ''' local time measurement we have - but even these times can be incorrect, so we still have to apply reasonability
+        ''' checks to these times, so we use the local time and the defined lag and lead times to validate the latest measured
+        ''' timestamp.  If the newest received measurement timestamp gets too old (as defined by lag time) or creeps too far
+        ''' into the future (as defined by lead time), we will fall back on local system time.  Note that this creates a
+        ''' dependency on a fairly accurate local clock - the smaller the time deviation tolerances the better the needed local
+        ''' clock acuracy.  For example, time deviation tolerances of a few seconds might only require keeping the local clock
+        ''' synchronized to an NTP time source but sub-second tolerances would require that the local clock be very close to
+        ''' GPS time.
+        ''' </remarks>
+        Public ReadOnly Property RealTimeTicks() As Long
             Get
                 Dim currentTimeTicks As Long = Date.UtcNow.Ticks
 
                 ' If the current value for real-time is outside of the time deviation tolerance of the local clock
-                ' then we set real-time to be the current local clock time value
+                ' then we set latest measurement time (i.e., real-time) to be the current local clock time.  Note
+                ' that we still need to validate this value regardless of whether or not we are using the local clock
+                ' as real-time since the internal m_realTimeTicks value is used for creating measurement samples
                 If Not TimeIsValid(currentTimeTicks, m_realTimeTicks, m_lagTime, m_leadTime) Then
                     m_realTimeTicks = currentTimeTicks
                     m_currentSampleTimestamp = BaselinedTimestamp(currentTimeTicks, BaselineTimeInterval.Second)
                 End If
 
-                Return m_realTimeTicks
-            End Get
-            Private Set(ByVal value As Long)
-                ' If the specified date is newer than the current value and is within the specified time
-                ' deviation tolerance of the local clock time then we set the new date as "real-time"
-                If value > m_realTimeTicks Then
-                    Dim currentTimeTicks As Long = Date.UtcNow.Ticks
-
-                    If TimeIsValid(currentTimeTicks, value, m_lagTime, m_leadTime) Then
-                        ' New time measurement looks good, assume this time as "real-time"
-                        m_realTimeTicks = value
-                        m_currentSampleTimestamp = BaselinedTimestamp(m_realTimeTicks, BaselineTimeInterval.Second)
-                    ElseIf Not TimeIsValid(currentTimeTicks, m_realTimeTicks, m_lagTime, m_leadTime) Then
-                        ' New time measurement was invalid and current real-time value was old so we
-                        ' assume the current time as "real-time"
-                        m_realTimeTicks = currentTimeTicks
-                        m_currentSampleTimestamp = BaselinedTimestamp(currentTimeTicks, BaselineTimeInterval.Second)
-                    End If
+                If m_useLocalClockAsRealTime Then
+                    ' Assuming local system clock is the best value we have for real-time
+                    Return currentTimeTicks
+                Else
+                    ' Assuming lastest measurement timestamp is the best value we have for real-time
+                    Return m_realTimeTicks
                 End If
-            End Set
+            End Get
         End Property
 
         ''' <summary>Seconds given number of ticks is away from real-time</summary>
@@ -281,18 +295,45 @@ Namespace Measurements
 
         End Function
 
-        ''' <summary>Number of measurements that have been discarded because of bad timestamps (i.e., measurements that were outside the time deviation tolerance from base time - past or future)</summary>
+        ''' <summary>Total number of measurements that have been discarded because of old timestamps (i.e., measurements that were outside the time deviation tolerance from base time - past or future)</summary>
         Public ReadOnly Property DiscardedMeasurements() As Long
             Get
                 Return m_discardedMeasurements
             End Get
         End Property
 
+        ''' <summary>Total number of published measurements</summary>
+        Public ReadOnly Property PublishedMeasurements() As Long
+            Get
+                Return m_publishedMeasurements
+            End Get
+        End Property
+
+        ''' <summary>Total number of published frames</summary>
+        Public ReadOnly Property PublishedFrames() As Long
+            Get
+                Return m_publishedFrames
+            End Get
+        End Property
+
+        ''' <summary>Total number of measurements that were sorted by arrival because the measurement reported a bad timestamp quality</summary>
+        Public ReadOnly Property MeasurementsSortedByArrival() As Long
+            Get
+                Return m_measurementsSortedByArrival
+            End Get
+        End Property
+
         ''' <summary>Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position</summary>
         Public Overridable Sub SortMeasurement(ByVal measurement As IMeasurement)
 
-            ' Get sample for this timestamp, creating it if needed
-            Dim sample As Sample = GetSample(measurement.Ticks)
+            ' If measurement timestamp is not accurate, we'll set its timestamp to real-time and sort the measurement by arrival
+            If Not measurement.TimestampQualityIsGood Then
+                measurement.Ticks = RealTimeTicks
+                m_measurementsSortedByArrival += 1
+            End If
+
+            Dim ticks As Long = measurement.Ticks
+            Dim sample As Sample = GetSample(ticks)
 
             If sample Is Nothing Then
                 ' No samples exist for this timestamp - measurement must have been outside time deviation tolerance (past or future) 
@@ -300,13 +341,37 @@ Namespace Measurements
             Else
                 ' We've found the right sample for this data, so we access the proper data cell by first calculating the
                 ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
-                Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(measurement.Ticks) / m_ticksPerFrame))
+                Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(ticks) / m_ticksPerFrame))
 
                 ' Call user customizable function to assign new measurement to its frame
                 AssignMeasurementToFrame(frame, measurement)
 
-                ' Track absolute lastest timestamp and immediate measurement values...
-                RealTimeTicks = measurement.Ticks
+                ' Track absolute lastest measurement timestamp...
+                Dim currentTimeTicks As Long = Date.UtcNow.Ticks
+
+                ' If the specified date is newer than the current value and is within the specified time
+                ' deviation tolerance of the local clock time then we set the new date as "real-time"
+                If ticks > m_realTimeTicks Then
+                    If TimeIsValid(currentTimeTicks, ticks, m_lagTime, m_leadTime) Then
+                        ' New time measurement looks good, assume this time as "real-time"
+                        m_realTimeTicks = ticks
+                        m_currentSampleTimestamp = BaselinedTimestamp(m_realTimeTicks, BaselineTimeInterval.Second)
+                    ElseIf Not TimeIsValid(currentTimeTicks, m_realTimeTicks, m_lagTime, m_leadTime) Then
+                        ' New time measurement was invalid and current real-time value was old so we
+                        ' assume the current time as "real-time"
+                        m_realTimeTicks = currentTimeTicks
+                        m_currentSampleTimestamp = BaselinedTimestamp(currentTimeTicks, BaselineTimeInterval.Second)
+                    End If
+                End If
+
+                ' Update latest measurement sort time for this frame
+                If m_useLocalClockAsRealTime Then
+                    frame.SortTicks = currentTimeTicks
+                Else
+                    frame.SortTicks = m_realTimeTicks
+                End If
+
+                ' Track absolute latest measurement values
                 If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
             End If
 
@@ -331,18 +396,38 @@ Namespace Measurements
                 Dim currentTime As Date = Date.UtcNow
 
                 With sampleDetail
+                    Dim currentSample As Sample
+
                     SyncLock m_sampleQueue.SyncRoot
                         For x As Integer = 0 To m_sampleQueue.Count - 1
+                            ' Get next sample
+                            currentSample = m_sampleQueue(x).Value
+
                             .Append(Environment.NewLine)
                             .Append("     Sample ")
                             .Append(x)
                             .Append(" @ ")
-                            .Append(m_sampleQueue(x).Value.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
+                            .Append(currentSample.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
                             .Append(": ")
 
                             If x = 0 Then
+                                Dim frameIndex As Integer = m_frameIndex
+                                Dim currentFrame As IFrame = currentSample.Frames(frameIndex)
+
+                                ' Track timestamp of sample being published
+                                publishingSampleTimestamp = currentSample.Timestamp
+
+                                ' Append current frame detail
                                 .Append("publishing...")
-                                publishingSampleTimestamp = m_sampleQueue(x).Value.Timestamp
+                                .Append(Environment.NewLine)
+                                .Append(Environment.NewLine)
+                                .Append("       Current frame =")
+                                .Append(frameIndex + 1)
+                                .Append(" - sort time: ")
+
+                                ' Calculate maximum sort time for publishing frame
+                                .Append(TicksToSeconds(currentFrame.SortTicks - currentFrame.Ticks).ToString("0.0000"))
+                                .Append(" seconds")
                             Else
                                 .Append("concentrating...")
                             End If
@@ -393,6 +478,9 @@ Namespace Measurements
                     .Append(Environment.NewLine)
                     .Append("    Discarded measurements: ")
                     .Append(m_discardedMeasurements)
+                    .Append(Environment.NewLine)
+                    .Append("    Total sorts by arrival: ")
+                    .Append(m_measurementsSortedByArrival)
                     .Append(Environment.NewLine)
                     .Append("Published measurement loss: ")
                     .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements)).ToString("##0.0000%"))

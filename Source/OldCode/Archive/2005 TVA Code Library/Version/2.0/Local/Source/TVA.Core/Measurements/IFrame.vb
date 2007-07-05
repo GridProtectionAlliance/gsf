@@ -38,6 +38,7 @@ Namespace Measurements
         Property Published() As Boolean
 
         ''' <summary>Gets or sets total number of measurements that have been pubilshed for this frame</summary>
+        ''' <remarks>If this property has not been assigned a value, implementors should return measurement count</remarks>
         Property PublishedMeasurements() As Integer
 
         ''' <summary>Exact timestamp of the data represented in this frame</summary>
@@ -46,6 +47,14 @@ Namespace Measurements
 
         ''' <summary>Date representation of ticks of this frame</summary>
         ReadOnly Property Timestamp() As Date
+
+        ''' <summary>Timestamp of when the latest measurement was sorted into this frame</summary>
+        ''' <remarks>
+        ''' <para>This field is used to calculate the total required sort time</para>
+        ''' <para>Implementors should only store the largest value</para>
+        ''' <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</para>
+        ''' </remarks>
+        Property SortTicks() As Long
 
     End Interface
 

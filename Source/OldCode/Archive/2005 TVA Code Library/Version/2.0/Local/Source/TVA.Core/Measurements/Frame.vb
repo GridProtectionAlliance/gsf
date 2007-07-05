@@ -25,9 +25,10 @@ Namespace Measurements
         Implements IFrame
 
         Private m_ticks As Long
+        Private m_sortTicks As Long
         Private m_published As Boolean
-        Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
         Private m_publishedMeasurements As Integer
+        Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
 
         Public Sub New(ByVal ticks As Long)
 
@@ -105,6 +106,16 @@ Namespace Measurements
             Get
                 Return New Date(m_ticks)
             End Get
+        End Property
+
+        ''' <summary>Timestamp of when the latest measurement was sorted into this frame</summary>
+        Public Property SortTicks() As Long Implements IFrame.SortTicks
+            Get
+                Return m_sortTicks
+            End Get
+            Set(ByVal value As Long)
+                If value > m_sortTicks Then m_sortTicks = value
+            End Set
         End Property
 
         ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
