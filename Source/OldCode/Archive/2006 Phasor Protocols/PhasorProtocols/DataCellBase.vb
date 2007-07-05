@@ -76,7 +76,7 @@ Public MustInherit Class DataCellBase
         m_id = -1
         m_source = "__"
         m_key = UndefinedKey
-        m_ticks = parent.Ticks
+        m_ticks = -1
         m_adder = 0.0R
         m_multiplier = 1.0R
 
@@ -368,6 +368,7 @@ Public MustInherit Class DataCellBase
 
     Private Property IMeasurementTicks() As Long Implements IMeasurement.Ticks
         Get
+            If m_ticks = -1 Then m_ticks = Parent.Ticks
             Return m_ticks
         End Get
         Set(ByVal value As Long)
@@ -377,7 +378,7 @@ Public MustInherit Class DataCellBase
 
     Private ReadOnly Property IMeasurementTimestamp() As Date Implements IMeasurement.Timestamp
         Get
-            Return New Date(Parent.Ticks)
+            Return New Date(IMeasurementTicks)
         End Get
     End Property
 

@@ -47,7 +47,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         m_id = -1
         m_source = "__"
         m_key = UndefinedKey
-        m_ticks = parent.Parent.Parent.Ticks
+        m_ticks = -1
         m_adder = 0.0R
         m_multiplier = 1.0R
         m_dataQualityIsGood = -1
@@ -176,6 +176,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
     Public Overridable Property Ticks() As Long Implements IMeasurement.Ticks
         Get
+            If m_ticks = -1 Then m_ticks = m_parent.Parent.Parent.Ticks
             Return m_ticks
         End Get
         Set(ByVal value As Long)
