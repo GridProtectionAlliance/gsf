@@ -70,6 +70,7 @@ Namespace Measurements
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
         Private m_publishedFrames As Long                                       ' Total number of published frames
+        Private m_totalSortTime As Long                                         ' Total frame sorting time (in ticks)
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
@@ -217,6 +218,7 @@ Namespace Measurements
                     If Not m_enabled Then
                         ' Start real-time process queue
                         m_frameIndex = 0
+                        m_totalSortTime = 0
                         m_sampleQueue.Start()
                     End If
                 Else
@@ -323,6 +325,20 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Total seconds of required sorting time since concentrator started</summary>
+        Public ReadOnly Property TotalSortingTime() As Double
+            Get
+                Return TicksToSeconds(m_totalSortTime)
+            End Get
+        End Property
+
+        ''' <summary>Average required sorting time per frame in seconds</summary>
+        Public ReadOnly Property AverageSortingTimePerFrame() As Double
+            Get
+                Return TotalSortingTime / m_publishedFrames
+            End Get
+        End Property
+
         ''' <summary>Data comes in one-point at a time, so we use this function to place the point in its proper sample and row/cell position</summary>
         Public Overridable Sub SortMeasurement(ByVal measurement As IMeasurement)
 
@@ -349,8 +365,8 @@ Namespace Measurements
                 ' Track absolute lastest measurement timestamp...
                 Dim currentTimeTicks As Long = Date.UtcNow.Ticks
 
-                ' If the specified date is newer than the current value and is within the specified time
-                ' deviation tolerance of the local clock time then we set the new date as "real-time"
+                ' If the measurement time is newer than the current real-time value and is within the specified time
+                ' deviation tolerance of the local clock time then we set the measurement time as real-time
                 If ticks > m_realTimeTicks Then
                     If TimeIsValid(currentTimeTicks, ticks, m_lagTime, m_leadTime) Then
                         ' New time measurement looks good, assume this time as "real-time"
@@ -482,6 +498,10 @@ Namespace Measurements
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)
                     .Append(Environment.NewLine)
+                    .Append("Average sorting time/frame: ")
+                    .Append(AverageSortingTimePerFrame.ToString("0.0000"))
+                    .Append(" seconds")
+                    .Append(Environment.NewLine)
                     .Append("Published measurement loss: ")
                     .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements)).ToString("##0.0000%"))
                     .Append(Environment.NewLine)
@@ -540,7 +560,7 @@ Namespace Measurements
 
         End Function
 
-        ''' <summary>Consumers can choose to override this method to handle customize assignment of a measurement to its frame</summary>
+        ''' <summary>Consumers can choose to override this method to handle custom assignment of a measurement to its frame</summary>
         ''' <remarks>
         ''' <para>Override is optional, a measurement will simply be assigned to frame's measurement list otherwise</para>
         ''' <para>The frame's measurement dictionary should be synclocked prior to use by consumer</para>
@@ -679,6 +699,7 @@ Namespace Measurements
 
                 frame.Published = True
                 m_publishedFrames += 1
+                m_totalSortTime += (frame.SortTicks - frame.Ticks)
                 m_publishedMeasurements += frame.PublishedMeasurements
 
                 ' Increment frame index
