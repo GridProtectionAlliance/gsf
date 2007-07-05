@@ -88,11 +88,16 @@ Public Class MeasurementExporter
                 m_exportFileName(x) = .Item(exportShare).Value & .Item(String.Format("{0}.FileName", exportShare)).Value
 
                 ' Attempt connection to external network share
-                ConnectToNetworkShare( _
-                    .Item(exportShare).Value, _
-                    .Item(String.Format("{0}.UserName", exportShare)).Value, _
-                    .Item(String.Format("{0}.Password", exportShare)).Value, _
-                    .Item(String.Format("{0}.Domain", exportShare)).Value)
+                Try
+                    ConnectToNetworkShare( _
+                        .Item(exportShare).Value, _
+                        .Item(String.Format("{0}.UserName", exportShare)).Value, _
+                        .Item(String.Format("{0}.Password", exportShare)).Value, _
+                        .Item(String.Format("{0}.Domain", exportShare)).Value)
+                Catch ex As Exception
+                    ' Something unexpected happened during attempt to connect to network share - so we'll report it...
+                    RaiseCalculationException(ex)
+                End Try
             Next
         End With
 
