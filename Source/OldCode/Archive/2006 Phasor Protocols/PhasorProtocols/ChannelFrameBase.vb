@@ -33,6 +33,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_idCode As UInt16
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
+    Private m_sortTicks As Long
     Private m_published As Boolean
     Private m_publishedMeasurements As Integer
     Private m_parsedBinaryLength As UInt16
@@ -108,20 +109,6 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Private Function IFrameClone() As IFrame Implements IFrame.Clone
-
-        ' Because of the way we are using frames related to data concentration - we don't need to create a synchronized copy of the
-        ' frame's measurement dictionary - the measurements are distributed among the frame's cell elements
-        Return Me
-
-    End Function
-
-    Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
-        Get
-            Return Me
-        End Get
-    End Property
-
     Public Overridable Property IDCode() As UInt16 Implements IChannelFrame.IDCode
         Get
             Return m_idCode
@@ -137,6 +124,29 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
         Set(ByVal value As Long)
             m_ticks = value
+        End Set
+    End Property
+
+    Private Function IFrameClone() As IFrame Implements IFrame.Clone
+
+        ' Because of the way we are using frames related to data concentration - we don't need to create a synchronized copy of the
+        ' frame's measurement dictionary - the measurements are distributed among the frame's cell elements
+        Return Me
+
+    End Function
+
+    Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
+        Get
+            Return Me
+        End Get
+    End Property
+
+    Private Property IFrameSortTicks() As Long Implements IFrame.SortTicks
+        Get
+            Return m_sortTicks
+        End Get
+        Set(ByVal value As Long)
+            If value > m_sortTicks Then m_sortTicks = value
         End Set
     End Property
 
