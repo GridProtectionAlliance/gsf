@@ -421,7 +421,7 @@ Namespace Measurements
                                 .Append("publishing...")
                                 .Append(Environment.NewLine)
                                 .Append(Environment.NewLine)
-                                .Append("       Current frame =")
+                                .Append("       Current frame = ")
                                 .Append(frameIndex + 1)
                                 .Append(" - sort time: ")
 
