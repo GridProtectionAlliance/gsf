@@ -135,7 +135,7 @@ Public Class PhasorMeasurementMapper
                 .Append(Name)
                 .Append(Environment.NewLine)
                 .Append(m_frameParser.Status)
-                .Append("Undefined PMU's Encountered: ")
+                .Append("Undefined PMUs Encountered: ")
                 .Append(m_undefinedPmus.Count)
                 .Append(Environment.NewLine)
 
