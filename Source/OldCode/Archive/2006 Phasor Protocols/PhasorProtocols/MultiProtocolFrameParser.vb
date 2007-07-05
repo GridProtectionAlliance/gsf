@@ -21,6 +21,11 @@
 '       Added member variable 'm_clientConnectionAttempts' to track the number of attempts made for 
 '       connecting to the server since this information is no longer provided by the event raised by 
 '       any of the Communication Client components
+'  07/05/2007 - J. Ritchie Carroll
+'       Wrapped all event raising for frame parsing in Try/Catch so that any exceptions thrown in
+'       consumer event handlers won't have a negative effect on continuous data parsing - exceptions
+'       in consumer event handlers are duly noted and raised through the DataStreamException event
+'
 '*******************************************************************************************************
 
 Imports System.IO
@@ -748,7 +753,16 @@ Public Class MultiProtocolFrameParser
     Private Sub m_frameParser_ReceivedCommandFrame(ByVal frame As ICommandFrame) Handles m_frameParser.ReceivedCommandFrame
 
         m_frameRateTotal += 1
-        RaiseEvent ReceivedCommandFrame(frame)
+
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ReceivedCommandFrame(frame)
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ReceivedCommandFrame"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
         If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
@@ -763,7 +777,16 @@ Public Class MultiProtocolFrameParser
 
         m_frameRateTotal += 1
         m_configurationFrame = frame
-        RaiseEvent ReceivedConfigurationFrame(frame)
+
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ReceivedConfigurationFrame(frame)
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ReceivedConfigurationFrame"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
         If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
@@ -772,7 +795,16 @@ Public Class MultiProtocolFrameParser
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
         m_frameRateTotal += 1
-        RaiseEvent ReceivedDataFrame(frame)
+
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ReceivedDataFrame(frame)
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ReceivedDataFrame"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
         If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
@@ -781,7 +813,16 @@ Public Class MultiProtocolFrameParser
     Private Sub m_frameParser_ReceivedHeaderFrame(ByVal frame As IHeaderFrame) Handles m_frameParser.ReceivedHeaderFrame
 
         m_frameRateTotal += 1
-        RaiseEvent ReceivedHeaderFrame(frame)
+
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ReceivedHeaderFrame(frame)
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ReceivedHeaderFrame"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
         If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
@@ -790,7 +831,16 @@ Public Class MultiProtocolFrameParser
     Private Sub m_frameParser_ReceivedUndeterminedFrame(ByVal frame As IChannelFrame) Handles m_frameParser.ReceivedUndeterminedFrame
 
         m_frameRateTotal += 1
-        RaiseEvent ReceivedUndeterminedFrame(frame)
+
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ReceivedUndeterminedFrame(frame)
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ReceivedUndeterminedFrame"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
         If m_transportProtocol = Communication.TransportProtocol.File Then MaintainCapturedFrameReplayTiming()
 
@@ -798,13 +848,29 @@ Public Class MultiProtocolFrameParser
 
     Private Sub m_frameParser_ReceivedFrameBufferImage(ByVal frameType As FundamentalFrameType, ByVal binaryImage() As Byte, ByVal offset As Integer, ByVal length As Integer) Handles m_frameParser.ReceivedFrameBufferImage
 
-        RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ReceivedFrameBufferImage(frameType, binaryImage, offset, length)
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ReceivedFrameBufferImage"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
     End Sub
 
     Private Sub m_frameParser_ConfigurationChanged() Handles m_frameParser.ConfigurationChanged
 
-        RaiseEvent ConfigurationChanged()
+        ' We don't stop parsing for exceptions thrown in consumer event handlers
+        Try
+            RaiseEvent ConfigurationChanged()
+        Catch ex As Exception
+            RaiseEvent DataStreamException( _
+                New Exception(String.Format( _
+                "MultiProtocolFrameParser Consumer ""ConfigurationChanged"" Event Handler Exception: {0}", _
+                ex.Message), ex))
+        End Try
 
     End Sub
 
