@@ -700,8 +700,8 @@ Namespace Measurements
 
                 frame.Published = True
                 m_publishedFrames += 1
-                m_totalSortTime += (frame.SortTicks - frame.Ticks)
                 m_publishedMeasurements += frame.PublishedMeasurements
+                If frame.SortTicks > 0 Then m_totalSortTime += (frame.SortTicks - frame.Ticks)
 
                 ' Increment frame index
                 m_frameIndex += 1
