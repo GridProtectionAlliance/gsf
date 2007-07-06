@@ -258,14 +258,14 @@ Namespace Measurements
         ''' <remarks>
         ''' Because the measurements being received by remote devices are often measured relative to GPS time these timestamps
         ''' are typically more accurate than the local clock, as a result we can use the latest received timestamp as the best
-        ''' local time measurement we have - but even these times can be incorrect, so we still have to apply reasonability
-        ''' checks to these times, so we use the local time and the defined lag and lead times to validate the latest measured
-        ''' timestamp.  If the newest received measurement timestamp gets too old (as defined by lag time) or creeps too far
-        ''' into the future (as defined by lead time), we will fall back on local system time.  Note that this creates a
-        ''' dependency on a fairly accurate local clock - the smaller the time deviation tolerances the better the needed local
-        ''' clock acuracy.  For example, time deviation tolerances of a few seconds might only require keeping the local clock
-        ''' synchronized to an NTP time source but sub-second tolerances would require that the local clock be very close to
-        ''' GPS time.
+        ''' local time measurement we have (this method ignores transmission delays) - but even these times can be incorrect so
+        ''' we still have to apply reasonability checks to these times.  To do this we use the local time and the defined lag
+        ''' and lead times to validate the latest measured timestamp.  If the newest received measurement timestamp gets too
+        ''' old (as defined by lag time) or creeps too far into the future (as defined by lead time), we will fall back on local
+        ''' system time.  Note that this creates a dependency on a fairly accurate local clock - the smaller the time deviation
+        ''' tolerances the better the needed local clock acuracy.  For example, time deviation tolerances of a few seconds might
+        ''' only require keeping the local clock synchronized to an NTP time source but sub-second tolerances would require that
+        ''' the local clock be very close to GPS time.
         ''' </remarks>
         Public ReadOnly Property RealTimeTicks() As Long
             Get
@@ -333,6 +333,7 @@ Namespace Measurements
         End Property
 
         ''' <summary>Average required sorting time per frame in seconds</summary>
+        ''' <remarks>Slow reporting device measurements will have a negative impact on this statistic</remarks>
         Public ReadOnly Property AverageSortingTimePerFrame() As Double
             Get
                 Return TotalSortingTime / m_publishedFrames
