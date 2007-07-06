@@ -378,7 +378,13 @@ Public MustInherit Class DataCellBase
 
     Private ReadOnly Property IMeasurementTimestamp() As Date Implements IMeasurement.Timestamp
         Get
-            Return New Date(IMeasurementTicks)
+            Dim ticks As Long = IMeasurementTicks
+
+            If ticks = -1 Then
+                Return Date.MinValue
+            Else
+                Return New Date(ticks)
+            End If
         End Get
     End Property
 

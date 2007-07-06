@@ -152,7 +152,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     ''' <remarks>This value returns timestamp quality of parent data cell unless assigned an alternate value</remarks>
     Public Overridable Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
         Get
-            If m_timeQualityIsGood = -1 Then Return m_parent.Parent.SynchronizationIsValid
+            If m_timeQualityIsGood = -1 Then Return (m_parent.Parent.SynchronizationIsValid AndAlso Ticks <> -1)
             Return (m_timeQualityIsGood <> 0)
         End Get
         Set(ByVal value As Boolean)
@@ -186,7 +186,13 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
 
     Public Overridable ReadOnly Property Timestamp() As Date Implements IMeasurement.Timestamp
         Get
-            Return New Date(Ticks)
+            Dim ticks As Long = Me.Ticks
+
+            If ticks = -1 Then
+                Return Date.MinValue
+            Else
+                Return New Date(ticks)
+            End If
         End Get
     End Property
 

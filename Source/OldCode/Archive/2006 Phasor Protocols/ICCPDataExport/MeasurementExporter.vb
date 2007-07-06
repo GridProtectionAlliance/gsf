@@ -290,11 +290,11 @@ Public Class MeasurementExporter
                             RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find signal type for measurement {0}", inputMeasurementKey)))
                         End If
 
-                        exportData.Append(","c)
+                        exportData.Append(",,")
 
                         ' Export measurement quality
                         exportData.Append(measurementQuality)
-                        exportData.AppendLine()
+                        exportData.AppendLine(",")
                     Else
                         ' We were unable to find measurement tag for this key - this is unexpected
                         RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find measurement tag for measurement {0}", inputMeasurementKey)))
