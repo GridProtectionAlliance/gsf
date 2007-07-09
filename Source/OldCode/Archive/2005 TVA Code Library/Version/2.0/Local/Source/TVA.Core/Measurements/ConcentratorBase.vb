@@ -381,13 +381,6 @@ Namespace Measurements
                     End If
                 End If
 
-                ' Update latest measurement sort time for this frame
-                If m_useLocalClockAsRealTime Then
-                    frame.SortTicks = currentTimeTicks
-                Else
-                    frame.SortTicks = m_realTimeTicks
-                End If
-
                 ' Track absolute latest measurement values
                 If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
             End If
@@ -443,7 +436,7 @@ Namespace Measurements
                                 .Append(" - sort time: ")
 
                                 ' Calculate maximum sort time for publishing frame
-                                .Append(TicksToSeconds(currentFrame.SortTicks - currentFrame.Ticks).ToString("0.0000"))
+                                .Append(TicksToSeconds(currentFrame.SortTime.ElapsedTicks).ToString("0.0000"))
                                 .Append(" seconds")
                             Else
                                 .Append("concentrating...")
@@ -698,10 +691,12 @@ Namespace Measurements
                     RaiseEvent ProcessException(ex)
                 End Try
 
+                frame.SortTime.Stop()
                 frame.Published = True
+
                 m_publishedFrames += 1
+                m_totalSortTime += frame.SortTime.ElapsedTicks
                 m_publishedMeasurements += frame.PublishedMeasurements
-                If frame.SortTicks > 0 Then m_totalSortTime += (frame.SortTicks - frame.Ticks)
 
                 ' Increment frame index
                 m_frameIndex += 1

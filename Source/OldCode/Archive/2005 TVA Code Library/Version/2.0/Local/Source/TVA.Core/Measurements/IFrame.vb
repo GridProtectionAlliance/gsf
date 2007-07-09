@@ -48,13 +48,12 @@ Namespace Measurements
         ''' <summary>Date representation of ticks of this frame</summary>
         ReadOnly Property Timestamp() As Date
 
-        ''' <summary>Timestamp of when the latest measurement was sorted into this frame</summary>
+        ''' <summary>High-resolution elapsed time counter used to calculate how long it took to sort measurements into this frame</summary>
         ''' <remarks>
         ''' <para>This field is used to calculate the total required sort time</para>
-        ''' <para>Implementors should only store the largest value</para>
-        ''' <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</para>
+        ''' <para>Implementors need only store an instance to the System.Diagnostics.Stopwatch class</para>
         ''' </remarks>
-        Property SortTicks() As Long
+        Property SortTime() As Stopwatch
 
     End Interface
 

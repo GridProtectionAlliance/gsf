@@ -25,7 +25,7 @@ Namespace Measurements
         Implements IFrame
 
         Private m_ticks As Long
-        Private m_sortTicks As Long
+        Private m_stopwatch As Stopwatch
         Private m_published As Boolean
         Private m_publishedMeasurements As Integer
         Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
@@ -108,13 +108,13 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Timestamp of when the latest measurement was sorted into this frame</summary>
-        Public Property SortTicks() As Long Implements IFrame.SortTicks
+        ''' <summary>High-resolution elapsed time counter used to calculate how long it took to sort measurements into this frame</summary>
+        Public Property SortTime() As Stopwatch Implements IFrame.SortTime
             Get
-                Return m_sortTicks
+                Return m_stopwatch
             End Get
-            Set(ByVal value As Long)
-                If value > m_sortTicks Then m_sortTicks = value
+            Set(ByVal value As Stopwatch)
+                m_stopwatch = value
             End Set
         End Property
 
