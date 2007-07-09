@@ -360,6 +360,9 @@ Namespace Measurements
                 ' proper frame index (i.e., the row) - we can then directly access the correct measurement using its key
                 Dim frame As IFrame = sample.Frames(Convert.ToInt32(TicksBeyondSecond(ticks) / m_ticksPerFrame))
 
+                ' Start the sorting timer if it hasn't been started
+                If frame.SortTime Is Nothing Then frame.SortTime = Stopwatch.StartNew()
+
                 ' Call user customizable function to assign new measurement to its frame
                 AssignMeasurementToFrame(frame, measurement)
 
