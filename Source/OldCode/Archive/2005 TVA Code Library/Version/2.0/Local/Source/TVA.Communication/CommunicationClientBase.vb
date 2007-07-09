@@ -617,6 +617,8 @@ Public MustInherit Class CommunicationClientBase
             If stopRetrying AndAlso Not connected Then CancelConnect()
 
             Return connected
+        Else
+            Return True
         End If
 
     End Function
