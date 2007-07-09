@@ -549,8 +549,15 @@ Public MustInherit Class CommunicationServerBase
                 If data.Length <= MaximumDataSize Then
                     SyncLock m_clientIDs
                         For Each clientID As Guid In m_clientIDs
-                            ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
-                            SendPreparedDataTo(clientID, data)
+                            Try
+                                ' PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
+                                SendPreparedDataTo(clientID, data)
+                            Catch ex As Exception
+                                ' In rare cases, we might encounter an exception here when the inheriting server 
+                                ' class doesn't think that the ID of the client to which it has to send the message is 
+                                ' valid (even though it is). This might happen when connection with a new client is 
+                                ' not yet complete and we're trying to send a message to the client.
+                            End Try
 
                             ' JRC: Removed reflective thread invocation and changed to thread pool for speed...
                             '   TVA.Threading.RunThread.ExecuteNonPublicMethod(Me, "SendPreparedDataTo", clientID, dataToSend)
