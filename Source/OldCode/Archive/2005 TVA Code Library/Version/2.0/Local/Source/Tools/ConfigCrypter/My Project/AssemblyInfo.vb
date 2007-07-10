@@ -9,7 +9,7 @@ Imports System.Runtime.InteropServices
 ' Review the values of the assembly attributes
 
 <Assembly: AssemblyTitle("ConfigCrypter")> 
-<Assembly: AssemblyDescription("")> 
+<Assembly: AssemblyDescription("Utility for encrypting and decrypting configuration values.")> 
 <Assembly: AssemblyCompany("TVA")> 
 <Assembly: AssemblyProduct("ConfigCrypter")> 
 <Assembly: AssemblyCopyright("Copyright © TVA 2007")> 
