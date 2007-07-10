@@ -687,6 +687,9 @@ Namespace Measurements
             ' Frame timestamps are evenly distributed across their parent sample, so all we need to do
             ' is just wait for the lagtime to pass and begin publishing...
             If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
+                ' Available sorting time has passed - we're publishing the frame
+                frame.SortTime.Stop()
+
                 Try
                     ' Publish a copy of the current frame (this way consumer doesn't have to worry about frame synchronization)
                     PublishFrame(frame.Clone(), m_frameIndex)
@@ -694,9 +697,8 @@ Namespace Measurements
                     RaiseEvent ProcessException(ex)
                 End Try
 
-                frame.SortTime.Stop()
+                ' Update publication statistics
                 frame.Published = True
-
                 m_publishedFrames += 1
                 m_totalSortTime += frame.SortTime.ElapsedTicks
                 m_publishedMeasurements += frame.PublishedMeasurements
