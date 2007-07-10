@@ -637,7 +637,7 @@ Namespace Measurements
                     End Try
                 Else
                     ' We sleep the thread between loops to help reduce CPU loading...
-                    Thread.Sleep(1)
+                    Thread.Sleep(0)
                 End If
 
                 ' If we just created the sample we needed, then we'll get it here.  Otherwise the sample may have been
