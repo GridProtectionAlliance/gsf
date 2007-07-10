@@ -33,7 +33,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_idCode As UInt16
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
-    Private m_sortTicks As Long
+    Private m_sortTime As Stopwatch
     Private m_published As Boolean
     Private m_publishedMeasurements As Integer
     Private m_parsedBinaryLength As UInt16
@@ -141,12 +141,12 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Private Property IFrameSortTicks() As Long Implements IFrame.SortTicks
+    Private Property IFrameSortTime() As Stopwatch Implements IFrame.SortTime
         Get
-            Return m_sortTicks
+            Return m_sortTime
         End Get
-        Set(ByVal value As Long)
-            If value > m_sortTicks Then m_sortTicks = value
+        Set(ByVal value As Stopwatch)
+            m_sortTime = value
         End Set
     End Property
 

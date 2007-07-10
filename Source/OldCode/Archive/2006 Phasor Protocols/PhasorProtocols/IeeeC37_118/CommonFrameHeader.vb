@@ -134,11 +134,11 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public Property SortTicks() As Long Implements TVA.Measurements.IFrame.SortTicks
+            Public Property SortTime() As Stopwatch Implements TVA.Measurements.IFrame.SortTime
                 Get
-                    Return 0
+                    Return Nothing
                 End Get
-                Set(ByVal value As Long)
+                Set(ByVal value As Stopwatch)
                     Throw New NotImplementedException()
                 End Set
             End Property
