@@ -27,6 +27,7 @@ Imports TVA.Communication.Common
 Imports TVA.Configuration.Common
 Imports TVA.Text.Common
 Imports TVA.Data.Common
+Imports TVA.Threading
 Imports TVA.Measurements
 Imports TVA.DateTime.Common
 Imports TVA.Collections
@@ -217,7 +218,7 @@ Module MainModule
         End If
 
         ' Define all of the calculated measurements
-        m_calculatedMeasurements = DefineCalculatedMeasurements(connection)
+        m_calculatedMeasurements = LoadCalculatedMeasurements(connection)
 
         ' If the phasor measurement receivers are already defined we must be reloading - so we attempt
         ' an orderly shutdown
@@ -347,14 +348,15 @@ Module MainModule
                                     m_exceptionLogger)
                         End Select
 
+                        ' Expose status messages from measurement concentrator 
+                        AddHandler measurementConcentrator.StatusMessage, AddressOf DisplayStatusMessage
+
                         ' Initialize measurement concentrator (sets up signal references and configuration frames)
                         measurementConcentrator.Initialize( _
                             connection, _
                             .Item("PmuFilterSql").ToString(), _
                             Convert.ToInt32(.Item("NominalFrequency")), _
                             Convert.ToUInt16(.Item("IDCode")))
-
-                        AddHandler measurementConcentrator.StatusMessage, AddressOf DisplayStatusMessage
 
                         ' Start measurement concentrator
                         measurementConcentrator.Start()
@@ -372,7 +374,7 @@ Module MainModule
 
     End Function
 
-    Private Function DefineCalculatedMeasurements(ByVal connection As OleDbConnection) As ICalculatedMeasurementAdapter()
+    Private Function LoadCalculatedMeasurements(ByVal connection As OleDbConnection) As ICalculatedMeasurementAdapter()
 
         Dim calculatedMeasurementAdapters As New List(Of ICalculatedMeasurementAdapter)
         Dim calculatedMeasurementAdapter As ICalculatedMeasurementAdapter
@@ -469,8 +471,17 @@ Module MainModule
                         End Try
 
                         If calculatedMeasurementAdapter IsNot Nothing Then
-                            ' Intialize calculated measurement adapter
-                            calculatedMeasurementAdapter.Initialize( _
+                            ' Bubble calculation module status messages out to local update status function
+                            AddHandler calculatedMeasurementAdapter.StatusMessage, AddressOf DisplayStatusMessage
+
+                            ' Bubble newly calculated measurement out to functions that need the real-time data
+                            AddHandler calculatedMeasurementAdapter.NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
+
+                            ' Bubble calculation exceptions out to procedure that can handle these exceptions
+                            AddHandler calculatedMeasurementAdapter.CalculationException, AddressOf CalculationException
+                            
+                            ' Intialize calculated measurement adapter - we do this on a separate thread in case this task takes some time
+                            QueueThread.ExecuteMethod(calculatedMeasurementAdapter, "Initialize", _
                                 .Item("Name").ToString(), _
                                 .Item("ConfigSection").ToString(), _
                                 outputMeasurements.ToArray(), _
@@ -479,17 +490,6 @@ Module MainModule
                                 Convert.ToInt32(.Item("ExpectedFrameRate")), _
                                 Convert.ToDouble(.Item("LagTime")), _
                                 Convert.ToDouble(.Item("LeadTime")))
-
-                            With calculatedMeasurementAdapter
-                                ' Bubble calculation module status messages out to local update status function
-                                AddHandler .StatusMessage, AddressOf DisplayStatusMessage
-
-                                ' Bubble newly calculated measurement out to functions that need the real-time data
-                                AddHandler .NewCalculatedMeasurements, AddressOf NewCalculatedMeasurements
-
-                                ' Bubble calculation exceptions out to procedure that can handle these exceptions
-                                AddHandler .CalculationException, AddressOf CalculationException
-                            End With
 
                             ' Add new adapter to the list
                             calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
@@ -539,6 +539,9 @@ Module MainModule
     End Sub
 
     Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
+
+        ' Note that this data comes from a phasor measurement receiver which will have already
+        ' queued the measurements for archival...
 
         ' Provide newly parsed measurements to all calculated measurement modules
         If m_calculatedMeasurements IsNot Nothing Then
