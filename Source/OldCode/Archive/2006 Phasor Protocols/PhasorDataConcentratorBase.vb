@@ -21,12 +21,12 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Public Event StatusMessage(ByVal status As String)
 
-    Private WithEvents m_communicationServer As ICommunicationServer
     Private m_name As String
     Private m_configurationFrame As IConfigurationFrame
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
     Private m_publishDescriptor As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
+    Private WithEvents m_communicationServer As ICommunicationServer
 
     Protected Sub New( _
         ByVal communicationServer As ICommunicationServer, _
