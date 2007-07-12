@@ -833,9 +833,9 @@ Namespace Collections
         ''' is destructed, there may be items that remain unprocessed in the queue.
         ''' </para>
         ''' </remarks>
-        Public Overridable Sub Flush() Implements IDisposable.Dispose
+        Public Sub Flush() Implements IDisposable.Dispose
 
-            Flush(True)
+            Dispose(True)
             GC.SuppressFinalize(Me)
 
         End Sub
@@ -1262,7 +1262,7 @@ Namespace Collections
 
         End Sub
 
-        Protected Overridable Sub Flush(ByVal disposing As Boolean)
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_isDisposed Then
                 ' Dispose unmanaged resources.
