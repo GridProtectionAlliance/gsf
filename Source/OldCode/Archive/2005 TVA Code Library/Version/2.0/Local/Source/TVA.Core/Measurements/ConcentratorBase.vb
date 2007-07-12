@@ -57,7 +57,6 @@ Namespace Measurements
         Friend Event LeadTimeUpdated(ByVal leadTime As Double)                  ' Raised, for the benefit of dependent classes, when lead time is updated
         Friend Event LagTimeUpdated(ByVal lagTime As Double)                    ' Raised, for the benefit of dependent classes, when lag time is updated
 
-
         Private m_useLocalClockAsRealTime As Boolean                            ' Determines whether ot not to use local system clock as "real-time"
         Private m_realTimeTicks As Long                                         ' Ticks of the most recently received measurement (i.e., real-time)
         Private m_currentSampleTimestamp As Date                                ' Timestamp of current real-time value baselined at the bottom of the second
