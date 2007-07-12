@@ -22,6 +22,8 @@
 '  04/05/2007 - J. Ritchie Carroll
 '       Added "RequeueMode" properties to allow users to specify how data gets reinserted back into
 '       the list (prefix or suffix) after processing timeouts or exceptions
+'  07/12/2007 - Pinal C. Patel
+'       Modified the code for "Flush" method to correctly implement IDisposable interface
 '
 '*******************************************************************************************************
 
@@ -185,6 +187,7 @@ Namespace Collections
         Private WithEvents m_processTimer As System.Timers.Timer
         Private m_debugMode As Boolean
         Private m_waitHandle As AutoResetEvent
+        Private m_isDisposed As Boolean
 
 #End Region
 
@@ -832,41 +835,8 @@ Namespace Collections
         ''' </remarks>
         Public Overridable Sub Flush() Implements IDisposable.Dispose
 
-            If m_enabled Then
-                ' Only wait around if there's something to process :)
-                If Count > 0 Then
-                    Dim originalInterval As Double
-                    Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
-                    Dim originalRequeueOnException As Boolean = m_requeueOnException
-
-                    ' We must disable requeueing of items or this method may never end!
-                    m_requeueOnTimeout = False
-                    m_requeueOnException = False
-
-                    ' We need to get out of town - if we're running a process timer, we'll reduce time between calls to a minimum
-                    If Not m_processingIsRealTime Then
-                        originalInterval = m_processTimer.Interval
-                        m_processTimer.Interval = 1
-                    End If
-
-                    ' Create a new auto-resetting wait event
-                    m_waitHandle = New AutoResetEvent(False)
-
-                    ' Wait until all data has been processed
-                    m_waitHandle.WaitOne()
-
-                    ' Delete wait handle - only needed while flushing
-                    m_waitHandle = Nothing
-
-                    ' Just in case user continues to use queue after disposal, we'll restore original states
-                    If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
-                    m_requeueOnTimeout = originalRequeueOnTimeout
-                    m_requeueOnException = originalRequeueOnException
-                End If
-
-                ' All items have been processed - stop queue
-                [Stop]()
-            End If
+            Flush(True)
+            GC.SuppressFinalize(Me)
 
         End Sub
 
@@ -1289,6 +1259,54 @@ Namespace Collections
         Protected Sub RaiseProcessException(ByVal ex As Exception)
 
             RaiseEvent ProcessException(ex)
+
+        End Sub
+
+        Protected Overridable Sub Flush(ByVal disposing As Boolean)
+
+            If Not m_isDisposed Then
+                ' Dispose unmanaged resources.
+
+                If disposing Then
+                    ' Dispose managed resources.
+                    If m_enabled Then
+                        ' Only wait around if there's something to process :)
+                        If Count > 0 Then
+                            Dim originalInterval As Double
+                            Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
+                            Dim originalRequeueOnException As Boolean = m_requeueOnException
+
+                            ' We must disable requeueing of items or this method may never end!
+                            m_requeueOnTimeout = False
+                            m_requeueOnException = False
+
+                            ' We need to get out of town - if we're running a process timer, we'll reduce time between calls to a minimum
+                            If Not m_processingIsRealTime Then
+                                originalInterval = m_processTimer.Interval
+                                m_processTimer.Interval = 1
+                            End If
+
+                            ' Create a new auto-resetting wait event
+                            m_waitHandle = New AutoResetEvent(False)
+
+                            ' Wait until all data has been processed
+                            m_waitHandle.WaitOne()
+
+                            ' Delete wait handle - only needed while flushing
+                            m_waitHandle = Nothing
+
+                            ' Just in case user continues to use queue after disposal, we'll restore original states
+                            If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
+                            m_requeueOnTimeout = originalRequeueOnTimeout
+                            m_requeueOnException = originalRequeueOnException
+                        End If
+
+                        ' All items have been processed - stop queue
+                        [Stop]()
+                    End If
+                End If
+            End If
+            m_isDisposed = True
 
         End Sub
 
