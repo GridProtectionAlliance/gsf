@@ -273,28 +273,28 @@ Public MustInherit Class PhasorDataConcentratorBase
                 Case SignalType.Angle
                     ' Assign "phase angle" measurement to data cell
                     Dim phasorValues As PhasorValueCollection = dataCell.PhasorValues
-                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Angle = Convert.ToSingle(measurement.Value)
+                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Angle = Convert.ToSingle(measurement.AdjustedValue)
                 Case SignalType.Magnitude
                     ' Assign "phase magnitude" measurement to data cell
                     Dim phasorValues As PhasorValueCollection = dataCell.PhasorValues
-                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Magnitude = Convert.ToSingle(measurement.Value)
+                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Magnitude = Convert.ToSingle(measurement.AdjustedValue)
                 Case SignalType.Frequency
                     ' Assign "frequency" measurement to data cell
-                    dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.Value)
+                    dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.AdjustedValue)
                 Case SignalType.dfdt
                     ' Assign "df/dt" measurement to data cell
-                    dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.Value)
+                    dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.AdjustedValue)
                 Case SignalType.Status
                     ' Assign "common status flags" measurement to data cell
-                    dataCell.CommonStatusFlags = Convert.ToInt32(measurement.Value)
+                    dataCell.CommonStatusFlags = Convert.ToInt32(measurement.AdjustedValue)
                 Case SignalType.Digital
                     ' Assign "digital" measurement to data cell
                     Dim digitalValues As DigitalValueCollection = dataCell.DigitalValues
-                    If digitalValues.Count >= signalIndex Then digitalValues(signalIndex - 1).Value = Convert.ToInt16(measurement.Value)
+                    If digitalValues.Count >= signalIndex Then digitalValues(signalIndex - 1).Value = Convert.ToInt16(measurement.AdjustedValue)
                 Case SignalType.Analog
                     ' Assign "analog" measurement to data cell
                     Dim analogValues As AnalogValueCollection = dataCell.AnalogValues
-                    If analogValues.Count >= signalIndex Then analogValues(signalIndex - 1).Value = Convert.ToSingle(measurement.Value)
+                    If analogValues.Count >= signalIndex Then analogValues(signalIndex - 1).Value = Convert.ToSingle(measurement.AdjustedValue)
             End Select
 
             ' Track total measurements sorted for frame - this will become total measurements published
