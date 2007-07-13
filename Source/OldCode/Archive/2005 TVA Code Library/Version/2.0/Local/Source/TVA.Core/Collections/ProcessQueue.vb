@@ -1265,6 +1265,11 @@ Namespace Collections
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_isDisposed Then
+                ' PCP: This is not the best implementation of IDisposable, but this is best way I could think of to
+                ' avoid redundant calls to Dispose() since this method may take longer than it normally would. So,
+                ' the member variable used to track redundant calls is set before Dispose() finishes (the usual).
+                m_isDisposed = True
+
                 ' Dispose unmanaged resources.
 
                 If disposing Then
@@ -1306,7 +1311,6 @@ Namespace Collections
                     End If
                 End If
             End If
-            m_isDisposed = True
 
         End Sub
 

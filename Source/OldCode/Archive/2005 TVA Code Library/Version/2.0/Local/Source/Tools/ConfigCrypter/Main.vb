@@ -22,6 +22,7 @@ Imports TVA.Security.Cryptography.Common
 Public Class Main
 
     Private Const CryptoKey As String = "0679d9ae-aca5-4702-a3f5-604415096987"
+    Private Const InvalidInputPrompt As String = "[Input is not valid]"
 
     Private Sub Main_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
@@ -49,19 +50,19 @@ Public Class Main
                     TextBoxOutput.Text = Decrypt(TextBoxInput.Text, CryptoKey, EncryptLevel.Level4)
             End Select
         Catch ex As Exception
-            TextBoxOutput.Text = "[Input is invalid]"
+            TextBoxOutput.Text = InvalidInputPrompt
         End Try
 
     End Sub
 
     Private Sub LinkLabelCopy_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles LinkLabelCopy.LinkClicked
 
-        If Not String.IsNullOrEmpty(TextBoxOutput.Text) Then
+        If Not (String.IsNullOrEmpty(TextBoxOutput.Text) OrElse TextBoxOutput.Text = InvalidInputPrompt) Then
             ' Copy the text displayed in the output box to the clipboard.
             My.Computer.Clipboard.SetText(TextBoxOutput.Text)
             MessageBox.Show("Output text has been copied to the clipboard.", "Copy Text", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Else
-            MessageBox.Show("No output text available for copying to the clipboard.", "Copy Text", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            MessageBox.Show("No valid output text available for copying to the clipboard.", "Copy Text", MessageBoxButtons.OK, MessageBoxIcon.Warning)
         End If
 
     End Sub

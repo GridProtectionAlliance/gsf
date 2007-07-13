@@ -22,6 +22,7 @@ Partial Class Main
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Main))
         Me.GroupBoxDirection = New System.Windows.Forms.GroupBox
         Me.RadioButtonDecrypt = New System.Windows.Forms.RadioButton
         Me.RadioButtonEncrypt = New System.Windows.Forms.RadioButton
@@ -83,7 +84,7 @@ Partial Class Main
         Me.GroupBoxConfiguration.Controls.Add(Me.LabelInput)
         Me.GroupBoxConfiguration.Location = New System.Drawing.Point(12, 67)
         Me.GroupBoxConfiguration.Name = "GroupBoxConfiguration"
-        Me.GroupBoxConfiguration.Size = New System.Drawing.Size(268, 157)
+        Me.GroupBoxConfiguration.Size = New System.Drawing.Size(268, 140)
         Me.GroupBoxConfiguration.TabIndex = 1
         Me.GroupBoxConfiguration.TabStop = False
         Me.GroupBoxConfiguration.Text = "Config Value"
@@ -137,11 +138,12 @@ Partial Class Main
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(292, 233)
+        Me.ClientSize = New System.Drawing.Size(292, 216)
         Me.Controls.Add(Me.GroupBoxConfiguration)
         Me.Controls.Add(Me.GroupBoxDirection)
         Me.Font = New System.Drawing.Font("Tahoma", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
         Me.Name = "Main"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
