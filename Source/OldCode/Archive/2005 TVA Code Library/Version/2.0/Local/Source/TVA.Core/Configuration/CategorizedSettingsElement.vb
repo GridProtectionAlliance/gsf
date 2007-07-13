@@ -139,7 +139,13 @@ Namespace Configuration
 
                 If Not String.IsNullOrEmpty(stringValue) Then
                     ' Element's value string is present - convert it to the proper type
-                    Return CType(DirectCast(stringValue, Object), T)
+                    If GetType(T).IsEnum Then
+                        ' We'll parse the string to the equivalent enumeration.
+                        Return CType([Enum].Parse(GetType(T), stringValue), T)
+                    Else
+                        ' We'll cast the string to the specified type.
+                        Return CType(CType(stringValue, Object), T)
+                    End If
                 Else
                     ' Element's value string is not present, so use the default
                     Return defaultValue
