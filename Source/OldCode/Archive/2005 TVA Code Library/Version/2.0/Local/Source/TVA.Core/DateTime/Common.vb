@@ -24,6 +24,8 @@
 '       Updated BaselinedTimestamp function to support multiple time intervals
 '  09/18/2006 - J. Ritchie Carroll
 '       Added TicksBeyondSecond function to support high-resolution timestamp intervals
+'  07/17/2007 - J. Ritchie Carroll
+'       Exposed TicksPerSecond as public shared constant
 '
 '*******************************************************************************************************
 
@@ -33,6 +35,9 @@ Namespace DateTime
 
     ''' <summary>Defines common global functions related to Date/Time manipulation</summary>
     Public NotInheritable Class Common
+
+        ''' <summary>Number of 100-nanosecond ticks in one second</summary>
+        Public Const TicksPerSecond As Long = 10000000L
 
         ''' <summary>Standard time names used by SecondsToText function</summary>
         Private Shared m_standardTimeNames As String() = New String() {"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds"}
@@ -56,14 +61,14 @@ Namespace DateTime
         ''' <summary>Converts 100-nanosecond tick intervals to seconds</summary>
         Public Shared ReadOnly Property TicksToSeconds(ByVal ticks As Long) As Double
             Get
-                Return ticks / 10000000L
+                Return ticks / TicksPerSecond
             End Get
         End Property
 
         ''' <summary>Converts seconds to 100-nanosecond tick intervals</summary>
         Public Shared ReadOnly Property SecondsToTicks(ByVal seconds As Double) As Long
             Get
-                Return Convert.ToInt64(seconds * 10000000.0R)
+                Return Convert.ToInt64(seconds * TicksPerSecond)
             End Get
         End Property
 
