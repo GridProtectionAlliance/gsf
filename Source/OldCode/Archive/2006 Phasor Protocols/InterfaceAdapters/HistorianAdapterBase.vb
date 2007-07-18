@@ -121,41 +121,37 @@ Public MustInherit Class HistorianAdapterBase
 
         SyncLock m_measurementBuffer
             m_measurementBuffer.Add(measurement)
-            IncrementProcessedMeasurements()
+            IncrementProcessedMeasurements(1)
         End SyncLock
 
     End Sub
 
-    Public Overridable Sub QueueMeasurementsForArchival(ByVal measurements As IList(Of IMeasurement)) Implements IHistorianAdapter.QueueMeasurementsForArchival
+    Public Overridable Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement)) Implements IHistorianAdapter.QueueMeasurementsForArchival
 
         SyncLock m_measurementBuffer
             If measurements IsNot Nothing Then
-                For x As Integer = 0 To measurements.Count - 1
-                    m_measurementBuffer.Add(measurements(x))
-                    IncrementProcessedMeasurements()
+                For Each measurement As IMeasurement In measurements
+                    m_measurementBuffer.Add(measurements)
                 Next
-            End If
-        End SyncLock
 
-    End Sub
-
-    Public Overridable Sub QueueMeasurementsForArchival(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement)) Implements IHistorianAdapter.QueueMeasurementsForArchival
-
-        SyncLock m_measurementBuffer
-            If measurements IsNot Nothing Then
-                For Each measurement As IMeasurement In measurements.Values
-                    m_measurementBuffer.Add(measurement)
-                    IncrementProcessedMeasurements()
-                Next
+                IncrementProcessedMeasurements(measurements.Count)
             End If
         End SyncLock
 
     End Sub
 
     ' TODO: Optimize function to handle += measurements.Count yet still not miss sending the status update
-    Private Sub IncrementProcessedMeasurements()
+    Private Sub IncrementProcessedMeasurements(ByVal count As Integer)
 
-        m_processedMeasurements += 1
+        If m_processedMeasurements + count > m_processedMeasurements + m_processedMeasurements \ ProcessedMeasurementInterval Then
+            UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
+
+        End If
+
+        m_processedMeasurements += count
+
+
+
         If m_processedMeasurements Mod ProcessedMeasurementInterval = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
 
     End Sub

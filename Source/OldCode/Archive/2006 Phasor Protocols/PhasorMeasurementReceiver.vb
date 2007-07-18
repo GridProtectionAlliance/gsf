@@ -30,7 +30,7 @@ Imports PhasorProtocols.Common
 
 Public Class PhasorMeasurementReceiver
 
-    Public Event NewMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
+    Public Event NewMeasurements(ByVal measurements As ICollection(Of IMeasurement))
     Public Event StatusMessage(ByVal status As String)
 
     Private WithEvents m_reportingStatus As Timers.Timer
@@ -330,27 +330,22 @@ Public Class PhasorMeasurementReceiver
     Public Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
         ' Filter incoming measurements to just the ones destined for this archive
-        With measurement
-            If String.Compare(.Source, m_archiverSource, True) = 0 Then
-                m_historianAdapter.QueueMeasurementForArchival(.This)
+        If String.Compare(measurement.Source, m_archiverSource, True) = 0 Then m_historianAdapter.QueueMeasurementForArchival(measurement)
+
+    End Sub
+
+    Public Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement))
+
+        ' Filter incoming measurements to just the ones destined for this archive
+        Dim queuedMeasurements As New List(Of IMeasurement)
+
+        For Each measurement As IMeasurement In measurements
+            If String.Compare(measurement.Source, m_archiverSource, True) = 0 Then
+                queuedMeasurements.Add(queuedMeasurements)
             End If
-        End With
-
-    End Sub
-
-    Public Sub QueueMeasurementsForArchival(ByVal measurements As IList(Of IMeasurement))
-
-        For x As Integer = 0 To measurements.Count - 1
-            QueueMeasurementForArchival(measurements(x))
         Next
 
-    End Sub
-
-    Public Sub QueueMeasurementsForArchival(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
-
-        For Each measurement As IMeasurement In measurements.Values
-            QueueMeasurementForArchival(measurement)
-        Next
+        If queuedMeasurements.Count > 0 Then m_historianAdapter.QueueMeasurementsForArchival(queuedMeasurements)
 
     End Sub
 
@@ -360,7 +355,7 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
+    Private Sub NewParsedMeasurements(ByVal measurements As ICollection(Of IMeasurement))
 
         ' Queue all of the measurements up for archival
         m_historianAdapter.QueueMeasurementsForArchival(measurements)

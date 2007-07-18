@@ -35,13 +35,15 @@ Public Interface ICalculatedMeasurementAdapter
         ByVal lagTime As Double, _
         ByVal leadTime As Double)
 
+    Sub Start()
+
+    Sub [Stop]()
+
     Property ConfigurationSection() As String
 
     Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement)
 
-    Sub QueueMeasurementsForCalculation(ByVal measurements As IList(Of IMeasurement))
-
-    Sub QueueMeasurementsForCalculation(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
+    Sub QueueMeasurementsForCalculation(ByVal measurements As ICollection(Of IMeasurement))
 
     Property OutputMeasurements() As IMeasurement()
 

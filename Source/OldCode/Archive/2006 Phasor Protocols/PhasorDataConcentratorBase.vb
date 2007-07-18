@@ -215,28 +215,6 @@ Public MustInherit Class PhasorDataConcentratorBase
         End Set
     End Property
 
-    Public Overridable Sub SortMeasurements(ByVal measurements As IList(Of IMeasurement))
-
-        If measurements IsNot Nothing Then
-            For x As Integer = 0 To measurements.Count - 1
-                'QueueMeasurementForSorting(measurements(x))
-                SortMeasurement(measurements(x))
-            Next
-        End If
-
-    End Sub
-
-    Public Overridable Sub SortMeasurements(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
-
-        If measurements IsNot Nothing Then
-            For Each measurement As IMeasurement In measurements.Values
-                'QueueMeasurementForSorting(measurement)
-                SortMeasurement(measurement)
-            Next
-        End If
-
-    End Sub
-
     Protected ReadOnly Property CommunicationServer() As ICommunicationServer
         Get
             Return m_communicationServer

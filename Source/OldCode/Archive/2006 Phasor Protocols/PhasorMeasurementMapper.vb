@@ -35,7 +35,7 @@ Imports PhasorProtocols.Common
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
 
-    Public Event NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
+    Public Event NewParsedMeasurements(ByVal measurements As ICollection(Of IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
     Public Event Connected()
 
@@ -355,7 +355,7 @@ Public Class PhasorMeasurementMapper
         Next
 
         ' Provide real-time measurements where needed
-        RaiseEvent NewParsedMeasurements(frame.Measurements)
+        RaiseEvent NewParsedMeasurements(frame.Measurements.Values)
 
     End Sub
 

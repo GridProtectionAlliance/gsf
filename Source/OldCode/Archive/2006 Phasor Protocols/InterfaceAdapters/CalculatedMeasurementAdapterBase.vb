@@ -76,13 +76,20 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         Me.FramesPerSecond = expectedMeasurementsPerSecond
         Me.LagTime = lagTime
         Me.LeadTime = leadTime
+
+    End Sub
+
+    Public Overridable Sub Start() Implements ICalculatedMeasurementAdapter.Start
+
+        ' Start measurement concentration
         Me.Enabled = True
 
     End Sub
 
-    Public Overrides Sub Dispose()
+    Public Overridable Sub [Stop]() Implements ICalculatedMeasurementAdapter.Stop
 
-        Enabled = False
+        ' Stop measurement concentration
+        Me.Enabled = False
 
     End Sub
 
@@ -93,23 +100,15 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     End Sub
 
-    Public Overridable Sub QueueMeasurementsForCalculation(ByVal measurements As IList(Of IMeasurement)) Implements ICalculatedMeasurementAdapter.QueueMeasurementsForCalculation
+    Public Overridable Sub QueueMeasurementsForCalculation(ByVal measurements As ICollection(Of IMeasurement)) Implements ICalculatedMeasurementAdapter.QueueMeasurementsForCalculation
 
-        If measurements IsNot Nothing Then
-            For x As Integer = 0 To measurements.Count - 1
-                QueueMeasurementForCalculation(measurements(x))
-            Next
-        End If
+        Dim calculationMeasurements As New List(Of IMeasurement)
 
-    End Sub
+        For Each measurement As IMeasurement In measurements
+            If IsInputMeasurement(measurement.Key) Then calculationMeasurements.Add(measurement)
+        Next
 
-    Public Overridable Sub QueueMeasurementsForCalculation(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement)) Implements ICalculatedMeasurementAdapter.QueueMeasurementsForCalculation
-
-        If measurements IsNot Nothing Then
-            For Each measurement As IMeasurement In measurements.Values
-                QueueMeasurementForCalculation(measurement)
-            Next
-        End If
+        If calculationMeasurements.Count > 0 Then SortMeasurements(calculationMeasurements)
 
     End Sub
 

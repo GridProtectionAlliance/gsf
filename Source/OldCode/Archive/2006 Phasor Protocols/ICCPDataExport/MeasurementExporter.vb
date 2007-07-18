@@ -36,7 +36,6 @@ Public Class MeasurementExporter
     Private Const DefaultConfigSection As String = "ICCPDataExportModule"
 
     ' Initialization might take some time due to network share logon - so we postpone any frame publication until we're finished
-    Private m_initialized As Boolean
     Private m_measurementTags As Dictionary(Of MeasurementKey, String)
     Private m_signalTypes As Dictionary(Of MeasurementKey, String)
     Private m_useReferenceAngle As Boolean
@@ -47,6 +46,7 @@ Public Class MeasurementExporter
     Private m_totalExports As Long
     Private m_statusDisplayed As Boolean
     Private m_sqrtOf3 As Double
+    Private m_disposed As Boolean
 
     Private Enum ICCPDataQuality
         Good = 0
@@ -145,21 +145,22 @@ Public Class MeasurementExporter
         ' We track latest measurements so we can use these values when points are missing
         TrackLatestMeasurements = True
 
-        ' Mark initialization as complete
-        m_initialized = True
-
     End Sub
 
     Public Overrides Sub Dispose()
 
-        MyBase.Dispose()
+        If Not m_disposed Then
+            MyBase.Dispose()
 
-        GC.SuppressFinalize(Me)
+            GC.SuppressFinalize(Me)
 
-        ' We'll be nice and disconnect network shares when this class is disposed...
-        For x As Integer = 1 To m_exportCount
-            DisconnectFromNetworkShare(CategorizedStringSetting(ConfigurationSection, String.Format("ExportShare{0}", x)))
-        Next
+            ' We'll be nice and disconnect network shares when this class is disposed...
+            For x As Integer = 1 To m_exportCount
+                DisconnectFromNetworkShare(CategorizedStringSetting(ConfigurationSection, String.Format("ExportShare{0}", x)))
+            Next
+
+            m_disposed = True
+        End If
 
     End Sub
 
@@ -216,7 +217,7 @@ Public Class MeasurementExporter
         Dim ticks As Long = frame.Ticks
 
         ' We only export data at the specified interval
-        If (New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0 AndAlso m_initialized Then
+        If (New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0 Then
             ' Measurement export to a file may take more than 1/30 of a second - so we do this work asyncrhonously
             ThreadPool.QueueUserWorkItem(AddressOf ExportMeasurements, frame)
         End If

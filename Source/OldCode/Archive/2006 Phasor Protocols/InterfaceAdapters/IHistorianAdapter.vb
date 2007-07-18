@@ -29,9 +29,7 @@ Public Interface IHistorianAdapter
 
     Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
-    Sub QueueMeasurementsForArchival(ByVal measurements As IList(Of IMeasurement))
-
-    Sub QueueMeasurementsForArchival(ByVal measurements As IDictionary(Of MeasurementKey, IMeasurement))
+    Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement))
 
     Sub Disconnect()
 

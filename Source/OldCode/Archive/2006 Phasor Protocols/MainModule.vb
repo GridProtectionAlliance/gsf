@@ -479,9 +479,9 @@ Module MainModule
 
                             ' Bubble calculation exceptions out to procedure that can handle these exceptions
                             AddHandler calculatedMeasurementAdapter.CalculationException, AddressOf CalculationException
-                            
+
                             ' Intialize calculated measurement adapter - we do this on a separate thread in case this task takes some time
-                            QueueThread.ExecuteMethod(calculatedMeasurementAdapter, "Initialize", _
+                            QueueThread.ExecuteNonPublicSharedMethod(GetType(MainModule), "InitializeCalculatedMeasurement", _
                                 .Item("Name").ToString(), _
                                 .Item("ConfigSection").ToString(), _
                                 outputMeasurements.ToArray(), _
@@ -507,6 +507,39 @@ Module MainModule
         Return calculatedMeasurementAdapters.ToArray()
 
     End Function
+
+    Private Sub InitializeCalculatedMeasurement( _
+        ByVal calculatedMeasurementAdapter As ICalculatedMeasurementAdapter, _
+        ByVal calculationName As String, _
+        ByVal configurationSection As String, _
+        ByVal outputMeasurements As IMeasurement(), _
+        ByVal inputMeasurementKeys As MeasurementKey(), _
+        ByVal minimumMeasurementsToUse As Integer, _
+        ByVal expectedMeasurementsPerSecond As Integer, _
+        ByVal lagTime As Double, _
+        ByVal leadTime As Double)
+
+        ' Initialize calculated measurement - this is end user code and we're executing the initilization on a separate thread, so 
+        ' we'll need to manually report any errors...
+        Try
+            calculatedMeasurementAdapter.Initialize( _
+                calculationName, _
+                configurationSection, _
+                outputMeasurements, _
+                inputMeasurementKeys, _
+                minimumMeasurementsToUse, _
+                expectedMeasurementsPerSecond, _
+                lagTime, _
+                leadTime)
+
+            ' We start the measurement concentration only after a successful initialization
+            calculatedMeasurementAdapter.Start()
+        Catch ex As Exception
+            DisplayStatusMessage(String.Format("Exception during calculated measurement ""{0}"" initialization: {1}", calculatedMeasurementAdapter.Name, ex.Message))
+            m_exceptionLogger.Log(ex)
+        End Try
+
+    End Sub
 
     Private Sub NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
@@ -538,23 +571,25 @@ Module MainModule
 
     End Sub
 
-    Private Sub NewParsedMeasurements(ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement))
+    Private Sub NewParsedMeasurements(ByVal measurements As ICollection(Of IMeasurement))
 
         ' Note that this data comes from a phasor measurement receiver which will have already
         ' queued the measurements for archival...
 
-        ' Provide newly parsed measurements to all calculated measurement modules
-        If m_calculatedMeasurements IsNot Nothing Then
-            For x As Integer = 0 To m_calculatedMeasurements.Length - 1
-                m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
-            Next
-        End If
+        If measurements IsNot Nothing Then
+            ' Provide newly parsed measurements to all calculated measurement modules
+            If m_calculatedMeasurements IsNot Nothing Then
+                For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                    m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
+                Next
+            End If
 
-        ' Provide newly parsed measurements to all data concentrators
-        If measurements IsNot Nothing AndAlso m_measurementConcentrators IsNot Nothing Then
-            For x As Integer = 0 To m_measurementConcentrators.Length - 1
-                m_measurementConcentrators(x).SortMeasurements(measurements)
-            Next
+            ' Provide newly parsed measurements to all data concentrators
+            If m_measurementConcentrators IsNot Nothing Then
+                For x As Integer = 0 To m_measurementConcentrators.Length - 1
+                    m_measurementConcentrators(x).SortMeasurements(measurements)
+                Next
+            End If
         End If
 
     End Sub
