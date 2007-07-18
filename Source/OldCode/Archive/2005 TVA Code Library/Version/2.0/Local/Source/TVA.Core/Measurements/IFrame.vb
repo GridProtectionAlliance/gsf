@@ -48,12 +48,9 @@ Namespace Measurements
         ''' <summary>Date representation of ticks of this frame</summary>
         ReadOnly Property Timestamp() As Date
 
-        ''' <summary>High-resolution elapsed time counter used to calculate how long it took to sort measurements into this frame</summary>
-        ''' <remarks>
-        ''' <para>This field is used to calculate the total required sort time</para>
-        ''' <para>Implementors need to instatiate, but not start, the System.Diagnostics.Stopwatch class during construction</para>
-        ''' </remarks>
-        ReadOnly Property SortTime() As Stopwatch
+        ''' <summary>Elapsed ticks indicating how long it took to sort measurements into this frame</summary>
+        ''' <remarks>This field is used to track the total required sort time</remarks>
+        Property SortTime() As Long
 
     End Interface
 

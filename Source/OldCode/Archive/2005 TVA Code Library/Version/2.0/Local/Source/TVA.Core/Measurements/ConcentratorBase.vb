@@ -347,7 +347,7 @@ Namespace Measurements
         ''' <summary>Total seconds of required sorting time since concentrator started</summary>
         Public ReadOnly Property TotalSortingTime() As Double
             Get
-                Return m_totalSortTime / Stopwatch.Frequency
+                Return TicksToSeconds(m_totalSortTime)
             End Get
         End Property
 
@@ -457,7 +457,7 @@ Namespace Measurements
                     frame = sample.Frames(Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame))
 
                     ' Start the sorting timer for this frame if it hasn't been started
-                    If Not frame.SortTime.IsRunning Then frame.SortTime.Start()
+                    If frame.SortTime = 0 Then frame.SortTime = Date.Now.Ticks
 
                     ' Call user customizable function to assign new measurement to its frame
                     AssignMeasurementToFrame(frame, measurement)
@@ -546,7 +546,7 @@ Namespace Measurements
                                 .Append(" - sort time: ")
 
                                 ' Calculate maximum sort time for publishing frame
-                                .Append((currentFrame.SortTime.ElapsedTicks / Stopwatch.Frequency).ToString("0.0000"))
+                                .Append(TicksToSeconds(Date.Now.Ticks - currentFrame.SortTime).ToString("0.0000"))
                                 .Append(" seconds")
                             Else
                                 .Append("concentrating...")
@@ -733,25 +733,19 @@ Namespace Measurements
             ' Frame timestamps are evenly distributed across their parent sample, so all we need to do
             ' is just wait for the lagtime to pass and begin publishing...
             If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
-                ' Available sorting time has passed - we're publishing the frame.  Note that the frame stop watch will
-                ' only be running if any measurements were sorted into the frame - we'll not even waste our time trying
-                ' to publish the frame if there aren't any measurements available...
-                If frame.SortTime.IsRunning Then
-                    frame.SortTime.Stop()
+                ' Available sorting time has passed - we're publishing the frame
+                Try
+                    ' Publish a synchronized copy of the current frame (this way consumer doesn't have to worry about frame synchronization)
+                    PublishFrame(frame.Clone(), m_frameIndex)
+                Catch ex As Exception
+                    RaiseEvent ProcessException(ex)
+                End Try
 
-                    Try
-                        ' Publish a synchronized copy of the current frame (this way consumer doesn't have to worry about frame synchronization)
-                        PublishFrame(frame.Clone(), m_frameIndex)
-                    Catch ex As Exception
-                        RaiseEvent ProcessException(ex)
-                    End Try
-
-                    ' Update publication statistics
-                    frame.Published = True
-                    m_publishedFrames += 1
-                    m_totalSortTime += frame.SortTime.ElapsedTicks
-                    m_publishedMeasurements += frame.PublishedMeasurements
-                End If
+                ' Update publication statistics
+                frame.Published = True
+                m_publishedFrames += 1
+                m_totalSortTime += (Date.Now.Ticks - frame.SortTime)
+                m_publishedMeasurements += frame.PublishedMeasurements
 
                 ' Increment frame index
                 m_frameIndex += 1
