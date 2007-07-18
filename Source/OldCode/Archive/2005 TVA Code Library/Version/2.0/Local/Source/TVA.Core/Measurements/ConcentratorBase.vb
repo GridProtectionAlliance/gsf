@@ -457,7 +457,7 @@ Namespace Measurements
                     frame = sample.Frames(Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame))
 
                     ' Start the sorting timer for this frame if it hasn't been started
-                    If frame.SortTime Is Nothing Then frame.SortTime = Stopwatch.StartNew()
+                    If Not frame.SortTime.IsRunning Then frame.SortTime.Start()
 
                     ' Call user customizable function to assign new measurement to its frame
                     AssignMeasurementToFrame(frame, measurement)
@@ -734,7 +734,7 @@ Namespace Measurements
             ' is just wait for the lagtime to pass and begin publishing...
             If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
                 ' Available sorting time has passed - we're publishing the frame
-                frame.SortTime.Stop()
+                If frame.SortTime.IsRunning Then frame.SortTime.Stop()
 
                 Try
                     ' Publish a synchronized copy of the current frame (this way consumer doesn't have to worry about frame synchronization)

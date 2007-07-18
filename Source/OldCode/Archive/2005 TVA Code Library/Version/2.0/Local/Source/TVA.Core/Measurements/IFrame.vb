@@ -51,9 +51,9 @@ Namespace Measurements
         ''' <summary>High-resolution elapsed time counter used to calculate how long it took to sort measurements into this frame</summary>
         ''' <remarks>
         ''' <para>This field is used to calculate the total required sort time</para>
-        ''' <para>Implementors need only store an instance to the System.Diagnostics.Stopwatch class</para>
+        ''' <para>Implementors need to instatiate, but not start, the System.Diagnostics.Stopwatch class during construction</para>
         ''' </remarks>
-        Property SortTime() As Stopwatch
+        ReadOnly Property SortTime() As Stopwatch
 
     End Interface
 

@@ -33,6 +33,7 @@ Namespace Measurements
         Public Sub New(ByVal ticks As Long)
 
             m_ticks = ticks
+            m_stopwatch = New Stopwatch()
             m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
             m_publishedMeasurements = -1
 
@@ -109,13 +110,10 @@ Namespace Measurements
         End Property
 
         ''' <summary>High-resolution elapsed time counter used to calculate how long it took to sort measurements into this frame</summary>
-        Public Property SortTime() As Stopwatch Implements IFrame.SortTime
+        Public ReadOnly Property SortTime() As Stopwatch Implements IFrame.SortTime
             Get
                 Return m_stopwatch
             End Get
-            Set(ByVal value As Stopwatch)
-                m_stopwatch = value
-            End Set
         End Property
 
         ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
