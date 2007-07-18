@@ -653,7 +653,6 @@ Namespace Measurements
 #Region " Protected Methods Implementation "
 
         ''' <summary>Consumers must override this method in order to publish a frame</summary>
-        ''' <remarks>Implementors are expected to return total published measurements as return value</remarks>
         Protected MustOverride Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
         ''' <summary>Consumers can choose to override this method to create a new custom frame</summary>
