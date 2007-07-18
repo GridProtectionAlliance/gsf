@@ -141,13 +141,10 @@ Namespace BpaPdcStream
                 End Set
             End Property
 
-            Public Property SortTime() As Stopwatch Implements TVA.Measurements.IFrame.SortTime
+            Public ReadOnly Property SortTime() As Stopwatch Implements TVA.Measurements.IFrame.SortTime
                 Get
-                    Return Nothing
-                End Get
-                Set(ByVal value As Stopwatch)
                     Throw New NotImplementedException()
-                End Set
+                End Get
             End Property
 
             Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage

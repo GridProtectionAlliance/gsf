@@ -141,13 +141,11 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
-    Private Property IFrameSortTime() As Stopwatch Implements IFrame.SortTime
+    Private ReadOnly Property IFrameSortTime() As Stopwatch Implements IFrame.SortTime
         Get
+            If m_sortTime Is Nothing Then m_sortTime = New Stopwatch
             Return m_sortTime
         End Get
-        Set(ByVal value As Stopwatch)
-            m_sortTime = value
-        End Set
     End Property
 
     Public Overridable ReadOnly Property TimeTag() As UnixTimeTag Implements IChannelFrame.TimeTag

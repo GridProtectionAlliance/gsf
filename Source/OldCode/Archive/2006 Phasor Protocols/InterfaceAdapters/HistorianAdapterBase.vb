@@ -121,7 +121,7 @@ Public MustInherit Class HistorianAdapterBase
 
         SyncLock m_measurementBuffer
             m_measurementBuffer.Add(measurement)
-            IncrementProcessedMeasurements(1)
+            IncrementProcessedMeasurements()
         End SyncLock
 
     End Sub
@@ -131,27 +131,18 @@ Public MustInherit Class HistorianAdapterBase
         SyncLock m_measurementBuffer
             If measurements IsNot Nothing Then
                 For Each measurement As IMeasurement In measurements
-                    m_measurementBuffer.Add(measurements)
+                    m_measurementBuffer.Add(measurement)
+                    IncrementProcessedMeasurements()
                 Next
-
-                IncrementProcessedMeasurements(measurements.Count)
             End If
         End SyncLock
 
     End Sub
 
     ' TODO: Optimize function to handle += measurements.Count yet still not miss sending the status update
-    Private Sub IncrementProcessedMeasurements(ByVal count As Integer)
+    Private Sub IncrementProcessedMeasurements()
 
-        If m_processedMeasurements + count > m_processedMeasurements + m_processedMeasurements \ ProcessedMeasurementInterval Then
-            UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
-
-        End If
-
-        m_processedMeasurements += count
-
-
-
+        m_processedMeasurements += 1
         If m_processedMeasurements Mod ProcessedMeasurementInterval = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
 
     End Sub

@@ -341,7 +341,7 @@ Public Class PhasorMeasurementReceiver
 
         For Each measurement As IMeasurement In measurements
             If String.Compare(measurement.Source, m_archiverSource, True) = 0 Then
-                queuedMeasurements.Add(queuedMeasurements)
+                queuedMeasurements.Add(measurement)
             End If
         Next
 

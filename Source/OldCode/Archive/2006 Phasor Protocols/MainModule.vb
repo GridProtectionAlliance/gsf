@@ -27,7 +27,6 @@ Imports TVA.Communication.Common
 Imports TVA.Configuration.Common
 Imports TVA.Text.Common
 Imports TVA.Data.Common
-Imports TVA.Threading
 Imports TVA.Measurements
 Imports TVA.DateTime.Common
 Imports TVA.Collections
@@ -481,15 +480,16 @@ Module MainModule
                             AddHandler calculatedMeasurementAdapter.CalculationException, AddressOf CalculationException
 
                             ' Intialize calculated measurement adapter - we do this on a separate thread in case this task takes some time
-                            QueueThread.ExecuteNonPublicSharedMethod(GetType(MainModule), "InitializeCalculatedMeasurement", _
-                                .Item("Name").ToString(), _
-                                .Item("ConfigSection").ToString(), _
-                                outputMeasurements.ToArray(), _
-                                inputMeasurementKeys.ToArray(), _
-                                Convert.ToInt32(.Item("MinimumInputMeasurements")), _
-                                Convert.ToInt32(.Item("ExpectedFrameRate")), _
-                                Convert.ToDouble(.Item("LagTime")), _
-                                Convert.ToDouble(.Item("LeadTime")))
+                            CalculatedMeasurementInitialization.Execute( _
+                                    calculatedMeasurementAdapter, _
+                                    .Item("Name").ToString(), _
+                                    .Item("ConfigSection").ToString(), _
+                                    outputMeasurements.ToArray(), _
+                                    inputMeasurementKeys.ToArray(), _
+                                    Convert.ToInt32(.Item("MinimumInputMeasurements")), _
+                                    Convert.ToInt32(.Item("ExpectedFrameRate")), _
+                                    Convert.ToDouble(.Item("LagTime")), _
+                                    Convert.ToDouble(.Item("LeadTime")))
 
                             ' Add new adapter to the list
                             calculatedMeasurementAdapters.Add(calculatedMeasurementAdapter)
@@ -508,38 +508,78 @@ Module MainModule
 
     End Function
 
-    Private Sub InitializeCalculatedMeasurement( _
-        ByVal calculatedMeasurementAdapter As ICalculatedMeasurementAdapter, _
-        ByVal calculationName As String, _
-        ByVal configurationSection As String, _
-        ByVal outputMeasurements As IMeasurement(), _
-        ByVal inputMeasurementKeys As MeasurementKey(), _
-        ByVal minimumMeasurementsToUse As Integer, _
-        ByVal expectedMeasurementsPerSecond As Integer, _
-        ByVal lagTime As Double, _
-        ByVal leadTime As Double)
+    Private Class CalculatedMeasurementInitialization
 
-        ' Initialize calculated measurement - this is end user code and we're executing the initilization on a separate thread, so 
-        ' we'll need to manually report any errors...
-        Try
-            calculatedMeasurementAdapter.Initialize( _
-                calculationName, _
-                configurationSection, _
-                outputMeasurements, _
-                inputMeasurementKeys, _
-                minimumMeasurementsToUse, _
-                expectedMeasurementsPerSecond, _
-                lagTime, _
-                leadTime)
+        Public CalculatedMeasurementAdapter As ICalculatedMeasurementAdapter
+        Public CalculationName As String
+        Public ConfigurationSection As String
+        Public OutputMeasurements As IMeasurement()
+        Public InputMeasurementKeys As MeasurementKey()
+        Public MinimumMeasurementsToUse As Integer
+        Public ExpectedMeasurementsPerSecond As Integer
+        Public LagTime As Double
+        Public LeadTime As Double
 
-            ' We start the measurement concentration only after a successful initialization
-            calculatedMeasurementAdapter.Start()
-        Catch ex As Exception
-            DisplayStatusMessage(String.Format("Exception during calculated measurement ""{0}"" initialization: {1}", calculatedMeasurementAdapter.Name, ex.Message))
-            m_exceptionLogger.Log(ex)
-        End Try
+        Public Shared Sub Execute( _
+            ByVal calculatedMeasurementAdapter As ICalculatedMeasurementAdapter, _
+            ByVal calculationName As String, _
+            ByVal configurationSection As String, _
+            ByVal outputMeasurements As IMeasurement(), _
+            ByVal inputMeasurementKeys As MeasurementKey(), _
+            ByVal minimumMeasurementsToUse As Integer, _
+            ByVal expectedMeasurementsPerSecond As Integer, _
+            ByVal lagTime As Double, _
+            ByVal leadTime As Double)
 
-    End Sub
+            With New CalculatedMeasurementInitialization
+                .CalculatedMeasurementAdapter = calculatedMeasurementAdapter
+                .CalculationName = calculationName
+                .ConfigurationSection = configurationSection
+                .OutputMeasurements = outputMeasurements
+                .InputMeasurementKeys = inputMeasurementKeys
+                .MinimumMeasurementsToUse = minimumMeasurementsToUse
+                .ExpectedMeasurementsPerSecond = expectedMeasurementsPerSecond
+                .LagTime = lagTime
+                .LeadTime = leadTime
+
+                ThreadPool.QueueUserWorkItem(AddressOf Initialize, .This)
+            End With
+
+        End Sub
+
+        Public ReadOnly Property This() As CalculatedMeasurementInitialization
+            Get
+                Return Me
+            End Get
+        End Property
+
+        Private Shared Sub Initialize(ByVal state As Object)
+
+            ' Initialize calculated measurement - this is end user code and we're executing the initilization on a separate thread, so 
+            ' we'll need to manually report any errors...
+            With DirectCast(state, CalculatedMeasurementInitialization)
+                Try
+                    .CalculatedMeasurementAdapter.Initialize( _
+                        .CalculationName, _
+                        .ConfigurationSection, _
+                        .OutputMeasurements, _
+                        .InputMeasurementKeys, _
+                        .MinimumMeasurementsToUse, _
+                        .ExpectedMeasurementsPerSecond, _
+                        .LagTime, _
+                        .LeadTime)
+
+                    ' We start the measurement concentration only after a successful initialization
+                    .CalculatedMeasurementAdapter.Start()
+                Catch ex As Exception
+                    DisplayStatusMessage(String.Format("Exception during calculated measurement ""{0}"" initialization: {1}", .CalculatedMeasurementAdapter.Name, ex.Message))
+                    m_exceptionLogger.Log(ex)
+                End Try
+            End With
+
+        End Sub
+
+    End Class
 
     Private Sub NewCalculatedMeasurements(ByVal measurements As IList(Of IMeasurement))
 
