@@ -90,7 +90,7 @@ Module MainModule
         m_exceptionLogger.AutoRegister = True
         m_exceptionLogger.EndInit()
 
-        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 50, 500, False, False)
+        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages)
         m_statusMessageQueue.Start()
 
         InitializeConfiguration(AddressOf InitializeSystem)
