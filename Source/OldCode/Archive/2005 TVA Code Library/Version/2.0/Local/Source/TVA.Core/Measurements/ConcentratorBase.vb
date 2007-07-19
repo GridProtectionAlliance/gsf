@@ -397,55 +397,56 @@ Namespace Measurements
                 ' Baseline measurement timestamp at bottom of the second to use as sample "key"
                 baseTimeTicks = BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
 
-                ' Find sample for this measurement
-                sample = LookupSample(baseTimeTicks)
-
                 ' This next critical sorting operation automatically manages the sample queue based on timestamps of incoming measurements
                 ' Enter loop to wait until the sample exists, we will attempt to enter critical section and create it ourselves
-                Do Until sample IsNot Nothing
-                    ' We don't want to step on our own toes when creating new samples - so we create a critical section for
-                    ' this code - if another thread is busy creating samples, we'll just wait for it below
-                    If Monitor.TryEnter(m_sampleQueue.SyncRoot) Then
-                        Try
-                            ' Check difference between timestamp and current sample base-time in seconds and fill in any gaps.
-                            ' Note that current sample base-time will be validated against local clock in call to RealTimeTicks
-                            distance = DistanceFromRealTime(ticks)
+                Do
+                    ' Attempt to lookup sample for this measurement.  If this is our second pass then we may have just created the sample
+                    ' we needed, in which case we'll get it here.  Otherwise the sample may have been created by another thread while
+                    ' we were sleeping, so we'll check again to see to see if sample exists. Additionally, the TryGetValue function from
+                    ' the KeyedProcessqueue performs an internal SyncLock on the SyncRoot and waits for it to be released, so if another
+                    ' thread was creating new samples then we'll definitely pick up our needed sample when the lock is released.
+                    ' Nice and safe.
+                    If Not m_sampleQueue.TryGetValue(baseTimeTicks, sample) Then
+                        ' We don't want to step on our own toes when creating new samples - so we create a critical section for
+                        ' this code - if another thread is busy creating samples, we'll just wait for it next pass
+                        If Monitor.TryEnter(m_sampleQueue.SyncRoot) Then
+                            Try
+                                ' Check difference between timestamp and current sample base-time in seconds and fill in any gaps.
+                                ' Note that current sample base-time will be validated against local clock in call to RealTimeTicks
+                                distance = DistanceFromRealTime(ticks)
 
-                            If distance > m_lagTime OrElse distance < -m_leadTime Then
-                                ' This data has come in late or has a future timestamp.  For old timestamps, we're not
-                                ' going to create a sample for data that will never be processed.  For future dates we
-                                ' must assume that the clock from source device must be advanced and out-of-sync with
-                                ' real-time - either way this data will be discarded.
-                                m_discardedMeasurements += 1
-                                Exit Do
-                            ElseIf distance > 1 Then
-                                ' Add intermediate samples as needed...
-                                For x As Integer = 1 To System.Math.Floor(distance)
-                                    CreateSample(m_currentSampleTimestamp.AddSeconds(x).Ticks)
-                                Next
-                            End If
+                                If distance > m_lagTime OrElse distance < -m_leadTime Then
+                                    ' This data has come in late or has a future timestamp.  For old timestamps, we're not
+                                    ' going to create a sample for data that will never be processed.  For future dates we
+                                    ' must assume that the clock from source device must be advanced and out-of-sync with
+                                    ' real-time - either way this data will be discarded.
+                                    m_discardedMeasurements += 1
+                                    Exit Do
+                                ElseIf distance > 1 Then
+                                    ' Add intermediate samples as needed...
+                                    Dim newSampleTicks As Long
 
-                            ' Create sample for new base time
-                            CreateSample(baseTimeTicks)
-                        Catch
-                            ' Rethrow any exceptions - we are just catching any exceptions so we can
-                            ' make sure to release thread lock in finally
-                            Throw
-                        Finally
-                            Monitor.Exit(m_sampleQueue.SyncRoot)
-                        End Try
-                    Else
-                        ' We sleep the thread between loops to help reduce CPU loading...
-                        Thread.Sleep(1)
+                                    For x As Integer = 1 To System.Math.Floor(distance)
+                                        newSampleTicks = m_currentSampleTimestamp.AddSeconds(x).Ticks
+                                        m_sampleQueue.Add(newSampleTicks, New Sample(Me, newSampleTicks))
+                                    Next
+                                End If
+
+                                ' Create sample for new base time
+                                m_sampleQueue.Add(baseTimeTicks, New Sample(Me, baseTimeTicks))
+                            Catch
+                                ' Rethrow any exceptions - we are just catching any exceptions so we can
+                                ' make sure to release thread lock in finally
+                                Throw
+                            Finally
+                                Monitor.Exit(m_sampleQueue.SyncRoot)
+                            End Try
+                        Else
+                            ' Couldn't get lock - yield to other threads that may be creating the sample we need :)
+                            Thread.Sleep(0)
+                        End If
                     End If
-
-                    ' If we just created the sample we needed, then we'll get it here.  Otherwise the sample may have been
-                    ' created by another thread while we were sleeping, so we'll check again to see to see if sample exists.
-                    ' Additionally, the TryGetValue function (referenced from within LookupSample) internally performs a
-                    ' SyncLock on the SyncRoot and waits for it to be released, so if another thread was creating new
-                    ' samples then we'll definitely pick up our needed sample when the lock is released.  Nice and safe.
-                    sample = LookupSample(baseTimeTicks)
-                Loop
+                Loop While sample Is Nothing
 
                 '
                 ' *** Sort measurement into proper frame ***
@@ -481,12 +482,12 @@ Namespace Measurements
                                 ' to avoid the overhead of a function call and reduce total required synclock time
                                 distance = (currentTimeTicks - ticks) / TicksPerSecond
 
-                                If distance >= -m_leadTime AndAlso distance <= m_lagTime Then
+                                If distance <= m_lagTime AndAlso distance >= -m_leadTime Then
                                     ' New time measurement looks good, assume this time as "real-time"
                                     m_realTimeTicks = ticks
                                     m_currentSampleTimestamp = BaselinedTimestamp(m_realTimeTicks, BaselineTimeInterval.Second)
                                 Else
-                                    ' Current ticks were outside of time deviation tolerances so we'll also check to make
+                                    ' Measurement ticks were outside of time deviation tolerances so we'll also check to make
                                     ' sure current real-time ticks are within range as well
                                     distance = (currentTimeTicks - m_realTimeTicks) / TicksPerSecond
 
@@ -546,8 +547,12 @@ Namespace Measurements
                                 .Append(" - sort time: ")
 
                                 ' Calculate maximum sort time for publishing frame
-                                .Append(TicksToSeconds(Date.Now.Ticks - currentFrame.SortTime).ToString("0.0000"))
-                                .Append(" seconds")
+                                If currentFrame.SortTime > 0 Then
+                                    .Append(TicksToSeconds(Date.Now.Ticks - currentFrame.SortTime).ToString("0.0000"))
+                                    .Append(" seconds")
+                                Else
+                                    .Append("undetermined")
+                                End If
                             Else
                                 .Append("concentrating...")
                             End If
@@ -699,22 +704,6 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Gets the sample associated with the specified timestamp.</summary>
-        ''' <returns>The sample associated with the specified timestamp. If the specified timestamp is not found, property returns null.</returns>
-        ''' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
-        Protected Function LookupSample(ByVal ticks As Long) As Sample
-
-            Dim foundSample As Sample
-
-            ' Lookup sample with specified baselined ticks (this is internally SyncLock'd)
-            If m_sampleQueue.TryGetValue(ticks, foundSample) Then
-                Return foundSample
-            Else
-                Return Nothing
-            End If
-
-        End Function
-
 #End Region
 
 #Region " Private Methods Implementation "
@@ -743,8 +732,10 @@ Namespace Measurements
 
                 ' Update publication statistics
                 frame.Published = True
-                m_publishedFrames += 1
-                m_totalSortTime += (Date.Now.Ticks - frame.SortTime)
+                If frame.SortTime > 0 Then
+                    m_totalSortTime += (Date.Now.Ticks - frame.SortTime)
+                    m_publishedFrames += 1
+                End If
                 m_publishedMeasurements += frame.PublishedMeasurements
 
                 ' Increment frame index
@@ -768,15 +759,6 @@ Namespace Measurements
             ' We send out a notification that a new sample has been published so that anyone can have a chance
             ' to perform any last steps with the data before we remove it from the sample queue
             RaiseEvent SamplePublished(sample)
-
-        End Sub
-
-        ' Creates a new sample associated with the specified baselined timestamp ticks, if it doesn't already exist
-        Private Sub CreateSample(ByVal ticks As Long)
-
-            With m_sampleQueue
-                If Not .ContainsKey(ticks) Then .Add(ticks, New Sample(Me, ticks))
-            End With
 
         End Sub
 
@@ -861,6 +843,29 @@ Namespace Measurements
     '    Return sample
 
     'End Function
+
+    '''' <summary>Gets the sample associated with the specified timestamp.</summary>
+    '''' <returns>The sample associated with the specified timestamp. If the specified timestamp is not found, property returns null.</returns>
+    '''' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
+    'Protected Function LookupSample(ByVal ticks As Long) As Sample
+
+    '    Dim foundSample As Sample
+
+    '    ' Lookup sample with specified baselined ticks (this is internally SyncLock'd)
+    '    If m_sampleQueue.TryGetValue(ticks, foundSample) Then
+    '        Return foundSample
+    '    Else
+    '        Return Nothing
+    '    End If
+
+    'End Function
+
+    '' Creates a new sample associated with the specified baselined timestamp ticks, if it doesn't already exist
+    'Private Sub CreateSample(ByVal ticks As Long)
+
+    '    If Not m_sampleQueue.ContainsKey(ticks) Then m_sampleQueue.Add(ticks, New Sample(Me, ticks))
+
+    'End Sub
 
 #End Region
 
