@@ -90,7 +90,7 @@ Module MainModule
         m_exceptionLogger.AutoRegister = True
         m_exceptionLogger.EndInit()
 
-        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 10, Timeout.Infinite, False, False)
+        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 50, 500, False, False)
         m_statusMessageQueue.Start()
 
         InitializeConfiguration(AddressOf InitializeSystem)
@@ -820,48 +820,42 @@ Module MainModule
 
     Private Sub DisplayStatusMessages(ByVal messages As String())
 
-        For x As Integer = 0 To messages.Length - 1
-            _DisplayStatusMessage(messages(x))
-        Next
-
-    End Sub
-
-    Private Sub _DisplayStatusMessage(ByVal status As String)
-
         Dim displayMessage As Boolean
 
-        ' When errors happen with data being processed at 30 samples per second you can get a hefty volume
-        ' of errors very quickly, so to keep from flooding the message queue - we'll only send a handful
-        ' of messages every couple of seconds
-        If TicksToSeconds(DateTime.Now.Ticks - m_lastDisplayedMessageTime) < m_messageDisplayTimepan Then
-            displayMessage = (m_displayedMessageCount < m_maximumMessagesToDisplay)
-            m_displayedMessageCount += 1
-        Else
-            If m_displayedMessageCount > m_maximumMessagesToDisplay Then
-                Console.WriteLine("WARNING: {0} error messages discarded to avoid flooding message queue...", (m_displayedMessageCount - m_maximumMessagesToDisplay))
+        For x As Integer = 0 To messages.Length - 1
+            ' When errors happen with data being processed at 30 samples per second you can get a hefty volume
+            ' of errors very quickly, so to keep from flooding the message queue - we'll only send a handful
+            ' of messages every couple of seconds
+            If TicksToSeconds(Date.Now.Ticks - m_lastDisplayedMessageTime) < m_messageDisplayTimepan Then
+                displayMessage = (m_displayedMessageCount < m_maximumMessagesToDisplay)
+                m_displayedMessageCount += 1
+            Else
+                If m_displayedMessageCount > m_maximumMessagesToDisplay Then
+                    Console.WriteLine("WARNING: {0} error messages discarded to avoid flooding message queue, check log for full detail", (m_displayedMessageCount - m_maximumMessagesToDisplay))
+                    Console.WriteLine()
+                End If
+                displayMessage = True
+                m_displayedMessageCount = 0
+                m_lastDisplayedMessageTime = Date.Now.Ticks
+            End If
+
+            If displayMessage Then                
+                Console.WriteLine(messages(x))
                 Console.WriteLine()
             End If
-            displayMessage = True
-            m_displayedMessageCount = 0
-            m_lastDisplayedMessageTime = DateTime.Now.Ticks
-        End If
 
-        If displayMessage Then
-            Console.WriteLine(status)
-            Console.WriteLine()
-        End If
+            If m_systemLogEnabled Then
+                ' Initialize system log if this is first call
+                If m_systemLogFile Is Nothing Then
+                    m_systemLogFile = New LogFile()
+                    m_systemLogFile.Name = "SystemLog.txt"
+                    m_systemLogFile.FileFullOperation = LogFileFullOperation.Rollover
+                    m_systemLogFile.Open()
+                End If
 
-        If m_systemLogEnabled Then
-            ' Initialize system log if this is first call
-            If m_systemLogFile Is Nothing Then
-                m_systemLogFile = New LogFile()
-                m_systemLogFile.Name = "SystemLog.txt"
-                m_systemLogFile.FileFullOperation = LogFileFullOperation.Rollover
-                m_systemLogFile.Open()
+                m_systemLogFile.WriteTimestampedLine(messages(x))
             End If
-
-            m_systemLogFile.WriteTimestampedLine(status)
-        End If
+        Next
 
     End Sub
 

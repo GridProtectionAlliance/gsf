@@ -134,10 +134,13 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public ReadOnly Property SortTime() As Stopwatch Implements TVA.Measurements.IFrame.SortTime
+            Public Property SortTime() As Long Implements TVA.Measurements.IFrame.SortTime
                 Get
-                    Throw New NotImplementedException()
+                    Return 0
                 End Get
+                Set(ByVal value As Long)
+                    Throw New NotImplementedException()
+                End Set
             End Property
 
             Public Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
