@@ -25,7 +25,8 @@ Namespace Measurements
         Implements IFrame
 
         Private m_ticks As Long
-        Private m_sortTime As Long
+        Private m_startSortTime As Long
+        Private m_lastSortTime As Long
         Private m_published As Boolean
         Private m_publishedMeasurements As Integer
         Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
@@ -47,17 +48,20 @@ Namespace Measurements
 
         ''' <summary>Create a copy of this frame and its measurements</summary>
         ''' <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
-        Public Function Clone() As IFrame Implements IFrame.Clone
+        Public Function Clone() As Frame
 
-            With New Frame(m_ticks)
-                SyncLock m_measurements
-                    For Each dictionaryElement As KeyValuePair(Of MeasurementKey, IMeasurement) In m_measurements
-                        .Measurements.Add(dictionaryElement.Key, dictionaryElement.Value)
-                    Next
-                End SyncLock
+            Dim newFrame As New Frame(m_ticks)
 
-                Return .This
-            End With
+            newFrame.StartSortTime = m_startSortTime
+            newFrame.LastSortTime = m_lastSortTime
+
+            SyncLock m_measurements
+                For Each dictionaryElement As KeyValuePair(Of MeasurementKey, IMeasurement) In m_measurements
+                    newFrame.Measurements.Add(dictionaryElement.Key, dictionaryElement.Value)
+                Next
+            End SyncLock
+
+            Return newFrame
 
         End Function
 
@@ -108,13 +112,23 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Elapsed ticks indicating how long it took to sort measurements into this frame</summary>
-        Public Property SortTime() As Long Implements IFrame.SortTime
+        ''' <summary>Ticks of when first measurement was sorted into this frame</summary>
+        Public Property StartSortTime() As Long Implements IFrame.StartSortTime
             Get
-                Return m_sortTime
+                Return m_startSortTime
             End Get
             Set(ByVal value As Long)
-                m_sortTime = value
+                m_startSortTime = value
+            End Set
+        End Property
+
+        ''' <summary>Ticks of when last measurement was sorted into this frame</summary>
+        Public Property LastSortTime() As Long Implements IFrame.LastSortTime
+            Get
+                Return m_lastSortTime
+            End Get
+            Set(ByVal value As Long)
+                m_lastSortTime = value
             End Set
         End Property
 

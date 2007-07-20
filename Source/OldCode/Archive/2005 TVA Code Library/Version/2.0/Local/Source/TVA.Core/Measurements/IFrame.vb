@@ -26,10 +26,6 @@ Namespace Measurements
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IFrame
 
-        ''' <summary>Create a copy of this frame and its measurements</summary>
-        ''' <remarks>The frame's measurement dictionary should be synclocked prior to copy</remarks>
-        Function Clone() As IFrame
-
         ''' <summary>Keyed measurements in this frame</summary>
         ''' <remarks>Represents a dictionary of measurements, keyed by measurement key</remarks>
         ReadOnly Property Measurements() As IDictionary(Of MeasurementKey, IMeasurement)
@@ -48,9 +44,19 @@ Namespace Measurements
         ''' <summary>Date representation of ticks of this frame</summary>
         ReadOnly Property Timestamp() As Date
 
-        ''' <summary>Elapsed ticks indicating how long it took to sort measurements into this frame</summary>
-        ''' <remarks>This field is used to track the total required sort time</remarks>
-        Property SortTime() As Long
+        ''' <summary>Ticks of when first measurement was sorted into this frame</summary>
+        ''' <remarks>
+        ''' <para>This value is used to calculate total required sort time for the frame</para>
+        ''' <para>Implementors need only track the value</para>
+        ''' </remarks>
+        Property StartSortTime() As Long
+
+        ''' <summary>Ticks of when last measurement was sorted into this frame</summary>
+        ''' <remarks>
+        ''' <para>This value is used to calculate total required sort time for the frame</para>
+        ''' <para>Implementors need only track the value</para>
+        ''' </remarks>
+        Property LastSortTime() As Long
 
     End Interface
 
