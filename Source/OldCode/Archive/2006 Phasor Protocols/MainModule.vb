@@ -90,7 +90,7 @@ Module MainModule
         m_exceptionLogger.AutoRegister = True
         m_exceptionLogger.EndInit()
 
-        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages)
+        m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 50, Timeout.Infinite, False, False)
         m_statusMessageQueue.Start()
 
         InitializeConfiguration(AddressOf InitializeSystem)
@@ -733,7 +733,7 @@ Module MainModule
                     .Append("  ------------------------ ----------------------------------------------------")
                     .Append(Environment.NewLine)
                     '          01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
-                    '          >> No data frame has been parsed for SourceName - 00000 bytes received"
+                    '          >> No data has been parsed for SourceName - 00000 bytes received"
 
                     For Each mapper As PhasorMeasurementMapper In receiver.Mappers.Values
                         .Append("  ")
@@ -743,7 +743,7 @@ Module MainModule
                             .Append(mapper.Name)
                             .Append(Environment.NewLine)
                         Else
-                            .Append(">> No data frame has been parsed for ")
+                            .Append(">> No data has been parsed for ")
                             .Append(mapper.Name)
                             .Append(" - ")
                             .Append(mapper.TotalBytesReceived)
