@@ -134,7 +134,16 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
-            Public Property SortTime() As Long Implements TVA.Measurements.IFrame.SortTime
+            Public Property StartSortTime() As Long Implements TVA.Measurements.IFrame.StartSortTime
+                Get
+                    Return 0
+                End Get
+                Set(ByVal value As Long)
+                    Throw New NotImplementedException()
+                End Set
+            End Property
+
+            Public Property LastSortTime() As Long Implements TVA.Measurements.IFrame.LastSortTime
                 Get
                     Return 0
                 End Get
@@ -263,12 +272,6 @@ Namespace IeeeC37_118
                 Dim other As Measurements.IFrame = TryCast(obj, Measurements.IFrame)
                 If other IsNot Nothing Then Return CompareTo(other)
                 Throw New ArgumentException("Frame can only be compared with other IFrames...")
-
-            End Function
-
-            Private Function IFrameClone() As Measurements.IFrame Implements TVA.Measurements.IFrame.Clone
-
-                Throw New NotImplementedException()
 
             End Function
 

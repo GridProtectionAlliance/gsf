@@ -33,7 +33,8 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_idCode As UInt16
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
-    Private m_sortTime As Long
+    Private m_startSortTime As Long
+    Private m_lastSortTime As Long
     Private m_published As Boolean
     Private m_publishedMeasurements As Integer
     Private m_parsedBinaryLength As UInt16
@@ -127,26 +128,27 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Private Function IFrameClone() As IFrame Implements IFrame.Clone
-
-        ' Because of the way we are using frames related to data concentration - we don't need to create a synchronized copy of the
-        ' frame's measurement dictionary - the measurements are distributed among the frame's cell elements
-        Return Me
-
-    End Function
-
     Private ReadOnly Property IFrameThis() As IFrame Implements IFrame.This
         Get
             Return Me
         End Get
     End Property
 
-    Private Property IFrameSortTime() As Long Implements IFrame.SortTime
+    Public Property StartSortTime() As Long Implements IFrame.StartSortTime
         Get
-            Return m_sortTime
+            Return m_startSortTime
         End Get
         Set(ByVal value As Long)
-            m_sortTime = value
+            m_startSortTime = value
+        End Set
+    End Property
+
+    Public Property LastSortTime() As Long Implements IFrame.LastSortTime
+        Get
+            Return m_lastSortTime
+        End Get
+        Set(ByVal value As Long)
+            m_lastSortTime = value
         End Set
     End Property
 
