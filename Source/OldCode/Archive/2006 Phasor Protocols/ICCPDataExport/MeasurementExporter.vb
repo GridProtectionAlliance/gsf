@@ -150,16 +150,16 @@ Public Class MeasurementExporter
     Public Overrides Sub Dispose()
 
         If Not m_disposed Then
-            MyBase.Dispose()
+            m_disposed = True
 
             GC.SuppressFinalize(Me)
+
+            MyBase.Dispose()
 
             ' We'll be nice and disconnect network shares when this class is disposed...
             For x As Integer = 1 To m_exportCount
                 DisconnectFromNetworkShare(CategorizedStringSetting(ConfigurationSection, String.Format("ExportShare{0}", x)))
             Next
-
-            m_disposed = True
         End If
 
     End Sub
@@ -296,11 +296,12 @@ Public Class MeasurementExporter
                             RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find signal type for measurement {0}", inputMeasurementKey)))
                         End If
 
-                        exportData.Append(",,")
-
                         ' Export measurement quality
+                        exportData.Append(","c)
                         exportData.Append(measurementQuality)
-                        exportData.AppendLine(",")
+
+                        ' Terminate line
+                        exportData.AppendLine(",,")
                     Else
                         ' We were unable to find measurement tag for this key - this is unexpected
                         RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find measurement tag for measurement {0}", inputMeasurementKey)))
