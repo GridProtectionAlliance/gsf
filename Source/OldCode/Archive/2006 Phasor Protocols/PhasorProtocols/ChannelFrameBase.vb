@@ -134,6 +134,14 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
     End Property
 
+    Private Function IFrameClone() As IFrame Implements IFrame.Clone
+
+        ' We don't need to make a "clone" of the measurements in this frame since phasor concentration
+        ' handles measurement assignment in a special way - so we just return ourself for publication
+        Return Me
+
+    End Function
+
     Public Property StartSortTime() As Long Implements IFrame.StartSortTime
         Get
             Return m_startSortTime

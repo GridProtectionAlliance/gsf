@@ -327,6 +327,12 @@ Namespace Ieee1344
 
             End Function
 
+            Private Function IFrameClone() As TVA.Measurements.IFrame Implements TVA.Measurements.IFrame.Clone
+
+                Return Me
+
+            End Function
+
             Private ReadOnly Property IFrameMeasurements() As IDictionary(Of Measurements.MeasurementKey, Measurements.IMeasurement) Implements Measurements.IFrame.Measurements
                 Get
                     Throw New NotImplementedException()
