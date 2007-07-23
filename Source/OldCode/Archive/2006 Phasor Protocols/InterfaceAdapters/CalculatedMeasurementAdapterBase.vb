@@ -259,4 +259,10 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     End Sub
 
+    Private Sub CalculatedMeasurementAdapterBase_UnpublishedSamples(ByVal total As Integer) Handles Me.UnpublishedSamples
+
+        If total > 2 * LagTime Then UpdateStatus(String.Format("WARNING: There are {0} unpublished samples in the calculated measurement """ & Name & """ concentration queue...", total))
+
+    End Sub
+
 End Class

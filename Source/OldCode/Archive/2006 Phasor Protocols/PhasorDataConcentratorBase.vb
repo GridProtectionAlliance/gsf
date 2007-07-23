@@ -6,6 +6,7 @@ Imports System.Runtime.Serialization.Formatters
 Imports System.Runtime.Serialization.Formatters.Soap
 Imports TVA.Measurements
 Imports TVA.Communication
+Imports TVA.Collections
 Imports TVA.Data.Common
 Imports TVA.Common
 Imports TVA.IO.FilePath
@@ -19,10 +20,12 @@ Public MustInherit Class PhasorDataConcentratorBase
     Inherits ConcentratorBase
     Implements IServiceComponent
 
+    Public Event FramePublished(ByVal frame As IDataFrame)
     Public Event StatusMessage(ByVal status As String)
 
     Private m_name As String
     Private m_configurationFrame As IConfigurationFrame
+    Private WithEvents m_frameQueue As ProcessQueue(Of IDataFrame)
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
     Private m_publishDescriptor As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
@@ -38,6 +41,9 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         MyBase.New(framesPerSecond, lagTime, leadTime)
 
+        ' We create an asynchronous process queue of about 10 threads to start assigning sorted frame measurements to their proper data cell signals
+        m_frameQueue = ProcessQueue(Of IDataFrame).CreateAsynchronousQueue(AddressOf MapMeasurementsToSignals, (1.0R / framesPerSecond * 500.0R), 10, Timeout.Infinite, False, False)
+        m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
         m_communicationServer = communicationServer
         m_exceptionLogger = exceptionLogger
         m_publishDescriptor = True
@@ -54,7 +60,8 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         MyBase.Dispose()
 
-        ' Stop concentrator and communications server
+        ' Stop signal mapping process, concentrator and communications server
+        m_frameQueue.Stop()
         Me.Enabled = False
         If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
 
@@ -67,6 +74,9 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         ' Start concentrator
         Me.Enabled = True
+
+        ' Start signal mapping process
+        m_frameQueue.Start()
 
     End Sub
 
@@ -154,15 +164,13 @@ Public MustInherit Class PhasorDataConcentratorBase
         End Try
 
         ' Define measurement to signal cross reference dictionary
-        m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
-
         ' Initialize measurement list for each pmu keyed on the signal reference field
         With RetrieveData("SELECT * FROM ActiveDeviceMeasurements", connection).Rows
             For x As Integer = 0 To .Count - 1
                 With .Item(x)
                     signal = New SignalReference(.Item("SignalReference").ToString())
 
-                    ' Lookup cell index by acronym. Doing this work upfront will save a huge amount
+                    ' Lookup cell index by acronym - doing this work upfront will save a huge amount
                     ' of work during primary measurement sorting
                     If Not idLabelCellIndex.TryGetValue(signal.Acronym, signal.CellIndex) Then
                         ' We cache these indicies locally to speed up initialization - we'll be
@@ -197,9 +205,13 @@ Public MustInherit Class PhasorDataConcentratorBase
                 .Append(Name)
                 .Append(":"c)
                 .Append(Environment.NewLine)
+                .Append("Measurement to signal mapping queue status:")
+                .Append(Environment.NewLine)
+                .Append(m_frameQueue.Status)
                 If m_communicationServer IsNot Nothing Then
                     .Append(m_communicationServer.Status)
                 End If
+                .Append("Primary concentration queue status:")
                 .Append(MyBase.Status)
                 Return .ToString()
             End With
@@ -235,51 +247,21 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Protected MustOverride Function CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame) As IConfigurationFrame
 
-    Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
+    Protected MustOverride Function CreateNewDataFrame(ByVal ticks As Long) As IDataFrame
 
-        ' Assign all time-aligned measurements to their appropriate PMU (i.e., data frame cell)
-        Dim signalRef As SignalReference
+    Protected NotOverridable Overrides Function CreateNewFrame(ByVal ticks As Long) As TVA.Measurements.IFrame
 
-        ' Look up signal reference from measurement key
-        If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.CellIndex > -1 Then
-            ' Get associated data cell
-            Dim dataCell As IDataCell = DirectCast(frame, IDataFrame).Cells(signalRef.CellIndex)
-            Dim signalIndex As Integer = signalRef.Index
+        ' Create new data frame
+        Dim frame As IDataFrame = CreateNewDataFrame(ticks)
 
-            ' Assign value to appropriate cell property based on signal type
-            Select Case signalRef.Type
-                Case SignalType.Angle
-                    ' Assign "phase angle" measurement to data cell
-                    Dim phasorValues As PhasorValueCollection = dataCell.PhasorValues
-                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Angle = Convert.ToSingle(measurement.AdjustedValue)
-                Case SignalType.Magnitude
-                    ' Assign "phase magnitude" measurement to data cell
-                    Dim phasorValues As PhasorValueCollection = dataCell.PhasorValues
-                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Magnitude = Convert.ToSingle(measurement.AdjustedValue)
-                Case SignalType.Frequency
-                    ' Assign "frequency" measurement to data cell
-                    dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.AdjustedValue)
-                Case SignalType.dfdt
-                    ' Assign "df/dt" measurement to data cell
-                    dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.AdjustedValue)
-                Case SignalType.Status
-                    ' Assign "common status flags" measurement to data cell
-                    dataCell.CommonStatusFlags = Convert.ToInt32(measurement.AdjustedValue)
-                Case SignalType.Digital
-                    ' Assign "digital" measurement to data cell
-                    Dim digitalValues As DigitalValueCollection = dataCell.DigitalValues
-                    If digitalValues.Count >= signalIndex Then digitalValues(signalIndex - 1).Value = Convert.ToInt16(measurement.AdjustedValue)
-                Case SignalType.Analog
-                    ' Assign "analog" measurement to data cell
-                    Dim analogValues As AnalogValueCollection = dataCell.AnalogValues
-                    If analogValues.Count >= signalIndex Then analogValues(signalIndex - 1).Value = Convert.ToSingle(measurement.AdjustedValue)
-            End Select
+        ' Add frame to the frame process queue - this starts the signal mapping process independent of
+        ' any general concentration activities to help distribute processor load
+        m_frameQueue.Add(frame)
 
-            ' Track total measurements sorted for frame - this will become total measurements published
-            frame.PublishedMeasurements += 1
-        End If
+        ' Return new frame
+        Return frame
 
-    End Sub
+    End Function
 
     Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
@@ -302,6 +284,97 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
+    ' This method will be called simultaneously for several frames that are queued for imminent publication
+    Private Sub MapMeasurementsToSignals(ByVal frame As IDataFrame)
+
+        Dim frameMeasurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
+        Dim measurements As New List(Of IMeasurement)
+        Dim measurement As IMeasurement
+        Dim dataCell As IDataCell
+        Dim signalRef As SignalReference
+        Dim signalIndex As Integer
+        Dim phasorValues As PhasorValueCollection
+        'Dim digitalValues As DigitalValueCollection
+        'Dim analogValues As AnalogValueCollection
+
+        ' Keep mapping any newly sorted measurements to the data cell signals until the frame has been marked for publication...
+        Do Until frame.Published
+            Try
+                measurements.Clear()
+
+                ' To reduce total synclock time, we make a quick copy of any current frame measurements
+                SyncLock frameMeasurements
+                    If frameMeasurements.Count > 0 Then
+                        For Each measurement In frameMeasurements.Values
+                            measurements.Add(measurement)
+                        Next
+
+                        frameMeasurements.Clear()
+                    End If
+                End SyncLock
+
+                If measurements.Count > 0 Then
+                    ' Map each measurement to its signal and assign value to appropriate frame element
+                    For Each measurement In measurements
+                        ' Look up signal reference from measurement key
+                        If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.CellIndex > -1 Then
+                            ' Get associated data cell
+                            dataCell = frame.Cells(signalRef.CellIndex)
+                            signalIndex = signalRef.Index
+
+                            ' Assign value to appropriate cell property based on signal type
+                            Select Case signalRef.Type
+                                Case SignalType.Angle
+                                    ' Assign "phase angle" measurement to data cell
+                                    phasorValues = dataCell.PhasorValues
+                                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Angle = Convert.ToSingle(measurement.AdjustedValue)
+                                Case SignalType.Magnitude
+                                    ' Assign "phase magnitude" measurement to data cell
+                                    phasorValues = dataCell.PhasorValues
+                                    If phasorValues.Count >= signalIndex Then phasorValues(signalIndex - 1).Magnitude = Convert.ToSingle(measurement.AdjustedValue)
+                                Case SignalType.Frequency
+                                    ' Assign "frequency" measurement to data cell
+                                    dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.AdjustedValue)
+                                Case SignalType.dfdt
+                                    ' Assign "df/dt" measurement to data cell
+                                    dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.AdjustedValue)
+                                Case SignalType.Status
+                                    ' Assign "common status flags" measurement to data cell
+                                    dataCell.CommonStatusFlags = Convert.ToInt32(measurement.AdjustedValue)
+                            End Select
+
+                            'Case SignalType.Digital
+                            '    ' Assign "digital" measurement to data cell
+                            '    digitalValues = dataCell.DigitalValues
+                            '    If digitalValues.Count >= signalIndex Then digitalValues(signalIndex - 1).Value = Convert.ToInt16(measurement.AdjustedValue)
+                            'Case SignalType.Analog
+                            '    ' Assign "analog" measurement to data cell
+                            '    analogValues = dataCell.AnalogValues
+                            '    If analogValues.Count >= signalIndex Then analogValues(signalIndex - 1).Value = Convert.ToSingle(measurement.AdjustedValue)
+                        End If
+                    Next
+
+                    ' Track total measurements sorted for frame - this will become total measurements published
+                    frame.PublishedMeasurements += measurements.Count
+                Else
+                    ' No new measurements, sleep the thread...
+                    Thread.Sleep(1)
+                End If
+            Catch ex As ThreadAbortException
+                ' Rethrow thread abort so timer thread can be released normally
+                Throw ex
+            Catch ex As Exception
+                ' We only catch exceptions here because need to keep mapping measurements to the data cell signals even if there's an error
+                MyBase.RaiseProcessException(ex)
+            End Try
+        Loop
+
+        ' We expose published frames to consumer and derived classes just in case they have any final steps
+        ' they want to perform on the frame before it gets released
+        RaiseEvent FramePublished(frame)
+
+    End Sub
+
     Protected Overridable Sub HandleIncomingData(ByVal commandBuffer As Byte())
 
         ' This is optionally overridden to handle incoming data - such as IEEE commands
@@ -317,7 +390,13 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Private Sub PhasorDataConcentrator_UnpublishedSamples(ByVal total As Integer) Handles Me.UnpublishedSamples
 
-        If total > 2 * LagTime Then UpdateStatus(String.Format("There are {0} unpublished samples in the concentration queue...", total))
+        If total > 2 * LagTime Then UpdateStatus(String.Format("WARNING: There are {0} unpublished samples in the concentration queue...", total))
+
+    End Sub
+
+    Private Sub m_frameQueue_ProcessException(ByVal ex As System.Exception) Handles m_frameQueue.ProcessException
+
+        MyBase.RaiseProcessException(ex)
 
     End Sub
 

@@ -66,7 +66,7 @@ Public Class BpaPdcConcentrator
 
     End Function
 
-    Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As TVA.Measurements.IFrame
+    Protected Overrides Function CreateNewDataFrame(ByVal ticks As Long) As IDataFrame
 
         ' We create a new BPA PDCstream data frame based on current configuration frame
         Dim dataFrame As BpaPdcStream.DataFrame ' (ticks, m_configurationFrame)

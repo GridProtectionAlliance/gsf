@@ -188,7 +188,7 @@
 		/>
 		<AssemblyReference
 			RelativePath="..\..\..\TVA Code Library\Source\bin\TVA.Core.dll"
-			AssemblyName="TVA.Core, Version=2.1.98.28813, processorArchitecture=MSIL"
+			AssemblyName="TVA.Core, Version=2.1.99.32408, processorArchitecture=MSIL"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}"

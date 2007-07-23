@@ -73,7 +73,7 @@ Public Class IeeeC37_118Concentrator
 
     End Function
 
-    Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As TVA.Measurements.IFrame
+    Protected Overrides Function CreateNewDataFrame(ByVal ticks As Long) As IDataFrame
 
         ' We create a new IEEE C37.118 data frame based on current configuration frame
         Dim dataFrame As New IeeeC37_118.DataFrame(ticks, m_configurationFrame)
