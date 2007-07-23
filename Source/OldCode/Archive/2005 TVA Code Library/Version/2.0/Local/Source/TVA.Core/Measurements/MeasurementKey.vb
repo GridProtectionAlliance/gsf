@@ -15,8 +15,6 @@
 '
 '*******************************************************************************************************
 
-Imports TVA.Common
-
 Namespace Measurements
 
     ''' <summary>Defines a primary key for a measurement</summary>
@@ -129,7 +127,13 @@ Namespace Measurements
             Dim sourceCompare As Integer = String.Compare(m_source, other.Source, True)
 
             If sourceCompare = 0 Then
-                Return IIf(m_id < other.ID, -1, IIf(m_id > other.ID, 1, 0))
+                If m_id < other.ID Then
+                    Return -1
+                ElseIf m_id > other.ID Then
+                    Return 1
+                Else
+                    Return 0
+                End If
             Else
                 Return sourceCompare
             End If

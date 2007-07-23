@@ -141,7 +141,7 @@ Namespace Measurements
 
         End Function
 
-        ''' <summary>This implementation of a basic measurement compares itself by value</summary>
+        ''' <summary>This implementation of a basic measurement compares itself by timestamp</summary>
         Public Function CompareTo(ByVal other As IFrame) As Integer Implements System.IComparable(Of IFrame).CompareTo
 
             Return m_ticks.CompareTo(other.Ticks)

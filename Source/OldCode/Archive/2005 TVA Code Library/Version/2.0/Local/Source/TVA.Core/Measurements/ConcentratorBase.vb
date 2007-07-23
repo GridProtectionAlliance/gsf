@@ -57,7 +57,7 @@ Namespace Measurements
         Friend Event LeadTimeUpdated(ByVal leadTime As Double)                  ' Raised, for the benefit of dependent classes, when lead time is updated
         Friend Event LagTimeUpdated(ByVal lagTime As Double)                    ' Raised, for the benefit of dependent classes, when lag time is updated
 
-        Private m_useLocalClockAsRealTime As Boolean                            ' Determines whether ot not to use local system clock as "real-time"
+        Private m_useLocalClockAsRealTime As Boolean                            ' Determines whether or not to use local system clock as "real-time"
         Private m_realTimeTicks As Long                                         ' Ticks of the most recently received measurement (i.e., real-time)
         Private m_setRealTimeTicksLock As Object                                ' Object used to synchronize updating of real-time ticks
         Private m_framesPerSecond As Integer                                    ' Frames per second
@@ -73,7 +73,7 @@ Namespace Measurements
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
-        Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue
+        Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue (a sample represents one second of frames)
         Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
 
 #End Region
@@ -105,10 +105,10 @@ Namespace Measurements
 
             Dim currentTime As Date = Date.UtcNow
 
+            ' Setting FramesPerSecond property calculates ticks per frame
+            Me.FramesPerSecond = framesPerSecond
             m_realTimeTicks = currentTime.Ticks
             m_setRealTimeTicksLock = New Object
-            m_framesPerSecond = framesPerSecond
-            m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(framesPerSecond)
             m_lagTime = lagTime
             m_leadTime = leadTime
             m_latestMeasurements = New ImmediateMeasurements(Me)
@@ -188,6 +188,20 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Currently publishing sample</summary>
+        Public ReadOnly Property CurrentSample() As Sample
+            Get
+                Return m_sampleQueue(0%).Value
+            End Get
+        End Property
+
+        ''' <summary>Index of frame that is currently or about to be publishing</summary>
+        Public ReadOnly Property CurrentFrameIndex() As Integer
+            Get
+                Return m_frameIndex
+            End Get
+        End Property
+
         ''' <summary>Frames per second</summary>
         Public Property FramesPerSecond() As Integer
             Get
@@ -195,6 +209,7 @@ Namespace Measurements
             End Get
             Set(ByVal value As Integer)
                 m_framesPerSecond = value
+                m_ticksPerFrame = CDec(SecondsToTicks(1)) / CDec(m_framesPerSecond)
             End Set
         End Property
 
@@ -382,26 +397,30 @@ Namespace Measurements
                 ' Baseline measurement timestamp at bottom of the second to use as sample "key"
                 baseTimeTicks = BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
 
-                ' This next critical sorting operation automatically manages the sample queue based on timestamps of incoming measurements
-                SyncLock m_sampleQueue.SyncRoot
-                    If Not m_sampleQueue.TryGetValue(baseTimeTicks, sample) Then
-                        ' We didn't find sample for this measurement, so first let's validate the measurement time by
-                        ' checking the difference between the measurement's timestamp and real-time in seconds
-                        distance = DistanceFromRealTime(ticks)
+                ' Typically measurements in a group will be headed for the same sample - so no need to keep looking up
+                ' the same sample if it has already been found
+                If Not (sample IsNot Nothing AndAlso sample.Ticks = baseTimeTicks) Then
+                    ' This next critical sorting operation automatically manages the sample queue based on timestamps of incoming measurements
+                    SyncLock m_sampleQueue.SyncRoot
+                        If Not m_sampleQueue.TryGetValue(baseTimeTicks, sample) Then
+                            ' We didn't find sample for this measurement, so first let's validate the measurement time by
+                            ' checking the difference between the measurement's timestamp and real-time in seconds
+                            distance = DistanceFromRealTime(ticks)
 
-                        If distance > m_lagTime OrElse distance < -m_leadTime Then
-                            ' This data has come in late or has a future timestamp.  For old timestamps, we're not
-                            ' going to create a sample for data that will never be processed.  For future dates we
-                            ' must assume that the clock from source device must be advanced and out-of-sync with
-                            ' real-time - either way this data will be discarded.  Sample reference will be null.
-                            m_discardedMeasurements += 1
-                        Else
-                            ' Create sample for new base time
-                            sample = New Sample(Me, baseTimeTicks)
-                            m_sampleQueue.Add(baseTimeTicks, sample)
+                            If distance > m_lagTime OrElse distance < -m_leadTime Then
+                                ' This data has come in late or has a future timestamp.  For old timestamps, we're not
+                                ' going to create a sample for data that will never be processed.  For future dates we
+                                ' must assume that the clock from source device must be advanced and out-of-sync with
+                                ' real-time - either way this data will be discarded.  Sample reference will be null.
+                                m_discardedMeasurements += 1
+                            Else
+                                ' Create sample for new base time
+                                sample = New Sample(Me, baseTimeTicks)
+                                m_sampleQueue.Add(baseTimeTicks, sample)
+                            End If
                         End If
-                    End If
-                End SyncLock
+                    End SyncLock
+                End If
 
                 If sample IsNot Nothing Then
                     '
@@ -411,11 +430,9 @@ Namespace Measurements
                     ' We've found the right sample for this data, so we now calculate the proper frame index (i.e., the row)
                     frame = sample.Frames(Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame))
 
-                    ' No need to waste time sorting measurements into a frame that's already been published - so we check for this.
-                    ' Note that this step allows consumer to not worry about synchronizing the frame's measurement dictionary since
-                    ' no measurements will be assigned to the frame once the frame has been marked as published...
+                    ' No need to waste time sorting measurements into a frame that's already been published - so we check for this
                     If frame.Published Then
-                        ' We'll just count this as a discarded measurement...
+                        ' We'll just count this as a discarded measurement, frame is already publishing...
                         m_discardedMeasurements += 1
                     Else
                         ' Initialize the starting sort time for this frame
@@ -494,8 +511,7 @@ Namespace Measurements
                             .Append(": ")
 
                             If x = 0 Then
-                                Dim frameIndex As Integer = m_frameIndex
-                                Dim currentFrame As IFrame = currentSample.Frames(frameIndex)
+                                Dim currentFrame As IFrame = currentSample.Frames(m_frameIndex)
 
                                 ' Track timestamp of sample being published
                                 publishingSampleTimestamp = currentSample.Timestamp
@@ -505,7 +521,7 @@ Namespace Measurements
                                 .Append(Environment.NewLine)
                                 .Append(Environment.NewLine)
                                 .Append("       Current frame = ")
-                                .Append(frameIndex + 1)
+                                .Append(m_frameIndex + 1)
                                 .Append(" - sort time: ")
 
                                 ' Calculate maximum sort time for publishing frame
@@ -632,20 +648,14 @@ Namespace Measurements
         ''' <summary>Consumers can choose to override this method to handle custom assignment of a measurement to its frame</summary>
         ''' <remarks>
         ''' <para>Override is optional, a measurement will simply be assigned to frame's measurement list otherwise</para>
-        ''' <para>The frame's measurement dictionary is synclocked during assignment</para>
+        ''' <para>If overriden, make sure the frame's measurement dictionary is synclocked during assignment</para>
         ''' </remarks>
         Protected Overridable Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
-            Dim frameMeasurement As IMeasurement
+            Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
 
-            SyncLock frame.Measurements
-                If frame.Measurements.TryGetValue(measurement.Key, frameMeasurement) Then
-                    ' Measurement already exists, so we just update with the latest value
-                    frameMeasurement.Value = measurement.Value
-                Else
-                    ' Create new frame measurement if it doesn't exist
-                    frame.Measurements.Add(measurement.Key, measurement)
-                End If
+            SyncLock measurements
+                measurements(measurement.Key) = measurement
             End SyncLock
 
         End Sub
@@ -665,6 +675,13 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Allows derived classes to raise a processing exception</summary>
+        Protected Sub RaiseProcessException(ByVal ex As Exception)
+
+            RaiseEvent ProcessException(ex)
+
+        End Sub
+
 #End Region
 
 #Region " Private Methods Implementation "
@@ -672,11 +689,11 @@ Namespace Measurements
         ' Each sample consists of an array of frames - the sample represents one second of data, so all frames
         ' are to get published during this second.  Typically the process queue's "process item function"
         ' does the work of the queue - but in this case we use the "can process item function" to process
-        ' each frame in the sample until all frames have been published.
+        ' each frame in the sample until all frames have been published. This function is executed on a
+        ' real-time thread, so make sure any work to be done here is executed as efficiently as possible.
+        ' This function returns True when all frames in the sample have been published.
         Private Function CanPublishSample(ByVal ticks As Long, ByVal sample As Sample) As Boolean
 
-            ' This function is executed on a real-time thread, so make sure any work to be done here
-            ' is executed as efficiently as possible
             Dim frame As IFrame = sample.Frames(m_frameIndex)
             Dim allFramesPublished As Boolean
 
@@ -684,25 +701,31 @@ Namespace Measurements
             ' is just wait for the lagtime to pass and begin publishing...
             If DistanceFromRealTime(frame.Ticks) >= m_lagTime Then
                 ' Available sorting time has passed - we're publishing the frame
-                Dim frameSortTime As Long
+                Dim sortTime As Long
+                Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
 
                 ' We mark frame as published to prevent any further sorting into this frame
                 frame.Published = True
 
                 ' Calculate total time required to sort measurements into this frame so far
-                If frame.StartSortTime > 0 AndAlso frame.LastSortTime > 0 Then frameSortTime = frame.LastSortTime - frame.StartSortTime
+                If frame.StartSortTime > 0 AndAlso frame.LastSortTime > 0 Then sortTime = frame.LastSortTime - frame.StartSortTime
+
+                ' Publish the current frame - other threads handling measurement assignment are possibly still
+                ' in motion so we synchronize access to the frame's measurements.  To create a small optimization
+                ' we manually implement the synchrnonization instead of nesting a synclock inside the try/catch,
+                ' this eliminates an implicitly IL declared try/catch inside the existing try/catch
+                Monitor.Enter(measurements)
 
                 Try
-                    ' Publish the current frame.  Consumer doesn't have to worry about synchronization of the frame's
-                    ' measurements since no more measurements will be sorted into the frame at this point (frame has
-                    ' been marked as published)
                     PublishFrame(frame, m_frameIndex)
                 Catch ex As Exception
                     RaiseEvent ProcessException(ex)
+                Finally
+                    Monitor.Exit(measurements)
                 End Try
 
                 ' Update publication statistics
-                m_totalSortTime += frameSortTime
+                m_totalSortTime += sortTime
                 m_publishedFrames += 1
                 m_publishedMeasurements += frame.PublishedMeasurements
 
@@ -834,6 +857,14 @@ Namespace Measurements
     '    If Not m_sampleQueue.ContainsKey(ticks) Then m_sampleQueue.Add(ticks, New Sample(Me, ticks))
 
     'End Sub
+
+    'If measurements.TryGetValue(measurement.Key, foundMeasurement) Then
+    '    ' Measurement already exists, so we just update with the latest value
+    '    foundMeasurement.Value = measurement.Value
+    'Else
+    '    ' Create new frame measurement if it doesn't exist
+    '    measurements.Add(measurement.Key, measurement)
+    'End If
 
 #End Region
 
