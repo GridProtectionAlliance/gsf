@@ -711,17 +711,13 @@ Namespace Measurements
                 If frame.StartSortTime > 0 AndAlso frame.LastSortTime > 0 Then sortTime = frame.LastSortTime - frame.StartSortTime
 
                 ' Publish the current frame - other threads handling measurement assignment are possibly still
-                ' in motion so we synchronize access to the frame's measurements.  To create a small optimization
-                ' we manually implement the synchrnonization instead of nesting a synclock inside the try/catch,
-                ' this eliminates an implicitly IL declared try/catch inside the existing try/catch
-                Monitor.Enter(measurements)
-
+                ' in motion so we synchronize access to the frame's measurements and send in a copy of this
+                ' frame and its measurements - this keeps synclock time down to a minimum and allows user's
+                ' frame publication method to take as long as it needs.
                 Try
-                    PublishFrame(frame, m_frameIndex)
+                    PublishFrame(frame.Clone(), m_frameIndex)
                 Catch ex As Exception
                     RaiseEvent ProcessException(ex)
-                Finally
-                    Monitor.Exit(measurements)
                 End Try
 
                 ' Update publication statistics

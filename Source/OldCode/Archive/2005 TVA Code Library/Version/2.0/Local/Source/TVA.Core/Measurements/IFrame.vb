@@ -26,6 +26,10 @@ Namespace Measurements
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IFrame
 
+        ''' <summary>Create a copy of this frame and its measurements</summary>
+        ''' <remarks>Implementors should synclock frame's measurement dictionary during copy</remarks>
+        Function Clone() As IFrame
+
         ''' <summary>Keyed measurements in this frame</summary>
         ''' <remarks>Represents a dictionary of measurements, keyed by measurement key</remarks>
         ReadOnly Property Measurements() As IDictionary(Of MeasurementKey, IMeasurement)

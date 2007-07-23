@@ -48,7 +48,7 @@ Namespace Measurements
 
         ''' <summary>Create a copy of this frame and its measurements</summary>
         ''' <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
-        Public Function Clone() As Frame
+        Public Function Clone() As IFrame Implements IFrame.Clone
 
             Dim newFrame As New Frame(m_ticks)
 
