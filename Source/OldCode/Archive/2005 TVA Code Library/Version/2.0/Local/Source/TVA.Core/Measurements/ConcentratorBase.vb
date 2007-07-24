@@ -191,7 +191,11 @@ Namespace Measurements
         ''' <summary>Currently publishing sample</summary>
         Public ReadOnly Property CurrentSample() As Sample
             Get
-                Return m_sampleQueue(0%).Value
+                If m_sampleQueue.Count > 0 Then
+                    Return m_sampleQueue(0%).Value
+                Else
+                    Return Nothing
+                End If
             End Get
         End Property
 
