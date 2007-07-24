@@ -87,7 +87,7 @@ Public Class PhasorMeasurementMapper
 
         With m_connectionTimer
             .AutoReset = False
-            .Interval = 1000
+            .Interval = 1500
             .Enabled = False
         End With
 
