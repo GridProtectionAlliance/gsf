@@ -42,7 +42,6 @@ Public Class PhasorMeasurementReceiver
     Private m_statusInterval As Integer
     Private m_intializing As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
-    Private m_statusUpdateSyncLock As Object
 
     Public Sub New( _
         ByVal historianAdapter As IHistorianAdapter, _
@@ -59,7 +58,6 @@ Public Class PhasorMeasurementReceiver
         m_dataLossInterval = dataLossInterval
         m_exceptionLogger = exceptionLogger
         m_reportingStatus = New Timers.Timer
-        m_statusUpdateSyncLock = New Object
 
         With m_reportingStatus
             .AutoReset = True
@@ -353,11 +351,7 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub UpdateStatus(ByVal status As String) Handles m_historianAdapter.StatusMessage
 
-        ' Since same function handles status events from receivers and mappers multiple calls to raise event had
-        ' a tendency to lock up refreshing - so we force events to be raised sequentially
-        SyncLock m_statusUpdateSyncLock
-            RaiseEvent StatusMessage(String.Format("[{0}]: {1}", m_archiverSource, status))
-        End SyncLock
+        RaiseEvent StatusMessage(String.Format("[{0}]: {1}", m_archiverSource, status))
 
     End Sub
 

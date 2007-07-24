@@ -39,8 +39,9 @@ Public Class PhasorMeasurementMapper
     Public Event ParsingStatus(ByVal message As String)
     Public Event Connected()
 
-    Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_frameParser As MultiProtocolFrameParser
+    Private WithEvents m_dataStreamMonitor As Timers.Timer
+    Private WithEvents m_connectionTimer As Timers.Timer
     Private m_mapperName As String
     Private m_archiverSource As String
     Private m_source As String
@@ -82,6 +83,14 @@ Public Class PhasorMeasurementMapper
             .Enabled = False
         End With
 
+        m_connectionTimer = New Timers.Timer
+
+        With m_connectionTimer
+            .AutoReset = False
+            .Interval = 1000
+            .Enabled = False
+        End With
+
         m_undefinedPmus = New Dictionary(Of String, Long)
 
     End Sub
@@ -92,7 +101,7 @@ Public Class PhasorMeasurementMapper
         Disconnect()
 
         ' Start the connection cycle
-        m_frameParser.Start()
+        m_connectionTimer.Enabled = True
 
     End Sub
 
@@ -381,14 +390,6 @@ Public Class PhasorMeasurementMapper
 
         UpdateStatus(String.Format("{0} connection to ""{1}"" failed: {2}", m_source, m_frameParser.ConnectionName, ex.Message))
         m_exceptionLogger.Log(ex)
-
-        ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
-        ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
-
-    End Sub
-
-    Private Sub AttemptReconnection(ByVal state As Object)
-
         Connect()
 
     End Sub
@@ -418,11 +419,8 @@ Public Class PhasorMeasurementMapper
 
         If m_frameParser.Enabled Then
             ' Communications layer closed connection (close not initiated by system) - so we terminate gracefully...
-            Disconnect()
             UpdateStatus(String.Format("WARNING: Connection closed by remote device {0}, attempting reconnection...", m_source))
-
-            ' Start reconnection attempt on a seperate thread (need to let this communications thread die gracefully)
-            ThreadPool.UnsafeQueueUserWorkItem(AddressOf AttemptReconnection, Nothing)
+            Connect()
         Else
             UpdateStatus(String.Format("Disconnected from {0}.", m_source))
         End If
@@ -485,12 +483,19 @@ Public Class PhasorMeasurementMapper
 
         ' If we've received no data in the last little timespan, we restart connect cycle...
         If m_bytesReceived = 0 Then
+            m_dataStreamMonitor.Enabled = False
             UpdateStatus(String.Format("{0}No data on {1} received in {2} seconds, restarting connect cycle...{3}", Environment.NewLine, m_source, Convert.ToInt32(m_dataStreamMonitor.Interval / 1000.0R), Environment.NewLine))
             Connect()
-            m_dataStreamMonitor.Enabled = False
         End If
 
         m_bytesReceived = 0
+
+    End Sub
+
+    Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
+
+        ' Start frame parser (this will attempt connection)...
+        m_frameParser.Start()
 
     End Sub
 
