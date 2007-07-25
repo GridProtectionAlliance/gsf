@@ -73,6 +73,57 @@ Namespace Measurements
 
         End Function
 
+        Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
+
+            Return (m_hashCode = other.GetHashCode())
+
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            ' Can't use TryCast on a structure...
+            If TypeOf obj Is MeasurementKey Then Return Equals(DirectCast(obj, MeasurementKey))
+            Throw New ArgumentException("Object is not a MeasurementKey")
+
+        End Function
+
+        Public Function CompareTo(ByVal other As MeasurementKey) As Integer Implements System.IComparable(Of MeasurementKey).CompareTo
+
+            Dim sourceCompare As Integer = String.Compare(m_source, other.Source, True)
+
+            If sourceCompare = 0 Then
+                If m_id < other.ID Then
+                    Return -1
+                ElseIf m_id > other.ID Then
+                    Return 1
+                Else
+                    Return 0
+                End If
+            Else
+                Return sourceCompare
+            End If
+
+        End Function
+
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            ' Can't use TryCast on a structure...
+            If TypeOf obj Is MeasurementKey Then Return CompareTo(DirectCast(obj, MeasurementKey))
+            Throw New ArgumentException("Object is not a MeasurementKey")
+
+        End Function
+
+        Private Sub Regenerate()
+
+            ' We cache key elements during construction or after element value change to speed structure usage
+            Dim idImage As String = m_id.ToString()
+            m_hashCode = String.Format("{0}{1}", m_source, idImage.PadLeft(10, "0"c)).GetHashCode()
+            m_stringImage = String.Format("{0}:{1}", m_source, idImage)
+
+        End Sub
+
+#Region " MeasurementKey Operators "
+
         Public Shared Operator =(ByVal key1 As MeasurementKey, ByVal key2 As MeasurementKey) As Boolean
 
             Return key1.Equals(key2)
@@ -109,52 +160,7 @@ Namespace Measurements
 
         End Operator
 
-        Public Overrides Function Equals(ByVal obj As Object) As Boolean
-
-            If TypeOf obj Is MeasurementKey Then Return Equals(DirectCast(obj, MeasurementKey))
-            Throw New ArgumentException("Object is not a MeasurementKey")
-
-        End Function
-
-        Public Overloads Function Equals(ByVal other As MeasurementKey) As Boolean Implements System.IEquatable(Of MeasurementKey).Equals
-
-            Return (m_hashCode = other.GetHashCode())
-
-        End Function
-
-        Public Function CompareTo(ByVal other As MeasurementKey) As Integer Implements System.IComparable(Of MeasurementKey).CompareTo
-
-            Dim sourceCompare As Integer = String.Compare(m_source, other.Source, True)
-
-            If sourceCompare = 0 Then
-                If m_id < other.ID Then
-                    Return -1
-                ElseIf m_id > other.ID Then
-                    Return 1
-                Else
-                    Return 0
-                End If
-            Else
-                Return sourceCompare
-            End If
-
-        End Function
-
-        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
-
-            If TypeOf obj Is MeasurementKey Then Return CompareTo(DirectCast(obj, MeasurementKey))
-            Throw New ArgumentException("Object is not a MeasurementKey")
-
-        End Function
-
-        Private Sub Regenerate()
-
-            ' We cache key elements during construction or after element value change to speed structure usage
-            Dim idImage As String = m_id.ToString()
-            m_hashCode = String.Format("{0}{1}", m_source, idImage.PadLeft(10, "0"c)).GetHashCode()
-            m_stringImage = String.Format("{0}:{1}", m_source, idImage)
-
-        End Sub
+#End Region
 
     End Structure
 

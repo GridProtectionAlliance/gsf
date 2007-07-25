@@ -132,12 +132,19 @@ Namespace Measurements
             End Set
         End Property
 
-        ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
-        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+        ''' <summary>Returns True if the timestamp of this frame equals the timestamp of the specified other frame</summary>
+        Public Overloads Function Equals(ByVal other As IFrame) As Boolean Implements System.IEquatable(Of IFrame).Equals
+
+            Return (CompareTo(other) = 0)
+
+        End Function
+
+        ''' <summary>Returns True if the timestamp of this frame equals the timestamp of the specified other frame</summary>
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
             Dim other As IFrame = TryCast(obj, IFrame)
-            If other IsNot Nothing Then Return CompareTo(other)
-            Throw New ArgumentException("Frame can only be compared with other IFrames...")
+            If other IsNot Nothing Then Return Equals(other)
+            Throw New ArgumentException("Object is not an IFrame")
 
         End Function
 
@@ -148,12 +155,54 @@ Namespace Measurements
 
         End Function
 
-        ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
-        Public Overloads Function Equals(ByVal other As IFrame) As Boolean Implements System.IEquatable(Of IFrame).Equals
+        ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-            Return (CompareTo(other) = 0)
+            Dim other As IFrame = TryCast(obj, IFrame)
+            If other IsNot Nothing Then Return CompareTo(other)
+            Throw New ArgumentException("Frame can only be compared with other IFrames...")
 
         End Function
+
+#Region " Frame Operators "
+
+        Public Shared Operator =(ByVal frame1 As Frame, ByVal frame2 As Frame) As Boolean
+
+            Return frame1.Equals(frame2)
+
+        End Operator
+
+        Public Shared Operator <>(ByVal frame1 As Frame, ByVal frame2 As Frame) As Boolean
+
+            Return Not frame1.Equals(frame2)
+
+        End Operator
+
+        Public Shared Operator >(ByVal frame1 As Frame, ByVal frame2 As Frame) As Boolean
+
+            Return frame1.CompareTo(frame2) > 0
+
+        End Operator
+
+        Public Shared Operator >=(ByVal frame1 As Frame, ByVal frame2 As Frame) As Boolean
+
+            Return frame1.CompareTo(frame2) >= 0
+
+        End Operator
+
+        Public Shared Operator <(ByVal frame1 As Frame, ByVal frame2 As Frame) As Boolean
+
+            Return frame1.CompareTo(frame2) < 0
+
+        End Operator
+
+        Public Shared Operator <=(ByVal frame1 As Frame, ByVal frame2 As Frame) As Boolean
+
+            Return frame1.CompareTo(frame2) <= 0
+
+        End Operator
+
+#End Region
 
     End Class
 

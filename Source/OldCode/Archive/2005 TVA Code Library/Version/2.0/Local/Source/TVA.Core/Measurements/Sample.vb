@@ -18,18 +18,21 @@
 '*******************************************************************************************************
 
 Imports TVA.Common
+Imports TVA.DateTime.Common
 
 Namespace Measurements
 
     ''' <summary>This class represents a collection of frames over one second (i.e., a sample of data)</summary>
     Public Class Sample
 
-        Implements IComparable
+        Implements IEquatable(Of Sample), IComparable(Of Sample), IComparable
 
         Private m_frames As IFrame()            ' Array of frames
         Private m_ticks As Long                 ' Ticks at the beginning of sample
 
         Friend Sub New(ByVal parent As ConcentratorBase, ByVal ticks As Long)
+
+            Dim ticksPerFrame As Decimal = parent.TicksPerFrame
 
             m_ticks = ticks
 
@@ -37,8 +40,8 @@ Namespace Measurements
             m_frames = CreateArray(Of IFrame)(parent.FramesPerSecond)
 
             For x As Integer = 0 To m_frames.Length - 1
-                ' We precalculate frame ticks sitting in the middle of the frame
-                m_frames(x) = parent.CreateNewFrame(ticks + (x * parent.TicksPerFrame))
+                ' We precalculate frame ticks at the start of the frame
+                m_frames(x) = parent.CreateNewFrame(ticks + (x * ticksPerFrame))
             Next
 
         End Sub
@@ -74,14 +77,14 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Exact timestamp of the beginning of data sample</summary>
+        ''' <summary>Exact timestamp of the beginning of data sample second (0 milliseconds)</summary>
         ''' <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
         Public Property Ticks() As Long
             Get
                 Return m_ticks
             End Get
             Set(ByVal value As Long)
-                m_ticks = value
+                m_ticks = BaselinedTimestamp(value, DateTime.BaselineTimeInterval.Second).Ticks
             End Set
         End Property
 
@@ -92,14 +95,35 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Returns True if the timestamp of this sample equals the timestamp of the specified other sample</summary>
+        Public Overloads Function Equals(ByVal other As Sample) As Boolean Implements System.IEquatable(Of Sample).Equals
+
+            Return (CompareTo(other) = 0)
+
+        End Function
+
+        ''' <summary>Returns True if the timestamp of this sample equals the timestamp of the specified other sample</summary>
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            Dim other As Sample = TryCast(obj, Sample)
+            If other IsNot Nothing Then Return Equals(other)
+            Throw New ArgumentException("Object is not a Sample")
+
+        End Function
+
+        ''' <summary>Samples are sorted by timestamp</summary>
+        Public Function CompareTo(ByVal other As Sample) As Integer Implements System.IComparable(Of Sample).CompareTo
+
+            Return m_ticks.CompareTo(other.Ticks)
+
+        End Function
+
         ''' <summary>Samples are sorted by timestamp</summary>
         Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-            If TypeOf obj Is Sample Then
-                Return m_ticks.CompareTo(DirectCast(obj, Sample).Ticks)
-            Else
-                Throw New ArgumentException("Sample can only be compared with other Samples...")
-            End If
+            Dim other As Sample = TryCast(obj, Sample)
+            If other IsNot Nothing Then Return CompareTo(other)
+            Throw New ArgumentException("Sample can only be compared with other Samples...")
 
         End Function
 

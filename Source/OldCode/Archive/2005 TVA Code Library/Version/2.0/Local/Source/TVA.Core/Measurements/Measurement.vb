@@ -17,6 +17,8 @@
 '
 '*******************************************************************************************************
 
+Imports System.ComponentModel
+
 Namespace Measurements
 
     ''' <summary>Implementation of a basic measured value</summary>
@@ -27,7 +29,7 @@ Namespace Measurements
         Private m_id As Integer
         Private m_source As String
         Private m_key As MeasurementKey
-        Private m_tag As String
+        Private m_tagName As String
         Private m_value As Double
         Private m_adder As Double
         Private m_multiplier As Double
@@ -60,10 +62,10 @@ Namespace Measurements
 
         End Sub
 
-        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal tag As String, ByVal adder As Double, ByVal multiplier As Double)
+        Public Sub New(ByVal id As Integer, ByVal source As String, ByVal tagName As String, ByVal adder As Double, ByVal multiplier As Double)
 
             MyClass.New(id, source, Double.NaN, adder, multiplier, 0)
-            m_tag = tag
+            m_tagName = tagName
 
         End Sub
 
@@ -157,13 +159,13 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Gets or sets the text based ID of this measurement</summary>
-        Public Overridable Property Tag() As String Implements IMeasurement.Tag
+        ''' <summary>Gets or sets the text based tag name of this measurement</summary>
+        Public Overridable Property TagName() As String Implements IMeasurement.TagName
             Get
-                Return m_tag
+                Return m_tagName
             End Get
             Set(ByVal value As String)
-                m_tag = value
+                m_tagName = value
             End Set
         End Property
 
@@ -188,6 +190,7 @@ Namespace Measurements
         End Property
 
         ''' <summary>Defines an offset to add to the measurement value - defaults to zero</summary>
+        <DefaultValue(0.0R)> _
         Public Property Adder() As Double Implements IMeasurement.Adder
             Get
                 Return m_adder
@@ -198,6 +201,7 @@ Namespace Measurements
         End Property
 
         ''' <summary>Defines a mulplicative offset to add to the measurement value - defaults to one</summary>
+        <DefaultValue(1.0R)> _
         Public Property Multiplier() As Double Implements IMeasurement.Multiplier
             Get
                 Return m_multiplier
@@ -247,7 +251,34 @@ Namespace Measurements
 
         Public Overrides Function ToString() As String
 
-            Return Key.ToString()
+            If String.IsNullOrEmpty(m_tagName) Then
+                Return m_key.ToString()
+            Else
+                Return String.Format("{0} [{1}]", m_tagName, m_key.ToString())
+            End If
+
+        End Function
+
+        ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
+        Public Overloads Function Equals(ByVal other As IMeasurement) As Boolean Implements System.IEquatable(Of IMeasurement).Equals
+
+            Return (CompareTo(other) = 0)
+
+        End Function
+
+        ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            Dim other As IMeasurement = TryCast(obj, IMeasurement)
+            If other IsNot Nothing Then Return Equals(other)
+            Throw New ArgumentException("Object is not a Measurement")
+
+        End Function
+
+        ''' <summary>This implementation of a basic measurement compares itself by value</summary>
+        Public Function CompareTo(ByVal other As IMeasurement) As Integer Implements System.IComparable(Of IMeasurement).CompareTo
+
+            Return m_value.CompareTo(other.Value)
 
         End Function
 
@@ -260,19 +291,45 @@ Namespace Measurements
 
         End Function
 
-        ''' <summary>This implementation of a basic measurement compares itself by value</summary>
-        Public Function CompareTo(ByVal other As IMeasurement) As Integer Implements System.IComparable(Of IMeasurement).CompareTo
+#Region " Measurement Operators "
 
-            Return m_value.CompareTo(other.Value)
+        Public Shared Operator =(ByVal measurement1 As Measurement, ByVal measurement2 As Measurement) As Boolean
 
-        End Function
+            Return measurement1.Equals(measurement2)
 
-        ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
-        Public Overloads Function Equals(ByVal other As IMeasurement) As Boolean Implements System.IEquatable(Of IMeasurement).Equals
+        End Operator
 
-            Return (CompareTo(other) = 0)
+        Public Shared Operator <>(ByVal measurement1 As Measurement, ByVal measurement2 As Measurement) As Boolean
 
-        End Function
+            Return Not measurement1.Equals(measurement2)
+
+        End Operator
+
+        Public Shared Operator >(ByVal measurement1 As Measurement, ByVal measurement2 As Measurement) As Boolean
+
+            Return measurement1.CompareTo(measurement2) > 0
+
+        End Operator
+
+        Public Shared Operator >=(ByVal measurement1 As Measurement, ByVal measurement2 As Measurement) As Boolean
+
+            Return measurement1.CompareTo(measurement2) >= 0
+
+        End Operator
+
+        Public Shared Operator <(ByVal measurement1 As Measurement, ByVal measurement2 As Measurement) As Boolean
+
+            Return measurement1.CompareTo(measurement2) < 0
+
+        End Operator
+
+        Public Shared Operator <=(ByVal measurement1 As Measurement, ByVal measurement2 As Measurement) As Boolean
+
+            Return measurement1.CompareTo(measurement2) <= 0
+
+        End Operator
+
+#End Region
 
     End Class
 
