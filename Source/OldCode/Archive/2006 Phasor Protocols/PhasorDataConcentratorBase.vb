@@ -29,6 +29,172 @@ Public MustInherit Class PhasorDataConcentratorBase
     Private m_exceptionLogger As GlobalExceptionLogger
     Private WithEvents m_communicationServer As ICommunicationServer
 
+    ' This class associates a given measurement with its signal reference value - this comes in handy
+    ' because we are able to "pre-filter" measurements that get sorted based on whether or not we have
+    ' a signal reference defined for the measurement - once we know the signal reference, we make the
+    ' association using this measurement wrapper class which saves us having to lookup the measurement
+    ' again during the measurement to frame assignment 
+    Protected Class SignalReferenceMeasurement
+
+        Implements IMeasurement
+
+        Private m_measurement As IMeasurement
+        Private m_signalReference As SignalReference
+
+        Public Sub New(ByVal measurement As IMeasurement, ByVal signalReference As SignalReference)
+
+            m_measurement = measurement
+            m_signalReference = signalReference
+
+        End Sub
+
+        Public ReadOnly Property SignalReference() As SignalReference
+            Get
+                Return m_signalReference
+            End Get
+        End Property
+
+        Public ReadOnly Property UnwrappedMeasurement() As IMeasurement
+            Get
+                Return m_measurement
+            End Get
+        End Property
+
+#Region " IMeasurement Wrapper "
+
+        Public ReadOnly Property This() As IMeasurement Implements IMeasurement.This
+            Get
+                Return Me
+            End Get
+        End Property
+
+        Public Property ID() As Integer Implements IMeasurement.ID
+            Get
+                Return m_measurement.ID
+            End Get
+            Set(ByVal value As Integer)
+                m_measurement.ID = value
+            End Set
+        End Property
+
+        Public Property Source() As String Implements IMeasurement.Source
+            Get
+                Return m_measurement.Source
+            End Get
+            Set(ByVal value As String)
+                m_measurement.Source = value
+            End Set
+        End Property
+
+        Public ReadOnly Property Key() As MeasurementKey Implements IMeasurement.Key
+            Get
+                Return m_measurement.Key
+            End Get
+        End Property
+
+        Public Property TagName() As String Implements IMeasurement.TagName
+            Get
+                Return m_measurement.TagName
+            End Get
+            Set(ByVal value As String)
+                m_measurement.TagName = value
+            End Set
+        End Property
+
+        Public Property Ticks() As Long Implements IMeasurement.Ticks
+            Get
+                Return m_measurement.Ticks
+            End Get
+            Set(ByVal value As Long)
+                m_measurement.Ticks = value
+            End Set
+        End Property
+
+        Public ReadOnly Property Timestamp() As Date Implements IMeasurement.Timestamp
+            Get
+                Return m_measurement.Timestamp
+            End Get
+        End Property
+
+        Public Property Value() As Double Implements IMeasurement.Value
+            Get
+                Return m_measurement.Value
+            End Get
+            Set(ByVal value As Double)
+                m_measurement.Value = value
+            End Set
+        End Property
+
+        Public Property Adder() As Double Implements IMeasurement.Adder
+            Get
+                Return m_measurement.Adder
+            End Get
+            Set(ByVal value As Double)
+                m_measurement.Adder = value
+            End Set
+        End Property
+
+        Public Property Multiplier() As Double Implements IMeasurement.Multiplier
+            Get
+                Return m_measurement.Multiplier
+            End Get
+            Set(ByVal value As Double)
+                m_measurement.Multiplier = value
+            End Set
+        End Property
+
+        Public ReadOnly Property AdjustedValue() As Double Implements IMeasurement.AdjustedValue
+            Get
+                Return m_measurement.AdjustedValue
+            End Get
+        End Property
+
+        Public Property TimestampQualityIsGood() As Boolean Implements IMeasurement.TimestampQualityIsGood
+            Get
+                Return m_measurement.TimestampQualityIsGood
+            End Get
+            Set(ByVal value As Boolean)
+                m_measurement.TimestampQualityIsGood = value
+            End Set
+        End Property
+
+        Public Property ValueQualityIsGood() As Boolean Implements IMeasurement.ValueQualityIsGood
+            Get
+                Return m_measurement.ValueQualityIsGood
+            End Get
+            Set(ByVal value As Boolean)
+                m_measurement.ValueQualityIsGood = value
+            End Set
+        End Property
+
+        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+
+            Return CompareTo(DirectCast(obj, IMeasurement))
+
+        End Function
+
+        Public Function CompareTo(ByVal other As IMeasurement) As Integer Implements System.IComparable(Of IMeasurement).CompareTo
+
+            Return DirectCast(m_measurement, System.IComparable(Of IMeasurement)).CompareTo(other)
+
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+
+            Return Equals(DirectCast(obj, IMeasurement))
+
+        End Function
+
+        Public Overloads Function Equals(ByVal other As IMeasurement) As Boolean Implements System.IEquatable(Of IMeasurement).Equals
+
+            Return m_measurement.Equals(other)
+
+        End Function
+
+#End Region
+
+    End Class
+
     Protected Sub New( _
         ByVal communicationServer As ICommunicationServer, _
         ByVal name As String, _
@@ -238,16 +404,29 @@ Public MustInherit Class PhasorDataConcentratorBase
     ' We filter sorted incoming measurements to just those that are needed in the concentrated output stream
     Public Overrides Sub SortMeasurement(ByVal measurement As IMeasurement)
 
-        If m_signalReferences.ContainsKey(measurement.Key) Then MyBase.SortMeasurement(measurement)
+        Dim signalRef As SignalReference
+
+        ' We assign signal reference to measurement in advance since we are using this as a filter
+        ' anyway, this will save a lookup later during measurement assignment to frame...
+        If m_signalReferences.TryGetValue(measurement.Key, signalRef) Then
+            ' No need to sort this measurement unless it has a destination PMU
+            If signalRef.CellIndex > -1 Then MyBase.SortMeasurement(New SignalReferenceMeasurement(measurement, signalRef))
+        End If
 
     End Sub
 
     Public Overrides Sub SortMeasurements(ByVal measurements As ICollection(Of IMeasurement))
 
         Dim inputMeasurements As New List(Of IMeasurement)
+        Dim signalRef As SignalReference
 
         For Each measurement As IMeasurement In measurements
-            If m_signalReferences.ContainsKey(measurement.Key) Then inputMeasurements.Add(measurement)
+            ' We assign signal reference to measurement in advance since we are using this as a filter
+            ' anyway, this will save a lookup later during measurement assignment to frame...
+            If m_signalReferences.TryGetValue(measurement.Key, signalRef) Then
+                ' No need to sort this measurement unless it has a destination PMU
+                If signalRef.CellIndex > -1 Then inputMeasurements.Add(New SignalReferenceMeasurement(measurement, signalRef))
+            End If
         Next
 
         If inputMeasurements.Count > 0 Then MyBase.SortMeasurements(inputMeasurements)
@@ -256,11 +435,12 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
-        Dim signalRef As SignalReference
+        ' Make sure the measurement is a "SignalReferenceMeasurement" wrapper (it should be)
+        Dim wrappedMeasurement As SignalReferenceMeasurement = TryCast(measurement, SignalReferenceMeasurement)
 
-        ' Look up signal reference from measurement key
-        If m_signalReferences.TryGetValue(measurement.Key, signalRef) AndAlso signalRef.CellIndex > -1 Then
+        If wrappedMeasurement IsNot Nothing Then
             ' Get associated data cell
+            Dim signalRef As SignalReference = wrappedMeasurement.SignalReference
             Dim dataCell As IDataCell = DirectCast(frame, IDataFrame).Cells(signalRef.CellIndex)
             Dim signalIndex As Integer = signalRef.Index
 
@@ -295,6 +475,9 @@ Public MustInherit Class PhasorDataConcentratorBase
 
             ' Track total measurements sorted for frame - this will become total measurements published
             frame.PublishedMeasurements += 1
+        Else
+            ' I don't expect this to occur - but just in case
+            Throw New InvalidCastException(String.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a ""SignalReferenceMeasurement"" but got a ""{0}""", TypeName(measurement)))
         End If
 
     End Sub
