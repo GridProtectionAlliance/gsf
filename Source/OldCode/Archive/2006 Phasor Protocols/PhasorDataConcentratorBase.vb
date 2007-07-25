@@ -32,8 +32,8 @@ Public MustInherit Class PhasorDataConcentratorBase
     ' This class associates a given measurement with its signal reference value - this comes in handy
     ' because we are able to "pre-filter" measurements that get sorted based on whether or not we have
     ' a signal reference defined for the measurement - once we know the signal reference, we make the
-    ' association using this measurement wrapper class which saves us having to lookup the measurement
-    ' again during the measurement to frame assignment 
+    ' association using this measurement wrapper class which saves us having to lookup the signal
+    ' reference again during the measurement to frame assignment 
     Protected Class SignalReferenceMeasurement
 
         Implements IMeasurement
