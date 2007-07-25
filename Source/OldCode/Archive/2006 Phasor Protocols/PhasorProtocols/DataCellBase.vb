@@ -39,7 +39,7 @@ Public MustInherit Class DataCellBase
     Private m_id As Integer
     Private m_source As String
     Private m_key As MeasurementKey
-    Private m_tag As String
+    Private m_tagName As String
     Private m_ticks As Long
     Private m_adder As Double
     Private m_multiplier As Double
@@ -413,12 +413,12 @@ Public MustInherit Class DataCellBase
         End Get
     End Property
 
-    Private Property IMeasurementTag() As String Implements IMeasurement.Tag
+    Private Property IMeasurementTagName() As String Implements IMeasurement.TagName
         Get
-            Return m_tag
+            Return m_tagName
         End Get
         Set(ByVal value As String)
-            m_tag = value
+            m_tagName = value
         End Set
     End Property
 

@@ -29,7 +29,7 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     Private m_id As Integer
     Private m_source As String
     Private m_key As MeasurementKey
-    Private m_tag As String
+    Private m_tagName As String
     Private m_ticks As Long
     Private m_valueIndex As Integer
     Private m_adder As Double
@@ -95,12 +95,12 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
         End Get
     End Property
 
-    Public Overridable Property Tag() As String Implements IMeasurement.Tag
+    Public Overridable Property TagName() As String Implements IMeasurement.TagName
         Get
-            Return m_tag
+            Return m_tagName
         End Get
         Set(ByVal value As String)
-            m_tag = value
+            m_tagName = value
         End Set
     End Property
 
