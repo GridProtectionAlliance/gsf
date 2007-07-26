@@ -741,7 +741,6 @@ Module MainModule
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
                     .Append("Receiver for historian ")
                     .Append(receiver.HistorianName)
-                    .Append(":"c)
                     .Append(Environment.NewLine)
                     .Append(">> PMU/PDC Connection List (")
                     .Append(receiver.Mappers.Count)
