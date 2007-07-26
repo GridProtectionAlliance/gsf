@@ -42,7 +42,6 @@ Public Class PhasorMeasurementMapper
     Private WithEvents m_frameParser As MultiProtocolFrameParser
     Private WithEvents m_dataStreamMonitor As Timers.Timer
     Private WithEvents m_delayedConnection As Timers.Timer
-    Private m_mapperName As String
     Private m_archiverSource As String
     Private m_source As String
     Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
@@ -189,7 +188,13 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property Name() As String
         Get
-            If m_mapperName Is Nothing Then
+            Return Name(0)
+        End Get
+    End Property
+
+    Public ReadOnly Property Name(ByVal childrenToDisplay As Integer) As String
+        Get
+            If childrenToDisplay > 0 Then
                 With New StringBuilder
                     .Append(m_source)
 
@@ -204,20 +209,26 @@ Public Class PhasorMeasurementMapper
 
                     If displayChildren Then
                         Dim index As Integer
+
                         .Append(" [")
+
                         For Each pmu As ConfigurationCell In m_configurationCells.Values
                             If index > 0 Then .Append(", ")
                             .Append(pmu.IDLabel)
                             index += 1
+                            If index >= childrenToDisplay Then Exit For
                         Next
+
+                        If m_configurationCells.Count > index Then .Append(", ...")
+
                         .Append("]")
                     End If
 
-                    m_mapperName = .ToString()
+                    Return .ToString()
                 End With
+            Else
+                Return m_source
             End If
-
-            Return m_mapperName
         End Get
     End Property
 

@@ -176,10 +176,20 @@ Public MustInherit Class HistorianAdapterBase
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
+                .Append("      Historian connection: ")
+                If m_dataProcessingThread Is Nothing Then
+                    .Append("Inactive - not connected")
+                Else
+                    .Append("Active")
+                End If
+                .Append(Environment.NewLine)
                 .Append("  Queued measurement count: ")
                 SyncLock m_measurementBuffer
                     .Append(m_measurementBuffer.Count)
                 End SyncLock
+                .Append(Environment.NewLine)
+                .Append("     Archived measurements: ")
+                .Append(m_processedMeasurements)
                 .Append(Environment.NewLine)
                 Return .ToString()
             End With

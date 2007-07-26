@@ -299,7 +299,7 @@ Public Class PhasorMeasurementReceiver
 
     Public ReadOnly Property HistorianName() As String
         Get
-            Return m_historianAdapter.Name
+            Return String.Format("{0}: {1}", m_archiverSource, m_historianAdapter.Name)
         End Get
     End Property
 
@@ -312,15 +312,27 @@ Public Class PhasorMeasurementReceiver
     Public ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(String.Format("Phasor Measurement Receiver Status for ""{0}""", HistorianName))
+                .Append(String.Format("Receiver status for historian {0}", HistorianName))
                 .Append(Environment.NewLine)
+                .Append("  Total device connections: ")
+                .Append(m_mappers.Count)
                 .Append(Environment.NewLine)
                 .Append(m_historianAdapter.Status)
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+                .AppendFormat(">> [{0}] Detailed Device Connection Status:", m_archiverSource)
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
 
                 For Each parser As PhasorMeasurementMapper In m_mappers.Values
                     .Append(parser.Status)
                     .Append(Environment.NewLine)
                 Next
+
+                .Append(Environment.NewLine)
+                .Append(New String("-"c, 80))
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
 
                 Return .ToString()
             End With

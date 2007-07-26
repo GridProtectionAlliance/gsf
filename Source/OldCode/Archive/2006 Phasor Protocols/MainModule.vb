@@ -66,8 +66,7 @@ Module MainModule
         'Stop
 
         Dim consoleLine As String
-        Dim receiver As PhasorMeasurementReceiver
-        Dim mapper As PhasorMeasurementMapper = Nothing
+        Dim mapper As PhasorMeasurementMapper
 
         Console.WriteLine(MonitorInformation)
 
@@ -119,25 +118,7 @@ Module MainModule
             ElseIf consoleLine.StartsWith("gc", True, Nothing) Then
                 ForceGarbageCollection()
             ElseIf consoleLine.StartsWith("status", True, Nothing) Then
-                With New StringBuilder
-                    .Append(Environment.NewLine)
-
-                    For Each receiver In m_measurementReceivers.Values
-                        .Append(receiver.Status)
-                    Next
-
-                    For Each calculation As ICalculatedMeasurementAdapter In m_calculatedMeasurements
-                        .Append(calculation.Status)
-                    Next
-
-                    For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
-                        .Append(concentrator.Status)
-                    Next
-
-                    .Append(Environment.NewLine)
-
-                    DisplayStatusMessage(.ToString())
-                End With
+                DisplayStatusMessage(SystemStatus)
             ElseIf consoleLine.StartsWith("list", True, Nothing) Then
                 DisplayStatusMessage(ConnectionList)
             ElseIf consoleLine.StartsWith("version", True, Nothing) Then
@@ -165,7 +146,7 @@ Module MainModule
         Next
 
         ' Stop data measurement receivers
-        For Each receiver In m_measurementReceivers.Values
+        For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
             receiver.Disconnect()
         Next
 
@@ -712,15 +693,55 @@ Module MainModule
         End Get
     End Property
 
+    Private ReadOnly Property SystemStatus() As String
+        Get
+            With New StringBuilder
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+                .Append("*** Phasor Measurement Receivers (one per historian) ***")
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+
+                For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                    .Append(receiver.Status)
+                Next
+
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+                .Append("*** Calculated Measurement Adapters ***")
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+
+                For Each calculation As ICalculatedMeasurementAdapter In m_calculatedMeasurements
+                    .Append(calculation.Status)
+                Next
+
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+                .Append("*** Phasor Data Concentrators ***")
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+
+                For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
+                    .Append(concentrator.Status)
+                Next
+
+                .Append(Environment.NewLine)
+
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
     Private ReadOnly Property ConnectionList() As String
         Get
             With New StringBuilder
                 .Append(Environment.NewLine)
 
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-                    .Append("Phasor Measurement Receiver for Archive """)
+                    .Append("Receiver for historian ")
                     .Append(receiver.HistorianName)
-                    .Append("""")
+                    .Append(":"c)
                     .Append(Environment.NewLine)
                     .Append(">> PMU/PDC Connection List (")
                     .Append(receiver.Mappers.Count)
@@ -740,7 +761,7 @@ Module MainModule
                         If mapper.LastReportTime > 0 Then
                             .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                             .Append(" "c)
-                            .Append(mapper.Name)
+                            .Append(mapper.Name(4))
                             .Append(Environment.NewLine)
                         Else
                             .Append(">> No data has been parsed for ")
