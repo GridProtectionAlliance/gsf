@@ -218,23 +218,23 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Public Overrides Sub Dispose()
+    Public Overrides Sub Start()
 
-        MyBase.Dispose()
+        ' Start communications server
+        If m_communicationServer IsNot Nothing Then m_communicationServer.Start()
 
-        ' Stop concentrator and communications server
-        Me.Enabled = False
-        If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
+        ' Start concentrator
+        MyBase.Start()
 
     End Sub
 
-    Public Sub Start()
+    Public Overrides Sub [Stop]()
 
-        ' Start communications server
-        m_communicationServer.Start()
+        ' Stop concentrator
+        MyBase.[Stop]()
 
-        ' Start concentrator
-        Me.Enabled = True
+        ' Stop communications server
+        If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
 
     End Sub
 
