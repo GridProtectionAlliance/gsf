@@ -35,16 +35,16 @@ Public Class CumberlandPowerDeviationCalculator
     Private Const EnergizedThreshold As Double = 58000.0R           ' 20% of nominal line-to-neutral voltage
 
     ' Define the input measurement ID's needed to perform this calculation 
-    Private m_bus1VM As New MeasurementKey(1608, "P0")      ' TVA_CUMB-BUS1:ABBV
-    Private m_bus1VA As New MeasurementKey(1609, "P0")      ' TVA_CUMB-BUS1:ABBVH
-    Private m_bus2VM As New MeasurementKey(1610, "P0")      ' TVA_CUMB-BUS2:ABBV
-    Private m_bus2VA As New MeasurementKey(1611, "P0")      ' TVA_CUMB-BUS2:ABBVH
-    Private m_marsIM As New MeasurementKey(1612, "P0")      ' TVA_CUMB-MARS:ABBI
-    Private m_marsIA As New MeasurementKey(1615, "P0")      ' TVA_CUMB-MARS:ABBIH
-    Private m_johnIM As New MeasurementKey(1616, "P0")      ' TVA_CUMB-JOHN:ABBI
-    Private m_johnIA As New MeasurementKey(1619, "P0")      ' TVA_CUMB-JOHN:ABBIH
-    Private m_davdIM As New MeasurementKey(1620, "P0")      ' TVA_CUMB-DAVD:ABBI
-    Private m_davdIA As New MeasurementKey(1623, "P0")      ' TVA_CUMB-DAVD:ABBIH
+    Private m_bus1VM As New MeasurementKey(1608, "P2")      ' TVA_CUMB-BUS1:ABBV
+    Private m_bus1VA As New MeasurementKey(1609, "P2")      ' TVA_CUMB-BUS1:ABBVH
+    Private m_bus2VM As New MeasurementKey(1610, "P2")      ' TVA_CUMB-BUS2:ABBV
+    Private m_bus2VA As New MeasurementKey(1611, "P2")      ' TVA_CUMB-BUS2:ABBVH
+    Private m_marsIM As New MeasurementKey(1612, "P2")      ' TVA_CUMB-MARS:ABBI
+    Private m_marsIA As New MeasurementKey(1615, "P2")      ' TVA_CUMB-MARS:ABBIH
+    Private m_johnIM As New MeasurementKey(1616, "P2")      ' TVA_CUMB-JOHN:ABBI
+    Private m_johnIA As New MeasurementKey(1619, "P2")      ' TVA_CUMB-JOHN:ABBIH
+    Private m_davdIM As New MeasurementKey(1620, "P2")      ' TVA_CUMB-DAVD:ABBI
+    Private m_davdIA As New MeasurementKey(1623, "P2")      ' TVA_CUMB-DAVD:ABBIH
 
     Private m_minimumSamples As Integer
     Private m_latestMegaWatts As List(Of Double)
@@ -75,7 +75,7 @@ Public Class CumberlandPowerDeviationCalculator
         If outputMeasurements Is Nothing OrElse outputMeasurements.Length = 0 Then
             MyClass.OutputMeasurements = New IMeasurement() _
                 { _
-                    New Measurement(2712, "P0") _
+                    New Measurement(2712, "P2") _
                 }
         End If
 

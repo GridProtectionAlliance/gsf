@@ -707,7 +707,6 @@ Module MainModule
                 Next
 
                 .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
                 .Append("*** Calculated Measurement Adapters ***")
                 .Append(Environment.NewLine)
                 .Append(Environment.NewLine)

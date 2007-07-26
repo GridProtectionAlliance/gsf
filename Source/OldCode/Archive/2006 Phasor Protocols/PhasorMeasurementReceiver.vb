@@ -319,8 +319,7 @@ Public Class PhasorMeasurementReceiver
                 .Append(Environment.NewLine)
                 .Append(m_historianAdapter.Status)
                 .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
-                .AppendFormat(">> [{0}] Detailed Device Connection Status:", m_archiverSource)
+                .AppendFormat(">> [{0}] Detailed Device Connection Status <<", m_archiverSource)
                 .Append(Environment.NewLine)
                 .Append(Environment.NewLine)
 
@@ -329,7 +328,6 @@ Public Class PhasorMeasurementReceiver
                     .Append(Environment.NewLine)
                 Next
 
-                .Append(Environment.NewLine)
                 .Append(New String("-"c, 80))
                 .Append(Environment.NewLine)
                 .Append(Environment.NewLine)
