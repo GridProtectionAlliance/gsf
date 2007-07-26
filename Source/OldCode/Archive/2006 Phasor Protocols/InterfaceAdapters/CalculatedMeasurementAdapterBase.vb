@@ -79,17 +79,17 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     End Sub
 
-    Public Overridable Sub Start() Implements ICalculatedMeasurementAdapter.Start
+    Public Overrides Sub Start() Implements ICalculatedMeasurementAdapter.Start
 
         ' Start measurement concentration
-        Me.Enabled = True
+        MyBase.Start()
 
     End Sub
 
-    Public Overridable Sub [Stop]() Implements ICalculatedMeasurementAdapter.Stop
+    Public Overrides Sub [Stop]() Implements ICalculatedMeasurementAdapter.Stop
 
         ' Stop measurement concentration
-        Me.Enabled = False
+        MyBase.Stop()
 
     End Sub
 
@@ -261,7 +261,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Private Sub CalculatedMeasurementAdapterBase_UnpublishedSamples(ByVal total As Integer) Handles Me.UnpublishedSamples
 
-        If total > 2 * LagTime Then UpdateStatus(String.Format("WARNING: There are {0} unpublished samples in the calculated measurement """ & Name & """ concentration queue...", total))
+        If total > 2 * Convert.ToInt32(Math.Ceiling(LagTime)) Then UpdateStatus(String.Format("WARNING: There are {0} unpublished samples in the calculated measurement """ & Name & """ concentration queue...", total))
 
     End Sub
 
