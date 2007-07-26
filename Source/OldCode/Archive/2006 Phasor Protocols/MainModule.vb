@@ -759,7 +759,7 @@ Module MainModule
                         If mapper.LastReportTime > 0 Then
                             .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                             .Append(" "c)
-                            .Append(mapper.Name(4))
+                            .Append(mapper.Name(6))
                             .Append(Environment.NewLine)
                         Else
                             .Append(">> No data has been parsed for ")
