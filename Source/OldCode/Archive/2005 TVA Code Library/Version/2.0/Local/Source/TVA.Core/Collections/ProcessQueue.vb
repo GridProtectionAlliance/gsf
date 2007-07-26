@@ -835,8 +835,11 @@ Namespace Collections
         ''' </remarks>
         Public Sub Flush() Implements IDisposable.Dispose
 
-            Dispose(True)
+            ' PCP: Although the IDisposable guideline suggest that the object should be removed from GC finalize queue only
+            ' after Dispose() has completed successfully, we have to do the opposite because our Dispose() may take a long 
+            ' time to complete and it is possible that the GC finalizes this object before Dispose() completes.
             GC.SuppressFinalize(Me)
+            Dispose(True)
 
         End Sub
 
@@ -1265,11 +1268,6 @@ Namespace Collections
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_isDisposed Then
-                ' PCP: This is not the best implementation of IDisposable, but this is best way I could think of to
-                ' avoid redundant calls to Dispose() since this method may take longer than it normally would. So,
-                ' the member variable used to track redundant calls is set before Dispose() finishes (the usual).
-                m_isDisposed = True
-
                 ' Dispose unmanaged resources.
 
                 If disposing Then
@@ -1311,6 +1309,7 @@ Namespace Collections
                     End If
                 End If
             End If
+            m_isDisposed = True
 
         End Sub
 
