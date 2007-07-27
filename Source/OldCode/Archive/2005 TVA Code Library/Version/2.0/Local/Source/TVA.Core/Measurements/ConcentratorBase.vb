@@ -436,7 +436,7 @@ Namespace Measurements
                                     ' going to create a sample for data that will never be processed.  For future dates we
                                     ' must assume that the clock from source device must be advanced and out-of-sync with
                                     ' real-time - either way this data will be discarded.  Sample reference will be null.
-                                    m_discardedMeasurements += 1
+                                    Interlocked.Increment(m_discardedMeasurements)
                                 Else
                                     ' Create sample for new base time
                                     sample = New Sample(Me, baseTimeTicks)
@@ -463,62 +463,64 @@ Namespace Measurements
                     ' No need to waste time sorting measurements into a frame that's already been published - so we check for this
                     If frame.Published Then
                         ' We'll just count this as a discarded measurement, frame is already publishing...
-                        m_discardedMeasurements += 1
+                        Interlocked.Increment(m_discardedMeasurements)
                     Else
                         ' Initialize the starting sort time for this frame
                         If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
 
                         ' Call user customizable function to assign new measurement to its frame
-                        AssignMeasurementToFrame(frame, measurement)
+                        If AssignMeasurementToFrame(frame, measurement) Then
+                            ' Track time of last sorted measurement in this frame
+                            frame.LastSortTime = Date.UtcNow.Ticks
+                            '
+                            ' *** Manage "real-time" ticks ***
+                            '
 
-                        ' Track time of last sorted measurement in this frame
-                        frame.LastSortTime = Date.UtcNow.Ticks
+                            If Not m_useLocalClockAsRealTime Then
+                                ' If the measurement time is newer than the current real-time value and is within the specified time
+                                ' deviation tolerance of the local clock time then we set the measurement time as real-time.
+                                ' Note that the real time ticks member variable (m_realTimeTicks) is a static variable shared across
+                                ' all instances of the concentrator base class.
+                                Dim realTimeTicks As Long = m_realTimeTicks
 
-                        '
-                        ' *** Manage "real-time" ticks ***
-                        '
+                                If ticks > m_realTimeTicks Then
+                                    ' We need to apply a resonability check to this value - we do this using local clock.  Because
+                                    ' of the frequency with which this function gets called, we don't call the TimeIsValid nor the
+                                    ' DistanceFromRealTime functions to determine if the real-time ticks are valid, instead we
+                                    ' manually implement the code here to avoid function call overhead.
+                                    Dim currentTimeTicks As Long = Date.UtcNow.Ticks
+                                    distance = (currentTimeTicks - ticks) / TicksPerSecond
 
-                        If Not m_useLocalClockAsRealTime Then
-                            ' If the measurement time is newer than the current real-time value and is within the specified time
-                            ' deviation tolerance of the local clock time then we set the measurement time as real-time.
-                            ' Note that the real time ticks member variable (m_realTimeTicks) is a static variable shared across
-                            ' all instances of the concentrator base class.
-                            Dim realTimeTicks As Long = m_realTimeTicks
+                                    If distance <= m_lagTime AndAlso distance >= -m_leadTime Then
+                                        ' New time measurement looks good, assume this time as "real-time" so long as another
+                                        ' thread hasn't changed the real-time value already.  Using the interlocked compare
+                                        ' exchange method introduces the possibility that we may have had newer ticks than
+                                        ' another thread that just updated real-time ticks, but if so the deviation won't be
+                                        ' much since ticks were greater than current real-time ticks in all threads that got to
+                                        ' this point - besides newer measurements are always coming in anyway and the compare
+                                        ' exchange method saves a call to a monitor lock reducing possible contention
+                                        Interlocked.CompareExchange(m_realTimeTicks, ticks, realTimeTicks)
+                                    Else
+                                        ' Measurement ticks were outside of time deviation tolerances so we'll also check to make
+                                        ' sure current real-time ticks are within these tolerances as well
+                                        distance = (currentTimeTicks - m_realTimeTicks) / TicksPerSecond
 
-                            If ticks > m_realTimeTicks Then
-                                ' We need to apply a resonability check to this value - we do this using local clock.  Because
-                                ' of the frequency with which this function gets called, we don't call the TimeIsValid nor the
-                                ' DistanceFromRealTime functions to determine if the real-time ticks are valid, instead we
-                                ' manually implement the code here to avoid function call overhead.
-                                Dim currentTimeTicks As Long = Date.UtcNow.Ticks
-                                distance = (currentTimeTicks - ticks) / TicksPerSecond
-
-                                If distance <= m_lagTime AndAlso distance >= -m_leadTime Then
-                                    ' New time measurement looks good, assume this time as "real-time" so long as another
-                                    ' thread hasn't changed the real-time value already.  Using the interlocked compare
-                                    ' exchange method introduces the possibility that we may have had newer ticks than
-                                    ' another thread that just updated real-time ticks, but if so the deviation won't be
-                                    ' much since ticks were greater than current real-time ticks in all threads that got to
-                                    ' this point - besides newer measurements are always coming in anyway and the compare
-                                    ' exchange method saves a call to a monitor lock reducing possible contention
-                                    Interlocked.CompareExchange(m_realTimeTicks, ticks, realTimeTicks)
-                                Else
-                                    ' Measurement ticks were outside of time deviation tolerances so we'll also check to make
-                                    ' sure current real-time ticks are within these tolerances as well
-                                    distance = (currentTimeTicks - m_realTimeTicks) / TicksPerSecond
-
-                                    If distance > m_lagTime OrElse distance < -m_leadTime Then
-                                        ' New time measurement was invalid as was current real-time value so we have no choice but to
-                                        ' assume the current time as "real-time", so we set real time ticks to current ticks so long
-                                        ' as another thread hasn't changed it already
-                                        Interlocked.CompareExchange(m_realTimeTicks, currentTimeTicks, realTimeTicks)
+                                        If distance > m_lagTime OrElse distance < -m_leadTime Then
+                                            ' New time measurement was invalid as was current real-time value so we have no choice but to
+                                            ' assume the current time as "real-time", so we set real time ticks to current ticks so long
+                                            ' as another thread hasn't changed it already
+                                            Interlocked.CompareExchange(m_realTimeTicks, currentTimeTicks, realTimeTicks)
+                                        End If
                                     End If
                                 End If
                             End If
-                        End If
 
-                        ' Track absolute latest measurement values
-                        If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
+                            ' Track absolute latest measurement values
+                            If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
+                        Else
+                            ' If measurement was not assigned to frame, we'll just count it as discarded...
+                            Interlocked.Increment(m_discardedMeasurements)
+                        End If
                     End If
                 End If
             Next
@@ -687,7 +689,7 @@ Namespace Measurements
         ''' <para>Override is optional, a measurement will simply be assigned to frame's measurement list otherwise</para>
         ''' <para>If overriden, make sure the frame's measurement dictionary (if used) is locked during assignment</para>
         ''' </remarks>
-        Protected Overridable Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
+        Protected Overridable Function AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement) As Boolean
 
             Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
 
@@ -699,7 +701,7 @@ Namespace Measurements
                 If Monitor.TryEnter(measurements) Then
                     Try
                         measurements(measurement.Key) = measurement
-                        Exit Do
+                        Return True
                     Finally
                         Monitor.Exit(measurements)
                     End Try
@@ -710,7 +712,9 @@ Namespace Measurements
                 End If
             Loop
 
-        End Sub
+            Return False
+
+        End Function
 
         ''' <summary>We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion</summary>
         Protected Overrides Sub Finalize()
