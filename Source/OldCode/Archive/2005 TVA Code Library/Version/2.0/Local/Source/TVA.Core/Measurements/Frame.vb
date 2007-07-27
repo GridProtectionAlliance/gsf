@@ -39,6 +39,16 @@ Namespace Measurements
 
         End Sub
 
+        Public Sub New(ByVal ticks As Long, ByVal measurements As Dictionary(Of MeasurementKey, IMeasurement), ByVal startSortTime As Long, ByVal lastSortTime As Long)
+
+            m_ticks = ticks
+            m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)(measurements)
+            m_startSortTime = startSortTime
+            m_lastSortTime = lastSortTime
+            m_publishedMeasurements = -1
+
+        End Sub
+
         ''' <summary>Handy instance reference to self</summary>
         Public ReadOnly Property This() As IFrame Implements IFrame.This
             Get
@@ -50,18 +60,9 @@ Namespace Measurements
         ''' <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
         Public Function Clone() As IFrame Implements IFrame.Clone
 
-            Dim newFrame As New Frame(m_ticks)
-
-            newFrame.StartSortTime = m_startSortTime
-            newFrame.LastSortTime = m_lastSortTime
-
             SyncLock m_measurements
-                For Each dictionaryElement As KeyValuePair(Of MeasurementKey, IMeasurement) In m_measurements
-                    newFrame.Measurements.Add(dictionaryElement.Key, dictionaryElement.Value)
-                Next
+                Return New Frame(m_ticks, m_measurements, m_startSortTime, m_lastSortTime)
             End SyncLock
-
-            Return newFrame
 
         End Function
 
