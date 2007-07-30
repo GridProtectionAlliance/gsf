@@ -241,7 +241,7 @@ Public MustInherit Class HistorianAdapterBase
                 ' and we'll keep lock time to a minimum
                 measurements = Nothing
 
-                If Monitor.TryEnter(m_measurementQueue) Then
+                If Monitor.TryEnter(m_measurementQueue, 2) Then
                     Try
                         If m_measurementQueue.Count > 0 Then
                             measurements = m_measurementQueue.ToArray()

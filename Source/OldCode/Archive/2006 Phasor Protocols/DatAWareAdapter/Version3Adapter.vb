@@ -85,8 +85,8 @@ Public Class Version3Adapter
         m_connection = New TcpClient("server=" & m_archiverIP & "; port=" & m_archiverPort)
         m_connection.PayloadAware = True
         m_connection.MaximumConnectionAttempts = 1
-        'm_connection.Handshake = True
-        'm_connection.HandshakePassphrase = "DatAWareArchiver"
+        m_connection.Handshake = True
+        m_connection.HandshakePassphrase = "DatAWareArchiver"
 
         m_connectionException = Nothing
         m_connection.Connect()
