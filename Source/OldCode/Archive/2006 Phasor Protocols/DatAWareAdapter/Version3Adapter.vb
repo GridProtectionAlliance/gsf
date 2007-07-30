@@ -169,6 +169,9 @@ Public Class Version3Adapter
 
     Private Sub m_connection_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.Disconnected
 
+        ' Signal completion of connection cycle
+        m_waitHandle.Set()
+
         Connect()
 
     End Sub
