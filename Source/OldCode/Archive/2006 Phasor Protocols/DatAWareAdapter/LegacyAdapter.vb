@@ -93,56 +93,60 @@ Public Class LegacyAdapter
 
     Public Overrides ReadOnly Property Name() As String
         Get
-            Return "DW Archiver """ & m_archiverIP & ":" & m_archiverPort & """"
+            Return "DW Legacy Archiver " & m_archiverIP & ":" & m_archiverPort
         End Get
     End Property
 
-    Protected Overrides Sub ArchiveMeasurements()
+    Protected Overrides Sub ArchiveMeasurements(ByVal measurements As IMeasurement())
 
-        Dim x, totalPoints As Integer
-        Dim response As String
+        If m_clientStream IsNot Nothing Then
+            Dim measurement As IMeasurement
+            Dim remainingPoints As Integer = measurements.Length
+            Dim pointsToArchive, arrayIndex, bufferIndex, received, x As Integer
+            Dim response As String
 
-        ' Retrieve data points to be archived
-        SyncLock Measurements
-            With Measurements
-                totalPoints = Minimum(m_maximumEvents, .Count)
+            Do While remainingPoints > 0
+                pointsToArchive = Minimum(m_maximumEvents, remainingPoints)
+                remainingPoints -= pointsToArchive
 
-                If totalPoints > 0 Then
-                    ' Load binary standard event images into local buffer
-                    For x = 0 To totalPoints - 1
-                        With New PacketType1(.Item(x))
-                            System.Buffer.BlockCopy(.BinaryImage, 0, m_buffer, x * PacketType1.Size, PacketType1.Size)
-                        End With
-                    Next
+                ' Load binary standard event images into local buffer
+                bufferIndex = 0
 
-                    ' Remove measurements being processed
-                    .RemoveRange(0, totalPoints)
-                End If
-            End With
-        End SyncLock
-
-        If totalPoints > 0 Then
-            ' Post data to TCP stream
-            m_clientStream.Write(m_buffer, 0, totalPoints * PacketType1.Size)
-
-            If m_useTimeout Then
-                Try
-                    ' Wait for acknowledgement (limited to readtimeout)...
-                    Dim received As Integer = m_clientStream.Read(m_buffer, 0, m_buffer.Length)
-
-                    If received > 0 Then
-                        ' Interpret response as a string
-                        response = Encoding.Default.GetString(m_buffer, 0, received)
-
-                        ' Verify archiver response
-                        If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
+                For x = arrayIndex To arrayIndex + pointsToArchive - 1
+                    measurement = measurements(x)
+                    If measurement.Ticks > 0 Then
+                        Buffer.BlockCopy((New PacketType1(measurement)).BinaryImage, 0, m_buffer, bufferIndex * PacketType1.Size, PacketType1.Size)
+                        bufferIndex += 1
                     End If
-                Catch ex As IOException
-                    ' This exception will get thrown if we timeout waiting for acknowlegdement from server - there's nothing to do, so we just go on...
-                Catch
-                    Throw
-                End Try
-            End If
+                Next
+
+                arrayIndex += pointsToArchive
+
+                ' Post data to TCP stream
+                If bufferIndex > 0 Then
+                    m_clientStream.Write(m_buffer, 0, bufferIndex * PacketType1.Size)
+
+                    ' Handle acknowledgement if enabled
+                    If m_useTimeout Then
+                        Try
+                            ' Wait for acknowledgement (limited to readtimeout)...
+                            received = m_clientStream.Read(m_buffer, 0, m_buffer.Length)
+
+                            If received > 0 Then
+                                ' Interpret response as a string
+                                response = Encoding.Default.GetString(m_buffer, 0, received)
+
+                                ' Verify archiver response
+                                If Not response.StartsWith("ACK", True, Nothing) Then Throw New InvalidOperationException("DatAWare archiver failed to acknowledge packet transmission: " & response)
+                            End If
+                        Catch ex As IOException
+                            ' This exception will get thrown if we timeout waiting for acknowlegdement from server - there's nothing to do, so we just go on...
+                        Catch
+                            Throw
+                        End Try
+                    End If
+                End If
+            Loop
         End If
 
     End Sub

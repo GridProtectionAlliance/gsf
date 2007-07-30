@@ -46,7 +46,7 @@ Public Class Version3Adapter
         MyBase.New()
 
         m_archiverIP = "127.0.0.1"
-        m_archiverPort = 5000
+        m_archiverPort = 1003
         m_maximumEvents = 100000
         m_waitHandle = New AutoResetEvent(False)
 
@@ -83,10 +83,10 @@ Public Class Version3Adapter
 
         ' Connect to DatAWare archiver using TCP
         m_connection = New TcpClient("server=" & m_archiverIP & "; port=" & m_archiverPort)
-        m_connection.Handshake = True
-        m_connection.HandshakePassphrase = "DatAWareArchiver"
         m_connection.PayloadAware = True
         m_connection.MaximumConnectionAttempts = 1
+        'm_connection.Handshake = True
+        'm_connection.HandshakePassphrase = "DatAWareArchiver"
 
         m_connectionException = Nothing
         m_connection.Connect()
@@ -112,29 +112,33 @@ Public Class Version3Adapter
         End Get
     End Property
 
-    Protected Overrides Sub ArchiveMeasurements()
+    Protected Overrides Sub ArchiveMeasurements(ByVal measurements As IMeasurement())
 
         If m_connection IsNot Nothing Then
-            Dim totalPoints As Integer
-            Dim archiveMeasurements As List(Of IMeasurement) = MyBase.Measurements
+            Dim measurement As IMeasurement
+            Dim remainingPoints As Integer = measurements.Length
+            Dim pointsToArchive, arrayIndex, bufferIndex, x As Integer
 
-            ' Retrieve data points to be archived
-            SyncLock archiveMeasurements
-                totalPoints = Minimum(m_maximumEvents, archiveMeasurements.Count)
+            Do While remainingPoints > 0
+                pointsToArchive = Minimum(m_maximumEvents, remainingPoints)
+                remainingPoints -= pointsToArchive
 
-                If totalPoints > 0 Then
-                    ' Load binary standard event images into local buffer
-                    For x As Integer = 0 To totalPoints - 1
-                        Buffer.BlockCopy((New PacketType1(archiveMeasurements(x))).BinaryImage, 0, m_buffer, x * PacketType1.Size, PacketType1.Size)
-                    Next
+                ' Load binary standard event images into local buffer
+                bufferIndex = 0
 
-                    ' Remove measurements being processed
-                    archiveMeasurements.RemoveRange(0, totalPoints)
-                End If
-            End SyncLock
+                For x = arrayIndex To arrayIndex + pointsToArchive - 1
+                    measurement = measurements(x)
+                    If measurement.Ticks > 0 Then
+                        Buffer.BlockCopy((New PacketType1(measurement)).BinaryImage, 0, m_buffer, bufferIndex * PacketType1.Size, PacketType1.Size)
+                        bufferIndex += 1
+                    End If
+                Next
 
-            ' Post data to TCP stream
-            If totalPoints > 0 Then m_connection.Send(m_buffer, 0, totalPoints * PacketType1.Size)
+                arrayIndex += pointsToArchive
+
+                ' Post data to TCP stream
+                If bufferIndex > 0 Then m_connection.Send(m_buffer, 0, bufferIndex * PacketType1.Size)
+            Loop
         End If
 
     End Sub

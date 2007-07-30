@@ -189,6 +189,8 @@ Module MainModule
 
     Private Sub InitializeSystem(ByVal connection As OleDbConnection)
 
+        DisplayStatusMessage(String.Format("*** System Initializing [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
+
         ' If calculated measurements are already defined (i.e., we are "re-initializing" code), we need to dispose
         ' existing calculation instances such that all items can be shut-down in an orderly fashion
         If m_calculatedMeasurements IsNot Nothing Then
@@ -404,7 +406,7 @@ Module MainModule
                                                 New Measurement( _
                                                     Convert.ToInt32(.Item("MeasurementID")), _
                                                     .Item("ArchiveSource").ToString(), _
-                                                    Double.NaN, _
+                                                    String.Empty, _
                                                     Convert.ToDouble(.Item("Adder")), _
                                                     Convert.ToDouble(.Item("Multiplier"))))
                                         End With

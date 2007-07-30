@@ -24,24 +24,41 @@ Public MustInherit Class HistorianAdapterBase
     Inherits AdapterBase
     Implements IHistorianAdapter
 
+    ''' <summary>This event will be raised if there is an exception encountered while attempting to archive measurements</summary>
+    ''' <remarks>Connection cycle to historian will be restarted when an exception is encountered</remarks>
     Public Event ArchivalException(ByVal source As String, ByVal ex As Exception) Implements IHistorianAdapter.ArchivalException
 
-    Private m_measurementBuffer As List(Of IMeasurement)
-    Private WithEvents m_connectionTimer As Timers.Timer
+    ''' <summary>This event gets raised every second allowing consumer to track total number of unarchived measurements</summary>
+    ''' <remarks>If queue size reaches an unhealthy threshold, evasive action should be considered</remarks>
+    Public Event UnarchivedMeasurements(ByVal total As Integer) Implements IHistorianAdapter.UnarchivedMeasurements
+
+    Private m_measurementQueue As List(Of IMeasurement)
     Private m_dataProcessingThread As Thread
     Private m_processedMeasurements As Long
+    Private WithEvents m_connectionTimer As Timers.Timer
+    Private WithEvents m_monitorTimer As Timers.Timer
 
     Private Const ProcessedMeasurementInterval As Integer = 100000
 
     Public Sub New()
 
-        m_measurementBuffer = New List(Of IMeasurement)
+        m_measurementQueue = New List(Of IMeasurement)
 
         m_connectionTimer = New Timers.Timer
 
         With m_connectionTimer
             .AutoReset = False
             .Interval = 2000
+            .Enabled = False
+        End With
+
+        m_monitorTimer = New Timers.Timer
+
+        ' We monitor total number of unarchived measurements every second - this is a useful statistic to monitor, if
+        ' total number of unarchived measurements gets very large, measurement archival could be falling behind
+        With m_monitorTimer
+            .Interval = 1000
+            .AutoReset = True
             .Enabled = False
         End With
 
@@ -77,7 +94,7 @@ Public MustInherit Class HistorianAdapterBase
 
             UpdateStatus("Connection to " & Name & " established.")
         Catch ex As Exception
-            UpdateStatus(">> WARNING: Connection to " & Name & " failed: " & ex.Message)
+            UpdateStatus("WARNING: Connection to " & Name & " failed: " & ex.Message)
             Connect()
         End Try
 
@@ -113,56 +130,64 @@ Public MustInherit Class HistorianAdapterBase
 
     Protected MustOverride Sub AttemptDisconnection()
 
-    ' Note that since there may be many hundreds of new incoming measurements per second, consumer handling
-    ' the queuing of these new measurements should make sure that queue operations are handled on independent
-    ' threads (as needed) so as to not slow up archiving of new measurements
-
     Public Overridable Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement) Implements IHistorianAdapter.QueueMeasurementForArchival
 
-        SyncLock m_measurementBuffer
-            m_measurementBuffer.Add(measurement)
-            IncrementProcessedMeasurements()
+        SyncLock m_measurementQueue
+            m_measurementQueue.Add(measurement)
         End SyncLock
+
+        IncrementProcessedMeasurements(1)
 
     End Sub
 
     Public Overridable Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement)) Implements IHistorianAdapter.QueueMeasurementsForArchival
 
-        SyncLock m_measurementBuffer
-            If measurements IsNot Nothing Then
-                For Each measurement As IMeasurement In measurements
-                    m_measurementBuffer.Add(measurement)
-                    IncrementProcessedMeasurements()
-                Next
-            End If
+        Dim measurementCount As Integer
+
+        SyncLock m_measurementQueue
+            measurementCount = measurements.Count
+            m_measurementQueue.AddRange(measurements)
         End SyncLock
 
-    End Sub
-
-    ' TODO: Optimize function to handle += measurements.Count yet still not miss sending the status update
-    Private Sub IncrementProcessedMeasurements()
-
-        m_processedMeasurements += 1
-        If m_processedMeasurements Mod ProcessedMeasurementInterval = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
+        IncrementProcessedMeasurements(measurementCount)
 
     End Sub
 
-    'Private Sub IncrementProcessedMeasurements(ByVal totalAdded As Integer)
+    'Private Sub IncrementProcessedMeasurements()
 
-    '    m_processedMeasurements += totalAdded
+    '    Interlocked.Increment(m_processedMeasurements)
     '    If m_processedMeasurements Mod ProcessedMeasurementInterval = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
 
     'End Sub
 
-    ''' <summary>
-    ''' Queued measurements to be archived by historian
-    ''' </summary>
-    ''' <remarks>Base class consumers are expected to SyncLock this reference as needed before using data</remarks>
-    Protected Overridable ReadOnly Property Measurements() As List(Of IMeasurement)
-        Get
-            Return m_measurementBuffer
-        End Get
-    End Property
+    Private Sub IncrementProcessedMeasurements(ByVal totalAdded As Integer)
+
+        ' Check to see if total number of added points will exceed process interval used to show periodic
+        ' messages of how many points have been archived so far...
+        Dim showMessage As Boolean = (m_processedMeasurements + totalAdded >= (m_processedMeasurements \ ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval)
+        Interlocked.Add(m_processedMeasurements, totalAdded)
+        If showMessage Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
+
+    End Sub
+
+    ''' <summary>This function returns a range of measurements from the internal measurement queue, then removes the values</summary>
+    ''' <remarks>
+    ''' This method is typically only used to curtail size of measurement queue if it's getting too large.  If more points are
+    ''' requested than there are points available - all points in the queue will be returned.
+    ''' </remarks>
+    Public Function GetMeasurements(ByVal total As Integer) As IMeasurement() Implements IHistorianAdapter.GetMeasurements
+
+        Dim measurements As IMeasurement()
+
+        SyncLock m_measurementQueue
+            If total > m_measurementQueue.Count Then total = m_measurementQueue.Count
+            measurements = m_measurementQueue.GetRange(0, total).ToArray()
+            m_measurementQueue.RemoveRange(0, total)
+        End SyncLock
+
+        Return measurements
+
+    End Function
 
     Protected Property ConnectionAttemptInterval() As Integer
         Get
@@ -184,8 +209,8 @@ Public MustInherit Class HistorianAdapterBase
                 End If
                 .Append(Environment.NewLine)
                 .Append("  Queued measurement count: ")
-                SyncLock m_measurementBuffer
-                    .Append(m_measurementBuffer.Count)
+                SyncLock m_measurementQueue
+                    .Append(m_measurementQueue.Count)
                 End SyncLock
                 .Append(Environment.NewLine)
                 .Append("     Archived measurements: ")
@@ -202,77 +227,35 @@ Public MustInherit Class HistorianAdapterBase
 
     End Sub
 
-    ''' <summary>
-    ''' User implements to send queued meaurements to archive
-    ''' </summary>
-    ''' <remarks>
-    ''' <para>As many measurements as possible should be sent from measurement queue to the historian, then removed, so that system doesn't fall behind</para>
-    ''' <para>Note that measurement collection, accesible via "Measurements" property, should be SyncLock'ed as necessary during enumeration or updates</para>
-    ''' </remarks>
-    Protected MustOverride Sub ArchiveMeasurements()
+    ''' <summary>User implemented function used to send queued measurements to archive</summary>
+    Protected MustOverride Sub ArchiveMeasurements(ByVal measurements As IMeasurement())
 
     Private Sub ProcessMeasurements()
 
-        ' TODO: This needs to be adjustable based on the total number of items that can be processed by the historian at once...
-        Const statusInterval As Integer = 1000
-        Const dumpInterval As Integer = 500000
-        Const postDumpCount As Integer = 100
+        Dim measurements As IMeasurement()
 
-        Dim queuedMeasurements As Integer
-        Dim pollEvents As Long
-
-        ' Enter the data read loop
         Do While True
             Try
-                pollEvents = 0
+                ' Grab a copy of all queued measurements and send to historian adapter when
+                ' we can get a lock - this way the "queuing" of data will get lock priority
+                ' and we'll keep lock time to a minimum
+                measurements = Nothing
 
-                Do
-                    ' Get queue count before archival
-                    SyncLock m_measurementBuffer
-                        queuedMeasurements = Measurements.Count
-                    End SyncLock
-
-                    If queuedMeasurements > 0 Then
-                        ' Send measurements to historian
-                        ArchiveMeasurements()
-
-                        ' Get queue count after archival
-                        SyncLock m_measurementBuffer
-                            queuedMeasurements = Measurements.Count
-                        End SyncLock
-                    End If
-
-                    If queuedMeasurements > 0 Then
-                        ' We shouldn't stay in this loop forever (this would mean we're falling behind) so we broadcast the status of things...
-                        pollEvents += 1
-
-                        If pollEvents Mod statusInterval = 0 Then
-                            UpdateStatus(">> WARNING: " & queuedMeasurements.ToString("#,##0") & " measurements remain in the queue to be sent on " & Name & "...")
-                            If queuedMeasurements > dumpInterval Then Exit Do
+                If Monitor.TryEnter(m_measurementQueue) Then
+                    Try
+                        If m_measurementQueue.Count > 0 Then
+                            measurements = m_measurementQueue.ToArray()
+                            m_measurementQueue.Clear()
                         End If
-                    Else
-                        ' We sleep thread between polls to reduce CPU loading...
-                        Thread.Sleep(1)
-                    End If
-                Loop While queuedMeasurements > 0
-
-                ' We're getting behind, must dump measurements :(
-                If queuedMeasurements > dumpInterval Then
-                    ' TODO: It would certainly be advisable at this point to take pre-defined evasive action, e.g., you could
-                    ' prioritize all data connections for this receiver and start dropping connections (with proper
-                    ' notifications of control actions) to help alleviate data loss (that's all I do manually when this problem
-                    ' happens)
-                    SyncLock m_measurementBuffer
-                        ' TODO: When this starts happening - you've overloaded the real-time capacity of your historian
-                        ' and you must do something about it - bigger hardware, scale out, etc. Make sure to log this
-                        ' error externally (alarm or something) so things can be fixed...
-                        UpdateStatus(">> ERROR: Dumping " & (queuedMeasurements - postDumpCount).ToString("#,##0") & " measurements because we're falling behind :(")
-                        m_measurementBuffer.RemoveRange(0, queuedMeasurements - postDumpCount)
-                    End SyncLock
-                ElseIf pollEvents > statusInterval Then
-                    ' Send final status message - warning terminated...
-                    UpdateStatus(">> INFO: Warning state terminated - all queued measurements have been sent")
+                    Finally
+                        Monitor.Exit(m_measurementQueue)
+                    End Try
                 End If
+
+                If measurements IsNot Nothing Then ArchiveMeasurements(measurements)
+
+                ' We sleep thread between polls to reduce CPU loading...
+                Thread.Sleep(1)
             Catch ex As ThreadAbortException
                 ' If we received an abort exception, we'll egress gracefully
                 Exit Do
@@ -280,11 +263,19 @@ Public MustInherit Class HistorianAdapterBase
                 ' This will be a normal exception...
                 Exit Do
             Catch ex As Exception
+                ' If an exception is thrown by the archiver, we'll report the event and restart the connection cycle
                 RaiseArchivalException(ex)
                 Connect()
                 Exit Do
             End Try
         Loop
+
+    End Sub
+
+    ' All we do here is expose the total number of unarchived measurements in the queue
+    Private Sub m_monitorTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_monitorTimer.Elapsed
+
+        RaiseEvent UnarchivedMeasurements(m_measurementQueue.Count)
 
     End Sub
 

@@ -23,6 +23,8 @@ Public Interface IHistorianAdapter
 
     Event ArchivalException(ByVal source As String, ByVal ex As Exception)
 
+    Event UnarchivedMeasurements(ByVal total As Integer)
+
     Sub Initialize(ByVal connectionString As String)
 
     Sub Connect()
@@ -30,6 +32,8 @@ Public Interface IHistorianAdapter
     Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
     Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement))
+
+    Function GetMeasurements(ByVal total As Integer) As IMeasurement()
 
     Sub Disconnect()
 

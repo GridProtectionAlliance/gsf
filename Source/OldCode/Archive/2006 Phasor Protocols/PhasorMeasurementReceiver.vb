@@ -33,6 +33,9 @@ Public Class PhasorMeasurementReceiver
     Public Event NewMeasurements(ByVal measurements As ICollection(Of IMeasurement))
     Public Event StatusMessage(ByVal status As String)
 
+    Public Const UnarchivedMeasurementsWarningThreshold As Integer = 100000
+    Public Const UnarchivedMeasurementsDumpingThreshold As Integer = 500000
+
     Private WithEvents m_reportingStatus As Timers.Timer
     Private WithEvents m_historianAdapter As IHistorianAdapter
     Private m_archiverSource As String
@@ -421,6 +424,19 @@ Public Class PhasorMeasurementReceiver
 
         UpdateStatus(String.Format("{0} data archival exception: {1}", source, ex.Message))
         m_exceptionLogger.Log(ex)
+
+    End Sub
+
+    Private Sub m_historianAdapter_UnarchivedMeasurements(ByVal total As Integer) Handles m_historianAdapter.UnarchivedMeasurements
+
+        If total > UnarchivedMeasurementsDumpingThreshold Then
+            ' This event is typically caused by an offline historian, instead of throwing this data away we could offload these
+            ' measurements into a temporary local cache and inject them back into the queue later...
+            m_historianAdapter.GetMeasurements(UnarchivedMeasurementsDumpingThreshold)
+            UpdateStatus(String.Format("ERROR: System exercised evasive action and dumped {0} unarchived measurements from the historian queue :(", UnarchivedMeasurementsDumpingThreshold))
+        ElseIf total > UnarchivedMeasurementsWarningThreshold Then
+            UpdateStatus(String.Format("WARNING: There are {0} unarchived measurements in the historian queue", total))
+        End If
 
     End Sub
 

@@ -102,13 +102,13 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
 
     Public Overridable Sub QueueMeasurementsForCalculation(ByVal measurements As ICollection(Of IMeasurement)) Implements ICalculatedMeasurementAdapter.QueueMeasurementsForCalculation
 
-        Dim calculationMeasurements As New List(Of IMeasurement)
+        Dim inputMeasurements As New List(Of IMeasurement)
 
         For Each measurement As IMeasurement In measurements
-            If IsInputMeasurement(measurement.Key) Then calculationMeasurements.Add(measurement)
+            If IsInputMeasurement(measurement.Key) Then inputMeasurements.Add(measurement)
         Next
 
-        If calculationMeasurements.Count > 0 Then SortMeasurements(calculationMeasurements)
+        If inputMeasurements.Count > 0 Then SortMeasurements(inputMeasurements)
 
     End Sub
 
