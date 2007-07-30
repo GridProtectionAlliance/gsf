@@ -699,17 +699,13 @@ Namespace Measurements
             ' want to interfere with the frame publication procedure we only "attempt" the lock until we get it or exit
             ' if the frame has been published in the meantime (at which point why bother)
             Do Until frame.Published
-                If Monitor.TryEnter(measurements) Then
+                If Monitor.TryEnter(measurements, 1) Then
                     Try
                         measurements(measurement.Key) = measurement
                         Return True
                     Finally
                         Monitor.Exit(measurements)
                     End Try
-                Else
-                    ' We're in a hurry to complete sorting algorithm (data is always coming), so all we do
-                    ' is yield the thread and attempt the lock again as soon as possible
-                    Thread.Sleep(0)
                 End If
             Loop
 
