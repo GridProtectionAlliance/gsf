@@ -43,7 +43,7 @@ Namespace Measurements
         ''' <summary>This event is raised after a sample is published so that consumers may handle any last minute operations on a sample before it gets released</summary>
         Public Event SamplePublished(ByVal sample As Sample)
 
-        ''' <summary>This event gets raised every second allowing consumer to track current number of unpublished samlples</summary>
+        ''' <summary>This event gets raised every second allowing consumer to track current number of unpublished samples</summary>
         Public Event UnpublishedSamples(ByVal total As Integer)
 
         ''' <summary>This event will be raised if there is an exception encountered while attempting to process a frame in the sample queue</summary>
@@ -472,6 +472,7 @@ Namespace Measurements
                         If AssignMeasurementToFrame(frame, measurement) Then
                             ' Track time of last sorted measurement in this frame
                             frame.LastSortTime = Date.UtcNow.Ticks
+
                             '
                             ' *** Manage "real-time" ticks ***
                             '
@@ -747,8 +748,8 @@ Namespace Measurements
         ' queue - but in this case we use the "can process item function" to process each frame in the sample until all
         ' frames have been published. This function is executed on a real-time thread, so make sure any work to be done
         ' here is executed as efficiently as possible. This function returns True when all frames in the sample have
-        ' been published. Note that this method will only be called by a single thread, so we don't need to worry about
-        ' atomic operations on member variables.
+        ' been published. Note that this method will only be called by a single thread and the member variables being
+        ' updated are only updated here so we don't worry about atomic operations on these variables.
         Private Function CanPublishSample(ByVal ticks As Long, ByVal sample As Sample) As Boolean
 
             Dim frame As IFrame = sample.Frames(m_frameIndex)
