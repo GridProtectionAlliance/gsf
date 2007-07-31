@@ -33,9 +33,6 @@ Public Class PhasorMeasurementReceiver
     Public Event NewMeasurements(ByVal measurements As ICollection(Of IMeasurement))
     Public Event StatusMessage(ByVal status As String)
 
-    Public Const UnarchivedMeasurementsWarningThreshold As Integer = 100000
-    Public Const UnarchivedMeasurementsDumpingThreshold As Integer = 500000
-
     Private WithEvents m_reportingStatus As Timers.Timer
     Private WithEvents m_historianAdapter As IHistorianAdapter
     Private m_archiverSource As String
@@ -43,6 +40,8 @@ Public Class PhasorMeasurementReceiver
     Private m_dataLossInterval As Integer
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
     Private m_statusInterval As Integer
+    Private m_measurementWarningThreshold As Integer
+    Private m_measurementDumpingThreshold As Integer
     Private m_intializing As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
@@ -52,6 +51,8 @@ Public Class PhasorMeasurementReceiver
         ByVal statusInterval As Integer, _
         ByVal connectionString As String, _
         ByVal dataLossInterval As Integer, _
+        ByVal measurementWarningThreshold As Integer, _
+        ByVal measurementDumpingThreshold As Integer, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
         m_historianAdapter = historianAdapter
@@ -59,6 +60,8 @@ Public Class PhasorMeasurementReceiver
         m_statusInterval = statusInterval
         m_connectionString = connectionString
         m_dataLossInterval = dataLossInterval
+        m_measurementWarningThreshold = measurementWarningThreshold
+        m_measurementDumpingThreshold = measurementDumpingThreshold
         m_exceptionLogger = exceptionLogger
         m_reportingStatus = New Timers.Timer
 
@@ -429,12 +432,12 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub m_historianAdapter_UnarchivedMeasurements(ByVal total As Integer) Handles m_historianAdapter.UnarchivedMeasurements
 
-        If total > UnarchivedMeasurementsDumpingThreshold Then
+        If total > m_measurementDumpingThreshold Then
             ' This event is typically caused by an offline historian, instead of throwing this data away we could offload these
             ' measurements into a temporary local cache and inject them back into the queue later...
-            m_historianAdapter.GetMeasurements(UnarchivedMeasurementsDumpingThreshold)
-            UpdateStatus(String.Format("ERROR: System exercised evasive action and dumped {0} unarchived measurements from the historian queue :(", UnarchivedMeasurementsDumpingThreshold))
-        ElseIf total > UnarchivedMeasurementsWarningThreshold Then
+            m_historianAdapter.GetMeasurements(m_measurementDumpingThreshold)
+            UpdateStatus(String.Format("ERROR: System exercised evasive action and dumped {0} unarchived measurements from the historian queue :(", m_measurementDumpingThreshold))
+        ElseIf total > m_measurementWarningThreshold Then
             UpdateStatus(String.Format("WARNING: There are {0} unarchived measurements in the historian queue", total))
         End If
 

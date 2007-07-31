@@ -76,6 +76,9 @@ Module MainModule
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PMU_SDS.mdb", "PMU metaData database connect string")
         Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
+        Settings.Add("MeasurementWarningThreshold", "100000", "Number of unarchived measurements allowed in a historian queue before displaying a warning message")
+        Settings.Add("MeasurementDumpingThreshold", "500000", "Number of unarchived measurements allowed in a historian queue before taking evasive action and dumping data")
+        Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "100", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         Settings.Add("EnableLogFile", "True", "Set to ""True"" to enable log file")
@@ -243,6 +246,8 @@ Module MainModule
         Dim externalAssembly As Assembly
         Dim historianAdapter As IHistorianAdapter
         Dim connectionString As String = StringSetting("PMUDatabase")
+        Dim warningThreshold As Integer = IntegerSetting("MeasurementWarningThreshold")
+        Dim dumpingThreshold As Integer = IntegerSetting("MeasurementDumpingThreshold")
         Dim archiveSource As String
 
         'With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection)
@@ -267,6 +272,8 @@ Module MainModule
                             pmuStatusInterval, _
                             connectionString, _
                             dataLossInterval, _
+                            warningThreshold, _
+                            dumpingThreshold, _
                             m_exceptionLogger)
 
                         AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
