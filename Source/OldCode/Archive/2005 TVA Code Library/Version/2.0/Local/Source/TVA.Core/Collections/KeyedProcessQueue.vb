@@ -505,9 +505,7 @@ Namespace Collections
         ' Users implementing a KeyedProcessQueue will be thinking in terms of "keys" and "values", not a KeyValuePair structure
         Private Sub ProcessKeyedItem(ByVal item As KeyValuePair(Of TKey, TValue))
 
-            With item
-                m_processItemFunction(.Key, .Value)
-            End With
+            m_processItemFunction(item.Key, item.Value)
 
         End Sub
 
@@ -530,9 +528,7 @@ Namespace Collections
 
         Private Function CanProcessKeyedItem(ByVal item As KeyValuePair(Of TKey, TValue)) As Boolean
 
-            With item
-                Return m_canProcessItemFunction(.Key, .Value)
-            End With
+            Return m_canProcessItemFunction(item.Key, item.Value)
 
         End Function
 

@@ -24,6 +24,8 @@
 '       the list (prefix or suffix) after processing timeouts or exceptions
 '  07/12/2007 - Pinal C. Patel
 '       Modified the code for "Flush" method to correctly implement IDisposable interface
+'  08/01/2007 - J. Ritchie Carroll
+'       Added some minor optimizations where practical
 '
 '*******************************************************************************************************
 
@@ -182,12 +184,12 @@ Namespace Collections
         Private m_itemsProcessed As Long
         Private m_startTime As Long
         Private m_stopTime As Long
-        Private m_realTimeProcessThread As Thread
-        Private m_realTimeProcessThreadPriority As ThreadPriority
-        Private WithEvents m_processTimer As System.Timers.Timer
         Private m_debugMode As Boolean
         Private m_waitHandle As AutoResetEvent
         Private m_isDisposed As Boolean
+        Private m_realTimeProcessThread As Thread
+        Private m_realTimeProcessThreadPriority As ThreadPriority
+        Private WithEvents m_processTimer As System.Timers.Timer
 
 #End Region
 
@@ -506,12 +508,9 @@ Namespace Collections
             Else
                 ' Instantiate process queue for intervaled item processing
                 m_processTimer = New System.Timers.Timer
-
-                With m_processTimer
-                    .Interval = processInterval
-                    .AutoReset = True
-                    .Enabled = False
-                End With
+                m_processTimer.Interval = processInterval
+                m_processTimer.AutoReset = True
+                m_processTimer.Enabled = False
             End If
 
         End Sub
@@ -846,7 +845,7 @@ Namespace Collections
         ''' <summary>
         ''' Determines if the list is actively processing items
         ''' </summary>
-        Public Overridable ReadOnly Property Processing() As Boolean
+        Public ReadOnly Property Processing() As Boolean
             Get
                 If m_processingIsRealTime Then
                     Return (m_realTimeProcessThread IsNot Nothing)
@@ -859,7 +858,7 @@ Namespace Collections
         ''' <summary>
         ''' Returns the total number of items currently being processed
         ''' </summary>
-        Public Overridable ReadOnly Property ItemsBeingProcessed() As Long
+        Public ReadOnly Property ItemsBeingProcessed() As Long
             Get
                 Return m_itemsProcessing
             End Get
@@ -868,7 +867,7 @@ Namespace Collections
         ''' <summary>
         ''' Returns the total number of items processed so far
         ''' </summary>
-        Public Overridable ReadOnly Property TotalProcessedItems() As Long
+        Public ReadOnly Property TotalProcessedItems() As Long
             Get
                 Return m_itemsProcessed
             End Get
@@ -877,7 +876,7 @@ Namespace Collections
         ''' <summary>
         ''' Returns the current number of active threads
         ''' </summary>
-        Public Overridable ReadOnly Property ThreadCount() As Integer
+        Public ReadOnly Property ThreadCount() As Integer
             Get
                 Return m_threadCount
             End Get
@@ -910,7 +909,7 @@ Namespace Collections
         ''' <remarks>
         ''' This only affects real-time queues.  Changes to thread priority will only take effect when set before calling the "Start" method.
         ''' </remarks>
-        Public Overridable Property RealTimeProcessThreadPriority() As ThreadPriority
+        Public Property RealTimeProcessThreadPriority() As ThreadPriority
             Get
                 Return m_realTimeProcessThreadPriority
             End Get
@@ -1043,78 +1042,6 @@ Namespace Collections
         End Sub
 
         ''' <summary>
-        ''' Performs thread-safe atomic increment on active thread count
-        ''' </summary>
-        Protected Sub IncrementThreadCount()
-
-            Interlocked.Increment(m_threadCount)
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic decrement on active thread count
-        ''' </summary>
-        Protected Sub DecrementThreadCount()
-
-            Interlocked.Decrement(m_threadCount)
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic increment on total processed items count
-        ''' </summary>
-        Protected Sub IncrementItemsProcessed()
-
-            Interlocked.Increment(m_itemsProcessed)
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic addition on total processed items count
-        ''' </summary>
-        Protected Sub IncrementItemsProcessed(ByVal totalProcessed As Integer)
-
-            Interlocked.Add(m_itemsProcessed, Convert.ToInt64(totalProcessed))
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic increment on current number of processing items
-        ''' </summary>
-        Protected Sub IncrementItemsProcessing()
-
-            Interlocked.Increment(m_itemsProcessing)
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic addition on current number of processing items
-        ''' </summary>
-        Protected Sub IncrementItemsProcessing(ByVal totalProcessing As Integer)
-
-            Interlocked.Add(m_itemsProcessing, Convert.ToInt64(totalProcessing))
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic decrement on current number of processing items
-        ''' </summary>
-        Protected Sub DecrementItemsProcessing()
-
-            Interlocked.Decrement(m_itemsProcessing)
-
-        End Sub
-
-        ''' <summary>
-        ''' Performs thread-safe atomic negated addition on current number of processing items
-        ''' </summary>
-        Protected Sub DecrementItemsProcessing(ByVal totalProcessed As Integer)
-
-            Interlocked.Add(m_itemsProcessing, Convert.ToInt64(-totalProcessed))
-
-        End Sub
-
-        ''' <summary>
         ''' Determines if an item can be processed
         ''' </summary>
         ''' <remarks>
@@ -1128,7 +1055,10 @@ Namespace Collections
         ''' </remarks>
         Protected Overridable Function CanProcessItem(ByVal item As T) As Boolean
 
-            If m_canProcessItemFunction IsNot Nothing Then
+            If m_canProcessItemFunction Is Nothing Then
+                ' If user provided no implementation for this function or function failed, we assume item can be processed
+                Return True
+            Else
                 Try
                     ' When user function is provided we call it to determine if item should be processed at this time
                     Return m_canProcessItemFunction(item)
@@ -1140,9 +1070,6 @@ Namespace Collections
                     RaiseEvent ProcessException(ex)
                 End Try
             End If
-
-            ' If user provided no implementation for this function or function failed, we assume item can be processed
-            Return True
 
         End Function
 
@@ -1160,7 +1087,10 @@ Namespace Collections
         ''' </remarks>
         Protected Overridable Function CanProcessItems(ByVal items As T()) As Boolean
 
-            If m_canProcessItemFunction IsNot Nothing Then
+            If m_canProcessItemFunction Is Nothing Then
+                ' If user provided no implementation for this function or function failed, we assume item can be processed
+                Return True
+            Else
                 ' Otherwise we call user function for each item to determine if all items are ready for processing
                 Dim allItemsCanBeProcessed As Boolean = True
 
@@ -1173,9 +1103,6 @@ Namespace Collections
 
                 Return allItemsCanBeProcessed
             End If
-
-            ' If user provided no implementation for this function or function failed, we assume item can be processed
-            Return True
 
         End Function
 
@@ -1268,7 +1195,7 @@ Namespace Collections
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_isDisposed Then
-                ' Dispose unmanaged resources.
+                m_isDisposed = True
 
                 If disposing Then
                     ' Dispose managed resources.
@@ -1309,7 +1236,6 @@ Namespace Collections
                     End If
                 End If
             End If
-            m_isDisposed = True
 
         End Sub
 
@@ -1378,7 +1304,7 @@ Namespace Collections
             Try
                 ' Invoke user function to process item
                 m_processItemFunction(item)
-                IncrementItemsProcessed()
+                Interlocked.Increment(m_itemsProcessed)
 
                 ' Signal completion of processed items if we're flushing data on shutdown
                 If m_waitHandle IsNot Nothing AndAlso Count = 0 Then m_waitHandle.Set()
@@ -1404,7 +1330,7 @@ Namespace Collections
             Try
                 ' Invoke user function to process items
                 m_processItemsFunction(items)
-                IncrementItemsProcessed(items.Length)
+                Interlocked.Add(m_itemsProcessed, CLng(items.Length))
 
                 ' Signal completion of processed items if we're flushing data on shutdown
                 If m_waitHandle IsNot Nothing AndAlso Count = 0 Then m_waitHandle.Set()
@@ -1472,26 +1398,23 @@ Namespace Collections
                 ' Handle all queue operations for getting next item in a single synchronous operation.
                 ' We keep work to be done here down to a mimimum amount of time
                 SyncLock m_processQueue
-                    With m_processQueue
-                        ' We get next item to be processed if the number of current process threads is less
-                        ' than the maximum allowable number of process threads.
-                        If .Count > 0 AndAlso ThreadCount < m_maximumThreads Then
-                            ' Retrieve first item to be processed
-                            nextItem = .Item(0)
+                    ' We get next item to be processed if the number of current process threads is less
+                    ' than the maximum allowable number of process threads.
+                    If m_processQueue.Count > 0 AndAlso m_threadCount < m_maximumThreads Then
+                        ' Retrieve first item to be processed
+                        nextItem = m_processQueue(0)
 
-                            ' Call optional user function to see if we should process this item
-                            If CanProcessItem(nextItem) Then
-                                ' We increment the thread counter using a thread safe operation
-                                IncrementThreadCount()
+                        ' Call optional user function to see if we should process this item
+                        If CanProcessItem(nextItem) Then
+                            Interlocked.Increment(m_threadCount)
 
-                                ' Remove the item about to be processed from the queue
-                                .RemoveAt(0)
+                            ' Remove the item about to be processed from the queue
+                            m_processQueue.RemoveAt(0)
 
-                                processingItem = True
-                                IncrementItemsProcessing()
-                            End If
+                            processingItem = True
+                            Interlocked.Increment(m_itemsProcessing)
                         End If
-                    End With
+                    End If
                 End SyncLock
 
                 If processingItem Then
@@ -1530,8 +1453,8 @@ Namespace Collections
             Finally
                 ' Decrement thread count if item was retrieved for processing
                 If processingItem Then
-                    DecrementThreadCount()
-                    DecrementItemsProcessing()
+                    Interlocked.Decrement(m_threadCount)
+                    Interlocked.Decrement(m_itemsProcessing)
                 End If
             End Try
 
@@ -1547,26 +1470,23 @@ Namespace Collections
                 ' Handle all queue operations for getting next items in a single synchronous operation.
                 ' We keep work to be done here down to a mimimum amount of time
                 SyncLock m_processQueue
-                    With m_processQueue
-                        ' We get next items to be processed if the number of current process threads is less
-                        ' than the maximum allowable number of process threads.
-                        If .Count > 0 AndAlso ThreadCount < m_maximumThreads Then
-                            ' Retrieve items to be processed
-                            nextItems = ToArray()
+                    ' We get next items to be processed if the number of current process threads is less
+                    ' than the maximum allowable number of process threads.
+                    If m_processQueue.Count > 0 AndAlso m_threadCount < m_maximumThreads Then
+                        ' Retrieve items to be processed
+                        nextItems = ToArray()
 
-                            ' Call optional user function to see if we should process these items
-                            If CanProcessItems(nextItems) Then
-                                ' We increment the thread counter using a thread safe operation
-                                IncrementThreadCount()
+                        ' Call optional user function to see if we should process these items
+                        If CanProcessItems(nextItems) Then
+                            Interlocked.Increment(m_threadCount)
 
-                                ' Clear all items from the queue
-                                .Clear()
+                            ' Clear all items from the queue
+                            m_processQueue.Clear()
 
-                                processingItems = True
-                                IncrementItemsProcessing(nextItems.Length)
-                            End If
+                            processingItems = True
+                            Interlocked.Add(m_itemsProcessing, CLng(nextItems.Length))
                         End If
-                    End With
+                    End If
                 End SyncLock
 
                 If processingItems Then
@@ -1605,8 +1525,8 @@ Namespace Collections
             Finally
                 ' Decrement thread count if items were retrieved for processing
                 If processingItems Then
-                    DecrementThreadCount()
-                    DecrementItemsProcessing(nextItems.Length)
+                    Interlocked.Decrement(m_threadCount)
+                    Interlocked.Add(m_itemsProcessing, CLng(-nextItems.Length))
                 End If
             End Try
 
@@ -1637,16 +1557,18 @@ Namespace Collections
         Public Overridable Sub AddRange(ByVal collection As IEnumerable(Of T))
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).AddRange(collection)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If collection Is Nothing Then Throw New ArgumentNullException("collection", "collection is null")
 
                     For Each item As T In collection
                         m_processQueue.Add(item)
                     Next
+                Else
+                    ' Otherwise we'll call native implementation
+                    processQueue.AddRange(collection)
                 End If
 
                 DataAdded()
@@ -1670,9 +1592,7 @@ Namespace Collections
         '''	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
         Public Overridable Function BinarySearch(ByVal item As T) As Integer
 
-            SyncLock m_processQueue
-                Return BinarySearch(0, m_processQueue.Count, item, Nothing)
-            End SyncLock
+            Return BinarySearch(0, m_processQueue.Count, item, Nothing)
 
         End Function
 
@@ -1693,9 +1613,7 @@ Namespace Collections
         '''	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
         Public Overridable Function BinarySearch(ByVal item As T, ByVal comparer As IComparer(Of T)) As Integer
 
-            SyncLock m_processQueue
-                Return BinarySearch(0, m_processQueue.Count, item, comparer)
-            End SyncLock
+            Return BinarySearch(0, m_processQueue.Count, item, comparer)
 
         End Function
 
@@ -1720,11 +1638,10 @@ Namespace Collections
         Public Overridable Function BinarySearch(ByVal index As Integer, ByVal count As Integer, ByVal item As T, ByVal comparer As IComparer(Of T)) As Integer
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).BinarySearch(index, count, item, comparer)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     Dim foundIndex As Integer = -1
                     Dim startIndex As Integer = index
                     Dim stopIndex As Integer = index + count - 1
@@ -1776,6 +1693,9 @@ Namespace Collections
                     End If
 
                     Return foundIndex
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.BinarySearch(index, count, item, comparer)
                 End If
             End SyncLock
 
@@ -1788,11 +1708,10 @@ Namespace Collections
         Public Overridable Function ConvertAll(Of TOutput)(ByVal converter As Converter(Of T, TOutput)) As List(Of TOutput)
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).ConvertAll(converter)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If converter Is Nothing Then Throw New ArgumentNullException("converter", "converter is null")
 
                     Dim result As New List(Of TOutput)
@@ -1802,6 +1721,9 @@ Namespace Collections
                     Next
 
                     Return result
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.ConvertAll(converter)
                 End If
             End SyncLock
 
@@ -1814,26 +1736,25 @@ Namespace Collections
         Public Overridable Function Exists(ByVal match As Predicate(Of T)) As Boolean
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).Exists(match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
-                    ' Otherwise, we manually implement this feature...
                     Dim found As Boolean
 
-                    With m_processQueue
-                        For x As Integer = 0 To .Count - 1
-                            If match(.Item(x)) Then
-                                found = True
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    For x As Integer = 0 To m_processQueue.Count - 1
+                        If match(m_processQueue(x)) Then
+                            found = True
+                            Exit For
+                        End If
+                    Next
 
                     Return found
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.Exists(match)
                 End If
             End SyncLock
 
@@ -1846,11 +1767,10 @@ Namespace Collections
         Public Overridable Function Find(ByVal match As Predicate(Of T)) As T
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).Find(match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
                     Dim foundItem As T
@@ -1859,6 +1779,9 @@ Namespace Collections
                     If foundIndex >= 0 Then foundItem = m_processQueue(foundIndex)
 
                     Return foundItem
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.Find(match)
                 End If
             End SyncLock
 
@@ -1871,11 +1794,10 @@ Namespace Collections
         Public Overridable Function FindAll(ByVal match As Predicate(Of T)) As List(Of T)
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).FindAll(match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
                     Dim foundItems As New List(Of T)
@@ -1885,6 +1807,9 @@ Namespace Collections
                     Next
 
                     Return foundItems
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.FindAll(match)
                 End If
             End SyncLock
 
@@ -1896,9 +1821,7 @@ Namespace Collections
         ''' <exception cref="ArgumentNullException">match is null.</exception>
         Public Overridable Function FindIndex(ByVal match As Predicate(Of T)) As Integer
 
-            SyncLock m_processQueue
-                Return FindIndex(0, m_processQueue.Count, match)
-            End SyncLock
+            Return FindIndex(0, m_processQueue.Count, match)
 
         End Function
 
@@ -1910,9 +1833,7 @@ Namespace Collections
         ''' <exception cref="ArgumentNullException">match is null.</exception>
         Public Overridable Function FindIndex(ByVal startIndex As Integer, ByVal match As Predicate(Of T)) As Integer
 
-            SyncLock m_processQueue
-                Return FindIndex(startIndex, m_processQueue.Count, match)
-            End SyncLock
+            Return FindIndex(startIndex, m_processQueue.Count, match)
 
         End Function
 
@@ -1926,26 +1847,26 @@ Namespace Collections
         Public Overridable Function FindIndex(ByVal startIndex As Integer, ByVal count As Integer, ByVal match As Predicate(Of T)) As Integer
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).FindIndex(startIndex, count, match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If startIndex < 0 OrElse count < 0 OrElse startIndex + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue")
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
                     Dim foundindex As Integer = -1
 
-                    With m_processQueue
-                        For x As Integer = startIndex To startIndex + count - 1
-                            If match(.Item(x)) Then
-                                foundindex = x
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    For x As Integer = startIndex To startIndex + count - 1
+                        If match(m_processQueue(x)) Then
+                            foundindex = x
+                            Exit For
+                        End If
+                    Next
 
                     Return foundindex
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.FindIndex(startIndex, count, match)
                 End If
             End SyncLock
 
@@ -1958,11 +1879,10 @@ Namespace Collections
         Public Overridable Function FindLast(ByVal match As Predicate(Of T)) As T
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).FindLast(match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
                     Dim foundItem As T
@@ -1971,6 +1891,9 @@ Namespace Collections
                     If foundIndex >= 0 Then foundItem = m_processQueue(foundIndex)
 
                     Return foundItem
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.FindLast(match)
                 End If
             End SyncLock
 
@@ -1982,9 +1905,7 @@ Namespace Collections
         ''' <exception cref="ArgumentNullException">match is null.</exception>
         Public Overridable Function FindLastIndex(ByVal match As Predicate(Of T)) As Integer
 
-            SyncLock m_processQueue
-                Return FindLastIndex(0, m_processQueue.Count, match)
-            End SyncLock
+            Return FindLastIndex(0, m_processQueue.Count, match)
 
         End Function
 
@@ -1996,9 +1917,7 @@ Namespace Collections
         ''' <exception cref="ArgumentNullException">match is null.</exception>
         Public Overridable Function FindLastIndex(ByVal startIndex As Integer, ByVal match As Predicate(Of T)) As Integer
 
-            SyncLock m_processQueue
-                Return FindLastIndex(startIndex, m_processQueue.Count, match)
-            End SyncLock
+            Return FindLastIndex(startIndex, m_processQueue.Count, match)
 
         End Function
 
@@ -2012,26 +1931,26 @@ Namespace Collections
         Public Overridable Function FindLastIndex(ByVal startIndex As Integer, ByVal count As Integer, ByVal match As Predicate(Of T)) As Integer
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).FindLastIndex(startIndex, count, match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If startIndex < 0 OrElse count < 0 OrElse startIndex + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue")
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
                     Dim foundindex As Integer = -1
 
-                    With m_processQueue
-                        For x As Integer = startIndex + count - 1 To startIndex Step -1
-                            If match(.Item(x)) Then
-                                foundindex = x
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    For x As Integer = startIndex + count - 1 To startIndex Step -1
+                        If match(m_processQueue(x)) Then
+                            foundindex = x
+                            Exit For
+                        End If
+                    Next
 
                     Return foundindex
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.FindLastIndex(startIndex, count, match)
                 End If
             End SyncLock
 
@@ -2043,16 +1962,18 @@ Namespace Collections
         Public Overridable Sub ForEach(ByVal action As Action(Of T))
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).ForEach(action)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If action Is Nothing Then Throw New ArgumentNullException("action", "action is null")
 
                     For Each item As T In m_processQueue
                         action(item)
                     Next
+                Else
+                    ' Otherwise we'll call native implementation
+                    processQueue.ForEach(action)
                 End If
             End SyncLock
 
@@ -2067,11 +1988,10 @@ Namespace Collections
         Public Overridable Function GetRange(ByVal index As Integer, ByVal count As Integer) As List(Of T)
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).GetRange(index, count)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If index + count > m_processQueue.Count Then Throw New ArgumentException("Index and count do not denote a valid range of elements in the queue")
                     If index < 0 OrElse count < 0 Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
 
@@ -2082,6 +2002,9 @@ Namespace Collections
                     Next
 
                     Return items
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.GetRange(index, count)
                 End If
             End SyncLock
 
@@ -2094,9 +2017,7 @@ Namespace Collections
         ''' <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the queue.</exception>
         Public Overridable Function IndexOf(ByVal item As T, ByVal index As Integer) As Integer
 
-            SyncLock m_processQueue
-                Return IndexOf(item, index, m_processQueue.Count)
-            End SyncLock
+            Return IndexOf(item, index, m_processQueue.Count)
 
         End Function
 
@@ -2109,26 +2030,26 @@ Namespace Collections
         Public Overridable Function IndexOf(ByVal item As T, ByVal index As Integer, ByVal count As Integer) As Integer
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).IndexOf(item, index, count)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If index < 0 OrElse count < 0 OrElse index + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
 
                     Dim foundindex As Integer = -1
                     Dim comparer As Generic.Comparer(Of T) = Generic.Comparer(Of T).Default
 
-                    With m_processQueue
-                        For x As Integer = index To index + count - 1
-                            If comparer.Compare(item, .Item(x)) = 0 Then
-                                foundindex = x
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    For x As Integer = index To index + count - 1
+                        If comparer.Compare(item, m_processQueue(x)) = 0 Then
+                            foundindex = x
+                            Exit For
+                        End If
+                    Next
 
                     Return foundindex
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.IndexOf(item, index, count)
                 End If
             End SyncLock
 
@@ -2142,11 +2063,10 @@ Namespace Collections
         Public Overridable Sub InsertRange(ByVal index As Integer, ByVal collection As IEnumerable(Of T))
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).InsertRange(index, collection)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If index < 0 OrElse index > m_processQueue.Count - 1 Then Throw New ArgumentOutOfRangeException("index", "index is outside the range of valid indexes for the queue")
                     If collection Is Nothing Then Throw New ArgumentNullException("collection", "collection is null")
 
@@ -2154,6 +2074,9 @@ Namespace Collections
                         m_processQueue.Insert(index, item)
                         index += 1
                     Next
+                Else
+                    ' Otherwise we'll call native implementation
+                    processQueue.InsertRange(index, collection)
                 End If
 
                 DataAdded()
@@ -2166,9 +2089,7 @@ Namespace Collections
         ''' <param name="item">The object to locate in the queue. The value can be null for reference types.</param>
         Public Overridable Function LastIndexOf(ByVal item As T) As Integer
 
-            SyncLock m_processQueue
-                Return LastIndexOf(item, 0, m_processQueue.Count)
-            End SyncLock
+            Return LastIndexOf(item, 0, m_processQueue.Count)
 
         End Function
 
@@ -2179,9 +2100,7 @@ Namespace Collections
         ''' <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the queue. </exception>
         Public Overridable Function LastIndexOf(ByVal item As T, ByVal index As Integer) As Integer
 
-            SyncLock m_processQueue
-                Return LastIndexOf(item, index, m_processQueue.Count)
-            End SyncLock
+            Return LastIndexOf(item, index, m_processQueue.Count)
 
         End Function
 
@@ -2194,26 +2113,26 @@ Namespace Collections
         Public Overridable Function LastIndexOf(ByVal item As T, ByVal index As Integer, ByVal count As Integer) As Integer
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).LastIndexOf(item, index, count)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If index < 0 OrElse count < 0 OrElse index + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
 
                     Dim foundindex As Integer = -1
                     Dim comparer As Generic.Comparer(Of T) = Generic.Comparer(Of T).Default
 
-                    With m_processQueue
-                        For x As Integer = index + count - 1 To index Step -1
-                            If comparer.Compare(item, .Item(x)) = 0 Then
-                                foundindex = x
-                                Exit For
-                            End If
-                        Next
-                    End With
+                    For x As Integer = index + count - 1 To index Step -1
+                        If comparer.Compare(item, m_processQueue(x)) = 0 Then
+                            foundindex = x
+                            Exit For
+                        End If
+                    Next
 
                     Return foundindex
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.LastIndexOf(item, index, count)
                 End If
             End SyncLock
 
@@ -2226,25 +2145,25 @@ Namespace Collections
         Public Overridable Function RemoveAll(ByVal match As Predicate(Of T)) As Integer
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).RemoveAll(match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
 
                     Dim removedItems As Integer
 
-                    With m_processQueue
-                        For x As Integer = .Count - 1 To 0 Step -1
-                            If match(.Item(x)) Then
-                                .RemoveAt(x)
-                                removedItems += 1
-                            End If
-                        Next
-                    End With
-
+                    For x As Integer = m_processQueue.Count - 1 To 0 Step -1
+                        If match(m_processQueue(x)) Then
+                            m_processQueue.RemoveAt(x)
+                            removedItems += 1
+                        End If
+                    Next
+                    
                     Return removedItems
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.RemoveAll(match)
                 End If
             End SyncLock
 
@@ -2258,16 +2177,18 @@ Namespace Collections
         Public Overridable Sub RemoveRange(ByVal index As Integer, ByVal count As Integer)
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).RemoveRange(index, count)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If index < 0 OrElse count < 0 OrElse index + count > m_processQueue.Count Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
 
                     For x As Integer = index + count - 1 To index Step -1
                         m_processQueue.RemoveAt(x)
                     Next
+                Else
+                    ' Otherwise we'll call native implementation
+                    processQueue.RemoveRange(index, count)
                 End If
             End SyncLock
 
@@ -2276,9 +2197,7 @@ Namespace Collections
         ''' <summary>Reverses the order of the elements in the entire queue.</summary>
         Public Overridable Sub Reverse()
 
-            SyncLock m_processQueue
-                Reverse(0, m_processQueue.Count)
-            End SyncLock
+            Reverse(0, m_processQueue.Count)
 
         End Sub
 
@@ -2290,28 +2209,28 @@ Namespace Collections
         Public Overridable Sub Reverse(ByVal index As Integer, ByVal count As Integer)
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).Reverse(index, count)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If index + count > m_processQueue.Count Then Throw New ArgumentException("Index and count do not denote a valid range of elements in the queue")
                     If index < 0 OrElse count < 0 Then Throw New ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue")
 
                     Dim item As T
                     Dim stopIndex As Integer = index + count - 1
 
-                    With m_processQueue
-                        For x As Integer = index To (index + count - 1) \ 2
-                            If x < stopIndex Then
-                                ' Swap items top to bottom to reverse order
-                                item = .Item(x)
-                                .Item(x) = .Item(stopIndex)
-                                .Item(stopIndex) = item
-                                stopIndex -= 1
-                            End If
-                        Next
-                    End With
+                    For x As Integer = index To (index + count - 1) \ 2
+                        If x < stopIndex Then
+                            ' Swap items top to bottom to reverse order
+                            item = m_processQueue(x)
+                            m_processQueue(x) = m_processQueue(stopIndex)
+                            m_processQueue(stopIndex) = item
+                            stopIndex -= 1
+                        End If
+                    Next
+                Else
+                    ' Otherwise we'll call native implementation
+                    processQueue.Reverse(index, count)
                 End If
             End SyncLock
 
@@ -2321,9 +2240,7 @@ Namespace Collections
         '''	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
         Public Overridable Sub Sort()
 
-            SyncLock m_processQueue
-                Sort(0, m_processQueue.Count, Nothing)
-            End SyncLock
+            Sort(0, m_processQueue.Count, Nothing)
 
         End Sub
 
@@ -2333,9 +2250,7 @@ Namespace Collections
         '''	<exception cref="InvalidOperationException">the comparer is null and the default comparer, Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
         Public Overridable Sub Sort(ByVal comparer As IComparer(Of T))
 
-            SyncLock m_processQueue
-                Sort(0, m_processQueue.Count, comparer)
-            End SyncLock
+            Sort(0, m_processQueue.Count, comparer)
 
         End Sub
 
@@ -2349,19 +2264,23 @@ Namespace Collections
         Public Overridable Sub Sort(ByVal index As Integer, ByVal count As Integer, ByVal comparer As IComparer(Of T))
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).Sort(index, count, comparer)
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
+                    If comparer Is Nothing Then comparer = Generic.Comparer(Of T).Default
+
+                    ' This sort implementation is a little harsh but the normal process queue uses List(Of T) and the
+                    ' keyed process queue is based on a sorted list anyway (i.e., no sorting needed) - so this alternate
+                    ' sort implementation exists for any future derived process queue possibly based on a non List(Of T)
+                    ' queue and will at least ensure that the function will perform as expected
+                    Dim items As T() = ToArray()
+                    Array.Sort(Of T)(items, index, count, comparer)
+                    m_processQueue.Clear()
+                    AddRange(items)
                 Else
-                    ' Otherwise, we manually implement this feature...
-                    If index = 0 AndAlso count = m_processQueue.Count Then
-                        Dim items As T() = ToArray()
-                        Array.Sort(Of T)(items)
-                        m_processQueue.Clear()
-                        AddRange(items)
-                    Else
-                        Throw New NotImplementedException("Sorting portions of queue is currently not supported")
-                    End If
+                    ' Otherwise we'll call native implementation
+                    processQueue.Sort(index, count, comparer)
                 End If
             End SyncLock
 
@@ -2374,11 +2293,23 @@ Namespace Collections
         Public Overridable Sub Sort(ByVal comparison As Comparison(Of T))
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    DirectCast(m_processQueue, List(Of T)).Sort(comparison)
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
+                    If comparison Is Nothing Then Throw New ArgumentNullException("comparison", "comparison is null")
+
+                    ' This sort implementation is a little harsh but the normal process queue uses List(Of T) and the
+                    ' keyed process queue is based on a sorted list anyway (i.e., no sorting needed) - so this alternate
+                    ' sort implementation exists for any future derived process queue possibly based on a non List(Of T)
+                    ' queue and will at least ensure that the function will perform as expected
+                    Dim items As T() = ToArray()
+                    Array.Sort(Of T)(items, comparison)
+                    m_processQueue.Clear()
+                    AddRange(items)
                 Else
-                    Throw New NotImplementedException()
+                    ' Otherwise we'll call native implementation
+                    processQueue.Sort(comparison)
                 End If
             End SyncLock
 
@@ -2389,20 +2320,20 @@ Namespace Collections
         Public Overridable Function ToArray() As T()
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).ToArray()
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
+                    Dim items As T() = CreateArray(Of T)(m_processQueue.Count)
+
+                    For x As Integer = 0 To m_processQueue.Count - 1
+                        items(x) = m_processQueue(x)
+                    Next
+
+                    Return items
                 Else
-                    ' Otherwise, we manually implement this feature...
-                    With m_processQueue
-                        Dim items As T() = CreateArray(Of T)(.Count)
-
-                        For x As Integer = 0 To .Count - 1
-                            items(x) = .Item(x)
-                        Next
-
-                        Return items
-                    End With
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.ToArray()
                 End If
             End SyncLock
 
@@ -2415,11 +2346,10 @@ Namespace Collections
         Public Overridable Function TrueForAll(ByVal match As Predicate(Of T)) As Boolean
 
             SyncLock m_processQueue
-                If TypeOf m_processQueue Is List(Of T) Then
-                    ' We'll call native implementation if available
-                    Return DirectCast(m_processQueue, List(Of T)).TrueForAll(match)
-                Else
-                    ' Otherwise, we manually implement this feature...
+                Dim processQueue As List(Of T) = TryCast(m_processQueue, List(Of T))
+
+                If processQueue Is Nothing Then
+                    ' We manually implement this feature if process queue is not a List(Of T)
                     If match Is Nothing Then Throw New ArgumentNullException("match", "match is null")
                     Dim allTrue As Boolean = True
 
@@ -2431,6 +2361,9 @@ Namespace Collections
                     Next
 
                     Return allTrue
+                Else
+                    ' Otherwise we'll call native implementation
+                    Return processQueue.TrueForAll(match)
                 End If
             End SyncLock
 

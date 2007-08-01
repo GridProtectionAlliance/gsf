@@ -87,7 +87,7 @@ Namespace Measurements
         ''' <summary>Creates a new measurement concentrator</summary>
         ''' <param name="framesPerSecond">Number of frames to publish per second</param>
         ''' <param name="lagTime">Allowed past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins</param>
-        ''' <param name="leadTime">Allowed future time deviation tolerance, in seconds</param>
+        ''' <param name="leadTime">Allowed future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time</param>
         ''' <remarks>
         ''' <para>framesPerSecond must be at least one.</para>
         ''' <para>lagTime must be greater than zero but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time) - note that this defines time sensitivity to past timestamps.</para>
