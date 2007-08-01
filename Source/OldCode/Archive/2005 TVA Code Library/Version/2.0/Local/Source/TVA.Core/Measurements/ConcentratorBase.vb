@@ -22,6 +22,8 @@
 '       Classes abstracted for general use and added to TVA code library
 '  04/23/2007 - J. Ritchie Carroll
 '       Migrated concentrator to use a base class model instead of using delegates
+'  08/01/2007 - J. Ritchie Carroll
+'       Completed extensive threading optimizations to ensure performance
 '
 '*******************************************************************************************************
 
@@ -64,9 +66,12 @@ Namespace Measurements
         Private m_ticksPerFrame As Decimal                                      ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
         Private m_frameIndex As Integer                                         ' Current publishing frame index
         Private m_realTimeTicks As Long                                         ' Ticks of the most recently received measurement
+        Private m_useLocalClockAsRealTime As Boolean                            ' Determines whether or not to use local system clock as "real-time"
         Private m_measurementsSortedByArrival As Long                           ' Total number of measurements that were sorted by arrival
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
+        Private m_missedSortsByLockTimeout As Long                              ' Total number of unsorted measurements due to timeout waiting for lock
+        Private m_threadPoolSorts As Long                                       ' Total number of sorts deferred to thread pool because initial try lock failed
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_totalSortTime As Long                                         ' Total frame sorting time (in ticks)
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
@@ -74,7 +79,6 @@ Namespace Measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
         Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue (a sample represents one second of frames)
         Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
-        Private Shared m_useLocalClockAsRealTime As Boolean                     ' Determines whether or not to use local system clock as "real-time"
 
 #End Region
 
@@ -136,7 +140,7 @@ Namespace Measurements
         ''' <remarks>
         ''' <para>This value defines the time sensitivity to past measurement timestamps.</para>
         ''' <para>Defined as number of seconds allowed before assuming a measurement timestamp is too old.</para>
-        ''' <para>This becomes the amount of "delay" introduced by the concentrator to allow time for data to flow into the system.</para>
+        ''' <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one</exception>
         Public Property LagTime() As Double
@@ -155,7 +159,7 @@ Namespace Measurements
         ''' <remarks>
         ''' <para>This value defines the time sensitivity to future measurement timestamps.</para>
         ''' <para>Defined as number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
-        ''' <para>This typically defines the tolerated accuracy of the local clock to real-time.</para>
+        ''' <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         ''' </remarks>
         ''' <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one</exception>
         Public Property LeadTime() As Double
@@ -268,16 +272,10 @@ Namespace Measurements
 
         ''' <summary>Determines whether or not to use the local clock time as real-time</summary>
         ''' <remarks>
-        ''' <para>
         ''' You should only use your local system clock as real-time if the time is locally GPS synchronized
         ''' or the measurement values being sorted were not measured relative to a GPS synchronized clock
-        ''' </para>
-        ''' <para>
-        ''' Not this is a shared property that will affect *all* instances of the concentrator base class and
-        ''' hence only needs to be set once at system start-up.
-        ''' </para>
         ''' </remarks>
-        Public Shared Property UseLocalClockAsRealTime() As Boolean
+        Public Property UseLocalClockAsRealTime() As Boolean
             Get
                 Return m_useLocalClockAsRealTime
             End Get
@@ -398,25 +396,18 @@ Namespace Measurements
             Dim frame As IFrame
             Dim ticks As Long
             Dim lastTicks As Long
-            Dim baseTimeTicks As Long            
+            Dim baseTimeTicks As Long
             Dim distance As Double
 
             ' Measurements usually come in groups - so we process all available measurements in the collection here directly as an
             ' optimization which avoids the overhead of a function call for each measurement
             For Each measurement As IMeasurement In measurements
-                ' If measurement timestamp is marked as inaccurate, we'll validate its value - typically if the value is close to real-time
-                ' it's probably still a decent value - source device may have simply temporarily lost GPS lock
                 If Not measurement.TimestampQualityIsGood Then
-                    ' Since the lead time typically defines the tolerated accuracy of the local clock to real-time we'll use this
-                    ' value as the + and - timestamp tolerance to validate if the measurement time is reasonable
-                    distance = DistanceFromRealTime(measurement.Ticks)
-
-                    If distance > m_leadTime OrElse distance < -m_leadTime Then
-                        ' Measurement timestamp has floated outside of allowed local clock tolerance, so we set timestamp
-                        ' to current realtime value and count this as a measurement that was sorted by arrival
-                        measurement.Ticks = RealTimeTicks
-                        Interlocked.Increment(m_measurementsSortedByArrival)
-                    End If
+                    ' Since the measurement may have been delayed by prior concentration or long network distance, we
+                    ' have to assume that our local real-time value is better than the device measurement - so we set
+                    ' the measurement's timestamp to real-time and sort the measurement by arrival
+                    measurement.Ticks = RealTimeTicks
+                    Interlocked.Increment(m_measurementsSortedByArrival)
                 End If
 
                 '
@@ -469,7 +460,7 @@ Namespace Measurements
                     ' groups of parsed measurements will typically be coming in from the same source and hence will have the same ticks,
                     ' so if we have already found the destination frame for the same ticks then there's no need to lookup frame again...
                     If frame Is Nothing OrElse ticks <> lastTicks Then
-                        frame = sample.Frames(Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame))
+                        frame = sample.Frames(CInt((ticks - baseTimeTicks) / m_ticksPerFrame))
                         lastTicks = ticks
                     End If
 
@@ -478,7 +469,7 @@ Namespace Measurements
                         ' We'll just count this as a discarded measurement, frame is already publishing...
                         Interlocked.Increment(m_discardedMeasurements)
                     Else
-                        ' Initialize the starting sort time for this frame
+                        ' Make sure the starting sort time for this frame is initialized
                         If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
 
                         ' Call user customizable function to assign new measurement to its frame - this is a non-blocking operation, so if
@@ -489,6 +480,7 @@ Namespace Measurements
                         Else
                             ' We didn't get lock to assign measurement to frame so we queue it up for assignment on an independent thread
                             ThreadPool.QueueUserWorkItem(AddressOf AssignMeasurementToFrame, New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame))
+                            Interlocked.Increment(m_threadPoolSorts)
                         End If
 
                         ' Track absolute latest measurement values
@@ -638,12 +630,24 @@ Namespace Measurements
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)
                     .Append(Environment.NewLine)
+                    .Append("   Total thread pool sorts: ")
+                    .Append(m_threadPoolSorts)
+                    .Append(Environment.NewLine)
+                    .Append("   Missed sorts by timeout: ")
+                    .Append(m_missedSortsByLockTimeout)
+                    .Append(Environment.NewLine)
                     .Append("Average sorting time/frame: ")
                     .Append(AverageSortingTimePerFrame.ToString("0.0000"))
                     .Append(" seconds")
                     .Append(Environment.NewLine)
                     .Append("Published measurement loss: ")
                     .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements)).ToString("##0.0000%"))
+                    .Append(Environment.NewLine)
+                    .Append(" Loss due to lock timeouts: ")
+                    .Append((m_missedSortsByLockTimeout / NotLessThan(m_publishedMeasurements, m_missedSortsByLockTimeout)).ToString("##0.0000%"))
+                    .Append(Environment.NewLine)
+                    .Append("   Thread pool utilization: ")
+                    .Append((m_threadPoolSorts / NotLessThan(m_publishedMeasurements, m_threadPoolSorts)).ToString("##0.0000%"))
                     .Append(Environment.NewLine)
                     .Append(" Measurement time accuracy: ")
                     .Append((1.0R - m_measurementsSortedByArrival / NotLessThan(m_publishedMeasurements, m_measurementsSortedByArrival)).ToString("##0.0000%"))
@@ -707,7 +711,7 @@ Namespace Measurements
         ''' <para>Override is optional, a measurement will simply be assigned to frame's measurement list otherwise.</para>
         ''' <para>
         ''' If overriden, make sure the frame's measurement dictionary (if used) "attempts" a lock prior to assignment, please
-        ''' do not create a blocking lock here as this will create contention in the system and sorting must go on.  Return a
+        ''' do not create a blocking lock here as this can create contention in the system and sorting must go on.  Return a
         ''' value of False if you fail to get a lock (i.e., Monitor.TryEnter(frame.Measurements) returns False) and assignment
         ''' will be tried again from thread pool with an externally acquired lock.
         ''' </para>
@@ -861,8 +865,14 @@ Namespace Measurements
                 End If
             Loop
 
-            ' We'll just count this as a discarded measurement if it was never assigned to the frame
-            If Not assigned Then Interlocked.Increment(m_discardedMeasurements)
+            If Not assigned Then
+                ' We'll count this as a discarded measurement if it was never assigned to the frame
+                Interlocked.Increment(m_discardedMeasurements)
+
+                ' We also track total number of measurements that failed to sort because
+                ' system ran out of time trying to get a lock
+                Interlocked.Increment(m_missedSortsByLockTimeout)
+            End If
 
         End Sub
 
@@ -880,118 +890,118 @@ Namespace Measurements
 
         End Sub
 
+#Region " Old Code "
+
+        ' Note: Moved this code directly into the sorting function since this was the only place it was being called to optimize by preventing function call overhead
+
+        '''' <summary>This critical function automatically manages the sample queue based on timestamps of incoming measurements</summary>
+        '''' <returns>The sample associated with the specified timestamp. If the sample is not found at timestamp, it will be created.</returns>
+        '''' <param name="ticks">Ticks of the timestamp of the sample to get</param>
+        '''' <remarks>Function will return null if timestamp is outside of the specified time deviation tolerance</remarks>
+        'Protected Function GetSample(ByVal ticks As Long) As Sample
+
+        '    ' Baseline measurement timestamp at bottom of the second
+        '    Dim baseTimeTicks As Long = BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
+        '    Dim sample As Sample = LookupSample(baseTimeTicks)
+
+        '    ' Enter loop to wait until the sample exists, we will attempt to enter critical section and create it ourselves
+        '    Do Until sample IsNot Nothing
+        '        ' We don't want to step on our own toes when creating new samples - so we create a critical section for
+        '        ' this code - if another thread is busy creating samples, we'll just wait for it below
+        '        If Monitor.TryEnter(m_sampleQueue.SyncRoot) Then
+        '            Try
+        '                ' Check difference between timestamp and current sample base-time in seconds and fill in any gaps.
+        '                ' Note that current sample base-time will be validated against local clock
+        '                Dim distance As Double = DistanceFromRealTime(ticks)
+
+        '                If distance > m_lagTime OrElse distance < -m_leadTime Then
+        '                    ' This data has come in late or has a future timestamp.  For old timestamps, we're not
+        '                    ' going to create a sample for data that will never be processed.  For future dates we
+        '                    ' must assume that the clock from source device must be advanced and out-of-sync with
+        '                    ' real-time - either way this data will be discarded.
+        '                    Exit Do
+        '                ElseIf distance > 1 Then
+        '                    ' Add intermediate samples as needed...
+        '                    For x As Integer = 1 To System.Math.Floor(distance)
+        '                        CreateSample(m_currentSampleTimestamp.AddSeconds(x).Ticks)
+        '                    Next
+        '                End If
+
+        '                ' Create sample for new base time
+        '                CreateSample(baseTimeTicks)
+        '            Catch
+        '                ' Rethrow any exceptions - we are just catching any exceptions so we can
+        '                ' make sure to release thread lock in finally
+        '                Throw
+        '            Finally
+        '                Monitor.Exit(m_sampleQueue.SyncRoot)
+        '            End Try
+        '        Else
+        '            ' We sleep the thread between loops to help reduce CPU loading...
+        '            Thread.Sleep(1)
+        '        End If
+
+        '        ' If we just created the sample we needed, then we'll get it here.  Otherwise the sample may have been
+        '        ' created by another thread while we were sleeping, so we'll check again to see to see if sample exists.
+        '        ' Additionally, the TryGetValue function (referenced from within LookupSample) internally performs a
+        '        ' SyncLock on the SyncRoot and waits for it to be released, so if another thread was creating new
+        '        ' samples then we'll definitely pick up our needed sample when the lock is released.  Nice and safe.
+        '        sample = LookupSample(baseTimeTicks)
+        '    Loop
+
+        '    ' Return sample for this timestamp
+        '    Return sample
+
+        'End Function
+
+        '''' <summary>Gets the sample associated with the specified timestamp.</summary>
+        '''' <returns>The sample associated with the specified timestamp. If the specified timestamp is not found, property returns null.</returns>
+        '''' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
+        'Protected Function LookupSample(ByVal ticks As Long) As Sample
+
+        '    Dim foundSample As Sample
+
+        '    ' Lookup sample with specified baselined ticks (this is internally SyncLock'd)
+        '    If m_sampleQueue.TryGetValue(ticks, foundSample) Then
+        '        Return foundSample
+        '    Else
+        '        Return Nothing
+        '    End If
+
+        'End Function
+
+        '' Creates a new sample associated with the specified baselined timestamp ticks, if it doesn't already exist
+        'Private Sub CreateSample(ByVal ticks As Long)
+
+        '    If Not m_sampleQueue.ContainsKey(ticks) Then m_sampleQueue.Add(ticks, New Sample(Me, ticks))
+
+        'End Sub
+
+        'If measurements.TryGetValue(measurement.Key, foundMeasurement) Then
+        '    ' Measurement already exists, so we just update with the latest value
+        '    foundMeasurement.Value = measurement.Value
+        'Else
+        '    ' Create new frame measurement if it doesn't exist
+        '    measurements.Add(measurement.Key, measurement)
+        'End If
+
+        'SyncLock m_setRealTimeTicksLock
+        '    ' Since real-time ticks value may have been updated by other threads since we aquired the lock
+        '    ' we'll check to see if we still need to set real-time ticks to the current time
+        '    Dim updateRealTimeTicks As Boolean = (currentRealTimeTicks = m_realTimeTicks)
+
+        '    If Not updateRealTimeTicks Then
+        '        distance = (currentTimeTicks - m_realTimeTicks) / TicksPerSecond
+        '        updateRealTimeTicks = (distance > m_lagTime OrElse distance < -m_leadTime)
+        '    End If
+
+        '    If updateRealTimeTicks Then m_realTimeTicks = currentTimeTicks
+        'End SyncLock
+
+#End Region
+
 #End Region
 
     End Class
-
-#Region " Old Code "
-
-    ' Note: Moved this code directly into the sorting function since this was the only place it was being called to optimize by preventing function call overhead
-
-    '''' <summary>This critical function automatically manages the sample queue based on timestamps of incoming measurements</summary>
-    '''' <returns>The sample associated with the specified timestamp. If the sample is not found at timestamp, it will be created.</returns>
-    '''' <param name="ticks">Ticks of the timestamp of the sample to get</param>
-    '''' <remarks>Function will return null if timestamp is outside of the specified time deviation tolerance</remarks>
-    'Protected Function GetSample(ByVal ticks As Long) As Sample
-
-    '    ' Baseline measurement timestamp at bottom of the second
-    '    Dim baseTimeTicks As Long = BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks
-    '    Dim sample As Sample = LookupSample(baseTimeTicks)
-
-    '    ' Enter loop to wait until the sample exists, we will attempt to enter critical section and create it ourselves
-    '    Do Until sample IsNot Nothing
-    '        ' We don't want to step on our own toes when creating new samples - so we create a critical section for
-    '        ' this code - if another thread is busy creating samples, we'll just wait for it below
-    '        If Monitor.TryEnter(m_sampleQueue.SyncRoot) Then
-    '            Try
-    '                ' Check difference between timestamp and current sample base-time in seconds and fill in any gaps.
-    '                ' Note that current sample base-time will be validated against local clock
-    '                Dim distance As Double = DistanceFromRealTime(ticks)
-
-    '                If distance > m_lagTime OrElse distance < -m_leadTime Then
-    '                    ' This data has come in late or has a future timestamp.  For old timestamps, we're not
-    '                    ' going to create a sample for data that will never be processed.  For future dates we
-    '                    ' must assume that the clock from source device must be advanced and out-of-sync with
-    '                    ' real-time - either way this data will be discarded.
-    '                    Exit Do
-    '                ElseIf distance > 1 Then
-    '                    ' Add intermediate samples as needed...
-    '                    For x As Integer = 1 To System.Math.Floor(distance)
-    '                        CreateSample(m_currentSampleTimestamp.AddSeconds(x).Ticks)
-    '                    Next
-    '                End If
-
-    '                ' Create sample for new base time
-    '                CreateSample(baseTimeTicks)
-    '            Catch
-    '                ' Rethrow any exceptions - we are just catching any exceptions so we can
-    '                ' make sure to release thread lock in finally
-    '                Throw
-    '            Finally
-    '                Monitor.Exit(m_sampleQueue.SyncRoot)
-    '            End Try
-    '        Else
-    '            ' We sleep the thread between loops to help reduce CPU loading...
-    '            Thread.Sleep(1)
-    '        End If
-
-    '        ' If we just created the sample we needed, then we'll get it here.  Otherwise the sample may have been
-    '        ' created by another thread while we were sleeping, so we'll check again to see to see if sample exists.
-    '        ' Additionally, the TryGetValue function (referenced from within LookupSample) internally performs a
-    '        ' SyncLock on the SyncRoot and waits for it to be released, so if another thread was creating new
-    '        ' samples then we'll definitely pick up our needed sample when the lock is released.  Nice and safe.
-    '        sample = LookupSample(baseTimeTicks)
-    '    Loop
-
-    '    ' Return sample for this timestamp
-    '    Return sample
-
-    'End Function
-
-    '''' <summary>Gets the sample associated with the specified timestamp.</summary>
-    '''' <returns>The sample associated with the specified timestamp. If the specified timestamp is not found, property returns null.</returns>
-    '''' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
-    'Protected Function LookupSample(ByVal ticks As Long) As Sample
-
-    '    Dim foundSample As Sample
-
-    '    ' Lookup sample with specified baselined ticks (this is internally SyncLock'd)
-    '    If m_sampleQueue.TryGetValue(ticks, foundSample) Then
-    '        Return foundSample
-    '    Else
-    '        Return Nothing
-    '    End If
-
-    'End Function
-
-    '' Creates a new sample associated with the specified baselined timestamp ticks, if it doesn't already exist
-    'Private Sub CreateSample(ByVal ticks As Long)
-
-    '    If Not m_sampleQueue.ContainsKey(ticks) Then m_sampleQueue.Add(ticks, New Sample(Me, ticks))
-
-    'End Sub
-
-    'If measurements.TryGetValue(measurement.Key, foundMeasurement) Then
-    '    ' Measurement already exists, so we just update with the latest value
-    '    foundMeasurement.Value = measurement.Value
-    'Else
-    '    ' Create new frame measurement if it doesn't exist
-    '    measurements.Add(measurement.Key, measurement)
-    'End If
-
-    'SyncLock m_setRealTimeTicksLock
-    '    ' Since real-time ticks value may have been updated by other threads since we aquired the lock
-    '    ' we'll check to see if we still need to set real-time ticks to the current time
-    '    Dim updateRealTimeTicks As Boolean = (currentRealTimeTicks = m_realTimeTicks)
-
-    '    If Not updateRealTimeTicks Then
-    '        distance = (currentTimeTicks - m_realTimeTicks) / TicksPerSecond
-    '        updateRealTimeTicks = (distance > m_lagTime OrElse distance < -m_leadTime)
-    '    End If
-
-    '    If updateRealTimeTicks Then m_realTimeTicks = currentTimeTicks
-    'End SyncLock
-
-#End Region
 
 End Namespace
