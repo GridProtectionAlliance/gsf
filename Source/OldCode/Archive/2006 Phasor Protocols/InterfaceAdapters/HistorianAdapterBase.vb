@@ -142,14 +142,11 @@ Public MustInherit Class HistorianAdapterBase
 
     Public Overridable Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement)) Implements IHistorianAdapter.QueueMeasurementsForArchival
 
-        Dim measurementCount As Integer
-
         SyncLock m_measurementQueue
-            measurementCount = measurements.Count
             m_measurementQueue.AddRange(measurements)
         End SyncLock
 
-        IncrementProcessedMeasurements(measurementCount)
+        IncrementProcessedMeasurements(measurements.Count)
 
     End Sub
 
