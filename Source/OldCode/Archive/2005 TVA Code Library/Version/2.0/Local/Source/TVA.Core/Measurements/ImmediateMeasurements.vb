@@ -130,7 +130,7 @@ Namespace Measurements
         Public Sub DefineTaggedMeasurements(ByVal taggedMeasurements As DataTable)
 
             For Each row As DataRow In taggedMeasurements.Rows
-                AddTaggedMeasurement(row("Tag").ToString(), New MeasurementKey(Convert.ToInt32(row("ID")), row("Source").ToString()))
+                AddTaggedMeasurement(row("Tag").ToString(), New MeasurementKey(CInt(row("ID")), row("Source").ToString()))
             Next
 
         End Sub
