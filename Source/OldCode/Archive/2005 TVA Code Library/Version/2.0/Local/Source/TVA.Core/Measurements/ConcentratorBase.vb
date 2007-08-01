@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  TVA.Measurements.Concentrator.vb - Measurement concentrator
+'  TVA.Measurements.ConcentratorBase.vb - Measurement concentrator base class
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
