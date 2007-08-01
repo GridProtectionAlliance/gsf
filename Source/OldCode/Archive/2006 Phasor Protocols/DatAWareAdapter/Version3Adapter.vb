@@ -57,7 +57,7 @@ Public Class Version3Adapter
         Dim value As String
 
         ' Example connection string:
-        ' IP=localhost; Port=1002; MaxEvents=50; UseTimeout=True
+        ' IP=localhost; Port=1003; MaxEvents=100000
         With ParseKeyValuePairs(connectionString)
             If .TryGetValue("ip", value) Then m_archiverIP = value
             If .TryGetValue("port", value) Then m_archiverPort = Convert.ToInt32(value)
