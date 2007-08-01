@@ -73,7 +73,7 @@ Namespace Measurements
         Private m_missedSortsByLockTimeout As Long                              ' Total number of unsorted measurements due to timeout waiting for lock
         Private m_threadPoolSorts As Long                                       ' Total number of sorts deferred to thread pool because initial try lock failed
         Private m_publishedFrames As Long                                       ' Total number of published frames
-        Private m_totalSortTime As Long                                         ' Total frame sorting time (in ticks)
+        Private m_totalSortTime As Long                                         ' Total cumulative frame sorting times (in ticks) - used to calculate average
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
