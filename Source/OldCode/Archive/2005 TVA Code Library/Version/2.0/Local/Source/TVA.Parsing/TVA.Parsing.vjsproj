@@ -20,12 +20,14 @@
     <Optimize>false</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>..\bin\TVA.Parsing.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>..\bin\TVA.Parsing.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -34,6 +36,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HTMLParser\Common.java" />
     <Compile Include="HTMLParser\HTMLAnchorExtractor.java" />
     <Compile Include="HTMLParser\HTMLAttributeExtractor.java" />
     <Compile Include="HTMLParser\HTMLCollector.java" />
