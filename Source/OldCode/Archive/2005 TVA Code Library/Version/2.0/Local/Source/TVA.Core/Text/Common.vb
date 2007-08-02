@@ -616,7 +616,7 @@ Namespace Text
         ''' <summary>
         ''' Centers text within specified maximum length, biased to the left.
         ''' Text will be padded to the left and right with spaces.
-        ''' If value is greather than specified maximum length, value returned will be truncated from the right.
+        ''' If value is greater than specified maximum length, value returned will be truncated from the right.
         ''' </summary>
         Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer) As String
 
@@ -627,7 +627,7 @@ Namespace Text
         ''' <summary>
         ''' Centers text within specified maximum length, biased to the left.
         ''' Text will be padded to the left and right with specified padding character.
-        ''' If value is greather than specified maximum length, value returned will be truncated from the right.
+        ''' If value is greater than specified maximum length, value returned will be truncated from the right.
         ''' </summary>
         Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer, ByVal paddingCharacter As Char) As String
 
