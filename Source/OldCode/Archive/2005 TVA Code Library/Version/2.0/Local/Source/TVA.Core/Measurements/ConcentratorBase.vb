@@ -581,7 +581,7 @@ Namespace Measurements
 
                                 .Append(Environment.NewLine)
                                 .Append("       Last measurement = ")
-                                .Append(currentFrame.LastSortedMeasurement)
+                                .Append(currentFrame.LastSortedMeasurement.Key)
 
                                 ' Calculate total time from last measurement ticks
                                 If currentFrame.LastSortTime > 0 Then
