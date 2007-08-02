@@ -580,6 +580,7 @@ Namespace Measurements
                                 End If
 
                                 .Append(Environment.NewLine)
+                                .Append(Environment.NewLine)
                                 .Append("       Last measurement = ")
                                 .Append(currentFrame.LastSortedMeasurement.Key)
 
