@@ -19,6 +19,8 @@
 '  07/07/2006 - J. Ritchie Carroll
 '       Added GetStringSegments function to break a string up into smaller chunks for parsing
 '       and/or display purposes
+'  08/02/2007 - J. Ritchie Carroll
+'       Added a CenterText method for centering strings in console applications or fixed width fonts
 '
 '*******************************************************************************************************
 
@@ -596,10 +598,7 @@ Namespace Text
         ''' </summary>
         Public Shared Function TruncateLeft(ByVal value As String, ByVal maxLength As Integer) As String
 
-            If value.Length > maxLength Then
-                value = value.Substring(value.Length - maxLength)
-            End If
-
+            If value.Length > maxLength Then Return value.Substring(value.Length - maxLength)
             Return value
 
         End Function
@@ -609,11 +608,45 @@ Namespace Text
         ''' </summary>
         Public Shared Function TruncateRight(ByVal value As String, ByVal maxLength As Integer) As String
 
-            If value.Length > maxLength Then
-                value = value.Substring(0, maxLength)
-            End If
-
+            If value.Length > maxLength Then Return value.Substring(0, maxLength)
             Return value
+
+        End Function
+
+        ''' <summary>
+        ''' Centers text within specified maximum length, biased to the left.
+        ''' Text will be padded to the left and right with spaces.
+        ''' If value is greather than specified maximum length, value returned will be truncated from the right.
+        ''' </summary>
+        Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer) As String
+
+            Return CenterText(value, maxLength, " "c)
+
+        End Function
+
+        ''' <summary>
+        ''' Centers text within specified maximum length, biased to the left.
+        ''' Text will be padded to the left and right with specified padding character.
+        ''' If value is greather than specified maximum length, value returned will be truncated from the right.
+        ''' </summary>
+        Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer, ByVal paddingCharacter As Char) As String
+
+            If value.Length >= maxLength Then
+                ' Truncate excess characters on the right
+                Return value.Substring(0, maxLength)
+            Else
+                Dim remainingSpace As Integer = maxLength - value.Length
+                Dim leftSpaces, rightSpaces As Integer
+
+                ' Split remaining space between the left and the right
+                leftSpaces = remainingSpace \ 2
+                rightSpaces = leftSpaces
+
+                ' Add any remaining odd space to the right (bias text to the left)
+                If remainingSpace Mod 2 > 0 Then rightSpaces += 1
+
+                Return Concat(New String(paddingCharacter, leftSpaces), value, New String(paddingCharacter, rightSpaces))
+            End If
 
         End Function
 
