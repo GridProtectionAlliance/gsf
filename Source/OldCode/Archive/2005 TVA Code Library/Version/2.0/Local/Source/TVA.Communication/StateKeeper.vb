@@ -3,7 +3,7 @@
 Imports System.Net.Sockets
 
 ' JRC: Class properties converted to public members for optimization...
-Friend Class StateKeeper(Of T)
+Public Class StateKeeper(Of T)
 
     Public Client As T
     Public ID As Guid
