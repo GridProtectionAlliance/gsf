@@ -62,6 +62,13 @@ Namespace Measurements
         ''' </remarks>
         Property LastSortTime() As Long
 
+        ''' <summary>Last measurement that was sorted into this frame</summary>
+        ''' <remarks>
+        ''' <para>This value is used to help monitor slow moving measurements that are being sorted into the frame</para>
+        ''' <para>Implementors need only track the value</para>
+        ''' </remarks>
+        Property LastSortedMeasurement() As IMeasurement
+
     End Interface
 
 End Namespace

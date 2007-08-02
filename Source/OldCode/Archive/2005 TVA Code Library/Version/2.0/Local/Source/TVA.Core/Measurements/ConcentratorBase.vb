@@ -475,8 +475,9 @@ Namespace Measurements
                         ' Call user customizable function to assign new measurement to its frame - this is a non-blocking operation, so if
                         ' we failed to get a lock to handle assignment we queue this work up on an independent thread
                         If AssignMeasurementToFrame(frame, measurement) Then
-                            ' Track time of last sorted measurement in this frame
+                            ' Track last sorted measurement in this frame
                             frame.LastSortTime = Date.UtcNow.Ticks
+                            frame.LastSortedMeasurement = measurement
                         Else
                             ' We didn't get lock to assign measurement to frame so we queue it up for assignment on an independent thread
                             ThreadPool.QueueUserWorkItem(AddressOf AssignMeasurementToFrame, New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame))
@@ -576,6 +577,19 @@ Namespace Measurements
                                     .Append(" seconds")
                                 Else
                                     .Append("undetermined")
+                                End If
+
+                                .Append(Environment.NewLine)
+                                .Append("       Last measurement = ")
+                                .Append(currentFrame.LastSortedMeasurement)
+
+                                ' Calculate total time from last measurement ticks
+                                If currentFrame.LastSortTime > 0 Then
+                                    .Append(" - ")
+                                    .Append(TicksToSeconds(currentFrame.LastSortTime - currentFrame.LastSortedMeasurement.Ticks).ToString("0.0000"))
+                                    .Append(" seconds from source time")
+                                Else
+                                    .Append(" - deviation from source time undetermined")
                                 End If
                             Else
                                 .Append("concentrating...")
@@ -864,6 +878,10 @@ Namespace Measurements
                     Thread.Sleep(0)
                 End If
             Loop
+
+            ' We always track last sorted measurement (whether it made it into the frame or not) - this is
+            ' because user will be interested in knowing which measurements are moving the slowest
+            frame.LastSortedMeasurement = measurement
 
             If Not assigned Then
                 ' We'll count this as a discarded measurement if it was never assigned to the frame

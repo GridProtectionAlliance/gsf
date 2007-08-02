@@ -25,11 +25,12 @@ Namespace Measurements
         Implements IFrame
 
         Private m_ticks As Long
-        Private m_startSortTime As Long
-        Private m_lastSortTime As Long
         Private m_published As Boolean
         Private m_publishedMeasurements As Integer
         Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
+        Private m_startSortTime As Long
+        Private m_lastSortTime As Long
+        Private m_lastSortedMeasurement As IMeasurement
 
         Public Sub New(ByVal ticks As Long)
 
@@ -130,6 +131,16 @@ Namespace Measurements
             End Get
             Set(ByVal value As Long)
                 m_lastSortTime = value
+            End Set
+        End Property
+
+        ''' <summary>Last measurement that was sorted into this frame</summary>
+        Public Property LastSortedMeasurement() As IMeasurement Implements IFrame.LastSortedMeasurement
+            Get
+                Return m_lastSortedMeasurement
+            End Get
+            Set(ByVal value As IMeasurement)
+                m_lastSortedMeasurement = value
             End Set
         End Property
 
