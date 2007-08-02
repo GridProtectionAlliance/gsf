@@ -177,7 +177,7 @@ Public Class PhasorMeasurementMapper
                     ' Attempt to lookup station name in configuration frame of connected device
                     stationName = Nothing
                     If m_frameParser.ConfigurationFrame IsNot Nothing AndAlso m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(cell.IDCode, pmu) Then stationName = pmu.StationName
-                    If String.IsNullOrEmpty(stationName) Then stationName = cell.IDLabel & " - "
+                    If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.IDLabel & ">"
 
                     .Append("  ")
                     .Append(TruncateRight(stationName, 22).PadRight(22))
