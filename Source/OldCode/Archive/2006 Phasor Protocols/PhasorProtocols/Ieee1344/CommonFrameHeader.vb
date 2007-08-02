@@ -235,6 +235,15 @@ Namespace Ieee1344
                 End Set
             End Property
 
+            Public Property LastSortedMeasurement() As TVA.Measurements.IMeasurement Implements TVA.Measurements.IFrame.LastSortedMeasurement
+                Get
+                    Return Nothing
+                End Get
+                Set(ByVal value As TVA.Measurements.IMeasurement)
+                    Throw New NotImplementedException()
+                End Set
+            End Property
+
             Public ReadOnly Property TimeTag() As NtpTimeTag Implements ICommonFrameHeader.TimeTag
                 Get
                     Return CommonFrameHeader.TimeTag(Me)

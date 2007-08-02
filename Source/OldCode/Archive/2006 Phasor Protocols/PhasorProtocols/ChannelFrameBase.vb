@@ -33,12 +33,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     Private m_idCode As UInt16
     Private m_cells As IChannelCellCollection(Of T)
     Private m_ticks As Long
-    Private m_startSortTime As Long
-    Private m_lastSortTime As Long
     Private m_published As Boolean
     Private m_publishedMeasurements As Integer
     Private m_parsedBinaryLength As UInt16
     Private m_measurements As Dictionary(Of MeasurementKey, IMeasurement)
+    Private m_startSortTime As Long
+    Private m_lastSortTime As Long
+    Private m_lastSortedMeasurement As IMeasurement
 
     Protected Sub New()
     End Sub
@@ -157,6 +158,15 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Get
         Set(ByVal value As Long)
             m_lastSortTime = value
+        End Set
+    End Property
+
+    Public Property LastSortedMeasurement() As TVA.Measurements.IMeasurement Implements TVA.Measurements.IFrame.LastSortedMeasurement
+        Get
+            Return m_lastSortedMeasurement
+        End Get
+        Set(ByVal value As TVA.Measurements.IMeasurement)
+            m_lastSortedMeasurement = value
         End Set
     End Property
 

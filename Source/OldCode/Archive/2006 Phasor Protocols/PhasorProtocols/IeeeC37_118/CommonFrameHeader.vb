@@ -152,6 +152,15 @@ Namespace IeeeC37_118
                 End Set
             End Property
 
+            Public Property LastSortedMeasurement() As TVA.Measurements.IMeasurement Implements TVA.Measurements.IFrame.LastSortedMeasurement
+                Get
+                    Return Nothing
+                End Get
+                Set(ByVal value As TVA.Measurements.IMeasurement)
+                    Throw New NotImplementedException()
+                End Set
+            End Property
+
             Public Property InternalTimeQualityFlags() As Int32 Implements ICommonFrameHeader.InternalTimeQualityFlags
                 Get
                     Return m_timeQualityFlags

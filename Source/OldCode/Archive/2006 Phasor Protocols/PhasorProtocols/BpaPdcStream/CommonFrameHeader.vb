@@ -159,6 +159,15 @@ Namespace BpaPdcStream
                 End Set
             End Property
 
+            Public Property LastSortedMeasurement() As TVA.Measurements.IMeasurement Implements TVA.Measurements.IFrame.LastSortedMeasurement
+                Get
+                    Return Nothing
+                End Get
+                Set(ByVal value As TVA.Measurements.IMeasurement)
+                    Throw New NotImplementedException()
+                End Set
+            End Property
+
             Public ReadOnly Property BinaryImage() As Byte() Implements IBinaryDataProvider.BinaryImage
                 Get
                     Throw New NotImplementedException()
