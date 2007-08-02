@@ -586,7 +586,7 @@ Namespace Measurements
                                 ' Calculate total time from last measurement ticks
                                 If currentFrame.LastSortTime > 0 Then
                                     .Append(" - ")
-                                    .Append(TicksToSeconds(currentFrame.LastSortTime - currentFrame.LastSortedMeasurement.Ticks).ToString("0.0000"))
+                                    .Append(TicksToSeconds(NotLessThan(currentFrame.LastSortTime - currentFrame.LastSortedMeasurement.Ticks, 0L)).ToString("0.0000"))
                                     .Append(" seconds from source time")
                                 Else
                                     .Append(" - deviation from source time undetermined")
