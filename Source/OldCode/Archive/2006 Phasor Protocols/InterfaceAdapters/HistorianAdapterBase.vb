@@ -35,6 +35,7 @@ Public MustInherit Class HistorianAdapterBase
     Private m_measurementQueue As List(Of IMeasurement)
     Private m_dataProcessingThread As Thread
     Private m_processedMeasurements As Long
+    Private m_updateProcessCountLock As Object
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_monitorTimer As Timers.Timer
 
@@ -43,6 +44,7 @@ Public MustInherit Class HistorianAdapterBase
     Public Sub New()
 
         m_measurementQueue = New List(Of IMeasurement)
+        m_updateProcessCountLock = New Object
 
         m_connectionTimer = New Timers.Timer
 
@@ -136,7 +138,8 @@ Public MustInherit Class HistorianAdapterBase
             m_measurementQueue.Add(measurement)
         End SyncLock
 
-        IncrementProcessedMeasurements(1)
+        ' We throw status message updates on the thread pool so we don't slow sorting operations
+        ThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
 
     End Sub
 
@@ -146,7 +149,8 @@ Public MustInherit Class HistorianAdapterBase
             m_measurementQueue.AddRange(measurements)
         End SyncLock
 
-        IncrementProcessedMeasurements(measurements.Count)
+        ' We throw status message updates on the thread pool so we don't slow sorting operations
+        ThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
 
     End Sub
 
@@ -157,13 +161,20 @@ Public MustInherit Class HistorianAdapterBase
 
     'End Sub
 
-    Private Sub IncrementProcessedMeasurements(ByVal totalAdded As Integer)
+    Private Sub IncrementProcessedMeasurements(ByVal state As Object)
 
-        ' Check to see if total number of added points will exceed process interval used to show periodic
-        ' messages of how many points have been archived so far...
-        Dim showMessage As Boolean = (m_processedMeasurements + totalAdded >= (m_processedMeasurements \ ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval)
-        Interlocked.Add(m_processedMeasurements, totalAdded)
-        If showMessage Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
+        ' Since multiple threads may be calling this status update at the same time, we synchronize access to this code to prevent
+        ' multiple messages being displayed at nearly the same time
+        SyncLock m_updateProcessCountLock
+            ' Check to see if total number of added points will exceed process interval used to show periodic
+            ' messages of how many points have been archived so far...
+            Dim totalAdded As Integer = CInt(state)
+            Dim showMessage As Boolean = (m_processedMeasurements + totalAdded >= (m_processedMeasurements \ ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval)
+
+            m_processedMeasurements += totalAdded
+
+            If showMessage Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
+        End SyncLock
 
     End Sub
 

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  LegacyAdapter.vb - DatAWare legacy system adpater
+'  Version3Adapter.vb - DatAWare.NET historian adpater
 '  Copyright © 2005 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -114,7 +114,7 @@ Public Class Version3Adapter
 
     Protected Overrides Sub ArchiveMeasurements(ByVal measurements As IMeasurement())
 
-        If m_connection IsNot Nothing Then
+        If m_connection IsNot Nothing AndAlso m_connection.IsConnected Then
             Dim measurement As IMeasurement
             Dim remainingPoints As Integer = measurements.Length
             Dim pointsToArchive, arrayIndex, bufferIndex, x As Integer

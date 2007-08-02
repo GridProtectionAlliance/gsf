@@ -57,10 +57,35 @@ Public Class ConfigurationCellCollection
 
     End Function
 
+    Public Overridable Function TryGetByIDCode(ByVal idCode As UInt16, ByRef configurationCell As IConfigurationCell) As Boolean
+
+        For Each configurationCell In Me
+            If configurationCell.IDCode = idCode Then
+                Return True
+            End If
+        Next
+
+        configurationCell = Nothing
+        Return False
+
+    End Function
+
     Public Overridable Function IndexOfIDLabel(ByVal label As String) As Integer
 
         For index As Integer = 0 To Count - 1
             If String.Compare(Me(index).IDLabel, label, True) = 0 Then
+                Return index
+            End If
+        Next
+
+        Return -1
+
+    End Function
+
+    Public Overridable Function IndexOfIDCode(ByVal idCode As UInt16) As Integer
+
+        For index As Integer = 0 To Count - 1
+            If Me(index).IDCode = idCode Then
                 Return index
             End If
         Next

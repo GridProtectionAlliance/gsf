@@ -25,8 +25,13 @@ Public Class ConfigurationCell
 
     Inherits ConfigurationCellBase
 
+    ' We add statistic tracking and cached signal type information to our protocol independent configuration cell
     Private m_lastReportTime As Long
     Private m_signalSynonyms As Dictionary(Of SignalType, String())
+    Private m_totalDataQualityErrors As Long
+    Private m_totalTimeQualityErrors As Long
+    Private m_totalPmuErrors As Long
+
     Private m_analogDataFormat As PhasorProtocols.DataFormat
     Private m_frequencyDataFormat As PhasorProtocols.DataFormat
     Private m_phasorDataFormat As PhasorProtocols.DataFormat
@@ -127,6 +132,33 @@ Public Class ConfigurationCell
         End Get
         Set(ByVal value As Long)
             m_lastReportTime = value
+        End Set
+    End Property
+
+    Public Property TotalDataQualityErrors() As Long
+        Get
+            Return m_totalDataQualityErrors
+        End Get
+        Set(ByVal value As Long)
+            m_totalDataQualityErrors = value
+        End Set
+    End Property
+
+    Public Property TotalTimeQualityErrors() As Long
+        Get
+            Return m_totalTimeQualityErrors
+        End Get
+        Set(ByVal value As Long)
+            m_totalTimeQualityErrors = value
+        End Set
+    End Property
+
+    Public Property TotalPmuErrors() As Long
+        Get
+            Return m_totalPmuErrors
+        End Get
+        Set(ByVal value As Long)
+            m_totalPmuErrors = value
         End Set
     End Property
 

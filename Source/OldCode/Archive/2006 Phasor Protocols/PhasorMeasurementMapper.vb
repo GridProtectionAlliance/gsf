@@ -24,6 +24,7 @@ Imports TVA.DateTime
 Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.IO.FilePath
+Imports TVA.Text.Common
 Imports TVA.ErrorManagement
 Imports PhasorProtocols
 Imports PhasorProtocols.Common
@@ -154,15 +155,53 @@ Public Class PhasorMeasurementMapper
                 .Append(Name)
                 .Append(Environment.NewLine)
                 .Append(m_frameParser.Status)
+                .Append(Environment.NewLine)
+                .Append("  ")
+                .Append(CenterText("Parsed Frame Quality Statistics", 64))
+                .Append(Environment.NewLine)
+                .Append(Environment.NewLine)
+                '                   1         2         3         4         5         6
+                '          1234567890123456789012345678901234567890123456789012345678901234
+                .Append("  Device                 Bad Data  Bad Time   Frame    Last Report")
+                .Append(Environment.NewLine)
+                .Append("   Name                   Frames    Frames    Errors      Time")
+                .Append(Environment.NewLine)
+                '          1234567890123456789012 123456789 123456789 123456789
+                .Append("  ---------------------- --------- --------- --------- ------------")
+                .Append(Environment.NewLine)
+
+                Dim pmu As IConfigurationCell
+                Dim stationName As String
+
+                For Each cell As ConfigurationCell In m_configurationCells.Values
+                    ' Attempt to lookup station name in configuration frame of connected device
+                    stationName = Nothing
+                    If m_frameParser.ConfigurationFrame IsNot Nothing AndAlso m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(cell.IDCode, pmu) Then stationName = pmu.StationName
+                    If String.IsNullOrEmpty(stationName) Then stationName = cell.IDLabel & " - "
+
+                    .Append("  ")
+                    .Append(TruncateRight(stationName, 22).PadRight(22))
+                    .Append(" "c)
+                    .Append(CenterText(cell.TotalDataQualityErrors.ToString(), 9))
+                    .Append(" "c)
+                    .Append(CenterText(cell.TotalTimeQualityErrors.ToString(), 9))
+                    .Append(" "c)
+                    .Append(CenterText(cell.TotalPmuErrors.ToString(), 9))
+                    .Append(" "c)
+                    .Append((New Date(cell.LastReportTime)).ToString("HH:mm:ss.fff"))
+                    .Append(Environment.NewLine)
+                Next
+
+                .Append(Environment.NewLine)
                 .Append("Undefined PMUs Encountered: ")
                 .Append(m_undefinedPmus.Count)
                 .Append(Environment.NewLine)
 
                 SyncLock m_undefinedPmus
                     For Each item As KeyValuePair(Of String, Long) In m_undefinedPmus
-                        .Append("    ")
+                        .Append("    PMU """)
                         .Append(item.Key)
-                        .Append(" encountered ")
+                        .Append(""" encountered ")
                         .Append(item.Value)
                         .Append(" times")
                         .Append(Environment.NewLine)
@@ -324,6 +363,11 @@ Public Class PhasorMeasurementMapper
                 ' Track lastest reporting time
                 If ticks > pmu.LastReportTime Then pmu.LastReportTime = ticks
                 If ticks > m_lastReportTime Then m_lastReportTime = ticks
+
+                ' Track quality statistics for this PMU
+                If Not dataCell.DataIsValid Then pmu.TotalDataQualityErrors += 1
+                If Not dataCell.SynchronizationIsValid Then pmu.TotalTimeQualityErrors += 1
+                If dataCell.PmuError Then pmu.TotalPmuErrors += 1
 
                 ' Map status flags (SF) from PMU data cell itself
                 MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Status), dataCell)
