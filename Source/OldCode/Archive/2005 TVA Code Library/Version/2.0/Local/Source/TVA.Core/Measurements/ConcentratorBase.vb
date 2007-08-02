@@ -77,6 +77,7 @@ Namespace Measurements
         Private m_enabled As Boolean                                            ' Enabled state of concentrator
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
+        Private m_lastDiscardedMeasurement As IMeasurement                      ' Last measurement that was discarded by the concentrator
         Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue (a sample represents one second of frames)
         Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
 
@@ -344,6 +345,13 @@ Namespace Measurements
             End Get
         End Property
 
+        ''' <summary>Last measurement that was discarded by the concentrator</summary>
+        Public ReadOnly Property LastDiscardedMeasurement() As IMeasurement
+            Get
+                Return m_lastDiscardedMeasurement
+            End Get
+        End Property
+
         ''' <summary>Total number of published measurements</summary>
         Public ReadOnly Property PublishedMeasurements() As Long
             Get
@@ -441,6 +449,7 @@ Namespace Measurements
                                     ' must assume that the clock from source device must be advanced and out-of-sync with
                                     ' real-time - either way this data will be discarded.  Sample reference will be null.
                                     Interlocked.Increment(m_discardedMeasurements)
+                                    m_lastDiscardedMeasurement = measurement
                                 Else
                                     ' Create sample for new base time
                                     sample = New Sample(Me, baseTimeTicks)
@@ -468,6 +477,7 @@ Namespace Measurements
                     If frame.Published Then
                         ' We'll just count this as a discarded measurement, frame is already publishing...
                         Interlocked.Increment(m_discardedMeasurements)
+                        m_lastDiscardedMeasurement = measurement
                     Else
                         ' Make sure the starting sort time for this frame is initialized
                         If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
@@ -641,6 +651,9 @@ Namespace Measurements
                     .Append(Environment.NewLine)
                     .Append("    Discarded measurements: ")
                     .Append(m_discardedMeasurements)
+                    .Append(Environment.NewLine)
+                    .Append("Last discarded measurement: ")
+                    .Append(m_lastDiscardedMeasurement.Key)
                     .Append(Environment.NewLine)
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)
@@ -868,8 +881,11 @@ Namespace Measurements
                         ' Call user customizable assignment function
                         assigned = AssignMeasurementToFrame(frame, measurement)
 
-                        ' Update time of last sorted measurement in this frame
-                        If assigned Then frame.LastSortTime = Date.UtcNow.Ticks
+                        ' Track last sorted measurement in this frame
+                        If assigned Then
+                            frame.LastSortTime = Date.UtcNow.Ticks
+                            frame.LastSortedMeasurement = measurement
+                        End If
 
                         Exit Do
                     Finally
@@ -880,13 +896,10 @@ Namespace Measurements
                 End If
             Loop
 
-            ' We always track last sorted measurement (whether it made it into the frame or not) - this is
-            ' because user will be interested in knowing which measurements are moving the slowest
-            frame.LastSortedMeasurement = measurement
-
             If Not assigned Then
                 ' We'll count this as a discarded measurement if it was never assigned to the frame
                 Interlocked.Increment(m_discardedMeasurements)
+                m_lastDiscardedMeasurement = measurement
 
                 ' We also track total number of measurements that failed to sort because
                 ' system ran out of time trying to get a lock
