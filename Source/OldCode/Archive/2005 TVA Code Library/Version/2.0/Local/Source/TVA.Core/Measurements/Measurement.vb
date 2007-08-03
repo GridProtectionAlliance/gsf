@@ -257,13 +257,17 @@ Namespace Measurements
 
         Public Overloads Shared Function ToString(ByVal measurement As IMeasurement) As String
 
-            Dim tagName As String = measurement.TagName
-            Dim keyText As String = measurement.Key.ToString()
-
-            If String.IsNullOrEmpty(tagName) Then
-                Return keyText
+            If measurement Is Nothing Then
+                Return "Undefined"
             Else
-                Return String.Format("{0} [{1}]", tagName, keyText)
+                Dim tagName As String = measurement.TagName
+                Dim keyText As String = measurement.Key.ToString()
+
+                If String.IsNullOrEmpty(tagName) Then
+                    Return keyText
+                Else
+                    Return String.Format("{0} [{1}]", tagName, keyText)
+                End If
             End If
 
         End Function
