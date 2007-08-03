@@ -47,6 +47,7 @@ Public Class PhasorMeasurementMapper
     Private m_source As String
     Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
     Private m_measurementIDs As Dictionary(Of String, IMeasurement)
+    Private m_isConnected As Boolean
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
     Private m_errorCount As Integer
@@ -103,6 +104,8 @@ Public Class PhasorMeasurementMapper
 
     Public Sub Connect(ByVal delayed As Boolean)
 
+        m_lastReportTime = 0
+
         If delayed Then
             ' Start timer for delayed connection
             m_delayedConnection.Enabled = True
@@ -118,20 +121,24 @@ Public Class PhasorMeasurementMapper
 
     Public Sub Disconnect()
 
+        ' Stop delayed connection timer, if enabled
+        If m_delayedConnection IsNot Nothing Then m_delayedConnection.Enabled = False
+
         ' Stop data stream monitor, if running
-        If m_dataStreamMonitor IsNot Nothing Then
-            m_dataStreamMonitor.Enabled = False
-        End If
+        If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
 
         ' Stop multi-protocol frame parser
         If m_frameParser IsNot Nothing Then m_frameParser.Stop()
 
+        If m_attemptingConnection Then UpdateStatus(String.Format("Canceling connection cycle to {0}.", Name))
+
+        If m_isConnected Then UpdateStatus(String.Format("Disconnected from {0}.", m_source))
+
+        m_isConnected = False
         m_receivedConfigFrame = False
         m_errorCount = 0
         m_errorTime = 0
         m_unknownFramesReceived = 0
-
-        If m_attemptingConnection Then UpdateStatus(String.Format("Canceling connection cycle to {0}.", Name))
 
     End Sub
 
@@ -210,6 +217,12 @@ Public Class PhasorMeasurementMapper
 
                 Return .ToString()
             End With
+        End Get
+    End Property
+
+    Public ReadOnly Property IsConnected() As Boolean
+        Get
+            Return m_isConnected
         End Get
     End Property
 
@@ -443,6 +456,8 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_Connected() Handles m_frameParser.Connected
 
+        m_isConnected = True
+
         ' Enable data stream monitor for non-UDP connections
         m_attemptingConnection = False
         m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
@@ -482,6 +497,8 @@ Public Class PhasorMeasurementMapper
     End Sub
 
     Private Sub m_frameParser_Disconnected() Handles m_frameParser.Disconnected
+
+        m_isConnected = False
 
         If m_frameParser.Enabled Then
             ' Communications layer closed connection (close not initiated by system) - so we terminate gracefully...

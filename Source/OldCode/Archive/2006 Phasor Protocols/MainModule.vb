@@ -761,21 +761,30 @@ Module MainModule
                     .Append("  ------------------------ ----------------------------------------------------")
                     .Append(Environment.NewLine)
                     '          01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
-                    '          >> No data has been parsed for SourceName - 00000 bytes received"
+                    '          >> SourceName awaiting config frame - 1000 bytes received
+                    '          ** SourceName is not connected
 
                     For Each mapper As PhasorMeasurementMapper In receiver.Mappers.Values
                         .Append("  ")
-                        If mapper.LastReportTime > 0 Then
-                            .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
-                            .Append(" "c)
-                            .Append(mapper.Name(6))
-                            .Append(Environment.NewLine)
+
+                        If mapper.IsConnected Then
+                            If mapper.LastReportTime > 0 Then
+                                .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                                .Append(" "c)
+                                .Append(mapper.Name(6))
+                                .Append(Environment.NewLine)
+                            Else
+                                .Append(">> ")
+                                .Append(mapper.Name)
+                                .Append(" awaiting config frame - ")
+                                .Append(mapper.TotalBytesReceived)
+                                .Append(" bytes received")
+                                .Append(Environment.NewLine)
+                            End If
                         Else
-                            .Append(">> No data has been parsed for ")
+                            .Append("** ")
                             .Append(mapper.Name)
-                            .Append(" - ")
-                            .Append(mapper.TotalBytesReceived)
-                            .Append(" bytes received")
+                            .Append(" is not connected")
                             .Append(Environment.NewLine)
                         End If
                     Next

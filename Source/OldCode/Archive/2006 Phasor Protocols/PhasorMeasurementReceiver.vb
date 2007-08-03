@@ -24,6 +24,7 @@ Imports TVA.Communication
 Imports TVA.Measurements
 Imports TVA.Text.Common
 Imports TVA.ErrorManagement
+Imports TVA.IO
 Imports InterfaceAdapters
 Imports PhasorProtocols
 Imports PhasorProtocols.Common
@@ -171,7 +172,7 @@ Public Class PhasorMeasurementReceiver
                             If .PhasorProtocol = PhasorProtocol.BpaPdcStream Then
                                 ' BPA PDCstream has special connection needs
                                 With DirectCast(.ConnectionParameters, BpaPdcStream.ConnectionParameters)
-                                    .ConfigurationFileName = Concat(TVA.IO.FilePath.GetApplicationPath(), row("IPAddress"))
+                                    .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), row("IPAddress").ToString())
                                     .RefreshConfigurationFileOnChange = True
                                     .ParseWordCountFromByte = False
                                 End With
