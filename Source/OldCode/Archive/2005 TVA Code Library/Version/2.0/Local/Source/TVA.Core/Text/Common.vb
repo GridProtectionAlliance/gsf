@@ -620,6 +620,9 @@ Namespace Text
         ''' Text will be padded to the left and right with spaces.
         ''' If value is greater than specified maximum length, value returned will be truncated from the right.
         ''' </summary>
+        ''' <remarks>
+        ''' This function will handle multiple lines of text separated by Environment.NewLine
+        ''' </remarks>
         Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer) As String
 
             Return CenterText(value, maxLength, " "c)
@@ -631,6 +634,9 @@ Namespace Text
         ''' Text will be padded to the left and right with specified padding character.
         ''' If value is greater than specified maximum length, value returned will be truncated from the right.
         ''' </summary>
+        ''' <remarks>
+        ''' This function will handle multiple lines of text separated by Environment.NewLine
+        ''' </remarks>
         Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer, ByVal paddingCharacter As Char) As String
 
             ' If the text to be centered contains multiple lines, we'll center all the lines individually.
