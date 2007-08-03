@@ -2574,14 +2574,33 @@ Namespace Collections
 
 #Region " ICollection Implementation "
 
+        ''' <summary>Returns reference to internal IList that should be used to synchronize access to the queue.</summary>
+        ''' <returns>Reference to internal IList that should be used to synchronize access to the queue.</returns>
+        ''' <remarks>
+        ''' <para>
+        ''' Note that all the methods of this class are already individually synchronized, however to safely enumerate through each queue element 
+        ''' (i.e., to make sure list elements don't change during enumeration), derived classes and end users should perform their own
+        ''' synchronization by implementing a SyncLock using this SyncRoot property 
+        ''' </para>
+        ''' <para>
+        ''' We return a typed object for synchronization as an optimization - returning a generic object requires that SyncLock
+        ''' implementations validate that the referenced object is not a value type at run time.
+        ''' </para>
+        ''' </remarks>
+        Public ReadOnly Property SyncRoot() As IList(Of T)
+            Get
+                Return m_processQueue
+            End Get
+        End Property
+
         ''' <summary>Gets an object that can be used to synchronize access to the queue.</summary>
-        ''' <returns>An object that can be used to synchronize access to the queue.  In the default implementation, this property always returns the current instance.</returns>
+        ''' <returns>An object that can be used to synchronize access to the queue.</returns>
         ''' <remarks>
         ''' Note that all the methods of this class are already individually synchronized, however to safely enumerate through each queue element 
         ''' (i.e., to make sure list elements don't change during enumeration), derived classes and end users should perform their own
         ''' synchronization by implementing a SyncLock using this SyncRoot property
         ''' </remarks>
-        Public Overridable ReadOnly Property SyncRoot() As Object Implements ICollection.SyncRoot
+        Private ReadOnly Property ICollectionSyncRoot() As Object Implements ICollection.SyncRoot
             Get
                 Return m_processQueue
             End Get
@@ -2590,7 +2609,7 @@ Namespace Collections
         ''' <summary>Gets a value indicating whether access to the queue is synchronized (thread safe).</summary>
         ''' <returns>true if access to the queue is synchronized (thread safe); otherwise, false.  In the default implementation, this property always returns true.</returns>
         ''' <remarks>This queue is effectively "synchronized" since all functions synclock operations internally</remarks>
-        Public Overridable ReadOnly Property IsSynchronized() As Boolean Implements ICollection.IsSynchronized
+        Public ReadOnly Property IsSynchronized() As Boolean Implements ICollection.IsSynchronized
             Get
                 Return True
             End Get

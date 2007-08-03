@@ -24,7 +24,6 @@ Namespace Measurements
 
         Private m_id As Integer
         Private m_source As String
-        Private m_stringImage As String
         Private m_hashCode As Integer
 
         Public Sub New(ByVal id As Integer, ByVal source As String)
@@ -32,8 +31,8 @@ Namespace Measurements
             If String.IsNullOrEmpty(source) Then Throw New ArgumentNullException("source", "MeasurementKey source cannot be null")
 
             m_id = id
-            m_source = source
-            Regenerate()
+            m_source = source.ToUpper()
+            GenHashCode()
 
         End Sub
 
@@ -44,7 +43,7 @@ Namespace Measurements
             Set(ByVal value As Integer)
                 If m_id <> value Then
                     m_id = value
-                    Regenerate()
+                    GenHashCode()
                 End If
             End Set
         End Property
@@ -54,16 +53,16 @@ Namespace Measurements
                 Return m_source
             End Get
             Set(ByVal value As String)
-                If m_source <> value Then
-                    m_source = value
-                    Regenerate()
+                If String.Compare(m_source, value, True) <> 0 Then
+                    m_source = value.ToUpper()
+                    GenHashCode()
                 End If
             End Set
         End Property
 
         Public Overrides Function ToString() As String
 
-            Return m_stringImage
+            Return String.Format("{0}:{1}", m_source, m_id)
 
         End Function
 
@@ -89,7 +88,7 @@ Namespace Measurements
 
         Public Function CompareTo(ByVal other As MeasurementKey) As Integer Implements System.IComparable(Of MeasurementKey).CompareTo
 
-            Dim sourceCompare As Integer = String.Compare(m_source, other.Source, True)
+            Dim sourceCompare As Integer = String.Compare(m_source, other.Source)
 
             If sourceCompare = 0 Then
                 If m_id < other.ID Then
@@ -113,12 +112,10 @@ Namespace Measurements
 
         End Function
 
-        Private Sub Regenerate()
+        Private Sub GenHashCode()
 
-            ' We cache key elements during construction or after element value change to speed structure usage
-            Dim idImage As String = m_id.ToString()
-            m_hashCode = String.Format("{0}{1}", m_source, idImage.PadLeft(10, "0"c)).GetHashCode()
-            m_stringImage = String.Format("{0}:{1}", m_source, idImage)
+            ' We cache hash code during construction or after element value change to speed structure usage
+            m_hashCode = (m_source & m_id.ToString()).GetHashCode()
 
         End Sub
 

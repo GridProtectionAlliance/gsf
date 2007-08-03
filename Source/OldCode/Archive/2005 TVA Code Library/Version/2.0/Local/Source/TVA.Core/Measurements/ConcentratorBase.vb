@@ -30,6 +30,7 @@
 Imports System.Text
 Imports System.Threading
 Imports TVA.Collections
+Imports TVA.Collections.Common
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 Imports TVA.Math.Common
@@ -151,7 +152,7 @@ Namespace Measurements
             Set(ByVal value As Double)
                 If value <= 0 Then Throw New ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one")
                 m_lagTime = value
-                m_lagTicks = CLng(m_lagTime) * TicksPerSecond
+                m_lagTicks = Convert.ToInt64(m_lagTime) * TicksPerSecond
                 RaiseEvent LagTimeUpdated(m_lagTime)
             End Set
         End Property
@@ -469,7 +470,7 @@ Namespace Measurements
                     ' groups of parsed measurements will typically be coming in from the same source and hence will have the same ticks,
                     ' so if we have already found the destination frame for the same ticks then there's no need to lookup frame again...
                     If frame Is Nothing OrElse ticks <> lastTicks Then
-                        frame = sample.Frames(CInt((ticks - baseTimeTicks) / m_ticksPerFrame))
+                        frame = sample.Frames(Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame))
                         lastTicks = ticks
                     End If
 
@@ -490,7 +491,8 @@ Namespace Measurements
                             frame.LastSortedMeasurement = measurement
                         Else
                             ' We didn't get lock to assign measurement to frame so we queue it up for assignment on an independent thread
-                            ThreadPool.QueueUserWorkItem(AddressOf AssignMeasurementToFrame, New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame))
+                            Dim state As New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame)
+                            ThreadPool.QueueUserWorkItem(AddressOf AssignMeasurementToFrame, state)
                             Interlocked.Increment(m_threadPoolSorts)
                         End If
 
@@ -556,7 +558,11 @@ Namespace Measurements
                     Dim currentSample As Sample
 
                     SyncLock m_sampleQueue.SyncRoot
-                        For x As Integer = 0 To m_sampleQueue.Count - 1
+                        Const MaximumSamplesToDisplay As Integer = 5
+
+                        Dim samplesToDisplay As Integer = Minimum(m_sampleQueue.Count, MaximumSamplesToDisplay)
+
+                        For x As Integer = 0 To samplesToDisplay - 1
                             ' Get next sample
                             currentSample = m_sampleQueue(x).Value
 
@@ -592,7 +598,7 @@ Namespace Measurements
                                 .Append(Environment.NewLine)
                                 .Append(Environment.NewLine)
                                 .Append("       Last measurement = ")
-                                .Append(currentFrame.LastSortedMeasurement.Key)
+                                .Append(Measurement.ToString(currentFrame.LastSortedMeasurement))
 
                                 ' Calculate total time from last measurement ticks
                                 If currentFrame.LastSortTime > 0 Then
@@ -608,6 +614,19 @@ Namespace Measurements
 
                             .Append(Environment.NewLine)
                         Next
+
+                        If m_sampleQueue.Count > MaximumSamplesToDisplay Then
+                            Dim remainingSamples As Integer = m_sampleQueue.Count - MaximumSamplesToDisplay
+                            .Append(Environment.NewLine)
+                            .Append("     ")
+                            .Append(remainingSamples)
+                            If remainingSamples = 1 Then
+                                .Append(" more sample concentrating...")
+                            Else
+                                .Append(" more samples concentrating...")
+                            End If
+                            .Append(Environment.NewLine)
+                        End If
                     End SyncLock
                 End With
 
@@ -653,7 +672,9 @@ Namespace Measurements
                     .Append(m_discardedMeasurements)
                     .Append(Environment.NewLine)
                     .Append("Last discarded measurement: ")
-                    .Append(m_lastDiscardedMeasurement.Key)
+                    .Append(Measurement.ToString(m_lastDiscardedMeasurement))
+                    .Append(" - ")
+                    .Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .Append(Environment.NewLine)
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)

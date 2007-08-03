@@ -251,10 +251,19 @@ Namespace Measurements
 
         Public Overrides Function ToString() As String
 
-            If String.IsNullOrEmpty(m_tagName) Then
-                Return m_key.ToString()
+            Return ToString(Me)
+
+        End Function
+
+        Public Overloads Shared Function ToString(ByVal measurement As IMeasurement) As String
+
+            Dim tagName As String = measurement.TagName
+            Dim keyText As String = measurement.Key.ToString()
+
+            If String.IsNullOrEmpty(tagName) Then
+                Return keyText
             Else
-                Return String.Format("{0} [{1}]", m_tagName, m_key.ToString())
+                Return String.Format("{0} [{1}]", tagName, keyText)
             End If
 
         End Function
