@@ -37,7 +37,7 @@ Public Class TcpClient
 #Region " Member Declaration "
 
     Private m_payloadAware As Boolean
-    Private m_tcpClient As StateKeeper(Of Socket)
+    Private m_tcpClient As StateInfo(Of Socket)
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
 
@@ -230,7 +230,7 @@ Public Class TcpClient
 
                 ' Create a TCP socket and bind it to a local endpoint. Binding the socket will establish a 
                 ' physical presence of the socket necessary for receving data from the server
-                m_tcpClient = New StateKeeper(Of Socket)()
+                m_tcpClient = New StateInfo(Of Socket)()
                 m_tcpClient.ID = MyBase.ClientID
                 m_tcpClient.Passphrase = MyBase.HandshakePassphrase
                 m_tcpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)

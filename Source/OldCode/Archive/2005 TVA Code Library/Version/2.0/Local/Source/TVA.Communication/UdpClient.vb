@@ -43,7 +43,7 @@ Public Class UdpClient
     Private m_payloadAware As Boolean
     Private m_destinationReachableCheck As Boolean
     Private m_udpServer As IPEndPoint
-    Private m_udpClient As StateKeeper(Of Socket)
+    Private m_udpClient As StateInfo(Of Socket)
     Private m_receivingThread As Thread
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
@@ -363,7 +363,7 @@ Public Class UdpClient
                 m_udpServer = GetIpEndPoint(server, remotePort)
 
                 ' Create a UDP socket and bind it to a local endpoint for receiving data.
-                m_udpClient = New StateKeeper(Of Socket)()
+                m_udpClient = New StateInfo(Of Socket)()
                 m_udpClient.ID = MyBase.ClientID
                 m_udpClient.Passphrase = MyBase.HandshakePassphrase
                 m_udpClient.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)

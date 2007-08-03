@@ -38,8 +38,8 @@ Public Class TcpServer
 
     Private m_payloadAware As Boolean
     Private m_tcpServer As Socket
-    Private m_tcpClients As Dictionary(Of Guid, StateKeeper(Of Socket))
-    Private m_pendingTcpClients As List(Of StateKeeper(Of Socket))
+    Private m_tcpClients As Dictionary(Of Guid, StateInfo(Of Socket))
+    Private m_pendingTcpClients As List(Of StateInfo(Of Socket))
     Private m_configurationData As Dictionary(Of String, String)
     Private m_listenerThread As Thread
 
@@ -76,34 +76,24 @@ Public Class TcpServer
         End Set
     End Property
 
-    Public Function GetServerIPEndPoint() As IPEndPoint
+    <Browsable(False)> _
+    Public ReadOnly Property Server() As Socket
+        Get
+            Return m_tcpServer
+        End Get
+    End Property
 
-        If Enabled AndAlso IsRunning Then
-            Return CType(m_tcpServer.LocalEndPoint, IPEndPoint)
-        Else
-            Throw New InvalidOperationException("Server is not operational.")
-        End If
-
-    End Function
-
-    Public Function GetClientIPEndPoint(ByVal clientID As Guid) As IPEndPoint
-
-        If Enabled AndAlso IsRunning Then
-            Dim tcpClient As StateKeeper(Of Socket) = Nothing
+    <Browsable(False)> _
+    Public ReadOnly Property Clients() As List(Of StateInfo(Of Socket))
+        Get
+            Dim clientList As New List(Of StateInfo(Of Socket))()
             SyncLock m_tcpClients
-                m_tcpClients.TryGetValue(clientID, tcpClient)
+                clientList.AddRange(m_tcpClients.Values)
             End SyncLock
 
-            If tcpClient IsNot Nothing Then
-                Return CType(tcpClient.Client.RemoteEndPoint, IPEndPoint)
-            Else
-                Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
-            End If
-        Else
-            Throw New InvalidOperationException("Server is not operational.")
-        End If
-
-    End Function
+            Return clientList
+        End Get
+    End Property
 
 #Region " Overrides "
 
@@ -138,7 +128,7 @@ Public Class TcpServer
 
             ' Diconnect all of the pending clients connections.
             SyncLock m_pendingTcpClients
-                For Each pendingTcpClient As StateKeeper(Of Socket) In m_pendingTcpClients
+                For Each pendingTcpClient As StateInfo(Of Socket) In m_pendingTcpClients
                     If pendingTcpClient IsNot Nothing AndAlso pendingTcpClient.Client IsNot Nothing Then
                         pendingTcpClient.Client.Close()
                     End If
@@ -150,7 +140,7 @@ Public Class TcpServer
 
     Public Overrides Sub DisconnectOne(ByVal clientID As System.Guid)
 
-        Dim tcpClient As StateKeeper(Of Socket) = Nothing
+        Dim tcpClient As StateInfo(Of Socket) = Nothing
         SyncLock m_tcpClients
             m_tcpClients.TryGetValue(clientID, tcpClient)
         End SyncLock
@@ -215,7 +205,7 @@ Public Class TcpServer
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As Guid, ByVal data As Byte())
 
         If Enabled AndAlso IsRunning Then
-            Dim tcpClient As StateKeeper(Of Socket) = Nothing
+            Dim tcpClient As StateInfo(Of Socket) = Nothing
             SyncLock m_tcpClients
                 m_tcpClients.TryGetValue(clientID, tcpClient)
             End SyncLock
@@ -229,6 +219,7 @@ Public Class TcpServer
 
                 ' PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
                 tcpClient.Client.Send(data)
+                tcpClient.LastSendTimestamp = Date.Now
                 '' We'll send data over the wire asynchronously for improved performance.
                 'tcpClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, Nothing, Nothing)
             Else
@@ -294,7 +285,7 @@ Public Class TcpServer
             Do While True
                 If MaximumClients = -1 OrElse ClientIDs.Count < MaximumClients Then
                     ' We can accept incoming client connection requests.
-                    Dim tcpClient As New StateKeeper(Of Socket)()
+                    Dim tcpClient As New StateInfo(Of Socket)()
                     tcpClient.Client = m_tcpServer.Accept()  ' Accept client connection.
                     tcpClient.Client.LingerState = New LingerOption(True, 10)
 
@@ -330,7 +321,7 @@ Public Class TcpServer
     ''' <remarks>This method is meant to be executed on seperate threads.</remarks>
     Private Sub ReceiveClientData(ByVal state As Object)
 
-        Dim tcpClient As StateKeeper(Of Socket) = DirectCast(state, StateKeeper(Of Socket))
+        Dim tcpClient As StateInfo(Of Socket) = DirectCast(state, StateInfo(Of Socket))
         Try
             With tcpClient
                 If Handshake Then
@@ -367,6 +358,7 @@ Public Class TcpServer
                     Do While True
                         ' Receive data into the static buffer.
                         bytesReceived = .Client.Receive(m_buffer, 0, m_buffer.Length, SocketFlags.None)
+                        .LastReceiveTimestamp = Date.Now
 
                         ' We start receiving zero-length data when a TCP connection is disconnected by the 
                         ' opposite party. In such case we must consider ourself disconnected from the client.
@@ -397,6 +389,7 @@ Public Class TcpServer
                         ' Since TCP is a streaming protocol we can receive a part of the available data and
                         ' the remaing data can be received in subsequent receives.
                         bytesReceived = .Client.Receive(.DataBuffer, totalBytesReceived, (.DataBuffer.Length - totalBytesReceived), SocketFlags.None)
+                        .LastReceiveTimestamp = Date.Now
 
                         If bytesReceived = 0 Then Throw New SocketException(10101)
 
@@ -451,7 +444,7 @@ Public Class TcpServer
     ''' </summary>
     ''' <param name="data">The data received from the client.</param>
     ''' <param name="tcpClient">The TCP client who sent the data.</param>
-    Private Sub ProcessReceivedClientData(ByVal data As Byte(), ByVal tcpClient As StateKeeper(Of Socket))
+    Private Sub ProcessReceivedClientData(ByVal data As Byte(), ByVal tcpClient As StateInfo(Of Socket))
 
         If tcpClient.ID = Guid.Empty AndAlso Handshake Then
             ' Authentication is required, but not performed yet. When authentication is required

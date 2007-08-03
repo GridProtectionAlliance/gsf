@@ -38,7 +38,7 @@ Partial Class UdpServer
 
         m_payloadAware = False
         m_destinationReachableCheck = False
-        m_udpClients = New Dictionary(Of Guid, StateKeeper(Of System.Net.IPEndPoint))
+        m_udpClients = New Dictionary(Of Guid, StateInfo(Of System.Net.IPEndPoint))
         MyBase.ConfigurationString = "Port=8888; Clients=255.255.255.255:8888"
         MyBase.Protocol = TransportProtocol.Udp
         MyBase.ReceiveBufferSize = MaximumUdpDatagramSize

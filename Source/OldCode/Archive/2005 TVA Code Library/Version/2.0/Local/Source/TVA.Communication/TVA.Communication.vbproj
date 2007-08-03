@@ -76,7 +76,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Internal Code\CommunicationHelper.vb" />
-    <Compile Include="Internal Code\StateKeeper.vb" />
+    <Compile Include="StateInfo.vb" />
     <Compile Include="SerialClient.Designer.vb">
       <DependentUpon>SerialClient.vb</DependentUpon>
     </Compile>

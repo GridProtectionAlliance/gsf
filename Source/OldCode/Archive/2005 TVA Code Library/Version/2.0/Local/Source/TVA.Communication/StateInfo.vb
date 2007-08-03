@@ -3,15 +3,16 @@
 Imports System.Net.Sockets
 
 ' JRC: Class properties converted to public members for optimization...
-Public Class StateKeeper(Of T)
+Public Class StateInfo(Of T)
 
     Public Client As T
     Public ID As Guid
     Public Passphrase As String
     Public DataBuffer As Byte()
-    Public LastActivityTimestamp As Date
+    Public LastSendTimestamp As Date
+    Public LastReceiveTimestamp As Date
 
-    Public ReadOnly Property This() As StateKeeper(Of T)
+    Public ReadOnly Property This() As StateInfo(Of T)
         Get
             Return Me
         End Get

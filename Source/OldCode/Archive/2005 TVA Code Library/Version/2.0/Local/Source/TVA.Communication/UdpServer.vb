@@ -41,8 +41,8 @@ Public Class UdpServer
 
     Private m_payloadAware As Boolean
     Private m_destinationReachableCheck As Boolean
-    Private m_udpServer As StateKeeper(Of Socket)
-    Private m_udpClients As Dictionary(Of Guid, StateKeeper(Of IPEndPoint))
+    Private m_udpServer As StateInfo(Of Socket)
+    Private m_udpClients As Dictionary(Of Guid, StateInfo(Of IPEndPoint))
     Private m_configurationData As Dictionary(Of String, String)
 
 #End Region
@@ -109,34 +109,24 @@ Public Class UdpServer
         End Set
     End Property
 
-    Public Function GetServerIPEndPoint() As IPEndPoint
-
-        If Enabled AndAlso IsRunning Then
+    <Browsable(False)> _
+    Public ReadOnly Property Server() As IPEndPoint
+        Get
             Return CType(m_udpServer.Client.LocalEndPoint, IPEndPoint)
-        Else
-            Throw New InvalidOperationException("Server is not operational.")
-        End If
+        End Get
+    End Property
 
-    End Function
-
-    Public Function GetClientIPEndPoint(ByVal clientID As Guid) As IPEndPoint
-
-        If Enabled AndAlso IsRunning Then
-            Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
+    <Browsable(False)> _
+    Public ReadOnly Property Clients() As List(Of StateInfo(Of IPEndPoint))
+        Get
+            Dim clientList As New List(Of StateInfo(Of IPEndPoint))()
             SyncLock m_udpClients
-                m_udpClients.TryGetValue(clientID, udpClient)
+                clientList.AddRange(m_udpClients.Values)
             End SyncLock
 
-            If udpClient IsNot Nothing Then
-                Return udpClient.Client
-            Else
-                Throw New ArgumentException("Client ID '" & clientID.ToString() & "' is invalid.")
-            End If
-        Else
-            Throw New InvalidOperationException("Server is not operational.")
-        End If
-
-    End Function
+            Return clientList
+        End Get
+    End Property
 
 #Region " Overrides "
 
@@ -167,7 +157,7 @@ Public Class UdpServer
                 Dim serverPort As Integer = 0
                 If m_configurationData.ContainsKey("port") Then serverPort = Convert.ToInt32(m_configurationData("port"))
 
-                m_udpServer = New StateKeeper(Of Socket)()
+                m_udpServer = New StateInfo(Of Socket)()
                 m_udpServer.ID = ServerID
                 m_udpServer.Passphrase = HandshakePassphrase
                 m_udpServer.Client = New Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
@@ -198,7 +188,7 @@ Public Class UdpServer
                                 clientPort = Convert.ToInt32(clientStringSegments(1))
                             End If
 
-                            Dim udpClient As New StateKeeper(Of IPEndPoint)()
+                            Dim udpClient As New StateInfo(Of IPEndPoint)()
                             udpClient.ID = Guid.NewGuid()
                             udpClient.Client = GetIpEndPoint(clientStringSegments(0), clientPort)
                             SyncLock m_udpClients
@@ -236,7 +226,7 @@ Public Class UdpServer
 
     Public Overrides Sub DisconnectOne(ByVal clientID As System.Guid)
 
-        Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
+        Dim udpClient As StateInfo(Of IPEndPoint) = Nothing
         SyncLock m_udpClients
             m_udpClients.TryGetValue(clientID, udpClient)
         End SyncLock
@@ -312,7 +302,7 @@ Public Class UdpServer
     Protected Overrides Sub SendPreparedDataTo(ByVal clientID As System.Guid, ByVal data As Byte())
 
         If Enabled AndAlso IsRunning Then
-            Dim udpClient As StateKeeper(Of IPEndPoint) = Nothing
+            Dim udpClient As StateInfo(Of IPEndPoint) = Nothing
             SyncLock m_udpClients
                 m_udpClients.TryGetValue(clientID, udpClient)
             End SyncLock
@@ -333,6 +323,7 @@ Public Class UdpServer
 
                     ' PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
                     m_udpServer.Client.SendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client)
+                    udpClient.LastSendTimestamp = Date.Now
                     '' We'll send the data asynchronously for better performance.
                     'm_udpServer.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client, Nothing, Nothing)
                 Next
@@ -394,6 +385,7 @@ Public Class UdpServer
                     ' the datagrams received are not bigger than the receive buffer.
                     Do While True
                         bytesReceived = .Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, clientEndPoint)
+                        .LastReceiveTimestamp = Date.Now
 
                         If m_receiveRawDataFunction IsNot Nothing Then
                             m_receiveRawDataFunction(m_buffer, 0, bytesReceived)
@@ -410,6 +402,7 @@ Public Class UdpServer
                         End If
 
                         bytesReceived = .Client.ReceiveFrom(.DataBuffer, totalBytesReceived, (.DataBuffer.Length - totalBytesReceived), SocketFlags.None, clientEndPoint)
+                        .LastReceiveTimestamp = Date.Now
 
                         If payloadSize = -1 Then
                             payloadSize = PayloadAwareHelper.GetPayloadSize(.DataBuffer)
@@ -454,7 +447,7 @@ Public Class UdpServer
             If TypeOf clientMessage Is HandshakeMessage Then
                 Dim connectedClient As HandshakeMessage = DirectCast(clientMessage, HandshakeMessage)
                 If connectedClient.ID <> Guid.Empty AndAlso connectedClient.Passphrase = HandshakePassphrase Then
-                    Dim udpClient As New StateKeeper(Of IPEndPoint)()
+                    Dim udpClient As New StateInfo(Of IPEndPoint)()
                     udpClient.ID = connectedClient.ID
                     udpClient.Client = CType(senderEndPoint, IPEndPoint)
                     If SecureSession Then udpClient.Passphrase = GenerateKey()
@@ -479,13 +472,13 @@ Public Class UdpServer
                 OnClientDisconnected(disconnectedClient.ID)
             End If
         Else
-            Dim sender As StateKeeper(Of IPEndPoint) = Nothing
+            Dim sender As StateInfo(Of IPEndPoint) = Nothing
             Dim senderIPEndPoint As IPEndPoint = CType(senderEndPoint, IPEndPoint)
             If Not senderIPEndPoint.Equals(GetIpEndPoint(Dns.GetHostName(), Convert.ToInt32(m_configurationData("port")))) Then
                 ' The data received is not something that we might have broadcasted.
                 SyncLock m_udpClients
                     ' So, now we'll find the ID of the client who sent the data.
-                    For Each udpClient As StateKeeper(Of IPEndPoint) In m_udpClients.Values
+                    For Each udpClient As StateInfo(Of IPEndPoint) In m_udpClients.Values
                         If senderIPEndPoint.Equals(udpClient.Client) Then
                             sender = udpClient
                             Exit For

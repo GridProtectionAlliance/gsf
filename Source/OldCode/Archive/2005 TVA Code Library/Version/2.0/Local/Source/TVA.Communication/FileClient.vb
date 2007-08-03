@@ -37,7 +37,7 @@ Public Class FileClient
     Private m_receiveOnDemand As Boolean
     Private m_receiveInterval As Double
     Private m_startingOffset As Long
-    Private m_fileClient As StateKeeper(Of FileStream)
+    Private m_fileClient As StateInfo(Of FileStream)
     Private m_receivingThread As Thread
     Private m_connectionThread As Thread
     Private m_connectionData As Dictionary(Of String, String)
