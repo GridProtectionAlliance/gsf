@@ -492,7 +492,7 @@ Namespace Measurements
                         Else
                             ' We didn't get lock to assign measurement to frame so we queue it up for assignment on an independent thread
                             Dim state As New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame)
-                            ThreadPool.QueueUserWorkItem(AddressOf AssignMeasurementToFrame, state)
+                            ThreadPool.UnsafeQueueUserWorkItem(AddressOf AssignMeasurementToFrame, state)
                             Interlocked.Increment(m_threadPoolSorts)
                         End If
 
