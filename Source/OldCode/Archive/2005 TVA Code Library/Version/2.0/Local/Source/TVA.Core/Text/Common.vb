@@ -21,6 +21,8 @@
 '       and/or display purposes
 '  08/02/2007 - J. Ritchie Carroll
 '       Added a CenterText method for centering strings in console applications or fixed width fonts
+'  08/03/2007 - Pinal C. Patel
+'       Modified the CenterText method to handle multiple lines
 '
 '*******************************************************************************************************
 
@@ -631,22 +633,33 @@ Namespace Text
         ''' </summary>
         Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer, ByVal paddingCharacter As Char) As String
 
-            If value.Length >= maxLength Then
-                ' Truncate excess characters on the right
-                Return value.Substring(0, maxLength)
-            Else
-                Dim remainingSpace As Integer = maxLength - value.Length
-                Dim leftSpaces, rightSpaces As Integer
+            ' If the text to be centered contains multiple lines, we'll center all the lines individually.
+            Dim result As New StringBuilder()
+            Dim lines As String() = value.Split(New String() {Environment.NewLine}, StringSplitOptions.None)
 
-                ' Split remaining space between the left and the right
-                leftSpaces = remainingSpace \ 2
-                rightSpaces = leftSpaces
+            For i As Integer = 0 To lines.Length - 1
+                If lines(i).Length >= maxLength Then
+                    ' Truncate excess characters on the right
+                    result.Append(value.Substring(0, maxLength))
+                Else
+                    Dim remainingSpace As Integer = maxLength - lines(i).Length
+                    Dim leftSpaces, rightSpaces As Integer
 
-                ' Add any remaining odd space to the right (bias text to the left)
-                If remainingSpace Mod 2 > 0 Then rightSpaces += 1
+                    ' Split remaining space between the left and the right
+                    leftSpaces = remainingSpace \ 2
+                    rightSpaces = leftSpaces
 
-                Return Concat(New String(paddingCharacter, leftSpaces), value, New String(paddingCharacter, rightSpaces))
-            End If
+                    ' Add any remaining odd space to the right (bias text to the left)
+                    If remainingSpace Mod 2 > 0 Then rightSpaces += 1
+
+                    result.Append(Concat(New String(paddingCharacter, leftSpaces), lines(i), New String(paddingCharacter, rightSpaces)))
+                End If
+
+                ' We create a new line only if the original text contains multiple lines.
+                If i < lines.Length - 1 Then result.AppendLine()
+            Next
+
+            Return result.ToString()
 
         End Function
 
