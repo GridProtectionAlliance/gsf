@@ -52,20 +52,33 @@ Namespace Text
         ''' <para>This is a replacement for the String.Concat function.  Tests show that the system implemenation of this function is slow:
         ''' http://www.developer.com/net/cplus/article.php/3304901
         ''' </para>
-        ''' <para>Reflection into the mscorlib for this function for all versions up to 2.0 shows that it does simple string addition</para>
         ''' </remarks>
+        <Obsolete("Latest .NET versions of the String.Concat function have been optimized - this function will be removed from future builds of the code library.", False)> _
         Public Shared Function Concat(ByVal ParamArray values As String()) As String
 
             If values Is Nothing Then
                 Return ""
             Else
-                With New StringBuilder
-                    For x As Integer = 0 To values.Length - 1
-                        If Not String.IsNullOrEmpty(values(x)) Then .Append(values(x))
+                If values.Length = 2 Then
+                    Return String.Concat(values(0), values(1))
+                ElseIf values.Length = 3 Then
+                    Return String.Concat(values(0), values(1), values(3))
+                Else
+                    Dim x, size As Integer
+
+                    ' Precalculate needed size of string buffer
+                    For x = 0 To values.Length - 1
+                        If Not String.IsNullOrEmpty(values(x)) Then size += values(x).Length
                     Next
 
-                    Return .ToString
-                End With
+                    With New StringBuilder(size)
+                        For x = 0 To values.Length - 1
+                            If Not String.IsNullOrEmpty(values(x)) Then .Append(values(x))
+                        Next
+
+                        Return .ToString
+                    End With
+                End If
             End If
 
         End Function
@@ -332,7 +345,7 @@ Namespace Text
             If String.IsNullOrEmpty(value) Then Return ""
             If String.IsNullOrEmpty(duplicatedValue) Then Return value
 
-            Dim duplicate As String = Concat(duplicatedValue, duplicatedValue)
+            Dim duplicate As String = String.Concat(duplicatedValue, duplicatedValue)
 
             Do While value.IndexOf(duplicate) > -1
                 value = value.Replace(duplicate, duplicatedValue)
@@ -640,15 +653,21 @@ Namespace Text
         Public Shared Function CenterText(ByVal value As String, ByVal maxLength As Integer, ByVal paddingCharacter As Char) As String
 
             ' If the text to be centered contains multiple lines, we'll center all the lines individually.
+            Static lineDelimiters As String() = New String() {Environment.NewLine}
             Dim result As New StringBuilder()
-            Dim lines As String() = value.Split(New String() {Environment.NewLine}, StringSplitOptions.None)
+            Dim lines As String() = value.Split(lineDelimiters, StringSplitOptions.None)
+            Dim line As String
+            Dim lastLineIndex As Integer = lines.Length - 1
 
-            For i As Integer = 0 To lines.Length - 1
-                If lines(i).Length >= maxLength Then
+            For i As Integer = 0 To lastLineIndex
+                ' Get current line
+                line = lines(i)
+
+                If line.Length >= maxLength Then
                     ' Truncate excess characters on the right
-                    result.Append(value.Substring(0, maxLength))
+                    result.Append(line.Substring(0, maxLength))
                 Else
-                    Dim remainingSpace As Integer = maxLength - lines(i).Length
+                    Dim remainingSpace As Integer = maxLength - line.Length
                     Dim leftSpaces, rightSpaces As Integer
 
                     ' Split remaining space between the left and the right
@@ -658,11 +677,13 @@ Namespace Text
                     ' Add any remaining odd space to the right (bias text to the left)
                     If remainingSpace Mod 2 > 0 Then rightSpaces += 1
 
-                    result.Append(Concat(New String(paddingCharacter, leftSpaces), lines(i), New String(paddingCharacter, rightSpaces)))
+                    result.Append(New String(paddingCharacter, leftSpaces))
+                    result.Append(line)
+                    result.Append(New String(paddingCharacter, rightSpaces))
                 End If
 
                 ' We create a new line only if the original text contains multiple lines.
-                If i < lines.Length - 1 Then result.AppendLine()
+                If i < lastLineIndex Then result.AppendLine()
             Next
 
             Return result.ToString()
