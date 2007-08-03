@@ -672,9 +672,13 @@ Namespace Measurements
                     .Append(m_discardedMeasurements)
                     .Append(Environment.NewLine)
                     .Append("Last discarded measurement: ")
-                    .Append(Measurement.ToString(m_lastDiscardedMeasurement))
-                    .Append(" - ")
-                    .Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                    If m_lastDiscardedMeasurement Is Nothing Then
+                        .Append("<none>")
+                    Else
+                        .Append(Measurement.ToString(m_lastDiscardedMeasurement))
+                        .Append(" - ")
+                        .Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                    End If
                     .Append(Environment.NewLine)
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)
