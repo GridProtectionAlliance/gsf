@@ -32,10 +32,10 @@ Public Class ReferenceMagnitudeCalculator
         Get
             With New StringBuilder
                 .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(" Last calculated magnitude: ")
                 .Append(m_referenceMagnitude)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
             End With

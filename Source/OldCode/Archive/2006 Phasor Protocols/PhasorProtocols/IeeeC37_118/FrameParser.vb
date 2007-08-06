@@ -129,10 +129,10 @@ Namespace IeeeC37_118
                 With New StringBuilder
                     .Append("IEEEC37.118 draft revision: ")
                     .Append([Enum].GetName(GetType(DraftRevision), m_draftRevision))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("         Current time base: ")
                     .Append(TimeBase)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append(MyBase.Status)
 
                     Return .ToString()

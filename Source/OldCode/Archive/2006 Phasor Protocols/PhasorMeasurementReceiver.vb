@@ -219,7 +219,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus(String.Format("Loading expected PMU list for ""{0}"":", source))
 
                         Dim loadedPmuStatus As New StringBuilder
-                        loadedPmuStatus.Append(Environment.NewLine)
+                        loadedPmuStatus.AppendLine()
                         ' Making a connection to a concentrator - this may support multiple PMU's
                         'With RetrieveData(String.Format("SELECT AccessID, Acronym FROM PdcPmus WHERE PdcAcronym='{0}' AND Historian='{1}' ORDER BY IOIndex", source, m_archiverSource), connection)
                         With RetrieveData(String.Format("SELECT PMUIndex, PMUID FROM IEEEDataConnectionPMUs WHERE PlantCode='{0}' AND PDCID='{1}' ORDER BY PMUIndex", m_archiverSource, source), connection)
@@ -238,7 +238,7 @@ Public Class PhasorMeasurementReceiver
                                     'loadedPmuStatus.Append(.Item("AccessID"))
                                     loadedPmuStatus.Append(.Item("PMUIndex"))
                                     loadedPmuStatus.Append(")"c)
-                                    loadedPmuStatus.Append(Environment.NewLine)
+                                    loadedPmuStatus.AppendLine()
                                 End With
                             Next
                         End With
@@ -320,24 +320,24 @@ Public Class PhasorMeasurementReceiver
         Get
             With New StringBuilder
                 .Append(String.Format("Receiver status for historian {0}", HistorianName))
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  Total device connections: ")
                 .Append(m_mappers.Count)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(m_historianAdapter.Status)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .AppendFormat(">> [{0}] Detailed Device Connection Status <<", m_archiverSource)
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
 
                 For Each parser As PhasorMeasurementMapper In m_mappers.Values
                     .Append(parser.Status)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                 Next
 
                 .Append(New String("-"c, 80))
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
 
                 Return .ToString()
             End With

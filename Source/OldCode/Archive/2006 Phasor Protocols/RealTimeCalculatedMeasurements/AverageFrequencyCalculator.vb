@@ -32,10 +32,10 @@ Public Class AverageFrequencyCalculator
         Get
             With New StringBuilder
                 .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(" Last calculated frequency: ")
                 .Append(m_averageFrequency)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
             End With

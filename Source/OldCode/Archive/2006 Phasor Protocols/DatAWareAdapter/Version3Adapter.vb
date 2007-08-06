@@ -48,7 +48,6 @@ Public Class Version3Adapter
         m_archiverIP = "127.0.0.1"
         m_archiverPort = 1003
         m_maximumEvents = 100000
-        m_waitHandle = New AutoResetEvent(False)
 
     End Sub
 
@@ -81,21 +80,29 @@ Public Class Version3Adapter
 
     Protected Overrides Sub AttemptConnection()
 
-        ' Connect to DatAWare archiver using TCP
-        m_connection = New TcpClient("server=" & m_archiverIP & "; port=" & m_archiverPort)
-        m_connection.MaximumConnectionAttempts = 1
-        m_connection.PayloadAware = True
-        m_connection.Handshake = False
-        'm_connection.HandshakePassphrase = "DatAWareArchiver"
+        Try
+            ' Connect to DatAWare archiver using TCP
+            m_connection = New TcpClient("server=" & m_archiverIP & "; port=" & m_archiverPort)
+            m_connection.MaximumConnectionAttempts = 1
+            m_connection.PayloadAware = True
+            m_connection.Handshake = False
+            'm_connection.HandshakePassphrase = "DatAWareArchiver"
 
-        m_connectionException = Nothing
-        m_connection.Connect()
+            m_connectionException = Nothing
+            m_connection.Connect()
 
-        ' Wait until connection is finished (by success or failure)...
-        m_waitHandle.WaitOne()
+            ' Create a new auto-resetting wait event
+            m_waitHandle = New AutoResetEvent(False)
 
-        ' If there was a connection exception, re-throw to restart connect cycle
-        If m_connectionException IsNot Nothing Then Throw m_connectionException
+            ' Wait until connection is finished (by success or failure)...
+            m_waitHandle.WaitOne()
+
+            ' If there was a connection exception, re-throw to restart connect cycle
+            If m_connectionException IsNot Nothing Then Throw m_connectionException
+        Finally
+            ' Delete wait handle - only needed while connecting
+            m_waitHandle = Nothing
+        End Try
 
     End Sub
 
@@ -146,14 +153,14 @@ Public Class Version3Adapter
     Private Sub m_connection_Connected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.Connected
 
         ' Signal completion of connection cycle
-        m_waitHandle.Set()
+        If m_waitHandle IsNot Nothing Then m_waitHandle.Set()
 
     End Sub
 
     Private Sub m_connection_ConnectingCancelled(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.ConnectingCancelled
 
         ' Signal completion of connection cycle
-        m_waitHandle.Set()
+        If m_waitHandle IsNot Nothing Then m_waitHandle.Set()
 
     End Sub
 
@@ -163,16 +170,22 @@ Public Class Version3Adapter
         m_connectionException = e.Argument
 
         ' Signal completion of connection cycle
-        m_waitHandle.Set()
+        If m_waitHandle IsNot Nothing Then m_waitHandle.Set()
 
     End Sub
 
     Private Sub m_connection_Disconnected(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_connection.Disconnected
 
-        ' Signal completion of connection cycle
-        m_waitHandle.Set()
+        If m_waitHandle Is Nothing Then
+            ' Make sure connection cycle gets restarted when we get disconnected from archiver...
+            Connect()
+        Else
+            ' Socket was disconnected during connection attempt
+            m_connectionException = New InvalidOperationException("Socket disconnected during connection attempt.")
 
-        Connect()
+            ' Signal completion of connection cycle
+            m_waitHandle.Set()
+        End If
 
     End Sub
 

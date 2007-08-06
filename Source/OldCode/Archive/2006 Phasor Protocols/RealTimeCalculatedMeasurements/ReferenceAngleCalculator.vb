@@ -81,7 +81,7 @@ Public Class ReferenceAngleCalculator
 
             With New StringBuilder
                 .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  Last " & ValuesToShow & " calculated angles: ")
                 SyncLock m_latestCalculatedAngles
                     If m_latestCalculatedAngles.Count > ValuesToShow Then
@@ -90,7 +90,7 @@ Public Class ReferenceAngleCalculator
                         .Append("Not enough values calculated yet...")
                     End If
                 End SyncLock
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
             End With

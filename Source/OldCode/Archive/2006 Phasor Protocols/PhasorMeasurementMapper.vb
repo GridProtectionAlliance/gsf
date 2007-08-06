@@ -160,22 +160,22 @@ Public Class PhasorMeasurementMapper
             With New StringBuilder
                 .Append("Phasor Data Parsing Connection for ")
                 .Append(Name)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(m_frameParser.Status)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ")
-                .Append(CenterText("Parsed Frame Quality Statistics", 64))
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
-                '                   1         2         3         4         5         6
-                '          1234567890123456789012345678901234567890123456789012345678901234
-                .Append("  Device                 Bad Data  Bad Time   Frame    Last Report")
-                .Append(Environment.NewLine)
-                .Append("   Name                   Frames    Frames    Errors      Time")
-                .Append(Environment.NewLine)
-                '          1234567890123456789012 123456789 123456789 123456789
-                .Append("  ---------------------- --------- --------- --------- ------------")
-                .Append(Environment.NewLine)
+                .Append(CenterText("Parsed Frame Quality Statistics", 78))
+                .AppendLine()
+                .AppendLine()
+                '                   1         2         3         4         5         6         7
+                '          123456789012345678901234567890123456789012345678901234567890123456789012345678
+                .Append("  Device                  Bad Data   Bad Time    Frame      Total    Last Report")
+                .AppendLine()
+                .Append("   Name                    Frames     Frames     Errors     Frames      Time")
+                .AppendLine()
+                '          1234567890123456789012 1234567890 1234567890 1234567890 1234567890 123456789012
+                .Append("  ---------------------- ---------- ---------- ---------- ---------- ------------")
+                .AppendLine()
 
                 Dim pmu As IConfigurationCell
                 Dim stationName As String
@@ -189,20 +189,22 @@ Public Class PhasorMeasurementMapper
                     .Append("  ")
                     .Append(TruncateRight(stationName, 22).PadRight(22))
                     .Append(" "c)
-                    .Append(CenterText(cell.TotalDataQualityErrors.ToString(), 9))
+                    .Append(CenterText(cell.TotalDataQualityErrors.ToString(), 10))
                     .Append(" "c)
-                    .Append(CenterText(cell.TotalTimeQualityErrors.ToString(), 9))
+                    .Append(CenterText(cell.TotalTimeQualityErrors.ToString(), 10))
                     .Append(" "c)
-                    .Append(CenterText(cell.TotalPmuErrors.ToString(), 9))
+                    .Append(CenterText(cell.TotalPmuErrors.ToString(), 10))
+                    .Append(" "c)
+                    .Append(CenterText(cell.TotalFrames.ToString(), 10))
                     .Append(" "c)
                     .Append((New Date(cell.LastReportTime)).ToString("HH:mm:ss.fff"))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                 Next
 
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("Undefined PMUs Encountered: ")
                 .Append(m_undefinedPmus.Count)
-                .Append(Environment.NewLine)
+                .AppendLine()
 
                 SyncLock m_undefinedPmus
                     For Each item As KeyValuePair(Of String, Long) In m_undefinedPmus
@@ -211,7 +213,7 @@ Public Class PhasorMeasurementMapper
                         .Append(""" encountered ")
                         .Append(item.Value)
                         .Append(" times")
-                        .Append(Environment.NewLine)
+                        .AppendLine()
                     Next
                 End SyncLock
 
@@ -378,6 +380,7 @@ Public Class PhasorMeasurementMapper
                 If ticks > m_lastReportTime Then m_lastReportTime = ticks
 
                 ' Track quality statistics for this PMU
+                pmu.TotalFrames += 1
                 If Not dataCell.DataIsValid Then pmu.TotalDataQualityErrors += 1
                 If Not dataCell.SynchronizationIsValid Then pmu.TotalTimeQualityErrors += 1
                 If dataCell.PmuError Then pmu.TotalPmuErrors += 1

@@ -17,6 +17,7 @@
 
 Imports System.Text
 Imports System.Threading
+Imports System.Runtime.CompilerServices
 Imports TVA.Measurements
 
 Public MustInherit Class HistorianAdapterBase
@@ -35,7 +36,6 @@ Public MustInherit Class HistorianAdapterBase
     Private m_measurementQueue As List(Of IMeasurement)
     Private m_dataProcessingThread As Thread
     Private m_processedMeasurements As Long
-    Private m_updateProcessCountLock As Object
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_monitorTimer As Timers.Timer
 
@@ -44,7 +44,6 @@ Public MustInherit Class HistorianAdapterBase
     Public Sub New()
 
         m_measurementQueue = New List(Of IMeasurement)
-        m_updateProcessCountLock = New Object
 
         m_connectionTimer = New Timers.Timer
 
@@ -83,7 +82,7 @@ Public MustInherit Class HistorianAdapterBase
     Private Sub m_connectionTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_connectionTimer.Elapsed
 
         Try
-            UpdateStatus("Starting connection attempt to " & Name & "...")
+            UpdateStatus(String.Format("Starting connection attempt to {0}...", Name))
 
             ' Attempt connection to historian (consumer to call historian API connect function)
             ' This must happen before aborting data processing thread to keep disconnect from failing
@@ -94,9 +93,9 @@ Public MustInherit Class HistorianAdapterBase
             m_dataProcessingThread = New Thread(AddressOf ProcessMeasurements)
             m_dataProcessingThread.Start()
 
-            UpdateStatus("Connection to " & Name & " established.")
+            UpdateStatus(String.Format("Connection to {0} established.", Name))
         Catch ex As Exception
-            UpdateStatus("WARNING: Connection to " & Name & " failed: " & ex.Message)
+            UpdateStatus(String.Format("WARNING: Connection to {0} failed: {1}", Name, ex.Message))
             Connect()
         End Try
 
@@ -115,11 +114,12 @@ Public MustInherit Class HistorianAdapterBase
                 m_dataProcessingThread.Abort()
                 performedDisconnect = True
             End If
+
             m_dataProcessingThread = Nothing
 
-            If performedDisconnect Then UpdateStatus("Disconnected from " & Name)
+            If performedDisconnect Then UpdateStatus(String.Format("Disconnected from {0}", Name))
         Catch ex As Exception
-            UpdateStatus("Exception occured during disconnect from " & Name & ": " & ex.Message)
+            UpdateStatus(String.Format("Exception occured during disconnect from {0}: {1}", Name, ex.Message))
         End Try
 
     End Sub
@@ -161,20 +161,19 @@ Public MustInherit Class HistorianAdapterBase
 
     'End Sub
 
+    ' Since multiple threads may be calling this status update at the same time, we synchronize access to this code to prevent
+    ' multiple messages being displayed at nearly the same time - we do this using the method implementation attribute
+    <MethodImpl(MethodImplOptions.Synchronized)> _
     Private Sub IncrementProcessedMeasurements(ByVal state As Object)
 
-        ' Since multiple threads may be calling this status update at the same time, we synchronize access to this code to prevent
-        ' multiple messages being displayed at nearly the same time
-        SyncLock m_updateProcessCountLock
-            ' Check to see if total number of added points will exceed process interval used to show periodic
-            ' messages of how many points have been archived so far...
-            Dim totalAdded As Integer = CInt(state)
-            Dim showMessage As Boolean = (m_processedMeasurements + totalAdded >= (m_processedMeasurements \ ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval)
+        ' Check to see if total number of added points will exceed process interval used to show periodic
+        ' messages of how many points have been archived so far...
+        Dim totalAdded As Integer = Convert.ToInt32(state)
+        Dim showMessage As Boolean = (m_processedMeasurements + totalAdded >= (m_processedMeasurements \ ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval)
 
-            m_processedMeasurements += totalAdded
+        m_processedMeasurements += totalAdded
 
-            If showMessage Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
-        End SyncLock
+        If showMessage Then UpdateStatus(String.Format("{0:N0} measurements have been queued for archival so far...", m_processedMeasurements))
 
     End Sub
 
@@ -215,15 +214,15 @@ Public MustInherit Class HistorianAdapterBase
                 Else
                     .Append("Active")
                 End If
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  Queued measurement count: ")
                 SyncLock m_measurementQueue
                     .Append(m_measurementQueue.Count)
                 End SyncLock
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("     Archived measurements: ")
                 .Append(m_processedMeasurements)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 Return .ToString()
             End With
         End Get

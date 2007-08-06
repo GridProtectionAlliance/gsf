@@ -362,7 +362,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                 .Append("Operational Status for ")
                 .Append(Name)
                 .Append(":"c)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 If m_communicationServer IsNot Nothing Then
                     .Append(m_communicationServer.Status)
                 End If

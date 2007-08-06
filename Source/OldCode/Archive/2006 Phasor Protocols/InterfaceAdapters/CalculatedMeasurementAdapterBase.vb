@@ -178,7 +178,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                     .Append(ListToString(outputMeasurements, ","c))
                     .Append(",...")
                 End If
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("    Input measurement ID's: ")
                 If m_inputMeasurementKeys.Length <= MaxMeasurementsToShow Then
                     .Append(ListToString(m_inputMeasurementKeys, ","c))
@@ -188,10 +188,10 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                     .Append(ListToString(inputMeasurements, ","c))
                     .Append(",...")
                 End If
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(" Minimum measurements used: ")
                 .Append(m_minimumMeasurementsToUse)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
             End With

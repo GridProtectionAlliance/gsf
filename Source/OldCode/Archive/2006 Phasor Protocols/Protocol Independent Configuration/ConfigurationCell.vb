@@ -28,6 +28,7 @@ Public Class ConfigurationCell
     ' We add statistic tracking and cached signal type information to our protocol independent configuration cell
     Private m_lastReportTime As Long
     Private m_signalSynonyms As Dictionary(Of SignalType, String())
+    Private m_totalFrames As Long
     Private m_totalDataQualityErrors As Long
     Private m_totalTimeQualityErrors As Long
     Private m_totalPmuErrors As Long
@@ -132,6 +133,15 @@ Public Class ConfigurationCell
         End Get
         Set(ByVal value As Long)
             m_lastReportTime = value
+        End Set
+    End Property
+
+    Public Property TotalFrames() As Long
+        Get
+            Return m_totalFrames
+        End Get
+        Set(ByVal value As Long)
+            m_totalFrames = value
         End Set
     End Property
 

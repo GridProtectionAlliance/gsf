@@ -197,7 +197,7 @@ Public Class CumberlandPowerDeviationCalculator
 
             With New StringBuilder
                 .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  Latest " & ValuesToShow & " MegaWatt values: ")
                 SyncLock m_latestMegaWatts
                     If m_latestMegaWatts.Count > ValuesToShow Then
@@ -206,7 +206,7 @@ Public Class CumberlandPowerDeviationCalculator
                         .Append("Not enough values calculated yet...")
                     End If
                 End SyncLock
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
             End With

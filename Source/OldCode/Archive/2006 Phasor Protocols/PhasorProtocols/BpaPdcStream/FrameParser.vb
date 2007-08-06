@@ -148,14 +148,14 @@ Namespace BpaPdcStream
                 With New StringBuilder
                     .Append("    INI configuration file: ")
                     .Append(m_configurationFileName)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     If m_configurationFrame IsNot Nothing Then
                         .Append("       BPA PDC stream type: ")
                         .Append([Enum].GetName(GetType(StreamType), m_configurationFrame.StreamType))
-                        .Append(Environment.NewLine)
+                        .AppendLine()
                         .Append("   BPA PDC revision number: ")
                         .Append([Enum].GetName(GetType(RevisionNumber), m_configurationFrame.RevisionNumber))
-                        .Append(Environment.NewLine)
+                        .AppendLine()
                     End If
                     .Append(MyBase.Status)
 

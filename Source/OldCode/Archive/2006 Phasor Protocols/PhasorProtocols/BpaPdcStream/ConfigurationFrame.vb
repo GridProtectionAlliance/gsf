@@ -440,12 +440,12 @@ Namespace BpaPdcStream
                         .Append("PhasorV=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorV) & Environment.NewLine)
                         .Append("PhasorI=" & PhasorDefinition.ConfigFileFormat(DefaultPhasorI) & Environment.NewLine)
                         .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(DefaultFrequency) & Environment.NewLine)
-                        .Append(Environment.NewLine)
+                        .AppendLine()
 
                         .Append("[CONFIG]" & Environment.NewLine)
                         .Append("SampleRate=" & FrameRate & Environment.NewLine)
                         .Append("NumberOfPMUs=" & Cells.Count & Environment.NewLine)
-                        .Append(Environment.NewLine)
+                        .AppendLine()
 
                         For x As Int32 = 0 To Cells.Count - 1
                             .Append("[" & Cells(x).IDLabel & "]" & Environment.NewLine)
@@ -456,7 +456,7 @@ Namespace BpaPdcStream
                                 .Append("Phasor" & (y + 1) & "=" & PhasorDefinition.ConfigFileFormat(Cells(x).PhasorDefinitions(y)) & Environment.NewLine)
                             Next
                             .Append("Frequency=" & FrequencyDefinition.ConfigFileFormat(Cells(x).FrequencyDefinition) & Environment.NewLine)
-                            .Append(Environment.NewLine)
+                            .AppendLine()
                         Next
 
                         Return .ToString()

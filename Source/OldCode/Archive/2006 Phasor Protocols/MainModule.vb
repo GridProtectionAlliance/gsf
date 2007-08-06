@@ -132,7 +132,7 @@ Module MainModule
                 Exit Do
             Else
                 With New StringBuilder
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("Command unrecognized.  ")
                     .Append(CommandList)
 
@@ -674,28 +674,28 @@ Module MainModule
         Get
             With New StringBuilder
                 .Append(EntryAssembly.Title)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("   Assembly: ")
                 .Append(EntryAssembly.Name)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("    Version: ")
                 .Append(EntryAssembly.Version)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("   Location: ")
                 .Append(EntryAssembly.Location)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("    Created: ")
                 .Append(EntryAssembly.BuildDate)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("    NT User: ")
                 .Append(WindowsIdentity.GetCurrent.Name)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("    Runtime: ")
                 .Append(EntryAssembly.ImageRuntimeVersion)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("    Started: ")
                 .Append(DateTime.Now.ToString())
-                .Append(Environment.NewLine)
+                .AppendLine()
 
                 Return .ToString()
             End With
@@ -705,36 +705,36 @@ Module MainModule
     Private ReadOnly Property SystemStatus() As String
         Get
             With New StringBuilder
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
                 .Append("*** Phasor Measurement Receivers (one per historian) ***")
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
 
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
                     .Append(receiver.Status)
                 Next
 
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("*** Calculated Measurement Adapters ***")
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
 
                 For Each calculation As ICalculatedMeasurementAdapter In m_calculatedMeasurements
                     .Append(calculation.Status)
                 Next
 
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
                 .Append("*** Phasor Data Concentrators ***")
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
 
                 For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
                     .Append(concentrator.Status)
                 Next
 
-                .Append(Environment.NewLine)
+                .AppendLine()
 
                 Return .ToString()
             End With
@@ -744,22 +744,22 @@ Module MainModule
     Private ReadOnly Property ConnectionList() As String
         Get
             With New StringBuilder
-                .Append(Environment.NewLine)
+                .AppendLine()
 
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
                     .Append("Receiver for historian ")
                     .Append(receiver.HistorianName)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append(">> PMU/PDC Connection List (")
                     .Append(receiver.Mappers.Count)
                     .Append(" Total)")
-                    .Append(Environment.NewLine)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
+                    .AppendLine()
 
                     .Append("  Last Data Report Time:   PDC/PMU [PMU list]:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("  ------------------------ ----------------------------------------------------")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     '          01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
                     '          >> SourceName awaiting config frame - 1000 bytes received
                     '          ** SourceName is not connected
@@ -772,24 +772,24 @@ Module MainModule
                                 .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                                 .Append(" "c)
                                 .Append(mapper.Name(6))
-                                .Append(Environment.NewLine)
+                                .AppendLine()
                             Else
                                 .Append(">> ")
                                 .Append(mapper.Name)
                                 .Append(" awaiting config frame - ")
                                 .Append(mapper.TotalBytesReceived)
                                 .Append(" bytes received")
-                                .Append(Environment.NewLine)
+                                .AppendLine()
                             End If
                         Else
                             .Append("** ")
                             .Append(mapper.Name)
                             .Append(" is not connected")
-                            .Append(Environment.NewLine)
+                            .AppendLine()
                         End If
                     Next
 
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                 Next
 
                 Return .ToString()
@@ -801,35 +801,35 @@ Module MainModule
         Get
             With New StringBuilder
                 .Append("Possible commands:")
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
                 .Append("  ""Connect PmuID""                 - Restarts PMU connection cycle")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""Disconnect PmuID""              - Terminates PMU connection")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""SendCommand PmuID DisableData"" - Turns off real-time data")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""SendCommand PmuID EnableData""  - Turns on real-time data")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""SendCommand PmuID GetConfig""   - Requests configuration frame")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""Reload""                        - Reloads the entire service process")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""ReconnectAll""                  - Reconnects archives and phasor devices")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""GC""                            - Force .NET Garbage Collection")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""Status""                        - Returns current service status")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""List""                          - Displays loaded PMU/PDC connections")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""Version""                       - Displays service version information")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""Help""                          - Displays this help information")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("  ""Exit""                          - Exits this console monitor")
-                .Append(Environment.NewLine)
-                .Append(Environment.NewLine)
+                .AppendLine()
+                .AppendLine()
 
                 Return .ToString()
             End With

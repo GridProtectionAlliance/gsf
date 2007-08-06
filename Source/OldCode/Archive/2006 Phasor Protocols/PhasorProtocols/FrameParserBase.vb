@@ -174,39 +174,39 @@ Public MustInherit Class FrameParserBase
                 Else
                     .Append("Idle")
                 End If
-                .Append(Environment.NewLine)
+                .AppendLine()
                 If ProtocolUsesSyncByte Then
                     .Append(" Data synchronization byte: 0x")
                     .Append(ProtocolSyncByte.ToString("X"c))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                 End If
                 .Append("     Received config frame: ")
                 .Append(IIf(ConfigurationFrame Is Nothing, "No", "Yes"))
-                .Append(Environment.NewLine)
+                .AppendLine()
                 If ConfigurationFrame IsNot Nothing Then
                     .Append("   Devices in config frame: ")
                     .Append(ConfigurationFrame.Cells.Count)
                     .Append(" total - ")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     For x As Integer = 0 To ConfigurationFrame.Cells.Count - 1
                         .Append("               (")
                         .Append(ConfigurationFrame.Cells(x).IDCode)
                         .Append(") ")
                         .Append(ConfigurationFrame.Cells(x).StationName)
-                        .Append(Environment.NewLine)
+                        .AppendLine()
                     Next
                     .Append("     Configured frame rate: ")
                     .Append(ConfigurationFrame.FrameRate)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                 End If
                 .Append("  Parsing execution source: ")
                 If m_executeParseOnSeparateThread Then
                     .Append("Independent thread using queued data")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append(m_bufferQueue.Status)
                 Else
                     .Append("Communications thread")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                 End If
 
                 Return .ToString()

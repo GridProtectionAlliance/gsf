@@ -139,7 +139,7 @@ Public Class EventDetectTrigger
         Get
             With New StringBuilder
                 .Append(Name & " Status:")
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
             End With
