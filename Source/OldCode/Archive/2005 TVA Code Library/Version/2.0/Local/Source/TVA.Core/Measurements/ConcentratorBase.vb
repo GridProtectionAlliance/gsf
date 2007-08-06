@@ -68,6 +68,7 @@ Namespace Measurements
         Private m_frameIndex As Integer                                         ' Current publishing frame index
         Private m_realTimeTicks As Long                                         ' Ticks of the most recently received measurement
         Private m_useLocalClockAsRealTime As Boolean                            ' Determines whether or not to use local system clock as "real-time"
+        Private m_totalMeasurements As Long                                     ' Total number of measurements ever requested for sorting
         Private m_measurementsSortedByArrival As Long                           ' Total number of measurements that were sorted by arrival
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
@@ -339,6 +340,13 @@ Namespace Measurements
 
         End Function
 
+        ''' <summary>Total number of measurements that have ever been requested for sorting</summary>
+        Public ReadOnly Property TotalMeasurements() As Long
+            Get
+                Return m_totalMeasurements
+            End Get
+        End Property
+
         ''' <summary>Total number of measurements that have been discarded because of old timestamps (i.e., measurements that were outside the time deviation tolerance from base time - past or future)</summary>
         Public ReadOnly Property DiscardedMeasurements() As Long
             Get
@@ -407,6 +415,9 @@ Namespace Measurements
             Dim lastTicks As Long
             Dim baseTimeTicks As Long
             Dim distance As Double
+
+            ' Track total number of measurements requested for sorting
+            Interlocked.Add(m_totalMeasurements, measurements.Count)
 
             ' Measurements usually come in groups - so we process all available measurements in the collection here directly as an
             ' optimization which avoids the overhead of a function call for each measurement
@@ -566,7 +577,7 @@ Namespace Measurements
                             ' Get next sample
                             currentSample = m_sampleQueue(x).Value
 
-                            .Append(Environment.NewLine)
+                            .AppendLine()
                             .Append("     Sample ")
                             .Append(x)
                             .Append(" @ ")
@@ -581,8 +592,8 @@ Namespace Measurements
 
                                 ' Append current frame detail
                                 .Append("publishing...")
-                                .Append(Environment.NewLine)
-                                .Append(Environment.NewLine)
+                                .AppendLine()
+                                .AppendLine()
                                 .Append("       Current frame = ")
                                 .Append(m_frameIndex + 1)
                                 .Append(" - sort time: ")
@@ -595,8 +606,8 @@ Namespace Measurements
                                     .Append("undetermined")
                                 End If
 
-                                .Append(Environment.NewLine)
-                                .Append(Environment.NewLine)
+                                .AppendLine()
+                                .AppendLine()
                                 .Append("       Last measurement = ")
                                 .Append(Measurement.ToString(currentFrame.LastSortedMeasurement))
 
@@ -612,12 +623,12 @@ Namespace Measurements
                                 .Append("concentrating...")
                             End If
 
-                            .Append(Environment.NewLine)
+                            .AppendLine()
                         Next
 
                         If m_sampleQueue.Count > MaximumSamplesToDisplay Then
                             Dim remainingSamples As Integer = m_sampleQueue.Count - MaximumSamplesToDisplay
-                            .Append(Environment.NewLine)
+                            .AppendLine()
                             .Append("     ")
                             .Append(remainingSamples)
                             If remainingSamples = 1 Then
@@ -625,7 +636,7 @@ Namespace Measurements
                             Else
                                 .Append(" more samples concentrating...")
                             End If
-                            .Append(Environment.NewLine)
+                            .AppendLine()
                         End If
                     End SyncLock
                 End With
@@ -638,39 +649,42 @@ Namespace Measurements
                     Else
                         .Append("Disabled")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("          Defined lag time: ")
                     .Append(m_lagTime)
                     .Append(" seconds")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("         Defined lead time: ")
                     .Append(m_leadTime)
                     .Append(" seconds")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("          Local clock time: ")
                     .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("  Using clock as real-time: ")
                     .Append(m_useLocalClockAsRealTime)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     If Not m_useLocalClockAsRealTime Then
                         .Append("      Local clock accuracy: ")
                         .Append(DistanceFromRealTime(Date.UtcNow.Ticks).ToString("0.0000"))
                         .Append(" second deviation from lastest time")
-                        .Append(Environment.NewLine)
+                        .AppendLine()
                     End If
                     .Append("         Publishing sample: ")
                     .Append(publishingSampleTimestamp.ToString("dd-MMM-yyyy HH:mm:ss"))
                     .Append(", ")
                     .Append(TicksToSeconds(currentTime.Ticks - publishingSampleTimestamp.Ticks).ToString("0"))
                     .Append(" second deviation")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
+                    .Append("        Total measurements: ")
+                    .Append(m_totalMeasurements)
+                    .AppendLine()
                     .Append("    Published measurements: ")
                     .Append(m_publishedMeasurements)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("    Discarded measurements: ")
                     .Append(m_discardedMeasurements)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("Last discarded measurement: ")
                     If m_lastDiscardedMeasurement Is Nothing Then
                         .Append("<none>")
@@ -679,50 +693,50 @@ Namespace Measurements
                         .Append(" - ")
                         .Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   Total thread pool sorts: ")
                     .Append(m_threadPoolSorts)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   Missed sorts by timeout: ")
                     .Append(m_missedSortsByLockTimeout)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("Average sorting time/frame: ")
                     .Append(AverageSortingTimePerFrame.ToString("0.0000"))
                     .Append(" seconds")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("Published measurement loss: ")
-                    .Append((m_discardedMeasurements / NotLessThan(m_publishedMeasurements, m_discardedMeasurements)).ToString("##0.0000%"))
-                    .Append(Environment.NewLine)
+                    .Append((m_discardedMeasurements / m_totalMeasurements).ToString("##0.0000%"))
+                    .AppendLine()
                     .Append(" Loss due to lock timeouts: ")
-                    .Append((m_missedSortsByLockTimeout / NotLessThan(m_publishedMeasurements, m_missedSortsByLockTimeout)).ToString("##0.0000%"))
-                    .Append(Environment.NewLine)
+                    .Append((m_missedSortsByLockTimeout / m_totalMeasurements).ToString("##0.0000%"))
+                    .AppendLine()
                     .Append("   Thread pool utilization: ")
-                    .Append((m_threadPoolSorts / NotLessThan(m_publishedMeasurements, m_threadPoolSorts)).ToString("##0.0000%"))
-                    .Append(Environment.NewLine)
+                    .Append((m_threadPoolSorts / m_totalMeasurements).ToString("##0.0000%"))
+                    .AppendLine()
                     .Append(" Measurement time accuracy: ")
-                    .Append((1.0R - m_measurementsSortedByArrival / NotLessThan(m_publishedMeasurements, m_measurementsSortedByArrival)).ToString("##0.0000%"))
-                    .Append(Environment.NewLine)
+                    .Append((1.0R - m_measurementsSortedByArrival / m_totalMeasurements).ToString("##0.0000%"))
+                    .AppendLine()
                     .Append("    Total published frames: ")
                     .Append(m_publishedFrames)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("        Defined frame rate: ")
                     .Append(m_framesPerSecond)
                     .Append(" frames/sec, ")
                     .Append(m_ticksPerFrame.ToString("0.00"))
                     .Append(" ticks/frame")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("    Actual mean frame rate: ")
                     .Append((m_publishedFrames / (m_sampleQueue.RunTime - m_lagTime)).ToString("0.00"))
                     .Append(" frames/sec")
-                    .Append(Environment.NewLine)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
+                    .AppendLine()
                     .Append("Current sample detail:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append(sampleDetail.ToString)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
 
                     Return .ToString()
                 End With

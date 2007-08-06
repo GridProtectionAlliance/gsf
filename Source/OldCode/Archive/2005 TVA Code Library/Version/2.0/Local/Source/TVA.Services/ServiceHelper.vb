@@ -1206,12 +1206,12 @@ Public Class ServiceHelper
 
         With New StringBuilder()
             .Append(String.Format("Status of components used by {0}:", m_service.ServiceName))
-            .Append(Environment.NewLine)
+            .AppendLine()
             For Each serviceComponent As IServiceComponent In m_serviceComponents
                 If serviceComponent IsNot Nothing Then
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append(String.Format("Status of {0}:", serviceComponent.Name))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append(serviceComponent.Status)
                 End If
             Next

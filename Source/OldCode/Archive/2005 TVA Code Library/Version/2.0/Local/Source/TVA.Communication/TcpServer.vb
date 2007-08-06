@@ -247,7 +247,7 @@ Public Class TcpServer
                 ' Configuration string is not in the expected format.
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   Port=Local port number")
                     Throw New ArgumentException(.ToString())
                 End With

@@ -351,9 +351,9 @@ Public Class UdpServer
                 ' Configuration string is not in the expected format.
                 With New StringBuilder()
                     .Append("Configuration string must be in the following format:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   [Port=Local port number;] [Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]]")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("Text between square brackets, [...], is optional.")
                     Throw New ArgumentException(.ToString())
                 End With

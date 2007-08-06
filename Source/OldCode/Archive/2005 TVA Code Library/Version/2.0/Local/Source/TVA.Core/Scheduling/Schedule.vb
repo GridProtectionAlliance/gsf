@@ -160,13 +160,13 @@ Namespace Scheduling
                 With New System.Text.StringBuilder()
                     .Append("             Schedule name: ")
                     .Append(m_name)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("             Schedule rule: ")
                     .Append(Rule)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("             Last run time: ")
                     .Append(IIf(m_lastDueAt = System.DateTime.MinValue, "Never", m_lastDueAt))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
 
                     Return .ToString()
                 End With

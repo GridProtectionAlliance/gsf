@@ -132,7 +132,7 @@ Public Class SerialClient
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   Port=[Name of the COM port]; BaudRate=[9600|4800|2400|1200]; Parity=[None|Odd|Even|Mark|Space]; StopBits=[None|One|Two|OnePointFive]; DataBits=[Number of data bits per byte]")
                     Throw New ArgumentException(.ToString())
                 End With

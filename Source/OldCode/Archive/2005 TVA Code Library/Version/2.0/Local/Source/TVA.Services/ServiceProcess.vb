@@ -104,27 +104,27 @@ Public Class ServiceProcess
             With New StringBuilder()
                 .Append("              Process Name: ")
                 .Append(m_name)
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("             Current State: ")
                 .Append(m_currentState.ToString())
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("      Execution Start Time: ")
                 If m_executionStartTime <> Date.MinValue Then
                     .Append(m_executionStartTime.ToString())
                 Else
                     .Append("N/A")
                 End If
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("       Execution Stop Time: ")
                 If m_executionStopTime <> Date.MinValue Then
                     .Append(m_executionStopTime.ToString())
                 Else
                     .Append("N/A")
                 End If
-                .Append(Environment.NewLine)
+                .AppendLine()
                 .Append("       Last Execution Time: ")
                 .Append(SecondsToText(Me.LastExecutionTime))
-                .Append(Environment.NewLine)
+                .AppendLine()
 
                 Return .ToString()
             End With

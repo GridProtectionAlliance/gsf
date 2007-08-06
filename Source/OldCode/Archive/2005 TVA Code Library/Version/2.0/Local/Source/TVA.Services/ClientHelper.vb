@@ -168,7 +168,7 @@ Public Class ClientHelper
             .Append(message)
 
             For i As Integer = 0 To crlfCount - 1
-                .Append(Environment.NewLine)
+                .AppendLine()
             Next
 
             RaiseEvent UpdateClientStatus(Me, New GenericEventArgs(Of String)(.ToString()))

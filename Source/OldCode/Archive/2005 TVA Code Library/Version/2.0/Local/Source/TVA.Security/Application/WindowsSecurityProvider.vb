@@ -86,8 +86,8 @@ Namespace Application
                                     ' An unknown exception was encountered.
                                     With New StringBuilder()
                                         .Append("Access request could not be submitted due to an exception.")
-                                        .Append(Environment.NewLine)
-                                        .Append(Environment.NewLine)
+                                        .AppendLine()
+                                        .AppendLine()
                                         .Append(ex.ToString())
                                         MessageBox.Show(.ToString(), "Access Request", MessageBoxButtons.OK, MessageBoxIcon.Error)
                                     End With
@@ -95,8 +95,8 @@ Namespace Application
                             Catch ex As Exception
                                 With New StringBuilder()
                                     .Append("Access request could not be submitted due to an exception.")
-                                    .Append(Environment.NewLine)
-                                    .Append(Environment.NewLine)
+                                    .AppendLine()
+                                    .AppendLine()
                                     .Append(ex.ToString())
                                     MessageBox.Show(.ToString(), "Access Request", MessageBoxButtons.OK, MessageBoxIcon.Error)
                                 End With

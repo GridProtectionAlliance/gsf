@@ -262,7 +262,7 @@ Public Class FileClient
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   File=[Name of the file]")
                     Throw New ArgumentException(.ToString())
                 End With

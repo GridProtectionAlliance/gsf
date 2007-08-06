@@ -946,14 +946,14 @@ Namespace Collections
                     Else
                         .Append("Disabled")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("  Current processing state: ")
                     If Processing Then
                         .Append("Executing")
                     Else
                         .Append("Idle")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("       Processing interval: ")
                     If m_processingIsRealTime Then
                         .Append("Real-time")
@@ -961,7 +961,7 @@ Namespace Collections
                         .Append(ProcessInterval)
                         .Append(" milliseconds")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("        Processing timeout: ")
                     If m_processTimeout = Timeout.Infinite Then
                         .Append("Infinite")
@@ -969,7 +969,7 @@ Namespace Collections
                         .Append(m_processTimeout)
                         .Append(" milliseconds")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("      Queue threading mode: ")
                     If ThreadingMode = QueueThreadingMode.Asynchronous Then
                         .Append("Asynchronous - ")
@@ -978,29 +978,29 @@ Namespace Collections
                     Else
                         .Append("Synchronous")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("    Queue processing style: ")
                     If ProcessingStyle = QueueProcessingStyle.OneAtATime Then
                         .Append("One at a time")
                     Else
                         .Append("Many at once")
                     End If
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("    Total process run time: ")
                     .Append(SecondsToText(RunTime))
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("      Total active threads: ")
                     .Append(m_threadCount)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   Queued items to process: ")
                     .Append(Count)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("     Items being processed: ")
                     .Append(m_itemsProcessing)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("     Total items processed: ")
                     .Append(m_itemsProcessed)
-                    .Append(Environment.NewLine)
+                    .AppendLine()
 
                     Return .ToString()
                 End With

@@ -202,7 +202,7 @@ Public Class TcpClient
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   Server=Server name or IP; Port=Server port number")
                     Throw New ArgumentException(.ToString())
                 End With

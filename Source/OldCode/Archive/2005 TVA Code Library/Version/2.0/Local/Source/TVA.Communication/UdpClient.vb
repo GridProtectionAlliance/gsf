@@ -311,9 +311,9 @@ Public Class UdpClient
                 ' Connection string is not in the expected format.
                 With New StringBuilder()
                     .Append("Connection string must be in the following format:")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("   [Server=Server name or IP;] [[Remote]Port=Server port number;] LocalPort=Local port number")
-                    .Append(Environment.NewLine)
+                    .AppendLine()
                     .Append("Text between square brackets, [...], is optional.")
                     Throw New ArgumentException(.ToString())
                 End With
