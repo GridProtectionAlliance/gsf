@@ -31,6 +31,9 @@ Imports TVA.Security.Cryptography.Common
 ''' <summary>
 ''' Represents a TCP-based communication server.
 ''' </summary>
+''' <remarks>
+''' PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
+''' </remarks>
 <DisplayName("TcpServer")> _
 Public Class TcpServer
 

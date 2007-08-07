@@ -31,6 +31,9 @@ Imports TVA.ErrorManagement
 ''' <summary>
 ''' Represents a TCP-based communication client.
 ''' </summary>
+''' <remarks>
+''' PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
+''' </remarks>
 <DisplayName("TcpClient")> _
 Public Class TcpClient
 
