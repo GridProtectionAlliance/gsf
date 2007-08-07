@@ -589,7 +589,7 @@ Public MustInherit Class CommunicationClientBase
     ''' <returns>True if the connection was successful; otherwise False.</returns>
     Public Function WaitForConnection(ByVal waitTime As Integer) As Boolean Implements ICommunicationClient.WaitForConnection
 
-        Return WaitForConnection(waitTime, False)
+        Return WaitForConnection(waitTime, True)
 
     End Function
 
