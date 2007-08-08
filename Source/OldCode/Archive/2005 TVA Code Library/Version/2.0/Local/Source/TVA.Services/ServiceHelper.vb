@@ -1211,6 +1211,7 @@ Public Class ServiceHelper
                     .Append(CenterText(counter.MaximumValue.ToString(), 13))
                     .Append(" ")
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .AppendLine()
                 End If
 
                 counter = m_performanceMonitor.IOUsage
@@ -1258,6 +1259,7 @@ Public Class ServiceHelper
                     .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
                     .Append(" ")
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .AppendLine()
                 End If
 
                 counter = m_performanceMonitor.DatagramSendRate
@@ -1273,6 +1275,7 @@ Public Class ServiceHelper
                     .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
                     .Append(" ")
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .AppendLine()
                 End If
 
                 counter = m_performanceMonitor.ThreadingContentionRate
@@ -1288,6 +1291,7 @@ Public Class ServiceHelper
                     .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
                     .Append(" ")
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .AppendLine()
                 End If
 
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), UpdateCrlfCount)
