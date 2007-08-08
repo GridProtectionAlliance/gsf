@@ -521,6 +521,12 @@ Public Class ServiceHelper
 
     Public Sub ScheduleProcess(ByVal processName As String, ByVal scheduleRule As String)
 
+        ScheduleProcess(processName, scheduleRule, False)
+
+    End Sub
+
+    Public Sub ScheduleProcess(ByVal processName As String, ByVal scheduleRule As String, ByVal updateExistingSchedule As Boolean)
+
         processName = processName.Trim()
 
         If Processes(processName) IsNot Nothing Then
@@ -528,8 +534,10 @@ Public Class ServiceHelper
             Dim existingSchedule As Schedule = ScheduleManager.Schedules(processName)
 
             If existingSchedule IsNot Nothing Then
-                ' Update the process schedule if it is already exists.
-                existingSchedule.Rule = scheduleRule
+                If updateExistingSchedule Then
+                    ' Update the process schedule if it is already exists.
+                    existingSchedule.Rule = scheduleRule
+                End If
             Else
                 ' Schedule the process if it is not scheduled already.
                 ScheduleManager.Schedules.Add(New Schedule(processName, scheduleRule))
