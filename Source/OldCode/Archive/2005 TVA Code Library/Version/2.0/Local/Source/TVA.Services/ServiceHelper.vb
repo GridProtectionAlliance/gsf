@@ -12,6 +12,7 @@ Imports TVA.Scheduling
 Imports TVA.Configuration
 Imports TVA.Configuration.Common
 Imports TVA.Diagnostics
+Imports TVA.Text.Common
 
 <ToolboxBitmap(GetType(ServiceHelper)), DisplayName("ServiceHelper")> _
 Public Class ServiceHelper
@@ -1120,6 +1121,9 @@ Public Class ServiceHelper
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), UpdateCrlfCount)
             End With
         Else
+            Dim processorCountPercentage As Integer = System.Environment.ProcessorCount * 100
+            Dim counter As PerformanceCounter
+
             With New StringBuilder()
                 .AppendFormat("Health report for {0}:", m_service.ServiceName)
                 .AppendLine()
@@ -1144,65 +1148,128 @@ Public Class ServiceHelper
                 .Append(" ")
                 .Append(New String("-"c, 13))
                 .AppendLine()
-                .Append("CPU Usage (%)".PadRight(20))
+
+                counter = m_performanceMonitor.CPUUsage
+
+                '        12345678901234567890
+                .Append("CPU Time / Processor".PadRight(20))
                 .Append(" ")
-                .Append(m_performanceMonitor.CPUUsage.LastValue.ToString().PadRight(13))
+                .Append(CenterText((counter.LastValue / processorCountPercentage).ToString("0.00%"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.CPUUsage.MinimumValue.ToString().PadRight(13))
+                .Append(CenterText((counter.MinimumValue / processorCountPercentage).ToString("0.00%"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.CPUUsage.MaximumValue.ToString().PadRight(13))
+                .Append(CenterText((counter.MaximumValue / processorCountPercentage).ToString("0.00%"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.CPUUsage.AverageValue.ToString().PadRight(13))
+                .Append(CenterText((counter.AverageValue / processorCountPercentage).ToString("0.00%"), 13))
                 .AppendLine()
-                .Append("Memory Usage (KB)".PadRight(20))
+
+                counter = m_performanceMonitor.MemoryUsage
+
+                '        12345678901234567890
+                .Append("Process Memory Usage".PadRight(20))
                 .Append(" ")
-                .Append((m_performanceMonitor.MemoryUsage.LastValue / 1024).ToString().PadRight(13))
+                .Append(CenterText((counter.LastValue / 1048576).ToString("0.00 Mb"), 13))
                 .Append(" ")
-                .Append((m_performanceMonitor.MemoryUsage.MinimumValue / 1024).ToString().PadRight(13))
+                .Append(CenterText((counter.MinimumValue / 1048576).ToString("0.00 Mb"), 13))
                 .Append(" ")
-                .Append((m_performanceMonitor.MemoryUsage.MaximumValue / 1024).ToString().PadRight(13))
+                .Append(CenterText((counter.MaximumValue / 1048576).ToString("0.00 Mb"), 13))
                 .Append(" ")
-                .Append((m_performanceMonitor.MemoryUsage.AverageValue / 1024).ToString().PadRight(13))
+                .Append(CenterText((counter.AverageValue / 1048576).ToString("0.00 Mb"), 13))
                 .AppendLine()
-                .Append("IO Usage (KB)".PadRight(20))
+
+                counter = m_performanceMonitor.HandleCount
+
+                '        12345678901234567890
+                .Append("Process Handle Count".PadRight(20))
                 .Append(" ")
-                .Append((m_performanceMonitor.IOUsage.LastValue / 1024).ToString().PadRight(13))
+                .Append(CenterText(counter.LastValue.ToString(), 13))
                 .Append(" ")
-                .Append((m_performanceMonitor.IOUsage.MinimumValue / 1024).ToString().PadRight(13))
+                .Append(CenterText(counter.MinimumValue.ToString(), 13))
                 .Append(" ")
-                .Append((m_performanceMonitor.IOUsage.MaximumValue / 1024).ToString().PadRight(13))
+                .Append(CenterText(counter.MaximumValue.ToString(), 13))
                 .Append(" ")
-                .Append((m_performanceMonitor.IOUsage.AverageValue / 1024).ToString().PadRight(13))
+                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
                 .AppendLine()
-                .Append("IO Activity (Ops)".PadRight(20))
+
+                counter = m_performanceMonitor.ThreadCount
+
+                '        12345678901234567890
+                .Append("Process Thread Count".PadRight(20))
                 .Append(" ")
-                .Append(m_performanceMonitor.IOActivity.LastValue.ToString().PadRight(13))
+                .Append(CenterText(counter.LastValue.ToString(), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.IOActivity.MinimumValue.ToString().PadRight(13))
+                .Append(CenterText(counter.MinimumValue.ToString(), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.IOActivity.MaximumValue.ToString().PadRight(13))
+                .Append(CenterText(counter.MaximumValue.ToString(), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.IOActivity.AverageValue.ToString().PadRight(13))
+                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+
+                counter = m_performanceMonitor.IOUsage
+
+                '        12345678901234567890
+                .Append("IO Kilobytes / sec".PadRight(20))
+                .Append(" ")
+                .Append(CenterText((counter.LastValue / 1024).ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText((counter.MinimumValue / 1024).ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText((counter.AverageValue / 1024).ToString("0.00"), 13))
                 .AppendLine()
-                .Append("Handle Count (#)".PadRight(20))
+
+                counter = m_performanceMonitor.IOActivity
+
+                '        12345678901234567890
+                .Append("IO Operations / sec".PadRight(20))
                 .Append(" ")
-                .Append(m_performanceMonitor.HandleCount.LastValue.ToString().PadRight(13))
+                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.HandleCount.MinimumValue.ToString().PadRight(13))
+                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.HandleCount.MaximumValue.ToString().PadRight(13))
+                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.HandleCount.AverageValue.ToString().PadRight(13))
+                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
                 .AppendLine()
-                .Append("Thread Count (#)".PadRight(20))
+
+                counter = m_performanceMonitor.DatagramReceiveRate
+
+                '        12345678901234567890
+                .Append("Datagrams In / sec".PadRight(20))
                 .Append(" ")
-                .Append(m_performanceMonitor.ThreadCount.LastValue.ToString().PadRight(13))
+                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.ThreadCount.MinimumValue.ToString().PadRight(13))
+                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.ThreadCount.MaximumValue.ToString().PadRight(13))
+                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
                 .Append(" ")
-                .Append(m_performanceMonitor.ThreadCount.AverageValue.ToString().PadRight(13))
+                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+
+                counter = m_performanceMonitor.DatagramSendRate
+
+                '        12345678901234567890
+                .Append("Datagrams Out / sec".PadRight(20))
+                .Append(" ")
+                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+
+                counter = m_performanceMonitor.ThreadingContentionRate
+
+                '        12345678901234567890
+                .Append("Lock Contention Rate".PadRight(20))
+                .Append(" ")
+                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                .Append(" ")
+                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
 
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), UpdateCrlfCount)
             End With

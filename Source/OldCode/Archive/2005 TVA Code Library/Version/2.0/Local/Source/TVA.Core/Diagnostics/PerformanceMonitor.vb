@@ -1,4 +1,5 @@
 ' 06/01/2007
+' JRC: 08/08/2007 - Added lock contention rate and datagram / sec performance counters...
 
 Namespace Diagnostics
 
@@ -47,6 +48,9 @@ Namespace Diagnostics
             m_counters.Add(New PerformanceCounter("Process", "Handle Count", m_processName))
             m_counters.Add(New PerformanceCounter("Process", "Thread Count", m_processName))
             m_counters.Add(New PerformanceCounter("Process", "Working Set", m_processName))
+            m_counters.Add(New PerformanceCounter("IPv4", "Datagrams Sent/sec", ""))
+            m_counters.Add(New PerformanceCounter("IPv4", "Datagrams Received/sec", ""))
+            m_counters.Add(New PerformanceCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName))
 
             m_samplingTimer = New System.Timers.Timer(samplingInterval)
             m_samplingTimer.Start()
@@ -111,6 +115,45 @@ Namespace Diagnostics
         Public ReadOnly Property CPUUsage() As PerformanceCounter
             Get
                 Return Counters("% Processor Time")
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Gets the counter that monitors the IP based datagrams sent / second of the system.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>
+        ''' The TVA.Diagnostics.PerformanceCounter instance that monitors the IP based datagrams sent / second of the system.
+        ''' </returns>
+        Public ReadOnly Property DatagramSendRate() As PerformanceCounter
+            Get
+                Return Counters("Datagrams Sent/sec")
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Gets the counter that monitors the IP based datagrams received / second of the system.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>
+        ''' The TVA.Diagnostics.PerformanceCounter instance that monitors the IP based datagrams received / second of the system.
+        ''' </returns>
+        Public ReadOnly Property DatagramReceiveRate() As PerformanceCounter
+            Get
+                Return Counters("Datagrams Received/sec")
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Gets the counter that monitors the .NET threading contention rate / second of the process.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>
+        ''' The TVA.Diagnostics.PerformanceCounter instance that monitors the .NET threading contention rate / second of the process.
+        ''' </returns>
+        Public ReadOnly Property ThreadingContentionRate() As PerformanceCounter
+            Get
+                Return Counters("Contention Rate / sec")
             End Get
         End Property
 
