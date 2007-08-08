@@ -1152,125 +1152,143 @@ Public Class ServiceHelper
 
                 counter = m_performanceMonitor.CPUUsage
 
-                '        12345678901234567890
-                .Append("CPU Time / Processor".PadRight(20))
-                .Append(" ")
-                .Append(CenterText((counter.LastValue / processorCountPercentage).ToString("0.00%"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.MinimumValue / processorCountPercentage).ToString("0.00%"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.MaximumValue / processorCountPercentage).ToString("0.00%"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.AverageValue / processorCountPercentage).ToString("0.00%"), 13))
-                .AppendLine()
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("CPU Time / Processor".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText((counter.LastValue / processorCountPercentage).ToString("0.00%"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.MinimumValue / processorCountPercentage).ToString("0.00%"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.MaximumValue / processorCountPercentage).ToString("0.00%"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.AverageValue / processorCountPercentage).ToString("0.00%"), 13))
+                    .AppendLine()
+                End If
 
                 counter = m_performanceMonitor.MemoryUsage
 
-                '        12345678901234567890
-                .Append("Process Memory Usage".PadRight(20))
-                .Append(" ")
-                .Append(CenterText((counter.LastValue / 1048576).ToString("0.00 Mb"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.MinimumValue / 1048576).ToString("0.00 Mb"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.MaximumValue / 1048576).ToString("0.00 Mb"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.AverageValue / 1048576).ToString("0.00 Mb"), 13))
-                .AppendLine()
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("Process Memory Usage".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText((counter.LastValue / 1048576).ToString("0.00 Mb"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.MinimumValue / 1048576).ToString("0.00 Mb"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.MaximumValue / 1048576).ToString("0.00 Mb"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.AverageValue / 1048576).ToString("0.00 Mb"), 13))
+                    .AppendLine()
+                End If
 
                 counter = m_performanceMonitor.HandleCount
 
-                '        12345678901234567890
-                .Append("Process Handle Count".PadRight(20))
-                .Append(" ")
-                .Append(CenterText(counter.LastValue.ToString(), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MinimumValue.ToString(), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MaximumValue.ToString(), 13))
-                .Append(" ")
-                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
-                .AppendLine()
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("Process Handle Count".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText(counter.LastValue.ToString(), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MinimumValue.ToString(), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MaximumValue.ToString(), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .AppendLine()
+                End If
 
                 counter = m_performanceMonitor.ThreadCount
 
-                '        12345678901234567890
-                .Append("Process Thread Count".PadRight(20))
-                .Append(" ")
-                .Append(CenterText(counter.LastValue.ToString(), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MinimumValue.ToString(), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MaximumValue.ToString(), 13))
-                .Append(" ")
-                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("Process Thread Count".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText(counter.LastValue.ToString(), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MinimumValue.ToString(), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MaximumValue.ToString(), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                End If
 
                 counter = m_performanceMonitor.IOUsage
 
-                '        12345678901234567890
-                .Append("IO Kilobytes / sec".PadRight(20))
-                .Append(" ")
-                .Append(CenterText((counter.LastValue / 1024).ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.MinimumValue / 1024).ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText((counter.AverageValue / 1024).ToString("0.00"), 13))
-                .AppendLine()
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("IO Kilobytes / sec".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText((counter.LastValue / 1024).ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.MinimumValue / 1024).ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText((counter.AverageValue / 1024).ToString("0.00"), 13))
+                    .AppendLine()
+                End If
 
                 counter = m_performanceMonitor.IOActivity
 
-                '        12345678901234567890
-                .Append("IO Operations / sec".PadRight(20))
-                .Append(" ")
-                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
-                .AppendLine()
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("IO Operations / sec".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .AppendLine()
+                End If
 
                 counter = m_performanceMonitor.DatagramReceiveRate
 
-                '        12345678901234567890
-                .Append("Datagrams In / sec".PadRight(20))
-                .Append(" ")
-                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("Datagrams In / sec".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                End If
 
                 counter = m_performanceMonitor.DatagramSendRate
 
-                '        12345678901234567890
-                .Append("Datagrams Out / sec".PadRight(20))
-                .Append(" ")
-                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("Datagrams Out / sec".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                End If
 
                 counter = m_performanceMonitor.ThreadingContentionRate
 
-                '        12345678901234567890
-                .Append("Lock Contention Rate".PadRight(20))
-                .Append(" ")
-                .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                .Append(" ")
-                .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                If counter IsNot Nothing Then
+                    '        12345678901234567890
+                    .Append("Lock Contention Rate".PadRight(20))
+                    .Append(" ")
+                    .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" ")
+                    .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                End If
 
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), UpdateCrlfCount)
             End With
