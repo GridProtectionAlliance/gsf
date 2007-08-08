@@ -101,35 +101,16 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStarted(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStarted
 
-        ' Start system initialization on an independent thread so that service responds in a timely fashion...
-        ThreadPool.UnsafeQueueUserWorkItem(AddressOf InitializeSystem, Nothing)
+        Try
+            ' Start system initialization on an independent thread so that service responds in a timely fashion...
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf InitializeSystem, Nothing)
 
-        'Try
-        '    'ServiceHelper.AddProcess(AddressOf ExecutePrimaryProcess, "PrimaryProcess")
-
-        '    'ServiceHelper.AddProcess(AddressOf HealthMonitorProcess, "HealthMonitor")
-
-        '    '' Scan for all available notifiers.
-        '    'Dim asm As Reflection.Assembly = Nothing
-        '    'For Each dll As String In Directory.GetFiles(JustPath(TVA.Assembly.EntryAssembly.Location), "*.dll")
-        '    '    asm = Reflection.Assembly.LoadFrom(dll)
-        '    '    For Each asmType As Type In asm.GetExportedTypes()
-        '    '        If Not asmType.IsAbstract AndAlso _
-        '    '                asmType.GetInterface(NotifierInterface, True) IsNot Nothing Then
-        '    '            ' The scanned type can be instantiated and implements the required interface.
-        '    '            Dim notifier As INotifier = CType(Activator.CreateInstance(asmType), INotifier)
-        '    '            notifier.LoadSettings()
-        '    '            m_eventNotifiers.Add(notifier)
-        '    '        End If
-        '    '    Next
-        '    'Next
-
-        '    'NotifyArchiverStarted()
-
-        'Catch ex As Exception
-        '    ServiceHelper.GlobalExceptionLogger.Log(ex)
-        '    ServiceHelper.Service.Stop()
-        'End Try
+            ' We add a scheduled process to automatically request health status every minute - user can change schedule in config file
+            ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
+        Catch ex As Exception
+            ServiceHelper.GlobalExceptionLogger.Log(ex)
+            ServiceHelper.Service.Stop()
+        End Try
 
     End Sub
 
@@ -652,6 +633,14 @@ Public Class Service
         End If
 
     End Function
+
+    Private Sub HealthMonitorProcess(ByVal name As String, ByVal parameters As Object())
+
+        ' We pretend to be a client and send a "Health" command to ourselves...
+        Dim healthRequest As ClientRequest = ClientRequest.Parse("Health")
+        ServiceHelper.ClientRequestHandlers(healthRequest.Command).HandlerMethod(New ClientRequestInfo(New ClientInfo(System.Guid.Empty), healthRequest))
+
+    End Sub
 
 #End Region
 
