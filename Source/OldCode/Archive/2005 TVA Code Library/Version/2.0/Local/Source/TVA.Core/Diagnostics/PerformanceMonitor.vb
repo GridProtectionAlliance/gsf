@@ -42,15 +42,27 @@ Namespace Diagnostics
             MyBase.New()
             m_processName = processName
             m_counters = New List(Of PerformanceCounter)
-            m_counters.Add(New PerformanceCounter("Process", "% Processor Time", m_processName))
-            m_counters.Add(New PerformanceCounter("Process", "IO Data Bytes/sec", m_processName))
-            m_counters.Add(New PerformanceCounter("Process", "IO Data Operations/sec", m_processName))
-            m_counters.Add(New PerformanceCounter("Process", "Handle Count", m_processName))
-            m_counters.Add(New PerformanceCounter("Process", "Thread Count", m_processName))
-            m_counters.Add(New PerformanceCounter("Process", "Working Set", m_processName))
-            m_counters.Add(New PerformanceCounter("IPv4", "Datagrams Sent/sec", ""))
-            m_counters.Add(New PerformanceCounter("IPv4", "Datagrams Received/sec", ""))
-            m_counters.Add(New PerformanceCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName))
+
+            If System.Diagnostics.PerformanceCounterCategory.Exists("Process") Then
+                m_counters.Add(New PerformanceCounter("Process", "% Processor Time", m_processName))
+                m_counters.Add(New PerformanceCounter("Process", "IO Data Bytes/sec", m_processName))
+                m_counters.Add(New PerformanceCounter("Process", "IO Data Operations/sec", m_processName))
+                m_counters.Add(New PerformanceCounter("Process", "Handle Count", m_processName))
+                m_counters.Add(New PerformanceCounter("Process", "Thread Count", m_processName))
+                m_counters.Add(New PerformanceCounter("Process", "Working Set", m_processName))
+            End If
+
+            If System.Diagnostics.PerformanceCounterCategory.Exists("IPv4") Then
+                m_counters.Add(New PerformanceCounter("IPv4", "Datagrams Sent/sec", ""))
+                m_counters.Add(New PerformanceCounter("IPv4", "Datagrams Received/sec", ""))
+            ElseIf System.Diagnostics.PerformanceCounterCategory.Exists("IP") Then
+                m_counters.Add(New PerformanceCounter("IP", "Datagrams Sent/sec", ""))
+                m_counters.Add(New PerformanceCounter("IP", "Datagrams Received/sec", ""))
+            End If
+
+            If System.Diagnostics.PerformanceCounterCategory.Exists(".NET CLR LocksAndThreads") Then
+                m_counters.Add(New PerformanceCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName))
+            End If
 
             m_samplingTimer = New System.Timers.Timer(samplingInterval)
             m_samplingTimer.Start()
