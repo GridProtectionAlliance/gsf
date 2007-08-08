@@ -99,7 +99,7 @@ Public Class Service
 
     End Sub
 
-    Private Sub ServiceHelper_ServiceStarted(ByVal sender As Object, ByVal e As System.EventArgs) ' HACK: <remove> Handles ServiceHelper.ServiceStarted
+    Private Sub ServiceHelper_ServiceStarted(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStarted
 
         Try
             ' Start system initialization on an independent thread so that service responds in a timely fashion...
@@ -741,10 +741,6 @@ Public Class Service
                 ServiceHelper.UpdateStatus(requestInfo.Sender.ClientID, .ToString(), ServiceHelper.UpdateCrlfCount)
             End With
         Else
-
-            ' HACK: Delayed initialization required to debug service start-up
-            ServiceHelper_ServiceStarted(Me, EventArgs.Empty)
-
             DisplayStatusMessage("Forcing garbage collection and waiting for pending finalizers...")
 
             GC.Collect()
