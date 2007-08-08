@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B0F2E805-909C-4D0C-9428-2809D954636F}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>TVASPDC.Service</StartupObject>
+    <RootNamespace>TVASPDC</RootNamespace>
+    <AssemblyName>TVASPDC</AssemblyName>
+    <MyType>Console</MyType>
+    <OptionStrict>Off</OptionStrict>
+    <ApplicationIcon>TVAService.ico</ApplicationIcon>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>TVASPDC.xml</DocumentationFile>
+    <NoWarn>42030,42104,42108,42109</NoWarn>
+    <WarningsAsErrors>42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>TVASPDC.xml</DocumentationFile>
+    <NoWarn>42030,42104,42108,42109</NoWarn>
+    <WarningsAsErrors>42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Xml" />
+    <Reference Include="TVA.Communication, Version=2.1.96.41334, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Projects\Applications\TVA Code Library\Source\bin\TVA.Communication.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Core, Version=2.1.96.41334, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Projects\Applications\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Services, Version=2.1.96.41334, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Projects\Applications\TVA Code Library\Source\bin\TVA.Services.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Phasor Data Concentration\BpaPdcConcentrator.vb" />
+    <Compile Include="Phasor Measurement Reception\Enumerations.vb" />
+    <Compile Include="Phasor Data Concentration\IEEEC37.118Concentrator.vb" />
+    <Compile Include="Phasor Data Concentration\PhasorDataConcentratorBase.vb" />
+    <Compile Include="Phasor Measurement Reception\PhasorMeasurementMapper.vb" />
+    <Compile Include="Phasor Measurement Reception\PhasorMeasurementReceiver.vb" />
+    <Compile Include="ProjectInstaller.Designer.vb">
+      <DependentUpon>ProjectInstaller.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ProjectInstaller.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Protocol Independent Configuration\AnalogDefinition.vb" />
+    <Compile Include="Protocol Independent Configuration\ConfigurationCell.vb" />
+    <Compile Include="Protocol Independent Configuration\ConfigurationFrame.vb" />
+    <Compile Include="Protocol Independent Configuration\DigitalDefinition.vb" />
+    <Compile Include="Protocol Independent Configuration\FrequencyDefinition.vb" />
+    <Compile Include="Protocol Independent Configuration\PhasorDefinition.vb" />
+    <Compile Include="Service.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Service.Designer.vb">
+      <DependentUpon>Service.vb</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Phasor Measurement Reception\SignalReference.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ProjectInstaller.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ProjectInstaller.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Service.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>Service.vb</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TVAService.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\InterfaceAdapters\InterfaceAdapters.vbproj">
+      <Project>{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}</Project>
+      <Name>InterfaceAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PhasorProtocols\PhasorProtocols.vbproj">
+      <Project>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</Project>
+      <Name>PhasorProtocols</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>SET LocalInstall="C:\Program Files\TVA\TVA Super Phasor Data Concentrator\" /V /C /I /Q /R /Y
+XCOPY "$(TargetPath)" %25LocalInstall%25
+XCOPY "$(TargetDir)*.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)TVASPDCMonitor\$(OutDir)TVASPDCMonitor.exe" %25LocalInstall%25
+XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWare.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWareHistorianAdapter.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)ICCPDataExport\$(OutDir)ICCPDataExport.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)RealTimeCalculatedMeasurements\$(OutDir)RealTimeCalculatedMeasurements.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)RealTimeStabilityAlarm\$(OutDir)RealTimeStabilityAlarm.dll" %25LocalInstall%25
+ECHO $(SolutionName) Local Installation Files Updated...</PostBuildEvent>
+  </PropertyGroup>
+</Project>

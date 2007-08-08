@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="   Frame Parser Relationships">
+    <Position X="8.012" Y="0.646" Height="0.315" Width="1.782" />
+  </Comment>
+  <Comment CommentText="  BPA PDC Stream">
+    <Position X="1.177" Y="11.958" Height="0.302" Width="1.169" />
+  </Comment>
+  <Comment CommentText="   Virginia Tech FNET">
+    <Position X="4.323" Y="11.916" Height="0.312" Width="1.365" />
+  </Comment>
+  <Comment CommentText="  IEEE 1344">
+    <Position X="7.719" Y="11.937" Height="0.292" Width="0.887" />
+  </Comment>
+  <Comment CommentText="  IEEE C37.118">
+    <Position X="11.188" Y="11.916" Height="0.305" Width="1.075" />
+  </Comment>
+  <Class Name="PhasorProtocols.FrameParserBase">
+    <Position X="4.5" Y="1.75" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>FrameParserBase.vb</FileName>
+      <HashCode>AwAMItMkACAAQIggGCCAAAJhAoABAECAIEECAAkIBCg=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="System.IO.Stream">
+    <Position X="0.75" Y="0.5" Width="2" />
+    <TypeIdentifier />
+    <InheritanceLine Type="System.MarshalByRefObject" FixedToPoint="true">
+      <Path>
+        <Point X="1.625" Y="7" />
+        <Point X="1.625" Y="5.981" />
+      </Path>
+    </InheritanceLine>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="PhasorProtocols.BpaPdcStream.FrameParser">
+    <Position X="0.5" Y="12.5" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\FrameParser.vb</FileName>
+      <HashCode>ggAAAJAEAAAAYAgABACBAAAAAAAABAHAAkCCAAgBAQA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="PhasorProtocols.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="5.625" Y="10.899" />
+        <Point X="5.625" Y="12.125" />
+        <Point X="1.75" Y="12.125" />
+        <Point X="1.75" Y="12.5" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="PhasorProtocols.FNet.FrameParser">
+    <Position X="3.75" Y="12.5" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>FNet\FrameParser.vb</FileName>
+      <HashCode>AgAAAJAAAAAAJAgAAQCAAAAAAAKAAACBAGACAAgAAQA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="PhasorProtocols.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="5.625" Y="10.899" />
+        <Point X="5.625" Y="12.112" />
+        <Point X="5" Y="12.112" />
+        <Point X="5" Y="12.5" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="PhasorProtocols.Ieee1344.FrameParser">
+    <Position X="7" Y="12.5" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>Ieee1344\FrameParser.vb</FileName>
+      <HashCode>AAAAIBAAAAAAIAgAAACCAAAAAAAAAAHAAECCAAgAAQg=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="PhasorProtocols.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="5.625" Y="10.899" />
+        <Point X="5.625" Y="12.135" />
+        <Point X="8.25" Y="12.135" />
+        <Point X="8.25" Y="12.5" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="PhasorProtocols.IeeeC37_118.FrameParser">
+    <Position X="10.5" Y="12.5" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\FrameParser.vb</FileName>
+      <HashCode>BAAAIBAEADAAKAgAACAAAAAAAAAIAADABECCAAgIAQg=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="PhasorProtocols.FrameParserBase" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="5.625" Y="10.899" />
+        <Point X="5.625" Y="12.113" />
+        <Point X="11.75" Y="12.113" />
+        <Point X="11.75" Y="12.5" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="System.MarshalByRefObject">
+    <Position X="0.5" Y="7" Width="2.25" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="PhasorProtocols.MultiProtocolFrameParser">
+    <Position X="14.25" Y="1.25" Width="3.25" />
+    <TypeIdentifier>
+      <FileName>MultiProtocolFrameParser.vb</FileName>
+      <HashCode>JIAO4IF0gKAAYooEigCABMQRUoCFikQkPGmG04l+zYg=</HashCode>
+    </TypeIdentifier>
+    <Members>
+      <Method Name="ClientConnected" Hidden="true" />
+      <Method Name="GetDerivedCommandSupport" Hidden="true" />
+      <Method Name="IFrameParserWrite" Hidden="true" />
+      <Field Name="m_autoStartDataParsingSequence" Hidden="true" />
+      <Field Name="m_bufferSize" Hidden="true" />
+      <Field Name="m_byteRate" Hidden="true" />
+      <Field Name="m_byteRateTotal" Hidden="true" />
+      <Field Name="m_communicationClient" Hidden="true" />
+      <Method Name="m_communicationClient_Connected" Hidden="true" />
+      <Method Name="m_communicationClient_Connecting" Hidden="true" />
+      <Method Name="m_communicationClient_ConnectingException" Hidden="true" />
+      <Method Name="m_communicationClient_Disconnected" Hidden="true" />
+      <Field Name="m_communicationServer" Hidden="true" />
+      <Method Name="m_communicationServer_ClientConnected" Hidden="true" />
+      <Method Name="m_communicationServer_ClientDisconnected" Hidden="true" />
+      <Method Name="m_communicationServer_ServerStarted" Hidden="true" />
+      <Method Name="m_communicationServer_ServerStartupException" Hidden="true" />
+      <Method Name="m_communicationServer_ServerStopped" Hidden="true" />
+      <Field Name="m_configurationFrame" Hidden="true" />
+      <Field Name="m_connectionParameters" Hidden="true" />
+      <Field Name="m_connectionString" Hidden="true" />
+      <Field Name="m_dataStreamStartTime" Hidden="true" />
+      <Field Name="m_definedFrameRate" Hidden="true" />
+      <Field Name="m_deviceID" Hidden="true" />
+      <Field Name="m_deviceSupportsCommands" Hidden="true" />
+      <Field Name="m_enabled" Hidden="true" />
+      <Field Name="m_executeParseOnSeparateThread" Hidden="true" />
+      <Field Name="m_frameParser" Hidden="true" />
+      <Method Name="m_frameParser_ConfigurationChanged" Hidden="true" />
+      <Method Name="m_frameParser_DataStreamException" Hidden="true" />
+      <Method Name="m_frameParser_ReceivedCommandFrame" Hidden="true" />
+      <Method Name="m_frameParser_ReceivedConfigurationFrame" Hidden="true" />
+      <Method Name="m_frameParser_ReceivedDataFrame" Hidden="true" />
+      <Method Name="m_frameParser_ReceivedFrameBufferImage" Hidden="true" />
+      <Method Name="m_frameParser_ReceivedHeaderFrame" Hidden="true" />
+      <Method Name="m_frameParser_ReceivedUndeterminedFrame" Hidden="true" />
+      <Field Name="m_frameRate" Hidden="true" />
+      <Field Name="m_frameRateTotal" Hidden="true" />
+      <Field Name="m_initialBytesReceived" Hidden="true" />
+      <Field Name="m_initiatingDataStream" Hidden="true" />
+      <Field Name="m_lastFrameReceivedTime" Hidden="true" />
+      <Field Name="m_maximumConnectionAttempts" Hidden="true" />
+      <Field Name="m_phasorProtocol" Hidden="true" />
+      <Field Name="m_rateCalcTimer" Hidden="true" />
+      <Method Name="m_rateCalcTimer_Elapsed" Hidden="true" />
+      <Field Name="m_sourceName" Hidden="true" />
+      <Field Name="m_totalBytesReceived" Hidden="true" />
+      <Field Name="m_totalFramesReceived" Hidden="true" />
+      <Field Name="m_transportProtocol" Hidden="true" />
+      <Method Name="MaintainCapturedFrameReplayTiming" Hidden="true" />
+    </Members>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="PhasorProtocols.IFrameParser">
+    <Position X="9" Y="2.75" Width="3.25" />
+    <TypeIdentifier>
+      <FileName>IFrameParser.vb</FileName>
+      <HashCode>AAAIAIEkACAAAIgAAAAAAAABAgAAAAAAIEACAAkABAg=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+</ClassDiagram>
