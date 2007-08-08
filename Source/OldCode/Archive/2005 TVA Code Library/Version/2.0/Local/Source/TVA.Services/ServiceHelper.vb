@@ -1154,7 +1154,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("CPU Time / Processor".PadRight(20))
+                    .Append("CPU Time / Processor".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText((counter.LastValue / processorCountPercentage).ToString("0.00%"), 13))
                     .Append(" ")
@@ -1170,7 +1170,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Process Memory Usage".PadRight(20))
+                    .Append("Process Memory Usage".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText((counter.LastValue / 1048576).ToString("0.00 Mb"), 13))
                     .Append(" ")
@@ -1186,7 +1186,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Process Handle Count".PadRight(20))
+                    .Append("Process Handle Count".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText(counter.LastValue.ToString(), 13))
                     .Append(" ")
@@ -1202,7 +1202,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Process Thread Count".PadRight(20))
+                    .Append("Process Thread Count".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText(counter.LastValue.ToString(), 13))
                     .Append(" ")
@@ -1218,7 +1218,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("IO Kilobytes / sec".PadRight(20))
+                    .Append("IO Kilobytes / sec".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText((counter.LastValue / 1024).ToString("0.00"), 13))
                     .Append(" ")
@@ -1234,7 +1234,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("IO Operations / sec".PadRight(20))
+                    .Append("IO Operations / sec".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
                     .Append(" ")
@@ -1250,7 +1250,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Datagrams In / sec".PadRight(20))
+                    .Append("Datagrams In / sec".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
                     .Append(" ")
@@ -1266,7 +1266,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Datagrams Out / sec".PadRight(20))
+                    .Append("Datagrams Out / sec".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
                     .Append(" ")
@@ -1282,7 +1282,7 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Lock Contention Rate".PadRight(20))
+                    .Append("Lock Contention Rate".PadLeft(20))
                     .Append(" ")
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
                     .Append(" ")
