@@ -314,8 +314,14 @@ Public Class MeasurementExporter
                     ' Loop through each defined export file
                     For x As Integer = 0 To m_exportCount - 1
                         Try
-                            ' We'll wait on file lock for up to one second - then give up with IO exception
-                            If File.Exists(m_exportFileName(x)) Then WaitForWriteLock(m_exportFileName(x), 1)
+                            Try
+                                ' We'll wait on file lock for up to one second - then give up with IO exception
+                                WaitForWriteLock(m_exportFileName(x), 1)
+                            Catch ex As FileNotFoundException
+                                ' This would be an expected exception, nothing to do - even if we checked for
+                                ' this before we called the wait function, another process could have deleted
+                                ' the file before we attempt a file lock (this was happening with AREVA tool)...
+                            End Try
 
                             ' Create a new export file
                             fileStream = File.CreateText(m_exportFileName(x))
