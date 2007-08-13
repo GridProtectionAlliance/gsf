@@ -713,32 +713,32 @@ Public Class ServiceHelper
                     .AppendLine()
                     .AppendLine()
                     .Append("Client".PadRight(25))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Machine".PadRight(15))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("User".PadRight(15))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Connected".PadRight(20))
                     .AppendLine()
                     .Append(New String("-"c, 25))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 15))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 15))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 20))
                     For Each clientInfo As ClientInfo In m_connectedClients
                         .AppendLine()
                         .Append(clientInfo.ClientName.PadRight(25))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(clientInfo.MachineName.PadRight(15))
-                        .Append(" ")
+                        .Append(" "c)
                         If Not String.IsNullOrEmpty(clientInfo.UserName) Then
                             .Append(clientInfo.UserName.PadRight(15))
                         Else
                             .Append("[Not Available]".PadRight(15))
                         End If
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20))
                     Next
 
@@ -780,23 +780,23 @@ Public Class ServiceHelper
                     .AppendLine()
                     .AppendLine()
                     .Append("Category".PadRight(25))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Name".PadRight(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Value".PadRight(30))
                     .AppendLine()
                     .Append(New String("-"c, 25))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 30))
                     For Each category As String In settingsCategories
                         For Each setting As CategorizedSettingsElement In CategorizedSettings(category)
                             .AppendLine()
                             .Append(category.PadRight(25))
-                            .Append(" ")
+                            .Append(" "c)
                             .Append(setting.Name.PadRight(20))
-                            .Append(" ")
+                            .Append(" "c)
                             If Not String.IsNullOrEmpty(setting.Value) Then
                                 .Append(setting.Value.PadRight(30))
                             Else
@@ -852,32 +852,32 @@ Public Class ServiceHelper
                         .AppendLine()
                         .AppendLine()
                         .Append("Name".PadRight(20))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append("State".PadRight(15))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append("Last Exec. Start".PadRight(20))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append("Last Exec. Stop".PadRight(20))
                         .AppendLine()
                         .Append(New String("-"c, 20))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(New String("-"c, 15))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(New String("-"c, 20))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(New String("-"c, 20))
                         For Each process As ServiceProcess In m_processes
                             .AppendLine()
                             .Append(process.Name.PadRight(20))
-                            .Append(" ")
+                            .Append(" "c)
                             .Append(process.CurrentState.ToString().PadRight(15))
-                            .Append(" ")
+                            .Append(" "c)
                             If process.ExecutionStartTime <> Date.MinValue Then
                                 .Append(process.ExecutionStartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20))
                             Else
                                 .Append("[Not Executed]".PadRight(20))
                             End If
-                            .Append(" ")
+                            .Append(" "c)
                             If process.ExecutionStopTime <> Date.MinValue Then
                                 .Append(process.ExecutionStopTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20))
                             Else
@@ -901,36 +901,36 @@ Public Class ServiceHelper
                     .AppendLine()
                     .AppendLine()
                     .Append("ID".PadRight(5))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Name".PadRight(25))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Priority".PadRight(15))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Responding".PadRight(10))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Start Time".PadRight(20))
                     .AppendLine()
                     .Append(New String("-"c, 5))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 25))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 15))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 10))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 20))
                     For Each process As System.Diagnostics.Process In System.Diagnostics.Process.GetProcesses()
                         Try
                             .Append(process.StartInfo.UserName)
                             .AppendLine()
                             .Append(process.Id.ToString().PadRight(5))
-                            .Append(" ")
+                            .Append(" "c)
                             .Append(process.ProcessName.PadRight(25))
-                            .Append(" ")
+                            .Append(" "c)
                             .Append(process.PriorityClass.ToString().PadRight(15))
-                            .Append(" ")
+                            .Append(" "c)
                             .Append(IIf(process.Responding, "Yes", "No").PadRight(10))
-                            .Append(" ")
+                            .Append(" "c)
                             .Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20))
                         Catch ex As Exception
 
@@ -971,22 +971,22 @@ Public Class ServiceHelper
                     .AppendLine()
                     .AppendLine()
                     .Append("Name".PadRight(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Rule".PadRight(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append("Last Due".PadRight(30))
                     .AppendLine()
                     .Append(New String("-"c, 20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(New String("-"c, 30))
                     For Each schedule As Schedule In ScheduleManager.Schedules
                         .AppendLine()
                         .Append(schedule.Name.PadRight(20))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(schedule.Rule.PadRight(20))
-                        .Append(" ")
+                        .Append(" "c)
                         If schedule.LastDueAt <> Date.MinValue Then
                             .Append(schedule.LastDueAt.ToString().PadRight(30))
                         Else
@@ -1028,22 +1028,22 @@ Public Class ServiceHelper
                 .AppendLine()
                 .AppendLine()
                 .Append("Command".PadRight(20))
-                .Append(" ")
+                .Append(" "c)
                 .Append("Received".PadRight(25))
-                .Append(" ")
+                .Append(" "c)
                 .Append("Sender".PadRight(30))
                 .AppendLine()
                 .Append(New String("-"c, 20))
-                .Append(" ")
+                .Append(" "c)
                 .Append(New String("-"c, 25))
-                .Append(" ")
+                .Append(" "c)
                 .Append(New String("-"c, 30))
                 For Each historicRequest As ClientRequestInfo In m_clientRequestHistory
                     .AppendLine()
                     .Append(historicRequest.Request.Command.PadRight(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(historicRequest.ReceivedAt.ToString().PadRight(25))
-                    .Append(" ")
+                    .Append(" "c)
                     ' For some reason StringBuilder.AppendFormat() doesn't work as expected with String.PadRight()
                     .Append((historicRequest.Sender.UserName & " from " & historicRequest.Sender.MachineName).PadRight(30))
                 Next
@@ -1081,17 +1081,17 @@ Public Class ServiceHelper
                 .AppendLine()
                 .AppendLine()
                 .Append("Command".PadRight(20))
-                .Append(" ")
+                .Append(" "c)
                 .Append("Description".PadRight(55))
                 .AppendLine()
                 .Append(New String("-"c, 20))
-                .Append(" ")
+                .Append(" "c)
                 .Append(New String("-"c, 55))
                 For Each handler As ClientRequestHandlerInfo In m_clientRequestHandlers
                     If handler.IsAdvertised OrElse showAdvancedHelp Then
                         .AppendLine()
                         .Append(handler.Command.PadRight(20))
-                        .Append(" ")
+                        .Append(" "c)
                         .Append(handler.CommandDescription.PadRight(55))
                     End If
                 Next
@@ -1122,7 +1122,7 @@ Public Class ServiceHelper
                 UpdateStatus(requestInfo.Sender.ClientID, .ToString(), UpdateCrlfCount)
             End With
         Else
-            Dim processorCountPercentage As Integer = System.Environment.ProcessorCount * 100
+            Dim processorCount As Integer = System.Environment.ProcessorCount
             Dim counter As PerformanceCounter
 
             With New StringBuilder()
@@ -1130,39 +1130,40 @@ Public Class ServiceHelper
                 .AppendLine()
                 .AppendLine()
                 .Append("Counter".PadRight(20))
-                .Append(" ")
+                .Append(" "c)
                 .Append(CenterText("Last", 13))
-                .Append(" ")
-                .Append(CenterText("Minimum", 13))
-                .Append(" ")
-                .Append(CenterText("Maximum", 13))
-                .Append(" ")
+                .Append(" "c)
                 .Append(CenterText("Average", 13))
+                .Append(" "c)
+                .Append(CenterText("Maximum", 13))
+                .Append(" "c)
+                .Append(CenterText("Units", 16))
                 .AppendLine()
                 .Append(New String("-"c, 20))
-                .Append(" ")
+                .Append(" "c)
                 .Append(New String("-"c, 13))
-                .Append(" ")
+                .Append(" "c)
                 .Append(New String("-"c, 13))
-                .Append(" ")
+                .Append(" "c)
                 .Append(New String("-"c, 13))
-                .Append(" ")
-                .Append(New String("-"c, 13))
+                .Append(" "c)
+                .Append(New String("-"c, 16))
                 .AppendLine()
 
                 counter = m_performanceMonitor.CPUUsage
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("CPU Time / Processor".PadLeft(20))
-                    .Append(" ")
-                    .Append(CenterText((counter.LastValue / processorCountPercentage).ToString("0.00%"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.MinimumValue / processorCountPercentage).ToString("0.00%"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.MaximumValue / processorCountPercentage).ToString("0.00%"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.AverageValue / processorCountPercentage).ToString("0.00%"), 13))
+                    .Append("CPU Utilization".PadLeft(20))
+                    .Append(" "c)
+                    .Append(CenterText((counter.LastValue / processorCount).ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText((counter.AverageValue / processorCount).ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText((counter.MaximumValue / processorCount).ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Percent / CPU")
                     .AppendLine()
                 End If
 
@@ -1171,14 +1172,15 @@ Public Class ServiceHelper
                 If counter IsNot Nothing Then
                     '        12345678901234567890
                     .Append("Process Memory Usage".PadLeft(20))
-                    .Append(" ")
-                    .Append(CenterText((counter.LastValue / 1048576).ToString("0.00 Mb"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.MinimumValue / 1048576).ToString("0.00 Mb"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.MaximumValue / 1048576).ToString("0.00 Mb"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.AverageValue / 1048576).ToString("0.00 Mb"), 13))
+                    .Append(" "c)
+                    .Append(CenterText((counter.LastValue / 1048576).ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText((counter.AverageValue / 1048576).ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText((counter.MaximumValue / 1048576).ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Megabytes")
                     .AppendLine()
                 End If
 
@@ -1187,14 +1189,15 @@ Public Class ServiceHelper
                 If counter IsNot Nothing Then
                     '        12345678901234567890
                     .Append("Process Handle Count".PadLeft(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.LastValue.ToString(), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MinimumValue.ToString(), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MaximumValue.ToString(), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText(counter.MaximumValue.ToString(), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Total Handles")
                     .AppendLine()
                 End If
 
@@ -1203,14 +1206,15 @@ Public Class ServiceHelper
                 If counter IsNot Nothing Then
                     '        12345678901234567890
                     .Append("Process Thread Count".PadLeft(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.LastValue.ToString(), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MinimumValue.ToString(), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MaximumValue.ToString(), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText(counter.MaximumValue.ToString(), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Total Threads")
                     .AppendLine()
                 End If
 
@@ -1218,15 +1222,16 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("IO Kilobytes / sec".PadLeft(20))
-                    .Append(" ")
+                    .Append("I/O Data Rate".PadLeft(20))
+                    .Append(" "c)
                     .Append(CenterText((counter.LastValue / 1024).ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.MinimumValue / 1024).ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText((counter.AverageValue / 1024).ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Kilobytes / sec")
                     .AppendLine()
                 End If
 
@@ -1234,15 +1239,16 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("IO Operations / sec".PadLeft(20))
-                    .Append(" ")
+                    .Append("I/O Activity Rate".PadLeft(20))
+                    .Append(" "c)
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Operations / sec")
                     .AppendLine()
                 End If
 
@@ -1250,15 +1256,16 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Datagrams In / sec".PadLeft(20))
-                    .Append(" ")
+                    .Append("Incoming Packet Rate".PadLeft(20))
+                    .Append(" "c)
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Datagrams / sec")
                     .AppendLine()
                 End If
 
@@ -1266,15 +1273,16 @@ Public Class ServiceHelper
 
                 If counter IsNot Nothing Then
                     '        12345678901234567890
-                    .Append("Datagrams Out / sec".PadLeft(20))
-                    .Append(" ")
+                    .Append("Outgoing Packet Rate".PadLeft(20))
+                    .Append(" "c)
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Datagrams / sec")
                     .AppendLine()
                 End If
 
@@ -1283,14 +1291,15 @@ Public Class ServiceHelper
                 If counter IsNot Nothing Then
                     '        12345678901234567890
                     .Append("Lock Contention Rate".PadLeft(20))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MinimumValue.ToString("0.00"), 13))
-                    .Append(" ")
-                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
-                    .Append(" ")
+                    .Append(" "c)
                     .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                    .Append(" "c)
+                    '        1234567890123456
+                    .Append("Attempts / sec")
                     .AppendLine()
                 End If
 
