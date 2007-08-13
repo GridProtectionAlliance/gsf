@@ -348,7 +348,7 @@ Public Class MeasurementExporter
                     If frame.Timestamp.Minute Mod 2 = 0 Then
                         ' Make sure message is only displayed once during the minute :)
                         If Not m_statusDisplayed Then
-                            UpdateStatus(String.Format("{0} ICCP data exports have been successfully completed...", m_totalExports))
+                            UpdateStatus(String.Format("{0} successful ICCP exports...", m_totalExports))
                             m_statusDisplayed = True
                         End If
                     Else
