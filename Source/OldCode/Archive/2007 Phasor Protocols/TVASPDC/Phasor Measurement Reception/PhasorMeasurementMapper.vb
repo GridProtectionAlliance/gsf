@@ -470,6 +470,7 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles m_frameParser.ConnectionException
 
+        m_attemptingConnection = False
         UpdateStatus(String.Format("{0} connection to ""{1}"" failed: {2}", m_source, m_frameParser.ConnectionName, ex.Message))
         m_exceptionLogger.Log(ex)
         Connect(True)
@@ -492,7 +493,7 @@ Public Class PhasorMeasurementMapper
         ' When we get 10 or more exceptions within a ten second timespan, we will then restart connection cycle...
         If m_errorCount >= 10 Then
             UpdateStatus(String.Format("{0} connection terminated due to excessive exceptions.", m_source))
-            Connect(False)
+            Connect(True)
         End If
 
     End Sub
@@ -569,7 +570,7 @@ Public Class PhasorMeasurementMapper
         If m_bytesReceived = 0 Then
             m_dataStreamMonitor.Enabled = False
             UpdateStatus(String.Format("{0}No data on {1} received in {2} seconds, restarting connect cycle...{3}", Environment.NewLine, m_source, Convert.ToInt32(m_dataStreamMonitor.Interval / 1000.0R), Environment.NewLine))
-            Connect(False)
+            Connect(True)
         End If
 
         m_bytesReceived = 0

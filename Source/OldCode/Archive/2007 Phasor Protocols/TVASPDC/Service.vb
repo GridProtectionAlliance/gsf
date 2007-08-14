@@ -667,6 +667,8 @@ Public Class Service
             End With
         Else
             With New StringBuilder
+                .AppendFormat("System Uptime: {0}", SecondsToText(ServiceHelper.CommunicationServer.RunTime))
+                .AppendLine()
                 .AppendLine()
 
                 For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values

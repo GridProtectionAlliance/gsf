@@ -130,12 +130,19 @@
     <PostBuildEvent>SET LocalInstall="C:\Program Files\TVA\TVA Super Phasor Data Concentrator\" /V /C /I /Q /R /Y
 XCOPY "$(TargetPath)" %25LocalInstall%25
 XCOPY "$(TargetDir)*.dll" %25LocalInstall%25
+XCOPY "$(TargetDir)*.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)TVASPDCMonitor\$(OutDir)TVASPDCMonitor.exe" %25LocalInstall%25
+XCOPY "$(SolutionDir)TVASPDCMonitor\$(OutDir)TVASPDCMonitor.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWare.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWare.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWareHistorianAdapter.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWareHistorianAdapter.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)ICCPDataExport\$(OutDir)ICCPDataExport.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)ICCPDataExport\$(OutDir)ICCPDataExport.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)RealTimeCalculatedMeasurements\$(OutDir)RealTimeCalculatedMeasurements.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)RealTimeCalculatedMeasurements\$(OutDir)RealTimeCalculatedMeasurements.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)RealTimeStabilityAlarm\$(OutDir)RealTimeStabilityAlarm.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)RealTimeStabilityAlarm\$(OutDir)RealTimeStabilityAlarm.pdb" %25LocalInstall%25
 ECHO $(SolutionName) Local Installation Files Updated...</PostBuildEvent>
   </PropertyGroup>
 </Project>
