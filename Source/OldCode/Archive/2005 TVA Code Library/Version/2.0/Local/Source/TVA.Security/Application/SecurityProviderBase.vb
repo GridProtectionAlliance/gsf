@@ -100,25 +100,44 @@ Namespace Application
                 If m_enableCaching Then RetrieveUserData()
                 ' m_user will be initialized by RetrieveUserData() if user data was cached previously.
                 If m_user Is Nothing Then
-                    ' This is the best way of getting the current user's NT ID both in windows and web environments.
+                    ' We don't have data about the user, so we must get it.
+                    Dim username As String = GetUsername()  ' Get the username from inheriting class if it has.
+                    Dim password As String = GetPassword()  ' Get the password from inheriting class if it has.
+
+                    ' This will get us the login ID of the current user. This will be null in case of web app if:
+                    ' 1) Secured web page is being accessed from outside.
+                    ' 2) Secured web page is being accessed from inside, but "Integrated Windows Authentication"
+                    '    is turned off for the web site.
+                    ' Note: In case of a windows app, we'll always get the login ID of the current user.
                     Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
-                    If Not String.IsNullOrEmpty(userLoginID) Then
-                        ' User is internal since we have his/her login ID.
+
+                    If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
+                        InitializeUser(username, password)
+                    ElseIf Not String.IsNullOrEmpty(userLoginID) Then
                         InitializeUser(userLoginID.Split("\"c)(1))
                     Else
-                        ' User is either external or internal accessing from the internet (in case of web application).
-                        ' NOTE: It is important to note that this condition will never be true in case of a windows
-                        ' application, since we will always get the NT ID of the current user.
-                        Dim username As String = GetUsername()
-                        Dim password As String = GetPassword()
-                        If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
-                            InitializeUser(username, password)
-                        Else
-                            ' Since we don't have the username and password required for authenticating the user,
-                            ' we'll ask for the user's username and password.
-                            ShowLoginScreen()
-                        End If
+                        ShowLoginScreen()
                     End If
+
+                    '' This is the best way of getting the current user's NT ID both in windows and web environments.
+                    'Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+                    'If Not String.IsNullOrEmpty(userLoginID) Then
+                    '    ' User is internal since we have his/her login ID.
+                    '    InitializeUser(userLoginID.Split("\"c)(1))
+                    'Else
+                    '    ' User is either external or internal accessing from the internet (in case of web application).
+                    '    ' NOTE: It is important to note that this condition will never be true in case of a windows
+                    '    ' application, since we will always get the NT ID of the current user.
+                    '    Dim username As String = GetUsername()
+                    '    Dim password As String = GetPassword()
+                    '    If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
+                    '        InitializeUser(username, password)
+                    '    Else
+                    '        ' Since we don't have the username and password required for authenticating the user,
+                    '        ' we'll ask for the user's username and password.
+                    '        ShowLoginScreen()
+                    '    End If
+                    'End If
                 End If
 
                 If m_user IsNot Nothing Then
