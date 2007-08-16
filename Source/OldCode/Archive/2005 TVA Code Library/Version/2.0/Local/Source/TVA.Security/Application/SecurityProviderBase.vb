@@ -112,32 +112,27 @@ Namespace Application
                     Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
 
                     If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
+                        ' First, if we get the username and password from the inheriting class, we'll use it to 
+                        ' initialize the user data. This is very important for the following scenarios to work:
+                        ' o Internal user wants to access a secure page for which he/she does not have access, but
+                        '   have the credentials of a user who has access to this page and want to use the 
+                        '   credentials in order to access the secure web page.
+                        ' o Developer of an external facing web site wants to test the security without turning-off
+                        '   "Integrated Windows Authentication" for the web site, as doing so disable the debugging
+                        '   capabilities from the Visual Studio IDE.
+                        ' Note: Both of the scenarios above require that the person trying do access the secured web 
+                        '       page with someone else's credentials does not access to the web page. If the person
+                        '       has access, then the condition below will initialize the user data from the person's
+                        '       login ID and use this data to determine whether or not the user has access to the 
+                        '       secure web page.
                         InitializeUser(username, password)
                     ElseIf Not String.IsNullOrEmpty(userLoginID) Then
                         InitializeUser(userLoginID.Split("\"c)(1))
                     Else
+                        ' If both the above attempts fail to initialize the user data, we'll have to show the login
+                        ' screen, capture the user credentials and then initialize the user data.
                         ShowLoginScreen()
                     End If
-
-                    '' This is the best way of getting the current user's NT ID both in windows and web environments.
-                    'Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
-                    'If Not String.IsNullOrEmpty(userLoginID) Then
-                    '    ' User is internal since we have his/her login ID.
-                    '    InitializeUser(userLoginID.Split("\"c)(1))
-                    'Else
-                    '    ' User is either external or internal accessing from the internet (in case of web application).
-                    '    ' NOTE: It is important to note that this condition will never be true in case of a windows
-                    '    ' application, since we will always get the NT ID of the current user.
-                    '    Dim username As String = GetUsername()
-                    '    Dim password As String = GetPassword()
-                    '    If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
-                    '        InitializeUser(username, password)
-                    '    Else
-                    '        ' Since we don't have the username and password required for authenticating the user,
-                    '        ' we'll ask for the user's username and password.
-                    '        ShowLoginScreen()
-                    '    End If
-                    'End If
                 End If
 
                 If m_user IsNot Nothing Then
