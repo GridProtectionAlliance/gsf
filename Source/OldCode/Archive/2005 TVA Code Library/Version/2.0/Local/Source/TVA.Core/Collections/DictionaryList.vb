@@ -11,19 +11,19 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  01/07/2006 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code
 '
 '*******************************************************************************************************
 
 Namespace Collections
 
-    ''' <summary>This is essentially a sorted dictionary style list that implements IList</summary>
+    ''' <summary>This is essentially a sorted dictionary style list that implements IList.</summary>
     ''' <remarks>
     ''' <para>
     ''' Important note about using an "Integer" as the key for this class: IDictionary implementations
     ''' do not normally implement the IList interface because of ambiguity that is caused when implementing
-    ''' an integer key.  For example, if you implement this class with a key of type "Integer" you will not
-    ''' be able to access items in the queue by index without "casting" the class as IList, this is because
+    ''' an integer key. For example, if you implement this class with a key of type "Integer" you will not
+    ''' be able to access items in the queue by index without "casting" the class as IList. This is because
     ''' the Item property in both the IDictionary and IList would have the same parameters.
     ''' </para>
     ''' </remarks>
@@ -108,7 +108,8 @@ Namespace Collections
 
         Public Sub Insert(ByVal index As Integer, ByVal item As KeyValuePair(Of TKey, TValue)) Implements IList(Of KeyValuePair(Of TKey, TValue)).Insert
 
-            ' Doesn't matter where you try to insert the value since it will be inserted into its sorted location - so we just add the value
+            ' It does not matter where you try to insert the value, since it will be inserted into its sorted 
+            ' location, so we just add the value.
             m_list.Add(item.Key, item.Value)
 
         End Sub
