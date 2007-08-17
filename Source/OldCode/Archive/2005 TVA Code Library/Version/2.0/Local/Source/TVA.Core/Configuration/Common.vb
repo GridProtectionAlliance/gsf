@@ -11,7 +11,7 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/13/2006 - Pinal C. Patel
-'       Original version of source code generated
+'       Generated riginal version of source code
 '  05/19/2006 - J. Ritchie Carroll
 '       Added type-safe "native type" settings shortcut functions
 '  09/01/2006 - J. Ritchie Carroll
@@ -24,12 +24,11 @@ Namespace Configuration
     ''' <summary>
     ''' Defines common shared configuration file related functions.
     ''' </summary>
-    ''' <remarks></remarks>
     Public NotInheritable Class Common
 
         Private Sub New()
 
-            ' This class contains only global functions and is not meant to be instantiated
+            ' This class contains only global functions and is not meant to be instantiated.
 
         End Sub
 
@@ -37,12 +36,11 @@ Namespace Configuration
 
         ''' <summary>
         ''' Gets or sets the TVA.Configuration.ConfigurationFile object that represents the configuration
-        ''' file of the currently executing windows or web application.
+        ''' file of the currently executing Windows or Web application.
         ''' </summary>
-        ''' <value></value>
         ''' <returns>
         ''' The TVA.Configuration.ConfigurationFile object that represents the configuration file of the 
-        ''' currently executing windows or web application.
+        ''' currently executing Windows or Web application.
         ''' </returns>
         ''' <remarks>
         ''' <para>
@@ -82,21 +80,19 @@ Namespace Configuration
 
         ''' <summary>
         ''' Gets the TVA.Configuration.ConfigurationFile object that represent the specified configuration
-        ''' file that belongs a windows or web application.
+        ''' file that belongs a Windows or Web application.
         ''' </summary>
-        ''' <param name="filePath">Path of the configuration file that belongs to a windows or web application.</param>
-        ''' <value></value>
-        ''' <returns></returns>
+        ''' <param name="filePath">Path of the configuration file that belongs to a Windows or Web application.</param>
         ''' <remarks>
         ''' <para>
-        ''' Use this property for accessing the configuration files of other windows or web applications.
+        ''' Use this property for accessing the configuration files of other Windows or Web applications.
         ''' This will also give access to settings saved under the "appSettings" and "connectionStrings"
         ''' sections provided by the .Net framework in addition to the "categorizedSettings" sections.
         ''' </para>
         ''' <para>
         ''' Example:
         ''' <code>
-        ''' ' Manupulating the configuration file of another windows application.
+        ''' ' Manupulating the configuration file of another Windows application.
         ''' With CustomConfigFile("C:\Projects\WindowsApplication1\bin\Debug\WindowsApplication1.exe.config")
         '''     ' Adds setting to the "appSettings" section of the config file.
         '''     .AppSettings.Settings.Add("SaveSettingsOnExit", "1")
@@ -113,7 +109,7 @@ Namespace Configuration
         '''     .Save()
         ''' End With
         ''' 
-        ''' ' Manupulating the configuration file of another web application.
+        ''' ' Manupulating the configuration file of another Web application.
         ''' With CustomConfigFile("/WebApplication1/web.config")
         '''     ' Adds setting to the "appSettings" section of the config file.
         '''     .AppSettings.Settings.Add("SaveSettingsOnExit", "1")
@@ -144,7 +140,6 @@ Namespace Configuration
         ''' Gets the TVA.Configuration.CategorizedSettingsCollection representing the settings under "general"
         ''' category of the "categorizedSettings" section within the default configuration file.
         ''' </summary>
-        ''' <value></value>
         ''' <returns>
         ''' The TVA.Configuration.CategorizedSettingsCollection representing the settings under "general"
         ''' category of the "categorizedSettings" section.
@@ -177,7 +172,6 @@ Namespace Configuration
         ''' category of the "categorizedSettings" section within the default configuration file.
         ''' </summary>
         ''' <param name="category">The name of the category whose settings are to be retreived.</param>
-        ''' <value></value>
         ''' <returns>
         ''' The TVA.Configuration.CategorizedSettingsCollection representing the settings under the specified
         ''' category of the "categorizedSettings" section.
@@ -208,7 +202,6 @@ Namespace Configuration
         ''' <summary>
         ''' Writes the modified configuration settings to the default configuration file.
         ''' </summary>
-        ''' <remarks></remarks>
         Public Shared Sub SaveSettings()
             DefaultConfigFile.Save()
         End Sub
