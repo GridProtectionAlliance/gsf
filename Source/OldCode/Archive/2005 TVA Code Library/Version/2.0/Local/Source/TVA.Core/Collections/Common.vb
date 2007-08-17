@@ -11,7 +11,7 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  02/23/2003 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code
 '  01/23/2005 - J. Ritchie Carroll
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
 '
