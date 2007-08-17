@@ -517,6 +517,7 @@ Namespace Measurements
                                 frame = sample.Frames(frameIndex)
                                 lastTicks = ticks
                             Else
+                                ' There's a hole in my bucket, dear Liza, dear Liza...
                                 frame = Nothing
                             End If
                         End If
