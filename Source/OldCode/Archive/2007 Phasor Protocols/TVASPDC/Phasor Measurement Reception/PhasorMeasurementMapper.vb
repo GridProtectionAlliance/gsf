@@ -368,79 +368,84 @@ Public Class PhasorMeasurementMapper
 
         ' Loop through each parsed PMU data cell
         For x = 0 To frame.Cells.Count - 1
-            ' Get current PMU cell from data frame
-            dataCell = frame.Cells(x)
+            Try
+                ' Get current PMU cell from data frame
+                dataCell = frame.Cells(x)
 
-            ' Lookup PMU information by its ID code
-            If m_configurationCells.TryGetValue(dataCell.IDCode, pmu) Then
-                ' Track lastest reporting time
-                If ticks > pmu.LastReportTime Then pmu.LastReportTime = ticks
-                If ticks > m_lastReportTime Then m_lastReportTime = ticks
+                ' Lookup PMU information by its ID code
+                If m_configurationCells.TryGetValue(dataCell.IDCode, pmu) Then
+                    ' Track lastest reporting time
+                    If ticks > pmu.LastReportTime Then pmu.LastReportTime = ticks
+                    If ticks > m_lastReportTime Then m_lastReportTime = ticks
 
-                ' Track quality statistics for this PMU
-                pmu.TotalFrames += 1
-                If Not dataCell.DataIsValid Then pmu.TotalDataQualityErrors += 1
-                If Not dataCell.SynchronizationIsValid Then pmu.TotalTimeQualityErrors += 1
-                If dataCell.PmuError Then pmu.TotalPmuErrors += 1
+                    ' Track quality statistics for this PMU
+                    pmu.TotalFrames += 1
+                    If Not dataCell.DataIsValid Then pmu.TotalDataQualityErrors += 1
+                    If Not dataCell.SynchronizationIsValid Then pmu.TotalTimeQualityErrors += 1
+                    If dataCell.PmuError Then pmu.TotalPmuErrors += 1
 
-                ' Map status flags (SF) from PMU data cell itself
-                MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Status), dataCell)
+                    ' Map status flags (SF) from PMU data cell itself
+                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Status), dataCell)
 
-                ' Map phase angles (PAn) and magnitudes (PMn)
-                phasors = dataCell.PhasorValues
-                count = phasors.Count
+                    ' Map phase angles (PAn) and magnitudes (PMn)
+                    phasors = dataCell.PhasorValues
+                    count = phasors.Count
 
-                For y = 0 To count - 1
-                    ' Get composite phasor measurements
-                    measurements = phasors(y).Measurements
+                    For y = 0 To count - 1
+                        ' Get composite phasor measurements
+                        measurements = phasors(y).Measurements
 
-                    ' Map angle
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Angle, y, count), measurements(CompositePhasorValue.Angle))
+                        ' Map angle
+                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Angle, y, count), measurements(CompositePhasorValue.Angle))
 
-                    ' Map magnitude
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Magnitude, y, count), measurements(CompositePhasorValue.Magnitude))
-                Next
+                        ' Map magnitude
+                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Magnitude, y, count), measurements(CompositePhasorValue.Magnitude))
+                    Next
 
-                ' Map frequency (FQ) and df/dt (DF)
-                measurements = dataCell.FrequencyValue.Measurements
+                    ' Map frequency (FQ) and df/dt (DF)
+                    measurements = dataCell.FrequencyValue.Measurements
 
-                ' Map frequency
-                MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Frequency), measurements(CompositeFrequencyValue.Frequency))
+                    ' Map frequency
+                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Frequency), measurements(CompositeFrequencyValue.Frequency))
 
-                ' Map df/dt
-                MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.dfdt), measurements(CompositeFrequencyValue.DfDt))
+                    ' Map df/dt
+                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.dfdt), measurements(CompositeFrequencyValue.DfDt))
 
-                ' Map analog values (AVn)
-                analogs = dataCell.AnalogValues
-                count = analogs.Count
+                    ' Map analog values (AVn)
+                    analogs = dataCell.AnalogValues
+                    count = analogs.Count
 
-                For y = 0 To count - 1
-                    ' Map analog value
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Analog, y, count), analogs(y).Measurements(0))
-                Next
+                    For y = 0 To count - 1
+                        ' Map analog value
+                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Analog, y, count), analogs(y).Measurements(0))
+                    Next
 
-                ' Map digital values (DVn)
-                digitals = dataCell.DigitalValues
-                count = digitals.Count
+                    ' Map digital values (DVn)
+                    digitals = dataCell.DigitalValues
+                    count = digitals.Count
 
-                For y = 0 To count - 1
-                    ' Map digital value
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Digital, y, count), digitals(y).Measurements(0))
-                Next
-            Else
-                ' Encountered an undefined PMU, track frame counts
-                SyncLock m_undefinedPmus
-                    Dim frameCount As Long
+                    For y = 0 To count - 1
+                        ' Map digital value
+                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Digital, y, count), digitals(y).Measurements(0))
+                    Next
+                Else
+                    ' Encountered an undefined PMU, track frame counts
+                    SyncLock m_undefinedPmus
+                        Dim frameCount As Long
 
-                    If m_undefinedPmus.TryGetValue(dataCell.StationName, frameCount) Then
-                        frameCount += 1
-                        m_undefinedPmus(dataCell.StationName) = frameCount
-                    Else
-                        m_undefinedPmus.Add(dataCell.StationName, 1)
-                        UpdateStatus(String.Format("WARNING: Encountered an undefined PMU ""{0}"" for {1}.", dataCell.StationName, m_source))
-                    End If
-                End SyncLock
-            End If
+                        If m_undefinedPmus.TryGetValue(dataCell.StationName, frameCount) Then
+                            frameCount += 1
+                            m_undefinedPmus(dataCell.StationName) = frameCount
+                        Else
+                            m_undefinedPmus.Add(dataCell.StationName, 1)
+                            UpdateStatus(String.Format("WARNING: Encountered an undefined PMU ""{0}"" for {1}.", dataCell.StationName, m_source))
+                        End If
+                    End SyncLock
+                End If
+            Catch ex As Exception
+                UpdateStatus(String.Format("Exception encountered while mapping ""{0}"" data frame cell ""{1} [{2}]"" elements to measurements: {3}", m_source, dataCell.StationName, x, ex.Message))
+                m_exceptionLogger.Log(ex)
+            End Try
         Next
 
         ' Provide real-time measurements where needed
@@ -470,9 +475,9 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_ConnectionException(ByVal ex As System.Exception, ByVal connectionAttempts As Integer) Handles m_frameParser.ConnectionException
 
-        m_attemptingConnection = False
         UpdateStatus(String.Format("{0} connection to ""{1}"" failed: {2}", m_source, m_frameParser.ConnectionName, ex.Message))
         m_exceptionLogger.Log(ex)
+        m_attemptingConnection = False
         Connect(True)
 
     End Sub
