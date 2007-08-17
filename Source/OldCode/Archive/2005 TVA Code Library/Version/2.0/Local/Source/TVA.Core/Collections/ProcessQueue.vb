@@ -26,6 +26,8 @@
 '       Modified the code for "Flush" method to correctly implement IDisposable interface
 '  08/01/2007 - J. Ritchie Carroll
 '       Added some minor optimizations where practical
+'  08/17/2007 - J. Ritchie Carroll
+'       Removed IDisposable implementation because of continued flushing errors
 '
 '*******************************************************************************************************
 
@@ -49,7 +51,7 @@ Namespace Collections
     ''' </remarks>
     Public Class ProcessQueue(Of T)
 
-        Implements IList(Of T), ICollection, IDisposable
+        Implements IList(Of T), ICollection
 
 #Region " Public Member Declarations "
 
@@ -859,13 +861,44 @@ Namespace Collections
         ''' is destructed, there may be items that remain unprocessed in the queue.
         ''' </para>
         ''' </remarks>
-        Public Sub Flush() Implements IDisposable.Dispose
+        Public Sub Flush()
 
-            ' PCP: Although the IDisposable guideline suggest that the object should be removed from GC finalize queue only
-            ' after Dispose() has completed successfully, we have to do the opposite because our Dispose() may take a long 
-            ' time to complete, and it is possible that the GC finalizes this object before Dispose() completes.
-            GC.SuppressFinalize(Me)
-            Dispose(True)
+            ' Disposes managed resources.
+            If m_enabled Then
+                ' Only waits around if there is something to process.
+                If Count > 0 Then
+                    Dim originalInterval As Double
+                    Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
+                    Dim originalRequeueOnException As Boolean = m_requeueOnException
+
+                    ' We must disable requeueing of items or this method will continue indefinitely.
+                    m_requeueOnTimeout = False
+                    m_requeueOnException = False
+
+                    ' If we are running a process timer, we will reduce time between calls to a minimum.
+                    If Not m_processingIsRealTime Then
+                        originalInterval = m_processTimer.Interval
+                        m_processTimer.Interval = 1
+                    End If
+
+                    ' Creates a new auto-resetting wait event
+                    m_waitHandle = New AutoResetEvent(False)
+
+                    ' Waits until all data has been processed
+                    m_waitHandle.WaitOne()
+
+                    ' Deletes wait handle - only needed while flushing
+                    m_waitHandle = Nothing
+
+                    ' Just in case user continues to use queue after disposal, this restores original states.
+                    If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
+                    m_requeueOnTimeout = originalRequeueOnTimeout
+                    m_requeueOnException = originalRequeueOnException
+                End If
+
+                ' All items have been processed - stop queue.
+                [Stop]()
+            End If
 
         End Sub
 
@@ -1219,53 +1252,6 @@ Namespace Collections
         Protected Sub RaiseProcessException(ByVal ex As Exception)
 
             RaiseEvent ProcessException(ex)
-
-        End Sub
-
-        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
-
-            If Not m_isDisposed Then
-                m_isDisposed = True
-
-                If disposing Then
-                    ' Disposes managed resources.
-                    If m_enabled Then
-                        ' Only waits around if there is something to process.
-                        If Count > 0 Then
-                            Dim originalInterval As Double
-                            Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
-                            Dim originalRequeueOnException As Boolean = m_requeueOnException
-
-                            ' We must disable requeueing of items or this method will continue indefinitely.
-                            m_requeueOnTimeout = False
-                            m_requeueOnException = False
-
-                            ' If we are running a process timer, we will reduce time between calls to a minimum.
-                            If Not m_processingIsRealTime Then
-                                originalInterval = m_processTimer.Interval
-                                m_processTimer.Interval = 1
-                            End If
-
-                            ' Creates a new auto-resetting wait event
-                            m_waitHandle = New AutoResetEvent(False)
-
-                            ' Waits until all data has been processed
-                            m_waitHandle.WaitOne()
-
-                            ' Deletes wait handle - only needed while flushing
-                            m_waitHandle = Nothing
-
-                            ' Just in case user continues to use queue after disposal, this restores original states.
-                            If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
-                            m_requeueOnTimeout = originalRequeueOnTimeout
-                            m_requeueOnException = originalRequeueOnException
-                        End If
-
-                        ' All items have been processed - stop queue.
-                        [Stop]()
-                    End If
-                End If
-            End If
 
         End Sub
 
