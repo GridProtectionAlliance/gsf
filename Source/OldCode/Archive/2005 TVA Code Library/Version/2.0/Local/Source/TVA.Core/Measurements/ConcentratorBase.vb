@@ -510,7 +510,7 @@ Namespace Measurements
                         If frame Is Nothing OrElse ticks <> lastTicks Then
                             ' Unfortunately, badly time aligned measurements or those coming in at a higher sample rate may fall
                             ' outside available frame buckets so we have to check for this - buggy ABB PMU's often have this
-                            ' anomaly after running for a while which is why I had to put this check in :p...
+                            ' anomaly reporting 31 fps after running for a while which is why I had to put this check in :p...
                             frameIndex = Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame)
 
                             If frameIndex < m_framesPerSecond Then
