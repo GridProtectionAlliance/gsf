@@ -430,6 +430,7 @@ Namespace Measurements
             Dim ticks As Long
             Dim lastTicks As Long
             Dim baseTimeTicks As Long
+            Dim frameIndex As Integer
             Dim distance As Double
             Dim discardMeasurement As Boolean
 
@@ -507,33 +508,47 @@ Namespace Measurements
                         ' groups of parsed measurements will typically be coming in from the same source and hence will have the same ticks,
                         ' so if we have already found the destination frame for the same ticks then there's no need to lookup frame again...
                         If frame Is Nothing OrElse ticks <> lastTicks Then
-                            frame = sample.Frames(Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame))
-                            lastTicks = ticks
+                            ' Unfortunately, badly time aligned measurements or those coming in at a higher sample rate may fall
+                            ' outside available frame buckets so we have to check for this - buggy ABB PMU's often have this
+                            ' anomaly after running for a while which is why I had to put this check in :p...
+                            frameIndex = Convert.ToInt32((ticks - baseTimeTicks) / m_ticksPerFrame)
+
+                            If frameIndex < m_framesPerSecond Then
+                                frame = sample.Frames(frameIndex)
+                                lastTicks = ticks
+                            Else
+                                frame = Nothing
+                            End If
                         End If
 
-                        ' No need to waste time sorting measurements into a frame that's already been published - so we check for this
-                        If frame.Published Then
-                            ' We'll just count this as a discarded measurement, frame is already publishing...
+                        If frame Is Nothing Then
+                            ' When we have no bucket for the measurement, we count it as a discarded...
                             discardMeasurement = True
                         Else
-                            ' Make sure the starting sort time for this frame is initialized
-                            If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
-
-                            ' Call user customizable function to assign new measurement to its frame - this is a non-blocking operation, so if
-                            ' we failed to get a lock to handle assignment we queue this work up on an independent thread
-                            If AssignMeasurementToFrame(frame, measurement) Then
-                                ' Track last sorted measurement in this frame
-                                frame.LastSortTime = Date.UtcNow.Ticks
-                                frame.LastSortedMeasurement = measurement
+                            ' No need to waste time sorting measurements into a frame that's already been published - so we check for this
+                            If frame.Published Then
+                                ' We'll just count this as a discarded measurement, frame is already publishing...
+                                discardMeasurement = True
                             Else
-                                ' We didn't get lock to assign measurement to frame so we queue it up for assignment on an independent thread
-                                Dim state As New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame)
-                                ThreadPool.UnsafeQueueUserWorkItem(AddressOf AssignMeasurementToFrame, state)
-                                Interlocked.Increment(m_threadPoolSorts)
-                            End If
+                                ' Make sure the starting sort time for this frame is initialized
+                                If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
 
-                            ' Track absolute latest measurement values
-                            If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
+                                ' Call user customizable function to assign new measurement to its frame - this is a non-blocking operation, so if
+                                ' we failed to get a lock to handle assignment we queue this work up on an independent thread
+                                If AssignMeasurementToFrame(frame, measurement) Then
+                                    ' Track last sorted measurement in this frame
+                                    frame.LastSortTime = Date.UtcNow.Ticks
+                                    frame.LastSortedMeasurement = measurement
+                                Else
+                                    ' We didn't get lock to assign measurement to frame so we queue it up for assignment on an independent thread
+                                    Dim state As New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame)
+                                    ThreadPool.UnsafeQueueUserWorkItem(AddressOf AssignMeasurementToFrame, state)
+                                    Interlocked.Increment(m_threadPoolSorts)
+                                End If
+
+                                ' Track absolute latest measurement values
+                                If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
+                            End If
                         End If
                     End If
                 End If
