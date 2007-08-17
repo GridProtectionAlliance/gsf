@@ -11,9 +11,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/11/2006 - Pinal C. Patel
-'       Original version of source code generated
+'       Generated original version of source code 
 '  05/25/2006 - Pinal C. Patel
-'       Modified the Item(name) property to add a configuration element if it doesn't exist.
+'       Modified the Item(name) property to add a configuration element if it does not exist.
 '
 '*******************************************************************************************************
 
@@ -22,20 +22,18 @@ Imports System.Configuration
 Namespace Configuration
 
     ''' <summary>
-    ''' Represents a configuration element containing a collection of TVA.Configuration.CategorizedSettingsElement 
-    ''' within a configuration file.
+    ''' Represents a configuration element containing a collection of 
+    ''' TVA.Configuration.CategorizedSettingsElement within a configuration file.
     ''' </summary>
-    ''' <remarks></remarks>
     Public Class CategorizedSettingsElementCollection
         Inherits ConfigurationElementCollection
 
         ''' <summary>
         ''' Gets or sets the TVA.Configuration.CategorizedSettingsElement object at the specified index.
         ''' </summary>
-        ''' <param name="index">The zero-based index of the TVA.Configuration.CategorizedSettingsElement to return.</param>
-        ''' <value></value>
+        ''' <param name="index">The zero-based index of the TVA.Configuration.CategorizedSettingsElement to 
+        ''' return.</param>
         ''' <returns>The TVA.Configuration.CategorizedSettingsElement at the specified index; otherwise null.</returns>
-        ''' <remarks></remarks>
         Default Public Shadows Property Item(ByVal index As Integer) As CategorizedSettingsElement
             Get
                 If index >= MyBase.Count() Then
@@ -55,9 +53,7 @@ Namespace Configuration
         ''' Gets the TVA.Configuration.CategorizedSettingsElement object with the specified name.
         ''' </summary>
         ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsElement to return.</param>
-        ''' <value></value>
         ''' <returns>The TVA.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
-        ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String) As CategorizedSettingsElement
             Get
                 Return Item(name, False)
@@ -68,10 +64,9 @@ Namespace Configuration
         ''' Gets the TVA.Configuration.CategorizedSettingsElement object with the specified name.
         ''' </summary>
         ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsElement to return.</param>
-        ''' <param name="ensureExistance">True if the setting is to be created if it doesn't exist; otherwise False.</param>
-        ''' <value></value>
+        ''' <param name="ensureExistance">True, if the setting is to be created if it does not exist; 
+        ''' otherwise, false.</param>
         ''' <returns>The TVA.Configuration.CategorizedSettingsElement with the specified name; otherwise null.</returns>
-        ''' <remarks></remarks>
         Default Public Shadows ReadOnly Property Item(ByVal name As String, ByVal ensureExistance As Boolean) As CategorizedSettingsElement
             Get
                 If ensureExistance AndAlso MyBase.BaseGet(name) Is Nothing Then
@@ -87,7 +82,6 @@ Namespace Configuration
         ''' </summary>
         ''' <param name="setting">The TVA.Configuration.CategorizedSettingsElement whose index is to be returned.</param>
         ''' <returns>The index of the specified TVA.Configuration.CategorizedSettingsElement; otherwise -1.</returns>
-        ''' <remarks></remarks>
         Public Function IndexOf(ByVal setting As CategorizedSettingsElement) As Integer
 
             Return MyBase.BaseIndexOf(setting)
@@ -99,7 +93,6 @@ Namespace Configuration
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
-        ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String)
 
             Add(name, value, False)
@@ -111,8 +104,8 @@ Namespace Configuration
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
-        ''' <param name="encryptValue">True if the value string of the element is to be encrypted; otherwise False.</param>
-        ''' <remarks></remarks>
+        ''' <param name="encryptValue">True, if the value string of the element is to be encrypted; otherwise, 
+        ''' false.</param>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal encryptValue As Boolean)
 
             Add(name, value, "", encryptValue)
@@ -120,12 +113,12 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name, value and description string.
+        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name, value and description 
+        ''' string.
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
         ''' <param name="description">The description string of the element.</param>
-        ''' <remarks></remarks>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String)
 
             Add(New CategorizedSettingsElement(name, value, description, False))
@@ -133,13 +126,14 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name, value and description string.
+        ''' Adds a TVA.Configuration.CategorizedSettingsElement with the specified name, value and description 
+        ''' string.
         ''' </summary>
         ''' <param name="name">The name string of the element.</param>
         ''' <param name="value">The value string of the element.</param>
         ''' <param name="description">The description string of the element.</param>
-        ''' <param name="encryptValue">True if the value string of the element is to be encrypted; otherwise False.</param>
-        ''' <remarks></remarks>
+        ''' <param name="encryptValue">True, if the value string of the element is to be encrypted; otherwise, 
+        ''' false.</param>
         Public Sub Add(ByVal name As String, ByVal value As String, ByVal description As String, ByVal encryptValue As Boolean)
 
             Add(New CategorizedSettingsElement(name, value, description, encryptValue))
@@ -147,24 +141,24 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Adds the specified TVA.Configuration.CategorizedSettingsElement to the TVA.Configuration.CategorizedSettingsCollection.
+        ''' Adds the specified TVA.Configuration.CategorizedSettingsElement to the 
+        ''' TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
         ''' <param name="setting">The TVA.Configuration.CategorizedSettingsElement to add.</param>
-        ''' <remarks></remarks>
         Public Sub Add(ByVal setting As CategorizedSettingsElement)
 
             If MyBase.BaseGet(setting.Name()) Is Nothing Then
-                ' Add the element only if it doesn't exist.
+                ' Adds the element only if it does not exist.
                 MyBase.BaseAdd(setting)
             End If
 
         End Sub
 
         ''' <summary>
-        ''' Removes a TVA.Configuration.CategorizedSettingsElement with the specified name from the TVA.Configuration.CategorizedSettingsCollection.
+        ''' Removes a TVA.Configuration.CategorizedSettingsElement with the specified name from the 
+        ''' TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
         ''' <param name="name">The name of the TVA.Configuration.CategorizedSettingsElement to remove.</param>
-        ''' <remarks></remarks>
         Public Sub Remove(ByVal name As String)
 
             MyBase.BaseRemove(name)
@@ -172,10 +166,10 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Removes the specified TVA.Configuration.CategorizedSettingsElement from the TVA.Configuration.CategorizedSettingsCollection.
+        ''' Removes the specified TVA.Configuration.CategorizedSettingsElement from the 
+        ''' TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
         ''' <param name="setting">The TVA.Configuration.CategorizedSettingsElement to remove.</param>
-        ''' <remarks></remarks>
         Public Sub Remove(ByVal setting As CategorizedSettingsElement)
 
             If MyBase.BaseIndexOf(setting) >= 0 Then
@@ -185,10 +179,11 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Remove the TVA.Configuration.CategorizedSettingsElement at the specified location from the TVA.Configuration.CategorizedSettingsCollection.
+        ''' Removes the TVA.Configuration.CategorizedSettingsElement at the specified location from the 
+        ''' TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
-        ''' <param name="index">The index location of the TVA.Configuration.CategorizedSettingsElement to remove.</param>
-        ''' <remarks></remarks>
+        ''' <param name="index">The index location of the TVA.Configuration.CategorizedSettingsElement to 
+        ''' remove.</param>
         Public Sub RemoveAt(ByVal index As Integer)
 
             MyBase.BaseRemoveAt(index)
@@ -196,9 +191,9 @@ Namespace Configuration
         End Sub
 
         ''' <summary>
-        ''' Removes all TVA.Configuration.CategorizedSettingsElement from the TVA.Configuration.CategorizedSettingsCollection.
+        ''' Removes all TVA.Configuration.CategorizedSettingsElement from the 
+        ''' TVA.Configuration.CategorizedSettingsCollection.
         ''' </summary>
-        ''' <remarks></remarks>
         Public Sub Clear()
 
             MyBase.BaseClear()
