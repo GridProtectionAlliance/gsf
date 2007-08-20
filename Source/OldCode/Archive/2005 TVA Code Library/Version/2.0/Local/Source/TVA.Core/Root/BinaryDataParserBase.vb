@@ -18,10 +18,11 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
 
     Private m_idPropertyName As String
     Private m_optimizeParsing As Boolean
-    Private m_discardUnparsedData As Boolean
+    Private m_unparsedDataReuseLimit As Integer
     Private m_persistSettings As Boolean
     Private m_settingsCategoryName As String
     Private m_outputTypes As Dictionary(Of TIdentifier, TypeInfo)
+    Private m_unparsedDataReuseCount As Dictionary(Of Guid, Integer)
 
     Private WithEvents m_dataQueue As ProcessQueue(Of IdentifiableItem(Of Guid, Byte()))
 
@@ -37,19 +38,20 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
     Public Event DataParsed As EventHandler(Of GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput))))
 
     ''' <summary>
-    ''' Occurs when unused data during parsing is reused and not discarded.
-    ''' </summary>
-    Public Event DataReused As EventHandler(Of GenericEventArgs(Of TIdentifier))
-
-    ''' <summary>
-    ''' Occurs when unused data during parsing is discarded and not re-used.
-    ''' </summary>
-    Public Event DataDiscarded As EventHandler(Of GenericEventArgs(Of TIdentifier))
-
-    ''' <summary>
     ''' Occurs when a matching output type is not found for parsing the data image.
     ''' </summary>
     Public Event OutputTypeNotFound As EventHandler(Of GenericEventArgs(Of TIdentifier))
+
+    ''' <summary>
+    ''' Occurs when unparsed data is reused and not discarded.
+    ''' </summary>
+    Public Event UnparsedDataReused As EventHandler(Of GenericEventArgs(Of TIdentifier))
+
+    ''' <summary>
+    ''' Occurs when unparsed data is discarded and not re-used.
+    ''' </summary>
+    Public Event UnparsedDataDiscarded As EventHandler(Of GenericEventArgs(Of TIdentifier))
+
 
 #End Region
 
@@ -88,16 +90,16 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
     End Property
 
     ''' <summary>
-    ''' Gets or sets a boolean value indicating if unparsed data is to be discarded and not re-used.
+    ''' Gets or sets the number of attempts to be made to parse the unparsed data by reusing it.
     ''' </summary>
     ''' <value></value>
-    ''' <returns>True if unparsed data is to be discarded and not re-used; otherwise False.</returns>
-    Public Property DiscardUnparsedData() As Boolean
+    ''' <returns></returns>
+    Public Property UnparsedDataReuseLimit() As Integer
         Get
-            Return m_discardUnparsedData
+            Return m_unparsedDataReuseLimit
         End Get
-        Set(ByVal value As Boolean)
-            m_discardUnparsedData = value
+        Set(ByVal value As Integer)
+            m_unparsedDataReuseLimit = value
         End Set
     End Property
 
@@ -219,7 +221,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
 
 #Region " MustOverride "
 
-    Public MustOverride Function GetTypeID(ByVal binaryImage As Byte()) As TIdentifier
+    Public MustOverride Function GetTypeID(ByVal binaryImage As Byte(), ByVal startIndex As Integer) As TIdentifier
 
 #End Region
 
@@ -256,7 +258,7 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
                 If .Count > 0 Then
                     IDPropertyName = .Item("IDPropertyName").GetTypedValue(m_idPropertyName)
                     OptimizeParsing = .Item("OptimizeParsing").GetTypedValue(m_optimizeParsing)
-                    DiscardUnparsedData = .Item("DiscardUnparsedData").GetTypedValue(m_discardUnparsedData)
+                    UnparsedDataReuseLimit = .Item("UnparsedDataReuseLimit").GetTypedValue(m_unparsedDataReuseLimit)
                 End If
             End With
         Catch ex As Exception
@@ -279,9 +281,9 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
                         .Value = m_optimizeParsing.ToString()
                         .Description = "True if parsing is to be done in an optimal mode; otherwise False."
                     End With
-                    With .Item("DiscardUnparsedData", True)
-                        .Value = m_discardUnparsedData.ToString()
-                        .Description = "True if unparsed data is to be discarded and not re-used; otherwise False."
+                    With .Item("UnparsedDataReuseLimit", True)
+                        .Value = m_unparsedDataReuseLimit.ToString()
+                        .Description = "Number of times unparsed data can be reused before being discarded."
                     End With
                 End With
                 TVA.Configuration.Common.SaveSettings()
@@ -320,64 +322,106 @@ Public MustInherit Class BinaryDataParserBase(Of TIdentifier, TOutput As IBinary
 
     Private Sub ParseData(ByVal item As IdentifiableItem(Of Guid, Byte())())
 
+        Dim cursor As Integer
+        Dim instance As TOutput
+        Dim typeID As TIdentifier
+        Dim outputType As TypeInfo
+
         For i As Integer = 0 To item.Length - 1
-            ' We'll process all of the data images in the batch.
+            ' We have defined the process queue that holds the data to be parsed of type "Many-at-Once", so we'll
+            ' most likely get multiple data images that we must process and we'll do just that...!
             If item(i).Item IsNot Nothing AndAlso item(i).Item.Length > 0 Then
-                Dim typeID As TIdentifier = GetTypeID(item(i).Item)
-                Dim outputType As TypeInfo = Nothing
+                ' This data image is valid (i.e. has data in it), so we'll go on to process it. By "processing the
+                ' data image" we mean that we'll take the data in the image and use it to initialize an appropriate
+                ' instance of a type that will represent the data, hence making the binary data more meaningful and
+                ' useful.
+                Dim output As New List(Of TOutput)()
 
-                If m_outputTypes.TryGetValue(typeID, outputType) Then
-                    ' We have a type we can use to represent this data.
-                    Dim output As New List(Of TOutput)()
-                    Dim newInstance As TOutput = Nothing
+                cursor = 0
+                Do While cursor < item(i).Item.Length
+                    typeID = GetTypeID(item(i).Item, cursor) ' <- Necessary overhead :(
+                    If m_outputTypes.TryGetValue(typeID, outputType) Then
+                        ' We have type that can be instantiated and initialized with the data from this image.
+                        Try
+                            instance = outputType.CreateNew()
+                            cursor += instance.Initialize(item(i).Item, cursor)   ' Returns the number of bytes used.
+                            output.Add(instance)
 
-                    Dim j As Integer = 0
-                    Try
-                        Do While j < item(i).Item.Length
-                            ' Process the entire data image.
-                            newInstance = outputType.CreateNew()
-                            j += newInstance.Initialize(item(i).Item, j)
-                            output.Add(newInstance)
-                        Loop
-                    Catch ex As Exception
-                        ' We might encounter an exception if the data image being parsed is partial.
-                        If Not m_discardUnparsedData Then
-                            Dim insertUnusedData As Boolean = True
-                            Dim unusedData As Byte() = CreateArray(Of Byte)(item(i).Item.Length - j)
-                            Array.Copy(item(i).Item, j, unusedData, 0, unusedData.Length)
+                            m_unparsedDataReuseCount(item(i).Source) = 0    ' <- Necessary overhead :(
+                        Catch ex As Exception
+                            ' We might encounter an exception when a given type is trying to initialize the
+                            ' instance from the provided data, and that data is either partial or malformed.
+                            ' So if the image is partial and we combine it with future data from the same
+                            ' source, we will be able to succesfully use all of the data given the option to
+                            ' reuse data is turned on. However, if the image data is malformed, we will not be
+                            ' able to use it even if we combine it with future data from the same source, and 
+                            ' therefore we must give up reusing this "unparsed" data after so many attempts
+                            ' to re-use it.
+                            ' In order to achieve this, we use a dictionary to keep track of how many times
+                            ' unparsed data from a given source has been reused. If the data has not been reused
+                            ' up to the specified limit for reusing the data, we'll reuse the data, or else we'll
+                            ' discard it.
+                            Dim reuseCount As Integer = 0
+                            m_unparsedDataReuseCount.TryGetValue(item(i).Source, reuseCount)
 
-                            If i < (item.Length - 1) Then
-                                ' This isn't the last data image in the batch.
-                                For k As Integer = i + 1 To item.Length - 1
-                                    ' We'll for a data image in the batch that is from the same source as this image.
-                                    If item(k).Source.Equals(item(i).Source) Then
-                                        Dim mergedImage As Byte() = CreateArray(Of Byte)(item(k).Item.Length + unusedData.Length)
-                                        Array.Copy(item(k).Item, 0, mergedImage, 0, item(k).Item.Length)
-                                        Array.Copy(unusedData, 0, mergedImage, item(k).Item.Length, unusedData.Length)
+                            If reuseCount < m_unparsedDataReuseLimit Then
+                                ' We can try to reuse the unparsed data make use of it.
+                                Dim insertUnusedData As Boolean = True
 
-                                        item(k).Item = mergedImage
+                                ' First, we extract the unparsed data from the data image.
+                                Dim unusedData As Byte() = CreateArray(Of Byte)(item(i).Item.Length - cursor)
+                                Array.Copy(item(i).Item, cursor, unusedData, 0, unusedData.Length)
 
-                                        insertUnusedData = False
-                                        Exit For
-                                    End If
-                                Next
+                                If i < (item.Length - 1) Then
+                                    ' This isn't the last data image in the batch, so we'll look for the first data 
+                                    ' image that is from the same source as this data image.
+                                    For k As Integer = i + 1 To item.Length - 1
+                                        If item(k).Source.Equals(item(i).Source) Then
+                                            ' We found a data image from the same source so we'll merge the unparsed
+                                            ' data with the data in that data image and hopefully now we'll be able
+                                            ' to parse the combined data.
+                                            Dim mergedImage As Byte() = CreateArray(Of Byte)(item(k).Item.Length + unusedData.Length)
+                                            Array.Copy(unusedData, 0, mergedImage, 0, unusedData.Length)
+                                            Array.Copy(item(k).Item, 0, mergedImage, unusedData.Length, item(k).Item.Length)
+
+                                            item(k).Item = mergedImage
+
+                                            insertUnusedData = False
+                                            Exit For
+                                        End If
+                                    Next
+                                End If
+
+                                If insertUnusedData Then
+                                    ' We could not find a data image from the same source as the current data image
+                                    ' so we'll just insert this data in the queue, so by the time this data is 
+                                    ' processed in the next batch, we might have data from the same source that we 
+                                    ' might be able to combine and use.
+                                    m_dataQueue.Insert(0, New IdentifiableItem(Of Guid, Byte())(item(i).Source, unusedData))
+                                End If
+
+                                reuseCount += 1
+                                m_unparsedDataReuseCount(item(i).Source) = reuseCount
+                                cursor = item(i).Item.Length    ' Move on to the next data image.
+                                RaiseEvent UnparsedDataReused(Me, New GenericEventArgs(Of TIdentifier)(typeID))
+                            Else
+                                cursor = item(i).Item.Length    ' Move on to the next data image.
+
+                                m_unparsedDataReuseCount(item(i).Source) = 0
+                                RaiseEvent UnparsedDataDiscarded(Me, New GenericEventArgs(Of TIdentifier)(typeID))
                             End If
+                        End Try
+                    Else
+                        ' If we come accross data in the image we cannot convert to a type than, we are going
+                        ' to have to discard the remainder of the image because we will now know where the
+                        ' the next valid block of data is within the image.
 
-                            If insertUnusedData Then
-                                m_dataQueue.Insert(0, New IdentifiableItem(Of Guid, Byte())(item(i).Source, unusedData))
-                            End If
+                        cursor = item(i).Item.Length    ' Move on to the next data image.
+                        RaiseEvent OutputTypeNotFound(Me, New GenericEventArgs(Of TIdentifier)(typeID))
+                    End If
+                Loop
 
-                            RaiseEvent DataReused(Me, New GenericEventArgs(Of TIdentifier)(typeID))
-                        Else
-                            RaiseEvent DataDiscarded(Me, New GenericEventArgs(Of TIdentifier)(typeID))
-                        End If
-                    End Try
-
-                    RaiseEvent DataParsed(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput)))(New IdentifiableItem(Of Guid, List(Of TOutput))(item(i).Source, output)))
-                Else
-                    ' We'll notify that we didn't find a output type we could use to represent this data image.
-                    RaiseEvent OutputTypeNotFound(Me, New GenericEventArgs(Of TIdentifier)(typeID))
-                End If
+                RaiseEvent DataParsed(Me, New GenericEventArgs(Of IdentifiableItem(Of Guid, List(Of TOutput)))(New IdentifiableItem(Of Guid, List(Of TOutput))(item(i).Source, output)))
             End If
         Next
 

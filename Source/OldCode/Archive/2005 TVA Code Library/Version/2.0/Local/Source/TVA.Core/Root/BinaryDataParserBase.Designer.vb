@@ -21,9 +21,9 @@ Partial Class BinaryDataParserBase(Of TIdentifier, TOutput)
 
         m_idPropertyName = "ClassID"
         m_optimizeParsing = True
-        m_discardUnparsedData = True
         m_settingsCategoryName = Me.GetType().Name
-        m_outputTypes = New Dictionary(Of TIdentifier, TypeInfo)
+        m_outputTypes = New Dictionary(Of TIdentifier, TypeInfo)()
+        m_unparsedDataReuseCount = New Dictionary(Of Guid, Integer)()
         m_dataQueue = TVA.Collections.ProcessQueue(Of IdentifiableItem(Of Guid, Byte())).CreateRealTimeQueue(AddressOf ParseData)
 
     End Sub
