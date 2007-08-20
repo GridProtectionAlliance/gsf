@@ -11,7 +11,7 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/12/2006 - Pinal C. Patel
-'       Original version of source code generated
+'       Generated original version of source code
 '  11/14/2006 - Pinal C. Patel
 '       Modified the ValidateConfigurationFile to save the config file only it was modified.
 '  12/12/2006 - Pinal C. Patel
@@ -28,9 +28,8 @@ Imports TVA.IO.FilePath
 Namespace Configuration
 
     ''' <summary>
-    ''' Represents a configuration file of a windows or web application.
+    ''' Represents a configuration file of a Windows or Web application.
     ''' </summary>
-    ''' <remarks></remarks>
     Public Class ConfigurationFile
 
         Private m_configuration As System.Configuration.Configuration
@@ -41,17 +40,15 @@ Namespace Configuration
         ''' <summary>
         ''' Initializes a default instance of TVA.Configuration.ConfigurationFile.
         ''' </summary>
-        ''' <remarks></remarks>
         Public Sub New()
             MyClass.New("")
         End Sub
 
         ''' <summary>
-        ''' Initializes a instance of TVA.Configuration.ConfigurationFile for the specified configuration file
-        ''' that belongs to a windows or web application.
+        ''' Initializes an instance of TVA.Configuration.ConfigurationFile for the specified configuration file
+        ''' that belongs to a Windows or Web application.
         ''' </summary>
-        ''' <param name="configFilePath">Path of the configuration file that belongs to a windows or web application.</param>
-        ''' <remarks></remarks>
+        ''' <param name="configFilePath">Path of the configuration file that belongs to a Windows or Web application.</param>
         Public Sub New(ByVal configFilePath As String)
             m_configuration = GetConfiguration(configFilePath)
             If m_configuration.HasFile() Then
@@ -65,9 +62,7 @@ Namespace Configuration
         ''' <summary>
         ''' Gets the TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.
         ''' </summary>
-        ''' <value></value>
         ''' <returns>The TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property CategorizedSettings() As CategorizedSettingsSection
             Get
                 Return DirectCast(m_configuration.GetSection(CustomSectionName), CategorizedSettingsSection)
@@ -77,9 +72,7 @@ Namespace Configuration
         ''' <summary>
         ''' Gets the System.Configuration.AppSettingsSection representing the "appSettings" section of the configuration file.
         ''' </summary>
-        ''' <value></value>
         ''' <returns>The System.Configuration.AppSettingsSection representing the "appSettings" section of the configuration file.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property AppSettings() As AppSettingsSection
             Get
                 Return m_configuration.AppSettings()
@@ -89,9 +82,7 @@ Namespace Configuration
         ''' <summary>
         ''' Gets the System.Configuration.ConnectionStringsSection representing the "connectionStrings" section of the configuration file.
         ''' </summary>
-        ''' <value></value>
         ''' <returns>The System.Configuration.ConnectionStringsSection representing the "connectionStrings" section of the configuration file.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property ConnectionStrings() As ConnectionStringsSection
             Get
                 Return m_configuration.ConnectionStrings()
@@ -101,9 +92,7 @@ Namespace Configuration
         ''' <summary>
         ''' Gets the physical path to the configuration file represented by this TVA.Configuration.Configuration object.
         ''' </summary>
-        ''' <value></value>
         ''' <returns>The physical path to the configuration file represented by this TVA.Configuration.ConfigurationFile object.</returns>
-        ''' <remarks></remarks>
         Public ReadOnly Property FilePath() As String
             Get
                 Return m_configuration.FilePath()
@@ -114,7 +103,6 @@ Namespace Configuration
         ''' Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object 
         ''' to the configuration file that it represents.
         ''' </summary>
-        ''' <remarks></remarks>
         Public Sub Save()
 
             Save(ConfigurationSaveMode.Modified)
@@ -126,7 +114,6 @@ Namespace Configuration
         ''' to the configuration file that it represents.
         ''' </summary>
         ''' <param name="saveMode">A System.Configuration.ConfigurationSaveMode value that determines which property values to save.</param>
-        ''' <remarks></remarks>
         Public Sub Save(ByVal saveMode As ConfigurationSaveMode)
 
             m_configuration.Save(saveMode)
@@ -138,7 +125,6 @@ Namespace Configuration
         ''' to the specified configuration file.
         ''' </summary>
         ''' <param name="fileName">The path and file name to save the configuration file to.</param>
-        ''' <remarks></remarks>
         Public Sub SaveAs(ByVal fileName As String)
 
             m_configuration.SaveAs(fileName)
@@ -178,12 +164,12 @@ Namespace Configuration
                 Dim configFileWriter As New XmlTextWriter(configFilePath, System.Text.Encoding.UTF8)
                 configFileWriter.Indentation = 4
                 configFileWriter.Formatting = Formatting.Indented
-                ' Populate the very basic information required in a config file.
+                ' Populates the very basic information required in a config file.
                 configFileWriter.WriteStartDocument()
                 configFileWriter.WriteStartElement("configuration")
                 configFileWriter.WriteEndElement()
                 configFileWriter.WriteEndDocument()
-                ' Close the config file.
+                ' Closes the config file.
                 configFileWriter.Close()
 
                 ValidateConfigurationFile(configFilePath)
@@ -204,7 +190,7 @@ Namespace Configuration
                 ' that is required by the .Net configuration API to process our custom <categorizedSettings />
                 ' section. The configuration API will raise an exception if it doesn't find this section.
                 If configFile.DocumentElement.SelectNodes("configSections").Count() = 0 Then
-                    ' The <configSections> node is not present, so we'll add one.
+                    ' Adds a <configSections> node, if one is not present.
                     configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), _
                         configFile.DocumentElement.FirstChild())
 
@@ -212,8 +198,8 @@ Namespace Configuration
                 End If
                 Dim configSectionsNode As XmlNode = configFile.DocumentElement.SelectSingleNode("configSections")
                 If configSectionsNode.SelectNodes("section[@name = '" & CustomSectionName & "']").Count() = 0 Then
-                    ' The <section> node that specifies the DLL that handles the <categorizedSettings> node in
-                    ' the config file is not present, so we'll add it.
+                    ' Adds the <section> node that specifies the DLL that handles the <categorizedSettings> node in
+                    ' the config file, if one is not present.
                     Dim node As XmlNode = configFile.CreateElement("section")
                     Attribute(node, "name") = CustomSectionName
                     Attribute(node, "type") = CustomSectionType
