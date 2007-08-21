@@ -11,7 +11,7 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  ??/??/???? - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code
 '  05/25/2004 - J. Ritchie Carroll 
 '       Added "with parameters" overloads to all basic query functions
 '  06/21/2004 - J. Ritchie Carroll
@@ -22,7 +22,7 @@
 '       them through.  Easy way to cut down on the amount of code.
 '       This code is just for calls to Stored Procedures and will not work for in-line SQL
 '  03/28/2006 - Pinal C. Patel
-'       2.0 version of source code migrated from 1.1 source (TVA.Database.Common)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Database.Common)
 '
 '*******************************************************************************************************
 
@@ -48,7 +48,7 @@ Namespace Data
 
         Private Sub New()
 
-            ' This class contains only global functions and is not meant to be instantiated
+            ' This class contains only global functions and is not meant to be instantiated.
 
         End Sub
 
@@ -65,7 +65,7 @@ Namespace Data
 
 #Region " ExecuteNonQuery Overloaded Functions "
         ''' <summary>
-        ''' Executes the SQL statement and returns the number of rows affected.
+        ''' Executes the SQL statement, and returns the number of rows affected.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connectString">The connection string used for connecting to the data source.</param>
@@ -737,7 +737,7 @@ Namespace Data
 
 #Region " RetrieveData Overloaded Functions "
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -750,7 +750,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -767,7 +767,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -782,7 +782,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -801,7 +801,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -814,7 +814,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -831,7 +831,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -846,7 +846,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Sql Server data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -865,7 +865,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -894,7 +894,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -909,7 +909,7 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset 
+        ''' Executes the SQL statement using .Net Oracle data provider, and returns the first table of resultset, 
         ''' if the resultset contains multiple tables.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
@@ -929,7 +929,7 @@ Namespace Data
 #Region " RetrieveDataSet Overloaded Functions "
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
-        ''' multiple table depending on the SQL statement.
+        ''' multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -942,7 +942,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
-        ''' multiple table depending on the SQL statement.
+        ''' multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -959,7 +959,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
-        ''' multiple table depending on the SQL statement.
+        ''' multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -974,7 +974,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
-        ''' multiple table depending on the SQL statement.
+        ''' multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OleDb.OleDbConnection to use for executing the SQL statement.</param>
@@ -1014,7 +1014,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
@@ -1031,7 +1031,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
@@ -1046,7 +1046,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Sql Server data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.SqlClient.SqlConnection to use for executing the SQL statement.</param>
@@ -1074,7 +1074,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
@@ -1087,7 +1087,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
@@ -1103,7 +1103,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
@@ -1118,7 +1118,7 @@ Namespace Data
 
         ''' <summary>
         ''' Executes the SQL statement using .Net Oracle data provider, and returns the resultset that may 
-        ''' contain multiple table depending on the SQL statement.
+        ''' contain multiple tables, depending on the SQL statement.
         ''' </summary>
         ''' <param name="sql">The SQL statement to be executed.</param>
         ''' <param name="connection">The System.Data.OracleClient.OracleConnection to use for executing the SQL statement.</param>
@@ -1200,9 +1200,9 @@ Namespace Data
         ''' Converts delimited text to System.Data.DataTable.
         ''' </summary>
         ''' <param name="delimitedData">The delimited text to be converted to System.Data.DataTable.</param>
-        ''' <param name="delimiter">The character(es) used for delimiting the text.</param>
-        ''' <param name="header">True if the delimited text contains header information; otherwise False.</param>
-        ''' <returns>An System.Data.DataTable object.</returns>
+        ''' <param name="delimiter">The character(s) used for delimiting the text.</param>
+        ''' <param name="header">True, if the delimited text contains header information; otherwise, false.</param>
+        ''' <returns>A System.Data.DataTable object.</returns>
         Public Shared Function DelimitedDataToDataTable(ByVal delimitedData As String, ByVal delimiter As String, _
                 ByVal header As Boolean) As DataTable
 
@@ -1210,14 +1210,14 @@ Namespace Data
             Dim pattern As String = Regex.Escape(delimiter) & "(?=(?:[^""]*""[^""]*"")*(?![^""]*""))" 'Regex pattern that will be used to split the delimited data.
 
             delimitedData = delimitedData.Trim(New Char() {" "c, vbCr, vbLf}).Replace(vbLf, "") 'Remove any leading and trailing whitespaces, carriage returns or line feeds.
-            Dim lines() As String = delimitedData.Split(vbCr)  'Split delimited data into lines.
+            Dim lines() As String = delimitedData.Split(vbCr)  'Splits delimited data into lines.
 
             Dim cursor As Integer = 0
-            'Assume that the first line has header information.
+            'Assumes that the first line has header information.
             Dim headers() As String = Regex.Split(lines(cursor), pattern)
-            'Create columns.
+            'Creates columns.
             If header Then
-                'Use the first row as header row.
+                'Uses the first row as header row.
                 For i As Integer = 0 To headers.Length() - 1
                     table.Columns.Add(New DataColumn(headers(i).Trim(New Char() {""""c}))) 'Remove any leading and trailing quotes from the column name.
                 Next
@@ -1228,20 +1228,20 @@ Namespace Data
                 Next
             End If
 
-            'Populate the data table with csv data.
+            'Populates the data table with csv data.
             For cursor = cursor To lines.Length() - 1
-                Dim row As DataRow = table.NewRow() 'Create new row.
+                Dim row As DataRow = table.NewRow() 'Creates new row.
 
-                'Populate the new row.
+                'Populates the new row.
                 Dim fields() As String = Regex.Split(lines(cursor), pattern)
                 For i As Integer = 0 To fields.Length() - 1
-                    row(i) = fields(i).Trim(New Char() {""""c})    'Remove any leading and trailing quotes from the data.
+                    row(i) = fields(i).Trim(New Char() {""""c})    'Removes any leading and trailing quotes from the data.
                 Next
 
-                table.Rows.Add(row) 'Add the new row.
+                table.Rows.Add(row) 'Adds the new row.
             Next
 
-            'Return the data table.
+            'Returns the data table.
             Return table
 
         End Function
@@ -1250,15 +1250,15 @@ Namespace Data
         ''' Converts the System.Data.DataTable to delimited text.
         ''' </summary>
         ''' <param name="table">The System.Data.DataTable whose data is to be converted to delimited text.</param>
-        ''' <param name="delimiter">The character(es) to be used for delimiting the text.</param>
-        ''' <param name="quoted">True if text is to be surrounded by quotes; otherwise False.</param>
-        ''' <param name="header">True if the delimited text should have header information.</param>
+        ''' <param name="delimiter">The character(s) to be used for delimiting the text.</param>
+        ''' <param name="quoted">True, if text is to be surrounded by quotes; otherwise, false.</param>
+        ''' <param name="header">True, if the delimited text should have header information.</param>
         ''' <returns>A string of delimited text.</returns>
         Public Shared Function DataTableToDelimitedData(ByVal table As DataTable, ByVal delimiter As String, _
                 ByVal quoted As Boolean, ByVal header As Boolean) As String
 
             With New StringBuilder
-                'Use the column names as the headers if headers are requested.
+                'Uses the column names as the headers if headers are requested.
                 If header Then
                     For i As Integer = 0 To table.Columns().Count() - 1
                         .Append(IIf(quoted, """", "") & table.Columns(i).ColumnName() & IIf(quoted, """", ""))
@@ -1271,7 +1271,7 @@ Namespace Data
                 End If
 
                 For i As Integer = 0 To table.Rows().Count() - 1
-                    'Convert data table's data to delimited data.
+                    'Converts data table's data to delimited data.
                     For j As Integer = 0 To table.Columns().Count() - 1
                         .Append(IIf(quoted, """", "") & table.Rows(i)(j).ToString() & IIf(quoted, """", ""))
 
@@ -1282,7 +1282,7 @@ Namespace Data
                     .Append(vbCrLf)
                 Next
 
-                'Return the delimited data.
+                'Returns the delimited data.
                 Return .ToString()
             End With
 
@@ -1290,18 +1290,17 @@ Namespace Data
 #End Region
 
 #Region " Helpers "
-        ' tmshults 12/10/2004 - This is the private method that takes the passed Command Object queries what the 
-        '                       parameters are for the given StoredProcedure and then populates the values of the 
-        '                       command used to populate DataSets, Datatables, DataReaders or just used simply to 
-        '                       execute the required code with no need to return any data.
+        ' tmshults 12/10/2004 - Takes the passed Command Object queries, plus the parameters for the given StoredProcedure, and then populates 
+        '                       the values of the command used to populate DataSets, Datatables, DataReaders; or, executes the required code 
+        '                       with no need to return any data.
         Private Shared Sub FillStoredProcParameters(ByRef command As IDbCommand, ByVal connectionType As ConnectionType, ByVal parameters() As Object)
 
             If parameters IsNot Nothing Then
-                ' This is required for the SqlCommandBuilder to call Derive Parameters
+                ' Required for the SqlCommandBuilder to call Derive Parameters.
                 command.CommandType = CommandType.StoredProcedure
 
-                ' Makes quick query to db to find the parameters for the StoredProc 
-                ' and then creates them for the command
+                ' Makes quick query to db to find the parameters for the StoredProc, 
+                ' and then creates them for the command.
                 Select Case connectionType
                     Case connectionType.SqlClient
                         SqlClient.SqlCommandBuilder.DeriveParameters(command)
@@ -1311,21 +1310,21 @@ Namespace Data
                         OleDb.OleDbCommandBuilder.DeriveParameters(command)
                 End Select
 
-                ' Remove the ReturnValue Parameter
+                ' Removes the ReturnValue Parameter.
                 command.Parameters.RemoveAt(0)
 
-                ' Check to see if the Parameters found match the Values provide
+                ' Checks to see if the Parameters found match the Values provided.
                 If command.Parameters.Count() <> parameters.Length() Then
-                    ' If there are more values provide than parameters throw an error
+                    ' If there are more values than parameters, throws an error.
                     If parameters.Length > command.Parameters.Count Then _
                         Throw New ArgumentException("You have supplied more Values than Parameters listed for the Stored Procedure")
 
-                    ' Otherwise assume that the missing values are for Parameters that have default values
-                    ' and the code is willing to use the default.  To do this fill the extended ParamValue as Nothing/Null
-                    ReDim Preserve parameters(command.Parameters.Count - 1) ' Make the Values array match the Parameters of the Stored Proc
+                    ' Otherwise, assume that the missing values are for Parameters that have default values,
+                    ' and the code uses the default. To do this fill the extended ParamValue as Nothing/Null.
+                    ReDim Preserve parameters(command.Parameters.Count - 1) ' Makes the Values array match the Parameters of the Stored Proc.
                 End If
 
-                ' Assign the values to the the Parameters.
+                ' Assigns the values to the the Parameters.
                 For i As Integer = 0 To command.Parameters.Count() - 1
                     command.Parameters(i).Value = parameters(i)
                 Next
