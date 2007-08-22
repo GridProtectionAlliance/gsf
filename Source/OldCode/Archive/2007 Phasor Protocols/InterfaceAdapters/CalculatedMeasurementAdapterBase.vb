@@ -53,7 +53,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         ByVal outputMeasurements As IMeasurement(), _
         ByVal inputMeasurementKeys As MeasurementKey(), _
         ByVal minimumMeasurementsToUse As Integer, _
-        ByVal expectedMeasurementsPerSecond As Integer, _
+        ByVal expectedFrameRate As Integer, _
         ByVal lagTime As Double, _
         ByVal leadTime As Double) Implements ICalculatedMeasurementAdapter.Initialize
 
@@ -74,7 +74,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
             m_minimumMeasurementsToUse = minimumMeasurementsToUse
         End If
 
-        Me.FramesPerSecond = expectedMeasurementsPerSecond
+        Me.FramesPerSecond = expectedFrameRate
         Me.LagTime = lagTime
         Me.LeadTime = leadTime
 
