@@ -348,7 +348,7 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
         ' Map data frame measurement instances to their associated point ID's
-        Dim pmu As ConfigurationCell = Nothing
+        Dim pmu As ConfigurationCell
         Dim dataCell As IDataCell
         Dim phasors As PhasorValueCollection
         Dim analogs As AnalogValueCollection
