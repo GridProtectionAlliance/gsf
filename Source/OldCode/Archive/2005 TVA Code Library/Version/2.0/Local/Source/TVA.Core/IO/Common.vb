@@ -11,9 +11,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  01/24/2006 - J. Ritchie Carroll
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Common).
 '  03/06/2007 - J. Ritchie Carroll
-'       Added "CompareBuffers" method to compare to binary buffers
+'       Added "CompareBuffers" method to compare to binary buffers.
 '
 '*******************************************************************************************************
 
@@ -21,18 +21,18 @@ Imports TVA.Common
 
 Namespace IO
 
-    ''' <summary>Defines common IO related functions (e.g., common stream and buffer functions)</summary>
+    ''' <summary>Defines common IO related functions (e.g., common stream and buffer functions).</summary>
     Public NotInheritable Class Common
 
         Private Const BufferSize As Integer = 32768
 
         Private Sub New()
 
-            ' This class contains only global functions and is not meant to be instantiated
+            ' This class contains only global functions and is not meant to be instantiated.
 
         End Sub
 
-        ''' <summary>Copies input stream onto output stream</summary>
+        ''' <summary>Copies input stream onto output stream.</summary>
         Public Shared Sub CopyStream(ByVal inStream As System.IO.Stream, ByVal outStream As System.IO.Stream)
 
             Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
@@ -45,8 +45,8 @@ Namespace IO
 
         End Sub
 
-        ''' <summary>Reads entire stream contents and returns byte array of data</summary>
-        ''' <remarks>Note: you should only use this on streams where you know the data size to be small</remarks>
+        ''' <summary>Reads entire stream contents, and returns byte array of data.</summary>
+        ''' <remarks>Note: You should only use this on streams where you know the data size is small.</remarks>
         Public Shared Function ReadStream(ByVal inStream As System.IO.Stream) As Byte()
 
             Dim outStream As New System.IO.MemoryStream
@@ -57,8 +57,8 @@ Namespace IO
 
         End Function
 
-        ''' <summary>Returns a copy of the specified portion of the source buffer</summary>
-        ''' <remarks>This function will grow or shrink returned buffer as needed to make it the desired length</remarks>
+        ''' <summary>Returns a copy of the specified portion of the source buffer.</summary>
+        ''' <remarks>Grows or shrinks returned buffer, as needed, to make it the desired length.</remarks>
         Public Shared Function CopyBuffer(ByVal buffer As Byte(), ByVal startIndex As Integer, ByVal length As Integer) As Byte()
 
             Dim copiedBytes As Byte() = CreateArray(Of Byte)(IIf(buffer.Length - startIndex < length, buffer.Length - startIndex, length))
@@ -69,29 +69,29 @@ Namespace IO
 
         End Function
 
-        ''' <summary>Returns comparision results of two binary buffers</summary>
+        ''' <summary>Returns comparision results of two binary buffers.</summary>
         Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal buffer2 As Byte()) As Boolean
 
             If buffer1 Is Nothing AndAlso buffer2 Is Nothing Then
-                ' Both buffers are assumed equal if both are nothing
+                ' Both buffers are assumed equal if both are nothing.
                 Return 0
             ElseIf buffer1 Is Nothing Then
-                ' Buffer 2 has data and buffer 1 is nothing, buffer 2 assumed larger
+                ' Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
                 Return 1
             ElseIf buffer2 Is Nothing Then
-                ' Buffer 1 has data and buffer 2 is nothing, buffer 1 assumed larger
+                ' Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
                 Return -1
             Else
-                ' Code replicated here as an optimization instead of calling overloaded CompareBuffers
-                ' to prevent duplicate "Is Nothing" checks for empty buffers - this function needs to
-                ' execute as quickly as possible given possible intended uses...
+                ' Code replicated here as an optimization, instead of calling overloaded CompareBuffers
+                ' to prevent duplicate "Is Nothing" checks for empty buffers. This function needs to
+                ' execute as quickly as possible given possible intended uses.
                 Dim length1 As Integer = buffer1.Length
                 Dim length2 As Integer = buffer2.Length
 
                 If length1 = length2 Then
                     Dim comparision As Integer
 
-                    ' Compare elements of buffers that are equal sized
+                    ' Compares elements of buffers that are of equal size.
                     For x As Integer = 0 To length1 - 1
                         comparision = buffer1(x).CompareTo(buffer2(x))
                         If comparision <> 0 Then Exit For
@@ -99,7 +99,7 @@ Namespace IO
 
                     Return comparision
                 Else
-                    ' Buffer lengths are unequal, buffer with largest number of elements assumed to be largest
+                    ' Buffer lengths are unequal. Buffer with largest number of elements is assumed to be largest.
                     Return length1.CompareTo(length2)
                 End If
             End If
@@ -109,19 +109,19 @@ Namespace IO
         Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal offset1 As Integer, ByVal length1 As Integer, ByVal buffer2 As Byte(), ByVal offset2 As Integer, ByVal length2 As Integer) As Boolean
 
             If buffer1 Is Nothing AndAlso buffer2 Is Nothing Then
-                ' Both buffers are assumed equal if both are nothing
+                ' Both buffers are assumed equal if both are nothing.
                 Return 0
             ElseIf buffer1 Is Nothing Then
-                ' Buffer 2 has data and buffer 1 is nothing, buffer 2 assumed larger
+                ' Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
                 Return 1
             ElseIf buffer2 Is Nothing Then
-                ' Buffer 1 has data and buffer 2 is nothing, buffer 1 assumed larger
+                ' Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
                 Return -1
             Else
                 If length1 = length2 Then
                     Dim comparision As Integer
 
-                    ' Compare elements of buffers that are equal sized
+                    ' Compares elements of buffers that are of equal size.
                     For x As Integer = 0 To length1 - 1
                         comparision = buffer1(offset1 + x).CompareTo(buffer2(offset2 + x))
                         If comparision <> 0 Then Exit For
@@ -129,7 +129,7 @@ Namespace IO
 
                     Return comparision
                 Else
-                    ' Buffer lengths are unequal, buffer with largest number of elements assumed to be largest
+                    ' Buffer lengths are unequal. Buffer with largest number of elements is assumed to be largest.
                     Return length1.CompareTo(length2)
                 End If
             End If

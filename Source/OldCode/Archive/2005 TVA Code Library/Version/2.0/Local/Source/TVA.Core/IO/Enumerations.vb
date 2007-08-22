@@ -5,11 +5,11 @@ Namespace IO
     ''' </summary>
     Public Enum LogFileFullOperation As Integer
         ''' <summary>
-        ''' Truncate the existing entries in the log file to make space for new entries.
+        ''' Truncates the existing entries in the log file to make space for new entries.
         ''' </summary>
         Truncate
         ''' <summary>
-        ''' Rollover to a new log file and keep the full log file for reference.
+        ''' Rolls over to a new log file, and keeps the full log file for reference.
         ''' </summary>
         Rollover
     End Enum
