@@ -318,7 +318,7 @@ Public Class PhasorMeasurementReceiver
 
     Public ReadOnly Property HistorianName() As String Implements IServiceComponent.Name
         Get
-            Return String.Format("[{0}]: {1}", m_archiverSource, m_historianAdapter.Name)
+            Return String.Format("[{0}] {1}", m_archiverSource, m_historianAdapter.Name)
         End Get
     End Property
 
