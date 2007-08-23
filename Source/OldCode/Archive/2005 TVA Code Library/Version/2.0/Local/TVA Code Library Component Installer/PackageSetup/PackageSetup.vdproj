@@ -711,14 +711,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TVA Code Library Component Installer"
-        "ProductCode" = "8:{3BCC2D2F-BFD9-4398-B419-A336594268D5}"
-        "PackageCode" = "8:{D2163CBD-1D08-4A29-86B6-D435FA1D1C3D}"
+        "ProductCode" = "8:{BAF85D0B-8042-4DC5-B492-886052C2FEE3}"
+        "PackageCode" = "8:{BF30747A-7135-4E63-BEA9-795DDD1E10E8}"
         "UpgradeCode" = "8:{D2869791-F90D-45CE-97D6-E7067609EFBC}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:2.0.0"
+        "ProductVersion" = "8:2.0.1"
         "Manufacturer" = "8:TVA"
         "ARPHELPTELEPHONE" = "8:(423) 751-2827"
         "ARPHELPLINK" = "8:"
@@ -1494,7 +1494,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_2BC14F1A421C482DA938FF31EA1AC307"
             {
-            "SourcePath" = "8:..\\obj\\Release\\TVA Code Library Component Installer.dll"
+            "SourcePath" = "8:..\\obj\\Debug\\TVA Code Library Component Installer.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_D730680D854845F882FFBE237807C289"

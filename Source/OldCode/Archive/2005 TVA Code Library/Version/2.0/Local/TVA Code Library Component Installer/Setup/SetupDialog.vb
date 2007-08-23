@@ -10,12 +10,12 @@ Public NotInheritable Class SetupDialog
             Me.Show()
 
             ' Run project aggregator2
-            RunInstallation("ProjectAggregator2.msi")
+            RunInstallation("ProjectAggregator2.msi", "/quiet")
 
             InstallationStep.Text = "Installing TVA Visual Studio package component..."
 
             ' Run package setup
-            RunInstallation("PackageSetup.msi")
+            RunInstallation("PackageSetup.msi", "/quiet")
 
             InstallationStep.Text = "Registering package component into Visual Studio..."
 
@@ -73,10 +73,12 @@ Public NotInheritable Class SetupDialog
                 If params.Length > 1 Then
                     With Process.Start(params(0), params(1))
                         .WaitForExit()
+                        Debug.WriteLine(String.Format("{0} exit code = ", params(0), .ExitCode))
                     End With
                 ElseIf params.Length > 0 Then
                     With Process.Start(params(0))
                         .WaitForExit()
+                        Debug.WriteLine(String.Format("{0} exit code = ", params(0), .ExitCode))
                     End With
                 End If
             End If
