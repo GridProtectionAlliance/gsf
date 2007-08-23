@@ -11,9 +11,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  11/12/2004 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code.
 '  12/29/2005 - Pinal C. Patel
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Math)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Math).
 '
 '*******************************************************************************************************
 
@@ -21,7 +21,8 @@ Imports TVA.Common
 
 Namespace Math
 
-    ''' <summary>Class to temporarily cache composite values until all values been received so that a compound value can be created.</summary>
+    ''' <summary>Temporarily caches composite values until all values been received, so that a compound value 
+    ''' can be created.</summary>
     Public Class CompositeValues
 
         Private Structure CompositeValue
@@ -34,8 +35,9 @@ Namespace Math
         Private m_compositeValues As CompositeValue()
         Private m_allReceived As Boolean
 
-        ''' <summary>This constructor creates a new instance of the CompositeValues class specifing the total number of composite values to track.</summary>
-        ''' <param name="count">Total number of composite values to track</param>
+        ''' <summary>Creates a new instance of the CompositeValues class, specifing the total number of 
+        ''' composite values to track.</summary>
+        ''' <param name="count">Total number of composite values to track.</param>
         Public Sub New(ByVal count As Integer)
 
             m_compositeValues = CreateArray(Of CompositeValue)(count)
@@ -43,8 +45,8 @@ Namespace Math
         End Sub
 
         ''' <summary>Gets or sets the composite value at the specified index in composite value collection.</summary>
-        ''' <param name="index">The zero-based index of the composite value to get or set</param>
-        ''' <returns>The composite value at the specified index in composite value collection</returns>
+        ''' <param name="index">The zero-based index of the composite value to get or set.</param>
+        ''' <returns>The composite value at the specified index in composite value collection.</returns>
         Default Public Property Value(ByVal index As Integer) As Double
             Get
                 Return m_compositeValues(index).Value
@@ -59,14 +61,14 @@ Namespace Math
 
         ''' <summary>Gets a boolean value indicating if composite value at the specified index is received.</summary>
         ''' <param name="index">The zero-based index of the composite value.</param>
-        ''' <returns>True if composite value at the specified index is received; otherwise, False.</returns>
+        ''' <returns>True, if composite value at the specified index is received; otherwise, false.</returns>
         Public ReadOnly Property Received(ByVal index As Integer) As Boolean
             Get
                 Return m_compositeValues(index).Received
             End Get
         End Property
 
-        ''' <summary>Gets the number of compisite values in the composite value collection.</summary>
+        ''' <summary>Gets the number of composite values in the composite value collection.</summary>
         ''' <returns>To be provided.</returns>
         Public ReadOnly Property Count() As Integer
             Get
@@ -75,7 +77,7 @@ Namespace Math
         End Property
 
         ''' <summary>Gets a boolean value indicating if all composite values are received.</summary>
-        ''' <returns>True if all composite values are received; otherwise, False.</returns>
+        ''' <returns>True, if all composite values are received; otherwise, false.</returns>
         Public ReadOnly Property AllReceived() As Boolean
             Get
                 If m_allReceived Then
