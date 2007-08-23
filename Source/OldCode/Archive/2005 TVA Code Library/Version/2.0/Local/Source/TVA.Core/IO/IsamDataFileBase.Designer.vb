@@ -7,7 +7,7 @@ Namespace IO
         Public Sub New(ByVal container As System.ComponentModel.IContainer)
             MyClass.New()
 
-            'Required for Windows.Forms Class Composition Designer support
+            'Required for Windows.Forms Class Composition Designer support.
             If (container IsNot Nothing) Then
                 container.Add(Me)
             End If
@@ -18,7 +18,7 @@ Namespace IO
         Public Sub New()
             MyBase.New()
 
-            'This call is required by the Component Designer.
+            'Required by the Component Designer.
             InitializeComponent()
 
             m_name = Me.GetType().Name & Extension
@@ -34,11 +34,11 @@ Namespace IO
 
         End Sub
 
-        'Component overrides dispose to clean up the component list.
+        'Overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
             Try
-                Close()         ' Close the file.
+                Close()         ' Closes the file.
                 SaveSettings()  ' Saves settings to the config file.
                 If disposing AndAlso components IsNot Nothing Then
                     components.Dispose()
@@ -48,11 +48,11 @@ Namespace IO
             End Try
         End Sub
 
-        'Required by the Component Designer
+        'Required by the Component Designer.
         Private components As System.ComponentModel.IContainer
 
-        'NOTE: The following procedure is required by the Component Designer
-        'It can be modified using the Component Designer.
+        'NOTE: Required by the Component Designer. 
+        'Can be modified using the Component Designer.
         'Do not modify it using the code editor.
         <System.Diagnostics.DebuggerStepThrough()> _
         Private Sub InitializeComponent()
