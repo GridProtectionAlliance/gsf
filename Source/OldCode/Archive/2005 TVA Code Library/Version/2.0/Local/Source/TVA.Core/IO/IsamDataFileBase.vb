@@ -156,7 +156,7 @@ Namespace IO
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
-        ''' <remarks>In KB</remarks>
+        ''' <remarks>In KB.</remarks>
         <Browsable(False)> _
         Public ReadOnly Property MemoryUsage() As Long
             Get
@@ -200,29 +200,29 @@ Namespace IO
                 m_name = AbsolutePath(m_name)
                 If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                 If File.Exists(m_name) Then
-                    ' File exists, so we'll open it.
+                    ' Opens existing file.
                     m_fileStream = New FileStream(m_name, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
                 Else
-                    ' File doesn't exist, so we'll create it.
+                    ' Creates file.
                     m_fileStream = New FileStream(m_name, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
                 End If
 
                 If m_loadOnOpen Then Load()
 
-                ' Make sure that we have the minimum number of records specified.
+                ' Makes sure that we have the minimum number of records specified.
                 For i As Integer = PersistedRecordCount + 1 To m_minimumRecordCount
                     Write(i, NewRecord(i))
                 Next
 
                 If m_reloadOnModify Then
-                    ' Watch for any modifications made to the file.
+                    ' Watches for any modifications made to the file.
                     FileSystemWatcher.Path = JustPath(m_name)
                     FileSystemWatcher.Filter = JustFileName(m_name)
                     FileSystemWatcher.EnableRaisingEvents = True
                 End If
 
                 If m_autoSaveInterval > 0 Then
-                    ' Start the timer for saving data automatically.
+                    ' Starts the timer for saving data automatically.
                     m_autoSaveTimer.Interval = m_autoSaveInterval
                     m_autoSaveTimer.Start()
                 End If
@@ -237,16 +237,16 @@ Namespace IO
             If IsOpen Then
                 RaiseEvent FileClosing(Me, EventArgs.Empty)
 
-                ' Stop the timers if they are ticking.
+                ' Stops the timers if they are ticking.
                 m_autoSaveTimer.Stop()
 
-                ' Stop monitoring for changes to the file.
+                ' Stops monitoring for changes to the file.
                 FileSystemWatcher.EnableRaisingEvents = False
 
-                ' Save records back to the file if specified.
+                ' Saves records back to the file if specified.
                 If m_saveOnClose Then Save()
 
-                ' Release all of the used resources.
+                ' Releases all of the used resources.
                 If m_fileStream IsNot Nothing Then
                     SyncLock m_fileStream
                         m_fileStream.Dispose()
@@ -268,9 +268,9 @@ Namespace IO
         Public Sub Load()
 
             If IsOpen Then
-                ' We'll wait any pending request to save records to finish executing.
+                ' Waits for any pending request to save records before completing.
                 m_saveWaitHandle.WaitOne()
-                ' We wait for any prior request to loading records to finish executing.
+                ' Waits for any prior request to load records before completing.
                 m_loadWaitHandle.WaitOne()
 
                 m_loadWaitHandle.Reset()
@@ -302,16 +302,16 @@ Namespace IO
         Public Sub Save()
 
             If IsOpen Then
-                ' We'll wait any pending request to save records to finish executing.
+                ' Waits for any pending request to save records before completing.
                 m_saveWaitHandle.WaitOne()
-                ' We wait for any prior request to loading records to finish executing.
+                ' Waits for any prior request to load records before completing.
                 m_loadWaitHandle.WaitOne()
 
                 m_saveWaitHandle.Reset()
                 Try
                     RaiseEvent DataSaving(Me, EventArgs.Empty)
 
-                    ' We have to save (persist) records to the file only if we have them in memory.
+                    ' Saves (persists) records to the file, if present in memory.
                     If m_fileRecords IsNot Nothing Then
                         SyncLock m_fileRecords
                             WriteToDisk(m_fileRecords)
@@ -373,7 +373,7 @@ Namespace IO
                                 m_fileRecords.Add(record)
                             End SyncLock
                         Else
-                            ' Update the existing record with the new one.
+                            ' Updates the existing record with the new one.
                             SyncLock m_fileRecords
                                 m_fileRecords(recordID - 1) = record
                             End SyncLock
@@ -394,10 +394,10 @@ Namespace IO
                 Dim records As New List(Of T)()
 
                 If m_fileRecords Is Nothing Then
-                    ' We don't have any records in memory so, we'll read the persisted records.
+                    ' Reads persisted records if no records are in memory.
                     records.InsertRange(0, ReadFromDisk())
                 Else
-                    ' We already have records in memory that were read earlier, so we'll just use them.
+                    ' Reads records in memory.
                     SyncLock m_fileRecords
                         records.InsertRange(0, m_fileRecords)
                     End SyncLock
@@ -417,10 +417,10 @@ Namespace IO
                 If recordID > 0 Then
                     ' ID of the requested record is valid.
                     If m_fileRecords Is Nothing AndAlso recordID <= PersistedRecordCount Then
-                        ' The requested record exists in the file so we'll read it.
+                        ' Reads the requested record exists in the file.
                         record = ReadFromDisk(recordID)
                     ElseIf m_fileRecords IsNot Nothing AndAlso recordID <= InMemoryRecordCount Then
-                        ' We have the request record in memory, so we'll just use it.
+                        ' Uses the requested record from memory.
                         SyncLock m_fileRecords
                             record = m_fileRecords(recordID - 1)
                         End SyncLock
@@ -481,7 +481,7 @@ Namespace IO
                     End If
                 End With
             Catch ex As Exception
-                ' We'll encounter exceptions if the settings are not present in the config file.
+                ' Exceptions will occur if the settings are not present in the config file.
             End Try
 
         End Sub
@@ -519,7 +519,7 @@ Namespace IO
                     End With
                     TVA.Configuration.Common.SaveSettings()
                 Catch ex As Exception
-                    ' We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                    ' Exceptions may occur if the settings cannot be saved to the config file.
                 End Try
             End If
 
@@ -531,14 +531,14 @@ Namespace IO
 
         Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
 
-            ' We don't need to do anything before the component is initialized.
+            ' No prerequisites before the component is initialized.
 
         End Sub
 
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
             If Not DesignMode Then
-                LoadSettings()  ' Load settings from the config file.
+                LoadSettings()  ' Loads settings from the config file.
             End If
 
         End Sub
