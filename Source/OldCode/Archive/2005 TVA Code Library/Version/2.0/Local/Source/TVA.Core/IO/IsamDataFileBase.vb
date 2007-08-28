@@ -62,7 +62,7 @@ Namespace IO
             End Get
             Set(ByVal value As String)
                 If Not String.IsNullOrEmpty(value) Then
-                    If String.Compare(JustFileExtension(value), Extension) = 0 Then
+                    If String.Compare(JustFileExtension(value), Extension, True) = 0 Then
                         m_name = value
                         If IsOpen() Then
                             Close()
