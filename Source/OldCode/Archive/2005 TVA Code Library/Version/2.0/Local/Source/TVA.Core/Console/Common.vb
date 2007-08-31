@@ -41,9 +41,9 @@ Namespace Console
 
 #Region " Public Code "
 
-        ' VB doesn't provide you with an array of tokenized command line arguments - they're all in one string.  So this function
-        ' creates the desired tokenized argument array from the VB command line...
-        ' This function will always return at least one argument, even if it's an empty-string
+        ' VB does not provide you with an array of tokenized command line arguments; they are all in one string.  
+        ' So, this function creates the desired tokenized argument array from the VB command line.
+        ' This function will always return at least one argument, even if it is an empty string.
         Public Shared Function ParseCommand(ByVal command As String) As String()
 
             Dim parsedCommand As New List(Of String)()
@@ -55,10 +55,10 @@ Namespace Console
                 Dim argumentInQuotes As Boolean
                 Dim currentCharacter As Char
 
-                ' Encode embedded quotes - we allow embedded/nested quotes encoded as \"
+                ' Encodes embedded quotes. It allows embedded/nested quotes encoded as \".
                 command = Replace(command, "\""", encodedQuote)
 
-                ' Combine any quoted strings into a single arg by encoding embedded spaces
+                ' Combines any quoted strings into a single arg by encoding embedded spaces.
                 For x As Integer = 0 To command.Length - 1
                     currentCharacter = command.Chars(x)
 
@@ -83,9 +83,9 @@ Namespace Console
 
                 command = encodedCommand.ToString()
 
-                ' Parse every argument out by space and combine any quoted strings into a single arg
+                ' Parses every argument out by space and combine any quoted strings into a single arg.
                 For Each argument As String In command.Split(" "c)
-                    ' Add tokenized argument making sure to unencode any embedded quotes or spaces
+                    ' Adds tokenized argument, making sure to unencode any embedded quotes or spaces.
                     argument = Trim(Replace(Replace(argument, encodedQuote, """"), encodedSpace, " "))
                     If argument.Length > 0 Then parsedCommand.Add(argument)
                 Next
@@ -97,8 +97,8 @@ Namespace Console
 
         Public Shared Sub EnableRaisingEvents()
 
-            ' Member variable is used here so that the delegate is not garbage collected by the time it is called by
-            ' WIN API when any of the control events take place.
+            ' Member variable is used here so that the delegate is not garbage collected by the time it is called 
+            ' by WIN API when any of the control events take place.
             ' http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=996045&SiteID=1
             m_handler = AddressOf HandleConsoleWindowEvents
             SetConsoleWindowEventRaising(m_handler, True)
@@ -131,7 +131,8 @@ Namespace Console
 
             ' ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.WIN32COM.v10.en/dllproc/base/handlerroutine.htm
 
-            ' When this function doesn't return True, the default handler is called and the default action takes place.
+            ' When this function does not return True, the default handler is called and the default action takes 
+            ' place.
             Select Case controlType
                 Case ConsoleEventType.CancelKeyPress
                     Dim ctrlCKeyPressEventData As New System.ComponentModel.CancelEventArgs()
