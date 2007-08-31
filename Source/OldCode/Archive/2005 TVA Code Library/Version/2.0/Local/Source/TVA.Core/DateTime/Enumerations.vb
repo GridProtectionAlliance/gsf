@@ -14,13 +14,13 @@
 '       Moved all namespace level enumerations into "Enumerations.vb" file
 '  09/15/2007 - J. Ritchie Carroll
 '       Added BaselineTimeInterval enumeration to support multiple time intervals
-'       in the BaselinedTimestamp function
+'       in the BaselinedTimestamp function.
 '
 '*******************************************************************************************************
 
 Namespace DateTime
 
-    ''' <summary>Time names enumeration used by SecondsToText function</summary>
+    ''' <summary>Time names enumeration used by SecondsToText function.</summary>
     Public Enum TimeName
         Year
         Years
@@ -36,7 +36,7 @@ Namespace DateTime
         NoSeconds
     End Enum
 
-    ''' <summary>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function</summary>
+    ''' <summary>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function.</summary>
     Public Enum TimeZoneName
         DaylightName
         DaylightAbbreviation
@@ -45,19 +45,22 @@ Namespace DateTime
         StandardAbbreviation
     End Enum
 
-    ''' <summary>Time intervals enumeration used by BaselinedTimestamp function</summary>
+    ''' <summary>Time intervals enumeration used by BaselinedTimestamp function.</summary>
     Public Enum BaselineTimeInterval
-        ''' <summary>Baseline timestamp to the second (i.e., starting at zero milliseconds)</summary>
+        ''' <summary>Baseline timestamp to the second (i.e., starting at zero milliseconds).</summary>
         Second
-        ''' <summary>Baseline timestamp to the minute (i.e., starting at zero seconds and milliseconds)</summary>
+        ''' <summary>Baseline timestamp to the minute (i.e., starting at zero seconds and milliseconds).</summary>
         Minute
-        ''' <summary>Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds)</summary>
+        ''' <summary>Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds).</summary>
         Hour
-        ''' <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and milliseconds)</summary>
+        ''' <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and 
+        ''' milliseconds).</summary>
         Day
-        ''' <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds and milliseconds)</summary>
+        ''' <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds 
+        ''' and milliseconds).</summary>
         Month
-        ''' <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, seconds and milliseconds)</summary>
+        ''' <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, 
+        ''' seconds and milliseconds).</summary>
         Year
     End Enum
 
