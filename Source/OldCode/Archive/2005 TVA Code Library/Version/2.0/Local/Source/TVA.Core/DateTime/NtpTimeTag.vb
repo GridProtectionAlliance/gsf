@@ -11,11 +11,11 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  01/14/2005 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code.
 '  12/21/2005 - J. Ritchie Carroll
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.DateTime)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.DateTime).
 '  07/12/2006 - J. Ritchie Carroll
-'       Modified class to be derived from new "TimeTagBase" class 
+'       Modified class to be derived from new "TimeTagBase" class.
 '
 '*******************************************************************************************************
 
@@ -24,13 +24,13 @@ Imports TVA.DateTime.Common
 
 Namespace DateTime
 
-    ''' <summary>Standard Network Time Protocol Timetag</summary>
+    ''' <summary>Standard Network Time Protocol Timetag.</summary>
     Public Class NtpTimeTag
 
         Inherits TimeTagBase
 
         ' NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this
-        ' date to get offset in ticks for later conversion...
+        ' date to get offset in ticks for later conversion.
         Private Shared m_ntpDateOffsetTicks As Long = (New Date(1900, 1, 1, 0, 0, 0)).Ticks
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
@@ -39,16 +39,16 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new NTP timetag given number of seconds since 1/1/1900</summary>
-        ''' <param name="seconds">Number of seconds since 1/1/1900</param>
+        ''' <summary>Creates new NTP timetag, given number of seconds since 1/1/1900.</summary>
+        ''' <param name="seconds">Number of seconds since 1/1/1900.</param>
         Public Sub New(ByVal seconds As Double)
 
             MyBase.New(m_ntpDateOffsetTicks, seconds)
 
         End Sub
 
-        ''' <summary>Creates new NTP timetag given standard .NET DateTime</summary>
-        ''' <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1900)</param>
+        ''' <summary>Creates new NTP timetag, given standard .NET DateTime.</summary>
+        ''' <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1900).</param>
         Public Sub New(ByVal timestamp As Date)
 
             MyBase.New(m_ntpDateOffsetTicks, timestamp)
