@@ -11,10 +11,10 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  07/12/2006 - J. Ritchie Carroll
-'       Original version of source generated
+'       Generated original version of source code.
 '  11/03/2006 - J. Ritchie Carroll
-'       Updated base time comparison to use .NET date time since compared time-tags may not
-'       have the same base time ticks
+'       Updated base time comparison to use .NET date time, since compared time-tags may not
+'       have the same base time ticks.
 '
 '*******************************************************************************************************
 
@@ -23,7 +23,7 @@ Imports TVA.DateTime.Common
 
 Namespace DateTime
 
-    ''' <summary>Base class for alternate time tag implementations</summary>
+    ''' <summary>Base class for alternate time tag implementations.</summary>
     Public MustInherit Class TimeTagBase
 
         Implements IComparable, ISerializable, IEquatable(Of TimeTagBase)
@@ -33,15 +33,15 @@ Namespace DateTime
 
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
-            ' Deserialize time tag
+            ' Deserializes time tag.
             m_baseDateOffsetTicks = info.GetInt64("baseDateOffsetTicks")
             m_seconds = info.GetDouble("seconds")
 
         End Sub
 
-        ''' <summary>Creates new time-tag given number base time (in ticks) and seconds since base time</summary>
-        ''' <param name="baseDateOffsetTicks">Ticks of time-tag base</param>
-        ''' <param name="seconds">Number of seconds since base time</param>
+        ''' <summary>Creates new time tag, given number base time (in ticks) and seconds since base time.</summary>
+        ''' <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
+        ''' <param name="seconds">Number of seconds since base time.</param>
         Protected Sub New(ByVal baseDateOffsetTicks As Long, ByVal seconds As Double)
 
             m_baseDateOffsetTicks = baseDateOffsetTicks
@@ -49,18 +49,18 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new time-tag given standard .NET DateTime</summary>
-        ''' <param name="baseDateOffsetTicks">Ticks of time-tag base</param>
-        ''' <param name="timestamp">.NET DateTime used to create time-tag from</param>
+        ''' <summary>Creates new time tag, given standard .NET DateTime.</summary>
+        ''' <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
+        ''' <param name="timestamp">.NET DateTime used to create time tag from.</param>
         Protected Sub New(ByVal baseDateOffsetTicks As Long, ByVal timestamp As Date)
 
-            ' Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds
+            ' Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks
             Value = TicksToSeconds(timestamp.Ticks - m_baseDateOffsetTicks)
 
         End Sub
 
-        ''' <summary>Value represents number of seconds since base time</summary>
+        ''' <summary>Gets or sets number of seconds since base time.</summary>
         Public Overridable Property Value() As Double
             Get
                 Return m_seconds
@@ -71,33 +71,34 @@ Namespace DateTime
             End Set
         End Property
 
-        ''' <summary>Returns standard .NET DateTime representation for timetag</summary>
+        ''' <summary>Returns standard .NET DateTime representation for time tag.</summary>
         Public Overridable Function ToDateTime() As Date
 
-            ' Convert m_seconds to 100-nanosecond ticks and add the base time offset
+            ' Converts m_seconds to 100-nanosecond ticks and add the base time offset.
             Return New Date(SecondsToTicks(m_seconds) + m_baseDateOffsetTicks)
 
         End Function
 
-        ''' <summary>Returns basic textual representation for timetag</summary>
-        ''' <remarks>Format is "yyyy-MM-dd HH:mm:ss.fff" so that textual representation can be sorted in the correct chronological order</remarks>
+        ''' <summary>Returns basic textual representation for time tag.</summary>
+        ''' <remarks>Format is "yyyy-MM-dd HH:mm:ss.fff" so that textual representation can be sorted in the 
+        ''' correct chronological order.</remarks>
         Public Overrides Function ToString() As String
 
             Return ToDateTime().ToString("yyyy-MM-dd HH:mm:ss.fff")
 
         End Function
 
-        ''' <summary>Ticks representing the absolute minimum time of this timetag implementation</summary>
+        ''' <summary>Gets ticks representing the absolute minimum time of this time tag implementation.</summary>
         Public Overridable ReadOnly Property BaseDateOffsetTicks() As Long
             Get
                 Return m_baseDateOffsetTicks
             End Get
         End Property
 
-        ''' <summary>Compares this timetag to another one</summary>
+        ''' <summary>Compares this time tag to another one.</summary>
         Public Function CompareTo(ByVal timeTag As TimeTagBase) As Integer
 
-            ' Since compared time-tags may not have the same base time, we compare using .NET date time
+            ' Since compared time tags may not have the same base time, we compare using .NET date time.
             Return ToDateTime().CompareTo(timeTag.ToDateTime())
 
         End Function
@@ -134,7 +135,7 @@ Namespace DateTime
 
         Public Overridable Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) Implements System.Runtime.Serialization.ISerializable.GetObjectData
 
-            ' Serialize time tag
+            ' Serializes time tag.
             info.AddValue("baseDateOffsetTicks", m_baseDateOffsetTicks)
             info.AddValue("seconds", m_seconds)
 
