@@ -1,5 +1,9 @@
 ' 06/01/2007
 ' JRC: 08/08/2007 - Added lock contention rate and datagram / sec performance counters...
+' PCP: 09/04/2007 - Added Status property 
+
+Imports System.Text
+Imports TVA.Text.Common
 
 Namespace Diagnostics
 
@@ -203,6 +207,191 @@ Namespace Diagnostics
         Public ReadOnly Property ThreadCount() As PerformanceCounter
             Get
                 Return Counters("Thread Count")
+            End Get
+        End Property
+
+        Public ReadOnly Property Status() As String
+            Get
+                Dim processorCount As Integer = System.Environment.ProcessorCount
+                Dim counter As PerformanceCounter
+
+                With New StringBuilder()
+                    .Append("Counter".PadRight(20))
+                    .Append(" "c)
+                    .Append(CenterText("Last", 13))
+                    .Append(" "c)
+                    .Append(CenterText("Average", 13))
+                    .Append(" "c)
+                    .Append(CenterText("Maximum", 13))
+                    .Append(" "c)
+                    .Append(CenterText("Units", 16))
+                    .AppendLine()
+                    .Append(New String("-"c, 20))
+                    .Append(" "c)
+                    .Append(New String("-"c, 13))
+                    .Append(" "c)
+                    .Append(New String("-"c, 13))
+                    .Append(" "c)
+                    .Append(New String("-"c, 13))
+                    .Append(" "c)
+                    .Append(New String("-"c, 16))
+                    .AppendLine()
+
+                    counter = CPUUsage
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("CPU Utilization".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText((counter.LastValue / processorCount).ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText((counter.AverageValue / processorCount).ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText((counter.MaximumValue / processorCount).ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Percent / CPU")
+                        .AppendLine()
+                    End If
+
+                    counter = MemoryUsage
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("Process Memory Usage".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText((counter.LastValue / 1048576).ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText((counter.AverageValue / 1048576).ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText((counter.MaximumValue / 1048576).ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Megabytes")
+                        .AppendLine()
+                    End If
+
+                    counter = HandleCount
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("Process Handle Count".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText(counter.LastValue.ToString(), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.MaximumValue.ToString(), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Total Handles")
+                        .AppendLine()
+                    End If
+
+                    counter = ThreadCount
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("Process Thread Count".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText(counter.LastValue.ToString(), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.MaximumValue.ToString(), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Total Threads")
+                        .AppendLine()
+                    End If
+
+                    counter = IOUsage
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("I/O Data Rate".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText((counter.LastValue / 1024).ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText((counter.AverageValue / 1024).ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Kilobytes / sec")
+                        .AppendLine()
+                    End If
+
+                    counter = IOActivity
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("I/O Activity Rate".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Operations / sec")
+                        .AppendLine()
+                    End If
+
+                    counter = DatagramReceiveRate
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("Incoming Packet Rate".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Datagrams / sec")
+                        .AppendLine()
+                    End If
+
+                    counter = DatagramSendRate
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("Outgoing Packet Rate".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Datagrams / sec")
+                        .AppendLine()
+                    End If
+
+                    counter = ThreadingContentionRate
+
+                    If counter IsNot Nothing Then
+                        '        12345678901234567890
+                        .Append("Lock Contention Rate".PadLeft(20))
+                        .Append(" "c)
+                        .Append(CenterText(counter.LastValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.AverageValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        .Append(CenterText(counter.MaximumValue.ToString("0.00"), 13))
+                        .Append(" "c)
+                        '        1234567890123456
+                        .Append("Attempts / sec")
+                        .AppendLine()
+                    End If
+
+                    Return .ToString()
+                End With
             End Get
         End Property
 
