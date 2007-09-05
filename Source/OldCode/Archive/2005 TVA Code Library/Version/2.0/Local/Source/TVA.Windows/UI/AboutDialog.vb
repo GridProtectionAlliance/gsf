@@ -202,10 +202,15 @@ Namespace UI
             If m_assemblies Is Nothing Then
                 m_assemblies = New List(Of Assembly)
                 For Each asm As System.Reflection.Assembly In AppDomain.CurrentDomain.GetAssemblies()
-                    If File.Exists(asm.Location()) Then
-                        ' Discard assemblies that are embedded into the application.
-                        m_assemblies.Add(New Assembly(asm))
-                    End If
+                    Try
+                        If File.Exists(asm.Location()) Then
+                            ' Discard assemblies that are embedded into the application.
+                            m_assemblies.Add(New Assembly(asm))
+                        End If
+                    Catch ex As Exception
+                        ' Accessing Location property on assemblies that are built dynamically will result in an
+                        ' exception since such assemblies only exist in-memory, so we'll ignore such assemblies.
+                    End Try
                 Next
             End If
 
