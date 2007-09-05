@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.IO
+Imports System.Drawing
 Imports System.Windows.Forms
 Imports System.Reflection.Assembly
 Imports TVA.Assembly
@@ -181,7 +182,10 @@ Namespace UI
 
             Me.Text = String.Format(Me.Text(), Assembly.EntryAssembly.Title())
             If Me.Owner() IsNot Nothing Then
+                Dim originalSize As Size = Me.Size
+
                 Me.Font = Me.Owner.Font()
+                Me.Size = originalSize
             End If
 
             ' Show information about the application that opened this dialog box.
