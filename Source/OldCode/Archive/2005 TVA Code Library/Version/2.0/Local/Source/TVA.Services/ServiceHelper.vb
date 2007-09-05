@@ -1,5 +1,4 @@
 ' 08-29-06
-' JRC: 08/08/2007 - Added lock contention rate and datagram / sec performance counters to health display...
 
 Imports System.Text
 Imports System.Drawing
