@@ -84,7 +84,7 @@ Namespace UI
             Me.TabPageApplication.Location = New System.Drawing.Point(4, 22)
             Me.TabPageApplication.Name = "TabPageApplication"
             Me.TabPageApplication.Padding = New System.Windows.Forms.Padding(3)
-            Me.TabPageApplication.Size = New System.Drawing.Size(407, 227)
+            Me.TabPageApplication.Size = New System.Drawing.Size(402, 227)
             Me.TabPageApplication.TabIndex = 1
             Me.TabPageApplication.Text = "Application"
             Me.TabPageApplication.UseVisualStyleBackColor = True
@@ -96,7 +96,7 @@ Namespace UI
             Me.ListViewApplicationInfo.FullRowSelect = True
             Me.ListViewApplicationInfo.Location = New System.Drawing.Point(3, 3)
             Me.ListViewApplicationInfo.Name = "ListViewApplicationInfo"
-            Me.ListViewApplicationInfo.Size = New System.Drawing.Size(401, 221)
+            Me.ListViewApplicationInfo.Size = New System.Drawing.Size(396, 221)
             Me.ListViewApplicationInfo.TabIndex = 0
             Me.ListViewApplicationInfo.UseCompatibleStateImageBehavior = False
             Me.ListViewApplicationInfo.View = System.Windows.Forms.View.Details
@@ -117,7 +117,7 @@ Namespace UI
             Me.TabPageAssemblies.Controls.Add(Me.ComboBoxAssemblies)
             Me.TabPageAssemblies.Location = New System.Drawing.Point(4, 22)
             Me.TabPageAssemblies.Name = "TabPageAssemblies"
-            Me.TabPageAssemblies.Size = New System.Drawing.Size(407, 227)
+            Me.TabPageAssemblies.Size = New System.Drawing.Size(402, 227)
             Me.TabPageAssemblies.TabIndex = 2
             Me.TabPageAssemblies.Text = "Assemblies"
             Me.TabPageAssemblies.UseVisualStyleBackColor = True
@@ -129,7 +129,7 @@ Namespace UI
             Me.ListViewAssemblyInfo.FullRowSelect = True
             Me.ListViewAssemblyInfo.Location = New System.Drawing.Point(0, 21)
             Me.ListViewAssemblyInfo.Name = "ListViewAssemblyInfo"
-            Me.ListViewAssemblyInfo.Size = New System.Drawing.Size(407, 206)
+            Me.ListViewAssemblyInfo.Size = New System.Drawing.Size(402, 206)
             Me.ListViewAssemblyInfo.TabIndex = 1
             Me.ListViewAssemblyInfo.UseCompatibleStateImageBehavior = False
             Me.ListViewAssemblyInfo.View = System.Windows.Forms.View.Details
@@ -151,12 +151,13 @@ Namespace UI
             Me.ComboBoxAssemblies.FormattingEnabled = True
             Me.ComboBoxAssemblies.Location = New System.Drawing.Point(0, 0)
             Me.ComboBoxAssemblies.Name = "ComboBoxAssemblies"
-            Me.ComboBoxAssemblies.Size = New System.Drawing.Size(407, 21)
+            Me.ComboBoxAssemblies.Size = New System.Drawing.Size(402, 21)
             Me.ComboBoxAssemblies.TabIndex = 0
             '
             'ButtonOK
             '
             Me.ButtonOK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
+            Me.ButtonOK.DialogResult = System.Windows.Forms.DialogResult.Cancel
             Me.ButtonOK.Location = New System.Drawing.Point(181, 333)
             Me.ButtonOK.Name = "ButtonOK"
             Me.ButtonOK.Size = New System.Drawing.Size(75, 23)
@@ -179,8 +180,10 @@ Namespace UI
             '
             'AboutDialog
             '
+            Me.AcceptButton = Me.ButtonOK
             Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
             Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+            Me.CancelButton = Me.ButtonOK
             Me.ClientSize = New System.Drawing.Size(434, 368)
             Me.Controls.Add(Me.PictureBoxLogo)
             Me.Controls.Add(Me.ButtonOK)
