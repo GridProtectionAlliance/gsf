@@ -39,16 +39,22 @@ Namespace Math
         Public Event Status(ByVal message As String)
         Public Event Recalculated()
 
+        ''' <summary>
+        ''' Creates a default instance of the real-time slope calculation class. Must call Initialize before using.
+        ''' </summary>
+        Public Sub New()
+
+            MyBase.New()
+
+        End Sub
+
         ''' <summary>Creates a new instance of the real-time slope calculation class.</summary>
         ''' <param name="regressionInterval">Time span over which to calculate slope.</param>
         ''' <param name="estimatedRefreshInterval">Estimated data points per second.</param>
         Public Sub New(ByVal regressionInterval As Integer, ByVal estimatedRefreshInterval As Double)
 
-            m_regressionInterval = regressionInterval
-            m_pointCount = m_regressionInterval * (1 / estimatedRefreshInterval)
-            m_xValues = New List(Of Double)
-            m_yValues = New List(Of Double)
-            m_slopeRun = Date.Now
+            MyClass.New()
+            Initialize(regressionInterval, estimatedRefreshInterval)
 
         End Sub
 
@@ -75,6 +81,28 @@ Namespace Math
             If m_xValues.Count >= m_pointCount AndAlso Not m_calculating Then
                 ' Performs curve fit calculation on seperate thread, since it could be time consuming.
                 ThreadPool.QueueUserWorkItem(AddressOf PerformCalculation)
+            End If
+
+        End Sub
+
+        Public Sub Initialize(ByVal regressionInterval As Integer, ByVal estimatedRefreshInterval As Double)
+
+            m_slopeRun = Date.Now
+            m_regressionInterval = regressionInterval
+            m_pointCount = m_regressionInterval * (1 / estimatedRefreshInterval)
+            If m_xValues Is Nothing Then
+                m_xValues = New List(Of Double)
+            Else
+                SyncLock m_xValues
+                    m_xValues.Clear()
+                End SyncLock
+            End If
+            If m_yValues Is Nothing Then
+                m_yValues = New List(Of Double)
+            Else
+                SyncLock m_yValues
+                    m_yValues.Clear()
+                End SyncLock
             End If
 
         End Sub
