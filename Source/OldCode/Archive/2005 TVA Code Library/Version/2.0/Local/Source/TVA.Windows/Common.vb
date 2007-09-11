@@ -17,12 +17,15 @@
 '  10/30/2006 - J. Ritchie Carroll
 '       Added left-most, right-most, top-most and bottom-most screen bound functions
 '       Fixed an issue with forms showing up off the screen (esp. when switching primary monitor)
-'
+'  09/11/2007 - Pinal C. Patel
+'       Saving and retrieving setting by instantiating local config file variable in order to avoid the
+'       the "Config file has been modified" exception that is thrown when using shortcut methods
+' 
 '*******************************************************************************************************
 
 Imports System.Windows.Forms
+Imports TVA.Configuration
 Imports TVA.Collections.Common
-Imports TVA.Configuration.Common
 
 Public NotInheritable Class Common
 
@@ -116,7 +119,8 @@ Public NotInheritable Class Common
     ''' <param name="settingsCategory">Settings category used to persist form size information</param>
     Public Shared Sub SaveWindowSize(ByVal windowsForm As Form, ByVal settingsCategory As String)
 
-        With CategorizedSettings(settingsCategory)
+        Dim settings As New ConfigurationFile()
+        With settings.CategorizedSettings(settingsCategory)
             If .Item(windowsForm.Name) IsNot Nothing Then
                 .Item(windowsForm.Name).Value = windowsForm.Size.ToString()
             Else
@@ -124,7 +128,7 @@ Public NotInheritable Class Common
             End If
         End With
 
-        SaveSettings()
+        settings.Save()
 
     End Sub
 
@@ -146,7 +150,8 @@ Public NotInheritable Class Common
     ''' <param name="settingsCategory">Settings category used to persist form location information</param>
     Public Shared Sub SaveWindowLocation(ByVal windowsForm As Form, ByVal settingsCategory As String)
 
-        With CategorizedSettings(settingsCategory)
+        Dim settings As New ConfigurationFile()
+        With settings.CategorizedSettings(settingsCategory)
             If .Item(windowsForm.Name) IsNot Nothing Then
                 .Item(windowsForm.Name).Value = windowsForm.Location.ToString()
             Else
@@ -154,7 +159,7 @@ Public NotInheritable Class Common
             End If
         End With
 
-        SaveSettings()
+        settings.Save()
 
     End Sub
 
@@ -189,9 +194,10 @@ Public NotInheritable Class Common
     ''' <param name="settingsCategory">Settings category used to persist form size information</param>
     Public Shared Sub RestoreWindowSize(ByVal windowsForm As Form, ByVal settingsCategory As String)
 
-        If CategorizedSettings(settingsCategory)(windowsForm.Name) IsNot Nothing Then
+        Dim settings As New ConfigurationFile()
+        If settings.CategorizedSettings(settingsCategory)(windowsForm.Name) IsNot Nothing Then
             ' Restore last saved window size
-            Dim sizeSetting As New WindowSetting(CategorizedSettings(settingsCategory)(windowsForm.Name).Value())
+            Dim sizeSetting As New WindowSetting(settings.CategorizedSettings(settingsCategory)(windowsForm.Name).Value())
 
             With windowsForm
                 .Width = sizeSetting.ParamA(.MinimumSize.Width, GetTotalScreenWidth())
@@ -219,9 +225,10 @@ Public NotInheritable Class Common
     ''' <param name="settingsCategory">Settings category used to persist form location information</param>
     Public Shared Sub RestoreWindowLocation(ByVal windowsForm As Form, ByVal settingsCategory As String)
 
-        If CategorizedSettings(settingsCategory)(windowsForm.Name) IsNot Nothing Then
+        Dim settings As New ConfigurationFile()
+        If settings.CategorizedSettings(settingsCategory)(windowsForm.Name) IsNot Nothing Then
             ' Restore last saved window location
-            Dim locationSetting As New WindowSetting(CategorizedSettings(settingsCategory)(windowsForm.Name).Value())
+            Dim locationSetting As New WindowSetting(settings.CategorizedSettings(settingsCategory)(windowsForm.Name).Value())
 
             With windowsForm
                 .Left = locationSetting.ParamA(GetLeftMostScreenBound(), GetRightMostScreenBound() - .MinimumSize.Width)
