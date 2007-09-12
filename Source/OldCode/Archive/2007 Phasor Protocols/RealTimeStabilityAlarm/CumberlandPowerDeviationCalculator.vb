@@ -46,9 +46,13 @@ Public Class CumberlandPowerDeviationCalculator
     Private m_davdIM As New MeasurementKey(1620, "P2")      ' TVA_CUMB-DAVD:ABBI
     Private m_davdIA As New MeasurementKey(1623, "P2")      ' TVA_CUMB-DAVD:ABBIH
 
+    ' Define the output measurements that will be produced by this calculation
+    Private m_cumbPower As New Measurement(2711, "P2")      ' TVA_CUMB-MW
+    Private m_cumbStDev As New Measurement(2712, "P2")      ' TVA_CUMB-MWSTDEV
+
     Private m_minimumSamples As Integer
-    Private m_latestMegaWatts As List(Of Double)
-    Private m_measurements As IMeasurement()
+    Private m_powerDataSample As List(Of Double)
+    Private m_lastStDev As Double
 
     '#If DEBUG Then
     '    Private m_frameLog As LogFile
@@ -57,7 +61,7 @@ Public Class CumberlandPowerDeviationCalculator
 
     Public Sub New()
 
-        m_latestMegaWatts = New List(Of Double)
+        m_powerDataSample = New List(Of Double)
 
         '#If DEBUG Then
         '        m_frameLog = New LogFile(GetApplicationPath() & "PowerDeviationDetectorLog.txt")
@@ -70,17 +74,18 @@ Public Class CumberlandPowerDeviationCalculator
         ' Base class will automatically filter and time-align needed measurements from all real-time incoming data
         MyBase.Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
 
-        ' In this calculation, we manually initialize the output measurement to use for the base class since it is
-        ' a single hard-coded output that will not change (i.e., no need to specify output measurements from SQL)
+        ' In this calculation, we manually initialize the output measurements to use for the base class since they are
+        ' hard-coded set of outputs that will not change (i.e., no need to specify output measurements from SQL)
         If outputMeasurements Is Nothing OrElse outputMeasurements.Length = 0 Then
             MyClass.OutputMeasurements = New IMeasurement() _
                 { _
-                    New Measurement(2712, "P2") _
+                    m_cumbPower, _
+                    m_cumbStDev _
                 }
         End If
 
-        ' In this calculation, we manually initialize the input measurements to use for the base class since they are
-        ' a hard-coded set of inputs that will not change (i.e., no need to specifiy input measurements from SQL)
+        ' In this calculation, we manually initialize the input measurement ID's to use for the base class since they are
+        ' a hard-coded set of inputs that will not change (i.e., no need to specifiy input measurement ID's from SQL)
         If inputMeasurementKeys Is Nothing OrElse inputMeasurementKeys.Length = 0 Then
             With New List(Of MeasurementKey)
                 .Add(m_bus1VM)
@@ -160,15 +165,17 @@ Public Class CumberlandPowerDeviationCalculator
                     davdIM.AdjustedValue * Cos((davdIA.AdjustedValue - busVA) / DegreesToRadians)) * _
                     busVM / MegaVoltsOver3
 
-                ' Add latest calculated megawatts to queue
-                SyncLock m_latestMegaWatts
-                    With m_latestMegaWatts
-                        .Add(cumbMW)
-                        While .Count > m_minimumSamples
-                            .RemoveAt(0)
-                        End While
-                    End With
+                ' Add latest calculated power to data sample
+                SyncLock m_powerDataSample
+                    ' Add newst power calculation...
+                    m_powerDataSample.Add(cumbMW)
+
+                    ' Keep sample size steady...
+                    While m_powerDataSample.Count > m_minimumSamples
+                        m_powerDataSample.RemoveAt(0)
+                    End While
                 End SyncLock
+
                 '#If DEBUG Then
                 '            Else
                 '                LogFrameWarning("Not all needed measurements were available to perform calculation")
@@ -176,34 +183,46 @@ Public Class CumberlandPowerDeviationCalculator
             End If
         End With
 
-        ' We don't begin producing the output measurement until the needed number of samples are in the queue
-        If m_latestMegaWatts.Count >= m_minimumSamples Then
-            Dim stdevMeasurement As Measurement = Measurement.Clone(OutputMeasurements(0), frame.Ticks)
+        ' Check to see if the needed number of samples are available to begin producing the standard deviation output measurement
+        If m_powerDataSample.Count >= m_minimumSamples Then
+            ' Perform standard deviation of current power sample and publish measurements
+            Dim powerMeasurement As Measurement = Measurement.Clone(m_cumbPower, frame.Ticks)
+            Dim stdevMeasurement As Measurement = Measurement.Clone(m_cumbStDev, frame.Ticks)
 
-            ' Perform standard deviation of current sample and publish measurement
-            SyncLock m_latestMegaWatts
-                stdevMeasurement.Value = StandardDeviation(m_latestMegaWatts)
+            ' We sync-lock data sample because "Status" call can be invoked on another thread at any time...
+            SyncLock m_powerDataSample
+                powerMeasurement.Value = m_powerDataSample(m_powerDataSample.Count - 1)
+                stdevMeasurement.Value = StandardDeviation(m_powerDataSample)
             End SyncLock
 
-            ' Provide calculated measurement for external consumption
-            PublishNewCalculatedMeasurement(stdevMeasurement)
+            ' Provide calculated measurements for external consumption
+            PublishNewCalculatedMeasurements(New IMeasurement() {powerMeasurement, stdevMeasurement})
+
+            ' Track last standard deviation...
+            m_lastStDev = stdevMeasurement.Value
+        ElseIf cumbMW > 0 Then
+            ' If not, we can still start publishing power calculation as soon as we have one...
+            PublishNewCalculatedMeasurement(Measurement.Clone(m_cumbPower, cumbMW, frame.Ticks))
         End If
 
     End Sub
 
     Public Overrides ReadOnly Property Status() As String
         Get
-            Const ValuesToShow As Integer = 4
+            Const ValuesToShow As Integer = 3
 
             With New StringBuilder
                 .Append("  Latest " & ValuesToShow & " MegaWatt values: ")
-                SyncLock m_latestMegaWatts
-                    If m_latestMegaWatts.Count > ValuesToShow Then
-                        .Append(ListToString(m_latestMegaWatts.GetRange(m_latestMegaWatts.Count - ValuesToShow - 1, ValuesToShow), ","c))
+                SyncLock m_powerDataSample
+                    If m_powerDataSample.Count > ValuesToShow Then
+                        .Append(ListToString(m_powerDataSample.GetRange(m_powerDataSample.Count - ValuesToShow - 1, ValuesToShow), ","c))
                     Else
                         .Append("Not enough values calculated yet...")
                     End If
                 End SyncLock
+                .AppendLine()
+                .Append("     Latest StDev of Power: ")
+                .Append(m_lastStDev)
                 .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()

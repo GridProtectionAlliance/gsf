@@ -781,7 +781,8 @@ Public Class Service
                     Dim mapper As PhasorMeasurementMapper
 
                     If TryGetMapper(.Item("OrderedArg1"), requestInfo.Sender.ClientID, mapper) Then
-                        mapper.Connect()
+                        ' We use a delayed connection to avoid threading issues associated with device connections
+                        mapper.Connect(True)
                     End If
                 End If
             End If
