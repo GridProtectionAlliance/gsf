@@ -75,7 +75,7 @@ Public Class CumberlandPowerDeviationCalculator
         MyBase.Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime)
 
         ' In this calculation, we manually initialize the output measurements to use for the base class since they are
-        ' hard-coded set of outputs that will not change (i.e., no need to specify output measurements from SQL)
+        ' a hard-coded set of outputs that will not change (i.e., no need to specify output measurements from SQL)
         If outputMeasurements Is Nothing OrElse outputMeasurements.Length = 0 Then
             MyClass.OutputMeasurements = New IMeasurement() _
                 { _
