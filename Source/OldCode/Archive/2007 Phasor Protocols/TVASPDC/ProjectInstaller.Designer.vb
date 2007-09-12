@@ -23,7 +23,7 @@
         '
         'ServiceProcessInstaller
         '
-        Me.ServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.NetworkService
+        Me.ServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem
         Me.ServiceProcessInstaller.Password = Nothing
         Me.ServiceProcessInstaller.Username = Nothing
         '
