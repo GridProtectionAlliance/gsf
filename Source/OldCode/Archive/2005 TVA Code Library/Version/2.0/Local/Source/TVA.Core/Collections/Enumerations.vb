@@ -11,9 +11,11 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  07/11/2006 - J. Ritchie Carroll
-'       Moved all namespace level enumerations into "Enumerations.vb" file
+'       Moved all namespace level enumerations into "Enumerations.vb" file.
 '  04/05/2007 - J. Ritchie Carroll
-'       Added "RequeueMode" enumeration
+'       Added "RequeueMode" enumeration.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
