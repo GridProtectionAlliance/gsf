@@ -11,7 +11,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  01/07/2006 - J. Ritchie Carroll
-'       Generated original version of source code
+'       Generated original version of source code.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
