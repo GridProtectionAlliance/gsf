@@ -41,7 +41,7 @@ Namespace DateTime
 
         End Sub
 
-        ''' <summary>Creates new Unix timetag, given number of seconds since 1/1/1900.</summary>
+        ''' <summary>Creates new Unix timetag, given number of seconds since 1/1/1970.</summary>
         ''' <param name="seconds">Number of seconds since 1/1/1970.</param>
         Public Sub New(ByVal seconds As Double)
 
