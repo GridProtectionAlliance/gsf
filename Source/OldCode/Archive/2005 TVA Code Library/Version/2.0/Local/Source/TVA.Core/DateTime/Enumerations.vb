@@ -12,9 +12,11 @@
 '  -----------------------------------------------------------------------------------------------------
 '  07/11/2007 - J. Ritchie Carroll
 '       Moved all namespace level enumerations into "Enumerations.vb" file
-'  09/15/2007 - J. Ritchie Carroll
+'  08/15/2007 - J. Ritchie Carroll
 '       Added BaselineTimeInterval enumeration to support multiple time intervals
 '       in the BaselinedTimestamp function.
+'  08/31/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
