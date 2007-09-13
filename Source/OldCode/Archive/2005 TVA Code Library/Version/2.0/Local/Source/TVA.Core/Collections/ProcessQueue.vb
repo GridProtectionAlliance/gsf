@@ -11,23 +11,25 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  01/07/2006 - J. Ritchie Carroll
-'       Generated original version of source code
+'       Generated original version of source code.
 '  02/12/2006 - J. Ritchie Carroll
-'       Added multi-item bulk processing functionality
+'       Added multi-item bulk processing functionality.
 '  04/10/2006 - J. Ritchie Carroll
-'       Added "DebugMode" property to disable "catch" so exceptions are debugged in originating source
+'       Added "DebugMode" property to disable "catch" so exceptions are debugged in originating source.
 '  03/21/2007 - J. Ritchie Carroll
-'       Added "ItemsBeingProcessed" property to return current total number of items being processed
-'       Added "Flush" method to allow any remaining items in queue to be processed before shutdown
+'       Added "ItemsBeingProcessed" property to return current total number of items being processed.
+'       Added "Flush" method to allow any remaining items in queue to be processed before shutdown.
 '  04/05/2007 - J. Ritchie Carroll
 '       Added "RequeueMode" properties to allow users to specify how data gets reinserted back into
-'       the list (prefix or suffix) after processing timeouts or exceptions
+'       the list (prefix or suffix) after processing timeouts or exceptions.
 '  07/12/2007 - Pinal C. Patel
-'       Modified the code for "Flush" method to correctly implement IDisposable interface
+'       Modified the code for "Flush" method to correctly implement IDisposable interface.
 '  08/01/2007 - J. Ritchie Carroll
-'       Added some minor optimizations where practical
+'       Added some minor optimizations where practical.
 '  08/17/2007 - J. Ritchie Carroll
-'       Removed IDisposable implementation because of continued flushing errors
+'       Removed IDisposable implementation because of continued flushing errors.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
