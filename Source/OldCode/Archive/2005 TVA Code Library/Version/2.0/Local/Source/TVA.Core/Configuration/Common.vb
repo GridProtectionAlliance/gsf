@@ -11,11 +11,13 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/13/2006 - Pinal C. Patel
-'       Generated riginal version of source code
+'       Generated original version of source code.
 '  05/19/2006 - J. Ritchie Carroll
-'       Added type-safe "native type" settings shortcut functions
+'       Added type-safe "native type" settings shortcut functions.
 '  09/01/2006 - J. Ritchie Carroll
-'       Added set property to shortcut functions that didn't take default value parameter
+'       Added set property to shortcut functions that didn't take default value parameter.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

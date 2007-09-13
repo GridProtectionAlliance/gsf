@@ -11,7 +11,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/11/2006 - Pinal C. Patel
-'       Generated original version of source code
+'       Generated original version of source code.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

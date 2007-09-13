@@ -11,9 +11,11 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/11/2006 - Pinal C. Patel
-'       Generated original version of source code 
+'       Generated original version of source code.
 '  05/25/2006 - Pinal C. Patel
 '       Modified the Item(name) property to add a configuration element if it does not exist.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

@@ -11,11 +11,13 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/12/2006 - Pinal C. Patel
-'       Generated original version of source code
+'       Generated original version of source code.
 '  11/14/2006 - Pinal C. Patel
 '       Modified the ValidateConfigurationFile to save the config file only it was modified.
 '  12/12/2006 - Pinal C. Patel
 '       Wrote the TrimEnd function that is being used for initialized the Configuration object.
+'  08/20/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
