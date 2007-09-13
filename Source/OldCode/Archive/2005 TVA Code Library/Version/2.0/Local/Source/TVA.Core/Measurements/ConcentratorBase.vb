@@ -24,6 +24,8 @@
 '       Migrated concentrator to use a base class model instead of using delegates.
 '  08/01/2007 - J. Ritchie Carroll
 '       Completed extensive threading optimizations to ensure performance.
+'  08/27/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
