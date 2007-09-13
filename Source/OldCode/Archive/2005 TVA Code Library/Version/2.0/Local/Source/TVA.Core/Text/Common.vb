@@ -11,18 +11,20 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  02/23/2003 - J. Ritchie Carroll
-'       Generated original version of source code
+'       Generated original version of source code.
 '  01/24/2006 - J. Ritchie Carroll
-'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.String)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.String).
 '  06/01/2006 - J. Ritchie Carroll
-'       Added ParseBoolean function to parse strings representing booleans that may be numeric
+'       Added ParseBoolean function to parse strings representing booleans that may be numeric.
 '  07/07/2006 - J. Ritchie Carroll
 '       Added GetStringSegments function to break a string up into smaller chunks for parsing
-'       and/or displaying
+'       and/or displaying.
 '  08/02/2007 - J. Ritchie Carroll
-'       Added a CenterText method for centering strings in console applications or fixed width fonts
+'       Added a CenterText method for centering strings in console applications or fixed width fonts.
 '  08/03/2007 - Pinal C. Patel
-'       Modified the CenterText method to handle multiple lines
+'       Modified the CenterText method to handle multiple lines.
+'  08/21/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
