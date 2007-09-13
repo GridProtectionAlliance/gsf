@@ -14,6 +14,8 @@
 '       Generated original version of source code.
 '  12/29/2005 - Pinal C. Patel
 '       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Math).
+'  08/23/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

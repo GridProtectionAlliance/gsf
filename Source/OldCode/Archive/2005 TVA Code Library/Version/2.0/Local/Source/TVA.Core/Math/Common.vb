@@ -15,13 +15,15 @@
 '  12/29/2005 - Pinal C. Patel
 '       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Math).
 '  01/04/2006 - J. Ritchie Carroll
-'       Added crytographically strong random number generation functions
+'       Added crytographically strong random number generation functions.
 '  01/24/2006 - J. Ritchie Carroll
-'       Added curve fit function (courtesy of Brian Fox from DatAWare client code)
+'       Added curve fit function (courtesy of Brian Fox from DatAWare client code).
 '  11/08/2006 - J. Ritchie Carroll
-'       Added standard devitaion and average functions
+'       Added standard devitaion and average functions.
 '  12/07/2006 - J. Ritchie Carroll
-'       Added strongly-typed generic Not "comparator" functions (e.g., NotEqualTo)
+'       Added strongly-typed generic Not "comparator" functions (e.g., NotEqualTo).
+'  08/23/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

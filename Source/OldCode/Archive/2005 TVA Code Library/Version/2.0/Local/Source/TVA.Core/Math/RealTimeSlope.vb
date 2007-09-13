@@ -14,6 +14,8 @@
 '       Generated initial version of source for Real-Time Frequency Monitor.
 '  01/24/2006 - J. Ritchie Carroll
 '       Integrated into code library.
+'  08/23/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
