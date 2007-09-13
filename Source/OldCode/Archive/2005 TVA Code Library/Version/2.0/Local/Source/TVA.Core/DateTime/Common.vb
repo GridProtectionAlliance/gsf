@@ -26,6 +26,8 @@
 '       Added TicksBeyondSecond function to support high-resolution timestamp intervals.
 '  07/17/2007 - J. Ritchie Carroll
 '       Exposed TicksPerSecond as public shared constant.
+'  08/31/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
