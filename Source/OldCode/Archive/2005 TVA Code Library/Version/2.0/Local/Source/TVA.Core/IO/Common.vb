@@ -14,6 +14,8 @@
 '       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Common).
 '  03/06/2007 - J. Ritchie Carroll
 '       Added "CompareBuffers" method to compare to binary buffers.
+'  08/22/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
