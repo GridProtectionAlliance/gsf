@@ -11,11 +11,11 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  06/10/2004 - J. Ritchie Carroll
-'       Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.Date
+'       Integrated external source for Michael R. Brumm's TimeZone management into TVA.Shared.Date.
 '  12/21/2005 - J. Ritchie Carroll
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Date)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Date).
 '       Because this code is typically not used directly, but rather through helper functions
-'       defined in Common, no code comments were added to these classes...
+'       defined in Common, no code comments were added to these classes.
 '  12/28/2005 - J. Ritchie Carroll
 '       Made modifications to original source (e.g., merged SimpleTimeZone into Win32TimeZone) to
 '       help with FxCop compatibility.
@@ -39,7 +39,7 @@ Namespace DateTime
     ' For updates and more information, visit: http://www.michaelbrumm.com/simpletimezone.html
     ' or contact me@michaelbrumm.com
     '
-    ' Integrated into TVA code library on June 10th, 2004.  Some minor modifications made for integration reasons.
+    ' Integrated into TVA code library on June 10th, 2004. Some minor modifications made for integration reasons.
     '
     ' *************************************************************************************************************
 
