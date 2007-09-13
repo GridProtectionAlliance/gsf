@@ -11,9 +11,11 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  03/18/2005 - Pinal C. Patel
-'       Original version of source code generated
+'       Generated original version of source code.
 '  01/04/2006 - Pinal C. Patel
-'       2.0 version of source code migrated from 1.1 source (TVA.ErrorManagement.SmtpTraceListener)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.ErrorManagement.SmtpTraceListener).
+'  09/13/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
@@ -49,7 +51,7 @@ Namespace ErrorManagement
                 Throw New ArgumentException("Insufficient initialization data provided for Smtp.TraceListner. Initialization data must be provided in the following format: 'sender@email.com, recipient@email.com, smtp.email.com'.")
             End If
 
-            ' Initialize private variables.
+            ' Initializes private variables.
             m_sender = smtpData(0)
             m_recipient = smtpData(1)
             m_smtpServer = smtpData(2)
@@ -60,7 +62,7 @@ Namespace ErrorManagement
 
             Dim messageBuilder As New StringBuilder()
             messageBuilder.Append(message)
-            ' Append standard information to the bottom of the message.
+            ' Appends standard information to the bottom of the message.
             messageBuilder.Append(Environment.NewLine() & Environment.NewLine())
             messageBuilder.Append("This trace message was sent from the machine ")
             messageBuilder.Append(System.Net.Dns.GetHostName())
@@ -80,7 +82,7 @@ Namespace ErrorManagement
 
         Public Overloads Overrides Sub WriteLine(ByVal message As String)
 
-            ' Email the trace message.
+            ' Emails the trace message.
             Write(message)
 
         End Sub
