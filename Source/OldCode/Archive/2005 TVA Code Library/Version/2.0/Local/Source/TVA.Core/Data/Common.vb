@@ -11,18 +11,20 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  ??/??/???? - J. Ritchie Carroll
-'       Generated original version of source code
+'       Generated original version of source code.
 '  05/25/2004 - J. Ritchie Carroll 
-'       Added "with parameters" overloads to all basic query functions
+'       Added "with parameters" overloads to all basic query functions.
 '  06/21/2004 - J. Ritchie Carroll
-'       Added support for Oracle native .NET client since ESO systems can now work with this
+'       Added support for Oracle native .NET client since ESO systems can now work with this.
 '  12/10/2004 - Tim M Shults
 '       Added several new WithParameters overloads that allow a programmer to send just the 
 '       parameter values instead of creating a series of parameter objects and then sending 
-'       them through.  Easy way to cut down on the amount of code.
-'       This code is just for calls to Stored Procedures and will not work for in-line SQL
+'       them through. Easy way to cut down on the amount of code.
+'       This code is just for calls to Stored Procedures and will not work for in-line SQL.
 '  03/28/2006 - Pinal C. Patel
-'       Migrated 2.0 version of source code from 1.1 source (TVA.Database.Common)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Database.Common).
+'  08/21/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

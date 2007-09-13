@@ -11,7 +11,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  07/11/2007 - J. Ritchie Carroll
-'       Moved all namespace level enumerations into "Enumerations.vb" file
+'       Moved all namespace level enumerations into "Enumerations.vb" file.
+'  08/21/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
@@ -20,7 +22,6 @@ Namespace Data
     ''' <summary>
     ''' Types of data providers.
     ''' </summary>
-    ''' <remarks></remarks>
     Public Enum ConnectionType As Integer
         [OleDb]
         [SqlClient]
