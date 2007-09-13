@@ -11,11 +11,13 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/11/2006 - Pinal C. Patel
-'       Grated original version of source code
+'       Generated original version of source code.
 '  05/25/2006 - J. Ritchie Carroll
-'       Added Try/Catch safety wrapper around GetTypedValue implementation
+'       Added Try/Catch safety wrapper around GetTypedValue implementation.
 '  06/01/2006 - J. Ritchie Carroll
-'       Added GetTypedValue overload to handle boolean types as a special case
+'       Added GetTypedValue overload to handle boolean types as a special case.
+'  08/17/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
