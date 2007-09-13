@@ -11,7 +11,7 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  02/23/2003 - J. Ritchie Carroll
-'       Gerated original version of source code.
+'       Generated original version of source code.
 '  06/10/2004 - J. Ritchie Carroll
 '       Added SecondsToText overload to allow custom time names, e.g., 1 Min 2 Secs.
 '  01/05/2005 - J. Ritchie Carroll
