@@ -22,7 +22,7 @@
 '  02/09/2007 - Pinal C. Patel
 '       Made modifications to Win32TimeZone.GetDaylightChanges() function in order to accomodate the
 '       extended Daylight Savings Time taking effect from year 2007.
-'       For more information: http://support.microsoft.com/gp/cp_dst
+'       For more information: http://support.microsoft.com/gp/cp_dst.
 '
 '*******************************************************************************************************
 

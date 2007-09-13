@@ -17,7 +17,9 @@
 '  01/24/2006 - J. Ritchie Carroll
 '       Moved into DateTime namespace and renamed to UnixTimeTag.
 '  07/12/2006 - J. Ritchie Carroll
-'       Modified class to be derived from new "TimeTagBase" class. 
+'       Modified class to be derived from new "TimeTagBase" class.
+'  09/13/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

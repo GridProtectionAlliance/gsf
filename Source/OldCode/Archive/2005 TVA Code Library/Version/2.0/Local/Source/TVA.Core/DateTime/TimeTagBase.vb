@@ -15,6 +15,8 @@
 '  11/03/2006 - J. Ritchie Carroll
 '       Updated base time comparison to use .NET date time, since compared time-tags may not
 '       have the same base time ticks.
+'  09/07/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 

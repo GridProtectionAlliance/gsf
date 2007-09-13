@@ -16,6 +16,8 @@
 '       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.DateTime).
 '  07/12/2006 - J. Ritchie Carroll
 '       Modified class to be derived from new "TimeTagBase" class.
+'  08/31/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
