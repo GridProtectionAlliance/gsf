@@ -55,17 +55,16 @@ Namespace ErrorManagement
         <System.Diagnostics.DebuggerStepThrough()> _
         Private Sub InitializeComponent()
             Me.components = New System.ComponentModel.Container
-            Me.LogFile = New TVA.IO.LogFile(Me.components)
-            CType(Me.LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
+            Me._LogFile = New TVA.IO.LogFile(Me.components)
+            CType(Me._LogFile, System.ComponentModel.ISupportInitialize).BeginInit()
             '
-            'LogFile
+            '_LogFile
             '
-            Me.LogFile.AutoOpen = False
-            Me.LogFile.Name = "LogFile.txt"
-            CType(Me.LogFile, System.ComponentModel.ISupportInitialize).EndInit()
+            Me._LogFile.Name = "LogFile.txt"
+            CType(Me._LogFile, System.ComponentModel.ISupportInitialize).EndInit()
 
         End Sub
-        Friend WithEvents LogFile As TVA.IO.LogFile
+        Friend WithEvents _LogFile As TVA.IO.LogFile
 
     End Class
 

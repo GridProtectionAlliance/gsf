@@ -10,6 +10,7 @@ Imports System.Drawing
 Imports System.ComponentModel
 Imports System.Windows.Forms
 Imports TVA.Net.Smtp
+Imports TVA.IO
 Imports TVA.IO.FilePath
 Imports TVA.Identity
 
@@ -240,6 +241,13 @@ Namespace ErrorManagement
                     m_applicationType = TVA.Common.GetApplicationType()
                 End If
                 Return m_applicationType
+            End Get
+        End Property
+
+        <Browsable(False)> _
+        Public ReadOnly Property LogFile() As LogFile
+            Get
+                Return _LogFile
             End Get
         End Property
 
@@ -804,15 +812,15 @@ Namespace ErrorManagement
                 Try
                     m_logToFileOK = False
 
-                    LogFile.Name = LogFileName
-                    If Not LogFile.IsOpen Then LogFile.Open()
-                    LogFile.WriteTimestampedLine(ExceptionToString(exception, m_parentAssembly))
+                    _LogFile.Name = LogFileName
+                    If Not _LogFile.IsOpen Then _LogFile.Open()
+                    _LogFile.WriteTimestampedLine(ExceptionToString(exception, m_parentAssembly))
 
                     m_logToFileOK = True
                 Catch ex As Exception
 
                 Finally
-                    LogFile.Close()
+                    _LogFile.Close()
                 End Try
             End If
 
