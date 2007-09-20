@@ -333,7 +333,7 @@ Namespace Measurements
         ''' latest received timestamp as the best local time measurement we have (this method ignores 
         ''' transmission delays); but, even these times can be incorrect so we still have to apply reasonability 
         ''' checks to these times. To do this, we use the local time and the lead time value to validate the 
-        ''' latest measured timestamp.If the newest received measurement timestamp gets too old or creeps too
+        ''' latest measured timestamp. If the newest received measurement timestamp gets too old or creeps too
         ''' far into the future (both validated + and - against defined lead time property value), we will fall 
         ''' back on local system time. Note that this creates a dependency on a fairly accurate local clock - the 
         ''' smaller the lead time deviation tolerance, the better the needed local clock acuracy. For example, a 
