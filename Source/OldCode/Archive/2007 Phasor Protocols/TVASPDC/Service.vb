@@ -58,14 +58,14 @@ Public Class Service
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
         ' Make sure service settings exist
-        'Settings.Add("PMUDatabase", "Data Source=ESOEXTSQL;Initial Catalog=PMU_SDS;Integrated Security=False;user ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoextsql;Initial Catalog=PMU_SDS;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
-        Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PMU_SDS.mdb", "PMU metaData database connect string")
-        Settings.Add("PMUStatusInterval", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
+        'Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PMU_SDS.mdb", "PMU metaData database connect string")
+        Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=rgocdsql;Initial Catalog=PhasorMeasurementData;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
+        Settings.Add("ReportingTolerance", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
+        Settings.Add("StatusReportingInterval", "10", "How often to update PMU reporting status in database in seconds - this should match time required by update trigger which calculates uptime")
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MeasurementWarningThreshold", "100000", "Number of unarchived measurements allowed in a historian queue before displaying a warning message")
         Settings.Add("MeasurementDumpingThreshold", "500000", "Number of unarchived measurements allowed in a historian queue before taking evasive action and dumping data")
-        Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
         Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "100", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         Settings.Add("EnableLogFile", "True", "Set to ""True"" to enable log file")
@@ -81,6 +81,7 @@ Public Class Service
             .LogToEventLog = False
             .LogToFile = True
             .PersistSettings = True
+            .LogFile.FileFullOperation = LogFileFullOperation.Rollover
         End With
 
         With ServiceHelper.LogFile
@@ -184,7 +185,7 @@ Public Class Service
             End If
 
             ' Load the phasor measurement receivers (one per each established archive)
-            m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("PMUStatusInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
+            m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("ReportingTolerance"), IntegerSetting("StatusReportingInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
 
             ' If the phasor measurement concentrators are already defined we must be reloading - so we attempt
             ' an orderly shutdown
@@ -225,7 +226,7 @@ Public Class Service
 
     End Sub
 
-    Private Function LoadMeasurementReceivers(ByVal connection As OleDbConnection, ByVal pmuStatusInterval As Integer, ByVal dataLossInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
+    Private Function LoadMeasurementReceivers(ByVal connection As OleDbConnection, ByVal reportingTolerance As Integer, ByVal statusReportingInterval As Integer, ByVal dataLossInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
 
         Dim measurementReceivers As New Dictionary(Of String, PhasorMeasurementReceiver)
         Dim measurementReceiver As PhasorMeasurementReceiver
@@ -237,13 +238,11 @@ Public Class Service
         Dim dumpingThreshold As Integer = IntegerSetting("MeasurementDumpingThreshold")
         Dim archiveSource As String
 
-        'With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection)
-        With RetrieveData("SELECT * FROM MeasurementArchives WHERE Enabled <> 0", connection).Rows
+        With RetrieveData("SELECT * FROM Historian WHERE Enabled <> 0", connection).Rows
             For x As Integer = 0 To .Count - 1
                 Try
                     With .Item(x)
-                        'archiveSource = .Item("Acronym").ToString()
-                        archiveSource = .Item("ArchiveSource").ToString()
+                        archiveSource = .Item("Acronym").ToString()
                         externalAssemblyName = .Item("AssemblyName").ToString()
 
                         ' Load the external assembly for the historian adapter
@@ -256,8 +255,9 @@ Public Class Service
                         measurementReceiver = New PhasorMeasurementReceiver( _
                             historianAdapter, _
                             archiveSource, _
-                            pmuStatusInterval, _
                             connectionString, _
+                            reportingTolerance, _
+                            statusReportingInterval, _
                             dataLossInterval, _
                             warningThreshold, _
                             dumpingThreshold, _
@@ -265,7 +265,7 @@ Public Class Service
 
                         AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
                         AddHandler measurementReceiver.NewMeasurements, AddressOf NewParsedMeasurements
-                        If ParseBoolean(.Item("InitializeOnStartup").ToString()) Then measurementReceiver.Initialize(connection)
+                        measurementReceiver.Initialize(connection)
 
                         measurementReceivers.Add(archiveSource, measurementReceiver)
                     End With
@@ -285,22 +285,31 @@ Public Class Service
         Dim measurementConcentrators As New List(Of PhasorDataConcentratorBase)
         Dim measurementConcentrator As PhasorDataConcentratorBase
         Dim communicationServer As ICommunicationServer
+        Dim connectionString As String
+        Dim keys As Dictionary(Of String, String)
+        Dim value As String
 
         With RetrieveData("SELECT * FROM Concentrator WHERE Enabled <> 0", connection).Rows
             For x As Integer = 0 To .Count - 1
                 With .Item(x)
                     Try
                         ' Create communications server for concentrator
-                        communicationServer = CreateCommunicationServer(.Item("ConnectionString").ToString())
+                        connectionString = .Item("ConnectionString").ToString()
+                        communicationServer = CreateCommunicationServer(connectionString)
                         communicationServer.Handshake = False
                         measurementConcentrator = Nothing
+
+                        ' Load protocol specific key/value pairs
+                        keys = ParseKeyValuePairs(connectionString)
 
                         ' Create new data concentrator
                         Select Case .Item("Type").ToString().Trim.ToUpper()
                             Case "IEEEC37.118"
-                                ' TODO: Load time base and version properties from generic connection parameters
                                 Dim timeBase As Integer = 16777215
                                 Dim version As Byte = 1
+
+                                If keys.TryGetValue("timebase", value) Then timeBase = Convert.ToInt32(value)
+                                If keys.TryGetValue("version", value) Then version = Convert.ToByte(value)
 
                                 measurementConcentrator = New IeeeC37_118Concentrator( _
                                         communicationServer, _
@@ -311,9 +320,14 @@ Public Class Service
                                         timeBase, _
                                         version, _
                                         ServiceHelper.GlobalExceptionLogger)
-                            Case "BPAPDC"
-                                ' TODO: Load INI file name property from generic connection parameters
-                                Dim iniFileName As String = ""
+                            Case "BPAPDCSTREAM"
+                                Dim iniFileName As String
+
+                                If Not keys.TryGetValue("inifilename", iniFileName) Then
+                                    Throw New InvalidOperationException("Did not find key/valur pair for ""INIFileName"" in BPA PDCstream concentrator connection string.  BPA PDCstream concentrator cannot start without a valid INI based configuration file.")
+                                End If
+
+                                iniFileName = String.Concat(FilePath.GetApplicationPath(), iniFileName)
 
                                 measurementConcentrator = New BpaPdcConcentrator( _
                                     communicationServer, _
@@ -379,8 +393,7 @@ Public Class Service
         '   LeadTime                    Double
 
         ' Load all the unique calculated measurement assemlies into the current application domain
-        'With RetrieveData("SELECT * FROM CalculatedMeasurement WHERE Enabled <> 0", connection)
-        With RetrieveData("SELECT * FROM CalculatedMeasurements WHERE Enabled <> 0", connection).Rows
+        With RetrieveData("SELECT * FROM CalculatedMeasurement WHERE Enabled <> 0", connection).Rows
             For x As Integer = 0 To .Count - 1
                 Try
                     With .Item(x)
@@ -781,8 +794,7 @@ Public Class Service
                     Dim mapper As PhasorMeasurementMapper
 
                     If TryGetMapper(.Item("OrderedArg1"), requestInfo.Sender.ClientID, mapper) Then
-                        ' We use a delayed connection to avoid threading issues associated with device connections
-                        mapper.Connect(True)
+                        mapper.Connect()
                     End If
                 End If
             End If

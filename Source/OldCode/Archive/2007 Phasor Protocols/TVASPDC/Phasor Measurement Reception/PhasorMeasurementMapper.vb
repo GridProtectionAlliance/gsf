@@ -42,7 +42,6 @@ Public Class PhasorMeasurementMapper
 
     Private WithEvents m_frameParser As MultiProtocolFrameParser
     Private WithEvents m_dataStreamMonitor As Timers.Timer
-    Private WithEvents m_delayedConnection As Timers.Timer
     Private m_archiverSource As String
     Private m_source As String
     Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
@@ -84,45 +83,23 @@ Public Class PhasorMeasurementMapper
             .Enabled = False
         End With
 
-        m_delayedConnection = New Timers.Timer
-
-        With m_delayedConnection
-            .AutoReset = False
-            .Interval = 1500
-            .Enabled = False
-        End With
-
         m_undefinedPmus = New Dictionary(Of String, Long)
 
     End Sub
 
     Public Sub Connect()
 
-        Connect(False)
-
-    End Sub
-
-    Public Sub Connect(ByVal delayed As Boolean)
-
         m_lastReportTime = 0
 
-        If delayed Then
-            ' Start timer for delayed connection
-            m_delayedConnection.Enabled = True
-        Else
-            ' Make sure we are disconnected before attempting a connection
-            Disconnect()
+        ' Make sure we are disconnected before attempting a connection
+        Disconnect()
 
-            ' Start frame parser (this will attempt connection)...
-            m_frameParser.Start()
-        End If
+        ' Start frame parser (this will attempt connection)...
+        m_frameParser.Start()
 
     End Sub
 
     Public Sub Disconnect()
-
-        ' Stop delayed connection timer, if enabled
-        If m_delayedConnection IsNot Nothing Then m_delayedConnection.Enabled = False
 
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
@@ -135,6 +112,7 @@ Public Class PhasorMeasurementMapper
         If m_isConnected Then UpdateStatus(String.Format("Disconnected from {0}.", m_source))
 
         m_isConnected = False
+        m_attemptingConnection = False
         m_receivedConfigFrame = False
         m_errorCount = 0
         m_errorTime = 0
@@ -463,9 +441,9 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_Connected() Handles m_frameParser.Connected
 
         m_isConnected = True
+        m_attemptingConnection = False
 
         ' Enable data stream monitor for non-UDP connections
-        m_attemptingConnection = False
         m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
 
         UpdateStatus(String.Format("Connection to {0} established.", m_source))
@@ -478,7 +456,7 @@ Public Class PhasorMeasurementMapper
         UpdateStatus(String.Format("{0} connection to ""{1}"" failed: {2}", m_source, m_frameParser.ConnectionName, ex.Message))
         m_exceptionLogger.Log(ex)
         m_attemptingConnection = False
-        Connect(True)
+        Connect()
 
     End Sub
 
@@ -498,7 +476,7 @@ Public Class PhasorMeasurementMapper
         ' When we get 10 or more exceptions within a ten second timespan, we will then restart connection cycle...
         If m_errorCount >= 10 Then
             UpdateStatus(String.Format("{0} connection terminated due to excessive exceptions.", m_source))
-            Connect(True)
+            Connect()
         End If
 
     End Sub
@@ -510,7 +488,8 @@ Public Class PhasorMeasurementMapper
         If m_frameParser.Enabled Then
             ' Communications layer closed connection (close not initiated by system) - so we terminate gracefully...
             UpdateStatus(String.Format("WARNING: Connection closed by remote device {0}, attempting reconnection...", m_source))
-            Connect(True)
+            m_attemptingConnection = False
+            Connect()
         Else
             UpdateStatus(String.Format("Disconnected from {0}.", m_source))
         End If
@@ -575,21 +554,10 @@ Public Class PhasorMeasurementMapper
         If m_bytesReceived = 0 Then
             m_dataStreamMonitor.Enabled = False
             UpdateStatus(String.Format("{0}No data on {1} received in {2} seconds, restarting connect cycle...{3}", Environment.NewLine, m_source, Convert.ToInt32(m_dataStreamMonitor.Interval / 1000.0R), Environment.NewLine))
-            Connect(True)
+            Connect()
         End If
 
         m_bytesReceived = 0
-
-    End Sub
-
-    ' Delayed connection handler
-    Private Sub m_delayedConnection_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_delayedConnection.Elapsed
-
-        ' Make sure we are disconnected before attempting a connection
-        Disconnect()
-
-        ' Start frame parser (this will attempt connection)...
-        m_frameParser.Start()
 
     End Sub
 

@@ -117,22 +117,28 @@ Public Class MeasurementExporter
         ' Need to open database connection to load measurement tags and signal types.
         ' Note that data connection string defined in config file of parent process.
         Dim connection As New OleDbConnection(StringSetting("PMUDatabase"))
+        Dim inputMeasurementKey As MeasurementKey
 
         connection.Open()
 
-        ' TODO: When you get around to implementing both archive source and ID in the measurements table these queries will need to be changed :)
-
         ' Populate measurement tag and signal type dictionaries
         For x As Integer = 0 To inputMeasurementKeys.Length - 1
-            ' Load measurement tag name
-            m_measurementTags.Add(inputMeasurementKeys(x), _
-                ExecuteScalar(String.Format("SELECT PointTag FROM Measurements WHERE ID={0}", _
-                inputMeasurementKeys(x).ID), connection).ToString().Replace("-"c, "_"c).Replace(":"c, "_"c))
+            ' Get input measurement identification key
+            inputMeasurementKey = inputMeasurementKeys(x)
 
-            ' Load measurement signal type
-            m_signalTypes.Add(inputMeasurementKeys(x), _
-                ExecuteScalar(String.Format("SELECT SignalID FROM Measurements WHERE ID={0}", _
-                inputMeasurementKeys(x).ID), connection).ToString())
+            ' Get point tag and signal type information for each input measurement
+            With RetrieveRow(String.Format( _
+                    "SELECT PointTag, SignalAcronym FROM MeasurementDetail WHERE HistorianAcronym='{0}' AND PointID={1}", _
+                        inputMeasurementKey.Source, _
+                        inputMeasurementKey.ID), _
+                    connection)
+
+                ' Load measurement tag name (remove any dashes or colons)
+                m_measurementTags.Add(inputMeasurementKey, .Item("PointTag").ToString().Replace("-"c, "_"c).Replace(":"c, "_"c))
+
+                ' Load measurement signal type
+                m_signalTypes.Add(inputMeasurementKey, .Item("SignalAcronym").ToString())
+            End With
         Next
 
         If m_useReferenceAngle Then
@@ -280,14 +286,14 @@ Public Class MeasurementExporter
 
                             ' Export measurement value, making any needed adjustments
                             If m_signalTypes.TryGetValue(inputMeasurementKey, signalType) Then
-                                If String.Compare(signalType, "VPHA", True) = 0 OrElse String.Compare(signalType, "IPHA", True) = 0 Then
+                                If String.Compare(signalType, "VPHA") = 0 OrElse String.Compare(signalType, "IPHA") = 0 Then
                                     ' This is a phase angle measurement, export the value relative to the reference angle (if available)
                                     If referenceAngle Is Nothing Then
                                         exportData.Append(measurementValue)
                                     Else
                                         exportData.Append(referenceAngle.AdjustedValue - measurementValue)
                                     End If
-                                ElseIf String.Compare(signalType, "VPHM", True) = 0 Then
+                                ElseIf String.Compare(signalType, "VPHM") = 0 Then
                                     ' Voltage from PMU's is line-to-neutral volts, we convert this to line-to-line kilovolts
                                     exportData.Append(measurementValue * m_sqrtOf3 / 1000.0R)
                                 Else
