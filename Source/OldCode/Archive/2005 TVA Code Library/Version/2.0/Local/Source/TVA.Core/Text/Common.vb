@@ -31,7 +31,6 @@
 '*******************************************************************************************************
 
 Imports System.Text
-Imports System.Globalization.CultureInfo
 Imports TVA.Common
 
 Namespace Text
@@ -619,13 +618,13 @@ Namespace Text
 
         End Function
 
-        ''' <summary>Converts given string into TitleCase (upper case first letter of each word).</summary>
+        ''' <summary>Converts the provided string into TitleCase (upper case first letter of each word).</summary>
         ''' <param name="value">Input string.</param>
-        ''' <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture, this way even
+        ''' <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture. This way, even
         ''' strings formatted in all-caps will still be properly formatted.</remarks>
         Public Shared Function TitleCase(ByVal value As String) As String
 
-            Return CurrentUICulture.TextInfo.ToTitleCase(value.ToLower())
+            Return System.Globalization.CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(value.ToLower())
 
         End Function
 
