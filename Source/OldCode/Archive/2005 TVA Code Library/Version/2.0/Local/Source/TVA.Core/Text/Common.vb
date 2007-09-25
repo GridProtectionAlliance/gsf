@@ -25,10 +25,13 @@
 '       Modified the CenterText method to handle multiple lines.
 '  08/21/2007 - Darrell Zuercher
 '       Edited code comments.
+'  09/25/2007 - J. Ritchie Carroll
+'       Added TitleCase function to format a string with the first letter of each word capitalized
 '
 '*******************************************************************************************************
 
 Imports System.Text
+Imports System.Globalization.CultureInfo
 Imports TVA.Common
 
 Namespace Text
@@ -613,6 +616,16 @@ Namespace Text
         Public Shared Function Base64Decode(ByVal value As String) As String
 
             Return System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(value))
+
+        End Function
+
+        ''' <summary>Converts given string into TitleCase (upper case first letter of each word).</summary>
+        ''' <param name="value">Input string.</param>
+        ''' <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture, this way even
+        ''' strings formatted in all-caps will still be properly formatted.</remarks>
+        Public Shared Function TitleCase(ByVal value As String) As String
+
+            Return CurrentUICulture.TextInfo.ToTitleCase(value.ToLower())
 
         End Function
 
