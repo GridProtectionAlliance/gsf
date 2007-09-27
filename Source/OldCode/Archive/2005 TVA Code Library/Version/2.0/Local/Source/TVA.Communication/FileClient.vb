@@ -179,7 +179,7 @@ Public Class FileClient
     ''' <summary>
     ''' Disconnects from the file (i.e., closes the file stream).
     ''' </summary>
-    Public Overrides Sub Disconnect()
+    Public Overrides Sub Disconnect(ByVal timeout As Integer)
 
         CancelConnect()
 

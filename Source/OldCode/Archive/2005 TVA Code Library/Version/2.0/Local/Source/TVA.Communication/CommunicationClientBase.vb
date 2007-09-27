@@ -514,7 +514,16 @@ Public MustInherit Class CommunicationClientBase
     ''' <summary>
     ''' Disconnects the client from the connected server
     ''' </summary>
-    Public MustOverride Sub Disconnect() Implements ICommunicationClient.Disconnect
+    Public Overridable Sub Disconnect() Implements ICommunicationClient.Disconnect
+
+        Disconnect(Timeout.Infinite)
+
+    End Sub
+
+    ''' <summary>
+    ''' Disconnects the client from the connected server, timing out within specified milliseconds if needed
+    ''' </summary>
+    Public MustOverride Sub Disconnect(ByVal timeout As Integer) Implements ICommunicationClient.Disconnect
 
     ''' <summary>
     ''' Sends data to the server.

@@ -16,6 +16,8 @@
 '       Added bypass optimizations for high-speed socket access
 '  12/01/2006 - Pinal C. Patel
 '       Modified code for handling "PayloadAware" transmissions
+'  09/27/2007 - J. Ritchie Carroll
+'       Added disconnect timeout overload
 '
 '*******************************************************************************************************
 
@@ -107,14 +109,21 @@ Public Class TcpClient
     ''' <summary>
     ''' Disconnects client from the connected server.
     ''' </summary>
-    Public Overrides Sub Disconnect()
+    Public Overrides Sub Disconnect(ByVal timeout As Integer)
 
         CancelConnect() ' Cancel any active connection attempts.
 
         If MyBase.Enabled AndAlso MyBase.IsConnected AndAlso _
                 m_tcpClient IsNot Nothing AndAlso m_tcpClient.Client IsNot Nothing Then
             ' Close the client socket that is connected to the server.
-            m_tcpClient.Client.Close()
+            m_tcpClient.Client.Shutdown(SocketShutdown.Both)
+
+            ' JRC: Allowing call with disconnect timeout...
+            If timeout <= 0 Then
+                m_tcpClient.Client.Close()
+            Else
+                m_tcpClient.Client.Close(timeout)
+            End If
         End If
 
     End Sub

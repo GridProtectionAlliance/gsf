@@ -86,7 +86,7 @@ Public Class SerialClient
     ''' <summary>
     ''' Disconnects from serial port.
     ''' </summary>
-    Public Overrides Sub Disconnect()
+    Public Overrides Sub Disconnect(ByVal timeout As Integer)
 
         CancelConnect()
 

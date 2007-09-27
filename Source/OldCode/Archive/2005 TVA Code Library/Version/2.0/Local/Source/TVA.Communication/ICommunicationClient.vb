@@ -16,6 +16,8 @@
 '       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
 '  05/01/2007 - Pinal C. Patel
 '       Made WaitForConnection() functions that returns a boolean value indicating success or failure
+'  09/27/2007 - J. Ritchie Carroll
+'       Added disconnect timeout overload
 '
 '*******************************************************************************************************
 
@@ -230,6 +232,11 @@ Public Interface ICommunicationClient
     ''' Disconnects the client from the connected server.
     ''' </summary>
     Sub Disconnect()
+
+    ''' <summary>
+    ''' Disconnects the client from the connected server, timing out within specified milliseconds if needed.
+    ''' </summary>
+    Sub Disconnect(ByVal timeout As Integer)
 
     ''' <summary>
     ''' Sends data to the server.

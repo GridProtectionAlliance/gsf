@@ -14,6 +14,8 @@
 '       Original version of source code generated
 '  09/06/2006 - J. Ritchie Carroll
 '       Added bypass optimizations for high-speed socket access
+'  09/27/2007 - J. Ritchie Carroll
+'       Added disconnect timeout overload
 '
 '*******************************************************************************************************
 
@@ -170,7 +172,7 @@ Public Class UdpClient
     ''' <summary>
     ''' Disconnects client from the connected server.
     ''' </summary>
-    Public Overrides Sub Disconnect()
+    Public Overrides Sub Disconnect(ByVal timeout As Integer)
 
         CancelConnect() ' Cancel any active connection attempts.
 
@@ -192,7 +194,15 @@ Public Class UdpClient
                 End Try
             End If
 
-            m_udpClient.Client.Close()
+            ' Close the UDP socket.
+            m_udpClient.Client.Shutdown(SocketShutdown.Both)
+
+            ' JRC: Allowing call with disconnect timeout...
+            If timeout <= 0 Then
+                m_udpClient.Client.Close()
+            Else
+                m_udpClient.Client.Close(timeout)
+            End If
         End If
 
     End Sub
