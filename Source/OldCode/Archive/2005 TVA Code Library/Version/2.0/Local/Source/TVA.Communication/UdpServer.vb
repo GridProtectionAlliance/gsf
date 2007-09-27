@@ -34,7 +34,7 @@ Imports TVA.Security.Cryptography.Common
 ''' connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
 ''' of SecureSession which otherwise is not possible.
 ''' </remarks>
-<DisplayName("UdpServer")> _
+<DisplayName("Udp Communication Server")> _
 Public Class UdpServer
 
 #Region " Member Declaration "

@@ -36,7 +36,7 @@ Imports TVA.ErrorManagement
 ''' <remarks>
 ''' PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
 ''' </remarks>
-<DisplayName("TcpClient")> _
+<DisplayName("Tcp Communication Client")> _
 Public Class TcpClient
 
 #Region " Member Declaration "

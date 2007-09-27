@@ -37,7 +37,7 @@ Imports TVA.ErrorManagement
 ''' connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
 ''' of SecureSession which otherwise is not possible.
 ''' </remarks>
-<DisplayName("UdpClient")> _
+<DisplayName("Udp Communication Client")> _
 Public Class UdpClient
 
 #Region " Member Declaration "

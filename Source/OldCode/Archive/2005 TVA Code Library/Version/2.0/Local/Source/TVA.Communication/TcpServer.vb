@@ -34,7 +34,7 @@ Imports TVA.Security.Cryptography.Common
 ''' <remarks>
 ''' PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
 ''' </remarks>
-<DisplayName("TcpServer")> _
+<DisplayName("Tcp Communication Server")> _
 Public Class TcpServer
 
 #Region " Member Declaration "

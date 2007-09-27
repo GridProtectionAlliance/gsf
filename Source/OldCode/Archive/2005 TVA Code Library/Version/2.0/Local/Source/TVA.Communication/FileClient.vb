@@ -28,7 +28,7 @@ Imports TVA.ErrorManagement
 ''' <summary>
 ''' Represents a File-based communication client.
 ''' </summary>
-<DisplayName("FileClient")> _
+<DisplayName("File Communication Client")> _
 Public Class FileClient
 
 #Region " Member Declaration "
