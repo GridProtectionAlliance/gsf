@@ -85,7 +85,7 @@
         <table width="750" cellpadding=2 cellspacing=1 border=0 align=center style="border: solid 1px LightSteelBlue">
             <tr>
                 <td height="50" valign=middle align=left colspan=4 class="PageHeader"">
-                    &nbsp;<img src="Images\TRO.gif" border="0" />&nbsp;<asp:Label ID="Label1" runat="server" CssClass="HeadingLabel" Text="Apply for an Account" Height="31px"></asp:Label>
+                    &nbsp;<img src="Images\Logo.gif" border="0" />&nbsp;<asp:Label ID="Label1" runat="server" CssClass="HeadingLabel" Text="Apply for an Account" Height="31px"></asp:Label>
                     &nbsp;&nbsp;&nbsp;
                 </td>                
             </tr>

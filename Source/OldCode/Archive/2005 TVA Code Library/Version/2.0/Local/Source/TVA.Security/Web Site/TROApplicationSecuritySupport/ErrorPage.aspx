@@ -86,7 +86,7 @@
         <table width="500" cellpadding=2 cellspacing=1 border=0 align=center style="border: solid 1px lightsteelBlue">
             <tr>
                 <td height="50" valign=middle align=left colspan=3 class="PageHeader"">
-                    &nbsp;<img src="Images\TRO.gif" border="0" />&nbsp;<asp:Label ID="LabelErrorType" runat="server" CssClass="HeadingLabel" Height="31px"></asp:Label>
+                    &nbsp;<img src="Images\Logo.gif" border="0" />&nbsp;<asp:Label ID="LabelErrorType" runat="server" CssClass="HeadingLabel" Height="31px"></asp:Label>
                     &nbsp;&nbsp;&nbsp;
                 </td>                
             </tr>
