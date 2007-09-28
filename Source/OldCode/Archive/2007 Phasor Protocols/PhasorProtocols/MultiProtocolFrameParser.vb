@@ -369,20 +369,9 @@ Public Class MultiProtocolFrameParser
         m_enabled = False
         m_rateCalcTimer.Enabled = False
 
-        If m_communicationClient IsNot Nothing Then
-            ' Sockets can start behaving poorly on shutdown - this has exposed itself as a thread-lockup during disconnect.
-            ' As a result, we perform disconnect on a completely seperate thread which allows us to time-out...
-            With New Thread(AddressOf CloseClientSocket)
-                ' Start thread to close socket
-                .Start(m_communicationClient)
-
-                ' We'll wait up to two seconds to allow socket to close (should be well more than enough time)
-                If Not .Join(2000) Then
-                    ' If socket fails to terminate, we'll abort thread and stop trying
-                    .Abort()
-                End If
-            End With
-        End If
+        ' Sockets can start behaving poorly on shutdown - this has exposed itself as a thread-lockup during disconnect.
+        ' As a result, we timeout on disconnect if it takes longer than 2 seconds...
+        If m_communicationClient IsNot Nothing Then m_communicationClient.Disconnect(2000)
         If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
         If m_frameParser IsNot Nothing Then m_frameParser.Stop()
 
@@ -391,13 +380,6 @@ Public Class MultiProtocolFrameParser
         m_frameParser = Nothing
         m_communicationClient = Nothing
         m_communicationServer = Nothing
-
-    End Sub
-
-    Private Sub CloseClientSocket(ByVal state As Object)
-
-        Dim communicationClient As ICommunicationClient = TryCast(state, ICommunicationClient)
-        If communicationClient IsNot Nothing Then communicationClient.Disconnect()
 
     End Sub
 
