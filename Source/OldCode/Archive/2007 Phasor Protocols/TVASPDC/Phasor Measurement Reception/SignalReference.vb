@@ -13,17 +13,24 @@ Public Structure SignalReference
     ' Parse signal reference
     Public Sub New(ByVal signalReference As String)
 
-        Dim elements As String() = signalReference.Trim().Split("-"c)
+        ' Signal reference may contain multiple dashes, we're interested in the last one
+        Dim splitIndex As Integer = signalReference.LastIndexOf("-"c)
 
-        Acronym = elements(0).Trim().ToUpper()
+        If splitIndex > -1 Then
+            Dim signalType As String = signalReference.Substring(splitIndex + 1).Trim().ToUpper()
+            Acronym = signalReference.Substring(0, splitIndex).Trim().ToUpper()
 
-        ' If the length of the signal type acronym is greater than 2, then this
-        ' is an indexed signal type (e.g., CORD-PA2)
-        If elements(1).Length > 2 Then
-            Type = GetSignalType(elements(1).Substring(0, 2).Trim().ToUpper())
-            If Type <> Unknown Then Index = Convert.ToInt32(elements(1).Substring(2))
+            ' If the length of the signal type acronym is greater than 2, then this
+            ' is an indexed signal type (e.g., CORD-PA2)
+            If signalType.Length > 2 Then
+                Type = GetSignalType(signalType.Substring(0, 2))
+                If Type <> Unknown Then Index = Convert.ToInt32(signalType.Substring(2))
+            Else
+                Type = GetSignalType(signalType)
+            End If
         Else
-            Type = GetSignalType(elements(1).Trim().ToUpper())
+            ' This represents an error - best we can do is assume entire string is the acronym
+            Acronym = signalReference.Trim().ToUpper()
         End If
 
     End Sub

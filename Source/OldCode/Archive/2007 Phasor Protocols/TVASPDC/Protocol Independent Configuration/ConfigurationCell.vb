@@ -92,6 +92,9 @@ Public Class ConfigurationCell
             ' Create and cache new non-indexed signal reference
             synonyms(0) = SignalReference.ToString(IDLabel, signal)
 
+            ' Cache generated signal synonym
+            m_signalSynonyms.Add(signal, synonyms)
+
             Return synonyms(0)
         End Get
     End Property
@@ -124,6 +127,9 @@ Public Class ConfigurationCell
             ' Create and cache new signal reference
             synonyms(signalIndex) = SignalReference.ToString(IDLabel, signal, signalIndex + 1)
 
+            ' Cache generated signal synonym array
+            m_signalSynonyms.Add(signal, synonyms)
+
             Return synonyms(signalIndex)
         End Get
     End Property
@@ -145,6 +151,7 @@ Public Class ConfigurationCell
             m_totalFrames = value
         End Set
     End Property
+
     Public Property TotalDataQualityErrors() As Long
         Get
             Return m_totalDataQualityErrors

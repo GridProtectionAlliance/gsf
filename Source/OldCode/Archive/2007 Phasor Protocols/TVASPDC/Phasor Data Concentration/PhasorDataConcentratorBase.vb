@@ -278,7 +278,6 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim configurationFrame As New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond))
 
         If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Active <> 0"
-        'If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM PMUs WHERE IsActive <> 0"
 
         ' TODO: Will need to allow a way to define digitals and analogs in the ouput stream at some point
         With RetrieveData(pmuFilterSql, connection).Rows
@@ -293,14 +292,10 @@ Public MustInherit Class PhasorDataConcentratorBase
                     cell.AnalogDataFormat = DataFormat.FloatingPoint
 
                     cell.IDLabel = TruncateRight(.Item("Acronym").ToString(), cell.IDLabelLength)
-                    'cell.IDLabel = TruncateRight(.Item("PMUID_Uniq").ToString(), cell.IDLabelLength)
-
                     cell.StationName = TruncateRight(.Item("Name").ToString(), cell.MaximumStationNameLength)
-                    'cell.StationName = TruncateRight(.Item("PMUName").ToString(), cell.MaximumStationNameLength)
 
                     ' Load all phasors as defined in the database
-                    With RetrieveData(String.Format("SELECT Label, Type FROM Phasor WHERE ID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows
-                        'With RetrieveData(String.Format("SELECT Label, Type FROM Phasors WHERE PMUID='{0}' ORDER BY PhasorIndex", cell.IDLabel), connection).Rows
+                    With RetrieveData(String.Format("SELECT Label, Type FROM Phasor WHERE PmuID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows                        
                         For y As Integer = 0 To .Count - 1
                             With .Item(y)
                                 cell.PhasorDefinitions.Add( _

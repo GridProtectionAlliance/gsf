@@ -376,7 +376,7 @@ Public Class PhasorMeasurementReceiver
                                 .Append(", ReportTime='")
                                 .Append(DateTime.UtcNow.ToString())
                                 .Append("' WHERE ID=")
-                                .Append(cell.Tag)
+                                .Append(cell.Tag.ToString())
 
                                 ExecuteNonQuery(.ToString(), connection)
                             End With

@@ -82,7 +82,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Phasor Data Concentration\BpaPdcConcentrator.vb" />
-    <Compile Include="Phasor Measurement Reception\Enumerations.vb" />
+    <Compile Include="Enumerations.vb" />
     <Compile Include="Phasor Data Concentration\IEEEC37.118Concentrator.vb" />
     <Compile Include="Phasor Data Concentration\PhasorDataConcentratorBase.vb" />
     <Compile Include="Phasor Measurement Reception\PhasorMeasurementMapper.vb" />
