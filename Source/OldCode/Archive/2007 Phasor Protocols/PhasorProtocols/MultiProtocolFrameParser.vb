@@ -25,6 +25,10 @@
 '       Wrapped all event raising for frame parsing in Try/Catch so that any exceptions thrown in
 '       consumer event handlers won't have a negative effect on continuous data parsing - exceptions
 '       in consumer event handlers are duly noted and raised through the DataStreamException event
+'  09/28/2007 - J. Ritchie Carroll
+'       Implemented new disconnect overload on communications client that allows timeout on socket
+'       close to fix an issue related non-responsive threads that "lock-up" after sending connection
+'       commands that attempt to close the socket for remotely connected devices
 '
 '*******************************************************************************************************
 
