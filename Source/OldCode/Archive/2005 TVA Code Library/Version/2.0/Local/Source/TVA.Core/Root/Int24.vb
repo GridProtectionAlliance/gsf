@@ -1,13 +1,17 @@
+Option Strict On
+
 Imports System.Runtime.InteropServices
 Imports System.Globalization
+Imports Tva.Interop.Bit
 
 <Serializable(), StructLayout(LayoutKind.Sequential), ComVisible(True)> _
 Public Structure Int24
 
     Implements IComparable, IFormattable, IConvertible, IComparable(Of Int24), IComparable(Of Int32), IEquatable(Of Int24), IEquatable(Of Int32)
 
-    Public Const MaxValue As Int32 = 16777215
-    Public Const MinValue As Int32 = -16777216
+    Public Const BitMask As Int32 = (Bit24 Or Bit25 Or Bit26 Or Bit27 Or Bit28 Or Bit29 Or Bit30 Or Bit31)
+    Public Const MaxValue As Int32 = 8388607
+    Public Const MinValue As Int32 = -8388608
 
     ' We store the Int24 value in a 4-byte integer for convenience
     Friend m_value As Int32
@@ -24,6 +28,8 @@ Public Structure Int24
         m_value = value
 
     End Sub
+
+#Region " Operators "
 
     Public Shared Operator =(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
 
@@ -133,15 +139,15 @@ Public Structure Int24
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As Int32
-
-        Return value.ToInt32(Nothing)
-
-    End Operator
-
     Public Shared Narrowing Operator CType(ByVal value As Int32) As Int24
 
         Return New Int24(value)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int24) As Int32
+
+        Return value.ToInt32(Nothing)
 
     End Operator
 
@@ -157,15 +163,45 @@ Public Structure Int24
 
     End Operator
 
+    Public Shared Operator Not(ByVal value As Int24) As Int24
+
+        Return CType((Not CType(value, Int32)), Int24)
+
+    End Operator
+
     Public Shared Operator And(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
         Return CType(CType(value1, Int32) And CType(value2, Int32), Int24)
 
     End Operator
 
+    Public Shared Operator And(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 And CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator And(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) And value2)
+
+    End Operator
+
     Public Shared Operator Or(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
         Return CType(CType(value1, Int32) Or CType(value2, Int32), Int24)
+
+    End Operator
+
+    Public Shared Operator Or(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 Or CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator Or(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) Or value2)
 
     End Operator
 
@@ -217,17 +253,39 @@ Public Structure Int24
 
     End Operator
 
-    Public Shared Operator >>(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator >>(ByVal value As Int24, ByVal shifts As Integer) As Int24
 
-        Return CType(value1, Int32) >> value2
+        Dim result As Int32 = CType(value, Int32)
+
+        For x As Integer = 1 To shifts
+            ' Perform a single right rotation
+            result >>= 1
+
+            ' Keep an eye on that 25th bit (24th if counting from 0) that will need to be rotated back to the front on the line
+            If (result And Bit24) > 0 Then result = (result Or Bit0 And Not Bit24)
+        Next
+
+        Return CType(result, Int24)
 
     End Operator
 
-    Public Shared Operator <<(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator <<(ByVal value As Int24, ByVal shifts As Int32) As Int24
 
-        Return CType(value1, Int32) << value2
+        Dim result As Int32 = CType(value, Int32)
+
+        For x As Integer = 1 To shifts
+            ' Perform a single left rotation
+            result <<= 1
+
+            ' Keep an eye on that 32nd bit (31st if counting from 0) that will need to be rotated back to the end on the line
+            If (result And Bit31) > 0 Then result = (result Or Bit23 And Not Bit31)
+        Next
+
+        Return CType(result, Int24)
 
     End Operator
+
+#End Region
 
     Public Function CompareTo(ByVal value As Object) As Integer Implements IComparable.CompareTo
 
@@ -399,6 +457,12 @@ Public Structure Int24
     Private Function ToUInt16(ByVal provider As IFormatProvider) As UInt16 Implements IConvertible.ToUInt16
 
         Return Convert.ToUInt16(m_value, provider)
+
+    End Function
+
+    Public Function ToInt32() As Int32
+
+        Return (m_value Or BitMask)
 
     End Function
 
