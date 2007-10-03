@@ -460,12 +460,6 @@ Public Structure Int24
 
     End Function
 
-    Public Function ToInt32() As Int32
-
-        Return (m_value Or BitMask)
-
-    End Function
-
     Private Function ToInt32(ByVal provider As IFormatProvider) As Integer Implements IConvertible.ToInt32
 
         Return m_value
