@@ -1,27 +1,89 @@
+'*******************************************************************************************************
+'  TVA.Int24.vb - Representation of a 3-byte, 24-bit signed integer
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2827
+'       Email: jrcarrol@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  10/04/2007 - J. Ritchie Carroll
+'       Original version of source code generated
+'
+'*******************************************************************************************************
+
 Option Strict On
 
 Imports System.Runtime.InteropServices
 Imports System.Globalization
+Imports TVA.Common
 Imports Tva.Interop.Bit
 
-<Serializable(), StructLayout(LayoutKind.Sequential), ComVisible(True)> _
+''' <summary>Represents a 24-bit signed integer.</summary>
+''' <remarks>
+''' <para>
+''' This class behaves like most other intrinsic signed integers but allows a 3-byte, 24-bit integer implementation
+''' that is often found in many digital-signal processing arenas and different kinds of protocol parsing.  A 24-bit
+''' integer is typically used save storage space on disk where its value range of -8388608 to 8388607 is sufficient,
+''' but the Int16 value range of -32768 to 32767 is too small.
+''' </para>
+''' <para>
+''' This structure uses an Int32 internally for storage and most other common excepted integer functionality, so using
+''' a 24-bit integer will not save memory (CPU's don't process an odd number of bytes natively).  However, if the 24-bit
+''' signed integer range (-8388608 to 8388607) suits your data needs you can save disk space by only storing the three
+''' bytes that this integer actually consumes.  You can do this by calling the Int24.GetBytes function to return a three
+''' binary byte array that can be serialized to the desired destination and then calling the Int24.GetValue function to
+''' restore the Int24 value from those three bytes.
+''' </para>
+''' <para>
+''' All the standard operators for the Int24 have been fully defined for use with both Int24 and Int32 signed integers,
+''' you should find that without the exception Int24 can be compared and numerically calculated with an Int24 or Int32.
+''' Necessary casting should be minimal, but if "Option Strict" is on you will need to cast integer literals to an Int24,
+''' for example: <example>Dim i As Int24 = CType(12, Int24)</example>
+''' This is because integer literals are defined as Int32 and you can't define an Int24 intrinsic literal, but typical
+''' use should be very simple - just as if you are using any other native signed integer.
+''' </para>
+''' </remarks>
+<Serializable()> _
 Public Structure Int24
 
     Implements IComparable, IFormattable, IConvertible, IComparable(Of Int24), IComparable(Of Int32), IEquatable(Of Int24), IEquatable(Of Int32)
 
+#Region " Public Constants "
+
+    ''' <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
     Public Const BitMask As Int32 = (Bit24 Or Bit25 Or Bit26 Or Bit27 Or Bit28 Or Bit29 Or Bit30 Or Bit31)
+
+    ''' <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
     Public Const MaxValue As Int32 = 8388607
+
+    ''' <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
     Public Const MinValue As Int32 = -8388608
 
-    ' We store the Int24 value in a 4-byte integer for convenience
-    Friend m_value As Int32
+#End Region
 
+#Region " Member Fields "
+
+    ' We internally store the Int24 value in a 4-byte integer for convenience
+    Private m_value As Int32
+
+#End Region
+
+#Region " Constructors "
+
+    ''' <summary>Creates 24-bit signed integer from an existing 24-bit signed integer.</summary>
     Public Sub New(ByVal value As Int24)
 
         m_value = CType(value, Int32)
 
     End Sub
 
+    ''' <summary>Creates 24-bit signed integer from a 32-bit signed integer.</summary>
+    ''' <param name="value">32-bit signed integer to use as new 24-bit signed integer value.</param>
+    ''' <exception cref="OverflowException">Source values outside 24-bit min/max range will cause an overflow exception.</exception>
     Public Sub New(ByVal value As Int32)
 
         ValidateBitSize(value)
@@ -29,7 +91,91 @@ Public Structure Int24
 
     End Sub
 
-#Region " Operators "
+    ''' <summary>Creates 24-bit signed integer from three bytes at a specified position in a byte array.</summary>
+    ''' <param name="value">An array of bytes.</param>
+    ''' <param name="startIndex">The starting position within value.</param>
+    ''' <remarks>
+    ''' <para>You can use this constructor in-lieu of a System.BitConverter.ToInt24 function.</para>
+    ''' <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
+    ''' </remarks>
+    Public Sub New(ByVal value As Byte(), ByVal startIndex As Integer)
+
+        m_value = CType(Int24.GetValue(value, startIndex), Int32)
+
+    End Sub
+
+#End Region
+
+#Region " BitConverter Operations "
+
+    ''' <summary>Returns the Int24 value as an array of three bytes.</summary>
+    ''' <returns>An array of bytes with length 3.</returns>
+    ''' <remarks>
+    ''' <para>You can use this function in-lieu of a System.BitConverter.GetBytes function.</para>
+    ''' <para>Bytes will be returned in endian order of currently executing process architecture (little-endian on Intel platforms).</para>
+    ''' </remarks>
+    Public Function GetBytes() As Byte()
+
+        ' Return serialized 3-byte representation of Int24
+        Return Int24.GetBytes(Me)
+
+    End Function
+
+    ''' <summary>Returns the specified Int24 value as an array of three bytes.</summary>
+    ''' <param name="value">Int24 value to </param>
+    ''' <returns>An array of bytes with length 3.</returns>
+    ''' <remarks>
+    ''' <para>You can use this function in-lieu of a System.BitConverter.GetBytes function.</para>
+    ''' <para>Bytes will be returned in endian order of currently executing process architecture (little-endian on Intel platforms).</para>
+    ''' </remarks>
+    Public Shared Function GetBytes(ByVal value As Int24) As Byte()
+
+        ' We use a 32-bit integer to store 24-bit integer internally
+        Dim int32Bytes As Byte() = BitConverter.GetBytes(CType(value, Int32))
+        Dim int24Bytes As Byte() = CreateArray(Of Byte)(3)
+
+        If BitConverter.IsLittleEndian Then
+            ' Copy little-endian bytes starting at index 0
+            Buffer.BlockCopy(int32Bytes, 0, int24Bytes, 0, 3)
+        Else
+            ' Copy big-endian bytes starting at index 1
+            Buffer.BlockCopy(int32Bytes, 1, int24Bytes, 0, 3)
+        End If
+
+        ' Return serialized 3-byte representation of Int24
+        Return int24Bytes
+
+    End Function
+
+    ''' <summary>Returns a 24-bit signed integer from three bytes at a specified position in a byte array.</summary>
+    ''' <param name="value">An array of bytes.</param>
+    ''' <param name="startIndex">The starting position within value.</param>
+    ''' <returns>A 24-bit signed integer formed by three bytes beginning at startIndex.</returns>
+    ''' <remarks>
+    ''' <para>You can use this function in-lieu of a System.BitConverter.ToInt24 function.</para>
+    ''' <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
+    ''' </remarks>
+    Public Shared Function GetValue(ByVal value As Byte(), ByVal startIndex As Integer) As Int24
+
+        ' We use a 32-bit integer to store 24-bit integer internally
+        Dim bytes As Byte() = CreateArray(Of Byte)(4)
+
+        If BitConverter.IsLittleEndian Then
+            ' Copy little-endian bytes starting at index 0 leaving byte at index 3 blank
+            Buffer.BlockCopy(value, 0, bytes, 0, 3)
+        Else
+            ' Copy big-endian bytes starting at index 1 leaving byte at index 0 blank
+            Buffer.BlockCopy(value, 0, bytes, 1, 3)
+        End If
+
+        ' Deserialize value
+        Return CType(ApplyBitMask(BitConverter.ToInt32(bytes, 0)), Int24)
+
+    End Function
+
+#End Region
+
+#Region " Native Type Operators "
 
     Public Shared Operator =(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
 
@@ -139,15 +285,105 @@ Public Structure Int24
 
     End Operator
 
+    Public Shared Narrowing Operator CType(ByVal value As String) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As Decimal) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As Double) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As Single) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As Int64) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
     Public Shared Narrowing Operator CType(ByVal value As Int32) As Int24
 
         Return New Int24(value)
 
     End Operator
 
+    Public Shared Narrowing Operator CType(ByVal value As Int24) As Byte
+
+        Return CType(CType(value, Int32), Byte)
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As Int24) As Int16
+
+        Return CType(CType(value, Int32), Int16)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Byte) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Char) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int16) As Int24
+
+        Return New Int24(Convert.ToInt32(value))
+
+    End Operator
+
     Public Shared Widening Operator CType(ByVal value As Int24) As Int32
 
         Return value.ToInt32(Nothing)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int24) As Int64
+
+        Return value.ToInt64(Nothing)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int24) As Double
+
+        Return value.ToDouble(Nothing)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int24) As Single
+
+        Return value.ToSingle(Nothing)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int24) As Decimal
+
+        Return value.ToDecimal(Nothing)
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As Int24) As String
+
+        Return value.ToString()
 
     End Operator
 
@@ -211,21 +447,69 @@ Public Structure Int24
 
     End Operator
 
+    Public Shared Operator Xor(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 Xor CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator Xor(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) Xor value2)
+
+    End Operator
+
     Public Shared Operator Mod(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
         Return CType(CType(value1, Int32) Mod CType(value2, Int32), Int24)
 
     End Operator
 
+    Public Shared Operator Mod(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 Mod CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator Mod(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) Mod value2)
+
+    End Operator
+
     Public Shared Operator +(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) Mod CType(value2, Int32), Int24)
+        Return CType(CType(value1, Int32) + CType(value2, Int32), Int24)
+
+    End Operator
+
+    Public Shared Operator +(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 + CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator +(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) + value2)
 
     End Operator
 
     Public Shared Operator -(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) Mod CType(value2, Int32), Int24)
+        Return CType(CType(value1, Int32) - CType(value2, Int32), Int24)
+
+    End Operator
+
+    Public Shared Operator -(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 - CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator -(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) - value2)
 
     End Operator
 
@@ -235,57 +519,111 @@ Public Structure Int24
 
     End Operator
 
+    Public Shared Operator *(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+
+        Return (value1 * CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator *(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+
+        Return (CType(value1, Int32) * value2)
+
+    End Operator
+
     Public Shared Operator \(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
         Return CType(CType(value1, Int32) \ CType(value2, Int32), Int24)
 
     End Operator
 
-    Public Shared Operator /(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
+    Public Shared Operator \(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
 
-        Return CType(CType(CType(value1, Int32) / CType(value2, Int32), Int32), Int24)
+        Return (value1 \ CType(value2, Int32))
 
     End Operator
 
-    Public Shared Operator ^(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
+    Public Shared Operator \(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
 
-        Return CType(CType(CType(value1, Int32) ^ CType(value2, Int32), Int32), Int24)
+        Return (CType(value1, Int32) \ value2)
+
+    End Operator
+
+    Public Shared Operator /(ByVal value1 As Int24, ByVal value2 As Int24) As Double
+
+        Return (CType(value1, Double) / CType(value2, Double))
+
+    End Operator
+
+    Public Shared Operator /(ByVal value1 As Int32, ByVal value2 As Int24) As Double
+
+        Return (CType(value1, Double) / CType(value2, Double))
+
+    End Operator
+
+    Public Shared Operator /(ByVal value1 As Int24, ByVal value2 As Int32) As Double
+
+        Return (CType(value1, Double) / CType(value2, Int32))
+
+    End Operator
+
+    Public Shared Operator ^(ByVal value1 As Int24, ByVal value2 As Int24) As Double
+
+        Return (CType(value1, Double) ^ CType(value2, Double))
+
+    End Operator
+
+    Public Shared Operator ^(ByVal value1 As Int32, ByVal value2 As Int24) As Double
+
+        Return (CType(value1, Double) ^ CType(value2, Double))
+
+    End Operator
+
+    Public Shared Operator ^(ByVal value1 As Int24, ByVal value2 As Int32) As Double
+
+        Return (CType(value1, Double) ^ CType(value2, Double))
 
     End Operator
 
     Public Shared Operator >>(ByVal value As Int24, ByVal shifts As Integer) As Int24
 
-        Dim result As Int32 = CType(value, Int32)
-
-        For x As Integer = 1 To shifts
-            ' Perform a single right rotation
-            result >>= 1
-
-            ' Keep an eye on that 25th bit (24th if counting from 0) that will need to be rotated back to the front on the line
-            If (result And Bit24) > 0 Then result = (result Or Bit0 And Not Bit24)
-        Next
-
-        Return CType(result, Int24)
+        Return CType(ApplyBitMask(CType(value, Int32) >> shifts), Int24)
 
     End Operator
 
     Public Shared Operator <<(ByVal value As Int24, ByVal shifts As Int32) As Int24
 
-        Dim result As Int32 = CType(value, Int32)
-
-        For x As Integer = 1 To shifts
-            ' Perform a single left rotation
-            result <<= 1
-
-            ' Keep an eye on that 32nd bit (31st if counting from 0) that will need to be rotated back to the end on the line
-            If (result And Bit31) > 0 Then result = (result Or Bit23 And Not Bit31)
-        Next
-
-        Return CType(result, Int24)
+        Return CType(ApplyBitMask(CType(value, Int32) << shifts), Int24)
 
     End Operator
 
 #End Region
+
+#Region " Int24 Specific Functions "
+
+    Private Shared Sub ValidateBitSize(ByVal value As Int32)
+
+        If value > Int24.MaxValue Or value < Int24.MinValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit integer"))
+
+    End Sub
+
+    Private Shared Function ApplyBitMask(ByVal value As Int32) As Int32
+
+        If (value And Bit23) > 0 Then
+            ' If the sign-bit is set, this number will be negative - set all high-byte bits (keeps 32-bit number in 24-bit range)
+            value = (value Or BitMask)
+        Else
+            ' If the sign-bit is not set, this number will be positive - clear all high-byte bits (keeps 32-bit number in 24-bit range)
+            value = (value And Not BitMask)
+        End If
+
+        Return value
+
+    End Function
+
+#End Region
+
+#Region " Standard Numeric Operations "
 
     Public Function CompareTo(ByVal value As Object) As Integer Implements IComparable.CompareTo
 
@@ -418,12 +756,6 @@ Public Structure Int24
 
     End Function
 
-    Private Shared Sub ValidateBitSize(ByVal value As Int32)
-
-        If value > Int24.MaxValue Or value < Int24.MinValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit integer"))
-
-    End Sub
-
     Private Function ToBoolean(ByVal provider As IFormatProvider) As Boolean Implements IConvertible.ToBoolean
 
         Return Convert.ToBoolean(m_value, provider)
@@ -513,5 +845,7 @@ Public Structure Int24
         Return Convert.ChangeType(m_value, type, provider)
 
     End Function
+
+#End Region
 
 End Structure
