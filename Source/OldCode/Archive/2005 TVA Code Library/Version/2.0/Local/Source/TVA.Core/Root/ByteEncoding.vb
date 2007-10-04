@@ -455,6 +455,10 @@ Public MustInherit Class ByteEncoding
     End Property
 
     ''' <summary>Handles encoding and decoding of a byte buffer into a big-endian binary (i.e., 0 and 1's) based presentation format</summary>
+    ''' <remarks>
+    ''' Although endianness is typically used in the context of byte order (see TVA.Interop.EndianOrder to handle byte order swapping),
+    ''' this property allows you visualize "bits" in big-endian order, right-to-left (note that bits are normally stored in the same order as their bytes).
+    ''' </remarks>
     Public Shared ReadOnly Property BigEndianBinary() As BinaryEncoding
         Get
             If m_bigEndianBinaryEncoding Is Nothing Then m_bigEndianBinaryEncoding = New BinaryEncoding(Endianness.BigEndian)
@@ -463,6 +467,10 @@ Public MustInherit Class ByteEncoding
     End Property
 
     ''' <summary>Handles encoding and decoding of a byte buffer into a little-endian binary (i.e., 0 and 1's) based presentation format</summary>
+    ''' <remarks>
+    ''' Although endianness is typically used in the context of byte order (see TVA.Interop.EndianOrder to handle byte order swapping),
+    ''' this property allows you visualize "bits" in little-endian order, left-to-right (note that bits are normally stored in the same order as their bytes).
+    ''' </remarks>
     Public Shared ReadOnly Property LittleEndianBinary() As BinaryEncoding
         Get
             If m_littleEndianBinaryEncoding Is Nothing Then m_littleEndianBinaryEncoding = New BinaryEncoding(Endianness.LittleEndian)
