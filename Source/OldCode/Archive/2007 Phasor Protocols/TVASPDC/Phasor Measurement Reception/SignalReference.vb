@@ -21,7 +21,7 @@ Public Structure SignalReference
             Acronym = signalReference.Substring(0, splitIndex).Trim().ToUpper()
 
             ' If the length of the signal type acronym is greater than 2, then this
-            ' is an indexed signal type (e.g., CORD-PA2)
+            ' is an indexed signal type (e.g., CORDOVA-PA2)
             If signalType.Length > 2 Then
                 Type = GetSignalType(signalType.Substring(0, 2))
                 If Type <> Unknown Then Index = Convert.ToInt32(signalType.Substring(2))
@@ -31,6 +31,7 @@ Public Structure SignalReference
         Else
             ' This represents an error - best we can do is assume entire string is the acronym
             Acronym = signalReference.Trim().ToUpper()
+            Type = Unknown
         End If
 
     End Sub
@@ -45,13 +46,15 @@ Public Structure SignalReference
             Case "FQ"   ' Frequency
                 Return SignalType.Frequency
             Case "DF"   ' df/dt
-                Return SignalType.dfdt
+                Return SignalType.dFdt
             Case "SF"   ' Status Flags
                 Return SignalType.Status
             Case "DV"   ' Digital Value
                 Return SignalType.Digital
             Case "AV"   ' Analog Value
                 Return SignalType.Analog
+            Case "CV"   ' Calculated Value
+                Return SignalType.Calculation
             Case Else
                 Return SignalType.Unknown
         End Select
@@ -67,7 +70,7 @@ Public Structure SignalReference
                 Return "PM"
             Case SignalType.Frequency
                 Return "FQ"
-            Case SignalType.dfdt
+            Case SignalType.dFdt
                 Return "DF"
             Case SignalType.Status
                 Return "SF"
@@ -75,6 +78,8 @@ Public Structure SignalReference
                 Return "DV"
             Case SignalType.Analog
                 Return "AV"
+            Case SignalType.Calculation
+                Return "CV"
             Case Else
                 Return "??"
         End Select

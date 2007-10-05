@@ -16,12 +16,22 @@
 '*******************************************************************************************************
 
 Public Enum SignalType
+    ''' <summary>Phase Angle</summary>
     Angle
+    ''' <summary>Phase Magnitude</summary>
     Magnitude
+    ''' <summary>Line Frequency</summary>
     Frequency
-    dfdt
+    ''' <summary>Frequency Delta (dF/dt)</summary>
+    dFdt
+    ''' <summary>Status Flags</summary>
     Status
+    ''' <summary>Digital Value</summary>
     Digital
+    ''' <summary>Analog Value</summary>
     Analog
+    ''' <summary>Calculated Value</summary>
+    Calculation
+    ''' <summary>Undetermined Signal Type</summary>
     Unknown
 End Enum

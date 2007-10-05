@@ -295,13 +295,21 @@ Public MustInherit Class PhasorDataConcentratorBase
                     cell.StationName = TruncateRight(.Item("Name").ToString(), cell.MaximumStationNameLength)
 
                     ' Load all phasors as defined in the database
-                    With RetrieveData(String.Format("SELECT Label, Type FROM Phasor WHERE PmuID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows                        
+                    With RetrieveData(String.Format("SELECT * FROM Phasor WHERE PmuID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows
                         For y As Integer = 0 To .Count - 1
                             With .Item(y)
                                 cell.PhasorDefinitions.Add( _
-                                    New PhasorDefinition(cell, y, TruncateRight(.Item("Label").ToString(), cell.MaximumStationNameLength), _
-                                    1, 0.0F, IIf(.Item("Type").ToString().StartsWith("V", StringComparison.OrdinalIgnoreCase), _
-                                    PhasorType.Voltage, PhasorType.Current), Nothing))
+                                    New PhasorDefinition( _
+                                        cell, y, _
+                                            TruncateRight(String.Format("{0} {1}{2} {3}", _
+                                                .Item("BpaAcronym").ToString(), _
+                                                .Item("PhaseType").ToString(), _
+                                                .Item("Type").ToString(), _
+                                                .Item("Label").ToString()), _
+                                            cell.MaximumStationNameLength), _
+                                        1, 0.0F, IIf(.Item("Type").ToString().StartsWith( _
+                                            "V", StringComparison.OrdinalIgnoreCase), _
+                                            PhasorType.Voltage, PhasorType.Current), Nothing))
                             End With
                         Next
                     End With
@@ -479,7 +487,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                 Case SignalType.Frequency
                     ' Assign "frequency" measurement to data cell
                     dataCell.FrequencyValue.Frequency = Convert.ToSingle(measurement.AdjustedValue)
-                Case SignalType.dfdt
+                Case SignalType.dFdt
                     ' Assign "df/dt" measurement to data cell
                     dataCell.FrequencyValue.DfDt = Convert.ToSingle(measurement.AdjustedValue)
                 Case SignalType.Status
@@ -519,7 +527,8 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         ' Prior to publication, set data validity bits based on reception of all data values
         For Each dataCell As IDataCell In dataFrame.Cells
-            If dataCell.DataIsValid Then dataCell.DataIsValid = dataCell.AllValuesAssigned
+            ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...
+            If Not dataCell.AllValuesAssigned Then dataCell.StatusFlags = -1
         Next
 
         ' Publish binary image over specified communication layer

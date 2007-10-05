@@ -387,7 +387,7 @@ Public Class PhasorMeasurementMapper
                     MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Frequency), measurements(CompositeFrequencyValue.Frequency))
 
                     ' Map df/dt
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.dfdt), measurements(CompositeFrequencyValue.DfDt))
+                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.dFdt), measurements(CompositeFrequencyValue.DfDt))
 
                     ' Map analog values (AVn)
                     analogs = dataCell.AnalogValues
