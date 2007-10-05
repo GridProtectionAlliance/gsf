@@ -124,16 +124,16 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Scheduling\SchedulePart.vb" />
-    <Compile Include="Root\BinaryDataParserBase.Designer.vb">
+    <Compile Include="Parsing\BinaryDataParserBase.Designer.vb">
       <DependentUpon>BinaryDataParserBase.vb</DependentUpon>
     </Compile>
-    <Compile Include="Root\BinaryDataParserBase.vb">
+    <Compile Include="Parsing\BinaryDataParserBase.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Root\Enumerations.vb" />
     <Compile Include="Root\GenericEventArgs.vb" />
-    <Compile Include="Root\IBinaryDataConsumer.vb" />
-    <Compile Include="Root\IBinaryDataProvider.vb" />
+    <Compile Include="Parsing\IBinaryDataConsumer.vb" />
+    <Compile Include="Parsing\IBinaryDataProvider.vb" />
     <Compile Include="Root\IdentifiableItem.vb" />
     <Compile Include="Collections\Enumerations.vb" />
     <Compile Include="Configuration\Common.vb" />

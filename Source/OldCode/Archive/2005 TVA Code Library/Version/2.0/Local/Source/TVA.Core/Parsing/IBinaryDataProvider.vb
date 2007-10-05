@@ -15,11 +15,15 @@
 '
 '*******************************************************************************************************
 
-''' <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
-Public Interface IBinaryDataProvider
+Namespace Parsing
 
-    ReadOnly Property BinaryImage() As Byte()
+    ''' <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
+    Public Interface IBinaryDataProvider
 
-    ReadOnly Property BinaryLength() As Integer
+        ReadOnly Property BinaryImage() As Byte()
 
-End Interface
+        ReadOnly Property BinaryLength() As Integer
+
+    End Interface
+
+End Namespace

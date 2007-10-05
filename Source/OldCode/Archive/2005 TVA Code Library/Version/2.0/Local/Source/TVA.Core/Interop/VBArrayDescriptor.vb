@@ -1,5 +1,7 @@
 ' 03/07/2007
 
+Imports TVA.Parsing
+
 Namespace Interop
 
     Public Class VBArrayDescriptor

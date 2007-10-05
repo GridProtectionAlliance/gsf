@@ -1,6 +1,6 @@
 Namespace IO
 
-    Partial Class IsamDataFileBase(Of T As IBinaryDataProvider)
+    Partial Class IsamDataFileBase(Of T As TVA.Parsing.IBinaryDataProvider)
         Inherits System.ComponentModel.Component
 
         <System.Diagnostics.DebuggerNonUserCode()> _
