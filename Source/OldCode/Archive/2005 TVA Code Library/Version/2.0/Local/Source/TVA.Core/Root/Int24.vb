@@ -26,25 +26,24 @@ Imports Tva.Interop.Bit
 ''' <remarks>
 ''' <para>
 ''' This class behaves like most other intrinsic signed integers but allows a 3-byte, 24-bit integer implementation
-''' that is often found in many digital-signal processing arenas and different kinds of protocol parsing.  A 24-bit
-''' integer is typically used save storage space on disk where its value range of -8388608 to 8388607 is sufficient,
-''' but the Int16 value range of -32768 to 32767 is too small.
+''' that is often found in many digital-signal processing arenas and different kinds of protocol parsing.  A signed
+''' 24-bit integer is typically used to save storage space on disk where its value range of -8388608 to 8388607 is
+''' sufficient, but the signed Int16 value range of -32768 to 32767 is too small.
 ''' </para>
 ''' <para>
-''' This structure uses an Int32 internally for storage and most other common excepted integer functionality, so using
-''' a 24-bit integer will not save memory (CPU's don't process an odd number of bytes natively).  However, if the 24-bit
-''' signed integer range (-8388608 to 8388607) suits your data needs you can save disk space by only storing the three
-''' bytes that this integer actually consumes.  You can do this by calling the Int24.GetBytes function to return a three
-''' binary byte array that can be serialized to the desired destination and then calling the Int24.GetValue function to
-''' restore the Int24 value from those three bytes.
+''' This structure uses an Int32 internally for storage and most other common expected integer functionality, so using
+''' a 24-bit integer will not save memory.  However, if the 24-bit signed integer range (-8388608 to 8388607) suits your
+''' data needs you can save disk space by only storing the three bytes that this integer actually consumes.  You can do
+''' this by calling the Int24.GetBytes function to return a three binary byte array that can be serialized to the desired
+''' destination and then calling the Int24.GetValue function to restore the Int24 value from those three bytes.
 ''' </para>
 ''' <para>
-''' All the standard operators for the Int24 have been fully defined for use with both Int24 and Int32 signed integers,
+''' All the standard operators for the Int24 have been fully defined for use with both Int24 and Int32 signed integers;
 ''' you should find that without the exception Int24 can be compared and numerically calculated with an Int24 or Int32.
 ''' Necessary casting should be minimal, but if "Option Strict" is on you will need to cast integer literals to an Int24,
-''' for example: <example>Dim i As Int24 = CType(12, Int24)</example>
-''' This is because integer literals are defined as Int32 and you can't define an Int24 intrinsic literal, but typical
-''' use should be very simple - just as if you are using any other native signed integer.
+''' for example: <example>Dim i As Int24 = CType(12, Int24)</example>. This is because integer literals are typically
+''' defined as Int32 by the compiler and you can't define an Int24 intrinsic literal. Regardless, typical use should be
+''' very simple - just as if you are using any other native signed integer.
 ''' </para>
 ''' </remarks>
 <Serializable()> _
@@ -86,7 +85,7 @@ Public Structure Int24
     ''' <exception cref="OverflowException">Source values outside 24-bit min/max range will cause an overflow exception.</exception>
     Public Sub New(ByVal value As Int32)
 
-        ValidateBitSize(value)
+        ValidateNumericRange(value)
         m_value = value
 
     End Sub
@@ -106,7 +105,7 @@ Public Structure Int24
 
 #End Region
 
-#Region " BitConverter Operations "
+#Region " BitConverter Stand-in Operations "
 
     ''' <summary>Returns the Int24 value as an array of three bytes.</summary>
     ''' <returns>An array of bytes with length 3.</returns>
@@ -175,7 +174,11 @@ Public Structure Int24
 
 #End Region
 
-#Region " Native Type Operators "
+#Region " Int24 Operators "
+
+    ' Every effort has been made to make Int24 as cleanly interoperable with Int32 as possible...
+
+#Region " Comparison Operators "
 
     Public Shared Operator =(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
 
@@ -285,6 +288,12 @@ Public Structure Int24
 
     End Operator
 
+#End Region
+
+#Region " Type Conversion Operators "
+
+#Region " Narrowing Conversions "
+
     Public Shared Narrowing Operator CType(ByVal value As String) As Int24
 
         Return New Int24(Convert.ToInt32(value))
@@ -332,6 +341,10 @@ Public Structure Int24
         Return CType(CType(value, Int32), Int16)
 
     End Operator
+
+#End Region
+
+#Region " Widening Conversions "
 
     Public Shared Widening Operator CType(ByVal value As Byte) As Int24
 
@@ -386,6 +399,12 @@ Public Structure Int24
         Return value.ToString()
 
     End Operator
+
+#End Region
+
+#End Region
+
+#Region " Boolean and Bitwise Operators "
 
     Public Shared Operator IsTrue(ByVal value As Int24) As Boolean
 
@@ -458,6 +477,10 @@ Public Structure Int24
         Return (CType(value1, Int32) Xor value2)
 
     End Operator
+
+#End Region
+
+#Region " Arithmetic Operators "
 
     Public Shared Operator Mod(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
@@ -599,11 +622,13 @@ Public Structure Int24
 
 #End Region
 
+#End Region
+
 #Region " Int24 Specific Functions "
 
-    Private Shared Sub ValidateBitSize(ByVal value As Int32)
+    Private Shared Sub ValidateNumericRange(ByVal value As Int32)
 
-        If value > Int24.MaxValue Or value < Int24.MinValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit integer"))
+        If value > Int24.MaxValue Or value < Int24.MinValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit integer", value))
 
     End Sub
 
@@ -625,6 +650,16 @@ Public Structure Int24
 
 #Region " Standard Numeric Operations "
 
+    ''' <summary>
+    ''' Compares this instance to a specified object and returns an indication of their relative values.
+    ''' </summary>
+    ''' <param name="value">An object to compare, or null.</param>
+    ''' <returns>
+    ''' A signed number indicating the relative values of this instance and value. Returns less than zero
+    ''' if this instance is less than value, zero if this instance is equal to value, or greater than zero
+    ''' if this instance is greater than value.
+    ''' </returns>
+    ''' <exception cref="ArgumentException">value is not an Int32 or Int24.</exception>
     Public Function CompareTo(ByVal value As Object) As Integer Implements IComparable.CompareTo
 
         If value Is Nothing Then Return 1
@@ -639,12 +674,32 @@ Public Structure Int24
 
     End Function
 
+    ''' <summary>
+    ''' Compares this instance to a specified 32-bit signed integer and returns an indication of their
+    ''' relative values.
+    ''' </summary>
+    ''' <param name="value">An integer to compare.</param>
+    ''' <returns>
+    ''' A signed number indicating the relative values of this instance and value. Returns less than zero
+    ''' if this instance is less than value, zero if this instance is equal to value, or greater than zero
+    ''' if this instance is greater than value.
+    ''' </returns>
     Public Function CompareTo(ByVal value As Int24) As Integer Implements IComparable(Of Int24).CompareTo
 
         Return CompareTo(CType(value, Int32))
 
     End Function
 
+    ''' <summary>
+    ''' Compares this instance to a specified 32-bit signed integer and returns an indication of their
+    ''' relative values.
+    ''' </summary>
+    ''' <param name="value">An integer to compare.</param>
+    ''' <returns>
+    ''' A signed number indicating the relative values of this instance and value. Returns less than zero
+    ''' if this instance is less than value, zero if this instance is equal to value, or greater than zero
+    ''' if this instance is greater than value.
+    ''' </returns>
     Public Function CompareTo(ByVal value As Int32) As Integer Implements IComparable(Of Int32).CompareTo
 
         If m_value < value Then Return -1
@@ -654,6 +709,14 @@ Public Structure Int24
 
     End Function
 
+    ''' <summary>
+    ''' Returns a value indicating whether this instance is equal to a specified object.
+    ''' </summary>
+    ''' <param name="obj">An object to compare, or null.</param>
+    ''' <returns>
+    ''' True if obj is an instance of Int32 or Int24 and equals the value of this instance;
+    ''' otherwise, False.
+    ''' </returns>
     Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
         If TypeOf obj Is Int32 Or TypeOf obj Is Int24 Then Return Equals(CType(obj, Int32))
@@ -661,72 +724,212 @@ Public Structure Int24
 
     End Function
 
-    Public Overloads Function Equals(ByVal value As Int24) As Boolean Implements IEquatable(Of Int24).Equals
+    ''' <summary>
+    ''' Returns a value indicating whether this instance is equal to a specified Int24 value.
+    ''' </summary>
+    ''' <param name="obj">An Int24 value to compare to this instance.</param>
+    ''' <returns>
+    ''' True if obj has the same value as this instance; otherwise, False.
+    ''' </returns>
+    Public Overloads Function Equals(ByVal obj As Int24) As Boolean Implements IEquatable(Of Int24).Equals
 
-        Return Equals(CType(value, Int32))
+        Return Equals(CType(obj, Int32))
 
     End Function
 
-    Public Overloads Function Equals(ByVal value As Int32) As Boolean Implements IEquatable(Of Int32).Equals
+    ''' <summary>
+    ''' Returns a value indicating whether this instance is equal to a specified Int32 value.
+    ''' </summary>
+    ''' <param name="obj">An Int32 value to compare to this instance.</param>
+    ''' <returns>
+    ''' True if obj has the same value as this instance; otherwise, False.
+    ''' </returns>
+    Public Overloads Function Equals(ByVal obj As Int32) As Boolean Implements IEquatable(Of Int32).Equals
 
-        Return (m_value = value)
+        Return (m_value = obj)
 
     End Function
 
+    ''' <summary>
+    ''' Returns the hash code for this instance.
+    ''' </summary>
+    ''' <returns>
+    ''' A 32-bit signed integer hash code.
+    ''' </returns>
     Public Overrides Function GetHashCode() As Integer
 
         Return m_value
 
     End Function
 
+    ''' <summary>
+    ''' Converts the numeric value of this instance to its equivalent string representation.
+    ''' </summary>
+    ''' <returns>
+    ''' The string representation of the value of this instance, consisting of a minus sign if
+    ''' the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+    ''' </returns>
     Public Overrides Function ToString() As String
 
         Return m_value.ToString()
 
     End Function
 
+    ''' <summary>
+    ''' Converts the numeric value of this instance to its equivalent string representation, using
+    ''' the specified format.
+    ''' </summary>
+    ''' <param name="format">A format string.</param>
+    ''' <returns>
+    ''' The string representation of the value of this instance as specified by format.
+    ''' </returns>
     Public Overloads Function ToString(ByVal format As String) As String
 
         Return m_value.ToString(format)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the numeric value of this instance to its equivalent string representation using the
+    ''' specified culture-specific format information.
+    ''' </summary>
+    ''' <param name="provider">
+    ''' An System.IFormatProvider that supplies culture-specific formatting information.
+    ''' </param>
+    ''' <returns>
+    ''' The string representation of the value of this instance as specified by provider.
+    ''' </returns>
     Public Overloads Function ToString(ByVal provider As IFormatProvider) As String Implements IConvertible.ToString
 
         Return m_value.ToString(provider)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the numeric value of this instance to its equivalent string representation using the
+    ''' specified format and culture-specific format information.
+    ''' </summary>
+    ''' <param name="format">A format specification.</param>
+    ''' <param name="provider">
+    ''' An System.IFormatProvider that supplies culture-specific formatting information.
+    ''' </param>
+    ''' <returns>
+    ''' The string representation of the value of this instance as specified by format and provider.
+    ''' </returns>
     Public Overloads Function ToString(ByVal format As String, ByVal provider As IFormatProvider) As String Implements IFormattable.ToString
 
         Return m_value.ToString(format, provider)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the string representation of a number to its 24-bit signed integer equivalent.
+    ''' </summary>
+    ''' <param name="s">A string containing a number to convert.</param>
+    ''' <returns>
+    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' </returns>
+    ''' <exception cref="ArgumentNullException">s is null.</exception>
+    ''' <exception cref="OverflowAction">
+    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' </exception>
+    ''' <exception cref="FormatException">s is not in the correct format.</exception>
     Public Shared Function Parse(ByVal s As String) As Int24
 
         Return CType(Int32.Parse(s), Int24)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the string representation of a number in a specified style to its 24-bit signed integer equivalent.
+    ''' </summary>
+    ''' <param name="s">A string containing a number to convert.</param>
+    ''' <param name="style">
+    ''' A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
+    ''' A typical value to specify is System.Globalization.NumberStyles.Integer.
+    ''' </param>
+    ''' <returns>
+    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' </returns>
+    ''' <exception cref="ArgumentException">
+    ''' style is not a System.Globalization.NumberStyles value. -or- style is not a combination of 
+    ''' System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
+    ''' </exception>
+    ''' <exception cref="ArgumentNullException">s is null.</exception>
+    ''' <exception cref="OverflowAction">
+    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' </exception>
+    ''' <exception cref="FormatException">s is not in a format compliant with style.</exception>
     Public Shared Function Parse(ByVal s As String, ByVal style As NumberStyles) As Int24
 
         Return CType(Int32.Parse(s, style), Int24)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the string representation of a number in a specified culture-specific format to its 24-bit
+    ''' signed integer equivalent.
+    ''' </summary>
+    ''' <param name="s">A string containing a number to convert.</param>
+    ''' <param name="provider">
+    ''' An System.IFormatProvider that supplies culture-specific formatting information about s.
+    ''' </param>
+    ''' <returns>
+    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' </returns>
+    ''' <exception cref="ArgumentNullException">s is null.</exception>
+    ''' <exception cref="OverflowAction">
+    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' </exception>
+    ''' <exception cref="FormatException">s is not in the correct format.</exception>
     Public Shared Function Parse(ByVal s As String, ByVal provider As IFormatProvider) As Int24
 
         Return CType(Int32.Parse(s, provider), Int24)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the string representation of a number in a specified style and culture-specific format to its 24-bit
+    ''' signed integer equivalent.
+    ''' </summary>
+    ''' <param name="s">A string containing a number to convert.</param>
+    ''' <param name="style">
+    ''' A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
+    ''' A typical value to specify is System.Globalization.NumberStyles.Integer.
+    ''' </param>
+    ''' <param name="provider">
+    ''' An System.IFormatProvider that supplies culture-specific formatting information about s.
+    ''' </param>
+    ''' <returns>
+    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' </returns>
+    ''' <exception cref="ArgumentException">
+    ''' style is not a System.Globalization.NumberStyles value. -or- style is not a combination of 
+    ''' System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
+    ''' </exception>
+    ''' <exception cref="ArgumentNullException">s is null.</exception>
+    ''' <exception cref="OverflowAction">
+    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' </exception>
+    ''' <exception cref="FormatException">s is not in a format compliant with style.</exception>
     Public Shared Function Parse(ByVal s As String, ByVal style As NumberStyles, ByVal provider As IFormatProvider) As Int24
 
         Return CType(Int32.Parse(s, style, provider), Int24)
 
     End Function
 
+    ''' <summary>
+    ''' Converts the string representation of a number to its 24-bit signed integer equivalent. A return value
+    ''' indicates whether the conversion succeeded or failed.
+    ''' </summary>
+    ''' <param name="s">A string containing a number to convert.</param>
+    ''' <param name="result">
+    ''' When this method returns, contains the 24-bit signed integer value equivalent to the number contained in s,
+    ''' if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
+    ''' is not of the correct format, or represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' This parameter is passed uninitialized.
+    ''' </param>
+    ''' <returns>true if s was converted successfully; otherwise, false.</returns>
     Public Shared Function TryParse(ByVal s As String, ByRef result As Int24) As Boolean
 
         Dim parseResult As Int32
@@ -734,10 +937,40 @@ Public Structure Int24
 
         parseResponse = Int32.TryParse(s, parseResult)
 
-        result = CType(parseResult, Int24)
+        Try
+            result = CType(parseResult, Int24)
+        Catch
+            result = CType(0, Int24)
+            parseResponse = False
+        End Try
+
+        Return parseResponse
 
     End Function
 
+    ''' <summary>
+    ''' Converts the string representation of a number in a specified style and culture-specific format to its
+    ''' 24-bit signed integer equivalent. A return value indicates whether the conversion succeeded or failed.
+    ''' </summary>
+    ''' <param name="s">A string containing a number to convert.</param>
+    ''' <param name="style">
+    ''' A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
+    ''' A typical value to specify is System.Globalization.NumberStyles.Integer.
+    ''' </param>
+    ''' <param name="result">
+    ''' When this method returns, contains the 24-bit signed integer value equivalent to the number contained in s,
+    ''' if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
+    ''' is not in a format compliant with style, or represents a number less than Int24.MinValue or greater than
+    ''' Int24.MaxValue. This parameter is passed uninitialized.
+    ''' </param>
+    ''' <param name="provider">
+    ''' An System.IFormatProvider objectthat supplies culture-specific formatting information about s.
+    ''' </param>
+    ''' <returns>true if s was converted successfully; otherwise, false.</returns>
+    ''' <exception cref="ArgumentException">
+    ''' style is not a System.Globalization.NumberStyles value. -or- style is not a combination of 
+    ''' System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
+    ''' </exception>
     Public Shared Function TryParse(ByVal s As String, ByVal style As NumberStyles, ByVal provider As IFormatProvider, ByRef result As Int24) As Boolean
 
         Dim parseResult As Int32
@@ -745,16 +978,35 @@ Public Structure Int24
 
         parseResponse = Int32.TryParse(s, style, provider, parseResult)
 
-        result = CType(parseResult, Int24)
+        Try
+            result = CType(parseResult, Int24)
+        Catch
+            result = CType(0, Int24)
+            parseResponse = False
+        End Try
+
+        Return parseResponse
 
     End Function
 
+    ''' <summary>
+    ''' Returns the System.TypeCode for value type System.Int32 (there is no defined type code for an Int24).
+    ''' </summary>
+    ''' <returns>The enumerated constant, System.TypeCode.Int32.</returns>
+    ''' <remarks>
+    ''' There is no defined Int24 type code and since an Int24 will easily fit inside an Int32, the
+    ''' Int32 type code is returned.
+    ''' </remarks>
     Public Function GetTypeCode() As TypeCode Implements IConvertible.GetTypeCode
 
-        ' There is no Int24 type code, and an Int24 will only fit inside an Int32 - so we return an Int32 type code
+        ' There is no Int24 type code, and an Int24 will fit inside an Int32 - so we return an Int32 type code
         Return TypeCode.Int32
 
     End Function
+
+#Region " Private IConvertible Implementation "
+
+    ' These are are private on the native integer implementations, so we just make them private as well...
 
     Private Function ToBoolean(ByVal provider As IFormatProvider) As Boolean Implements IConvertible.ToBoolean
 
@@ -845,6 +1097,8 @@ Public Structure Int24
         Return Convert.ChangeType(m_value, type, provider)
 
     End Function
+
+#End Region
 
 #End Region
 
