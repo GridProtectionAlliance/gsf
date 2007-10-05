@@ -20,7 +20,7 @@ Option Strict On
 Imports System.Runtime.InteropServices
 Imports System.Globalization
 Imports TVA.Common
-Imports Tva.Interop.Bit
+Imports TVA.Interop.Bit
 
 ''' <summary>Represents a 24-bit signed integer.</summary>
 ''' <remarks>
