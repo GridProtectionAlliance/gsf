@@ -113,6 +113,7 @@
     <Compile Include="Net\Ftp\SessionDisconnected.vb" />
     <Compile Include="Net\Smtp\Common.vb" />
     <Compile Include="Net\Smtp\SimpleMailMessage.vb" />
+    <Compile Include="Root\UInt24.vb" />
     <Compile Include="Root\Int24.vb" />
     <Compile Include="Scheduling\Enumerations.vb" />
     <Compile Include="Scheduling\Schedule.vb" />
