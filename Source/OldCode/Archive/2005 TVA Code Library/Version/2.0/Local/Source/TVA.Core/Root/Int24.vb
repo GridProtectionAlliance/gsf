@@ -54,11 +54,11 @@ Public Structure Int24
     ''' <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
     Public Const BitMask As Int32 = (Bit24 Or Bit25 Or Bit26 Or Bit27 Or Bit28 Or Bit29 Or Bit30 Or Bit31)
 
-    ''' <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
-    Public Const MaxValue As Int32 = 8388607
+    ''' <summary>Represents the largest possible value of an Int24 as an Int32. This field is constant.</summary>
+    Public Const MaxValue32 As Int32 = 8388607
 
-    ''' <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
-    Public Const MinValue As Int32 = -8388608
+    ''' <summary>Represents the smallest possible value of an Int24 as an Int32. This field is constant.</summary>
+    Public Const MinValue32 As Int32 = -8388608
 
 #End Region
 
@@ -67,9 +67,19 @@ Public Structure Int24
     ' We internally store the Int24 value in a 4-byte integer for convenience
     Private m_value As Int32
 
+    Private Shared m_maxValue As Int24
+    Private Shared m_minValue As Int24
+
 #End Region
 
 #Region " Constructors "
+
+    Shared Sub New()
+
+        m_maxValue = New Int24(MaxValue32)
+        m_minValue = New Int24(MinValue32)
+
+    End Sub
 
     ''' <summary>Creates 24-bit signed integer from an existing 24-bit signed integer.</summary>
     Public Sub New(ByVal value As Int24)
@@ -638,9 +648,23 @@ Public Structure Int24
 
 #Region " Int24 Specific Functions "
 
+    ''' <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
+    Public Shared ReadOnly Property MaxValue() As Int24
+        Get
+            Return m_maxValue
+        End Get
+    End Property
+
+    ''' <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
+    Public Shared ReadOnly Property MinValue() As Int24
+        Get
+            Return m_minValue
+        End Get
+    End Property
+
     Private Shared Sub ValidateNumericRange(ByVal value As Int32)
 
-        If value > Int24.MaxValue Or value < Int24.MinValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit signed integer", value))
+        If value > Int24.MaxValue32 Or value < Int24.MinValue32 Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit signed integer", value))
 
     End Sub
 

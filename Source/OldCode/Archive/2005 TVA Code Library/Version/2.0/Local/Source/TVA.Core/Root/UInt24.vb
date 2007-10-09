@@ -20,7 +20,6 @@ Option Strict On
 Imports System.Runtime.InteropServices
 Imports System.Globalization
 Imports TVA.Common
-Imports TVA.Interop
 Imports TVA.Interop.Bit
 
 ''' <summary>Represents a 24-bit unsigned integer.</summary>
@@ -55,11 +54,11 @@ Public Structure UInt24
     ''' <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
     Public Const BitMask As UInt32 = 4278190080
 
-    ''' <summary>Represents the largest possible value of an UInt24. This field is constant.</summary>
-    Public Const MaxValue As UInt32 = 16777215
+    ''' <summary>Represents the largest possible value of an UInt24 as an UInt32. This field is constant.</summary>
+    Public Const MaxValue32 As UInt32 = 16777215
 
-    ''' <summary>Represents the smallest possible value of an UInt24. This field is constant.</summary>
-    Public Const MinValue As UInt32 = 0
+    ''' <summary>Represents the smallest possible value of an UInt24 as an UInt32. This field is constant.</summary>
+    Public Const MinValue32 As UInt32 = 0
 
 #End Region
 
@@ -68,9 +67,19 @@ Public Structure UInt24
     ' We internally store the UInt24 value in a 4-byte integer for convenience
     Private m_value As UInt32
 
+    Private Shared m_maxValue As UInt24
+    Private Shared m_minValue As UInt24
+
 #End Region
 
 #Region " Constructors "
+
+    Shared Sub New()
+
+        m_maxValue = New UInt24(MaxValue32)
+        m_minValue = New UInt24(MinValue32)
+
+    End Sub
 
     ''' <summary>Creates 24-bit unsigned integer from an existing 24-bit unsigned integer.</summary>
     Public Sub New(ByVal value As UInt24)
@@ -655,9 +664,23 @@ Public Structure UInt24
 
 #Region " UInt24 Specific Functions "
 
+    ''' <summary>Represents the largest possible value of an UInt24. This field is constant.</summary>
+    Public Shared ReadOnly Property MaxValue() As UInt24
+        Get
+            Return m_maxValue
+        End Get
+    End Property
+
+    ''' <summary>Represents the smallest possible value of an UInt24. This field is constant.</summary>
+    Public Shared ReadOnly Property MinValue() As UInt24
+        Get
+            Return m_minValue
+        End Get
+    End Property
+
     Private Shared Sub ValidateNumericRange(ByVal value As UInt32)
 
-        If value > UInt24.MaxValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit unsigned integer", value))
+        If value > MaxValue32 Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit unsigned integer", value))
 
     End Sub
 
@@ -780,7 +803,7 @@ Public Structure UInt24
     ''' </returns>
     Public Overrides Function GetHashCode() As Integer
 
-        Return BitwiseCast.ToInt32(m_value)
+        Return TVA.Interop.BitwiseCast.ToInt32(m_value)
 
     End Function
 
