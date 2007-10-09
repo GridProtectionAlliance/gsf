@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  TVA.Int24.vb - Representation of a 3-byte, 24-bit signed integer
+'  TVA.UInt24.vb - Representation of a 3-byte, 24-bit unsigned integer
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -10,7 +10,7 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  10/04/2007 - J. Ritchie Carroll
+'  10/09/2007 - J. Ritchie Carroll
 '       Original version of source code generated
 '
 '*******************************************************************************************************
@@ -20,84 +20,85 @@ Option Strict On
 Imports System.Runtime.InteropServices
 Imports System.Globalization
 Imports TVA.Common
+Imports TVA.Interop
 Imports TVA.Interop.Bit
 
-''' <summary>Represents a 24-bit signed integer.</summary>
+''' <summary>Represents a 24-bit unsigned integer.</summary>
 ''' <remarks>
 ''' <para>
-''' This class behaves like most other intrinsic signed integers but allows a 3-byte, 24-bit integer implementation
-''' that is often found in many digital-signal processing arenas and different kinds of protocol parsing.  A signed
-''' 24-bit integer is typically used to save storage space on disk where its value range of -8388608 to 8388607 is
-''' sufficient, but the signed Int16 value range of -32768 to 32767 is too small.
+''' This class behaves like most other intrinsic unsigned integers but allows a 3-byte, 24-bit integer implementation
+''' that is often found in many digital-signal processing arenas and different kinds of protocol parsing.  An unsigned
+''' 24-bit integer is typically used to save storage space on disk where its value range of 0 to 16777215 is sufficient,
+''' but the unsigned Int16 value range of 0 to 65535 is too small.
 ''' </para>
 ''' <para>
-''' This structure uses an Int32 internally for storage and most other common expected integer functionality, so using
-''' a 24-bit integer will not save memory.  However, if the 24-bit signed integer range (-8388608 to 8388607) suits your
+''' This structure uses an UInt32 internally for storage and most other common expected integer functionality, so using
+''' a 24-bit integer will not save memory.  However, if the 24-bit unsigned integer range (0 to 16777215) suits your
 ''' data needs you can save disk space by only storing the three bytes that this integer actually consumes.  You can do
-''' this by calling the Int24.GetBytes function to return a three binary byte array that can be serialized to the desired
-''' destination and then calling the Int24.GetValue function to restore the Int24 value from those three bytes.
+''' this by calling the UInt24.GetBytes function to return a three binary byte array that can be serialized to the desired
+''' destination and then calling the UInt24.GetValue function to restore the UInt24 value from those three bytes.
 ''' </para>
 ''' <para>
-''' All the standard operators for the Int24 have been fully defined for use with both Int24 and Int32 signed integers;
-''' you should find that without the exception Int24 can be compared and numerically calculated with an Int24 or Int32.
+''' All the standard operators for the UInt24 have been fully defined for use with both UInt24 and UInt32 unsigned integers;
+''' you should find that without the exception UInt24 can be compared and numerically calculated with an UInt24 or UInt32.
 ''' Necessary casting should be minimal and typical use should be very simple - just as if you are using any other native
-''' signed integer.
+''' unsigned integer.
 ''' </para>
 ''' </remarks>
-<Serializable()> _
-Public Structure Int24
+<Serializable(), CLSCompliant(False)> _
+Public Structure UInt24
 
-    Implements IComparable, IFormattable, IConvertible, IComparable(Of Int24), IComparable(Of Int32), IEquatable(Of Int24), IEquatable(Of Int32)
+    Implements IComparable, IFormattable, IConvertible, IComparable(Of UInt24), IComparable(Of UInt32), IEquatable(Of UInt24), IEquatable(Of UInt32)
 
 #Region " Public Constants "
 
     ''' <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
-    Public Const BitMask As Int32 = (Bit24 Or Bit25 Or Bit26 Or Bit27 Or Bit28 Or Bit29 Or Bit30 Or Bit31)
+    Public Const BitMask As UInt32 = 4278190080
 
-    ''' <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
-    Public Const MaxValue As Int32 = 8388607
+    ''' <summary>Represents the largest possible value of an UInt24. This field is constant.</summary>
+    Public Const MaxValue As UInt32 = 16777215
 
-    ''' <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
-    Public Const MinValue As Int32 = -8388608
+    ''' <summary>Represents the smallest possible value of an UInt24. This field is constant.</summary>
+    Public Const MinValue As UInt32 = 0
 
 #End Region
 
 #Region " Member Fields "
 
-    ' We internally store the Int24 value in a 4-byte integer for convenience
-    Private m_value As Int32
+    ' We internally store the UInt24 value in a 4-byte integer for convenience
+    Private m_value As UInt32
 
 #End Region
 
 #Region " Constructors "
 
-    ''' <summary>Creates 24-bit signed integer from an existing 24-bit signed integer.</summary>
-    Public Sub New(ByVal value As Int24)
+    ''' <summary>Creates 24-bit unsigned integer from an existing 24-bit unsigned integer.</summary>
+    Public Sub New(ByVal value As UInt24)
 
-        m_value = CType(value, Int32)
+        m_value = CType(value, UInt32)
 
     End Sub
 
-    ''' <summary>Creates 24-bit signed integer from a 32-bit signed integer.</summary>
-    ''' <param name="value">32-bit signed integer to use as new 24-bit signed integer value.</param>
-    ''' <exception cref="OverflowException">Source values outside 24-bit min/max range will cause an overflow exception.</exception>
-    Public Sub New(ByVal value As Int32)
+    ''' <summary>Creates 24-bit unsigned integer from a 32-bit unsigned integer.</summary>
+    ''' <param name="value">32-bit unsigned integer to use as new 24-bit unsigned integer value.</param>
+    ''' <exception cref="OverflowException">Source values over 24-bit max range will cause an overflow exception.</exception>
+    Public Sub New(ByVal value As UInt32)
 
         ValidateNumericRange(value)
         m_value = value
 
     End Sub
 
-    ''' <summary>Creates 24-bit signed integer from three bytes at a specified position in a byte array.</summary>
+    ''' <summary>Creates 24-bit unsigned integer from three bytes at a specified position in a byte array.</summary>
     ''' <param name="value">An array of bytes.</param>
     ''' <param name="startIndex">The starting position within value.</param>
     ''' <remarks>
-    ''' <para>You can use this constructor in-lieu of a System.BitConverter.ToInt24 function.</para>
+    ''' <para>You can use this constructor in-lieu of a System.BitConverter.ToUInt24 function.</para>
     ''' <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
     ''' </remarks>
     Public Sub New(ByVal value As Byte(), ByVal startIndex As Integer)
 
-        m_value = CType(Int24.GetValue(value, startIndex), Int32)
+        m_value = CType(UInt24.GetValue(value, startIndex), UInt32)
 
     End Sub
 
@@ -105,7 +106,7 @@ Public Structure Int24
 
 #Region " BitConverter Stand-in Operations "
 
-    ''' <summary>Returns the Int24 value as an array of three bytes.</summary>
+    ''' <summary>Returns the UInt24 value as an array of three bytes.</summary>
     ''' <returns>An array of bytes with length 3.</returns>
     ''' <remarks>
     ''' <para>You can use this function in-lieu of a System.BitConverter.GetBytes function.</para>
@@ -113,22 +114,22 @@ Public Structure Int24
     ''' </remarks>
     Public Function GetBytes() As Byte()
 
-        ' Return serialized 3-byte representation of Int24
-        Return Int24.GetBytes(Me)
+        ' Return serialized 3-byte representation of UInt24
+        Return UInt24.GetBytes(Me)
 
     End Function
 
-    ''' <summary>Returns the specified Int24 value as an array of three bytes.</summary>
-    ''' <param name="value">Int24 value to </param>
+    ''' <summary>Returns the specified UInt24 value as an array of three bytes.</summary>
+    ''' <param name="value">UInt24 value to </param>
     ''' <returns>An array of bytes with length 3.</returns>
     ''' <remarks>
     ''' <para>You can use this function in-lieu of a System.BitConverter.GetBytes function.</para>
     ''' <para>Bytes will be returned in endian order of currently executing process architecture (little-endian on Intel platforms).</para>
     ''' </remarks>
-    Public Shared Function GetBytes(ByVal value As Int24) As Byte()
+    Public Shared Function GetBytes(ByVal value As UInt24) As Byte()
 
         ' We use a 32-bit integer to store 24-bit integer internally
-        Dim int32Bytes As Byte() = BitConverter.GetBytes(CType(value, Int32))
+        Dim int32Bytes As Byte() = BitConverter.GetBytes(CType(value, UInt32))
         Dim int24Bytes As Byte() = CreateArray(Of Byte)(3)
 
         If BitConverter.IsLittleEndian Then
@@ -139,20 +140,20 @@ Public Structure Int24
             Buffer.BlockCopy(int32Bytes, 1, int24Bytes, 0, 3)
         End If
 
-        ' Return serialized 3-byte representation of Int24
+        ' Return serialized 3-byte representation of UInt24
         Return int24Bytes
 
     End Function
 
-    ''' <summary>Returns a 24-bit signed integer from three bytes at a specified position in a byte array.</summary>
+    ''' <summary>Returns a 24-bit unsigned integer from three bytes at a specified position in a byte array.</summary>
     ''' <param name="value">An array of bytes.</param>
     ''' <param name="startIndex">The starting position within value.</param>
-    ''' <returns>A 24-bit signed integer formed by three bytes beginning at startIndex.</returns>
+    ''' <returns>A 24-bit unsigned integer formed by three bytes beginning at startIndex.</returns>
     ''' <remarks>
-    ''' <para>You can use this function in-lieu of a System.BitConverter.ToInt24 function.</para>
+    ''' <para>You can use this function in-lieu of a System.BitConverter.ToUInt24 function.</para>
     ''' <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
     ''' </remarks>
-    Public Shared Function GetValue(ByVal value As Byte(), ByVal startIndex As Integer) As Int24
+    Public Shared Function GetValue(ByVal value As Byte(), ByVal startIndex As Integer) As UInt24
 
         ' We use a 32-bit integer to store 24-bit integer internally
         Dim bytes As Byte() = CreateArray(Of Byte)(4)
@@ -166,121 +167,121 @@ Public Structure Int24
         End If
 
         ' Deserialize value
-        Return CType(ApplyBitMask(BitConverter.ToInt32(bytes, 0)), Int24)
+        Return CType(ApplyBitMask(BitConverter.ToUInt32(bytes, 0)), UInt24)
 
     End Function
 
 #End Region
 
-#Region " Int24 Operators "
+#Region " UInt24 Operators "
 
-    ' Every effort has been made to make Int24 as cleanly interoperable with Int32 as possible...
+    ' Every effort has been made to make UInt24 as cleanly interoperable with UInt32 as possible...
 
 #Region " Comparison Operators "
 
-    Public Shared Operator =(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
+    Public Shared Operator =(ByVal value1 As UInt24, ByVal value2 As UInt24) As Boolean
 
         Return value1.Equals(value2)
 
     End Operator
 
-    Public Shared Operator =(ByVal value1 As Int32, ByVal value2 As Int24) As Boolean
+    Public Shared Operator =(ByVal value1 As UInt32, ByVal value2 As UInt24) As Boolean
 
-        Return value1.Equals(CType(value2, Int32))
-
-    End Operator
-
-    Public Shared Operator =(ByVal value1 As Int24, ByVal value2 As Int32) As Boolean
-
-        Return CType(value1, Int32).Equals(value2)
+        Return value1.Equals(CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator <>(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
+    Public Shared Operator =(ByVal value1 As UInt24, ByVal value2 As UInt32) As Boolean
+
+        Return CType(value1, UInt32).Equals(value2)
+
+    End Operator
+
+    Public Shared Operator <>(ByVal value1 As UInt24, ByVal value2 As UInt24) As Boolean
 
         Return Not value1.Equals(value2)
 
     End Operator
 
-    Public Shared Operator <>(ByVal value1 As Int32, ByVal value2 As Int24) As Boolean
+    Public Shared Operator <>(ByVal value1 As UInt32, ByVal value2 As UInt24) As Boolean
 
-        Return Not value1.Equals(CType(value2, Int32))
-
-    End Operator
-
-    Public Shared Operator <>(ByVal value1 As Int24, ByVal value2 As Int32) As Boolean
-
-        Return Not CType(value1, Int32).Equals(value2)
+        Return Not value1.Equals(CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator <(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
+    Public Shared Operator <>(ByVal value1 As UInt24, ByVal value2 As UInt32) As Boolean
+
+        Return Not CType(value1, UInt32).Equals(value2)
+
+    End Operator
+
+    Public Shared Operator <(ByVal value1 As UInt24, ByVal value2 As UInt24) As Boolean
 
         Return (value1.CompareTo(value2) < 0)
 
     End Operator
 
-    Public Shared Operator <(ByVal value1 As Int32, ByVal value2 As Int24) As Boolean
+    Public Shared Operator <(ByVal value1 As UInt32, ByVal value2 As UInt24) As Boolean
 
-        Return (value1.CompareTo(CType(value2, Int32)) < 0)
+        Return (value1.CompareTo(CType(value2, UInt32)) < 0)
 
     End Operator
 
-    Public Shared Operator <(ByVal value1 As Int24, ByVal value2 As Int32) As Boolean
+    Public Shared Operator <(ByVal value1 As UInt24, ByVal value2 As UInt32) As Boolean
 
         Return (value1.CompareTo(value2) < 0)
 
     End Operator
 
-    Public Shared Operator <=(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
+    Public Shared Operator <=(ByVal value1 As UInt24, ByVal value2 As UInt24) As Boolean
 
         Return (value1.CompareTo(value2) <= 0)
 
     End Operator
 
-    Public Shared Operator <=(ByVal value1 As Int32, ByVal value2 As Int24) As Boolean
+    Public Shared Operator <=(ByVal value1 As UInt32, ByVal value2 As UInt24) As Boolean
 
-        Return (value1.CompareTo(CType(value2, Int32)) <= 0)
+        Return (value1.CompareTo(CType(value2, UInt32)) <= 0)
 
     End Operator
 
-    Public Shared Operator <=(ByVal value1 As Int24, ByVal value2 As Int32) As Boolean
+    Public Shared Operator <=(ByVal value1 As UInt24, ByVal value2 As UInt32) As Boolean
 
         Return (value1.CompareTo(value2) <= 0)
 
     End Operator
 
-    Public Shared Operator >(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
+    Public Shared Operator >(ByVal value1 As UInt24, ByVal value2 As UInt24) As Boolean
 
         Return (value1.CompareTo(value2) > 0)
 
     End Operator
 
-    Public Shared Operator >(ByVal value1 As Int32, ByVal value2 As Int24) As Boolean
+    Public Shared Operator >(ByVal value1 As UInt32, ByVal value2 As UInt24) As Boolean
 
-        Return (value1.CompareTo(CType(value2, Int32)) > 0)
+        Return (value1.CompareTo(CType(value2, UInt32)) > 0)
 
     End Operator
 
-    Public Shared Operator >(ByVal value1 As Int24, ByVal value2 As Int32) As Boolean
+    Public Shared Operator >(ByVal value1 As UInt24, ByVal value2 As UInt32) As Boolean
 
         Return (value1.CompareTo(value2) > 0)
 
     End Operator
 
-    Public Shared Operator >=(ByVal value1 As Int24, ByVal value2 As Int24) As Boolean
+    Public Shared Operator >=(ByVal value1 As UInt24, ByVal value2 As UInt24) As Boolean
 
         Return (value1.CompareTo(value2) >= 0)
 
     End Operator
 
-    Public Shared Operator >=(ByVal value1 As Int32, ByVal value2 As Int24) As Boolean
+    Public Shared Operator >=(ByVal value1 As UInt32, ByVal value2 As UInt24) As Boolean
 
-        Return (value1.CompareTo(CType(value2, Int32)) >= 0)
+        Return (value1.CompareTo(CType(value2, UInt32)) >= 0)
 
     End Operator
 
-    Public Shared Operator >=(ByVal value1 As Int24, ByVal value2 As Int32) As Boolean
+    Public Shared Operator >=(ByVal value1 As UInt24, ByVal value2 As UInt32) As Boolean
 
         Return (value1.CompareTo(value2) >= 0)
 
@@ -292,79 +293,75 @@ Public Structure Int24
 
 #Region " Narrowing Conversions "
 
-    Public Shared Narrowing Operator CType(ByVal value As String) As Int24
+    Public Shared Narrowing Operator CType(ByVal value As String) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    Public Shared Narrowing Operator CType(ByVal value As Decimal) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    Public Shared Narrowing Operator CType(ByVal value As Double) As Int24
+    Public Shared Narrowing Operator CType(ByVal value As Decimal) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    Public Shared Narrowing Operator CType(ByVal value As Single) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As UInt64) As Int24
+    Public Shared Narrowing Operator CType(ByVal value As Double) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    Public Shared Narrowing Operator CType(ByVal value As Int64) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As UInt32) As Int24
+    Public Shared Narrowing Operator CType(ByVal value As Single) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    Public Shared Narrowing Operator CType(ByVal value As Int32) As Int24
-
-        Return New Int24(value)
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    <CLSCompliant(False)> _
+    Public Shared Narrowing Operator CType(ByVal value As Int64) As UInt24
+
+        Return New UInt24(Convert.ToUInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As UInt64) As UInt24
+
+        Return New UInt24(Convert.ToUInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As Int32) As UInt24
+
+        Return New UInt24(Convert.ToUInt32(value))
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As UInt32) As UInt24
+
+        Return New UInt24(value)
+
+    End Operator
+
     Public Shared Narrowing Operator CType(ByVal value As UInt24) As Int24
 
-        Return New Int24(CType(value, Int32))
+        Return CType(CType(value, Int32), Int24)
 
     End Operator
 
-    Public Shared Narrowing Operator CType(ByVal value As Int24) As Int16
+    Public Shared Narrowing Operator CType(ByVal value As UInt24) As Int16
 
-        Return CType(CType(value, Int32), Int16)
-
-    End Operator
-
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As Int24) As UInt16
-
-        Return CType(CType(value, Int32), UInt16)
+        Return CType(CType(value, UInt32), Int16)
 
     End Operator
 
-    Public Shared Narrowing Operator CType(ByVal value As Int24) As Byte
+    Public Shared Narrowing Operator CType(ByVal value As UInt24) As UInt16
 
-        Return CType(CType(value, Int32), Byte)
+        Return CType(CType(value, UInt32), UInt16)
+
+    End Operator
+
+    Public Shared Narrowing Operator CType(ByVal value As UInt24) As Byte
+
+        Return CType(CType(value, UInt32), Byte)
 
     End Operator
 
@@ -372,83 +369,79 @@ Public Structure Int24
 
 #Region " Widening Conversions "
 
-    <CLSCompliant(False)> _
-    Public Shared Widening Operator CType(ByVal value As SByte) As Int24
+    Public Shared Widening Operator CType(ByVal value As SByte) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    Public Shared Widening Operator CType(ByVal value As Byte) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Char) As Int24
+    Public Shared Widening Operator CType(ByVal value As Byte) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    Public Shared Widening Operator CType(ByVal value As Int16) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Widening Operator CType(ByVal value As UInt16) As Int24
+    Public Shared Widening Operator CType(ByVal value As Char) As UInt24
 
-        Return New Int24(Convert.ToInt32(value))
+        Return New UInt24(Convert.ToUInt32(value))
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As Int32
+    Public Shared Widening Operator CType(ByVal value As Int16) As UInt24
+
+        Return New UInt24(Convert.ToUInt32(value))
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As UInt16) As UInt24
+
+        Return New UInt24(Convert.ToUInt32(value))
+
+    End Operator
+
+    Public Shared Widening Operator CType(ByVal value As UInt24) As Int32
 
         Return value.ToInt32(Nothing)
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Widening Operator CType(ByVal value As Int24) As UInt32
+    Public Shared Widening Operator CType(ByVal value As UInt24) As UInt32
 
         Return value.ToUInt32(Nothing)
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As Int64
+    Public Shared Widening Operator CType(ByVal value As UInt24) As Int64
 
         Return value.ToInt64(Nothing)
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Widening Operator CType(ByVal value As Int24) As UInt64
+    Public Shared Widening Operator CType(ByVal value As UInt24) As UInt64
 
         Return value.ToUInt64(Nothing)
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As Double
+    Public Shared Widening Operator CType(ByVal value As UInt24) As Double
 
         Return value.ToDouble(Nothing)
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As Single
+    Public Shared Widening Operator CType(ByVal value As UInt24) As Single
 
         Return value.ToSingle(Nothing)
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As Decimal
+    Public Shared Widening Operator CType(ByVal value As UInt24) As Decimal
 
         Return value.ToDecimal(Nothing)
 
     End Operator
 
-    Public Shared Widening Operator CType(ByVal value As Int24) As String
+    Public Shared Widening Operator CType(ByVal value As UInt24) As String
 
         Return value.ToString()
 
@@ -460,75 +453,75 @@ Public Structure Int24
 
 #Region " Boolean and Bitwise Operators "
 
-    Public Shared Operator IsTrue(ByVal value As Int24) As Boolean
+    Public Shared Operator IsTrue(ByVal value As UInt24) As Boolean
 
-        Return (value <> 0)
+        Return (value > 0)
 
     End Operator
 
-    Public Shared Operator IsFalse(ByVal value As Int24) As Boolean
+    Public Shared Operator IsFalse(ByVal value As UInt24) As Boolean
 
         Return (value = 0)
 
     End Operator
 
-    Public Shared Operator Not(ByVal value As Int24) As Int24
+    Public Shared Operator Not(ByVal value As UInt24) As UInt24
 
-        Return CType((Not CType(value, Int32)), Int24)
-
-    End Operator
-
-    Public Shared Operator And(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
-
-        Return CType(CType(value1, Int32) And CType(value2, Int32), Int24)
+        Return CType((Not CType(value, UInt32)), UInt24)
 
     End Operator
 
-    Public Shared Operator And(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+    Public Shared Operator And(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return (value1 And CType(value2, Int32))
-
-    End Operator
-
-    Public Shared Operator And(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
-
-        Return (CType(value1, Int32) And value2)
+        Return CType(CType(value1, UInt32) And CType(value2, UInt32), UInt24)
 
     End Operator
 
-    Public Shared Operator Or(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
+    Public Shared Operator And(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
 
-        Return CType(CType(value1, Int32) Or CType(value2, Int32), Int24)
-
-    End Operator
-
-    Public Shared Operator Or(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
-
-        Return (value1 Or CType(value2, Int32))
+        Return (value1 And CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator Or(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator And(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
 
-        Return (CType(value1, Int32) Or value2)
-
-    End Operator
-
-    Public Shared Operator Xor(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
-
-        Return CType(CType(value1, Int32) Xor CType(value2, Int32), Int24)
+        Return (CType(value1, UInt32) And value2)
 
     End Operator
 
-    Public Shared Operator Xor(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+    Public Shared Operator Or(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return (value1 Xor CType(value2, Int32))
+        Return CType(CType(value1, UInt32) Or CType(value2, UInt32), UInt24)
 
     End Operator
 
-    Public Shared Operator Xor(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator Or(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
 
-        Return (CType(value1, Int32) Xor value2)
+        Return (value1 Or CType(value2, UInt32))
+
+    End Operator
+
+    Public Shared Operator Or(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
+
+        Return (CType(value1, UInt32) Or value2)
+
+    End Operator
+
+    Public Shared Operator Xor(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
+
+        Return CType(CType(value1, UInt32) Xor CType(value2, UInt32), UInt24)
+
+    End Operator
+
+    Public Shared Operator Xor(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
+
+        Return (value1 Xor CType(value2, UInt32))
+
+    End Operator
+
+    Public Shared Operator Xor(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
+
+        Return (CType(value1, UInt32) Xor value2)
 
     End Operator
 
@@ -536,141 +529,141 @@ Public Structure Int24
 
 #Region " Arithmetic Operators "
 
-    Public Shared Operator Mod(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
+    Public Shared Operator Mod(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, Int32) Mod CType(value2, Int32), Int24)
-
-    End Operator
-
-    Public Shared Operator Mod(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
-
-        Return (value1 Mod CType(value2, Int32))
+        Return CType(CType(value1, UInt32) Mod CType(value2, UInt32), UInt24)
 
     End Operator
 
-    Public Shared Operator Mod(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator Mod(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
 
-        Return (CType(value1, Int32) Mod value2)
-
-    End Operator
-
-    Public Shared Operator +(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
-
-        Return CType(CType(value1, Int32) + CType(value2, Int32), Int24)
+        Return (value1 Mod CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator +(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+    Public Shared Operator Mod(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
 
-        Return (value1 + CType(value2, Int32))
-
-    End Operator
-
-    Public Shared Operator +(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
-
-        Return (CType(value1, Int32) + value2)
+        Return (CType(value1, UInt32) Mod value2)
 
     End Operator
 
-    Public Shared Operator -(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
+    Public Shared Operator +(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, Int32) - CType(value2, Int32), Int24)
-
-    End Operator
-
-    Public Shared Operator -(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
-
-        Return (value1 - CType(value2, Int32))
+        Return CType(CType(value1, UInt32) + CType(value2, UInt32), UInt24)
 
     End Operator
 
-    Public Shared Operator -(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator +(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
 
-        Return (CType(value1, Int32) - value2)
-
-    End Operator
-
-    Public Shared Operator *(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
-
-        Return CType(CType(value1, Int32) * CType(value2, Int32), Int24)
+        Return (value1 + CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator *(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
+    Public Shared Operator +(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
 
-        Return (value1 * CType(value2, Int32))
-
-    End Operator
-
-    Public Shared Operator *(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
-
-        Return (CType(value1, Int32) * value2)
+        Return (CType(value1, UInt32) + value2)
 
     End Operator
 
-    Public Shared Operator \(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
+    Public Shared Operator -(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, Int32) \ CType(value2, Int32), Int24)
-
-    End Operator
-
-    Public Shared Operator \(ByVal value1 As Int32, ByVal value2 As Int24) As Int32
-
-        Return (value1 \ CType(value2, Int32))
+        Return CType(CType(value1, UInt32) - CType(value2, UInt32), UInt24)
 
     End Operator
 
-    Public Shared Operator \(ByVal value1 As Int24, ByVal value2 As Int32) As Int32
+    Public Shared Operator -(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
 
-        Return (CType(value1, Int32) \ value2)
+        Return (value1 - CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator /(ByVal value1 As Int24, ByVal value2 As Int24) As Double
+    Public Shared Operator -(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
+
+        Return (CType(value1, UInt32) - value2)
+
+    End Operator
+
+    Public Shared Operator *(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
+
+        Return CType(CType(value1, UInt32) * CType(value2, UInt32), UInt24)
+
+    End Operator
+
+    Public Shared Operator *(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
+
+        Return (value1 * CType(value2, UInt32))
+
+    End Operator
+
+    Public Shared Operator *(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
+
+        Return (CType(value1, UInt32) * value2)
+
+    End Operator
+
+    Public Shared Operator \(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
+
+        Return CType(CType(value1, UInt32) \ CType(value2, UInt32), UInt24)
+
+    End Operator
+
+    Public Shared Operator \(ByVal value1 As UInt32, ByVal value2 As UInt24) As UInt32
+
+        Return (value1 \ CType(value2, UInt32))
+
+    End Operator
+
+    Public Shared Operator \(ByVal value1 As UInt24, ByVal value2 As UInt32) As UInt32
+
+        Return (CType(value1, UInt32) \ value2)
+
+    End Operator
+
+    Public Shared Operator /(ByVal value1 As UInt24, ByVal value2 As UInt24) As Double
 
         Return (CType(value1, Double) / CType(value2, Double))
 
     End Operator
 
-    Public Shared Operator /(ByVal value1 As Int32, ByVal value2 As Int24) As Double
+    Public Shared Operator /(ByVal value1 As UInt32, ByVal value2 As UInt24) As Double
 
         Return (CType(value1, Double) / CType(value2, Double))
 
     End Operator
 
-    Public Shared Operator /(ByVal value1 As Int24, ByVal value2 As Int32) As Double
+    Public Shared Operator /(ByVal value1 As UInt24, ByVal value2 As UInt32) As Double
 
-        Return (CType(value1, Double) / CType(value2, Int32))
+        Return (CType(value1, Double) / CType(value2, UInt32))
 
     End Operator
 
-    Public Shared Operator ^(ByVal value1 As Int24, ByVal value2 As Int24) As Double
+    Public Shared Operator ^(ByVal value1 As UInt24, ByVal value2 As UInt24) As Double
 
         Return (CType(value1, Double) ^ CType(value2, Double))
 
     End Operator
 
-    Public Shared Operator ^(ByVal value1 As Int32, ByVal value2 As Int24) As Double
+    Public Shared Operator ^(ByVal value1 As UInt32, ByVal value2 As UInt24) As Double
 
         Return (CType(value1, Double) ^ CType(value2, Double))
 
     End Operator
 
-    Public Shared Operator ^(ByVal value1 As Int24, ByVal value2 As Int32) As Double
+    Public Shared Operator ^(ByVal value1 As UInt24, ByVal value2 As UInt32) As Double
 
         Return (CType(value1, Double) ^ CType(value2, Double))
 
     End Operator
 
-    Public Shared Operator >>(ByVal value As Int24, ByVal shifts As Integer) As Int24
+    Public Shared Operator >>(ByVal value As UInt24, ByVal shifts As Integer) As UInt24
 
-        Return CType(ApplyBitMask(CType(value, Int32) >> shifts), Int24)
+        Return CType(ApplyBitMask(CType(value, UInt32) >> shifts), UInt24)
 
     End Operator
 
-    Public Shared Operator <<(ByVal value As Int24, ByVal shifts As Int32) As Int24
+    Public Shared Operator <<(ByVal value As UInt24, ByVal shifts As Integer) As UInt24
 
-        Return CType(ApplyBitMask(CType(value, Int32) << shifts), Int24)
+        Return CType(ApplyBitMask(CType(value, UInt32) << shifts), UInt24)
 
     End Operator
 
@@ -678,25 +671,18 @@ Public Structure Int24
 
 #End Region
 
-#Region " Int24 Specific Functions "
+#Region " UInt24 Specific Functions "
 
-    Private Shared Sub ValidateNumericRange(ByVal value As Int32)
+    Private Shared Sub ValidateNumericRange(ByVal value As UInt32)
 
-        If value > Int24.MaxValue Or value < Int24.MinValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit signed integer", value))
+        If value > UInt24.MaxValue Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit unsigned integer", value))
 
     End Sub
 
-    Private Shared Function ApplyBitMask(ByVal value As Int32) As Int32
+    Private Shared Function ApplyBitMask(ByVal value As UInt32) As UInt32
 
-        If (value And Bit23) > 0 Then
-            ' If the sign-bit is set, this number will be negative - set all high-byte bits (keeps 32-bit number in 24-bit range)
-            value = (value Or BitMask)
-        Else
-            ' If the sign-bit is not set, this number will be positive - clear all high-byte bits (keeps 32-bit number in 24-bit range)
-            value = (value And Not BitMask)
-        End If
-
-        Return value
+        ' For unsigned values, all we do is clear all the high bits (keeps 32-bit unsigned number in 24-bit unsigned range)...
+        Return (value And Not BitMask)
 
     End Function
 
@@ -709,17 +695,17 @@ Public Structure Int24
     ''' </summary>
     ''' <param name="value">An object to compare, or null.</param>
     ''' <returns>
-    ''' A signed number indicating the relative values of this instance and value. Returns less than zero
+    ''' An unsigned number indicating the relative values of this instance and value. Returns less than zero
     ''' if this instance is less than value, zero if this instance is equal to value, or greater than zero
     ''' if this instance is greater than value.
     ''' </returns>
-    ''' <exception cref="ArgumentException">value is not an Int32 or Int24.</exception>
+    ''' <exception cref="ArgumentException">value is not an UInt32 or UInt24.</exception>
     Public Function CompareTo(ByVal value As Object) As Integer Implements IComparable.CompareTo
 
         If value Is Nothing Then Return 1
-        If Not TypeOf value Is Int32 AndAlso Not TypeOf value Is Int24 Then Throw New ArgumentException("Argument must be an Int32 or an Int24")
+        If Not TypeOf value Is UInt32 AndAlso Not TypeOf value Is UInt24 Then Throw New ArgumentException("Argument must be an UInt32 or an UInt24")
 
-        Dim num As Int32 = CType(value, Int32)
+        Dim num As UInt32 = CType(value, UInt32)
 
         If m_value < num Then Return -1
         If m_value > num Then Return 1
@@ -729,32 +715,32 @@ Public Structure Int24
     End Function
 
     ''' <summary>
-    ''' Compares this instance to a specified 32-bit signed integer and returns an indication of their
+    ''' Compares this instance to a specified 32-bit unsigned integer and returns an indication of their
     ''' relative values.
     ''' </summary>
     ''' <param name="value">An integer to compare.</param>
     ''' <returns>
-    ''' A signed number indicating the relative values of this instance and value. Returns less than zero
+    ''' An unsigned number indicating the relative values of this instance and value. Returns less than zero
     ''' if this instance is less than value, zero if this instance is equal to value, or greater than zero
     ''' if this instance is greater than value.
     ''' </returns>
-    Public Function CompareTo(ByVal value As Int24) As Integer Implements IComparable(Of Int24).CompareTo
+    Public Function CompareTo(ByVal value As UInt24) As Integer Implements IComparable(Of UInt24).CompareTo
 
-        Return CompareTo(CType(value, Int32))
+        Return CompareTo(CType(value, UInt32))
 
     End Function
 
     ''' <summary>
-    ''' Compares this instance to a specified 32-bit signed integer and returns an indication of their
+    ''' Compares this instance to a specified 32-bit unsigned integer and returns an indication of their
     ''' relative values.
     ''' </summary>
     ''' <param name="value">An integer to compare.</param>
     ''' <returns>
-    ''' A signed number indicating the relative values of this instance and value. Returns less than zero
+    ''' An unsigned number indicating the relative values of this instance and value. Returns less than zero
     ''' if this instance is less than value, zero if this instance is equal to value, or greater than zero
     ''' if this instance is greater than value.
     ''' </returns>
-    Public Function CompareTo(ByVal value As Int32) As Integer Implements IComparable(Of Int32).CompareTo
+    Public Function CompareTo(ByVal value As UInt32) As Integer Implements IComparable(Of UInt32).CompareTo
 
         If m_value < value Then Return -1
         If m_value > value Then Return 1
@@ -768,37 +754,37 @@ Public Structure Int24
     ''' </summary>
     ''' <param name="obj">An object to compare, or null.</param>
     ''' <returns>
-    ''' True if obj is an instance of Int32 or Int24 and equals the value of this instance;
+    ''' True if obj is an instance of UInt32 or UInt24 and equals the value of this instance;
     ''' otherwise, False.
     ''' </returns>
     Public Overrides Function Equals(ByVal obj As Object) As Boolean
 
-        If TypeOf obj Is Int32 Or TypeOf obj Is Int24 Then Return Equals(CType(obj, Int32))
+        If TypeOf obj Is UInt32 Or TypeOf obj Is UInt24 Then Return Equals(CType(obj, UInt32))
         Return False
 
     End Function
 
     ''' <summary>
-    ''' Returns a value indicating whether this instance is equal to a specified Int24 value.
+    ''' Returns a value indicating whether this instance is equal to a specified UInt24 value.
     ''' </summary>
-    ''' <param name="obj">An Int24 value to compare to this instance.</param>
+    ''' <param name="obj">An UInt24 value to compare to this instance.</param>
     ''' <returns>
     ''' True if obj has the same value as this instance; otherwise, False.
     ''' </returns>
-    Public Overloads Function Equals(ByVal obj As Int24) As Boolean Implements IEquatable(Of Int24).Equals
+    Public Overloads Function Equals(ByVal obj As UInt24) As Boolean Implements IEquatable(Of UInt24).Equals
 
-        Return Equals(CType(obj, Int32))
+        Return Equals(CType(obj, UInt32))
 
     End Function
 
     ''' <summary>
-    ''' Returns a value indicating whether this instance is equal to a specified Int32 value.
+    ''' Returns a value indicating whether this instance is equal to a specified UInt32 value.
     ''' </summary>
-    ''' <param name="obj">An Int32 value to compare to this instance.</param>
+    ''' <param name="obj">An UInt32 value to compare to this instance.</param>
     ''' <returns>
     ''' True if obj has the same value as this instance; otherwise, False.
     ''' </returns>
-    Public Overloads Function Equals(ByVal obj As Int32) As Boolean Implements IEquatable(Of Int32).Equals
+    Public Overloads Function Equals(ByVal obj As UInt32) As Boolean Implements IEquatable(Of UInt32).Equals
 
         Return (m_value = obj)
 
@@ -808,11 +794,11 @@ Public Structure Int24
     ''' Returns the hash code for this instance.
     ''' </summary>
     ''' <returns>
-    ''' A 32-bit signed integer hash code.
+    ''' A 32-bit unsigned integer hash code.
     ''' </returns>
     Public Overrides Function GetHashCode() As Integer
 
-        Return m_value
+        Return BitwiseCast.ToInt32(m_value)
 
     End Function
 
@@ -877,25 +863,25 @@ Public Structure Int24
     End Function
 
     ''' <summary>
-    ''' Converts the string representation of a number to its 24-bit signed integer equivalent.
+    ''' Converts the string representation of a number to its 24-bit unsigned integer equivalent.
     ''' </summary>
     ''' <param name="s">A string containing a number to convert.</param>
     ''' <returns>
-    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' A 24-bit unsigned integer equivalent to the number contained in s.
     ''' </returns>
     ''' <exception cref="ArgumentNullException">s is null.</exception>
     ''' <exception cref="OverflowAction">
-    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' s represents a number less than UInt24.MinValue or greater than UInt24.MaxValue.
     ''' </exception>
     ''' <exception cref="FormatException">s is not in the correct format.</exception>
-    Public Shared Function Parse(ByVal s As String) As Int24
+    Public Shared Function Parse(ByVal s As String) As UInt24
 
-        Return CType(Int32.Parse(s), Int24)
+        Return CType(UInt32.Parse(s), UInt24)
 
     End Function
 
     ''' <summary>
-    ''' Converts the string representation of a number in a specified style to its 24-bit signed integer equivalent.
+    ''' Converts the string representation of a number in a specified style to its 24-bit unsigned integer equivalent.
     ''' </summary>
     ''' <param name="s">A string containing a number to convert.</param>
     ''' <param name="style">
@@ -903,7 +889,7 @@ Public Structure Int24
     ''' A typical value to specify is System.Globalization.NumberStyles.Integer.
     ''' </param>
     ''' <returns>
-    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' A 24-bit unsigned integer equivalent to the number contained in s.
     ''' </returns>
     ''' <exception cref="ArgumentException">
     ''' style is not a System.Globalization.NumberStyles value. -or- style is not a combination of 
@@ -911,40 +897,40 @@ Public Structure Int24
     ''' </exception>
     ''' <exception cref="ArgumentNullException">s is null.</exception>
     ''' <exception cref="OverflowAction">
-    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' s represents a number less than UInt24.MinValue or greater than UInt24.MaxValue.
     ''' </exception>
     ''' <exception cref="FormatException">s is not in a format compliant with style.</exception>
-    Public Shared Function Parse(ByVal s As String, ByVal style As NumberStyles) As Int24
+    Public Shared Function Parse(ByVal s As String, ByVal style As NumberStyles) As UInt24
 
-        Return CType(Int32.Parse(s, style), Int24)
+        Return CType(UInt32.Parse(s, style), UInt24)
 
     End Function
 
     ''' <summary>
     ''' Converts the string representation of a number in a specified culture-specific format to its 24-bit
-    ''' signed integer equivalent.
+    ''' unsigned integer equivalent.
     ''' </summary>
     ''' <param name="s">A string containing a number to convert.</param>
     ''' <param name="provider">
     ''' An System.IFormatProvider that supplies culture-specific formatting information about s.
     ''' </param>
     ''' <returns>
-    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' A 24-bit unsigned integer equivalent to the number contained in s.
     ''' </returns>
     ''' <exception cref="ArgumentNullException">s is null.</exception>
     ''' <exception cref="OverflowAction">
-    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' s represents a number less than UInt24.MinValue or greater than UInt24.MaxValue.
     ''' </exception>
     ''' <exception cref="FormatException">s is not in the correct format.</exception>
-    Public Shared Function Parse(ByVal s As String, ByVal provider As IFormatProvider) As Int24
+    Public Shared Function Parse(ByVal s As String, ByVal provider As IFormatProvider) As UInt24
 
-        Return CType(Int32.Parse(s, provider), Int24)
+        Return CType(UInt32.Parse(s, provider), UInt24)
 
     End Function
 
     ''' <summary>
     ''' Converts the string representation of a number in a specified style and culture-specific format to its 24-bit
-    ''' signed integer equivalent.
+    ''' unsigned integer equivalent.
     ''' </summary>
     ''' <param name="s">A string containing a number to convert.</param>
     ''' <param name="style">
@@ -955,7 +941,7 @@ Public Structure Int24
     ''' An System.IFormatProvider that supplies culture-specific formatting information about s.
     ''' </param>
     ''' <returns>
-    ''' A 24-bit signed integer equivalent to the number contained in s.
+    ''' A 24-bit unsigned integer equivalent to the number contained in s.
     ''' </returns>
     ''' <exception cref="ArgumentException">
     ''' style is not a System.Globalization.NumberStyles value. -or- style is not a combination of 
@@ -963,38 +949,38 @@ Public Structure Int24
     ''' </exception>
     ''' <exception cref="ArgumentNullException">s is null.</exception>
     ''' <exception cref="OverflowAction">
-    ''' s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' s represents a number less than UInt24.MinValue or greater than UInt24.MaxValue.
     ''' </exception>
     ''' <exception cref="FormatException">s is not in a format compliant with style.</exception>
-    Public Shared Function Parse(ByVal s As String, ByVal style As NumberStyles, ByVal provider As IFormatProvider) As Int24
+    Public Shared Function Parse(ByVal s As String, ByVal style As NumberStyles, ByVal provider As IFormatProvider) As UInt24
 
-        Return CType(Int32.Parse(s, style, provider), Int24)
+        Return CType(UInt32.Parse(s, style, provider), UInt24)
 
     End Function
 
     ''' <summary>
-    ''' Converts the string representation of a number to its 24-bit signed integer equivalent. A return value
+    ''' Converts the string representation of a number to its 24-bit unsigned integer equivalent. A return value
     ''' indicates whether the conversion succeeded or failed.
     ''' </summary>
     ''' <param name="s">A string containing a number to convert.</param>
     ''' <param name="result">
-    ''' When this method returns, contains the 24-bit signed integer value equivalent to the number contained in s,
+    ''' When this method returns, contains the 24-bit unsigned integer value equivalent to the number contained in s,
     ''' if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-    ''' is not of the correct format, or represents a number less than Int24.MinValue or greater than Int24.MaxValue.
+    ''' is not of the correct format, or represents a number less than UInt24.MinValue or greater than UInt24.MaxValue.
     ''' This parameter is passed uninitialized.
     ''' </param>
     ''' <returns>true if s was converted successfully; otherwise, false.</returns>
-    Public Shared Function TryParse(ByVal s As String, ByRef result As Int24) As Boolean
+    Public Shared Function TryParse(ByVal s As String, ByRef result As UInt24) As Boolean
 
-        Dim parseResult As Int32
+        Dim parseResult As UInt32
         Dim parseResponse As Boolean
 
-        parseResponse = Int32.TryParse(s, parseResult)
+        parseResponse = UInt32.TryParse(s, parseResult)
 
         Try
-            result = CType(parseResult, Int24)
+            result = CType(parseResult, UInt24)
         Catch
-            result = CType(0, Int24)
+            result = CType(0, UInt24)
             parseResponse = False
         End Try
 
@@ -1004,7 +990,7 @@ Public Structure Int24
 
     ''' <summary>
     ''' Converts the string representation of a number in a specified style and culture-specific format to its
-    ''' 24-bit signed integer equivalent. A return value indicates whether the conversion succeeded or failed.
+    ''' 24-bit unsigned integer equivalent. A return value indicates whether the conversion succeeded or failed.
     ''' </summary>
     ''' <param name="s">A string containing a number to convert.</param>
     ''' <param name="style">
@@ -1012,10 +998,10 @@ Public Structure Int24
     ''' A typical value to specify is System.Globalization.NumberStyles.Integer.
     ''' </param>
     ''' <param name="result">
-    ''' When this method returns, contains the 24-bit signed integer value equivalent to the number contained in s,
+    ''' When this method returns, contains the 24-bit unsigned integer value equivalent to the number contained in s,
     ''' if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-    ''' is not in a format compliant with style, or represents a number less than Int24.MinValue or greater than
-    ''' Int24.MaxValue. This parameter is passed uninitialized.
+    ''' is not in a format compliant with style, or represents a number less than UInt24.MinValue or greater than
+    ''' UInt24.MaxValue. This parameter is passed uninitialized.
     ''' </param>
     ''' <param name="provider">
     ''' An System.IFormatProvider objectthat supplies culture-specific formatting information about s.
@@ -1025,17 +1011,17 @@ Public Structure Int24
     ''' style is not a System.Globalization.NumberStyles value. -or- style is not a combination of 
     ''' System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
     ''' </exception>
-    Public Shared Function TryParse(ByVal s As String, ByVal style As NumberStyles, ByVal provider As IFormatProvider, ByRef result As Int24) As Boolean
+    Public Shared Function TryParse(ByVal s As String, ByVal style As NumberStyles, ByVal provider As IFormatProvider, ByRef result As UInt24) As Boolean
 
-        Dim parseResult As Int32
+        Dim parseResult As UInt32
         Dim parseResponse As Boolean
 
-        parseResponse = Int32.TryParse(s, style, provider, parseResult)
+        parseResponse = UInt32.TryParse(s, style, provider, parseResult)
 
         Try
-            result = CType(parseResult, Int24)
+            result = CType(parseResult, UInt24)
         Catch
-            result = CType(0, Int24)
+            result = CType(0, UInt24)
             parseResponse = False
         End Try
 
@@ -1044,17 +1030,17 @@ Public Structure Int24
     End Function
 
     ''' <summary>
-    ''' Returns the System.TypeCode for value type System.Int32 (there is no defined type code for an Int24).
+    ''' Returns the System.TypeCode for value type System.UInt32 (there is no defined type code for an UInt24).
     ''' </summary>
-    ''' <returns>The enumerated constant, System.TypeCode.Int32.</returns>
+    ''' <returns>The enumerated constant, System.TypeCode.UInt32.</returns>
     ''' <remarks>
-    ''' There is no defined Int24 type code and since an Int24 will easily fit inside an Int32, the
-    ''' Int32 type code is returned.
+    ''' There is no defined UInt24 type code and since an UInt24 will easily fit inside an UInt32, the
+    ''' UInt32 type code is returned.
     ''' </remarks>
     Public Function GetTypeCode() As TypeCode Implements IConvertible.GetTypeCode
 
-        ' There is no Int24 type code, and an Int24 will fit inside an Int32 - so we return an Int32 type code
-        Return TypeCode.Int32
+        ' There is no UInt24 type code, and an UInt24 will fit inside an UInt32 - so we return an UInt32 type code
+        Return TypeCode.UInt32
 
     End Function
 
@@ -1100,13 +1086,13 @@ Public Structure Int24
 
     Private Function ToInt32(ByVal provider As IFormatProvider) As Integer Implements IConvertible.ToInt32
 
-        Return m_value
+        Return Convert.ToInt32(m_value, provider)
 
     End Function
 
     Private Function ToUInt32(ByVal provider As IFormatProvider) As UInt32 Implements IConvertible.ToUInt32
 
-        Return Convert.ToUInt32(m_value, provider)
+        Return m_value
 
     End Function
 
