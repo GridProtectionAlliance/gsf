@@ -317,19 +317,7 @@ Public Structure UInt24
 
     End Operator
 
-    Public Shared Narrowing Operator CType(ByVal value As Int64) As UInt24
-
-        Return New UInt24(Convert.ToUInt32(value))
-
-    End Operator
-
     Public Shared Narrowing Operator CType(ByVal value As UInt64) As UInt24
-
-        Return New UInt24(Convert.ToUInt32(value))
-
-    End Operator
-
-    Public Shared Narrowing Operator CType(ByVal value As Int32) As UInt24
 
         Return New UInt24(Convert.ToUInt32(value))
 
@@ -341,9 +329,15 @@ Public Structure UInt24
 
     End Operator
 
+    Public Shared Narrowing Operator CType(ByVal value As Int24) As UInt24
+
+        Return New UInt24(CType(value, UInt32))
+
+    End Operator
+
     Public Shared Narrowing Operator CType(ByVal value As UInt24) As Int24
 
-        Return CType(CType(value, Int32), Int24)
+        Return New Int24(CType(value, Int32))
 
     End Operator
 
@@ -369,12 +363,6 @@ Public Structure UInt24
 
 #Region " Widening Conversions "
 
-    Public Shared Widening Operator CType(ByVal value As SByte) As UInt24
-
-        Return New UInt24(Convert.ToUInt32(value))
-
-    End Operator
-
     Public Shared Widening Operator CType(ByVal value As Byte) As UInt24
 
         Return New UInt24(Convert.ToUInt32(value))
@@ -382,12 +370,6 @@ Public Structure UInt24
     End Operator
 
     Public Shared Widening Operator CType(ByVal value As Char) As UInt24
-
-        Return New UInt24(Convert.ToUInt32(value))
-
-    End Operator
-
-    Public Shared Widening Operator CType(ByVal value As Int16) As UInt24
 
         Return New UInt24(Convert.ToUInt32(value))
 

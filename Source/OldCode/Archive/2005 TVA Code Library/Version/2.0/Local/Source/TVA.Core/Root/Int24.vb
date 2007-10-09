@@ -316,21 +316,7 @@ Public Structure Int24
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As UInt64) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
     Public Shared Narrowing Operator CType(ByVal value As Int64) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As UInt32) As Int24
 
         Return New Int24(Convert.ToInt32(value))
 
@@ -342,23 +328,9 @@ Public Structure Int24
 
     End Operator
 
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As UInt24) As Int24
-
-        Return New Int24(CType(value, Int32))
-
-    End Operator
-
     Public Shared Narrowing Operator CType(ByVal value As Int24) As Int16
 
         Return CType(CType(value, Int32), Int16)
-
-    End Operator
-
-    <CLSCompliant(False)> _
-    Public Shared Narrowing Operator CType(ByVal value As Int24) As UInt16
-
-        Return CType(CType(value, Int32), UInt16)
 
     End Operator
 
@@ -371,13 +343,6 @@ Public Structure Int24
 #End Region
 
 #Region " Widening Conversions "
-
-    <CLSCompliant(False)> _
-    Public Shared Widening Operator CType(ByVal value As SByte) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
 
     Public Shared Widening Operator CType(ByVal value As Byte) As Int24
 
@@ -392,13 +357,6 @@ Public Structure Int24
     End Operator
 
     Public Shared Widening Operator CType(ByVal value As Int16) As Int24
-
-        Return New Int24(Convert.ToInt32(value))
-
-    End Operator
-
-    <CLSCompliant(False)> _
-    Public Shared Widening Operator CType(ByVal value As UInt16) As Int24
 
         Return New Int24(Convert.ToInt32(value))
 
