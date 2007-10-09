@@ -30,6 +30,7 @@ Imports TVA.DateTime.Common
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Communication.Common
 Imports TVA.Security.Cryptography
+Imports TVA.Configuration
 
 ''' <summary>
 ''' Represents a server involved in the transportation of data.

@@ -188,7 +188,7 @@
     <Compile Include="Text\Common.vb" />
     <Compile Include="Xml\Common.vb" />
     <Compile Include="Root\ByteEncoding.vb" />
-    <Compile Include="Root\IPersistSettings.vb" />
+    <Compile Include="Configuration\IPersistSettings.vb" />
     <Compile Include="Root\ObjectState.vb" />
     <Compile Include="Root\ProcessProgress.vb" />
     <Compile Include="Root\Serialization.vb" />

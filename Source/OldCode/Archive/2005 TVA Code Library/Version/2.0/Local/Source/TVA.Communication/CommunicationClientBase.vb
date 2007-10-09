@@ -28,6 +28,7 @@ Imports TVA.IO.Common
 Imports TVA.DateTime.Common
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Communication.Common
+Imports TVA.Configuration
 
 ''' <summary>
 ''' Represents a client involved in the transportation of data.

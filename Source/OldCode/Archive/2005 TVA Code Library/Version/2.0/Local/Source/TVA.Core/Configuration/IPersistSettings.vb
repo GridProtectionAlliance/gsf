@@ -1,13 +1,17 @@
 ' 03/21/2007
 
-Public Interface IPersistSettings
+Namespace Configuration
 
-    Property PersistSettings() As Boolean
+    Public Interface IPersistSettings
 
-    Property SettingsCategoryName() As String
+        Property PersistSettings() As Boolean
 
-    Sub SaveSettings()
+        Property SettingsCategoryName() As String
 
-    Sub LoadSettings()
+        Sub SaveSettings()
 
-End Interface
+        Sub LoadSettings()
+
+    End Interface
+
+End Namespace

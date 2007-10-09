@@ -13,6 +13,7 @@ Imports TVA.Net.Smtp
 Imports TVA.IO
 Imports TVA.IO.FilePath
 Imports TVA.Identity
+Imports TVA.Configuration
 
 Namespace ErrorManagement
 

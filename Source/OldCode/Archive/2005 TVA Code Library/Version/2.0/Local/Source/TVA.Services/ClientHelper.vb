@@ -21,6 +21,7 @@ Imports System.ComponentModel
 Imports TVA.Communication
 Imports TVA.Serialization
 Imports TVA.Configuration.Common
+Imports TVA.Configuration
 
 <ToolboxBitmap(GetType(ClientHelper)), DisplayName("ClientHelper")> _
 Public Class ClientHelper
