@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  TVA.Console.Arguments.vb - Common Configuration Functions
+'  TVA.Console.Arguments.vb - Command Line Parameter Parsing Class
 '  Copyright © 2007 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -10,8 +10,8 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  02/08/2007 - Pinal C. Patel
-'       Generated original version of source code.
+'  03/28/2006 - Pinal C. Patel
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Console)
 '  10/09/2007 - J. Ritchie Carroll / Pinal C. Patel
 '       Fixed stand-alone argument bug at end of line and changed class to use generic Dictionary class
 '
