@@ -84,7 +84,7 @@ Public Structure UInt24
     ''' <summary>Creates 24-bit unsigned integer from an existing 24-bit unsigned integer.</summary>
     Public Sub New(ByVal value As UInt24)
 
-        m_value = CType(value, UInt32)
+        m_value = ApplyBitMask(CType(value, UInt32))
 
     End Sub
 
@@ -94,7 +94,7 @@ Public Structure UInt24
     Public Sub New(ByVal value As UInt32)
 
         ValidateNumericRange(value)
-        m_value = value
+        m_value = ApplyBitMask(value)
 
     End Sub
 
@@ -107,7 +107,7 @@ Public Structure UInt24
     ''' </remarks>
     Public Sub New(ByVal value As Byte(), ByVal startIndex As Integer)
 
-        m_value = CType(UInt24.GetValue(value, startIndex), UInt32)
+        m_value = ApplyBitMask(CType(UInt24.GetValue(value, startIndex), UInt32))
 
     End Sub
 
@@ -458,13 +458,13 @@ Public Structure UInt24
 
     Public Shared Operator Not(ByVal value As UInt24) As UInt24
 
-        Return CType((Not CType(value, UInt32)), UInt24)
+        Return CType(ApplyBitMask(Not CType(value, UInt32)), UInt24)
 
     End Operator
 
     Public Shared Operator And(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) And CType(value2, UInt32), UInt24)
+        Return CType(ApplyBitMask(CType(value1, UInt32) And CType(value2, UInt32)), UInt24)
 
     End Operator
 
@@ -482,7 +482,7 @@ Public Structure UInt24
 
     Public Shared Operator Or(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) Or CType(value2, UInt32), UInt24)
+        Return CType(ApplyBitMask(CType(value1, UInt32) Or CType(value2, UInt32)), UInt24)
 
     End Operator
 
@@ -500,7 +500,7 @@ Public Structure UInt24
 
     Public Shared Operator Xor(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) Xor CType(value2, UInt32), UInt24)
+        Return CType(ApplyBitMask(CType(value1, UInt32) Xor CType(value2, UInt32)), UInt24)
 
     End Operator
 
@@ -522,7 +522,7 @@ Public Structure UInt24
 
     Public Shared Operator Mod(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) Mod CType(value2, UInt32), UInt24)
+        Return CType((CType(value1, UInt32) Mod CType(value2, UInt32)), UInt24)
 
     End Operator
 
@@ -540,7 +540,7 @@ Public Structure UInt24
 
     Public Shared Operator +(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) + CType(value2, UInt32), UInt24)
+        Return CType((CType(value1, UInt32) + CType(value2, UInt32)), UInt24)
 
     End Operator
 
@@ -558,7 +558,7 @@ Public Structure UInt24
 
     Public Shared Operator -(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) - CType(value2, UInt32), UInt24)
+        Return CType((CType(value1, UInt32) - CType(value2, UInt32)), UInt24)
 
     End Operator
 
@@ -576,7 +576,7 @@ Public Structure UInt24
 
     Public Shared Operator *(ByVal value1 As UInt24, ByVal value2 As UInt24) As UInt24
 
-        Return CType(CType(value1, UInt32) * CType(value2, UInt32), UInt24)
+        Return CType((CType(value1, UInt32) * CType(value2, UInt32)), UInt24)
 
     End Operator
 

@@ -22,6 +22,8 @@
 '       2.0 version of source code migrated from 1.1 source (TVA.Shared.Bit)
 '  01/04/2006 - J. Ritchie Carroll
 '       Added code comments - moved into Interop namespace
+'  10/10/2007 - J. Ritchie Carroll
+'       Added bit-rotation functions (BitRotL and BitRotR)
 '
 '*******************************************************************************************************
 
@@ -149,6 +151,214 @@ Namespace Interop
 
         ''' <summary>Bit 31 (0x80000000)</summary>
         Public Const Bit31 As Int32 = -2147483648   ' &H80000000
+
+        ''' <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotL(ByVal value As Byte, ByVal rotations As Integer) As Byte
+
+            Dim hiBitSet As Boolean
+
+            For x As Integer = 1 To (rotations Mod 8)
+                hiBitSet = ((value And Bit7) = Bit7)
+                value <<= 1
+                If hiBitSet Then value = (value Or Bit0)
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotL(ByVal value As Int16, ByVal rotations As Integer) As Int16
+
+            Dim hiBitSet As Boolean
+
+            For x As Integer = 1 To (rotations Mod 16)
+                hiBitSet = ((value And Bit15) = Bit15)
+                value <<= 1
+                If hiBitSet Then value = (value Or Bit0)
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotL(ByVal value As Int24, ByVal rotations As Integer) As Int24
+
+            Dim hiBitSet As Boolean
+            Dim int24Bit0 As Int24 = Bit0
+            Dim int24Bit23 As Int24 = Bit23
+
+            For x As Integer = 1 To (rotations Mod 24)
+                hiBitSet = ((value And int24Bit23) = int24Bit23)
+                value <<= 1
+                If hiBitSet Then value = (value Or int24Bit0)
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotL(ByVal value As Int32, ByVal rotations As Integer) As Int32
+
+            Dim hiBitSet As Boolean
+
+            For x As Integer = 1 To (rotations Mod 32)
+                hiBitSet = ((value And Bit31) = Bit31)
+                value <<= 1
+                If hiBitSet Then value = (value Or Bit0)
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotR(ByVal value As Byte, ByVal rotations As Integer) As Byte
+
+            Dim loBitSet As Boolean
+
+            For x As Integer = 1 To (rotations Mod 8)
+                loBitSet = ((value And Bit0) = Bit0)
+                value >>= 1
+
+                If loBitSet Then
+                    value = (value Or Bit7)
+                Else
+                    value = (value And Not Bit7)
+                End If
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotR(ByVal value As Int16, ByVal rotations As Integer) As Int16
+
+            Dim loBitSet As Boolean
+
+            For x As Integer = 1 To (rotations Mod 16)
+                loBitSet = ((value And Bit0) = Bit0)
+                value >>= 1
+
+                If loBitSet Then
+                    value = (value Or Bit15)
+                Else
+                    value = (value And Not Bit15)
+                End If
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotR(ByVal value As Int24, ByVal rotations As Integer) As Int24
+
+            Dim loBitSet As Boolean
+            Dim int24Bit0 As Int24 = Bit0
+            Dim int24Bit23 As Int24 = Bit23
+
+            For x As Integer = 1 To (rotations Mod 24)
+                loBitSet = ((value And int24Bit0) = int24Bit0)
+                value >>= 1
+
+                If loBitSet Then
+                    value = (value Or int24Bit23)
+                Else
+                    value = (value And Not int24Bit23)
+                End If
+            Next
+
+            Return value
+
+        End Function
+
+        ''' <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        ''' <param name="value">Value used for bit-rotation</param>
+        ''' <param name="rotations">Number of rotations to perform</param>
+        ''' <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        ''' <remarks>
+        ''' Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        ''' .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        ''' architectures.
+        ''' </remarks>
+        Public Shared Function BitRotR(ByVal value As Int32, ByVal rotations As Integer) As Int32
+
+            Dim loBitSet As Boolean
+
+            For x As Integer = 1 To (rotations Mod 32)
+                loBitSet = ((value And Bit0) = Bit0)
+                value >>= 1
+
+                If loBitSet Then
+                    value = (value Or Bit31)
+                Else
+                    value = (value And Not Bit31)
+                End If
+            Next
+
+            Return value
+
+        End Function
 
         ''' <summary>
         ''' Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte 

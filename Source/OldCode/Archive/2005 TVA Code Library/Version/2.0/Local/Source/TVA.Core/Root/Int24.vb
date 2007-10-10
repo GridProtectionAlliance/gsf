@@ -84,7 +84,7 @@ Public Structure Int24
     ''' <summary>Creates 24-bit signed integer from an existing 24-bit signed integer.</summary>
     Public Sub New(ByVal value As Int24)
 
-        m_value = CType(value, Int32)
+        m_value = ApplyBitMask(CType(value, Int32))
 
     End Sub
 
@@ -94,7 +94,7 @@ Public Structure Int24
     Public Sub New(ByVal value As Int32)
 
         ValidateNumericRange(value)
-        m_value = value
+        m_value = ApplyBitMask(value)
 
     End Sub
 
@@ -107,7 +107,7 @@ Public Structure Int24
     ''' </remarks>
     Public Sub New(ByVal value As Byte(), ByVal startIndex As Integer)
 
-        m_value = CType(Int24.GetValue(value, startIndex), Int32)
+        m_value = ApplyBitMask(CType(Int24.GetValue(value, startIndex), Int32))
 
     End Sub
 
@@ -442,13 +442,13 @@ Public Structure Int24
 
     Public Shared Operator Not(ByVal value As Int24) As Int24
 
-        Return CType((Not CType(value, Int32)), Int24)
+        Return CType(ApplyBitMask(Not CType(value, Int32)), Int24)
 
     End Operator
 
     Public Shared Operator And(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) And CType(value2, Int32), Int24)
+        Return CType(ApplyBitMask(CType(value1, Int32) And CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -466,7 +466,7 @@ Public Structure Int24
 
     Public Shared Operator Or(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) Or CType(value2, Int32), Int24)
+        Return CType(ApplyBitMask(CType(value1, Int32) Or CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -484,7 +484,7 @@ Public Structure Int24
 
     Public Shared Operator Xor(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) Xor CType(value2, Int32), Int24)
+        Return CType(ApplyBitMask(CType(value1, Int32) Xor CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -506,7 +506,7 @@ Public Structure Int24
 
     Public Shared Operator Mod(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) Mod CType(value2, Int32), Int24)
+        Return CType((CType(value1, Int32) Mod CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -524,7 +524,7 @@ Public Structure Int24
 
     Public Shared Operator +(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) + CType(value2, Int32), Int24)
+        Return CType((CType(value1, Int32) + CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -542,7 +542,7 @@ Public Structure Int24
 
     Public Shared Operator -(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) - CType(value2, Int32), Int24)
+        Return CType((CType(value1, Int32) - CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -560,7 +560,7 @@ Public Structure Int24
 
     Public Shared Operator *(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) * CType(value2, Int32), Int24)
+        Return CType((CType(value1, Int32) * CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -578,7 +578,7 @@ Public Structure Int24
 
     Public Shared Operator \(ByVal value1 As Int24, ByVal value2 As Int24) As Int24
 
-        Return CType(CType(value1, Int32) \ CType(value2, Int32), Int24)
+        Return CType((CType(value1, Int32) \ CType(value2, Int32)), Int24)
 
     End Operator
 
@@ -664,7 +664,7 @@ Public Structure Int24
 
     Private Shared Sub ValidateNumericRange(ByVal value As Int32)
 
-        If value > Int24.MaxValue32 Or value < Int24.MinValue32 Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit signed integer", value))
+        If value > (Int24.MaxValue32 + 1) Or value < Int24.MinValue32 Then Throw New OverflowException(String.Format("Value of {0} will not fit in a 24-bit signed integer", value))
 
     End Sub
 
