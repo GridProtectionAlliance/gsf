@@ -12,10 +12,11 @@
 '  -----------------------------------------------------------------------------------------------------
 '  02/08/2007 - Pinal C. Patel
 '       Generated original version of source code.
+'  10/09/2007 - J. Ritchie Carroll / Pinal C. Patel
+'       Fixed stand-alone argument bug at end of line and changed class to use generic Dictionary class
 '
 '*******************************************************************************************************
 
-Imports System.Collections.Specialized
 Imports System.Text.RegularExpressions
 
 Namespace Console
@@ -27,7 +28,7 @@ Namespace Console
         Private m_commandLine As String
         Private m_orderedArgID As String
         Private m_orderedArgCount As Integer
-        Private m_parameters As StringDictionary
+        Private m_parameters As Dictionary(Of String, String)
 
         Public Sub New(ByVal commandLine As String)
 
@@ -37,14 +38,12 @@ Namespace Console
 
         Public Sub New(ByVal commandLine As String, ByVal orderedArgID As String)
 
-            MyBase.New()
-
             Dim spliter As New Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
             Dim remover As New Regex("^['""]?(.*?)['""]?$", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
             Dim parameter As String
             Dim parts As String()
 
-            m_parameters = New StringDictionary()
+            m_parameters = New Dictionary(Of String, String)(StringComparer.CurrentCultureIgnoreCase)
             m_orderedArgCount = 0
             m_commandLine = commandLine
             m_orderedArgID = orderedArgID
@@ -55,6 +54,11 @@ Namespace Console
             '   -param1=value1 --param2 /param3:"Test-:-work" 
             '   /param4=happy -param5 '--=nice=--'
             For Each arg As String In Common.ParseCommand(m_commandLine)
+                ' Found just a parameter in last pass...
+                ' The last parameter is still waiting, with no value, set it to nothing.
+                If Not parameter Is Nothing Then If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, Nothing)
+                parameter = Nothing
+
                 If Not String.IsNullOrEmpty(arg) Then
                     ' If this argument begins with a quote, we treat it as a stand-alone argument
                     If arg.Chars(0) = """"c Or arg.Chars(0) = "'"c Then
@@ -76,15 +80,6 @@ Namespace Console
 
                         Select Case parts.Length
                             Case 1
-                                ' Found just a parameter
-                                ' The last parameter is still waiting. 
-                                ' With no value, set it to true.
-                                If Not parameter Is Nothing Then
-                                    If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
-                                End If
-
-                                parameter = Nothing
-
                                 ' Handle stand alone ordered arguments
                                 m_orderedArgCount += 1
                                 parameter = orderedArgID & m_orderedArgCount
@@ -98,21 +93,9 @@ Namespace Console
                                 parameter = Nothing
                             Case 2
                                 ' Found just a parameter
-                                ' The last parameter is still waiting. 
-                                ' With no value, set it to true.
-                                If Not parameter Is Nothing Then
-                                    If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
-                                End If
-
                                 parameter = parts(1)
                             Case 3
                                 ' Parameter with enclosed value
-                                ' The last parameter is still waiting. 
-                                ' With no value, set it to true.
-                                If Not parameter Is Nothing Then
-                                    If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
-                                End If
-
                                 parameter = parts(1)
 
                                 ' Remove possible enclosing characters (",')
@@ -129,43 +112,43 @@ Namespace Console
 
             ' In case a parameter is still waiting
             If Not parameter Is Nothing Then
-                If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, "True")
+                If Not m_parameters.ContainsKey(parameter) Then m_parameters.Add(parameter, Nothing)
             End If
 
         End Sub
 
         ' Retrieve a parameter value if it exists 
-        Default Public ReadOnly Property Item(ByVal param As String) As String
+        Default Public Overridable ReadOnly Property Item(ByVal param As String) As String
             Get
                 Return m_parameters(param)
             End Get
         End Property
 
-        Public ReadOnly Property Exists(ByVal param As String) As Boolean
+        Public Overridable ReadOnly Property Exists(ByVal param As String) As Boolean
             Get
-                Return (Len(Trim(Me(param))) > 0)
+                Return m_parameters.ContainsKey(param)
             End Get
         End Property
 
-        Public ReadOnly Property Count() As Integer
+        Public Overridable ReadOnly Property Count() As Integer
             Get
                 Return m_parameters.Count
             End Get
         End Property
 
-        Public ReadOnly Property OrderedArgID() As String
+        Public Overridable ReadOnly Property OrderedArgID() As String
             Get
                 Return m_orderedArgID
             End Get
         End Property
 
-        Public ReadOnly Property OrderedArgCount() As Integer
+        Public Overridable ReadOnly Property OrderedArgCount() As Integer
             Get
                 Return m_orderedArgCount
             End Get
         End Property
 
-        Public ReadOnly Property ContainsHelpRequest() As Boolean
+        Public Overridable ReadOnly Property ContainsHelpRequest() As Boolean
             Get
                 Return (m_parameters.ContainsKey("?") Or m_parameters.ContainsKey("Help"))
             End Get
@@ -182,6 +165,12 @@ Namespace Console
             Return m_commandLine
 
         End Function
+
+        Protected ReadOnly Property InternalDictionary() As Dictionary(Of String, String)
+            Get
+                Return m_parameters
+            End Get
+        End Property
 
     End Class
 
