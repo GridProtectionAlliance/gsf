@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+Imports TVA.Parsing
 Imports PhasorProtocols.Common
 
 ''' <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>

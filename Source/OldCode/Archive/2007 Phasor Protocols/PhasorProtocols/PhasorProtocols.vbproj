@@ -46,18 +46,9 @@
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="TVA.Communication, Version=2.1.99.32408, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Communication.dll</HintPath>
-    </Reference>
-    <Reference Include="TVA.Core, Version=2.1.99.32408, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\TVA.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="TVA.IO.Compression, Version=2.1.99.32408, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TVA Code Library\Source\bin\TVA.IO.Compression.dll</HintPath>
-    </Reference>
+    <Reference Include="TVA.Communication, Version=2.1.99.32408, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="TVA.Core, Version=2.1.99.32408, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="TVA.IO.Compression, Version=2.1.99.32408, Culture=neutral, processorArchitecture=x86" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />

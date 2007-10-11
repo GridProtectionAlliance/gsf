@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Imports TVA.Parsing
+
 ''' <summary>This interface represents a protocol independent representation of any data type.</summary>
 <CLSCompliant(False)> _
 Public Interface IChannel

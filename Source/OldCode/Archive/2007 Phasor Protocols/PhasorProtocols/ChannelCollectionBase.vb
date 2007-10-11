@@ -17,6 +17,7 @@
 
 Imports System.Runtime.Serialization
 Imports System.ComponentModel
+Imports TVA.Parsing
 Imports PhasorProtocols.Common
 
 ''' <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data.</summary>

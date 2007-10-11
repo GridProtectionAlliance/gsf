@@ -18,6 +18,7 @@
 Imports System.Runtime.Serialization
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
+Imports TVA.Parsing
 Imports PhasorProtocols.Common
 Imports PhasorProtocols.IeeeC37_118.Common
 

@@ -18,9 +18,10 @@
 Imports System.Runtime.Serialization
 Imports System.IO
 Imports TVA.DateTime
+Imports TVA.Parsing
+Imports TVA.IO.Compression.Common
 Imports PhasorProtocols.Common
 Imports PhasorProtocols.Ieee1344.Common
-Imports TVA.IO.Compression.Common
 
 Namespace Ieee1344
 
