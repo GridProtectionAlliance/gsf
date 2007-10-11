@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/TROApplicationSecuritySupport/Login.aspx" hash="fffffff392bb75d1" filehash="fea8c947cacdaec5" flags="110000" assembly="App_Web_4jeo_dh7" type="ASP.login_aspx">
+    <filedeps>
+        <filedep name="/TROApplicationSecuritySupport/Login.aspx" />
+        <filedep name="/TROApplicationSecuritySupport/Login.aspx.vb" />
+    </filedeps>
+</preserve>

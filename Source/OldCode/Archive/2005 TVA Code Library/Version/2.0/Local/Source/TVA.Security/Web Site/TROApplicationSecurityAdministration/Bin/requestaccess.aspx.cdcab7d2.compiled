@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/TROApplicationSecuritySupport/RequestAccess.aspx" hash="fffffff392bb75d1" filehash="4a9487788dc28c2b" flags="110000" assembly="App_Web_4jeo_dh7" type="ASP.requestaccess_aspx">
+    <filedeps>
+        <filedep name="/TROApplicationSecuritySupport/RequestAccess.aspx" />
+        <filedep name="/TROApplicationSecuritySupport/RequestAccess.aspx.vb" />
+    </filedeps>
+</preserve>

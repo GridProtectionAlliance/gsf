@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/TROApplicationSecuritySupport/ApplyForAccount.aspx" hash="fffffff392bb75d1" filehash="8147f01bc72ac967" flags="110000" assembly="App_Web_4jeo_dh7" type="ASP.applyforaccount_aspx">
+    <filedeps>
+        <filedep name="/TROApplicationSecuritySupport/ApplyForAccount.aspx" />
+        <filedep name="/TROApplicationSecuritySupport/ApplyForAccount.aspx.vb" />
+    </filedeps>
+</preserve>
