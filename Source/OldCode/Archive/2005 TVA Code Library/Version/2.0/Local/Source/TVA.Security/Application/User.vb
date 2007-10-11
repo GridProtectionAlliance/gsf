@@ -1,15 +1,22 @@
 ' 09-26-06
+' PCP: 10/11/2007 - Added GeneratePassword() shared function and enforced strong password rule in EncryptPassword()
 
 Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Security.Principal
-Imports TVA.Data.Common
+Imports System.Text
+Imports System.Text.RegularExpressions
+Imports TVA.Common
 Imports TVA.Identity
+Imports TVA.Data.Common
+Imports TVA.Math.Common
 
 Namespace Application
 
     <Serializable()> _
     Public Class User
+
+#Region " Member Declaration "
 
         Private m_username As String
         Private m_password As String
@@ -30,6 +37,13 @@ Namespace Application
         Private m_roles As List(Of Role)
         Private m_applications As List(Of Application)
 
+        Private Const MinimumPasswordLength As Integer = 8
+        Private Const StrongPasswordRegex As String = "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
+
+#End Region
+
+#Region " Code Scope: Public "
+
         Public Sub New(ByVal username As String, ByVal dbConnection As SqlConnection)
 
             MyClass.New(username, Nothing, dbConnection)
@@ -44,7 +58,6 @@ Namespace Application
 
         Public Sub New(ByVal username As String, ByVal password As String, ByVal dbConnection As SqlConnection, ByVal applicationName As String)
 
-            MyBase.New()
             If dbConnection IsNot Nothing Then
                 If dbConnection.State <> System.Data.ConnectionState.Open Then dbConnection.Open()
                 ' We'll retrieve all the data we need in a single trip to the database by calling the stored 
@@ -336,12 +349,80 @@ Namespace Application
 
         End Function
 
-        Public Shared Function EncryptPassword(ByVal password As String) As String
+#Region " Shared "
 
-            ' We prepend salt text to the password and then has it to make it even more secure.
-            Return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile("O3990\P78f9E66b:a35_V©6M13©6~2&[" & password, "SHA1")
+        Public Shared Function GeneratePassword(ByVal length As Integer) As String
+
+            If length >= MinimumPasswordLength Then
+                Dim password As Char() = CreateArray(Of Char)(length)
+
+                ' ASCII character ranges:
+                ' Digits - 48 to 57
+                ' Upper case - 65 to 90
+                ' Lower case - 97 to 122
+
+                ' Out of the minimum of 8 characters in the password, we'll make sure that the password contains
+                ' at least 2 digits and 2 upper case letter, so that the password meets the strong password rule.
+                Dim digits As Integer = 0
+                Dim upperCase As Integer = 0
+                Dim minSpecialChars As Integer = 2
+                For i As Integer = 0 To password.Length - 1
+                    If digits < minSpecialChars Then
+                        password(i) = Chr(CInt(RandomBetween(48, 57)))
+                        digits += 1
+                    ElseIf upperCase < minSpecialChars Then
+                        password(i) = Chr(CInt(RandomBetween(65, 90)))
+                        upperCase += 1
+                    Else
+                        password(i) = Chr(CInt(RandomBetween(97, 122)))
+                    End If
+                Next
+
+                ' We have a random password that meets the strong password rule, now we'll shuffle it to make it 
+                ' even more random.
+                Dim temp As Char
+                Dim swapIndex As Integer
+                For i As Integer = 0 To password.Length - 1
+                    swapIndex = CInt(RandomBetween(0, password.Length - 1))
+                    temp = password(swapIndex)
+                    password(swapIndex) = password(i)
+                    password(i) = temp
+                Next
+
+                Return New String(password)
+            Else
+                Throw New ArgumentException(String.Format("Password length should be at least {0} characters.", MinimumPasswordLength))
+            End If
 
         End Function
+
+        Public Shared Function EncryptPassword(ByVal password As String) As String
+
+            If Regex.IsMatch(password, StrongPasswordRegex) Then
+                ' We prepend salt text to the password and then has it to make it even more secure.
+                Return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile("O3990\P78f9E66b:a35_V©6M13©6~2&[" & password, "SHA1")
+            Else
+                ' Password does not meet the strong password rule defined below, so we don't encrypt the password.
+                With New StringBuilder()
+                    .Append("Password does not meet the following criteria:")
+                    .AppendLine()
+                    .Append("- Password must be at least 8 characters")
+                    .AppendLine()
+                    .Append("- Password must contain at least 1 digit")
+                    .AppendLine()
+                    .Append("- Password must contain at least 1 upper case letter")
+                    .AppendLine()
+                    .Append("- Password must contain at least 1 lower case letter")
+
+                    Throw New InvalidOperationException(.ToString())
+                End With
+            End If
+
+        End Function
+
+#End Region
+
+#End Region
 
     End Class
 
