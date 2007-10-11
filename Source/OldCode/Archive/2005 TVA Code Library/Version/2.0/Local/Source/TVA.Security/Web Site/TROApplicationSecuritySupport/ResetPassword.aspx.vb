@@ -1,7 +1,7 @@
-Imports Tva.Data.Common
 Imports System.Data
 Imports System.Data.SqlClient
-Imports Tva.Security.Application
+Imports TVA.Data.Common
+Imports TVA.Security.Application
 
 Partial Class ResetPassword
     Inherits System.Web.UI.Page
@@ -98,9 +98,9 @@ Partial Class ResetPassword
                             Dim emailAddress As String = ExecuteScalar("Select IsNull(UserEmailAddress, '') As UserEmailAddress From Users Where UserName = '" & userName & "'", conn)
 
                             If Not emailAddress = "" Then
-                                Dim newPassword As String = System.Web.Security.Membership.GeneratePassword(8, 0)
+                                Dim newPassword As String = TVA.Security.Application.User.GeneratePassword(8)
 
-                                ExecuteNonQuery("ResetPassword", conn, userName, securityQuestion, securityAnswer, Tva.Security.Application.User.EncryptPassword(newPassword))
+                                ExecuteNonQuery("ResetPassword", conn, userName, securityQuestion, securityAnswer, TVA.Security.Application.User.EncryptPassword(newPassword))
 
                                 Me.LabelError.Text = "Your password has been reset. You will soon receive an email with your new password. You must change your password by clicking on the Change Password link below."
 

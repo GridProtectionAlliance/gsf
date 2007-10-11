@@ -1,7 +1,7 @@
-Imports Tva.Security.Application
-Imports Tva.Data.Common
 Imports System.Data
 Imports System.Data.SqlClient
+Imports TVA.Data.Common
+Imports TVA.Security.Application
 
 Partial Class ChangePassword
     Inherits System.Web.UI.Page
@@ -33,7 +33,7 @@ Partial Class ChangePassword
                             conn.Open()
                         End If
 
-                        ExecuteNonQuery("ChangePassword", conn, userName, Tva.Security.Application.User.EncryptPassword(oldPassword), Tva.Security.Application.User.EncryptPassword(newPassword))
+                        ExecuteNonQuery("ChangePassword", conn, userName, TVA.Security.Application.User.EncryptPassword(oldPassword), TVA.Security.Application.User.EncryptPassword(newPassword))
 
                         Me.LabelError.Text = "Your password has been changed successfully. Please <a href=Login.aspx>login</a> with your new password."
 

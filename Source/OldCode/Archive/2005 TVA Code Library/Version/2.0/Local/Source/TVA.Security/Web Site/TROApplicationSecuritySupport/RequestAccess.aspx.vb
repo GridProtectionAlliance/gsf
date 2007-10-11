@@ -1,7 +1,7 @@
-Imports Tva.Security.Application
 Imports System.Data
 Imports System.Data.SqlClient
-Imports Tva.Data.Common
+Imports TVA.Data.Common
+Imports TVA.Security.Application
 
 Partial Class RequestAccess
     Inherits System.Web.UI.Page

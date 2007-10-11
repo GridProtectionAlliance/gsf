@@ -1,9 +1,9 @@
 Imports System.Data
 Imports System.Data.SqlClient
-Imports Tva.Data.Common
-Imports Tva.Security.Application
 Imports System.Security.Principal
 Imports System.DirectoryServices
+Imports TVA.Data.Common
+Imports TVA.Security.Application
 
 Partial Class ApplyForAccount
     Inherits System.Web.UI.Page
@@ -165,7 +165,7 @@ Partial Class ApplyForAccount
                 End If
 
                 Dim userName As String = Me.TextBoxUserName.Text.Replace("'", "").Replace("%", "")
-                Dim password As String = Tva.Security.Application.User.EncryptPassword(Me.TextBoxPassword.Text.Replace("'", "").Replace("%", "").Replace(" ", ""))
+                Dim password As String = TVA.Security.Application.User.EncryptPassword(Me.TextBoxPassword.Text.Replace("'", "").Replace("%", "").Replace(" ", ""))
                 Dim securityQuestion As String = Me.DropDownListSecurityQuestions.SelectedItem.ToString
                 Dim securityAnswer As String = Me.TextBoxSecurityAnswer.Text.Replace("'", "''")
                 Dim firstName As String = Me.TextBoxFirstName.Text.Replace("'", "").Replace("%", "")
