@@ -79,6 +79,10 @@ Public Class TcpServer
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets the System.Net.Sockets.Socket of the server.
+    ''' </summary>
+    ''' <returns>The System.Net.Sockets.Socket of the server.</returns>
     <Browsable(False)> _
     Public ReadOnly Property Server() As Socket
         Get
@@ -86,6 +90,12 @@ Public Class TcpServer
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets the current states of all connected clients which includes the System.Net.Sockets.Socket of clients.
+    ''' </summary>
+    ''' <remarks>
+    ''' The current states of all connected clients which includes the System.Net.Sockets.Socket of clients.
+    ''' </remarks>
     <Browsable(False)> _
     Public ReadOnly Property Clients() As List(Of StateInfo(Of Socket))
         Get
@@ -95,6 +105,27 @@ Public Class TcpServer
             End SyncLock
 
             Return clientList
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Gets the current state of the specified client which includes its System.Net.Sockets.Socket.
+    ''' </summary>
+    ''' <param name="clientID"></param>
+    ''' <value></value>
+    ''' <returns>
+    ''' The current state of the specified client which includes its System.Net.Sockets.Socket if the 
+    ''' specified client ID is valid (client is connected); otherwise Nothing.
+    ''' </returns>
+    <Browsable(False)> _
+    Public ReadOnly Property Clients(ByVal clientID As Guid) As StateInfo(Of Socket)
+        Get
+            Dim client As StateInfo(Of Socket) = Nothing
+            SyncLock m_tcpClients
+                m_tcpClients.TryGetValue(clientID, client)
+            End SyncLock
+
+            Return client
         End Get
     End Property
 

@@ -109,6 +109,10 @@ Public Class UdpServer
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets the System.Net.IPEndPoint of the server.
+    ''' </summary>
+    ''' <returns>The System.Net.IPEndPoint of the server.</returns>
     <Browsable(False)> _
     Public ReadOnly Property Server() As IPEndPoint
         Get
@@ -116,6 +120,12 @@ Public Class UdpServer
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets the current states of all connected clients which includes the System.Net.IPEndPoint of clients.
+    ''' </summary>
+    ''' <remarks>
+    ''' The current states of all connected clients which includes the System.Net.IPEndPoint of clients.
+    ''' </remarks>
     <Browsable(False)> _
     Public ReadOnly Property Clients() As List(Of StateInfo(Of IPEndPoint))
         Get
@@ -128,6 +138,27 @@ Public Class UdpServer
         End Get
     End Property
 
+    ''' <summary>
+    ''' Gets the current state of the specified client which includes its System.Net.IPEndPoint.
+    ''' </summary>
+    ''' <param name="clientID"></param>
+    ''' <value></value>
+    ''' <returns>
+    ''' The current state of the specified client which includes its System.Net.IPEndPoint if the 
+    ''' specified client ID is valid (client is connected); otherwise Nothing.
+    ''' </returns>
+    <Browsable(False)> _
+    Public ReadOnly Property Clients(ByVal clientID As Guid) As StateInfo(Of IPEndPoint)
+        Get
+            Dim client As StateInfo(Of IPEndPoint) = Nothing
+            SyncLock m_udpClients
+                m_udpClients.TryGetValue(clientID, client)
+            End SyncLock
+
+            Return client
+        End Get
+    End Property
+
 #Region " Overrides "
 
     ''' <summary>
@@ -136,7 +167,7 @@ Public Class UdpServer
     ''' <value>Receive buffer size</value>
     ''' <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while server is running</exception>
     ''' <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
-    ''' <returns>The maximum number of bytes that can be received at a time by the server from the clients.</returns>
+
     Public Overrides Property ReceiveBufferSize() As Integer
         Get
             Return MyBase.ReceiveBufferSize
