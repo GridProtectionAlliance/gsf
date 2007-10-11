@@ -34,7 +34,7 @@ Imports TVA.Interop.Bit
 ''' This structure uses an UInt32 internally for storage and most other common expected integer functionality, so using
 ''' a 24-bit integer will not save memory.  However, if the 24-bit unsigned integer range (0 to 16777215) suits your
 ''' data needs you can save disk space by only storing the three bytes that this integer actually consumes.  You can do
-''' this by calling the UInt24.GetBytes function to return a three binary byte array that can be serialized to the desired
+''' this by calling the UInt24.GetBytes function to return a three byte binary array that can be serialized to the desired
 ''' destination and then calling the UInt24.GetValue function to restore the UInt24 value from those three bytes.
 ''' </para>
 ''' <para>
