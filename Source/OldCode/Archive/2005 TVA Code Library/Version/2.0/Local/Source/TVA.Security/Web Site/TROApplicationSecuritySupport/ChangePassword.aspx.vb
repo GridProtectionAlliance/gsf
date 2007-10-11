@@ -12,7 +12,7 @@ Partial Class ChangePassword
         Dim userName As String = Me.TextBoxUserName.Text.Replace("'", "").Replace("%", "")
         Dim oldPassword As String = Me.TextBoxPassword.Text.Replace("'", "").Replace("%", "")
         Dim newPassword As String = Me.TextBoxNewPassword.Text.Replace("'", "").Replace("%", "")
-
+        Dim errorPageUrl As String = "ErrorPage.aspx"
         If Page.IsValid Then
             Try
                 If Session("ConnectionString") Is Nothing Then
@@ -22,13 +22,10 @@ Partial Class ChangePassword
                 If Session("ApplicationName") Is Nothing Then
                     Response.Redirect("ErrorPage.aspx?t=1", True)
                 End If
-
                 conn = New SqlConnection(Session("ConnectionString"))
 
                 With New User(userName, oldPassword, New SqlConnection(Session("ConnectionString")))
                     If .IsExternal AndAlso .IsAuthenticated Then
-
-
                         If Not conn.State = ConnectionState.Open Then
                             conn.Open()
                         End If
@@ -38,9 +35,10 @@ Partial Class ChangePassword
                             'let user know about the strong password rules.
                             TVA.Security.Application.User.EncryptPassword(newPassword)
                         Catch ex As Exception
-                            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ChangePassword.aspx Submit()", ex.ToString)
-                            Response.Redirect("ErrorPage.aspx?t=3")
+                            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ChangePassword.aspx IncorrectPasswordFormat", ex.ToString)
+                            errorPageUrl = "ErrorPage.aspx?t=3"
                         End Try
+
                         ExecuteNonQuery("ChangePassword", conn, userName, TVA.Security.Application.User.EncryptPassword(oldPassword), TVA.Security.Application.User.EncryptPassword(newPassword))
 
                         Me.LabelError.Text = "Your password has been changed successfully. Please <a href=Login.aspx>login</a> with your new password."
@@ -58,10 +56,10 @@ Partial Class ChangePassword
                     If Not conn.State = ConnectionState.Open Then
                         conn.Open()
                     End If
-                    
+
                     ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ChangePassword.aspx Submit()", sqlEx.ToString)
 
-                    Response.Redirect("ErrorPage.aspx", False)
+                    Response.Redirect(errorPageUrl, False)
                 End If
 
             Catch ex As Exception
@@ -72,7 +70,7 @@ Partial Class ChangePassword
 
                 ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ChangePassword.aspx Submit()", ex.ToString)
 
-                Response.Redirect("ErrorPage.aspx", False)
+                Response.Redirect(errorPageUrl, False)
 
             Finally
                 If conn.State = ConnectionState.Open Then
@@ -82,7 +80,7 @@ Partial Class ChangePassword
             End Try
 
         Else
-            Response.Redirect("ErrorPage.aspx", False)
+            Response.Redirect(errorPageUrl, False)
 
         End If
 
