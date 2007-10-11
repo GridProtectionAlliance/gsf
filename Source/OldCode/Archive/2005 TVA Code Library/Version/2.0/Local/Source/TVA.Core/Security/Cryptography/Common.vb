@@ -654,25 +654,28 @@ Namespace Security.Cryptography
 
             Dim keyChars As Char()
             Dim keyChar As Char
-            Dim y As Integer
+            Dim x, y As Integer
 
             ' Generate a character array of unique values
             With New StringBuilder
                 .Append(StandardKey)
-                .Append(Guid.NewGuid.ToString.ToLower)
+                .Append(Guid.NewGuid.ToString.ToLower.Replace("-", "©ª¦"))
                 .Append(System.DateTime.UtcNow.Ticks)
+                For x = 1 To 50
+                    .Append(Convert.ToChar(RandomInt32Between(33, 255)))
+                Next
                 .Append(Environment.MachineName)
                 .Append(GetKeyFromSeed(Microsoft.VisualBasic.Timer))
                 .Append(Environment.UserDomainName)
                 .Append(Environment.UserName)
                 .Append(Microsoft.VisualBasic.Timer)
-                .Append(System.DateTime.Now.ToString)
-                .Append(Guid.NewGuid.ToString.ToUpper)
-                keyChars = .ToString.Replace(" "c, "©"c).Replace("-"c, "~"c).Replace("/"c, "%"c).ToCharArray
+                .Append(System.DateTime.Now.ToString.Replace("/", "¡¤¥").Replace(" ", "°"))
+                .Append(Guid.NewGuid.ToString.ToUpper.Replace("-", "£§"))
+                keyChars = .ToString().ToCharArray()
             End With
 
             ' Swap values around in array at random
-            For x As Integer = 0 To keyChars.Length - 1
+            For x = 0 To keyChars.Length - 1
                 y = RandomInt32Between(1, keyChars.Length) - 1
                 If x <> y Then
                     keyChar = keyChars(x)
