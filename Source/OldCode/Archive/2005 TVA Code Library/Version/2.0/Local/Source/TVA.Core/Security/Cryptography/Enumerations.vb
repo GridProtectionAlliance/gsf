@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  07/11/2007 - J. Ritchie Carroll
 '       Moved all namespace level enumerations into "Enumerations.vb" file
+'  10/11/2007 - J. Ritchie Carroll
+'       Added "Level 5" encryption to further obfuscate data using bit-rotation
 '
 '*******************************************************************************************************
 
@@ -21,7 +23,7 @@ Namespace Security.Cryptography
     ''' <remarks>
     ''' <para>
     ''' Encryption algorithms are cumulative, the levels represent tradeoffs on speed vs. cipher strength - level 1
-    ''' will have the fastest encryption speed with the simplest encryption strength - level 4 will have the
+    ''' will have the fastest encryption speed with the simplest encryption strength - level 5 will have the
     ''' strongest cumulative encryption strength with the slowest encryption speed.
     ''' </para>
     ''' </remarks>
@@ -29,15 +31,15 @@ Namespace Security.Cryptography
         ''' <summary>Use no encryption</summary>
         None
         ''' <summary>Adds simple multi-alogorithm XOR based encryption</summary>
-        ''' <remarks>This is the fastest and weakest level of encyption</remarks>
         Level1
         ''' <summary>Adds TripleDES based encryption</summary>
         Level2
         ''' <summary>Adds RC2 based encryption</summary>
         Level3
         ''' <summary>Adds RijndaelManaged based enryption</summary>
-        ''' <remarks>This is the slowest and strongest level of encyption</remarks>
         Level4
+        ''' <summary>Adds simple bit-rotation based enryption</summary>
+        Level5
     End Enum
 
 End Namespace

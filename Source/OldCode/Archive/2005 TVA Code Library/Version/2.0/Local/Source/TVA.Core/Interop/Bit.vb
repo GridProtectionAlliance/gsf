@@ -360,64 +360,102 @@ Namespace Interop
 
         End Function
 
-        ''' <summary>
-        ''' Returns the high byte (Int8) from a word (Int16).  On Intel platforms this should return the high-order byte 
-        ''' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the right-most, 
-        ''' most-significant-byte of the integer value.
-        ''' </summary>
+        ''' <summary>Returns the high-byte from a word (Int16).</summary>
+        ''' <param name="word">2-byte, 16-bit signed integer value.</param>
+        ''' <returns>The high-order byte of the specified 16-bit signed integer value.</returns>
+        ''' <remarks>
+        ''' On little-endian architectures (e.g., Intel platforms), this will be the byte value whose in-memory representation
+        ''' is the same as the right-most, most-significant-byte of the integer value.
+        ''' </remarks>
         Public Shared Function HiByte(ByVal word As Int16) As Byte
 
-            Return BitConverter.GetBytes(word)(1)
+            If BitConverter.IsLittleEndian Then
+                Return BitConverter.GetBytes(word)(1)
+            Else
+                Return BitConverter.GetBytes(word)(0)
+            End If
 
         End Function
 
-        ''' <summary>
-        ''' Returns the high word (Int16) from a double word (Int32).  On Intel platforms this should return the high-order word
-        ''' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the right-most,
-        ''' most-significant-word of the integer value.
-        ''' </summary>
+        ''' <summary>Returns the high-word (Int16) from a double-word (Int32).</summary>
+        ''' <param name="doubleWord">4-byte, 32-bit signed integer value.</param>
+        ''' <returns>The high-order word of the specified 32-bit signed integer value.</returns>
+        ''' <remarks>
+        ''' On little-endian architectures (e.g., Intel platforms), this will be the word value
+        ''' whose in-memory representation is the same as the right-most, most-significant-word
+        ''' of the integer value.
+        ''' </remarks>
         Public Shared Function HiWord(ByVal doubleWord As Int32) As Int16
 
-            Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2)
+            If BitConverter.IsLittleEndian Then
+                Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2)
+            Else
+                Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0)
+            End If
 
         End Function
 
-        ''' <summary>
-        ''' Returns the low byte (Int8) from a word (Int16).  On Intel platforms this should return the low-order byte
-        ''' of a 16-bit integer value, i.e., the byte value whose in-memory representation is the same as the left-most,
-        ''' least-significant-byte of the integer value.
-        ''' </summary>
+        ''' <summary>Returns the low-byte from a word (Int16).</summary>
+        ''' <param name="word">2-byte, 16-bit signed integer value.</param>
+        ''' <returns>The low-order byte of the specified 16-bit signed integer value.</returns>
+        ''' <remarks>
+        ''' On little-endian architectures (e.g., Intel platforms), this will be the byte value
+        ''' whose in-memory representation is the same as the left-most, least-significant-byte
+        ''' of the integer value.
+        ''' </remarks>
         Public Shared Function LoByte(ByVal word As Int16) As Byte
 
-            Return BitConverter.GetBytes(word)(0)
+            If BitConverter.IsLittleEndian Then
+                Return BitConverter.GetBytes(word)(0)
+            Else
+                Return BitConverter.GetBytes(word)(1)
+            End If
 
         End Function
 
-        ''' <summary>
-        ''' Returns the low word (Int16) from a double word (Int32).  On Intel platforms this should return the low-order word
-        ''' of a 32-bit integer value, i.e., the word value whose in-memory representation is the same as the left-most,
-        ''' least-significant-word of the integer value.
-        ''' </summary>
+        ''' <summary>Returns the low-word (Int16) from a double-word (Int32).</summary>
+        ''' <param name="doubleWord">4-byte, 32-bit signed integer value.</param>
+        ''' <returns>The low-order word of the specified 32-bit signed integer value.</returns>
+        ''' <remarks>
+        ''' On little-endian architectures (e.g., Intel platforms), this will be the word value
+        ''' whose in-memory representation is the same as the left-most, least-significant-word
+        ''' of the integer value.
+        ''' </remarks>
         Public Shared Function LoWord(ByVal doubleWord As Int32) As Int16
 
-            Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0)
+            If BitConverter.IsLittleEndian Then
+                Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0)
+            Else
+                Return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2)
+            End If
 
         End Function
 
-        ''' <summary>Makes a word (Int16) from two bytes (Int8).</summary>
+        ''' <summary>Makes a word (Int16) from two bytes.</summary>
+        ''' <returns>A 16-bit word made from the two specified bytes.</returns>
         Public Shared Function MakeWord(ByVal high As Byte, ByVal low As Byte) As Int16
 
-            Return BitConverter.ToInt16(New Byte() {low, high}, 0)
+            If BitConverter.IsLittleEndian Then
+                Return BitConverter.ToInt16(New Byte() {low, high}, 0)
+            Else
+                Return BitConverter.ToInt16(New Byte() {high, low}, 0)
+            End If
 
         End Function
 
-        ''' <summary>Makes a double word (Int32) from two words (Int16).</summary>
+        ''' <summary>Makes a double-word (Int32) from two words (Int16).</summary>
+        ''' <returns>A 32-bit double-word made from the two specified 16-bit words.</returns>
         Public Shared Function MakeDWord(ByVal high As Int16, ByVal low As Int16) As Int32
 
             Dim bytes As Byte() = CreateArray(Of Byte)(4)
 
-            Array.Copy(BitConverter.GetBytes(low), 0, bytes, 0, 2)
-            Array.Copy(BitConverter.GetBytes(high), 0, bytes, 2, 2)
+            If BitConverter.IsLittleEndian Then
+                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 2)
+                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 2, 2)
+            Else
+                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 2)
+                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 2, 2)
+            End If
 
             Return BitConverter.ToInt32(bytes, 0)
 

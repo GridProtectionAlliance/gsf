@@ -17,6 +17,9 @@
 '  02/28/2007 - J. Ritchie Carroll
 '       Change string based encrypt and decrypt functions to return null if
 '       input string to be encrypted or decrypted was null or empty
+'  10/11/2007 - J. Ritchie Carroll
+'       Added Obfuscate and Deobfuscate functions that perform data obfuscation
+'       based upon simple bit-rotation algorithms
 '
 '*******************************************************************************************************
 
@@ -85,6 +88,9 @@ Namespace Security.Cryptography
                     data = Encrypt(New RC2CryptoServiceProvider, data, key, IV)
                     If strength >= EncryptLevel.Level4 Then
                         data = Encrypt(New RijndaelManaged, data, key, IV)
+                        If strength >= EncryptLevel.Level5 Then
+                            data = Obfuscate(data, key)
+                        End If
                     End If
                 End If
             End If
@@ -113,6 +119,9 @@ Namespace Security.Cryptography
                     inStream = Encrypt(New RC2CryptoServiceProvider, inStream, key, IV)
                     If strength >= EncryptLevel.Level4 Then
                         inStream = Encrypt(New RijndaelManaged, inStream, key, IV)
+                        If strength >= EncryptLevel.Level5 Then
+                            inStream = Obfuscate(inStream, key)
+                        End If
                     End If
                 End If
             End If
@@ -260,6 +269,7 @@ Namespace Security.Cryptography
             If strength = EncryptLevel.None Then Return data
 
             ' Perform requested levels of decryption
+            If strength >= EncryptLevel.Level5 Then data = Deobfuscate(data, key)
             If strength >= EncryptLevel.Level4 Then data = Decrypt(New RijndaelManaged, data, key, IV)
             If strength >= EncryptLevel.Level3 Then data = Decrypt(New RC2CryptoServiceProvider, data, key, IV)
             If strength >= EncryptLevel.Level2 Then data = Decrypt(New TripleDESCryptoServiceProvider, data, key, IV)
@@ -280,6 +290,8 @@ Namespace Security.Cryptography
 
             If strength = EncryptLevel.None Then Return inStream
 
+            ' Perform requested levels of decryption
+            If strength >= EncryptLevel.Level5 Then inStream = Deobfuscate(inStream, key)
             If strength >= EncryptLevel.Level4 Then inStream = Decrypt(New RijndaelManaged, inStream, key, IV)
             If strength >= EncryptLevel.Level3 Then inStream = Decrypt(New RC2CryptoServiceProvider, inStream, key, IV)
             If strength >= EncryptLevel.Level2 Then inStream = Decrypt(New TripleDESCryptoServiceProvider, inStream, key, IV)
@@ -452,7 +464,8 @@ Namespace Security.Cryptography
                 outStream.Position = 0
                 Return outStream
             Else
-                ' For streams that can't be positioned, we copy all data onto a memory stream and try again
+                ' For streams that can't be positioned (i.e., can't obtain length), we copy all
+                ' data onto a memory stream and try again
                 Dim outStream As New MemoryStream
                 Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
                 Dim read As Integer
@@ -470,13 +483,6 @@ Namespace Security.Cryptography
 
         End Function
 
-        ''' <summary>Encrypts or decrypts a string using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</summary>
-        Public Shared Function Crypt(ByVal str As String, ByVal encryptionKey As String) As String
-
-            Return Encoding.Unicode.GetString(Crypt(Encoding.Unicode.GetBytes(str), Encoding.Unicode.GetBytes(encryptionKey)))
-
-        End Function
-
         ''' <summary>Encrypts or decrypts data using XOR based algorithms.  Call once to encrypt, call again with same key to decrypt.</summary>
         Public Shared Function Crypt(ByVal data As Byte(), ByVal encryptionKey As Byte()) As Byte()
 
@@ -484,7 +490,7 @@ Namespace Security.Cryptography
             ' Repeated encryption sequences do not occur for (3 * encryptionKey.Length) unique bytes
 
             Dim cryptData As Byte() = CreateArray(Of Byte)(data.Length)
-            Dim keyPos As Long
+            Dim keyIndex As Long
             Dim algorithm As Integer
             Dim cryptChar As Integer
 
@@ -492,18 +498,15 @@ Namespace Security.Cryptography
             Rnd(-1)
             Randomize(encryptionKey(0))
 
-            keyPos = 0
-            algorithm = 0
-
             For x As Integer = 0 To data.Length - 1
                 cryptData(x) = data(x)
                 If cryptData(x) > 0 Then
                     Select Case algorithm
                         Case 0
-                            cryptChar = encryptionKey(keyPos)
+                            cryptChar = encryptionKey(keyIndex)
                             If cryptData(x) <> cryptChar Then cryptData(x) = (cryptData(x) Xor cryptChar)
                         Case 1
-                            cryptChar = Int(Rnd() * (encryptionKey(keyPos) + 1))
+                            cryptChar = Int(Rnd() * (encryptionKey(keyIndex) + 1))
                             If cryptData(x) <> cryptChar Then cryptData(x) = (cryptData(x) Xor cryptChar)
                         Case 2
                             cryptChar = Int(Rnd() * 256)
@@ -517,9 +520,129 @@ Namespace Security.Cryptography
                     algorithm = 0
 
                     ' Select next encryption key
-                    keyPos = keyPos + 1
-                    If keyPos > encryptionKey.Length - 1 Then keyPos = 0
+                    keyIndex += 1
+                    If keyIndex > encryptionKey.Length - 1 Then keyIndex = 0
                 End If
+            Next
+
+            Return cryptData
+
+        End Function
+
+        ''' <summary>Obfuscates input stream onto output stream using bit-rotation algorithms.</summary>
+        Public Shared Function Obfuscate(ByVal inStream As Stream, ByVal encryptionKey As Byte()) As Stream
+
+            If inStream.CanSeek Then
+                Dim outStream As New MemoryStream
+                Dim buffer As Byte() = CreateArray(Of Byte)(inStream.Length)
+
+                inStream.Read(buffer, 0, buffer.Length)
+                buffer = Obfuscate(buffer, encryptionKey)
+                outStream.Write(buffer, 0, buffer.Length)
+
+                outStream.Position = 0
+                Return outStream
+            Else
+                ' For streams that can't be positioned (i.e., can't obtain length), we copy all
+                ' data onto a memory stream and try again
+                Dim outStream As New MemoryStream
+                Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
+                Dim read As Integer
+
+                read = inStream.Read(buffer, 0, BufferSize)
+
+                While read > 0
+                    outStream.Write(buffer, 0, read)
+                    read = inStream.Read(buffer, 0, BufferSize)
+                End While
+
+                outStream.Position = 0
+                Return Obfuscate(outStream, encryptionKey)
+            End If
+
+        End Function
+
+        ''' <summary>Obfuscates data using bit-rotation algorithms.</summary>
+        Public Shared Function Obfuscate(ByVal data As Byte(), ByVal encryptionKey As Byte()) As Byte()
+
+            Dim key As Byte
+            Dim keyIndex As Long = encryptionKey.Length - 1
+            Dim cryptData As Byte() = CreateArray(Of Byte)(data.Length)
+
+            ' Start bit rotation cycle
+            For x As Integer = 0 To cryptData.Length - 1
+                ' Get current key value
+                key = encryptionKey(keyIndex)
+
+                If key Mod 2 = 0 Then
+                    cryptData(x) = BitRotL(data(x), key)
+                Else
+                    cryptData(x) = BitRotR(data(x), key)
+                End If
+
+                ' Select next encryption key index
+                keyIndex -= 1
+                If keyIndex < 0 Then keyIndex = encryptionKey.Length - 1
+            Next
+
+            Return cryptData
+
+        End Function
+
+        ''' <summary>Deobfuscates input stream onto output stream using bit-rotation algorithms.</summary>
+        Public Shared Function Deobfuscate(ByVal inStream As Stream, ByVal encryptionKey As Byte()) As Stream
+
+            If inStream.CanSeek Then
+                Dim outStream As New MemoryStream
+                Dim buffer As Byte() = CreateArray(Of Byte)(inStream.Length)
+
+                inStream.Read(buffer, 0, buffer.Length)
+                buffer = Deobfuscate(buffer, encryptionKey)
+                outStream.Write(buffer, 0, buffer.Length)
+
+                outStream.Position = 0
+                Return outStream
+            Else
+                ' For streams that can't be positioned (i.e., can't obtain length), we copy all
+                ' data onto a memory stream and try again
+                Dim outStream As New MemoryStream
+                Dim buffer As Byte() = CreateArray(Of Byte)(BufferSize)
+                Dim read As Integer
+
+                read = inStream.Read(buffer, 0, BufferSize)
+
+                While read > 0
+                    outStream.Write(buffer, 0, read)
+                    read = inStream.Read(buffer, 0, BufferSize)
+                End While
+
+                outStream.Position = 0
+                Return Deobfuscate(outStream, encryptionKey)
+            End If
+
+        End Function
+
+        ''' <summary>Deobfuscates data using bit-rotation algorithms.</summary>
+        Public Shared Function Deobfuscate(ByVal data As Byte(), ByVal encryptionKey As Byte()) As Byte()
+
+            Dim key As Byte
+            Dim keyIndex As Long = encryptionKey.Length - 1
+            Dim cryptData As Byte() = CreateArray(Of Byte)(data.Length)
+
+            ' Start bit rotation cycle
+            For x As Integer = 0 To cryptData.Length - 1
+                ' Get current key value
+                key = encryptionKey(keyIndex)
+
+                If key Mod 2 = 0 Then
+                    cryptData(x) = BitRotR(data(x), key)
+                Else
+                    cryptData(x) = BitRotL(data(x), key)
+                End If
+
+                ' Select next encryption key index
+                keyIndex -= 1
+                If keyIndex < 0 Then keyIndex = encryptionKey.Length - 1
             Next
 
             Return cryptData
@@ -539,7 +662,7 @@ Namespace Security.Cryptography
                 .Append(Guid.NewGuid.ToString.ToLower)
                 .Append(System.DateTime.UtcNow.Ticks)
                 .Append(Environment.MachineName)
-                .Append(GetSeedFromKey(Microsoft.VisualBasic.Timer))
+                .Append(GetKeyFromSeed(Microsoft.VisualBasic.Timer))
                 .Append(Environment.UserDomainName)
                 .Append(Environment.UserName)
                 .Append(Microsoft.VisualBasic.Timer)
@@ -562,32 +685,29 @@ Namespace Security.Cryptography
 
         End Function
 
-        ''' <summary>Returns a coded string representing a number which can later be decoded with <see cref="GetSeedFromKey" />.</summary>
-        ''' <remarks>
-        ''' <para>This function was designed for Microsoft.VisualBasic.Timer values.</para>
-        ''' </remarks>
-        Public Shared Function GetKeyFromSeed(ByVal seed As Integer) As String
+        ''' <summary>Returns a simple encoded string representing a number which can later be decoded with <see cref="GetSeedFromKey" />.</summary>
+        ''' <remarks>This function was designed for 24-bit values.</remarks>
+        Public Shared Function GetKeyFromSeed(ByVal seed As Int24) As String
 
-            ' This is a handy algorithm for encoding a timer value
-            ' Use GetSeedFromKey to decode
-
-            Dim alphaIndex As Integer
+            ' This is a handy algorithm for encoding an integer value, use GetSeedFromKey to decode
+            Dim seedValue As Int32 = CType(seed, Int32)
             Dim seedBytes(3) As Byte
+            Dim alphaIndex As Integer
+            Dim asciiA As Integer = Asc("A"c)
 
-            If seed < 0 Then Throw New ArgumentException("Cannot calculate key from negative seed")
-            If LoByte(LoWord(seed)) > 0 Then Throw New ArgumentException("Seed is too large (function was designed for Microsoft.VisualBasic.Timer values)")
+            If seedValue < 0 Then Throw New ArgumentException("Cannot calculate key from negative seed")
 
             ' Break seed into its component bytes
-            seedBytes(0) = HiByte(HiWord(seed))
-            seedBytes(1) = LoByte(HiWord(seed))
-            seedBytes(2) = HiByte(LoWord(seed))
+            seedBytes(0) = LoByte(LoWord(seedValue))
+            seedBytes(1) = HiByte(LoWord(seedValue))
+            seedBytes(2) = LoByte(HiWord(seedValue))
 
             ' Create alpha-numeric key string
             With New StringBuilder
                 For x As Integer = 0 To 2
                     alphaIndex = RandomInt32Between(0, 25)
                     If x > 0 Then .Append("-"c)
-                    .Append(Convert.ToChar(Asc("A"c) + (25 - alphaIndex)))
+                    .Append(Convert.ToChar(asciiA + (25 - alphaIndex)))
                     .Append(seedBytes(x) + alphaIndex)
                 Next
 
@@ -596,8 +716,10 @@ Namespace Security.Cryptography
 
         End Function
 
-        ''' <summary>Returns the number from a string coded with <see cref="GetKeyFromSeed" />.</summary>
-        Public Shared Function GetSeedFromKey(ByVal key As String) As Integer
+        ''' <summary>Returns the number from a string encoded with <see cref="GetKeyFromSeed" />.</summary>
+        Public Shared Function GetSeedFromKey(ByVal key As String) As Int24
+
+            If String.IsNullOrEmpty(key) Then Throw New ArgumentNullException("key", "key cannot be null")
 
             Dim seedBytes As Byte() = CreateArray(Of Byte)(3)
             Dim delimeter1 As Integer
@@ -606,9 +728,9 @@ Namespace Security.Cryptography
             Dim value As Integer
 
             ' Remove all white space from specified parameter
-            key = key.Trim.ToUpper
+            key = key.Trim().ToUpper()
 
-            If Len(key) > 5 And Len(key) < 15 Then
+            If key.Length > 5 And key.Length < 15 Then
                 ' Get Delimiter positions
                 delimeter1 = InStr(key, "-")
                 delimeter2 = InStr(delimeter1 + 1, key, "-", 0)
@@ -638,7 +760,7 @@ Namespace Security.Cryptography
                     Next
 
                     ' Create seed from its component bytes
-                    Return MakeDWord(MakeWord(seedBytes(0), seedBytes(1)), MakeWord(seedBytes(2), 0))
+                    Return MakeDWord(MakeWord(0, seedBytes(2)), MakeWord(seedBytes(1), seedBytes(0)))
                 End If
             End If
 
