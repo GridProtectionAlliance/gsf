@@ -6,6 +6,7 @@ Partial Class _Default
 
     Public Sub New()
         MyBase.New("TRO_APP_SEC", CType(System.Configuration.ConfigurationManager.AppSettings("SecurityServer"), SecurityServer), False)
+        'MyBase.New("TRO_APP_SEC", SecurityServer.Productio, False)
     End Sub
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load

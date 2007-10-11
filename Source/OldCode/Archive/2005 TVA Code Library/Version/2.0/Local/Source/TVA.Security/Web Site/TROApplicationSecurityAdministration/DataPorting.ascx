@@ -1,5 +1,16 @@
 <%@ Control Language="VB" AutoEventWireup="false" CodeFile="DataPorting.ascx.vb" Inherits="DataPorting" %>
 
+<script language=javascript>
+    function CompareSources()
+    {
+        if (document.getElementById("UltraWebTabTools__ctl8_DataPorting1_DropDownListSource").value == document.getElementById("UltraWebTabTools__ctl8_DataPorting1_DropDownListDestination").value)
+        {
+            alert("Please Select Different Source and Destination Databases.");
+            return false;        
+        }
+    }
+</script>
+
 <br />
 <table border=0 cellpadding=2 cellspacing=1 width="750" align=center>
      <tr>
@@ -16,11 +27,11 @@
     </tr>
     <tr>
         <td class="whiteCell"><asp:Label ID="Label4" runat="server" CssClass="Label" Text="Application:"></asp:Label></td>
-        <td class="whiteCell"><asp:DropDownList ID="DropDownListApplication" runat="server"></asp:DropDownList></td>
+        <td class="whiteCell"><asp:DropDownList ID="DropDownListApplication" runat="server" CssClass="TextBox"></asp:DropDownList></td>
         <td class="whiteCell"><asp:Label ID="Label2" runat="server" CssClass="Label" Text="Source:"></asp:Label></td>
-        <td class="whiteCell"><asp:DropDownList ID="DropDownListSource" runat="server"></asp:DropDownList></td>
+        <td class="whiteCell"><asp:DropDownList ID="DropDownListSource" runat="server" CssClass="TextBox"></asp:DropDownList></td>
         <td class="whiteCell"><asp:Label ID="Label3" runat="server" CssClass="Label" Text="Destination:"></asp:Label></td>
-        <td class="whiteCell"><asp:DropDownList ID="DropDownListDestination" runat="server"></asp:DropDownList></td>
+        <td class="whiteCell"><asp:DropDownList ID="DropDownListDestination" runat="server" CssClass="TextBox"></asp:DropDownList></td>
         <td class="whiteCell" align="right"><asp:Button ID="ButtonCompare" runat="server" CssClass="buttonText" Text="Compare" /></td>
     </tr>    
 </table>

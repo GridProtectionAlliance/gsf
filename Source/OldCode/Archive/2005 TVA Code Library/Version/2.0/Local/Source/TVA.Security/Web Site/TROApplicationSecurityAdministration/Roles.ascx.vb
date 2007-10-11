@@ -44,7 +44,17 @@ Partial Class Roles
     Private Sub PopulateApplications()
         'Repopulate dropdown
         Me.DropDownListApplications.Items.Clear()
+        Me.DropDownListSelectApplications.Items.Clear()
+
         With Me.DropDownListApplications
+            .DataSource = appsAdapter.GetApplications
+            .DataTextField = "ApplicationName"
+            .DataValueField = "ApplicationID"
+            .DataBind()
+            .SelectedIndex = 0
+        End With
+
+        With Me.DropDownListSelectApplications
             .DataSource = appsAdapter.GetApplications
             .DataTextField = "ApplicationName"
             .DataValueField = "ApplicationID"
@@ -54,6 +64,7 @@ Partial Class Roles
 
         If Not ViewState("App") = "" Then
             Me.DropDownListApplications.SelectedValue = ViewState("App")
+            Me.DropDownListSelectApplications.SelectedValue = ViewState("App")
         End If
     End Sub
 
@@ -157,12 +168,16 @@ Partial Class Roles
                 Me.LabelMessage.Text = "Role Name already exists."
                 Exit Sub
             End If
+            Me.LabelMessage.Text = ""
 
-            rolesAdapter.InsertRole(newRoleDescription, newRoleName, New Guid(Me.DropDownListApplications.SelectedValue.ToString))
+            'rolesAdapter.InsertRole(newRoleDescription, newRoleName, New Guid(Me.DropDownListApplications.SelectedValue.ToString))
+            'when we add new role we will use application selected from the top dropdown list.
+            rolesAdapter.InsertRole(newRoleDescription, newRoleName, New Guid(Me.DropDownListSelectApplications.SelectedValue.ToString))
 
         Else
             If ViewState("Role") <> "" Then
                 Dim origRoleID As Guid = rolesAdapter.GetRoleID(ViewState("Role").ToString)
+                'when we update role, we will use application selected from the bottom dropdown list.
                 rolesAdapter.UpdateRole(newRoleDescription, newRoleName, origRoleID, New Guid(Me.DropDownListApplications.SelectedValue.ToString))
             End If
         End If
@@ -222,6 +237,7 @@ Partial Class Roles
     ''' <remarks></remarks>
     Protected Sub DropDownListApplications_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles DropDownListApplications.SelectedIndexChanged
         ViewState("App") = Me.DropDownListApplications.SelectedValue.ToString
+        Me.DropDownListSelectApplications.SelectedValue = Me.DropDownListApplications.SelectedValue
         Me.BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
         ClearForm()
     End Sub
@@ -266,6 +282,12 @@ Partial Class Roles
             If Me.DropDownListApplications.Items.Count > 0 Then
                 BindToGrid(New Guid(Me.DropDownListApplications.SelectedValue.ToString))
             End If
+        End If
+
+        If ViewState("Mode") = "Add" Then
+            Me.DropDownListSelectApplications.Enabled = True
+        ElseIf ViewState("Mode") = "Edit" Then
+            Me.DropDownListSelectApplications.Enabled = False
         End If
     End Sub
 

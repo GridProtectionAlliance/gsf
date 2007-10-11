@@ -32,7 +32,15 @@ Partial Class ChangePassword
                         If Not conn.State = ConnectionState.Open Then
                             conn.Open()
                         End If
-
+                        Try
+                            'EncryptPassword will throw an exception if password does not meet 
+                            'the strong password criteria. This is placed in try catch just to 
+                            'let user know about the strong password rules.
+                            TVA.Security.Application.User.EncryptPassword(newPassword)
+                        Catch ex As Exception
+                            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "ChangePassword.aspx Submit()", ex.ToString)
+                            Response.Redirect("ErrorPage.aspx?t=3")
+                        End Try
                         ExecuteNonQuery("ChangePassword", conn, userName, TVA.Security.Application.User.EncryptPassword(oldPassword), TVA.Security.Application.User.EncryptPassword(newPassword))
 
                         Me.LabelError.Text = "Your password has been changed successfully. Please <a href=Login.aspx>login</a> with your new password."

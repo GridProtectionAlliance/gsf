@@ -2,10 +2,11 @@
 Partial Class DataPorting
     Inherits System.Web.UI.UserControl
 
-    Private appsAdapter As New DevelopmentDSTableAdapters.ApplicationsTableAdapter
-
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
         If Not IsPostBack Then
+
+            Dim appsAdapter As New DevelopmentDSTableAdapters.ApplicationsTableAdapter
             With Me.DropDownListSource
                 With .Items
                     .Add(New ListItem("Development", "0"))
@@ -30,7 +31,25 @@ Partial Class DataPorting
                 .DataValueField = "ApplicationID"
                 .DataBind()
             End With
+
+            Me.ButtonCompare.Attributes.Add("OnClick", "CompareSources()")
+
         End If
+
+    End Sub
+
+    Protected Sub ButtonCompare_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles ButtonCompare.Click
+
+        Dim appsAdapter As Object
+
+        If Me.DropDownListSource.SelectedValue = "0" Then
+            appsAdapter = New DevelopmentDSTableAdapters.ApplicationsTableAdapter
+        ElseIf Me.DropDownListSource.SelectedValue = "1" Then
+
+        ElseIf Me.DropDownListSource.SelectedValue = "2" Then
+
+        End If
+
     End Sub
 
 End Class

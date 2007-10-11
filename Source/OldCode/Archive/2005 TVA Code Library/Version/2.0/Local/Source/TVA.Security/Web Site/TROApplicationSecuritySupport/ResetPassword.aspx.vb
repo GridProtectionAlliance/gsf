@@ -100,6 +100,16 @@ Partial Class ResetPassword
                             If Not emailAddress = "" Then
                                 Dim newPassword As String = TVA.Security.Application.User.GeneratePassword(8)
 
+                                Try
+                                    'EncryptPassword will throw an exception if password does not meet 
+                                    'the strong password criteria. This is placed in try catch just to 
+                                    'let user know about the strong password rules.
+                                    TVA.Security.Application.User.EncryptPassword(newPassword)
+                                Catch ex As Exception
+                                    ExecuteNonQuery("LogError", conn, Session("ApplicationName").ToString, "ResetPassword.aspx Submit()", ex.ToString)
+                                    Response.Redirect("ErrorPage.aspx?t=3")
+                                End Try
+
                                 ExecuteNonQuery("ResetPassword", conn, userName, securityQuestion, securityAnswer, TVA.Security.Application.User.EncryptPassword(newPassword))
 
                                 Me.LabelError.Text = "Your password has been reset. You will soon receive an email with your new password. You must change your password by clicking on the Change Password link below."

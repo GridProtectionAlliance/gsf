@@ -6,6 +6,7 @@ Partial Class ErrorPage
         AccessDenied
         AppNotConfig
         LockedOut
+        PasswordFormat
     End Enum
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
@@ -25,6 +26,13 @@ Partial Class ErrorPage
                     Case ErrorTypes.LockedOut
                         Me.LabelErrorType.Text = "Account Locked Out"
                         Me.LabelDetailError.Text = "Your account has been locked out."
+                    Case ErrorTypes.PasswordFormat
+                        Me.LabelErrorType.Text = "Incorrect Password Format"
+                        Me.LabelDetailError.Text = "Password does not meet the following criteria:<br />" & _
+                                "<ul>" & "<li>Password must be at least 8 characters</li>" & _
+                                        "<li>Password must contain at least 1 digit</li>" & _
+                                        "<li>Password must contain at least 1 upper case letter</li>" & _
+                                        "<li>Password must contain at least 1 lower case letter</li>" & "</ul>"
                     Case Else
                         Me.LabelErrorType.Text = "Error Occured"
                         Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please check that your username and password is correct." & _

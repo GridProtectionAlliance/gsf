@@ -18,6 +18,13 @@
     </tr>     
     <tr>
         <td class="whiteCell">
+            <asp:Label ID="Label4" runat="server" CssClass="Label" Text="Application:"></asp:Label></td>
+        <td class="whiteCell" colspan="3">
+            <asp:DropDownList ID="DropDownListSelectApplications" runat="server" CssClass="TextBox" Width="200" AutoPostBack="True">
+            </asp:DropDownList></td>
+    </tr>
+    <tr>
+        <td class="whiteCell">
             <asp:Label ID="Label2" runat="server" CssClass="Label" Text="Role Name:"></asp:Label></td>
         <td class="whiteCell" colspan=3>
             <asp:TextBox ID="TextBoxName" runat="server" CssClass="TextBox" Width="490px"></asp:TextBox>

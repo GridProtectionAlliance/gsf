@@ -148,6 +148,7 @@ Partial Class Users
     End Sub
 
     Private Sub PopulateUserInfo(ByVal userName As String)
+        ClearForm()
         Dim users As Security.UsersAndCompaniesAndSecurityQuestionsDataTable = Me.userAndCompaniesAndSecurityQuestionsAdapter.GetUserByUserName(userName)
         Dim user As Security.UsersAndCompaniesAndSecurityQuestionsRow = users.Rows(0)
 
