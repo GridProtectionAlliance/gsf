@@ -1,6 +1,6 @@
 '*******************************************************************************************************
 '  TVA.Int24.vb - Representation of a 3-byte, 24-bit signed integer
-'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'  Copyright © 2007 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
 '  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
