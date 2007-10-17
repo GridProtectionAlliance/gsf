@@ -50,6 +50,7 @@ Public Class Service
     Private m_lastDisplayedMessageTime As Long
     Private m_displayedMessageCount As Long
     Private m_statusMessageQueue As ProcessQueue(Of String)
+    Private m_useLocalClockAsRealTime As Boolean
 
 #End Region
 
@@ -60,7 +61,7 @@ Public Class Service
         ' Make sure service settings exist
         'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoextsql;Initial Catalog=PMU_SDS;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         'Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PMU_SDS.mdb", "PMU metaData database connect string")
-        Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=rgocdsql;Initial Catalog=PhasorMeasurementData;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
+        Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoasqlgendat\gendat;Initial Catalog=PhasorMeasurementData;User ID=NaspiApp;pwd=pw4site", "PMU metaData database connect string")
         Settings.Add("ReportingTolerance", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         Settings.Add("StatusReportingInterval", "10", "How often to update PMU reporting status in database in seconds - this should match time required by update trigger which calculates uptime")
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
@@ -68,12 +69,16 @@ Public Class Service
         Settings.Add("MeasurementDumpingThreshold", "500000", "Number of unarchived measurements allowed in a historian queue before taking evasive action and dumping data")
         Settings.Add("MessageDisplayTimespan", "2", "Timespan, in seconds, over which to monitor message volume")
         Settings.Add("MaximumMessagesToDisplay", "100", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
-        Settings.Add("EnableLogFile", "True", "Set to ""True"" to enable log file")
+        Settings.Add("EnableLogFile", "True", "Set to True to enable log file")
+        Settings.Add("UseLocalClockAsRealTime", "True", "Set to True if local clock is very close to GPS, other set to False to use most recently received timestamp")
         SaveSettings()
 
         ' Set message display queue
         m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 50, Timeout.Infinite, False, False)
         m_statusMessageQueue.Start()
+
+        ' Determine if local system is configured with a real-time clock
+        m_useLocalClockAsRealTime = BooleanSetting("UseLocalClockAsRealTime")
 
         ServiceHelper.LogStatusUpdates = BooleanSetting("EnableLogFile")
 
@@ -350,6 +355,9 @@ Public Class Service
                                 Convert.ToByte(.Item("NominalFrequency")), _
                                 Convert.ToUInt16(.Item("IDCode")))
 
+                            ' It's optimal to use local clock as real-time if local clock can be trusted...
+                            measurementConcentrator.UseLocalClockAsRealTime = m_useLocalClockAsRealTime
+
                             ' Start measurement concentrator
                             measurementConcentrator.Start()
 
@@ -463,6 +471,11 @@ Public Class Service
                         End Try
 
                         If calculatedMeasurementAdapter IsNot Nothing Then
+                            ' For calculated measurements that use a concentrator as their base class, we adjust UseLocalClockAsRealTime
+                            ' property as needed - it's optimal to use local clock as real-time if local clock can be trusted...
+                            Dim concentrator As ConcentratorBase = TryCast(calculatedMeasurementAdapter, ConcentratorBase)
+                            If concentrator IsNot Nothing Then concentrator.UseLocalClockAsRealTime = m_useLocalClockAsRealTime
+
                             ' Bubble calculation module status messages out to local update status function
                             AddHandler calculatedMeasurementAdapter.StatusMessage, AddressOf DisplayStatusMessage
 

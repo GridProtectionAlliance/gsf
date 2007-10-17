@@ -276,6 +276,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         ' Define protocol independent configuration frame based on PMU filter expression
         Dim configurationFrame As New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond))
+        Dim cell As ConfigurationCell
 
         If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Active <> 0"
 
@@ -283,7 +284,7 @@ Public MustInherit Class PhasorDataConcentratorBase
         With RetrieveData(pmuFilterSql, connection).Rows
             For x As Integer = 0 To .Count - 1
                 With .Item(x)
-                    Dim cell As New ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency)
+                    cell = New ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency)
 
                     ' To allow rectangular phasors and/or scaled values - make adjustments here...
                     cell.PhasorDataFormat = DataFormat.FloatingPoint
@@ -291,8 +292,8 @@ Public MustInherit Class PhasorDataConcentratorBase
                     cell.FrequencyDataFormat = DataFormat.FloatingPoint
                     cell.AnalogDataFormat = DataFormat.FloatingPoint
 
-                    cell.IDLabel = TruncateRight(.Item("Acronym").ToString(), cell.IDLabelLength)
-                    cell.StationName = TruncateRight(.Item("Name").ToString(), cell.MaximumStationNameLength)
+                    cell.IDLabel = TruncateRight(.Item("Acronym").ToString(), cell.IDLabelLength).Trim()
+                    cell.StationName = TruncateRight(.Item("Name").ToString(), cell.MaximumStationNameLength).Trim()
 
                     ' Load all phasors as defined in the database
                     With RetrieveData(String.Format("SELECT * FROM Phasor WHERE PmuID={0} ORDER BY IOIndex", Convert.ToInt32(.Item("ID"))), connection).Rows
@@ -301,12 +302,11 @@ Public MustInherit Class PhasorDataConcentratorBase
                                 cell.PhasorDefinitions.Add( _
                                     New PhasorDefinition( _
                                         cell, y, _
-                                            TruncateRight(String.Format("{0} {1}{2} {3}", _
-                                                .Item("BpaAcronym").ToString(), _
-                                                .Item("PhaseType").ToString(), _
-                                                .Item("Type").ToString(), _
-                                                .Item("Label").ToString()), _
-                                            cell.MaximumStationNameLength), _
+                                            TruncateRight(String.Format("{1}{2} {3}", _
+                                                .Item("PhaseType").ToString().Trim(), _
+                                                .Item("Type").ToString().Trim(), _
+                                                .Item("Label").ToString().Trim()), _
+                                            cell.MaximumStationNameLength).Trim(), _
                                         1, 0.0F, IIf(.Item("Type").ToString().StartsWith( _
                                             "V", StringComparison.OrdinalIgnoreCase), _
                                             PhasorType.Voltage, PhasorType.Current), Nothing))
@@ -316,7 +316,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
                     ' Add frequency definition
                     cell.FrequencyDefinition = New FrequencyDefinition( _
-                        cell, String.Format("{0} Frequency", cell.IDLabel), _
+                        cell, String.Format("{0} Frequency", cell.TrimLabel), _
                         Convert.ToInt32(.Item("FreqScale")), _
                         Convert.ToSingle(.Item("FreqOffset")), _
                         Convert.ToInt32(.Item("DfDtScale")), _

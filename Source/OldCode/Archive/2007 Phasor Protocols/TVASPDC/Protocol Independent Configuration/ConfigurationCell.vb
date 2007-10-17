@@ -77,6 +77,21 @@ Public Class ConfigurationCell
         End Get
     End Property
 
+    ' No need to restrict ID's to 4 characters non BPA stream usages
+    Public Overrides ReadOnly Property IDLabelLength() As Integer
+        Get
+            Return 100
+        End Get
+    End Property
+
+    ' Labels will be padded to the right to IDLabelLength (for proper protocol formatting) - this property
+    ' provides trimmed (non-padded) textual representation...
+    Public ReadOnly Property TrimLabel() As String
+        Get
+            Return MyBase.IDLabel.Trim()
+        End Get
+    End Property
+
     Public ReadOnly Property SignalSynonym(ByVal signal As SignalType) As String
         Get
             ' We cache non-indexed signal reference strings so they don't need to be generated at each mapping call.
@@ -90,7 +105,7 @@ Public Class ConfigurationCell
             synonyms = CreateArray(Of String)(1)
 
             ' Create and cache new non-indexed signal reference
-            synonyms(0) = SignalReference.ToString(IDLabel, signal)
+            synonyms(0) = SignalReference.ToString(TrimLabel, signal)
 
             ' Cache generated signal synonym
             m_signalSynonyms.Add(signal, synonyms)
@@ -114,7 +129,7 @@ Public Class ConfigurationCell
                     ' Lookup signal reference "synonym" value of given signal index
                     If synonyms(signalIndex) Is Nothing Then
                         ' Didn't find signal index, create and cache new signal reference
-                        synonyms(signalIndex) = SignalReference.ToString(IDLabel, signal, signalIndex + 1)
+                        synonyms(signalIndex) = SignalReference.ToString(TrimLabel, signal, signalIndex + 1)
                     End If
 
                     Return synonyms(signalIndex)
@@ -125,7 +140,7 @@ Public Class ConfigurationCell
             synonyms = CreateArray(Of String)(signalCount)
 
             ' Create and cache new signal reference
-            synonyms(signalIndex) = SignalReference.ToString(IDLabel, signal, signalIndex + 1)
+            synonyms(signalIndex) = SignalReference.ToString(TrimLabel, signal, signalIndex + 1)
 
             ' Cache generated signal synonym array
             m_signalSynonyms.Add(signal, synonyms)

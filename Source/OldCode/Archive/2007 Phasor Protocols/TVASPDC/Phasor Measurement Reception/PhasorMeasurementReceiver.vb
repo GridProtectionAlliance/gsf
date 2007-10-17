@@ -145,7 +145,7 @@ Public Class PhasorMeasurementReceiver
                     parser = New MultiProtocolFrameParser
                     configurationCells = New Dictionary(Of UInt16, ConfigurationCell)
 
-                    source = row("Acronym").ToString().Trim().ToUpper()
+                    source = row("Acronym").ToString().ToUpper().Trim()
                     timezone = row("TimeZone").ToString()
                     timeAdjustmentTicks = Convert.ToInt64(row("TimeOffsetTicks"))
                     accessID = Convert.ToUInt16(row("AccessID"))
@@ -186,7 +186,7 @@ Public Class PhasorMeasurementReceiver
                         With RetrieveData(String.Format("SELECT ID, AccessID, Acronym FROM PdcPmus WHERE PdcID='{0}' AND Historian='{1}' ORDER BY IOIndex", row("ID"), m_archiverSource), connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
-                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), .Item("Acronym").ToString().Trim().ToUpper())
+                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), row("Acronym").ToString().ToUpper().Trim())
                                     configCell.Tag = .Item("ID")
                                     configurationCells.Add(configCell.IDCode, configCell)
 
@@ -194,7 +194,7 @@ Public Class PhasorMeasurementReceiver
                                     loadedPmuStatus.Append("   PMU ")
                                     loadedPmuStatus.Append(y.ToString("00"))
                                     loadedPmuStatus.Append(": ")
-                                    loadedPmuStatus.Append(configCell.IDLabel)
+                                    loadedPmuStatus.Append(configCell.TrimLabel)
                                     loadedPmuStatus.Append(" (")
                                     loadedPmuStatus.Append(configCell.IDCode)
                                     loadedPmuStatus.Append(")"c)
@@ -367,20 +367,18 @@ Public Class PhasorMeasurementReceiver
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
                     ' Update reporting status for each PMU
                     For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
-                        If Not String.IsNullOrEmpty(cell.IDLabel) Then
-                            With New StringBuilder
-                                reporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_reportingTolerance, -1, 0)
+                        With New StringBuilder
+                            reporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_reportingTolerance, -1, 0)
 
-                                .Append("UPDATE Pmu SET Reporting=")
-                                .Append(reporting)
-                                .Append(", ReportTime='")
-                                .Append(DateTime.UtcNow.ToString())
-                                .Append("' WHERE ID=")
-                                .Append(cell.Tag.ToString())
+                            .Append("UPDATE Pmu SET Reporting=")
+                            .Append(reporting)
+                            .Append(", ReportTime='")
+                            .Append(DateTime.UtcNow.ToString())
+                            .Append("' WHERE ID=")
+                            .Append(cell.Tag.ToString())
 
-                                ExecuteNonQuery(.ToString(), connection)
-                            End With
-                        End If
+                            ExecuteNonQuery(.ToString(), connection)
+                        End With
                     Next
                 Next
             Catch ex As Exception

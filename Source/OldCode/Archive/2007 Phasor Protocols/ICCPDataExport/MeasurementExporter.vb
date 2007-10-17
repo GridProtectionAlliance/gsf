@@ -143,7 +143,7 @@ Public Class MeasurementExporter
 
         If m_useReferenceAngle Then
             ' Lastly, we also need to determine which angle is the reference angle
-            With RetrieveRow("SELECT * FROM OutputReferenceAngleMeasurement", connection)
+            With RetrieveRow("SELECT * FROM CalcOutputReferenceAngleMeasurement", connection)
                 m_referenceAngleKey = New MeasurementKey( _
                     Convert.ToInt32(.Item("MeasurementID")), _
                     .Item("ArchiveSource").ToString())
