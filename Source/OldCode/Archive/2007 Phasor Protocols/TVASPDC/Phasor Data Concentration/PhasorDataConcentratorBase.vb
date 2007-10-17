@@ -292,7 +292,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                     cell.FrequencyDataFormat = DataFormat.FloatingPoint
                     cell.AnalogDataFormat = DataFormat.FloatingPoint
 
-                    cell.IDLabel = TruncateRight(.Item("Acronym").ToString(), cell.IDLabelLength).Trim()
+                    cell.IDLabel = .Item("Acronym").ToString().Trim()
                     cell.StationName = TruncateRight(.Item("Name").ToString(), cell.MaximumStationNameLength).Trim()
 
                     ' Load all phasors as defined in the database
@@ -302,7 +302,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                                 cell.PhasorDefinitions.Add( _
                                     New PhasorDefinition( _
                                         cell, y, _
-                                            TruncateRight(String.Format("{1}{2} {3}", _
+                                            TruncateRight(String.Format("{0}{1} {2}", _
                                                 .Item("PhaseType").ToString().Trim(), _
                                                 .Item("Type").ToString().Trim(), _
                                                 .Item("Label").ToString().Trim()), _
@@ -316,9 +316,9 @@ Public MustInherit Class PhasorDataConcentratorBase
 
                     ' Add frequency definition
                     cell.FrequencyDefinition = New FrequencyDefinition( _
-                        cell, String.Format("{0} Frequency", cell.TrimLabel), _
-                        Convert.ToInt32(.Item("FreqScale")), _
-                        Convert.ToSingle(.Item("FreqOffset")), _
+                        cell, String.Format("{0} Frequency", cell.IDLabel), _
+                        Convert.ToInt32(.Item("FrequencyScale")), _
+                        Convert.ToSingle(.Item("FrequencyOffset")), _
                         Convert.ToInt32(.Item("DfDtScale")), _
                         Convert.ToSingle(.Item("DfDtOffset")))
 

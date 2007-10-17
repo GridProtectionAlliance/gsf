@@ -161,7 +161,7 @@ Public Class PhasorMeasurementMapper
                     ' Attempt to lookup station name in configuration frame of connected device
                     stationName = Nothing
                     If m_frameParser.ConfigurationFrame IsNot Nothing AndAlso m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(cell.IDCode, pmu) Then stationName = pmu.StationName
-                    If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.TrimLabel & ">"
+                    If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.IDLabel & ">"
 
                     .Append(TruncateRight(stationName, 22).PadRight(22))
                     .Append(" "c)
@@ -233,7 +233,7 @@ Public Class PhasorMeasurementMapper
                     If Not displayChildren Then
                         ' Could still be a PDC with one child - so we'll compare the names
                         With m_configurationCells.Values.GetEnumerator()
-                            If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.TrimLabel, True) <> 0)
+                            If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.IDLabel, True) <> 0)
                         End With
                     End If
 

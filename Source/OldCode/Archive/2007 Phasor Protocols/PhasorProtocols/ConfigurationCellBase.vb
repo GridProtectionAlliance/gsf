@@ -152,21 +152,25 @@ Public MustInherit Class ConfigurationCellBase
             If value.Trim.Length > IDLabelLength Then
                 Throw New OverflowException("ID label must not be more than " & IDLabelLength & " characters in length")
             Else
-                m_idLabel = GetValidLabel(value).PadRight(IDLabelLength)
+                m_idLabel = GetValidLabel(value).Trim()
             End If
         End Set
     End Property
 
     Public Overridable ReadOnly Property IDLabelImage() As Byte() Implements IConfigurationCell.IDLabelImage
         Get
-            Return Encoding.ASCII.GetBytes(m_idLabel)
+            If IDLabelLength < Int32.MaxValue Then
+                Return Encoding.ASCII.GetBytes(m_idLabel.PadRight(IDLabelLength))
+            Else
+                Return Encoding.ASCII.GetBytes(m_idLabel)
+            End If
         End Get
     End Property
 
     Public Overridable ReadOnly Property IDLabelLength() As Int32 Implements IConfigurationCell.IDLabelLength
         Get
-            ' ID label length is 4 characters
-            Return 4
+            ' We don't restrict this for most protocols...
+            Return Int32.MaxValue
         End Get
     End Property
 

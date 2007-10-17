@@ -194,7 +194,7 @@ Public Class PhasorMeasurementReceiver
                                     loadedPmuStatus.Append("   PMU ")
                                     loadedPmuStatus.Append(y.ToString("00"))
                                     loadedPmuStatus.Append(": ")
-                                    loadedPmuStatus.Append(configCell.TrimLabel)
+                                    loadedPmuStatus.Append(configCell.IDLabel)
                                     loadedPmuStatus.Append(" (")
                                     loadedPmuStatus.Append(configCell.IDCode)
                                     loadedPmuStatus.Append(")"c)

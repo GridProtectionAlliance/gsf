@@ -124,6 +124,13 @@ Namespace BpaPdcStream
             End Set
         End Property
 
+        Public Overrides ReadOnly Property IDLabelLength() As Int32
+            Get
+                ' BPA PDCstream ID label length is 4 characters - max!
+                Return 4
+            End Get
+        End Property
+
         Public Property SectionEntry() As String
             Get
                 If m_configurationFileCell Is Nothing Then
