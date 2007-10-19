@@ -42,6 +42,7 @@ Public Class PhasorMeasurementMapper
 
     Private WithEvents m_frameParser As MultiProtocolFrameParser
     Private WithEvents m_dataStreamMonitor As Timers.Timer
+    Private WithEvents m_delayedConnection As Timers.Timer
     Private m_archiverSource As String
     Private m_source As String
     Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
@@ -83,29 +84,45 @@ Public Class PhasorMeasurementMapper
             .Enabled = False
         End With
 
+        m_delayedConnection = New Timers.Timer
+
+        With m_delayedConnection
+            .AutoReset = False
+            .Interval = 1500
+            .Enabled = False
+        End With
         m_undefinedPmus = New Dictionary(Of String, Long)
 
     End Sub
 
     Public Sub Connect()
 
-        m_lastReportTime = 0
-
         ' Make sure we are disconnected before attempting a connection
         Disconnect()
 
-        ' Start frame parser (this will attempt connection)...
-        m_frameParser.Start()
+        m_lastReportTime = 0
+
+        ' Start timer for delayed connection
+        m_delayedConnection.Enabled = True
 
     End Sub
 
     Public Sub Disconnect()
 
+        ' Stop delayed connection timer, if enabled
+        If m_delayedConnection IsNot Nothing Then m_delayedConnection.Enabled = False
+
         ' Stop data stream monitor, if running
         If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Enabled = False
 
         ' Stop multi-protocol frame parser
-        If m_frameParser IsNot Nothing Then m_frameParser.Stop()
+        If m_frameParser IsNot Nothing Then
+            ' We perform disconnect on a separate thread since this can give us troubles :(
+            With New Thread(AddressOf m_frameParser.Stop)
+                .Start()
+                If Not .Join(1000) Then .Abort()
+            End With
+        End If
 
         If m_attemptingConnection Then UpdateStatus(String.Format("Canceling connection cycle to {0}.", Name))
 
@@ -558,6 +575,14 @@ Public Class PhasorMeasurementMapper
         End If
 
         m_bytesReceived = 0
+
+    End Sub
+
+    ' Delayed connection handler
+    Private Sub m_delayedConnection_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_delayedConnection.Elapsed
+
+        ' Start frame parser (this will attempt connection)...
+        m_frameParser.Start()
 
     End Sub
 

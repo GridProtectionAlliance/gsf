@@ -90,7 +90,6 @@ Partial Class Service
         '
         'Service
         '
-        Me.CanPauseAndContinue = True
         Me.CanShutdown = True
         Me.ServiceName = "TVASPDC"
         CType(Me.TcpServer, System.ComponentModel.ISupportInitialize).EndInit()

@@ -278,6 +278,9 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim configurationFrame As New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond))
         Dim cell As ConfigurationCell
 
+        ' We'll give a full config frame of validated PMU's when debugging...
+        'If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Interconnection = 'Eastern' AND Validated <> 0"
+
         If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Active <> 0"
 
         ' TODO: Will need to allow a way to define digitals and analogs in the ouput stream at some point
@@ -301,22 +304,19 @@ Public MustInherit Class PhasorDataConcentratorBase
                             With .Item(y)
                                 cell.PhasorDefinitions.Add( _
                                     New PhasorDefinition( _
-                                        cell, y, _
-                                            TruncateRight(String.Format("{0}{1} {2}", _
-                                                .Item("PhaseType").ToString().Trim(), _
-                                                .Item("Type").ToString().Trim(), _
-                                                .Item("Label").ToString().Trim()), _
-                                            cell.MaximumStationNameLength).Trim(), _
+                                        cell, y, GeneratePhasorLabel( _
+                                        .Item("Label"), .Item("PhaseType"), .Item("Type"), _
+                                        cell.MaximumStationNameLength), _
                                         1, 0.0F, IIf(.Item("Type").ToString().StartsWith( _
-                                            "V", StringComparison.OrdinalIgnoreCase), _
-                                            PhasorType.Voltage, PhasorType.Current), Nothing))
+                                        "V", StringComparison.OrdinalIgnoreCase), _
+                                        PhasorType.Voltage, PhasorType.Current), Nothing))
                             End With
                         Next
                     End With
 
                     ' Add frequency definition
                     cell.FrequencyDefinition = New FrequencyDefinition( _
-                        cell, String.Format("{0} Frequency", cell.IDLabel), _
+                        cell, String.Format("{0} Freq", TruncateRight(cell.IDLabel, 11)).Trim(), _
                         Convert.ToInt32(.Item("FrequencyScale")), _
                         Convert.ToSingle(.Item("FrequencyOffset")), _
                         Convert.ToInt32(.Item("DfDtScale")), _
@@ -373,6 +373,35 @@ Public MustInherit Class PhasorDataConcentratorBase
         End With
 
     End Sub
+
+    Private Function GeneratePhasorLabel(ByVal phasorlabel As Object, ByVal phaseType As Object, ByVal type As Object, ByVal maxLength As Integer) As String
+
+        With New StringBuilder
+            If phasorlabel IsNot Nothing AndAlso Not TypeOf phasorlabel Is DBNull Then
+                .Append(RemoveDuplicateWhiteSpace(TruncateRight(phasorlabel.ToString(), maxLength - 4).Trim()))
+
+                Select Case phaseType.ToString().Trim().ToUpper().Chars(0)
+                    Case "+"c ' Positive Sequence
+                        .Append(" +S")
+                    Case "-"c ' Negative Sequence
+                        .Append(" -S")
+                    Case "0"c ' Zero Sequence
+                        .Append(" 0S")
+                    Case "A"c ' A Phase
+                        .Append(" AP")
+                    Case "B"c ' B Phase
+                        .Append(" BP")
+                    Case "C"c ' C Phase
+                        .Append(" CP")
+                End Select
+
+                .Append(type.ToString().Trim().ToUpper().Chars(0))
+            End If
+
+            Return .ToString().Trim()
+        End With
+
+    End Function
 
     Public ReadOnly Property ConfigurationFrame() As IConfigurationFrame
         Get

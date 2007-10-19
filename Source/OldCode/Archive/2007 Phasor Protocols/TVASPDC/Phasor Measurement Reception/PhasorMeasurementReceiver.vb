@@ -127,6 +127,9 @@ Public Class PhasorMeasurementReceiver
             Dim measurementIDs As New Dictionary(Of String, IMeasurement)
             Dim configCell As ConfigurationCell
             Dim parser As MultiProtocolFrameParser
+            Dim keys As Dictionary(Of String, String)
+            Dim transport As String
+            Dim iniFileName As String
             Dim row As DataRow
             Dim source As String
             Dim timezone As String
@@ -150,7 +153,13 @@ Public Class PhasorMeasurementReceiver
                     timeAdjustmentTicks = Convert.ToInt64(row("TimeOffsetTicks"))
                     accessID = Convert.ToUInt16(row("AccessID"))
 
-                    ' Setup phasor frame parser
+                    ' Initialize connection string
+                    parser.ConnectionString = row("ConnectionString").ToString()
+
+                    ' We pre-parse the connection string for special parameters
+                    keys = ParseKeyValuePairs(parser.ConnectionString)
+
+                    ' Define phasor protocol
                     Try
                         parser.PhasorProtocol = DirectCast([Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol").ToString(), True), PhasorProtocol)
                     Catch ex As ArgumentException
@@ -159,15 +168,29 @@ Public Class PhasorMeasurementReceiver
                         parser.PhasorProtocol = PhasorProtocol.IeeeC37_118V1
                     End Try
 
-                    ' Initialize connection string
-                    parser.ConnectionString = row("ConnectionString").ToString()
+                    ' Define transport protocol
+                    Try
+                        If keys.TryGetValue("protocol", transport) Then
+                            parser.TransportProtocol = DirectCast([Enum].Parse(GetType(TransportProtocol), transport, True), TransportProtocol)
+                        Else
+                            UpdateStatus(String.Format("Didn't find transport protocol in connection string for ""{0}"": ""{1}"" - defaulting to TCP.", source, parser.ConnectionString))
+                            parser.TransportProtocol = TransportProtocol.Tcp
+                        End If
+                    Catch ex As ArgumentException
+                        UpdateStatus(String.Format("Unexpected transport protocol encountered for ""{0}"": {1} - defaulting to TCP.", source, transport))
+                        m_exceptionLogger.Log(ex)
+                        parser.TransportProtocol = TransportProtocol.Tcp
+                    End Try
 
                     ' Handle special connection parameters
                     If parser.PhasorProtocol = PhasorProtocol.BpaPdcStream Then
                         ' Make sure required INI configuration file parameter gets initialized for BPA streams
                         With DirectCast(parser.ConnectionParameters, BpaPdcStream.ConnectionParameters)
-                            Dim keys As Dictionary(Of String, String) = ParseKeyValuePairs(parser.ConnectionString)
-                            .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), keys("inifilename"))
+                            If keys.TryGetValue("inifilename", iniFileName) Then
+                                .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), keys("inifilename"))
+                            Else
+                                UpdateStatus(String.Format("Didn't find INI filename setting (e.g., ""inifilename=DEVICE_PDC.ini"") required for BPA PDCstream protocol in connection string for ""{0}"": ""{1}"" - device may fail to connect.", source, parser.ConnectionString))
+                            End If
                             .RefreshConfigurationFileOnChange = True
                             .ParseWordCountFromByte = False
                         End With
@@ -252,8 +275,13 @@ Public Class PhasorMeasurementReceiver
                         ' Add mapper to collection
                         m_mappers.Add(source, .This)
 
-                        ' Start connection cycle
-                        .Connect()
+                        Try
+                            ' Attempt to start connection cycle
+                            .Connect()
+                        Catch ex As Exception
+                            UpdateStatus(String.Format("Connection attempt failed for ""{0}"": {1}", source, ex.Message))
+                            m_exceptionLogger.Log(ex)
+                        End Try
                     End With
                 Next
             End With
