@@ -56,14 +56,22 @@ Public Class AverageFrequencyCalculator
         With frame.Measurements
             ' We need to get at least one frequency for this calculation...
             If .Count > 0 Then
+                Dim frequency As Double
                 Dim frequencyTotal As Double
+                Dim total As Integer
 
                 ' Calculate average magnitude
                 For Each measurement As IMeasurement In .Values
-                    frequencyTotal += measurement.AdjustedValue
+                    frequency = measurement.AdjustedValue
+
+                    ' Validate frequency
+                    If frequency > 57 AndAlso frequency < 62 Then
+                        frequencyTotal += measurement.AdjustedValue
+                        total += 1
+                    End If
                 Next
 
-                m_averageFrequency = (frequencyTotal / .Count)
+                m_averageFrequency = (frequencyTotal / total)
 
                 ' Provide calculated measurement for external consumption
                 PublishNewCalculatedMeasurement(Measurement.Clone(OutputMeasurements(0), m_averageFrequency, frame.Ticks))
