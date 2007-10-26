@@ -209,7 +209,7 @@ Public Class PhasorMeasurementReceiver
                         With RetrieveData(String.Format("SELECT ID, AccessID, Acronym FROM PdcPmus WHERE PdcID='{0}' AND Historian='{1}' ORDER BY IOIndex", row("ID"), m_archiverSource), connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
-                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), row("Acronym").ToString().ToUpper().Trim())
+                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), .Item("Acronym").ToString().ToUpper().Trim())
                                     configCell.Tag = .Item("ID")
                                     configurationCells.Add(configCell.IDCode, configCell)
 
