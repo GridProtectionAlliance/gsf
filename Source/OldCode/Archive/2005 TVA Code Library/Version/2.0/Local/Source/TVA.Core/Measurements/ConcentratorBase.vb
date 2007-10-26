@@ -751,7 +751,7 @@ Namespace Measurements
                     If Not m_useLocalClockAsRealTime Then
                         .Append("      Local clock accuracy: ")
                         .Append(DistanceFromRealTime(Date.UtcNow.Ticks).ToString("0.0000"))
-                        .Append(" second deviation from lastest time")
+                        .Append(" second deviation from latest time")
                         .AppendLine()
                     End If
                     .Append(" Allowing sorts by arrival: ")
