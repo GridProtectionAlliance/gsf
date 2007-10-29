@@ -51,6 +51,7 @@ Public Class Service
     Private m_displayedMessageCount As Long
     Private m_statusMessageQueue As ProcessQueue(Of String)
     Private m_useLocalClockAsRealTime As Boolean
+    Private m_allowSortsByArrival As Boolean
 
 #End Region
 
@@ -71,6 +72,7 @@ Public Class Service
         Settings.Add("MaximumMessagesToDisplay", "100", "Maximum number of messages to be tolerated during MessageDisplayTimespan")
         Settings.Add("EnableLogFile", "True", "Set to True to enable log file")
         Settings.Add("UseLocalClockAsRealTime", "True", "Set to True if local clock is very close to GPS, other set to False to use most recently received timestamp")
+        Settings.Add("AllowSortsByArrival", "False", "Set to True to allow sorting of measurements by arrival for bad timestamps")
         SaveSettings()
 
         ' Set message display queue
@@ -79,6 +81,9 @@ Public Class Service
 
         ' Determine if local system is configured with a real-time clock
         m_useLocalClockAsRealTime = BooleanSetting("UseLocalClockAsRealTime")
+
+        ' Determine whether or not to allow measurement sorting by arrival for measurements with bad time quality
+        m_allowSortsByArrival = BooleanSetting("AllowSortsByArrival")
 
         ServiceHelper.LogStatusUpdates = BooleanSetting("EnableLogFile")
 
@@ -358,6 +363,9 @@ Public Class Service
                             ' It's optimal to use local clock as real-time if local clock can be trusted...
                             measurementConcentrator.UseLocalClockAsRealTime = m_useLocalClockAsRealTime
 
+                            ' Determine whether or not to allow sorts by arrival for bad timestamps...
+                            measurementConcentrator.AllowSortsByArrival = m_allowSortsByArrival
+
                             ' Start measurement concentrator
                             measurementConcentrator.Start()
 
@@ -474,7 +482,10 @@ Public Class Service
                             ' For calculated measurements that use a concentrator as their base class, we adjust UseLocalClockAsRealTime
                             ' property as needed - it's optimal to use local clock as real-time if local clock can be trusted...
                             Dim concentrator As ConcentratorBase = TryCast(calculatedMeasurementAdapter, ConcentratorBase)
-                            If concentrator IsNot Nothing Then concentrator.UseLocalClockAsRealTime = m_useLocalClockAsRealTime
+                            If concentrator IsNot Nothing Then
+                                concentrator.UseLocalClockAsRealTime = m_useLocalClockAsRealTime
+                                concentrator.AllowSortsByArrival = m_allowSortsByArrival
+                            End If
 
                             ' Bubble calculation module status messages out to local update status function
                             AddHandler calculatedMeasurementAdapter.StatusMessage, AddressOf DisplayStatusMessage
