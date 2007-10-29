@@ -183,9 +183,16 @@ Namespace IO
                 ' Creates the folder in which the log file will reside it, if it does not exist.
                 If Not Directory.Exists(JustPath(m_name)) Then Directory.CreateDirectory(JustPath(m_name))
                 ' Opens the log file (if it exists) or creates it (if it does not exist).
-                m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate)
+                m_fileStream = New FileStream(m_name, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite)
                 ' Scrolls to the end of the file so that existing data is not overwritten.
                 m_fileStream.Seek(0, SeekOrigin.End)
+                ' If this is a new log file, set its creation date to current date. This is done to prevent historic 
+                ' log files (when FileFullOperation = Rollover) from having the same start time in their filename.
+                If m_fileStream.Length = 0 Then
+                    With New FileInfo(m_name)
+                        .CreationTime = Date.Now
+                    End With
+                End If
 
                 ' Starts the queue to which log entries are going to be added.
                 m_logEntryQueue.Start()
