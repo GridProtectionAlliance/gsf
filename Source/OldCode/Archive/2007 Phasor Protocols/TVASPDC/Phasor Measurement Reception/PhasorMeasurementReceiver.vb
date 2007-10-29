@@ -135,6 +135,8 @@ Public Class PhasorMeasurementReceiver
             Dim timezone As String
             Dim timeAdjustmentTicks As Long
             Dim accessID As UInt16
+            Dim isVirtual As Boolean
+            Dim virtualSetting As String
             Dim x, y As Integer
 
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)(StringComparer.OrdinalIgnoreCase)
@@ -159,45 +161,57 @@ Public Class PhasorMeasurementReceiver
                     ' We pre-parse the connection string for special parameters
                     keys = ParseKeyValuePairs(parser.ConnectionString)
 
-                    ' Define phasor protocol
-                    Try
-                        parser.PhasorProtocol = DirectCast([Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol").ToString(), True), PhasorProtocol)
-                    Catch ex As ArgumentException
-                        UpdateStatus(String.Format("Unexpected phasor protocol encountered for ""{0}"": {1} - defaulting to IEEE C37.118 V1.", source, row("PhasorProtocol")))
-                        m_exceptionLogger.Log(ex)
-                        parser.PhasorProtocol = PhasorProtocol.IeeeC37_118V1
-                    End Try
+                    ' See if this is a virtual device
+                    isVirtual = False
 
-                    ' Define transport protocol
-                    Try
-                        If keys.TryGetValue("protocol", transport) Then
-                            parser.TransportProtocol = DirectCast([Enum].Parse(GetType(TransportProtocol), transport, True), TransportProtocol)
-                        Else
-                            UpdateStatus(String.Format("Didn't find transport protocol in connection string for ""{0}"": ""{1}"" - defaulting to TCP.", source, parser.ConnectionString))
-                            parser.TransportProtocol = TransportProtocol.Tcp
-                        End If
-                    Catch ex As ArgumentException
-                        UpdateStatus(String.Format("Unexpected transport protocol encountered for ""{0}"": {1} - defaulting to TCP.", source, transport))
-                        m_exceptionLogger.Log(ex)
-                        parser.TransportProtocol = TransportProtocol.Tcp
-                    End Try
-
-                    ' Handle special connection parameters
-                    If parser.PhasorProtocol = PhasorProtocol.BpaPdcStream Then
-                        ' Make sure required INI configuration file parameter gets initialized for BPA streams
-                        With DirectCast(parser.ConnectionParameters, BpaPdcStream.ConnectionParameters)
-                            If keys.TryGetValue("inifilename", iniFileName) Then
-                                .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), keys("inifilename"))
-                            Else
-                                UpdateStatus(String.Format("Didn't find INI filename setting (e.g., ""inifilename=DEVICE_PDC.ini"") required for BPA PDCstream protocol in connection string for ""{0}"": ""{1}"" - device may fail to connect.", source, parser.ConnectionString))
-                            End If
-                            .RefreshConfigurationFileOnChange = True
-                            .ParseWordCountFromByte = False
-                        End With
+                    If keys.TryGetValue("virtual", virtualSetting) Then
+                        isVirtual = ParseBoolean(virtualSetting)
                     End If
 
-                    parser.DeviceID = accessID
-                    parser.SourceName = source
+                    If Not isVirtual Then
+                        ' Define phasor protocol
+                        Try
+                            parser.PhasorProtocol = DirectCast([Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol").ToString(), True), PhasorProtocol)
+                        Catch ex As ArgumentException
+                            UpdateStatus(String.Format("Unexpected phasor protocol encountered for ""{0}"": {1} - defaulting to IEEE C37.118 V1.", source, row("PhasorProtocol")))
+                            m_exceptionLogger.Log(ex)
+                            parser.PhasorProtocol = PhasorProtocol.IeeeC37_118V1
+                        End Try
+
+                        ' Define transport protocol
+                        Try
+                            If keys.TryGetValue("protocol", transport) Then
+                                parser.TransportProtocol = DirectCast([Enum].Parse(GetType(TransportProtocol), transport, True), TransportProtocol)
+                            Else
+                                UpdateStatus(String.Format("Didn't find transport protocol in connection string for ""{0}"": ""{1}"" - defaulting to TCP.", source, parser.ConnectionString))
+                                parser.TransportProtocol = TransportProtocol.Tcp
+                            End If
+                        Catch ex As ArgumentException
+                            UpdateStatus(String.Format("Unexpected transport protocol encountered for ""{0}"": {1} - defaulting to TCP.", source, transport))
+                            m_exceptionLogger.Log(ex)
+                            parser.TransportProtocol = TransportProtocol.Tcp
+                        End Try
+
+                        ' Handle special connection parameters
+                        If parser.PhasorProtocol = PhasorProtocol.BpaPdcStream Then
+                            ' Make sure required INI configuration file parameter gets initialized for BPA streams
+                            With DirectCast(parser.ConnectionParameters, BpaPdcStream.ConnectionParameters)
+                                If keys.TryGetValue("inifilename", iniFileName) Then
+                                    .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), keys("inifilename"))
+                                Else
+                                    UpdateStatus(String.Format("Didn't find INI filename setting (e.g., ""inifilename=DEVICE_PDC.ini"") required for BPA PDCstream protocol in connection string for ""{0}"": ""{1}"" - device may fail to connect.", source, parser.ConnectionString))
+                                End If
+                                .RefreshConfigurationFileOnChange = True
+                                .ParseWordCountFromByte = False
+                            End With
+                        End If
+
+                        parser.DeviceID = accessID
+                        parser.SourceName = source
+                    Else
+                        ' Nothing to parse for virtual devices...
+                        parser = Nothing
+                    End If
 
                     If ParseBoolean(row("IsConcentrator").ToString()) Then
                         UpdateStatus(String.Format("Loading expected PMU list for ""{0}"":", source))
@@ -209,7 +223,7 @@ Public Class PhasorMeasurementReceiver
                         With RetrieveData(String.Format("SELECT ID, AccessID, Acronym FROM PdcPmus WHERE PdcID='{0}' AND Historian='{1}' ORDER BY IOIndex", row("ID"), m_archiverSource), connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
-                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), .Item("Acronym").ToString().ToUpper().Trim())
+                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), .Item("Acronym").ToString().ToUpper().Trim(), False)
                                     configCell.Tag = .Item("ID")
                                     configurationCells.Add(configCell.IDCode, configCell)
 
@@ -229,7 +243,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus(loadedPmuStatus.ToString())
                     Else
                         ' Making a connection to a single device
-                        configCell = New ConfigurationCell(accessID, source)
+                        configCell = New ConfigurationCell(accessID, source, isVirtual)
                         configCell.Tag = row("ID")
                         configurationCells.Add(accessID, configCell)
                     End If
@@ -395,6 +409,9 @@ Public Class PhasorMeasurementReceiver
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
                     ' Update reporting status for each PMU
                     For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
+                        ' We'll assign times for virtual PMU's 
+                        If cell.IsVirtual Then cell.LastReportTime = DateTime.UtcNow.Ticks
+
                         With New StringBuilder
                             reporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_reportingTolerance, -1, 0)
 

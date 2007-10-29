@@ -33,6 +33,7 @@ Public Class ConfigurationCell
     Private m_totalDataQualityErrors As Long
     Private m_totalTimeQualityErrors As Long
     Private m_totalPmuErrors As Long
+    Private m_isVirtual As Boolean
 
     Private m_analogDataFormat As PhasorProtocols.DataFormat
     Private m_frequencyDataFormat As PhasorProtocols.DataFormat
@@ -64,16 +65,23 @@ Public Class ConfigurationCell
 
     End Sub
 
-    Public Sub New(ByVal idCode As UInt16, ByVal idLabel As String)
+    Public Sub New(ByVal idCode As UInt16, ByVal idLabel As String, ByVal isVirtual As Boolean)
 
         MyClass.New(Nothing, idCode, LineFrequency.Hz60)
         MyClass.IDLabel = idLabel
+        m_isVirtual = isVirtual
 
     End Sub
 
     Public Overrides ReadOnly Property DerivedType() As System.Type
         Get
             Return Me.GetType()
+        End Get
+    End Property
+
+    Public ReadOnly Property IsVirtual() As Boolean
+        Get
+            Return m_isVirtual
         End Get
     End Property
 

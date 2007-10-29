@@ -103,7 +103,12 @@ Public Class PhasorMeasurementMapper
         m_lastReportTime = 0
 
         ' Start timer for delayed connection
-        m_delayedConnection.Enabled = True
+        If m_frameParser Is Nothing Then
+            ' Virtual connections will be assumed to be connected
+            m_isConnected = True
+        Else
+            m_delayedConnection.Enabled = True
+        End If
 
     End Sub
 
@@ -156,8 +161,10 @@ Public Class PhasorMeasurementMapper
                 .Append("Phasor Data Parsing Connection for ")
                 .Append(Name)
                 .AppendLine()
-                .Append(m_frameParser.Status)
-                .AppendLine()
+                If m_frameParser IsNot Nothing Then
+                    .Append(m_frameParser.Status)
+                    .AppendLine()
+                End If
                 .Append(CenterText("Parsed Frame Quality Statistics", 78))
                 .AppendLine()
                 .AppendLine()
@@ -177,7 +184,9 @@ Public Class PhasorMeasurementMapper
                 For Each cell As ConfigurationCell In m_configurationCells.Values
                     ' Attempt to lookup station name in configuration frame of connected device
                     stationName = Nothing
-                    If m_frameParser.ConfigurationFrame IsNot Nothing AndAlso m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(cell.IDCode, pmu) Then stationName = pmu.StationName
+                    If m_frameParser IsNot Nothing Then
+                        If m_frameParser.ConfigurationFrame IsNot Nothing AndAlso m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(cell.IDCode, pmu) Then stationName = pmu.StationName
+                    End If
                     If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.IDLabel & ">"
 
                     .Append(TruncateRight(stationName, 22).PadRight(22))
@@ -229,7 +238,11 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property TotalBytesReceived() As Long
         Get
-            Return m_frameParser.TotalBytesReceived
+            If m_frameParser Is Nothing Then
+                Return 0
+            Else
+                Return m_frameParser.TotalBytesReceived
+            End If
         End Get
     End Property
 
