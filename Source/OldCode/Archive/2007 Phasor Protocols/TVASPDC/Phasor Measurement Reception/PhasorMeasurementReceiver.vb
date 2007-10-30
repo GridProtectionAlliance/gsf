@@ -125,10 +125,10 @@ Public Class PhasorMeasurementReceiver
         Try
             m_intializing = True
 
-            Dim configurationCells As Dictionary(Of UInt16, ConfigurationCell)
-            Dim measurementIDs As New Dictionary(Of String, IMeasurement)
-            Dim configCell As ConfigurationCell
             Dim parser As MultiProtocolFrameParser
+            Dim configurationCells As Dictionary(Of UInt16, ConfigurationCell)
+            Dim measurementIDs As Dictionary(Of String, IMeasurement)
+            Dim configCell As ConfigurationCell
             Dim keys As Dictionary(Of String, String)
             Dim transport As String
             Dim iniFileName As String
@@ -151,7 +151,7 @@ Public Class PhasorMeasurementReceiver
 
                     parser = New MultiProtocolFrameParser
                     configurationCells = New Dictionary(Of UInt16, ConfigurationCell)
-                    measurementIDs.Clear()
+                    measurementIDs = New Dictionary(Of String, IMeasurement)
 
                     source = row("Acronym").ToString().ToUpper().Trim()
                     timezone = row("TimeZone").ToString()
