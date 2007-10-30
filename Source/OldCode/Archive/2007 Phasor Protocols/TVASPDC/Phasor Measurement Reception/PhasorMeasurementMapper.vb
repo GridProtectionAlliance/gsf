@@ -58,6 +58,8 @@ Public Class PhasorMeasurementMapper
     Private m_timeAdjustmentTicks As Long
     Private m_attemptingConnection As Boolean
     Private m_undefinedPmus As Dictionary(Of String, Long)
+    Private m_hasVirtualCells As Boolean
+    Private m_checkedForVirtualCells As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
@@ -163,8 +165,12 @@ Public Class PhasorMeasurementMapper
                 .AppendLine()
                 If m_frameParser IsNot Nothing Then
                     .Append(m_frameParser.Status)
+                Else
+                    .AppendLine()
+                    .Append(">> No frame parser defined for this device.")
                     .AppendLine()
                 End If
+                .AppendLine()
                 .Append(CenterText("Parsed Frame Quality Statistics", 78))
                 .AppendLine()
                 .AppendLine()
@@ -189,15 +195,19 @@ Public Class PhasorMeasurementMapper
                     End If
                     If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.IDLabel & ">"
 
-                    .Append(TruncateRight(stationName, 22).PadRight(22))
-                    .Append(" "c)
-                    .Append(CenterText(cell.TotalDataQualityErrors.ToString(), 10))
-                    .Append(" "c)
-                    .Append(CenterText(cell.TotalTimeQualityErrors.ToString(), 10))
-                    .Append(" "c)
-                    .Append(CenterText(cell.TotalPmuErrors.ToString(), 10))
-                    .Append(" "c)
-                    .Append(CenterText(cell.TotalFrames.ToString(), 10))
+                    If cell.IsVirtual Then
+                        .Append(TruncateRight(">> Virtual device: " & stationName, 62).PadRight(62))
+                    Else
+                        .Append(TruncateRight(stationName, 22).PadRight(22))
+                        .Append(" "c)
+                        .Append(CenterText(cell.TotalDataQualityErrors.ToString(), 10))
+                        .Append(" "c)
+                        .Append(CenterText(cell.TotalTimeQualityErrors.ToString(), 10))
+                        .Append(" "c)
+                        .Append(CenterText(cell.TotalPmuErrors.ToString(), 10))
+                        .Append(" "c)
+                        .Append(CenterText(cell.TotalFrames.ToString(), 10))
+                    End If
                     .Append(" "c)
                     .Append((New Date(cell.LastReportTime)).ToString("HH:mm:ss.fff"))
                     .AppendLine()
@@ -292,6 +302,45 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
+    Public ReadOnly Property HasVirtualCells() As Boolean
+        Get
+            ' Mapper configuration doesn't change during its lifecycle - so
+            ' we only check to see if there are virtual cells once
+            If Not m_checkedForVirtualCells Then
+                For Each cell As ConfigurationCell In m_configurationCells.Values
+                    If cell.IsVirtual Then
+                        m_hasVirtualCells = True
+                        Exit For
+                    End If
+                Next
+
+                m_checkedForVirtualCells = True
+            End If
+
+            Return m_hasVirtualCells
+        End Get
+    End Property
+
+    Public Sub ReceivedNewVirtualMeasurements(ByVal cell As ConfigurationCell, ByVal measurements As List(Of IMeasurement))
+
+        ' We use this function to verify that the virutal device is actually reporting - that is, that
+        ' the composed points that make up this virtual device are actually being calculated...
+        Dim measurement As IMeasurement
+
+        For x As Integer = 0 To measurements.Count - 1
+            measurement = measurements(x)
+
+            If m_measurementIDs.ContainsValue(measurement) Then
+                ' Track lastest reporting time
+                Dim ticks As Long = measurement.Ticks
+                If ticks > cell.LastReportTime Then cell.LastReportTime = ticks
+                If ticks > m_lastReportTime Then m_lastReportTime = ticks
+                Exit For
+            End If
+        Next
+
+    End Sub
+
     Public Property TimeZone() As Win32TimeZone
         Get
             Return m_timezone
@@ -356,7 +405,7 @@ Public Class PhasorMeasurementMapper
     Private Sub m_frameParser_ReceivedDataFrame(ByVal frame As IDataFrame) Handles m_frameParser.ReceivedDataFrame
 
         ' Map data frame measurement instances to their associated point ID's
-        Dim pmu As ConfigurationCell
+        Dim cell As ConfigurationCell
         Dim dataCell As IDataCell
         Dim phasors As PhasorValueCollection
         Dim analogs As AnalogValueCollection
@@ -369,7 +418,7 @@ Public Class PhasorMeasurementMapper
         If m_timezone IsNot Nothing Then frame.Ticks = m_timezone.ToUniversalTime(frame.Timestamp).Ticks
 
         ' We also allow "fine tuning" of time for fickle GPS clocks...
-        If m_timeAdjustmentTicks > 0 Then frame.Ticks += m_timeAdjustmentTicks
+        If m_timeAdjustmentTicks <> 0 Then frame.Ticks += m_timeAdjustmentTicks
 
         ' Get ticks of this frame
         ticks = frame.Ticks
@@ -381,19 +430,19 @@ Public Class PhasorMeasurementMapper
                 dataCell = frame.Cells(x)
 
                 ' Lookup PMU information by its ID code
-                If m_configurationCells.TryGetValue(dataCell.IDCode, pmu) Then
+                If m_configurationCells.TryGetValue(dataCell.IDCode, cell) Then
                     ' Track lastest reporting time
-                    If ticks > pmu.LastReportTime Then pmu.LastReportTime = ticks
+                    If ticks > cell.LastReportTime Then cell.LastReportTime = ticks
                     If ticks > m_lastReportTime Then m_lastReportTime = ticks
 
                     ' Track quality statistics for this PMU
-                    pmu.TotalFrames += 1
-                    If Not dataCell.DataIsValid Then pmu.TotalDataQualityErrors += 1
-                    If Not dataCell.SynchronizationIsValid Then pmu.TotalTimeQualityErrors += 1
-                    If dataCell.PmuError Then pmu.TotalPmuErrors += 1
+                    cell.TotalFrames += 1
+                    If Not dataCell.DataIsValid Then cell.TotalDataQualityErrors += 1
+                    If Not dataCell.SynchronizationIsValid Then cell.TotalTimeQualityErrors += 1
+                    If dataCell.PmuError Then cell.TotalPmuErrors += 1
 
                     ' Map status flags (SF) from PMU data cell itself
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Status), dataCell)
+                    MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.Status), dataCell)
 
                     ' Map phase angles (PAn) and magnitudes (PMn)
                     phasors = dataCell.PhasorValues
@@ -404,20 +453,20 @@ Public Class PhasorMeasurementMapper
                         measurements = phasors(y).Measurements
 
                         ' Map angle
-                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Angle, y, count), measurements(CompositePhasorValue.Angle))
+                        MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.Angle, y, count), measurements(CompositePhasorValue.Angle))
 
                         ' Map magnitude
-                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Magnitude, y, count), measurements(CompositePhasorValue.Magnitude))
+                        MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.Magnitude, y, count), measurements(CompositePhasorValue.Magnitude))
                     Next
 
                     ' Map frequency (FQ) and df/dt (DF)
                     measurements = dataCell.FrequencyValue.Measurements
 
                     ' Map frequency
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Frequency), measurements(CompositeFrequencyValue.Frequency))
+                    MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.Frequency), measurements(CompositeFrequencyValue.Frequency))
 
                     ' Map df/dt
-                    MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.dFdt), measurements(CompositeFrequencyValue.DfDt))
+                    MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.dFdt), measurements(CompositeFrequencyValue.DfDt))
 
                     ' Map analog values (AVn)
                     analogs = dataCell.AnalogValues
@@ -425,7 +474,7 @@ Public Class PhasorMeasurementMapper
 
                     For y = 0 To count - 1
                         ' Map analog value
-                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Analog, y, count), analogs(y).Measurements(0))
+                        MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.Analog, y, count), analogs(y).Measurements(0))
                     Next
 
                     ' Map digital values (DVn)
@@ -434,7 +483,7 @@ Public Class PhasorMeasurementMapper
 
                     For y = 0 To count - 1
                         ' Map digital value
-                        MapSignalToMeasurement(frame, pmu.SignalSynonym(SignalType.Digital, y, count), digitals(y).Measurements(0))
+                        MapSignalToMeasurement(frame, cell.SignalSynonym(SignalType.Digital, y, count), digitals(y).Measurements(0))
                     Next
                 Else
                     ' Encountered an undefined PMU, track frame counts

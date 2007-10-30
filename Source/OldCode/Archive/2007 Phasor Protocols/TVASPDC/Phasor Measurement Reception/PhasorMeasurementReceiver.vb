@@ -48,6 +48,8 @@ Public Class PhasorMeasurementReceiver
     Private m_measurementDumpingThreshold As Integer
     Private m_intializing As Boolean
     Private m_isDisposed As Boolean
+    Private m_hasVirtualCells As Boolean
+    Private m_checkedForVirtualCells As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
@@ -135,7 +137,7 @@ Public Class PhasorMeasurementReceiver
             Dim timezone As String
             Dim timeAdjustmentTicks As Long
             Dim accessID As UInt16
-            Dim isVirtual As Boolean
+            Dim virtualDevice As Boolean
             Dim virtualSetting As String
             Dim x, y As Integer
 
@@ -149,6 +151,7 @@ Public Class PhasorMeasurementReceiver
 
                     parser = New MultiProtocolFrameParser
                     configurationCells = New Dictionary(Of UInt16, ConfigurationCell)
+                    measurementIDs.Clear()
 
                     source = row("Acronym").ToString().ToUpper().Trim()
                     timezone = row("TimeZone").ToString()
@@ -162,13 +165,18 @@ Public Class PhasorMeasurementReceiver
                     keys = ParseKeyValuePairs(parser.ConnectionString)
 
                     ' See if this is a virtual device
-                    isVirtual = False
+                    virtualDevice = False
 
                     If keys.TryGetValue("virtual", virtualSetting) Then
-                        isVirtual = ParseBoolean(virtualSetting)
+                        ' Virtual devices consist entirely of composed points so there
+                        ' will be no physical device to connect to
+                        virtualDevice = ParseBoolean(virtualSetting)
                     End If
 
-                    If Not isVirtual Then
+                    If virtualDevice Then
+                        ' Nothing to parse for virtual devices...
+                        parser = Nothing
+                    Else
                         ' Define phasor protocol
                         Try
                             parser.PhasorProtocol = DirectCast([Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol").ToString(), True), PhasorProtocol)
@@ -208,9 +216,6 @@ Public Class PhasorMeasurementReceiver
 
                         parser.DeviceID = accessID
                         parser.SourceName = source
-                    Else
-                        ' Nothing to parse for virtual devices...
-                        parser = Nothing
                     End If
 
                     If ParseBoolean(row("IsConcentrator").ToString()) Then
@@ -228,7 +233,7 @@ Public Class PhasorMeasurementReceiver
                                     configurationCells.Add(configCell.IDCode, configCell)
 
                                     ' Create status display string for loaded PMU
-                                    loadedPmuStatus.Append("   PMU ")
+                                    loadedPmuStatus.Append("   PDC Device ")
                                     loadedPmuStatus.Append(y.ToString("00"))
                                     loadedPmuStatus.Append(": ")
                                     loadedPmuStatus.Append(configCell.IDLabel)
@@ -243,7 +248,7 @@ Public Class PhasorMeasurementReceiver
                         UpdateStatus(loadedPmuStatus.ToString())
                     Else
                         ' Making a connection to a single device
-                        configCell = New ConfigurationCell(accessID, source, isVirtual)
+                        configCell = New ConfigurationCell(accessID, source, virtualDevice)
                         configCell.Tag = row("ID")
                         configurationCells.Add(accessID, configCell)
                     End If
@@ -366,7 +371,40 @@ Public Class PhasorMeasurementReceiver
             End If
         Next
 
-        If queuedMeasurements.Count > 0 Then m_historianAdapter.QueueMeasurementsForArchival(queuedMeasurements)
+        If queuedMeasurements.Count > 0 Then
+            ' Queue points for archival
+            m_historianAdapter.QueueMeasurementsForArchival(queuedMeasurements)
+
+            ' For cases of "virtual" devices - we'll pass composed points back into
+            ' the phasor measurement mappers (a little backwards flow, eh? :)
+            If Not m_intializing Then
+                ' Mapper configurations don't change during their lifecycles - so
+                ' we only check to see if there are any virtual cells once
+                If Not m_checkedForVirtualCells Then
+                    For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                        ' No need to send data to mapper unless it references any virtual cells
+                        If mapper.HasVirtualCells Then
+                            m_hasVirtualCells = True
+                            Exit For
+                        End If
+                    Next
+
+                    m_checkedForVirtualCells = True
+                End If
+
+                If m_hasVirtualCells Then
+                    For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                        ' No need to send data to mapper unless it references any virtual cells
+                        If mapper.HasVirtualCells Then
+                            ' Pass the calculated points along to any virutal devices...
+                            For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
+                                If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
+                            Next
+                        End If
+                    Next
+                End If
+            End If
+        End If
 
     End Sub
 
@@ -409,9 +447,6 @@ Public Class PhasorMeasurementReceiver
                 For Each mapper As PhasorMeasurementMapper In m_mappers.Values
                     ' Update reporting status for each PMU
                     For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
-                        ' We'll assign times for virtual PMU's 
-                        If cell.IsVirtual Then cell.LastReportTime = DateTime.UtcNow.Ticks
-
                         With New StringBuilder
                             reporting = IIf(Math.Abs(DateTime.UtcNow.Subtract(New DateTime(cell.LastReportTime)).Seconds) <= m_reportingTolerance, -1, 0)
 
