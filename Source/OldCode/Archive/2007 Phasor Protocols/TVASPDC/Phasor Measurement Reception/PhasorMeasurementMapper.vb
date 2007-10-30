@@ -46,7 +46,8 @@ Public Class PhasorMeasurementMapper
     Private m_archiverSource As String
     Private m_source As String
     Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
-    Private m_measurementIDs As Dictionary(Of String, IMeasurement)
+    Private m_signalMeasurements As Dictionary(Of String, IMeasurement)
+    Private m_activeMeasurements As List(Of IMeasurement)
     Private m_isConnected As Boolean
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
@@ -59,7 +60,6 @@ Public Class PhasorMeasurementMapper
     Private m_attemptingConnection As Boolean
     Private m_undefinedPmus As Dictionary(Of String, Long)
     Private m_hasVirtualCells As Boolean
-    Private m_checkedForVirtualCells As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
@@ -67,7 +67,7 @@ Public Class PhasorMeasurementMapper
         ByVal archiverSource As String, _
         ByVal source As String, _
         ByVal configurationCells As Dictionary(Of UInt16, ConfigurationCell), _
-        ByVal measurementIDs As Dictionary(Of String, IMeasurement), _
+        ByVal signalMeasurements As Dictionary(Of String, IMeasurement), _
         ByVal dataLossInterval As Integer, _
         ByVal exceptionLogger As GlobalExceptionLogger)
 
@@ -75,7 +75,7 @@ Public Class PhasorMeasurementMapper
         m_archiverSource = archiverSource
         m_source = source
         m_configurationCells = configurationCells
-        m_measurementIDs = measurementIDs
+        m_signalMeasurements = signalMeasurements
         m_exceptionLogger = exceptionLogger
 
         m_dataStreamMonitor = New Timers.Timer
@@ -93,7 +93,24 @@ Public Class PhasorMeasurementMapper
             .Interval = 1500
             .Enabled = False
         End With
+
         m_undefinedPmus = New Dictionary(Of String, Long)
+
+        ' Mapper configuration doesn't change during its lifecycle - so
+        ' we only check to see if there are virtual cells once
+        For Each cell As ConfigurationCell In m_configurationCells.Values
+            If cell.IsVirtual Then
+                m_hasVirtualCells = True
+                Exit For
+            End If
+        Next
+
+        If m_hasVirtualCells Then
+            ' When we have virtual cells to contend with, it will be helpful to
+            ' quickly do measurement filtering...
+            m_activeMeasurements = New List(Of IMeasurement)(m_signalMeasurements.Values)
+            m_activeMeasurements.Sort()
+        End If
 
     End Sub
 
@@ -196,7 +213,7 @@ Public Class PhasorMeasurementMapper
                     If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.IDLabel & ">"
 
                     If cell.IsVirtual Then
-                        .Append(TruncateRight(">> Virtual device: " & stationName, 62).PadRight(62))
+                        .Append(TruncateRight(">> Virtual device: " & stationName, 66).PadRight(66))
                     Else
                         .Append(TruncateRight(stationName, 22).PadRight(22))
                         .Append(" "c)
@@ -304,19 +321,6 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property HasVirtualCells() As Boolean
         Get
-            ' Mapper configuration doesn't change during its lifecycle - so
-            ' we only check to see if there are virtual cells once
-            If Not m_checkedForVirtualCells Then
-                For Each cell As ConfigurationCell In m_configurationCells.Values
-                    If cell.IsVirtual Then
-                        m_hasVirtualCells = True
-                        Exit For
-                    End If
-                Next
-
-                m_checkedForVirtualCells = True
-            End If
-
             Return m_hasVirtualCells
         End Get
     End Property
@@ -330,12 +334,15 @@ Public Class PhasorMeasurementMapper
         For x As Integer = 0 To measurements.Count - 1
             measurement = measurements(x)
 
-            If m_measurementIDs.ContainsValue(measurement) Then
+            If m_activeMeasurements.BinarySearch(measurement) >= 0 Then
                 ' Track lastest reporting time
                 Dim ticks As Long = measurement.Ticks
-                If ticks > cell.LastReportTime Then cell.LastReportTime = ticks
-                If ticks > m_lastReportTime Then m_lastReportTime = ticks
-                Exit For
+
+                If ticks > 0 Then
+                    If ticks > cell.LastReportTime Then cell.LastReportTime = ticks
+                    If ticks > m_lastReportTime Then m_lastReportTime = ticks
+                    Exit For
+                End If
             End If
         Next
 
@@ -388,7 +395,7 @@ Public Class PhasorMeasurementMapper
         Dim measurementID As IMeasurement
 
         ' Lookup synonym value in measurement ID list
-        If m_measurementIDs.TryGetValue(signalSynonym, measurementID) Then
+        If m_signalMeasurements.TryGetValue(signalSynonym, measurementID) Then
             ' Assign ID and other relevant measurement attributes to the signal value
             signalValue.ID = measurementID.ID
             signalValue.Source = m_archiverSource

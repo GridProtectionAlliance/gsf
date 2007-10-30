@@ -48,8 +48,7 @@ Public Class PhasorMeasurementReceiver
     Private m_measurementDumpingThreshold As Integer
     Private m_intializing As Boolean
     Private m_isDisposed As Boolean
-    Private m_hasVirtualCells As Boolean
-    Private m_checkedForVirtualCells As Boolean
+    Private m_hasVirtualDevices As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
@@ -127,7 +126,7 @@ Public Class PhasorMeasurementReceiver
 
             Dim parser As MultiProtocolFrameParser
             Dim configurationCells As Dictionary(Of UInt16, ConfigurationCell)
-            Dim measurementIDs As Dictionary(Of String, IMeasurement)
+            Dim signalMeasurements As Dictionary(Of String, IMeasurement)
             Dim configCell As ConfigurationCell
             Dim keys As Dictionary(Of String, String)
             Dim transport As String
@@ -151,7 +150,7 @@ Public Class PhasorMeasurementReceiver
 
                     parser = New MultiProtocolFrameParser
                     configurationCells = New Dictionary(Of UInt16, ConfigurationCell)
-                    measurementIDs = New Dictionary(Of String, IMeasurement)
+                    signalMeasurements = New Dictionary(Of String, IMeasurement)
 
                     source = row("Acronym").ToString().ToUpper().Trim()
                     timezone = row("TimeZone").ToString()
@@ -176,6 +175,9 @@ Public Class PhasorMeasurementReceiver
                     If virtualDevice Then
                         ' Nothing to parse for virtual devices...
                         parser = Nothing
+
+                        ' We track whether or not this receiver has virtual devices
+                        If Not m_hasVirtualDevices Then m_hasVirtualDevices = True
                     Else
                         ' Define phasor protocol
                         Try
@@ -257,7 +259,7 @@ Public Class PhasorMeasurementReceiver
                     With RetrieveData(String.Format("SELECT * FROM ActiveDeviceMeasurements WHERE Acronym='{0}' AND Historian='{1}'", source, m_archiverSource), connection)
                         For y = 0 To .Rows.Count - 1
                             With .Rows(y)
-                                measurementIDs.Add( _
+                                signalMeasurements.Add( _
                                     .Item("SignalReference").ToString(), _
                                     New Measurement( _
                                         Convert.ToInt32(.Item("PointID")), _
@@ -269,9 +271,9 @@ Public Class PhasorMeasurementReceiver
                         Next
                     End With
 
-                    UpdateStatus(String.Format("Loaded {0} active measurements for {1}...", measurementIDs.Count, source))
+                    UpdateStatus(String.Format("Loaded {0} active measurements for {1}...", signalMeasurements.Count, source))
 
-                    With New PhasorMeasurementMapper(parser, m_archiverSource, source, configurationCells, measurementIDs, m_dataLossInterval, m_exceptionLogger)
+                    With New PhasorMeasurementMapper(parser, m_archiverSource, source, configurationCells, signalMeasurements, m_dataLossInterval, m_exceptionLogger)
                         ' Add timezone mapping if not UTC...
                         If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
                             Try
@@ -377,32 +379,16 @@ Public Class PhasorMeasurementReceiver
 
             ' For cases of "virtual" devices - we'll pass composed points back into
             ' the phasor measurement mappers (a little backwards flow, eh? :)
-            If Not m_intializing Then
-                ' Mapper configurations don't change during their lifecycles - so
-                ' we only check to see if there are any virtual cells once
-                If Not m_checkedForVirtualCells Then
-                    For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                        ' No need to send data to mapper unless it references any virtual cells
-                        If mapper.HasVirtualCells Then
-                            m_hasVirtualCells = True
-                            Exit For
-                        End If
-                    Next
-
-                    m_checkedForVirtualCells = True
-                End If
-
-                If m_hasVirtualCells Then
-                    For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                        ' No need to send data to mapper unless it references any virtual cells
-                        If mapper.HasVirtualCells Then
-                            ' Pass the calculated points along to any virutal devices...
-                            For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
-                                If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
-                            Next
-                        End If
-                    Next
-                End If
+            If Not m_intializing AndAlso m_hasVirtualDevices AndAlso m_mappers IsNot Nothing Then
+                For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                    ' No need to send data to mapper unless it references any virtual cells
+                    If mapper.HasVirtualCells Then
+                        ' Pass the calculated points along to any virutal devices...
+                        For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
+                            If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
+                        Next
+                    End If
+                Next
             End If
         End If
 
