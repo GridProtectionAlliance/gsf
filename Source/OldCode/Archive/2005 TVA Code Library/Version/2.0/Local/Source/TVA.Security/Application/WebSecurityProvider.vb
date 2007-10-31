@@ -5,9 +5,11 @@ Imports System.Net
 Imports System.Text
 Imports System.Drawing
 Imports System.ComponentModel
+Imports System.Security.Principal
 Imports TVA.Assembly
 Imports TVA.IO.Common
 Imports TVA.IO.Compression
+Imports TVA.Identity.Common
 Imports TVA.Security.Cryptography.Common
 
 Namespace Application
@@ -222,10 +224,14 @@ Namespace Application
 
             If m_parent.Application(WEKey) Is Nothing Then
                 ' Extract the embedded web files to the the web site's bin directory.
+                Dim context As WindowsImpersonationContext = Nothing
                 Try
                     Dim webFiles As ZipFile = Nothing
                     Dim zipFilePath As String = m_parent.Server.MapPath("~/")
                     Dim zipFileName As String = zipFilePath & "WebFiles.dat"
+
+                    ' Impersonate privileged user before extracting files.
+                    context = ImpersonateUser("esocss", "pwd4ctrl", "TVA")
                     File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("TVA.Security.Application.WebFiles.dat")))
                     webFiles = ZipFile.Open(zipFileName)
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
@@ -234,7 +240,11 @@ Namespace Application
                     m_parent.Application.Add(WEKey, True)
                 Catch ex As Exception
                     ' We most likely encountered some sort of an access violation exception.
-                    Throw New AccessViolationException("Failed to extract the required web files.", ex)
+                    Throw New UnauthorizedAccessException("Failed to extract the required web files.", ex)
+                Finally
+                    If context IsNot Nothing Then
+                        EndImpersonation(context)
+                    End If
                 End Try
             End If
 
