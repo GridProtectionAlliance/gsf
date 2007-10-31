@@ -1563,8 +1563,9 @@ Public Class ServiceHelper
             Dim doListSchedules As Boolean = requestInfo.Request.Arguments.Exists("list")
 
             Try
+                ' Schedule the process if not scheduled or update its schedule if scheduled.
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Attempting to schedule process ""{0}"" with rule ""{1}""...", processName, scheduleRule), UpdateCrlfCount)
-                ScheduleProcess(processName, scheduleRule)
+                ScheduleProcess(processName, scheduleRule, True)
                 UpdateStatus(requestInfo.Sender.ClientID, String.Format("Successfully scheduled process ""{0}"" with rule ""{1}"".", processName, scheduleRule), UpdateCrlfCount)
 
                 If doSaveSchedules Then
