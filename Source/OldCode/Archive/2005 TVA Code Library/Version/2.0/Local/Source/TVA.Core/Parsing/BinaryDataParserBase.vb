@@ -128,13 +128,19 @@ Namespace Parsing
 
             Dim asm As Reflection.Assembly = Nothing
             Dim typeCtor As ConstructorInfo = Nothing
+            Dim dllDirectory As String = AbsolutePath("")
             Dim asmBuilder As AssemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(New AssemblyName("InMemory"), AssemblyBuilderAccess.Run)
             Dim modBuilder As ModuleBuilder = asmBuilder.DefineDynamicModule("Helper")
             Dim typeBuilder As TypeBuilder = modBuilder.DefineType("ClassFactory")
             Dim outputTypes As New List(Of TypeInfo)() ' Temporarily hold output types until their IDs are determined.
 
-            ' Process all assemblies in the application's directory.
-            For Each dll As String In Directory.GetFiles(JustPath(TVA.Assembly.EntryAssembly.Location), "*.dll")
+            If GetApplicationType() = ApplicationType.Web Then
+                ' In case of a web application, we need to look in the bin directory for DLLs.
+                dllDirectory = AddPathSuffix(dllDirectory & "bin")
+            End If
+
+            ' Process all assemblies in the application bin directory.
+            For Each dll As String In Directory.GetFiles(dllDirectory, "*.dll")
                 ' Load the assembly in the curent app domain.
                 asm = Reflection.Assembly.LoadFrom(dll)
 
