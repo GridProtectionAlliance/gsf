@@ -123,11 +123,14 @@ Public Class PhasorMeasurementMapper
 
         ' Start timer for delayed connection
         If m_frameParser Is Nothing Then
-            ' Virtual connections will be assumed to be connected
-            m_isConnected = True
+            ' Purely virtual mappers will be assumed to be connected
+            m_isConnected = m_hasVirtualCells
         Else
             m_delayedConnection.Enabled = True
         End If
+
+        ' Display extra information for mappers with virtual devices
+        If m_hasVirtualCells Then UpdateStatus(String.Format("Connected {0} with virtual devices - {1} active measurements defined", m_source, m_activeMeasurements.Count))
 
     End Sub
 
@@ -275,47 +278,22 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property Name() As String
         Get
-            Return Name(0)
-        End Get
-    End Property
+            With New StringBuilder
+                .Append(m_source)
 
-    Public ReadOnly Property Name(ByVal childrenToDisplay As Integer) As String
-        Get
-            If childrenToDisplay > 0 Then
-                With New StringBuilder
-                    .Append(m_source)
+                Dim hasChildren As Boolean = (m_configurationCells.Count > 1)
 
-                    Dim displayChildren As Boolean = (m_configurationCells.Count > 1)
+                If Not hasChildren Then
+                    ' Could still be a PDC with one child - so we'll compare the names
+                    With m_configurationCells.Values.GetEnumerator()
+                        If .MoveNext Then hasChildren = (String.Compare(m_source, .Current.IDLabel, True) <> 0)
+                    End With
+                End If
 
-                    If Not displayChildren Then
-                        ' Could still be a PDC with one child - so we'll compare the names
-                        With m_configurationCells.Values.GetEnumerator()
-                            If .MoveNext Then displayChildren = (String.Compare(m_source, .Current.IDLabel, True) <> 0)
-                        End With
-                    End If
+                If hasChildren Then .AppendFormat(" [PDC: {0} Devices]", m_configurationCells.Count)
 
-                    If displayChildren Then
-                        Dim index As Integer
-
-                        .Append(" [")
-
-                        For Each pmu As ConfigurationCell In m_configurationCells.Values
-                            If index > 0 Then .Append(", ")
-                            .Append(pmu.IDLabel)
-                            index += 1
-                            If index >= childrenToDisplay Then Exit For
-                        Next
-
-                        If m_configurationCells.Count > index Then .Append(", ...")
-
-                        .Append("]")
-                    End If
-
-                    Return .ToString()
-                End With
-            Else
-                Return m_source
-            End If
+                Return .ToString()
+            End With
         End Get
     End Property
 

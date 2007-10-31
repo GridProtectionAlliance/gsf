@@ -139,14 +139,14 @@ Public Class Service
         ' Stop data concentrators
         If m_measurementConcentrators IsNot Nothing Then
             For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
-                concentrator.Dispose()
+                concentrator.Stop()
             Next
         End If
 
-        ' Shut down calculated measurements
+        ' Stop calculated measurements
         If m_calculatedMeasurements IsNot Nothing Then
             For x As Integer = 0 To m_calculatedMeasurements.Length - 1
-                m_calculatedMeasurements(x).Dispose()
+                m_calculatedMeasurements(x).Stop()
             Next
         End If
 
@@ -173,12 +173,12 @@ Public Class Service
 
             DisplayStatusMessage("PMU database connection opened...")
 
-            ' If calculated measurements are already defined (i.e., we are "re-initializing" code), we need to dispose
+            ' If calculated measurements are already defined (i.e., we are "re-initializing" code), we need to stop
             ' existing calculation instances such that all items can be shut-down in an orderly fashion
             If m_calculatedMeasurements IsNot Nothing Then
                 For x = 0 To m_calculatedMeasurements.Length - 1
                     ServiceHelper.ServiceComponents.Remove(m_calculatedMeasurements(x))
-                    m_calculatedMeasurements(x).Dispose()
+                    m_calculatedMeasurements(x).Stop()
                 Next
             End If
 
@@ -202,7 +202,7 @@ Public Class Service
             If m_measurementConcentrators IsNot Nothing Then
                 For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
                     ServiceHelper.ServiceComponents.Remove(concentrator)
-                    concentrator.Dispose()
+                    concentrator.Stop()
                 Next
             End If
 
@@ -718,7 +718,7 @@ Public Class Service
                     .AppendLine()
                     .AppendLine()
 
-                    .Append("  Last Data Report Time:   PDC/PMU [PMU list]:")
+                    .Append("  Last Data Report Time:   Device Acronym:")
                     .AppendLine()
                     .Append("  ------------------------ ----------------------------------------------------")
                     .AppendLine()
@@ -733,7 +733,7 @@ Public Class Service
                             If mapper.LastReportTime > 0 Then
                                 .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                                 .Append(" "c)
-                                .Append(mapper.Name(6))
+                                .Append(mapper.Name)
                                 .AppendLine()
                             Else
                                 .Append(">> ")

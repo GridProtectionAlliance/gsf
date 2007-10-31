@@ -106,8 +106,8 @@ Public Class PhasorMeasurementReceiver
 
     Public Sub Dispose() Implements IDisposable.Dispose
 
-        Dispose(True)
         GC.SuppressFinalize(Me)
+        Dispose(True)
 
     End Sub
 
