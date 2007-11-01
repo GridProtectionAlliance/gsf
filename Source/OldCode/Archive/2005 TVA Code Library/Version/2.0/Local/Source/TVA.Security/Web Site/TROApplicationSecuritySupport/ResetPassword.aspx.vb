@@ -118,12 +118,12 @@ Partial Class ResetPassword
                                 Dim emailBody As String = "<div style='font-family: Tahoma; font-size: .7em'>Dear " & .FirstName & ",<br /><br /> Your password has been reset. Below is your current account information.<BR><BR>" & _
                                                             "User Name: " & userName & "<BR>" & _
                                                             "New Password: " & newPassword & "<BR><br>" & _
-                                                            "If you did not request this change, please contact the TVA Information Technology Service Center at 423-751-4357." & _
+                                                            "If you did not request this change, please contact the TVA Operations Duty Specialist at 423-751-1700." & _
                                                             GetMessageFooter() & "</div>"
 
                                 Tva.Net.Smtp.Common.SendMail("troapplicationsecurity@tva.gov", emailAddress, "Your password has been reset.", emailBody, True, "mailhost.cha.tva.gov")
                             Else
-                                Me.LabelError.Text = "Reset passowrd failed. System did not find an email address for your account where your new password can be sent to. Please contact the TVA Information Technology Service Center at 423-751-4357 to update your account information and then try again."
+                                Me.LabelError.Text = "Reset passowrd failed. System did not find an email address for your account where your new password can be sent to. Please contact the TVA Operations Duty Specialist at 423-751-1700 to update your account information and then try again."
 
                             End If
 

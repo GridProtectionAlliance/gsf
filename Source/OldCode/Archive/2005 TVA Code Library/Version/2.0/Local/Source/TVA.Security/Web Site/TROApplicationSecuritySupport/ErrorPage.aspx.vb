@@ -19,7 +19,7 @@ Partial Class ErrorPage
                 Select Case CType(Request("t").ToString(), ErrorTypes)
                     Case ErrorTypes.AccessDenied
                         Me.LabelErrorType.Text = "Access Denied"
-                        Me.LabelDetailError.Text = "You are not authorized to view this page. <BR>Please request an access by clicking on Request Application Access link below."
+                        Me.LabelDetailError.Text = "You are not authorized to view this page. <BR>Please request an access by calling TVA Operations Duty Specialist at 423-751-1700."
                     Case ErrorTypes.AppNotConfig
                         Me.LabelErrorType.Text = "Application Configuration Error"
                         Me.LabelDetailError.Text = "Client application is not configured properly."
@@ -36,12 +36,12 @@ Partial Class ErrorPage
                     Case Else
                         Me.LabelErrorType.Text = "Error Occured"
                         Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please check that your username and password is correct." & _
-                                                    "<BR>If you do not have an account please apply for one."
+                                                    "<BR>If you do not have an account please apply for one by calling TVA Operations Duty Specialist at 423-751-1700."
                 End Select
 
             Else
                 Me.LabelErrorType.Text = "Error Occured"
-                Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please call the TVA Information Technology Service Center at 423-751-4357."
+                Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please call the TVA Operations Duty Specialist at 423-751-1700."
 
             End If
 
