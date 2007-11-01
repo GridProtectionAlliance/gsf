@@ -10,8 +10,10 @@ Partial Class ErrorPage
     End Enum
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Request.Url.ToString.ToLower.Contains("https:/") Then
+            Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
+        End If
         If Not IsPostBack Then
-
             SetSessions()
             If Request("t") IsNot Nothing AndAlso _
                 Not String.IsNullOrEmpty(Request("t").ToString()) Then

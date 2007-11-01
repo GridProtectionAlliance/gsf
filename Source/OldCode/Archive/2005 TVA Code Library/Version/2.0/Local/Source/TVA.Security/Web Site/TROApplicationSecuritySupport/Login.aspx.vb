@@ -10,7 +10,9 @@ Partial Class Login
     Private queryStringExists, returnUrlHasQueryString As Boolean
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-
+        If Request.Url.ToString.ToLower.Contains("https:/") Then
+            Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
+        End If
         Me.TextBoxUserName.Focus()
         If Not IsPostBack Then
             'Session("ApplicationName") = "TEST_APP_1"

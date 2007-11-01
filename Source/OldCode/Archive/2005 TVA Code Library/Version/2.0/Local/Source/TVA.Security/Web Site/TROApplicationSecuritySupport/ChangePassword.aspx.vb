@@ -13,6 +13,7 @@ Partial Class ChangePassword
         Dim oldPassword As String = Me.TextBoxPassword.Text.Replace("'", "").Replace("%", "")
         Dim newPassword As String = Me.TextBoxNewPassword.Text.Replace("'", "").Replace("%", "")
         Dim errorPageUrl As String = "ErrorPage.aspx"
+
         If Page.IsValid Then
             Try
                 If Session("ConnectionString") Is Nothing Then
@@ -87,6 +88,9 @@ Partial Class ChangePassword
     End Sub
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Request.Url.ToString.ToLower.Contains("https:/") Then
+            Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
+        End If
         Me.TextBoxUserName.Focus()
         SetSessions()
         If Request("m") IsNot Nothing AndAlso _

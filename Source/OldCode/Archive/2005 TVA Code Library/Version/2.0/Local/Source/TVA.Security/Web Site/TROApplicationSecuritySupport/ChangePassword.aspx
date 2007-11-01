@@ -78,7 +78,7 @@
     <form id="form1" runat="server">
         <table width="450" cellpadding=2 cellspacing=1 border=0 align=center>
             <tr>
-                <td align=left colspan=2><asp:Image ID="ImageLogo" runat="Server" ImageUrl="Images/tva-pso_logonbanner.jpg" /></td>                
+                <td align=left colspan=2><asp:Image ID="ImageLogo" runat="Server" ImageUrl="Images/LogoExternal.jpg" /></td>                
             </tr>
             <tr>
                 <td align=left colspan=2><asp:Label ID="Label1" runat="server" CssClass="HeadingLabel" Text="Change Password"></asp:Label></td>                
