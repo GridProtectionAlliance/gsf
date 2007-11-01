@@ -94,6 +94,7 @@
     <Compile Include="IO\LogFile.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Measurements\FrameQueue.vb" />
     <Compile Include="Measurements\MeasurementKey.vb" />
     <Compile Include="Net\Ftp\AsyncResult.vb" />
     <Compile Include="Net\Ftp\ControlChannel.vb" />

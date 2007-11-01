@@ -168,7 +168,7 @@ Namespace Measurements
         End Function
 
         ''' <summary>This implementation of a basic frame compares itself by timestamp</summary>
-        Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
+        Public Function CompareTo(ByVal obj As Object) As Integer
 
             Dim other As IFrame = TryCast(obj, IFrame)
             If other IsNot Nothing Then Return CompareTo(other)

@@ -21,7 +21,7 @@ Namespace Measurements
 
     Public Interface IFrame
 
-        Inherits IEquatable(Of IFrame), IComparable(Of IFrame), IComparable
+        Inherits IEquatable(Of IFrame), IComparable(Of IFrame)
 
         ''' <summary>Handy instance reference to self</summary>
         ReadOnly Property This() As IFrame
