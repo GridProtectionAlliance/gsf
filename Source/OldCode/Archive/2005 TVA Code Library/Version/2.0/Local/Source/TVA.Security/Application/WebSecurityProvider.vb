@@ -110,7 +110,7 @@ Namespace Application
         Protected Overrides Sub ShowLoginScreen()
 
             If m_parent IsNot Nothing Then
-                ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
+                ExtractWebFiles(False)   ' Make sure that the required web file exist in the application bin directory.
 
                 With New StringBuilder()
                     .Append(GetSafeUrl("Login.aspx"))
@@ -144,7 +144,7 @@ Namespace Application
 
             ' Upon unsuccessful login, we'll redirect the user to the *Access Denied* page.
             If m_parent IsNot Nothing Then
-                ExtractWebFiles()   ' Make sure that the required web file exist in the application bin directory.
+                ExtractWebFiles(False)   ' Make sure that the required web file exist in the application bin directory.
 
                 With New StringBuilder()
                     .Append(GetSafeUrl("ErrorPage.aspx"))
@@ -220,7 +220,7 @@ Namespace Application
 
 #Region " Private Code "
 
-        Private Sub ExtractWebFiles()
+        Private Sub ExtractWebFiles(ByVal impersonate As Boolean)
 
             If m_parent.Application(WEKey) Is Nothing Then
                 ' Extract the embedded web files to the the web site's bin directory.
@@ -230,17 +230,34 @@ Namespace Application
                     Dim zipFilePath As String = m_parent.Server.MapPath("~/")
                     Dim zipFileName As String = zipFilePath & "WebFiles.dat"
 
-                    ' Impersonate privileged user before extracting files.
-                    context = ImpersonateUser("esocss", "pwd4ctrl", "TVA")
+                    If impersonate Then
+                        ' Impersonate privileged user before extracting files.
+                        context = ImpersonateUser("esocss", "pwd4ctrl", "TVA")
+                    End If
+
                     File.WriteAllBytes(zipFileName, ReadStream(CallingAssembly.GetEmbeddedResource("TVA.Security.Application.WebFiles.dat")))
                     webFiles = ZipFile.Open(zipFileName)
                     webFiles.Extract("*.*", zipFilePath, UpdateOption.ZipFileIsNewer, True)
                     webFiles.Close()
                     File.Delete(zipFileName)
                     m_parent.Application.Add(WEKey, True)
+                Catch ex As UnauthorizedAccessException
+                    ' We failed to extract the web files because the user under which the web site is running
+                    ' under doesn't have write permission to web site directory. So, we'll try to extract the web
+                    ' files after impersonating a privileged user who will have write access on the server, and
+                    ' if not needs to be given access. However, we try impersonating privileged user before 
+                    ' extracting only if we haven't tried that already in order to prevent an endless loop in
+                    ' case the priviled user doesn't have write permission to the web site directory.
+                    If Not impersonate Then
+                        ' Try impersonation before extracting.
+                        ExtractWebFiles(True)
+                    Else
+                        ' There isn't anything we can do now, so we propogate the exception.
+                        Throw
+                    End If
                 Catch ex As Exception
-                    ' We most likely encountered some sort of an access violation exception.
-                    Throw New UnauthorizedAccessException("Failed to extract the required web files.", ex)
+                    ' Propogate the encountered exception.
+                    Throw
                 Finally
                     If context IsNot Nothing Then
                         EndImpersonation(context)
