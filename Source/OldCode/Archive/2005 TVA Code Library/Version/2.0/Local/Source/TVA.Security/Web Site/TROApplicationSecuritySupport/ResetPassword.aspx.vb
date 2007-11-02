@@ -9,7 +9,7 @@ Partial Class ResetPassword
     Private conn As New SqlConnection
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        If Request.Url.ToString.ToLower.Contains("https:/") Then
+        If Not Request.Url.ToString.ToLower.Contains("https://") Then
             Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
         End If
         '***********
