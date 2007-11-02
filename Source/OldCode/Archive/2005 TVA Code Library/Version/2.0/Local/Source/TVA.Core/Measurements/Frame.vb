@@ -8,8 +8,6 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This class represents a basic measured value
-'
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  6/22/2006 - J. Ritchie Carroll

@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  TVA.Measurements.Frame.vb - Basic frame implementation
+'  TVA.Measurements.FrameQueue.vb - Implementation of a queue of IFrame's
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -8,11 +8,9 @@
 '       Phone: 423/751-2827
 '       Email: jrcarrol@tva.gov
 '
-'  This class represents a basic measured value
-'
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  6/22/2006 - J. Ritchie Carroll
+'  11/01/2007 - J. Ritchie Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
@@ -40,6 +38,21 @@ Namespace Measurements
 
         End Sub
 
+        Public Property TicksPerFrame() As Decimal
+            Get
+                Return m_ticksPerFrame
+            End Get
+            Set(ByVal value As Decimal)
+                m_ticksPerFrame = value
+            End Set
+        End Property
+
+        Public ReadOnly Property CreateNewFrameFunction() As CreateNewFrameFunctionSignature
+            Get
+                Return m_createNewFrameFunction
+            End Get
+        End Property
+
         Public Sub Pop()
 
             SyncLock m_frames
@@ -57,6 +70,8 @@ Namespace Measurements
 
         Public ReadOnly Property Head() As IFrame
             Get
+                ' We track the head separately to avoid sync-lock on collection
+                ' to access item zero...
                 Return m_head
             End Get
         End Property
@@ -64,6 +79,12 @@ Namespace Measurements
         Public ReadOnly Property Tail() As IFrame
             Get
                 Return m_tail
+            End Get
+        End Property
+
+        Public ReadOnly Property Count() As Integer
+            Get
+                Return m_frames.Count
             End Get
         End Property
 

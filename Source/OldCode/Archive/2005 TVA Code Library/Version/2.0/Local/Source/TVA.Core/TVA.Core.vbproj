@@ -149,7 +149,6 @@
     <Compile Include="Configuration\CategorizedSettingsElement.vb" />
     <Compile Include="Configuration\CategorizedSettingsSection.vb" />
     <Compile Include="Measurements\ImmediateMeasurements.vb" />
-    <Compile Include="Measurements\Sample.vb" />
     <Compile Include="Security\Cryptography\Enumerations.vb" />
     <Compile Include="Services\Enumerations.vb" />
     <Compile Include="Services\IServiceComponent.vb" />
