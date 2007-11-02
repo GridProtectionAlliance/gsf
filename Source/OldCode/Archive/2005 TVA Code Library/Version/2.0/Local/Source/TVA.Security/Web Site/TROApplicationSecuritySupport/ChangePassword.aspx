@@ -85,8 +85,8 @@
                 <td align=left colspan=2><asp:Label ID="Label1" runat="server" CssClass="HeadingLabel" Text="Change Password"></asp:Label></td>                
             </tr>
             <tr>
-                <td width=125>&nbsp;</td>
-                <td width=325>&nbsp;</td>
+                <td width=150>&nbsp;</td>
+                <td width=300>&nbsp;</td>
             </tr>
             <tr>
                 <td colspan=2><asp:Label ID="LabelError" runat="server" CssClass="ErrorLabel" ForeColor="#C00000"></asp:Label></td>
