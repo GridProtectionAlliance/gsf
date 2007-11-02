@@ -843,6 +843,7 @@ Namespace Measurements
             Dim frame As IFrame
             Dim ticks As Long
             Dim frameIndex As Integer
+            Dim measurements As IDictionary(Of MeasurementKey, IMeasurement)
 
             Do While True
                 Try
@@ -863,13 +864,14 @@ Namespace Measurements
                             frameIndex = Convert.ToInt32((ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame)
 
                             ' Publish the current frame.
-                            Monitor.Enter(frame.Measurements)
+                            measurements = frame.Measurements
+                            Monitor.Enter(measurements)
 
                             Try
                                 PublishFrame(frame, frameIndex)
                             Finally
                                 ' Exit sync lock
-                                Monitor.Exit(frame.Measurements)
+                                Monitor.Exit(measurements)
 
                                 ' Remove the frame from the queue whether it successfully published or not
                                 m_frameQueue.Pop()
