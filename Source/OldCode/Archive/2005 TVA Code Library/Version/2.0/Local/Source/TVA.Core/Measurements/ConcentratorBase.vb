@@ -643,7 +643,7 @@ Namespace Measurements
                     .Append(m_leadTime)
                     .Append(" seconds")
                     .AppendLine()
-                    .Append("     Local clock time (UTC): ")
+                    .Append("    Local clock time (UTC): ")
                     .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .AppendLine()
                     .Append("  Using clock as real-time: ")
@@ -718,7 +718,7 @@ Namespace Measurements
                     .Append("Current frame publishing detail:")
                     .AppendLine()
                     .AppendLine()
-                    .Append("       Current frame = ")
+                    .Append("    Current frame = ")
                     .Append(currentFrame.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
                     .Append(" - sort time: ")
 
@@ -731,8 +731,7 @@ Namespace Measurements
                     End If
 
                     .AppendLine()
-                    .AppendLine()
-                    .Append("       Last measurement = ")
+                    .Append(" Last measurement = ")
                     .Append(Measurement.ToString(currentFrame.LastSortedMeasurement))
 
                     ' Calculates total time from last measurement ticks.
@@ -743,6 +742,7 @@ Namespace Measurements
                     Else
                         .Append(" - deviation from source time undetermined")
                     End If
+                    .AppendLine()
 
                     Return .ToString()
                 End With
@@ -862,13 +862,15 @@ Namespace Measurements
                             ' Calculate index of this frame within its second
                             frameIndex = Convert.ToInt32((ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame)
 
-                            ' Publish the current frame. Other threads handling measurement assignment are possibly still
-                            ' in motion, so "Clone" method synchronizes access to the frame's measurements and sends in a
-                            ' copy of this frame and its measurements. This keeps synclock time down to a minimum and allows
-                            ' the user's frame publication method to take as long as it needs.
+                            ' Publish the current frame.
+                            Monitor.Enter(frame.Measurements)
+
                             Try
-                                PublishFrame(frame.Clone(), frameIndex)
+                                PublishFrame(frame, frameIndex)
                             Finally
+                                ' Exit sync lock
+                                Monitor.Exit(frame.Measurements)
+
                                 ' Remove the frame from the queue whether it successfully published or not
                                 m_frameQueue.Pop()
                             End Try
