@@ -10,7 +10,9 @@ Partial Class ErrorPage
     End Enum
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        If String.Compare(Request.Url.Scheme, "https", True) <> 0 Then
+        If String.IsNullOrEmpty(System.Threading.Thread.CurrentPrincipal.Identity.Name) Then
+            Me.ImageLogo.ImageUrl = "Images/LogoExternal.jpg"
+        Else
             Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
         End If
         If Not IsPostBack Then

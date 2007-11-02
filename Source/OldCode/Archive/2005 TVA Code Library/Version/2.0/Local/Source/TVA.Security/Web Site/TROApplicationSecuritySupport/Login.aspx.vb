@@ -10,8 +10,9 @@ Partial Class Login
     Private queryStringExists, returnUrlHasQueryString As Boolean
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        Response.Write(Request.Url.Scheme)
-        If String.Compare(Request.Url.Scheme, "http", True) = 0 Then
+        If String.IsNullOrEmpty(System.Threading.Thread.CurrentPrincipal.Identity.Name) Then
+            Me.ImageLogo.ImageUrl = "Images/LogoExternal.jpg"
+        Else
             Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
         End If
 
