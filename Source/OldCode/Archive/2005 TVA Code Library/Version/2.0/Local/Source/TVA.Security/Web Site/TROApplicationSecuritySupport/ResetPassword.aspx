@@ -67,9 +67,10 @@
 
         .SmallLabel
         {
-	        color: #ffffff;
+	        color: Navy;
 	        font-family:Tahoma;
 	        font-size: .7em;
+	        font-weight: bold;
         }
         
     </STYLE>
@@ -92,18 +93,18 @@
                 <td colspan=2><asp:Label ID="LabelError" runat="server" CssClass="ErrorLabel" ForeColor="#C00000"></asp:Label></td>
             </tr>
             <tr>
-                <td><asp:Label ID="Label2" runat="server" CssClass="Label" Text="User Name:"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label2" runat="server" CssClass="Label" Text="User Name:"></asp:Label></td>
                 <td>
                     <asp:TextBox ID="TextBoxUserName" runat="server" CssClass="TextBox" Width="200px"></asp:TextBox>
                     <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ControlToValidate="TextBoxUserName"
                         ErrorMessage="*"></asp:RequiredFieldValidator></td>
             </tr>
             <tr>
-                <td><asp:Label ID="Label3" runat="server" CssClass="Label" Text="Security Question:"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label3" runat="server" CssClass="Label" Text="Security Question:"></asp:Label></td>
                 <td><asp:DropDownList ID="DropDownListSecurityQuestions" runat="server" CssClass="TextBox" Width="275px"></asp:DropDownList></td>
             </tr>
             <tr>
-                <td><asp:Label ID="Label4" runat="server" CssClass="Label" Text="Security Answer:"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label4" runat="server" CssClass="Label" Text="Security Answer:"></asp:Label></td>
                 <td><asp:TextBox ID="TextBoxSecurityAnswer" runat="server" CssClass="TextBox" Width="200px"></asp:TextBox>
                     <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ControlToValidate="TextBoxSecurityAnswer"
                         ErrorMessage="*"></asp:RequiredFieldValidator></td>
@@ -125,6 +126,12 @@
             <tr>
                 <td colspan=2><asp:HyperLink ID="HyperLink6" runat="server" CssClass="Label" NavigateUrl="ChangePassword.aspx">Change Password</asp:HyperLink></td>
             </tr>            
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan=2 align=center class="SmallLabel">T&nbsp;E&nbsp;N&nbsp;N&nbsp;E&nbsp;S&nbsp;S&nbsp;E&nbsp;E&nbsp;&nbsp;&nbsp;V&nbsp;A&nbsp;L&nbsp;L&nbsp;E&nbsp;Y&nbsp;&nbsp;&nbsp;A&nbsp;U&nbsp;T&nbsp;H&nbsp;O&nbsp;R&nbsp;I&nbsp;T&nbsp;Y</td>
+            </tr>
         </table>
     </form>
 </body>

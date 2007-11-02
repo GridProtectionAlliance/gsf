@@ -66,9 +66,10 @@
 
         .SmallLabel
         {
-	        color: #ffffff;
+	        color: Navy;
 	        font-family:Tahoma;
 	        font-size: .7em;
+	        font-weight: bold;
         }
         
     </STYLE>
@@ -91,19 +92,19 @@
                 <td colspan=2><asp:Label ID="LabelError" runat="server" CssClass="ErrorLabel" ForeColor="#C00000"></asp:Label></td>
             </tr>            
             <tr>
-                <td><asp:Label ID="Label2" runat="server" Text="User Name:" CssClass="Label"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label2" runat="server" Text="User Name:" CssClass="Label"></asp:Label></td>
                 <td><asp:TextBox ID="TextBoxUserName" runat="server" CssClass="TextBox" Width="150px"></asp:TextBox></td>
             </tr>
             <tr>
-                <td><asp:Label ID="Label3" runat="server" Text="Old Password:" CssClass="Label"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label3" runat="server" Text="Old Password:" CssClass="Label"></asp:Label></td>
                 <td><asp:TextBox ID="TextBoxPassword" runat="server" CssClass="TextBox" Width="150px" TextMode="Password"></asp:TextBox></td>
             </tr>
             <tr>
-                <td><asp:Label ID="Label4" runat="server" Text="New Password:" CssClass="Label"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label4" runat="server" Text="New Password:" CssClass="Label"></asp:Label></td>
                 <td><asp:TextBox ID="TextBoxNewPassword" runat="server" CssClass="TextBox" Width="150px" TextMode="Password"></asp:TextBox></td>
             </tr>
             <tr>
-                <td valign="top"><asp:Label ID="Label7" runat="server" Text="Confirm New Password:" CssClass="Label"></asp:Label></td>
+                <td valign="top" align="right"><asp:Label ID="Label7" runat="server" Text="Confirm New Password:" CssClass="Label"></asp:Label></td>
                 <td>
                     <asp:TextBox ID="TextBoxConfirmNewPassword" runat="server" CssClass="TextBox" Width="150px" TextMode="Password"></asp:TextBox><br />
                     <asp:CompareValidator ID="CompareValidator1" runat="server" ControlToCompare="TextBoxNewPassword"
@@ -122,7 +123,13 @@
             </tr>        
             <tr>
                 <td colspan=2><asp:HyperLink ID="HyperLink5" runat="server" CssClass="Label" NavigateUrl="Login.aspx">Login</asp:HyperLink></td>
-            </tr>              
+            </tr>       
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan=2 align=center class="SmallLabel">T&nbsp;E&nbsp;N&nbsp;N&nbsp;E&nbsp;S&nbsp;S&nbsp;E&nbsp;E&nbsp;&nbsp;&nbsp;V&nbsp;A&nbsp;L&nbsp;L&nbsp;E&nbsp;Y&nbsp;&nbsp;&nbsp;A&nbsp;U&nbsp;T&nbsp;H&nbsp;O&nbsp;R&nbsp;I&nbsp;T&nbsp;Y</td>
+            </tr>       
         </table>
     </form>
 </body>

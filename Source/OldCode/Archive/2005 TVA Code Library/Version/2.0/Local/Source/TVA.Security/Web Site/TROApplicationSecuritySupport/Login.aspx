@@ -58,9 +58,10 @@
         }
         .SmallLabel
         {
-	        color: #ffffff;
+	        color: Navy;
 	        font-family:Tahoma;
 	        font-size: .7em;
+	        font-weight: bold;
         }
         
     </STYLE>
@@ -79,16 +80,19 @@
             </tr>
             <tr>
                 <td colspan=2 align="center"><asp:Label ID="Label2" runat="server" CssClass="Label">This site is for authorized users of TVA services.<br />Please enter your ID and Password.</asp:Label></td>
-            </tr>            
+            </tr>       
+            <tr>
+                <td colspan=2>&nbsp;</td>
+            </tr>     
             <tr>
                 <td colspan="2"><asp:Label ID="LabelError" runat="server" CssClass="ErrorLabel" ForeColor="#C00000"></asp:Label></td>
             </tr>
             <tr>
-                <td width="125"><asp:Label ID="Label3" runat="server" CssClass="Label" Text="User Name:"></asp:Label></td>
+                <td width="125" align=right><asp:Label ID="Label3" runat="server" CssClass="Label" Text="User Name:"></asp:Label></td>
                 <td width="325"><asp:TextBox ID="TextBoxUserName" runat="server" Width="150px" CssClass="TextBox"></asp:TextBox></td>
             </tr>
             <tr>
-                <td><asp:Label ID="Label4" runat="server" CssClass="Label" Text="Password:"></asp:Label></td>
+                <td align="right"><asp:Label ID="Label4" runat="server" CssClass="Label" Text="Password:"></asp:Label></td>
                 <td><asp:TextBox ID="TextBoxPassword" runat="server" TextMode="Password" Width="150px" CssClass="TextBox"></asp:TextBox></td>
             </tr>
             <tr>
@@ -104,6 +108,12 @@
             <tr>
                 <td colspan=2><asp:HyperLink ID="HyperLink3" runat="server" CssClass="Label" NavigateUrl="ChangePassword.aspx">Change Password</asp:HyperLink></td>
             </tr>                  
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan=2 align=center class="SmallLabel">T&nbsp;E&nbsp;N&nbsp;N&nbsp;E&nbsp;S&nbsp;S&nbsp;E&nbsp;E&nbsp;&nbsp;&nbsp;V&nbsp;A&nbsp;L&nbsp;L&nbsp;E&nbsp;Y&nbsp;&nbsp;&nbsp;A&nbsp;U&nbsp;T&nbsp;H&nbsp;O&nbsp;R&nbsp;I&nbsp;T&nbsp;Y</td>
+            </tr>
         </table>
     </form>
 </body>
