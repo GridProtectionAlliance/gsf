@@ -10,7 +10,7 @@ Partial Class Login
     Private queryStringExists, returnUrlHasQueryString As Boolean
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        If Not Request.Url.Scheme.StartsWith("https") Then
+        If Not String.Compare(Request.Url.Scheme, "https", True) Then
             Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
         End If
         Me.TextBoxUserName.Focus()

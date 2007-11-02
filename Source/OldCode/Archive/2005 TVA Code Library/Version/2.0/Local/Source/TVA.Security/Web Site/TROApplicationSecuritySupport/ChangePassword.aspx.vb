@@ -88,7 +88,7 @@ Partial Class ChangePassword
     End Sub
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        If Not Request.Url.ToString.ToLower.Contains("https://") Then
+        If Not String.Compare(Request.Url.Scheme, "https", True) Then
             Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
         End If
         Me.TextBoxUserName.Focus()
