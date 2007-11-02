@@ -314,6 +314,11 @@ Namespace Application
                 .Append(m_parent.Request.Url.Scheme)
                 .Append(System.Uri.SchemeDelimiter)
                 .Append(m_parent.Request.Url.Host)
+                If Not m_parent.Request.Url.IsDefaultPort Then
+                    ' Port other than the default port 80 is used to access the web site.
+                    .Append(":")
+                    .Append(m_parent.Request.Url.Port)
+                End If
                 .Append(m_parent.Request.ApplicationPath)
                 .Append("/")
 
