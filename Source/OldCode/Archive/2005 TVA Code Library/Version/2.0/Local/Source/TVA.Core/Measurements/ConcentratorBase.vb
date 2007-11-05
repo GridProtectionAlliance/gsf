@@ -936,7 +936,7 @@ Namespace Measurements
                         Monitor.Exit(measurements)
                     End Try
                 Else
-                    Thread.Sleep(0)
+                    Thread.Sleep(1)
                 End If
             Loop
 
