@@ -30,6 +30,9 @@
 '       Removed IDisposable implementation because of continued flushing errors.
 '  08/17/2007 - Darrell Zuercher
 '       Edited code comments.
+'  11/05/2007 - J. Ritchie Carroll
+'       Modified flush to complete tasks on calling thread - this avoids errors when timer
+'       gets disposed before flush call.
 '
 '*******************************************************************************************************
 
@@ -194,7 +197,6 @@ Namespace Collections
         Private m_startTime As Long
         Private m_stopTime As Long
         Private m_debugMode As Boolean
-        Private m_waitHandle As AutoResetEvent
         Private m_isDisposed As Boolean
         Private m_realTimeProcessThread As Thread
         Private m_realTimeProcessThreadPriority As ThreadPriority
@@ -865,41 +867,36 @@ Namespace Collections
         ''' </remarks>
         Public Sub Flush()
 
-            ' Disposes managed resources.
+            ' Stop all queue processing...
+            [Stop]()
+
             If m_enabled Then
                 ' Only waits around if there is something to process.
                 If Count > 0 Then
-                    Dim originalInterval As Double
                     Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
                     Dim originalRequeueOnException As Boolean = m_requeueOnException
 
-                    ' We must disable requeueing of items or this method will continue indefinitely.
+                    ' We must disable requeueing of items or this method could continue indefinitely.
                     m_requeueOnTimeout = False
                     m_requeueOnException = False
 
-                    ' If we are running a process timer, we will reduce time between calls to a minimum.
-                    If Not m_processingIsRealTime Then
-                        originalInterval = m_processTimer.Interval
-                        m_processTimer.Interval = 1
-                    End If
+                    ' Create a real-time processing loop that will process remaining items as quickly as possible.
+                    SyncLock m_processQueue
+                        Do While m_processQueue.Count > 0
+                            If m_processItemsFunction Is Nothing Then
+                                ' Processes one item at a time.
+                                ProcessNextItem()
+                            Else
+                                ' Processes multiple items at once.
+                                ProcessNextItems()
+                            End If
+                        Loop
+                    End SyncLock
 
-                    ' Creates a new auto-resetting wait event
-                    m_waitHandle = New AutoResetEvent(False)
-
-                    ' Waits until all data has been processed
-                    m_waitHandle.WaitOne()
-
-                    ' Deletes wait handle - only needed while flushing
-                    m_waitHandle = Nothing
-
-                    ' Just in case user continues to use queue after disposal, this restores original states.
-                    If Not m_processingIsRealTime Then m_processTimer.Interval = originalInterval
+                    ' Just in case user continues to use queue after flush, this restores original states.
                     m_requeueOnTimeout = originalRequeueOnTimeout
                     m_requeueOnException = originalRequeueOnException
                 End If
-
-                ' All items have been processed - stop queue.
-                [Stop]()
             End If
 
         End Sub
@@ -1324,9 +1321,6 @@ Namespace Collections
                 m_processItemFunction(item)
                 Interlocked.Increment(m_itemsProcessed)
 
-                ' Signals completion of processed items, if we are flushing data on shutdown.
-                If m_waitHandle IsNot Nothing AndAlso Count = 0 Then m_waitHandle.Set()
-
                 ' Notifies consumers of successfully processed items.
                 RaiseEvent ItemProcessed(item)
             Catch ex As ThreadAbortException
@@ -1349,9 +1343,6 @@ Namespace Collections
                 ' Invokes user function to process items.
                 m_processItemsFunction(items)
                 Interlocked.Add(m_itemsProcessed, CLng(items.Length))
-
-                ' Signals completion of processed items, if we are flushing data on shutdown.
-                If m_waitHandle IsNot Nothing AndAlso Count = 0 Then m_waitHandle.Set()
 
                 ' Notifies consumers of successfully processed items.
                 RaiseEvent ItemsProcessed(items)
