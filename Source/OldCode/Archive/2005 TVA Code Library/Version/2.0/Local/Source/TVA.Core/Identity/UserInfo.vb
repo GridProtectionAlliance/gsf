@@ -17,11 +17,15 @@
 '  09/27/2006 - Pinal C. Patel
 '       Added Authenticate() function.
 '  09/29/2006 - Pinal C. Patel
-'       Added support to impersonate previliged user for retrieving user information.
+'       Added support to impersonate previliged user for retrieving user information
+'  11/06/2007 - Pinal C. Patel
+'       Modified the logic of Authenticate method to use the user's DirectoryEntry instance
+'       Modified UserEntry property to impersonate privileged user if configured for the instance
 '
 '*******************************************************************************************************
 
 Imports System.DirectoryServices
+Imports System.Security.Principal
 
 Namespace Identity
 
@@ -95,7 +99,16 @@ Namespace Identity
         Public ReadOnly Property UserEntry() As DirectoryEntry
             Get
                 If m_userEntry Is Nothing Then
+                    Dim currentContext As WindowsImpersonationContext = Nothing
                     Try
+                        ' 11/06/2007 - PCP: Some change in the AD now causes the searching the AD to fail also if 
+                        ' this code is not being executed under a domain account which was not the case before; 
+                        ' before only AD property lookup had this behavior.
+                        If m_usePreviligedAccount Then
+                            ' Impersonate to the previliged account if specified.
+                            currentContext = Common.ImpersonateUser(PrevilegedUserName, PrevilegedUserPassword)
+                        End If
+
                         ' 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
                         ' This is done to overcome "The server is not operational" COM exception that was being 
                         ' encountered when a domain name was being specified.
@@ -109,6 +122,9 @@ Namespace Identity
                     Catch
                         m_userEntry = Nothing
                         Throw
+                    Finally
+                        ' Undo impersonation if it was performed.
+                        If currentContext IsNot Nothing Then Common.EndImpersonation(currentContext)
                     End Try
                 End If
 
@@ -119,7 +135,7 @@ Namespace Identity
         ''' <summary>Returns adctive directory value for specified property</summary>
         Public ReadOnly Property UserProperty(ByVal propertyName As System.String) As String
             Get
-                Dim currentContext As System.Security.Principal.WindowsImpersonationContext = Nothing
+                Dim currentContext As WindowsImpersonationContext = Nothing
                 Try
                     If m_usePreviligedAccount Then
                         ' Impersonate to the previliged account if specified.
@@ -230,14 +246,24 @@ Namespace Identity
         Public Function Authenticate(ByVal password As String) As Boolean
 
             Try
-                Dim userEntry As New DirectoryEntry()
-                userEntry.Username = m_username
-                userEntry.Password = password
-                Return New DirectorySearcher(userEntry).FindOne() IsNot Nothing
+                Dim lookupResult As String
+
+                ' Set the credentials to use for looking up AD info.
+                UserEntry.Username = m_username
+                UserEntry.Password = password
+
+                ' We'll lookup a AD property which will fail if the credentials are incorrect.
+                lookupResult = UserProperty("displayName")
+
+                ' Remove the username and password we used for authentication.
+                UserEntry.Username = Nothing
+                UserEntry.Password = Nothing
+
+                ' AD property value will be null string if the AD property lookup failed.
+                Return Not String.IsNullOrEmpty(lookupResult)
             Catch ex As Exception
-                ' Failed to authenticate against the active directory with the specified password.
+                ' The one exception we might get is when we're getting the user's AD entry.
             End Try
-            Return False
 
         End Function
 
