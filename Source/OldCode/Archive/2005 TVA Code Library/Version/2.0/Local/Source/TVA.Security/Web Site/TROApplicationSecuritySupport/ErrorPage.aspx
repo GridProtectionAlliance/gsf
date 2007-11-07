@@ -92,7 +92,7 @@
                 <td align=left colspan=2><asp:Label ID="LabelErrorType" runat="server" CssClass="HeadingLabel"></asp:Label></td>                
             </tr>            
             <tr>
-                <td colspan="2"><asp:Label ID="LabelDetailError" runat="server" CssClass="ErrorLabel"></asp:Label></td>
+                <td colspan="2"><asp:Label ID="LabelDetailError" runat="server" CssClass="Label"></asp:Label></td>
             </tr>
             <tr>
                 <td width=125>&nbsp;</td>

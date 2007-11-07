@@ -23,7 +23,7 @@ Partial Class ErrorPage
                 Select Case CType(Request("t").ToString(), ErrorTypes)
                     Case ErrorTypes.AccessDenied
                         Me.LabelErrorType.Text = "Access Denied"
-                        Me.LabelDetailError.Text = "You are not authorized to view this page. <BR>Please request an access by calling TVA Operations Duty Specialist at 423-751-1700."
+                        Me.LabelDetailError.Text = "You are not authorized to view this page."
                     Case ErrorTypes.AppNotConfig
                         Me.LabelErrorType.Text = "Application Configuration Error"
                         Me.LabelDetailError.Text = "Client application is not configured properly."
@@ -39,13 +39,12 @@ Partial Class ErrorPage
                                         "<li>Password must contain at least 1 lower case letter</li>" & "</ul>"
                     Case Else
                         Me.LabelErrorType.Text = "Error Occured"
-                        Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please check that your username and password is correct." & _
-                                                    "<BR>If you do not have an account please apply for one by calling TVA Operations Duty Specialist at 423-751-1700."
+                        Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please check that your username and password is correct." 
                 End Select
 
             Else
                 Me.LabelErrorType.Text = "Error Occured"
-                Me.LabelDetailError.Text = "Error occured while processing your request. <BR>Please call the TVA Operations Duty Specialist at 423-751-1700."
+                Me.LabelDetailError.Text = "Error occured while processing your request."
 
             End If
 
