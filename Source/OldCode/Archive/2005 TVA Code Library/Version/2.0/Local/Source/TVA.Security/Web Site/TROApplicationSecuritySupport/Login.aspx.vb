@@ -93,14 +93,22 @@ Partial Class Login
                 connectionString = Session("ConnectionString")
                 returnUrl = Session("ReturnUrl")
 
-                Dim returnUri As Uri = New Uri(Session("ReturnUrl"))
-                Dim query As String = returnUri.Query
-                If query.Length > 0 Then
+                '*** This lines are commented as there was problem with the API when using relative urls to redirect.
+                '*** Changes made on 11/08/2007 by Mehul
+                'Dim returnUri As Uri = New Uri(Session("ReturnUrl"))
+                'Dim query As String = returnUri.Query
+                'If query.Length > 0 Then
+                '    ViewState("ReturnUrlHasQueryString") = True
+                'Else
+                '    ViewState("ReturnUrlHasQueryString") = False
+                'End If
+                'ViewState("QueryStringExists") = True
+
+                If returnUrl.Contains("?") Then
                     ViewState("ReturnUrlHasQueryString") = True
                 Else
                     ViewState("ReturnUrlHasQueryString") = False
                 End If
-                ViewState("QueryStringExists") = True
 
             Else
                 queryStringExists = False
