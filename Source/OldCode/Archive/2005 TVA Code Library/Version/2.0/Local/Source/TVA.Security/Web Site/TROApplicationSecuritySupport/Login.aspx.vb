@@ -102,13 +102,12 @@ Partial Class Login
                 'Else
                 '    ViewState("ReturnUrlHasQueryString") = False
                 'End If
-                'ViewState("QueryStringExists") = True
-
                 If returnUrl.Contains("?") Then
                     ViewState("ReturnUrlHasQueryString") = True
                 Else
                     ViewState("ReturnUrlHasQueryString") = False
                 End If
+                ViewState("QueryStringExists") = True
 
             Else
                 queryStringExists = False
