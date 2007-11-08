@@ -17,10 +17,13 @@
 '  09/27/2006 - Pinal C. Patel
 '       Added Authenticate() function.
 '  09/29/2006 - Pinal C. Patel
-'       Added support to impersonate previliged user for retrieving user information
+'       Added support to impersonate privileged user for retrieving user information
 '  11/06/2007 - Pinal C. Patel
 '       Modified the logic of Authenticate method to use the user's DirectoryEntry instance
 '       Modified UserEntry property to impersonate privileged user if configured for the instance
+'  11/08/2007 - J. Ritchie Carroll
+'       Corrected spelling of "Previleged" - this was a breaking change.
+'       Also, implemented user customizable implementation of previleged account credentials.
 '
 '*******************************************************************************************************
 
@@ -34,11 +37,18 @@ Namespace Identity
         Private m_loginID As String
         Private m_domain As String
         Private m_username As String
-        Private m_usePreviligedAccount As Boolean
+        Private m_usePrivilegedAccount As Boolean
         Private m_userEntry As DirectoryEntry
 
-        Private Const PrevilegedUserName As String = "esocss"
-        Private Const PrevilegedUserPassword As String = "pwd4ctrl"
+        Private m_previlegedUserName As String
+        Private m_previlegedPassword As String
+        Private m_previlegedDomain As String
+
+        ' TODO: As soon as "esocss" account goes away - the default entries will need to be removed and users will
+        ' have to call the "DefinePriviledgedAccount" function with their own credientials...
+        Private Const DefaultPrevilegedUserName As String = "esocss"
+        Private Const DefaultPrevilegedPassword As String = "pwd4ctrl"
+        Private Const DefaultPrevilegedDomain As String = "TVA"
 
         Public Sub New(ByVal username As String, ByVal domain As String)
 
@@ -47,9 +57,9 @@ Namespace Identity
         End Sub
 
         ''' <summary>Initializes a new instance of the user information class.</summary>
-        Public Sub New(ByVal username As String, ByVal domain As String, ByVal usePreviligedAccount As Boolean)
+        Public Sub New(ByVal username As String, ByVal domain As String, ByVal usePrivilegedAccount As Boolean)
 
-            MyClass.New(domain & "\" & username, usePreviligedAccount)
+            MyClass.New(domain & "\" & username, usePrivilegedAccount)
 
         End Sub
 
@@ -61,32 +71,51 @@ Namespace Identity
 
         ''' <summary>Initializes a new instance of the user information class.</summary>
         ''' <remarks>Specify login information as domain\username.</remarks>
-        Public Sub New(ByVal loginID As String, ByVal usePreviligedAccount As Boolean)
+        Public Sub New(ByVal loginID As String, ByVal usePrivilegedAccount As Boolean)
 
             Dim loginIDParts As String() = loginID.Split("\"c)
             If loginIDParts.Length = 2 Then
                 m_domain = loginIDParts(0)
                 m_username = loginIDParts(1)
             End If
+
             m_loginID = loginID
-            m_usePreviligedAccount = usePreviligedAccount
+            m_usePrivilegedAccount = usePrivilegedAccount
+
+            m_previlegedUserName = DefaultPrevilegedUserName
+            m_previlegedPassword = DefaultPrevilegedPassword
+            m_previlegedDomain = DefaultPrevilegedDomain
 
         End Sub
 
         ''' <summary>
-        ''' Gets or sets a boolean value indicating whether a previliged account will be used for retrieving
+        ''' Gets or sets a boolean value indicating whether a privileged account will be used for retrieving
         ''' information about the user from the Active Directory.
         ''' </summary>
         ''' <value></value>
-        ''' <returns>True if previliged account is to be used; otherwise False.</returns>
-        Public Property UsePreviligedAccount() As Boolean
+        ''' <returns>True if privileged account is to be used; otherwise False.</returns>
+        Public Property UsePrivilegedAccount() As Boolean
             Get
-                Return m_usePreviligedAccount
+                Return m_usePrivilegedAccount
             End Get
             Set(ByVal value As Boolean)
-                m_usePreviligedAccount = value
+                m_usePrivilegedAccount = value
             End Set
         End Property
+
+        ''' <summary>
+        ''' Defines priviledged account information
+        ''' </summary>
+        ''' <param name="username">Username of priviledged account</param>
+        ''' <param name="password">Password of priviledged account</param>
+        ''' <param name="domain">Domain of priviledged account</param>
+        Public Sub DefinePriviledgedAccount(ByVal username As String, ByVal password As String, ByVal domain As String)
+
+            m_previlegedUserName = username
+            m_previlegedPassword = password
+            m_previlegedDomain = domain
+
+        End Sub
 
         ''' <summary>Gets the login ID of the user.</summary>
         Public ReadOnly Property LoginID() As String
@@ -104,9 +133,9 @@ Namespace Identity
                         ' 11/06/2007 - PCP: Some change in the AD now causes the searching the AD to fail also if 
                         ' this code is not being executed under a domain account which was not the case before; 
                         ' before only AD property lookup had this behavior.
-                        If m_usePreviligedAccount Then
-                            ' Impersonate to the previliged account if specified.
-                            currentContext = Common.ImpersonateUser(PrevilegedUserName, PrevilegedUserPassword)
+                        If m_usePrivilegedAccount Then
+                            ' Impersonate to the privileged account if specified.
+                            currentContext = Common.ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain)
                         End If
 
                         ' 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
@@ -137,9 +166,9 @@ Namespace Identity
             Get
                 Dim currentContext As WindowsImpersonationContext = Nothing
                 Try
-                    If m_usePreviligedAccount Then
-                        ' Impersonate to the previliged account if specified.
-                        currentContext = Common.ImpersonateUser(PrevilegedUserName, PrevilegedUserPassword)
+                    If m_usePrivilegedAccount Then
+                        ' Impersonate to the privileged account if specified.
+                        currentContext = Common.ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain)
                     End If
 
                     Return UserEntry.Properties(propertyName)(0).ToString().Replace("  ", " ").Trim()
