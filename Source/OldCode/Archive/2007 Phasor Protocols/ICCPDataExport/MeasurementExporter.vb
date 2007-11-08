@@ -160,6 +160,20 @@ Public Class MeasurementExporter
 
     End Sub
 
+    Public Overrides Sub Start()
+
+        MyBase.Start()
+        If m_exportQueue IsNot Nothing Then m_exportQueue.Start()
+
+    End Sub
+
+    Public Overrides Sub [Stop]()
+
+        MyBase.[Stop]()
+        If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
+
+    End Sub
+
     Public Overrides Sub Dispose()
 
         If Not m_disposed Then
