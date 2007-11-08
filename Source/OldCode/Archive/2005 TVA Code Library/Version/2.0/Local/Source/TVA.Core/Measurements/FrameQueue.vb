@@ -12,9 +12,12 @@
 '  -----------------------------------------------------------------------------------------------------
 '  11/01/2007 - J. Ritchie Carroll
 '       Initial version of source generated
+'  11/08/2007 - J. Ritchie Carroll
+'       Optimized "Pop" call to be a no-wait operation
 '
 '*******************************************************************************************************
 
+Imports System.Threading
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 
@@ -55,16 +58,55 @@ Namespace Measurements
 
         Public Sub Pop()
 
-            SyncLock m_frames
-                m_frames.RemoveAt(0)
+            If Monitor.TryEnter(m_frames) Then
+                Try
+                    ' Got a lock - remove frame
+                    m_frames.RemoveAt(0)
 
-                If m_frames.Count > 0 Then
-                    m_head = m_frames(0)
+                    If m_frames.Count > 0 Then
+                        m_head = m_frames(0)
+                    Else
+                        m_head = Nothing
+                        m_tail = Nothing
+                    End If
+                Finally
+                    Monitor.Exit(m_frames)
+                End Try
+            Else
+                ' Argh, no lock.  Oh well, no rush - frame's already been handled so
+                ' we'll just remove it a little later
+                ThreadPool.QueueUserWorkItem(AddressOf Pop)
+            End If
+
+        End Sub
+
+        Private Sub Pop(ByVal state As Object)
+
+            ' We weren't able to get an immediate lock to remove top frame from original
+            ' "Pop" call so now we're running on an independent thread and we'll hang
+            ' around until we can get that work done...
+            Do While True
+                If Monitor.TryEnter(m_frames) Then
+                    Try
+                        ' Now we have a lock, so remove frame
+                        m_frames.RemoveAt(0)
+
+                        If m_frames.Count > 0 Then
+                            m_head = m_frames(0)
+                        Else
+                            m_head = Nothing
+                            m_tail = Nothing
+                        End If
+
+                        Exit Do
+                    Finally
+                        Monitor.Exit(m_frames)
+                    End Try
                 Else
-                    m_head = Nothing
-                    m_tail = Nothing
+                    ' Snooze a bit and try again...
+                    Thread.Sleep(1)
                 End If
-            End SyncLock
+            Loop
 
         End Sub
 
@@ -94,6 +136,7 @@ Namespace Measurements
             Dim destinationTicks As Long = CLng(ticks / m_ticksPerFrame) * m_ticksPerFrame
             Dim frameIndex As Integer
 
+            ' Wait for queue lock
             SyncLock m_frames
                 frameIndex = m_frames.BinarySearch(New Frame(destinationTicks))
 
