@@ -153,10 +153,7 @@ Public Class MeasurementExporter
 
         ' Set up a synchronous process queue to handle exports that will limit total export time to export interval - queue should
         ' never have more than one item queued at once...
-        m_exportQueue = ProcessQueue(Of IFrame).CreateSynchronousQueue(AddressOf ExportMeasurements, 1, m_exportInterval, False, False)
-
-        ' Mark initialization as complete
-        m_initialized = True
+        m_exportQueue = ProcessQueue(Of IFrame).CreateSynchronousQueue(AddressOf ExportMeasurements, 10, m_exportInterval * 1000, False, False)
 
     End Sub
 
@@ -164,6 +161,9 @@ Public Class MeasurementExporter
 
         MyBase.Start()
         If m_exportQueue IsNot Nothing Then m_exportQueue.Start()
+
+        ' Mark initialization as complete
+        m_initialized = True
 
     End Sub
 
