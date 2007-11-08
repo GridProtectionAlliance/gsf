@@ -288,39 +288,28 @@ Namespace Application
         Private Function GetSafeUrl(ByVal webPage As String) As String
 
             With New StringBuilder()
+                Dim getRequest As WebRequest = Nothing
                 Try
-                    ' First try to make a request for the page locally. If we're unable to request the page
-                    ' locally or if an exception is encountered when making the request, we'll use the page
-                    ' at one of the three remote web sites (development/acceptance/production).
-                    Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & webPage)
+                    ' First, we'll try to access the specified web page locally by hitting the web site at the
+                    ' default port 80.
+                    getRequest = WebRequest.Create(GetLocalWebSiteUrl(False) & webPage)
                     getRequest.Credentials = CredentialCache.DefaultCredentials
 
-                    If getRequest.GetResponse() Is Nothing Then
+                    getRequest.GetResponse()
+                Catch ex1 As Exception
+                    Try
+                        ' Next, we'll try to access the specified web page locally by hitting the web site at
+                        ' a port other than 80 if it is running on a different port.
+                        getRequest = WebRequest.Create(GetLocalWebSiteUrl(True) & webPage)
+                        getRequest.Credentials = CredentialCache.DefaultCredentials
+
+                        getRequest.GetResponse()
+                    Catch ex2 As Exception
+                        ' If all fails, we use one of three remote web sites (development/acceptance/production).
                         .Append(GetRemoteWebSiteUrl())
-                    End If
-                Catch ex As Exception
-                    .Append(GetRemoteWebSiteUrl())
+                    End Try
                 End Try
                 .Append(webPage)
-
-                Return .ToString()
-            End With
-
-        End Function
-
-        Private Function GetLocalWebSiteUrl() As String
-
-            With New StringBuilder()
-                .Append(m_parent.Request.Url.Scheme)
-                .Append(System.Uri.SchemeDelimiter)
-                .Append(m_parent.Request.Url.Host)
-                If Not m_parent.Request.Url.IsDefaultPort Then
-                    ' Port other than the default port 80 is used to access the web site.
-                    .Append(":")
-                    .Append(m_parent.Request.Url.Port)
-                End If
-                .Append(m_parent.Request.ApplicationPath)
-                .Append("/")
 
                 Return .ToString()
             End With
@@ -337,9 +326,28 @@ Namespace Application
                     Case SecurityServer.Acceptance
                         .Append("chaaesoweb.cha.tva.gov")
                     Case SecurityServer.Production
-                        .Append("opweb1.cha.tva.gov")
+                        .Append("troweb.cha.tva.gov")
                 End Select
                 .Append("/troapplicationsecurity/")
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetLocalWebSiteUrl(ByVal addPort As Boolean) As String
+
+            With New StringBuilder()
+                .Append(m_parent.Request.Url.Scheme)
+                .Append(System.Uri.SchemeDelimiter)
+                .Append(m_parent.Request.Url.Host)
+                If Not m_parent.Request.Url.IsDefaultPort AndAlso addPort Then
+                    ' Port other than the default port 80 is used to access the web site.
+                    .Append(":")
+                    .Append(m_parent.Request.Url.Port)
+                End If
+                .Append(m_parent.Request.ApplicationPath)
+                .Append("/")
 
                 Return .ToString()
             End With
