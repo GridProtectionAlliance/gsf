@@ -75,6 +75,7 @@ Namespace Measurements
             Else
                 ' Argh, no lock.  Oh well, no rush - frame's already been handled so
                 ' we'll just remove it a little later
+                m_head = Nothing
                 ThreadPool.QueueUserWorkItem(AddressOf Pop)
             End If
 
@@ -152,7 +153,7 @@ Namespace Measurements
                         m_frames.Sort()
                     End If
 
-                    If m_head Is Nothing Then m_head = m_tail
+                    If m_head Is Nothing AndAlso m_frames.Count = 1 Then m_head = m_tail
                 Else
                     ' Found desired frame
                     frame = m_frames(frameIndex)
