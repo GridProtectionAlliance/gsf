@@ -58,36 +58,21 @@ Namespace Measurements
 
         Public Sub Pop()
 
-            If Monitor.TryEnter(m_frames) Then
-                Try
-                    ' Got a lock - remove frame
-                    m_frames.RemoveAt(0)
-
-                    If m_frames.Count > 0 Then
-                        m_head = m_frames(0)
-                    Else
-                        m_head = Nothing
-                        m_tail = Nothing
-                    End If
-                Finally
-                    Monitor.Exit(m_frames)
-                End Try
-            Else
-                ' Argh, no lock.  Oh well, no rush - frame's already been handled so
-                ' we'll just remove it a little later
-                m_head = Nothing
-                ThreadPool.QueueUserWorkItem(AddressOf Pop)
-            End If
+            ' Frame's already been handled so there's no rush in removing it, so
+            ' we just remove it a little later making this a no-wait operation
+            m_head = Nothing
+            ThreadPool.QueueUserWorkItem(AddressOf Pop)
 
         End Sub
 
         Private Sub Pop(ByVal state As Object)
 
-            ' We weren't able to get an immediate lock to remove top frame from original
+            ' We didn't try for an immediate lock to remove top frame from original
             ' "Pop" call so now we're running on an independent thread and we'll hang
             ' around until we can get that work done...
             Do While True
-                If Monitor.TryEnter(m_frames) Then
+                ' Try for lock - we'll wait a moment to see if we can get it...
+                If Monitor.TryEnter(m_frames, 1) Then
                     Try
                         ' Now we have a lock, so remove frame
                         m_frames.RemoveAt(0)
@@ -104,7 +89,7 @@ Namespace Measurements
                         Monitor.Exit(m_frames)
                     End Try
                 Else
-                    ' Snooze a bit and try again...
+                    ' Snooze for a bit and try again...
                     Thread.Sleep(1)
                 End If
             Loop
