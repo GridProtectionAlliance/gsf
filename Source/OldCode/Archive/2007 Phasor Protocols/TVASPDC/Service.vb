@@ -637,16 +637,18 @@ Public Class Service
         ' queued the measurements for archival...
 
         If measurements IsNot Nothing Then
+            Dim x As Integer
+
             ' Provide newly parsed measurements to all calculated measurement modules
             If m_calculatedMeasurements IsNot Nothing Then
-                For x As Integer = 0 To m_calculatedMeasurements.Length - 1
+                For x = 0 To m_calculatedMeasurements.Length - 1
                     m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
                 Next
             End If
 
             ' Provide newly parsed measurements to all data concentrators
             If m_measurementConcentrators IsNot Nothing Then
-                For x As Integer = 0 To m_measurementConcentrators.Length - 1
+                For x = 0 To m_measurementConcentrators.Length - 1
                     m_measurementConcentrators(x).SortMeasurements(measurements)
                 Next
             End If
