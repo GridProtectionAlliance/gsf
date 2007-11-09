@@ -118,8 +118,9 @@ Namespace Measurements
 
         Public Function GetFrame(ByVal ticks As Long) As IFrame
 
-            Dim frame As IFrame
+            ' Calculate destination ticks for this frame
             Dim destinationTicks As Long = CLng(ticks / m_ticksPerFrame) * m_ticksPerFrame
+            Dim frame As IFrame
             Dim frameIndex As Integer
 
             ' Wait for queue lock
