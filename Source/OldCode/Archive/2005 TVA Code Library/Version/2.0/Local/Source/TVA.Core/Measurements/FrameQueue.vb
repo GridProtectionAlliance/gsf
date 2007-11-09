@@ -71,8 +71,8 @@ Namespace Measurements
             ' "Pop" call so now we're running on an independent thread and we'll hang
             ' around until we can get that work done...
             Do While True
-                ' Try for lock - we'll wait a moment to see if we can get it...
-                If Monitor.TryEnter(m_frames, 1) Then
+                ' Attempt a lock, no need to wait...
+                If Monitor.TryEnter(m_frames) Then
                     Try
                         ' Now we have a lock, so remove frame
                         m_frames.RemoveAt(0)
