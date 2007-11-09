@@ -121,10 +121,7 @@ Namespace Application
                         '   "Integrated Windows Authentication" for the web site, as doing so disable the debugging
                         '   capabilities from the Visual Studio IDE.
                         ' Note: Both of the scenarios above require that the person trying do access the secured web 
-                        '       page with someone else's credentials does not access to the web page. If the person
-                        '       has access, then the condition below will initialize the user data from the person's
-                        '       login ID and use this data to determine whether or not the user has access to the 
-                        '       secure web page.
+                        '       page with someone else's credentials does not access to the web page. 
                         InitializeUser(username, password)
                     ElseIf Not String.IsNullOrEmpty(userLoginID) Then
                         InitializeUser(userLoginID.Split("\"c)(1))
@@ -141,6 +138,9 @@ Namespace Application
                     If beforeAuthenticateEventData.Cancel Then Exit Sub
 
                     If UserHasApplicationAccess() Then
+                        ' Upon successful login, we'll cache the user data if specified in the configuration.
+                        If m_enableCaching Then CacheUserData()
+
                         ' User has been authenticated successfully and has access to the specified application.
                         Dim accessGrantedEventData As New CancelEventArgs()
                         RaiseEvent AccessGranted(Me, accessGrantedEventData)
@@ -265,9 +265,6 @@ Namespace Application
                 connection = New SqlConnection(ConnectionString)
                 connection.Open()
                 m_user = New User(username, password, connection, m_applicationName)
-
-                ' We'll cache the user data if specified in the configuration.
-                If m_enableCaching Then CacheUserData()
             Catch ex As SqlException
                 ' We'll notifying about the excountered SQL exception by rasing an event.
                 RaiseEvent DbConnectionException(Me, New GenericEventArgs(Of Exception)(ex))

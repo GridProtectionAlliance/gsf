@@ -112,10 +112,18 @@ Namespace Application
             If m_parent IsNot Nothing Then
                 ExtractWebFiles(False)   ' Make sure that the required web file exist in the application bin directory.
 
+                Dim webPage As String = "Login.aspx"
+                Dim redirUrl As String = GetSafeUrl(webPage)
                 With New StringBuilder()
-                    .Append(GetSafeUrl("Login.aspx"))
+                    .Append(redirUrl)
                     .Append("?r=")              ' Return Url
-                    .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    If redirUrl <> webPage Then
+                        ' Redirection is absolute, so we'll provide absolute return Url.
+                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    Else
+                        ' Redirection is relative, so we'll provide relative return Url.
+                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.PathAndQuery))
+                    End If
                     .Append("&a=")              ' Application Name
                     .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
                     .Append("&c=")              ' Connection String
@@ -146,11 +154,19 @@ Namespace Application
             If m_parent IsNot Nothing Then
                 ExtractWebFiles(False)   ' Make sure that the required web file exist in the application bin directory.
 
+                Dim webPage As String = "ErrorPage.aspx"
+                Dim redirUrl As String = GetSafeUrl(webPage)
                 With New StringBuilder()
-                    .Append(GetSafeUrl("ErrorPage.aspx"))
+                    .Append(redirUrl)
                     .Append("?t=0")             ' Specify the type of error to be "Access Denied".
                     .Append("&r=")              ' Return Url
-                    .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    If redirUrl <> webPage Then
+                        ' Redirection is absolute, so we'll provide absolute return Url.
+                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
+                    Else
+                        ' Redirection is relative, so we'll provide relative return Url.
+                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.PathAndQuery))
+                    End If
                     .Append("&a=")              ' Application Name
                     .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
                     .Append("&c=")              ' Connection String
