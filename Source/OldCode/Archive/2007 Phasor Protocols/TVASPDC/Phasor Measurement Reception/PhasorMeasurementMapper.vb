@@ -47,7 +47,7 @@ Public Class PhasorMeasurementMapper
     Private m_source As String
     Private m_configurationCells As Dictionary(Of UInt16, ConfigurationCell)
     Private m_signalMeasurements As Dictionary(Of String, IMeasurement)
-    Private m_activeMeasurements As List(Of IMeasurement)
+    Private m_activeMeasurementKeys As List(Of MeasurementKey)
     Private m_isConnected As Boolean
     Private m_lastReportTime As Long
     Private m_bytesReceived As Long
@@ -108,8 +108,13 @@ Public Class PhasorMeasurementMapper
         If m_hasVirtualCells Then
             ' When we have virtual cells to contend with, it will be helpful to
             ' quickly do measurement filtering...
-            m_activeMeasurements = New List(Of IMeasurement)(m_signalMeasurements.Values)
-            m_activeMeasurements.Sort()
+            m_activeMeasurementKeys = New List(Of MeasurementKey)
+
+            For Each measurement As IMeasurement In m_signalMeasurements.Values
+                m_activeMeasurementKeys.Add(measurement.Key)
+            Next
+
+            m_activeMeasurementKeys.Sort()
         End If
 
     End Sub
@@ -130,7 +135,7 @@ Public Class PhasorMeasurementMapper
         End If
 
         ' Display extra information for mappers with virtual devices
-        If m_hasVirtualCells Then UpdateStatus(String.Format("Connected {0} with virtual devices - {1} active measurements defined", m_source, m_activeMeasurements.Count))
+        If m_hasVirtualCells Then UpdateStatus(String.Format("Connected {0} with virtual devices - {1} active measurements defined", m_source, m_activeMeasurementKeys.Count))
 
     End Sub
 
@@ -210,10 +215,12 @@ Public Class PhasorMeasurementMapper
                 For Each cell As ConfigurationCell In m_configurationCells.Values
                     ' Attempt to lookup station name in configuration frame of connected device
                     stationName = Nothing
+
                     If m_frameParser IsNot Nothing Then
                         If m_frameParser.ConfigurationFrame IsNot Nothing AndAlso m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(cell.IDCode, pmu) Then stationName = pmu.StationName
                     End If
-                    If String.IsNullOrEmpty(stationName) Then stationName = "Undefined: <" & cell.IDLabel & ">"
+
+                    If String.IsNullOrEmpty(stationName) Then stationName = "<" & cell.IDLabel & ">"
 
                     If cell.IsVirtual Then
                         .Append(TruncateRight(">> Virtual device: " & stationName, 66).PadRight(66))
@@ -312,7 +319,7 @@ Public Class PhasorMeasurementMapper
         For x As Integer = 0 To measurements.Count - 1
             measurement = measurements(x)
 
-            If m_activeMeasurements.BinarySearch(measurement) >= 0 Then
+            If m_activeMeasurementKeys.BinarySearch(measurement.Key) >= 0 Then
                 ' Track lastest reporting time
                 Dim ticks As Long = measurement.Ticks
 
