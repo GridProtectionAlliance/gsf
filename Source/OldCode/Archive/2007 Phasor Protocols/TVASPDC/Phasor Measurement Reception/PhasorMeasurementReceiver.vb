@@ -17,6 +17,7 @@
 
 Imports System.Text
 Imports System.Data.OleDb
+Imports System.Threading
 Imports TVA.Common
 Imports TVA.DateTime.Common
 Imports TVA.Data.Common
@@ -377,20 +378,32 @@ Public Class PhasorMeasurementReceiver
             ' Queue points for archival
             m_historianAdapter.QueueMeasurementsForArchival(queuedMeasurements)
 
-            ' For cases of "virtual" devices - we'll pass composed points back into
-            ' the phasor measurement mappers (a little backwards flow, eh? :)
+            ' For cases of "virtual" devices we'll pass calculated points back into the phasor
+            ' measurement mappers (a little backwards flow) to allow "reporting" functionality
+            ' for virtual devices that don't otherwise make a "connection"
             If Not m_intializing AndAlso m_hasVirtualDevices AndAlso m_mappers IsNot Nothing Then
-                For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                    ' No need to send data to mapper unless it references any virtual cells
-                    If mapper.HasVirtualCells Then
-                        ' Pass the calculated points along to any virutal devices...
-                        For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
-                            If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
-                        Next
-                    End If
-                Next
+                ' Since this is just for handling "reporting" status of virtual devices and
+                ' we need to return thread control to the calculated measurement, we throw this
+                ' update activity onto the thread pool - no rush, order not important
+                ThreadPool.QueueUserWorkItem(AddressOf UpdateVirtualDevices, queuedMeasurements)
             End If
         End If
+
+    End Sub
+
+    Private Sub UpdateVirtualDevices(ByVal state As Object)
+
+        Dim queuedMeasurements As List(Of IMeasurement) = DirectCast(state, List(Of IMeasurement))
+
+        For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+            ' No need to send data to mapper unless it references any virtual cells
+            If mapper.HasVirtualCells Then
+                ' Pass the calculated points along to any virutal devices...
+                For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
+                    If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
+                Next
+            End If
+        Next
 
     End Sub
 
