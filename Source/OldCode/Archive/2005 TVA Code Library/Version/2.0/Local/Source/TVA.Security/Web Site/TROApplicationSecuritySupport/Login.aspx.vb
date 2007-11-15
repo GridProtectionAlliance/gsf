@@ -12,8 +12,10 @@ Partial Class Login
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         If String.IsNullOrEmpty(System.Threading.Thread.CurrentPrincipal.Identity.Name) Then
             Me.ImageLogo.ImageUrl = "Images/LogoExternal.jpg"
+            Me.Page.Title = "TVA - Application Login"
         Else
             Me.ImageLogo.ImageUrl = "Images/LogoInternal.jpg"
+            Me.Page.Title = "TRO - Application Login"
         End If
 
         Me.TextBoxUserName.Focus()
