@@ -2639,10 +2639,10 @@ Namespace Collections
 #End Region
 
 #Region " IEnumerable Implementation "
+
         ''' <summary>
         ''' Gets an enumerator of all items within the queue.
         ''' </summary>
-
         Private Function IEnumerableGetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
 
             Return DirectCast(m_processQueue, IEnumerable).GetEnumerator()
