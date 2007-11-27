@@ -867,19 +867,21 @@ Namespace Collections
         ''' </remarks>
         Public Sub Flush()
 
+            Dim enabled As Boolean = m_enabled
+
             ' Stop all queue processing...
             [Stop]()
 
-            If m_enabled Then
+            If enabled Then
+                Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
+                Dim originalRequeueOnException As Boolean = m_requeueOnException
+
+                ' We must disable requeueing of items or this method could continue indefinitely.
+                m_requeueOnTimeout = False
+                m_requeueOnException = False
+
                 ' Only waits around if there is something to process.
-                If Count > 0 Then
-                    Dim originalRequeueOnTimeout As Boolean = m_requeueOnTimeout
-                    Dim originalRequeueOnException As Boolean = m_requeueOnException
-
-                    ' We must disable requeueing of items or this method could continue indefinitely.
-                    m_requeueOnTimeout = False
-                    m_requeueOnException = False
-
+                Do While Count > 0
                     ' Create a real-time processing loop that will process remaining items as quickly as possible.
                     SyncLock m_processQueue
                         Do While m_processQueue.Count > 0
@@ -892,11 +894,11 @@ Namespace Collections
                             End If
                         Loop
                     End SyncLock
+                Loop
 
-                    ' Just in case user continues to use queue after flush, this restores original states.
-                    m_requeueOnTimeout = originalRequeueOnTimeout
-                    m_requeueOnException = originalRequeueOnException
-                End If
+                ' Just in case user continues to use queue after flush, this restores original states.
+                m_requeueOnTimeout = originalRequeueOnTimeout
+                m_requeueOnException = originalRequeueOnException
             End If
 
         End Sub
