@@ -1,4 +1,22 @@
-' 03/28/2007
+'*******************************************************************************************************
+'  TVA.Parsing.BinaryDataParserBase.vb - Base class for parsing binary data
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  03/28/2007 - Pinal C. Patel
+'       Original version of source code generated
+'  11/30/2007 - Pinal C. Patel
+'       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
+'       instead of DesignMode property as the former is more accurate than the latter
+'
+'*******************************************************************************************************
 
 Option Strict On
 
@@ -315,7 +333,7 @@ Namespace Parsing
 
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
-            If Not DesignMode Then
+            If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
                 LoadSettings()  ' Load settings from the config file.
             End If
 

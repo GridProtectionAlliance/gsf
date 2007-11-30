@@ -1,4 +1,19 @@
-' 09-26-06
+'*******************************************************************************************************
+'  TVA.Security.Application.WebSecurityProvider.vb - Security provider for web applications
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  09-22-06 - Pinal C. Patel
+'       Original version of source code generated
+'
+'*******************************************************************************************************
 
 Imports System.IO
 Imports System.Net

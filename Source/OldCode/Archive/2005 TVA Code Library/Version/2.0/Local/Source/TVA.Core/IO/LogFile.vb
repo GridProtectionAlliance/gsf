@@ -1,4 +1,22 @@
-' PCP: 04-09-2007
+'*******************************************************************************************************
+'  TVA.IO.LogFile.vb - Log file that can be used for logging purpose
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  04-09-2007 - Pinal C. Patel
+'       Original version of source code generated
+'  11/30/2007 - Pinal C. Patel
+'       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
+'       instead of DesignMode property as the former is more accurate than the latter
+'
+'*******************************************************************************************************
 
 Option Strict On
 
@@ -421,7 +439,7 @@ Namespace IO
 
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
-            If Not DesignMode Then
+            If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
                 LoadSettings()            ' Loads settings from the config file.
                 If m_autoOpen Then Open() ' Opens the file automatically, if specified.
             End If

@@ -18,6 +18,11 @@
 '       Implemented the IPersistSettings and ISupportInitialize interfaces
 '  05/02/2007 - Pinal C. Patel
 '       Converted schedules to a list instead of a dictionary
+'  11/30/2007 - Pinal C. Patel
+'       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
+'       instead of DesignMode property as the former is more accurate than the latter
+'       Modified the Stop() method to avoid a  null reference exception that was most likely causing
+'       the IDE of the component's consumer to crash in design-mode
 '
 '*******************************************************************************************************
 
@@ -175,7 +180,9 @@ Namespace Scheduling
         Public Sub [Stop]()
 
             If m_enabled Then
-                If m_startTimerThread.IsAlive Then m_startTimerThread.Abort()
+                If m_startTimerThread IsNot Nothing AndAlso m_startTimerThread.IsAlive Then
+                    m_startTimerThread.Abort()
+                End If
                 If m_timer.Enabled Then
                     m_timer.Stop()
                     RaiseEvent Stopped(Me, EventArgs.Empty)
@@ -379,7 +386,7 @@ Namespace Scheduling
 
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
-            If Not DesignMode Then
+            If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
                 LoadSettings()            ' Load settings from the config file.
             End If
 

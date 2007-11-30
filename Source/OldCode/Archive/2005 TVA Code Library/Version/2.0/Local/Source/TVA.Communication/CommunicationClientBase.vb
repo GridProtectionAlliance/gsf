@@ -1,5 +1,5 @@
 '*******************************************************************************************************
-'  TVA.Communication.ClientBase.vb - Base functionality of a client for transporting data
+'  TVA.Communication.CommunicationClientBase.vb - Base functionality of a client for transporting data
 '  Copyright © 2006 - TVA, all rights reserved - Gbtc
 '
 '  Build Environment: VB.NET, Visual Studio 2005
@@ -14,6 +14,9 @@
 '       Original version of source code generated
 '  09/06/2006 - J. Ritchie Carroll
 '       Added bypass optimizations for high-speed client data access
+'  11/30/2007 - Pinal C. Patel
+'       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
+'       instead of DesignMode property as the former is more accurate than the latter
 '
 '*******************************************************************************************************
 
@@ -828,7 +831,7 @@ Public MustInherit Class CommunicationClientBase
 
     Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
-        If Not DesignMode Then
+        If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
             LoadSettings()  ' Load settings from the config file.
         End If
 

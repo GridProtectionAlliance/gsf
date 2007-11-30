@@ -1,4 +1,22 @@
-' PCP: 04/03/2007
+'*******************************************************************************************************
+'  TVA.ErrorManagement.GlobalExceptionLogger.vb - Global exception logger for windows and web apps
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  04/03/2007 - Pinal C. Patel
+'       Original version of source code generated
+'  11/30/2007 - Pinal C. Patel
+'       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
+'       instead of DesignMode property as the former is more accurate than the latter
+'
+'*******************************************************************************************************
 
 Option Strict On
 
@@ -580,7 +598,7 @@ Namespace ErrorManagement
 
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
-            If Not DesignMode Then
+            If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
                 LoadSettings()              ' Load settings from the config file.
                 If m_autoRegister Then Register() ' Start the logger automatically if specified.
                 m_parentAssembly = System.Reflection.Assembly.GetCallingAssembly()
