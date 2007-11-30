@@ -19,7 +19,13 @@
 
 Imports TVA.Text.Common
 
-Public Class Common
+Public NotInheritable Class Common
+
+    Private Sub New()
+
+        ' This class contains only global functions and is not meant to be instantiated
+
+    End Sub
 
     ''' <summary>
     ''' This function signature gets implemented as needed to allow consumers to "intercept" data before it goes through normal processing
