@@ -39,8 +39,6 @@ Namespace Application
         Private m_accConnectionString As String
         Private m_prdConnectionString As String
 
-        'Private Const ConfigurationElement As String = "SecurityProvider"
-
 #End Region
 
 #Region " Event Declaration "
@@ -195,6 +193,11 @@ Namespace Application
 #End Region
 
 #Region " Protected Code "
+
+        ''' <summary>
+        ''' Category name under which settings are to be saved in the config file.
+        ''' </summary>
+        Protected Const SettingsCategory As String = "SecurityProvider"
 
         ''' <summary>
         ''' 
