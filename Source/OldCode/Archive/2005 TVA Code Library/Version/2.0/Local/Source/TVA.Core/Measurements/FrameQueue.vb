@@ -28,6 +28,8 @@ Namespace Measurements
     Public Class FrameQueue
 
         Private m_frames As List(Of IFrame)
+        'Private m_frameLoader As Thread
+        Private m_currentTicks As Long
         Private m_head As IFrame
         Private m_tail As IFrame
         Private m_ticksPerFrame As Decimal
@@ -36,6 +38,7 @@ Namespace Measurements
         Public Sub New(ByVal ticksPerFrame As Decimal, ByVal createNewFrameFunction As CreateNewFrameFunctionSignature)
 
             m_frames = New List(Of IFrame)
+            'm_frameLoader = New Thread(AddressOf LoadFramesProc)
             m_ticksPerFrame = ticksPerFrame
             m_createNewFrameFunction = createNewFrameFunction
 
@@ -126,8 +129,17 @@ Namespace Measurements
             ' Wait for queue lock
             SyncLock m_frames
                 frameIndex = m_frames.BinarySearch(New Frame(destinationTicks))
+                If m_currentTicks < destinationTicks Then m_currentTicks = destinationTicks
 
                 If frameIndex < 0 Then
+                    '' Once running - the frame loader thread should keep us in frames
+                    '' so it would be rare that this manual frame creation will be
+                    '' needed.  Since we're here, make sure the thread is running...
+                    'If m_frameLoader Is Nothing OrElse Not m_frameLoader.IsAlive Then
+                    '    m_frameLoader = New Thread(AddressOf LoadFramesProc)
+                    '    m_frameLoader.Start()
+                    'End If
+
                     ' Didn't find frame for this timestamp so we create one
                     frame = m_createNewFrameFunction(destinationTicks)
 
@@ -149,6 +161,52 @@ Namespace Measurements
             Return frame
 
         End Function
+
+        'Private Sub LoadFramesProc()
+
+        '    'Dim framesPerSecond As Integer = CInt(CDec(TicksPerSecond) / m_ticksPerFrame)
+        '    Dim x, destinationTicks As Long
+        '    Dim frame As IFrame
+        '    Dim frameIndex As Integer
+
+        '    Do While True
+        '        ' Attempt a lock, no need to wait...
+        '        If Monitor.TryEnter(m_frames) Then
+        '            Try
+        '                ' We have a lock now, so let's check to see if we need to add some frames,
+        '                ' we'll try to keep a full second's worth of future frames out there
+        '                frame = Nothing
+
+        '                For x = m_currentTicks To m_currentTicks + TicksPerSecond Step m_ticksPerFrame
+        '                    destinationTicks = CLng(x / m_ticksPerFrame) * m_ticksPerFrame
+        '                    frameIndex = m_frames.BinarySearch(New Frame(destinationTicks))
+
+        '                    If frameIndex < 0 Then
+        '                        ' Didn't find frame for this timestamp so we create one
+        '                        frame = m_createNewFrameFunction(destinationTicks)
+        '                        m_frames.Add(frame)
+        '                    End If
+        '                Next
+
+        '                If frame IsNot Nothing Then
+        '                    If m_tail Is Nothing OrElse frame.CompareTo(m_tail) > 0 Then
+        '                        m_tail = frame
+        '                    Else
+        '                        m_frames.Sort()
+        '                    End If
+
+        '                    If m_head Is Nothing AndAlso m_frames.Count = 1 Then m_head = m_tail
+        '                End If
+        '            Finally
+        '                Monitor.Exit(m_frames)
+        '            End Try
+        '        End If
+
+        '        ' This is a lazy process, we are always snoozing and trying again...
+        '        Thread.Sleep(10)
+        '    Loop
+
+        'End Sub
 
     End Class
 
