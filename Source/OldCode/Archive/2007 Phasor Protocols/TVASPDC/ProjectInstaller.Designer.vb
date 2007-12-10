@@ -24,6 +24,7 @@
         'ServiceProcessInstaller
         '
         Me.ServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem
+        Me.ServiceProcessInstaller.Installers.AddRange(New System.Configuration.Install.Installer() {Me.ServiceInstaller})
         Me.ServiceProcessInstaller.Password = Nothing
         Me.ServiceProcessInstaller.Username = Nothing
         '
@@ -31,13 +32,13 @@
         '
         Me.ServiceInstaller.Description = "TVA's Multi-Protocol Super Phasor Data Concentration and Real-Time Calculation Se" & _
             "rvice"
-        Me.ServiceInstaller.DisplayName = "TVA Super Phasor Data Concentrator"
-        Me.ServiceInstaller.ServiceName = "TVASPDC"
+        Me.ServiceInstaller.DisplayName = "TVA SPDC 3.0"
+        Me.ServiceInstaller.ServiceName = "TVASPDC3"
         Me.ServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic
         '
         'ProjectInstaller
         '
-        Me.Installers.AddRange(New System.Configuration.Install.Installer() {Me.ServiceProcessInstaller, Me.ServiceInstaller})
+        Me.Installers.AddRange(New System.Configuration.Install.Installer() {Me.ServiceProcessInstaller})
 
     End Sub
     Friend WithEvents ServiceProcessInstaller As System.ServiceProcess.ServiceProcessInstaller

@@ -34,4 +34,4 @@ Imports System.Security.Permissions
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("2.1.98.28813")> 
 
-<Assembly: AssemblyVersion("2.1.*")> 
+<Assembly: AssemblyVersion("3.0.*")> 

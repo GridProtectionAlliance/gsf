@@ -12,7 +12,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyDescription("")> 
 <Assembly: AssemblyCompany("TVA")> 
 <Assembly: AssemblyProduct("DatAWareAdapter.vb")> 
-<Assembly: AssemblyCopyright("Copyright © TVA 2006")> 
+<Assembly: AssemblyCopyright("Copyright © TVA 2007")> 
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)>
@@ -31,4 +31,4 @@ Imports System.Runtime.InteropServices
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("2.1.33.40811")> 
 
-<Assembly: AssemblyVersion("2.2.*")> 
+<Assembly: AssemblyVersion("3.0.*")> 

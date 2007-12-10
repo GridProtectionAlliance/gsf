@@ -3987,6 +3987,11 @@ integer izmax1_(integer *n, doublecomplex *cx, integer *incx);
  
 /* Subroutine */ int zgesc2_(integer *n, doublecomplex *a, integer *lda, 
 	doublecomplex *rhs, integer *ipiv, integer *jpiv, doublereal *scale);
+
+/* Subroutine */ int zgesdd_(char *jobz, integer *m, integer *n, doublereal *
+	a, integer *lda, doublereal *s, doublereal *u, integer *ldu, 
+	doublereal *vt, integer *ldvt, doublereal *work, integer *lwork, 
+	double *rwork, integer *iwork, integer *info);
  
 /* Subroutine */ int zgesv_(integer *n, integer *nrhs, doublecomplex *a, 
 	integer *lda, integer *ipiv, doublecomplex *b, integer *ldb, integer *

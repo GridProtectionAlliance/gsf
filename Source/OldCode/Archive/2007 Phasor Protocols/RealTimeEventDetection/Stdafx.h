@@ -12,3 +12,6 @@
 #include "..\CLAPACKlibs\f2c.h"
 #include "..\CLAPACKlibs\clapack.h"
 #include "..\CLAPACKlibs\blaswrap.h"
+//#include "..\CLAPACKlibs\fftw3.h"
+extern "C" struct fftw_plan_s { void *_nouse;};
+#include "..\CLAPACKlibs\fftw3.h"

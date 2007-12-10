@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "RealTimeEventDetection.h"
 
+
 using namespace System;
 using namespace System::Text;
 using namespace System::Threading;
@@ -31,31 +32,29 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	if (String::IsNullOrEmpty(configurationSection)) ConfigurationSection = DefaultConfigSection;
 
 	// Get categorized settings section from configuration file
-	CategorizedSettingsElementCollection^ settings = TVA::Configuration::Common::CategorizedSettings[ConfigurationSection];
+    CategorizedSettingsElementCollection^ settings = TVA::Configuration::Common::CategorizedSettings[ConfigurationSection];
 
 	// Make sure needed configuration variables exist - since configuration variables will
 	// be added to config file of parent process we add them to a new configuration category
-	settings->Add("MaximumChannels", "6", "Maximum allowed data channels per PMU");
 	settings->Add("MaximumMissingPoints", "4", "Maximum allowed missing data points per channel per second");
 	settings->Add("MaximumCrossChecks", "40", "Maximum allowed number of cross-checks");
-	settings->Add("MaximumDisplayModes", "5", "Maximum allowed number of modes to display in each signal");
+	settings->Add("MaximumDisplayModes", "5", "Maximum allowed number of modes to ResultDisplay in each signal");
 	settings->Add("EstimateTriggerThreshold", "4", "Number of consistent estimates needed to trigger warning signal");
-	settings->Add("AnalysisWindow", "5", "Size of data sample window, in seconds");
+	settings->Add("AnalysisWindow", "180", "Size of data sample window, in seconds");
 	settings->Add("RemoveMeanValue", "True", "Remove mean value before analysis");
 	settings->Add("NormalizeData", "True", "NormalizeData data before analysis");
-	settings->Add("DisplayDetail", "True", "Detail display of result from each analysis");
-	settings->Add("RepeatTime", "1", "Time window used repeat analysis, in seconds");
+	settings->Add("DisplayDetail", "True", "Detail ResultDisplay of result from each analysis");
+	settings->Add("RepeatTime", "10", "Time window used repeat analysis, in seconds");
 	settings->Add("ConsistentFrequencyRange", "0.02", "Frequency range for consistent estimate");
 	settings->Add("ConsistentRatioRange", "0.02", "Ratio range for consistent estimate");
 	settings->Add("VoltageThreshold", "0.005", "Threshold of voltage for event detection");
-	settings->Add("CurrentThreshold", "0.01", "Threshold of current for event detection");
-	settings->Add("EnergyDisplayThreshold", "0.5", "Relative energy threshold used for display");
+	settings->Add("CurrentThreshold", "0.012", "Threshold of current for event detection");
+	settings->Add("EnergyDisplayThreshold", "0.5", "Relative energy threshold used for ResultDisplay");
 
 	// Save updates to config file, if any
 	TVA::Configuration::Common::SaveSettings();
 
 	// Load algorithm parameters from configuration file
-	m_maximumChannels = Convert::ToInt32(settings["MaximumChannels"]->Value);
 	m_maximumMissingPoints = Convert::ToInt32(settings["MaximumMissingPoints"]->Value);
 	m_maximumCrossChecks = Convert::ToInt32(settings["MaximumCrossChecks"]->Value);
 	m_maximumDisplayModes = Convert::ToInt32(settings["MaximumDisplayModes"]->Value);
@@ -72,66 +71,21 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	m_energyDisplayThreshold = Convert::ToDouble(settings["EnergyDisplayThreshold"]->Value);
 
 	// Initialize the input measurements needed to perform this calculation
-
-	//// Define CUMB measurements
-	//MeasurementKey^ cumbBus1VM = gcnew MeasurementKey(1608, "P0");	// TVA_CUMB-BUS1:ABBV
-	//MeasurementKey^ cumbBus1VA = gcnew MeasurementKey(1609, "P0");	// TVA_CUMB-BUS1:ABBVH
-	//MeasurementKey^ cumbMarsIM = gcnew MeasurementKey(1612, "P0");	// TVA_CUMB-MARS:ABBI
-	//MeasurementKey^ cumbMarsIA = gcnew MeasurementKey(1615, "P0");	// TVA_CUMB-MARS:ABBIH
-	//MeasurementKey^ cumbJohnIM = gcnew MeasurementKey(1616, "P0");	// TVA_CUMB-JOHN:ABBI
-	//MeasurementKey^ cumbJohnIA = gcnew MeasurementKey(1619, "P0");	// TVA_CUMB-JOHN:ABBIH
-	//MeasurementKey^ cumbDavdIM = gcnew MeasurementKey(1620, "P0");	// TVA_CUMB-DAVD:ABBI
-	//MeasurementKey^ cumbDavdIA = gcnew MeasurementKey(1623, "P0");	// TVA_CUMB-DAVD:ABBIH
-
-	//m_channelType = gcnew List<ChannelType>;
-
-	//m_channelType->Add(ChannelType::VM);
-	//m_channelType->Add(ChannelType::VA);
-	//m_channelType->Add(ChannelType::IM);
-	//m_channelType->Add(ChannelType::IA);
-	//m_channelType->Add(ChannelType::IM);
-	//m_channelType->Add(ChannelType::IA);
-	//m_channelType->Add(ChannelType::IM);
-	//m_channelType->Add(ChannelType::IA);
-
-	//// In this calculation, we manually initialize the input measurements to use for the base class since they are
- //   // a hard-coded set of inputs that will not change (i.e., no need to specifiy input measurements from SQL)
-	//List<MeasurementKey>^ inputMeasurements = gcnew List<MeasurementKey>;
-
-	//// Add CUMB channels to input measurements
-	//inputMeasurements->Add(*cumbBus1VM);	// Measurment 0
-	//inputMeasurements->Add(*cumbBus1VA);	// Measurment 1
-	//inputMeasurements->Add(*cumbMarsIM);	// Measurment 2
-	//inputMeasurements->Add(*cumbMarsIA);	// Measurment 3
-	//inputMeasurements->Add(*cumbJohnIM);	// Measurment 4
-	//inputMeasurements->Add(*cumbJohnIA);	// Measurment 5
-	//inputMeasurements->Add(*cumbDavdIM);	// Measurment 6
-	//inputMeasurements->Add(*cumbDavdIA);	// Measurment 7
-
-	//List<int>^ cumbMeasurementIndicies = gcnew List<int>;
-	//cumbMeasurementIndicies->Add(0);
-	//cumbMeasurementIndicies->Add(1);
-	//cumbMeasurementIndicies->Add(2);
-	//cumbMeasurementIndicies->Add(3);
-	//cumbMeasurementIndicies->Add(4);
-	//cumbMeasurementIndicies->Add(5);
-	//cumbMeasurementIndicies->Add(6);
-	//cumbMeasurementIndicies->Add(7);
-	// Define CUMB measurements
-
-	MeasurementKey^ jdayBusV = gcnew MeasurementKey(1608, "P0");	//
-	MeasurementKey^ jdayBusI1 = gcnew MeasurementKey(1609, "P0");	// 
-	MeasurementKey^ jdayBusI2 = gcnew MeasurementKey(1610, "P0");	// 
-	MeasurementKey^ jdayBusI3 = gcnew MeasurementKey(1611, "P0");	// 
-	MeasurementKey^ jdayBusI4 = gcnew MeasurementKey(1612, "P0");	// 
-	MeasurementKey^ jdayBusI5 = gcnew MeasurementKey(1613, "P0");	// 
-
+	MeasurementKey^ measurementKey0 = gcnew MeasurementKey(1608, "P2");      // TVA_CUMB-BUS1:ABBV  VM
+    MeasurementKey^ measurementKey1 = gcnew MeasurementKey(1610, "P2");      // TVA_CUMB-BUS2:ABBV  VM
+    MeasurementKey^ measurementKey2 = gcnew MeasurementKey(1612, "P2");      // TVA_CUMB-MARS:ABBI  IM
+    MeasurementKey^ measurementKey3 = gcnew MeasurementKey(1616, "P2");      // TVA_CUMB-JOHN:ABBI  IM
+    MeasurementKey^ measurementKey4 = gcnew MeasurementKey(1620, "P2");      // TVA_CUMB-DAVD:ABBI  IM
+	
+	//MeasurementKey^ measurementKey0 = gcnew MeasurementKey(1600, "P0");	
+	//MeasurementKey^ measurementKey1 = gcnew MeasurementKey(1601, "P0");	
+	//MeasurementKey^ measurementKey2 = gcnew MeasurementKey(1602, "P0");	
+	//MeasurementKey^ measurementKey3 = gcnew MeasurementKey(1603, "P0");	
 
 	m_channelType = gcnew List<ChannelType>;
 
 	m_channelType->Add(ChannelType::VM);
-	m_channelType->Add(ChannelType::IM);
-	m_channelType->Add(ChannelType::IM);
+	m_channelType->Add(ChannelType::VM);
 	m_channelType->Add(ChannelType::IM);
 	m_channelType->Add(ChannelType::IM);
 	m_channelType->Add(ChannelType::IM);
@@ -141,132 +95,72 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	List<MeasurementKey>^ inputMeasurements = gcnew List<MeasurementKey>;
 
 	// Add CUMB channels to input measurements
-	inputMeasurements->Add(*jdayBusV);	// Measurment 0
-	inputMeasurements->Add(*jdayBusI1);	// Measurment 1
-	inputMeasurements->Add(*jdayBusI2);	// Measurment 2
-	inputMeasurements->Add(*jdayBusI3);	// Measurment 3
-	inputMeasurements->Add(*jdayBusI4);	// Measurment 4
-	inputMeasurements->Add(*jdayBusI5);	// Measurment 5
+	inputMeasurements->Add(*measurementKey0);
+	inputMeasurements->Add(*measurementKey1);	
+	inputMeasurements->Add(*measurementKey2);	
+	inputMeasurements->Add(*measurementKey3);	
+	inputMeasurements->Add(*measurementKey4);	
 
+	List<int>^ cumbMeasurementIndicies = gcnew List<int>;
 
-	List<int>^ jdayMeasurementIndicies = gcnew List<int>;
-	jdayMeasurementIndicies->Add(0);
-	jdayMeasurementIndicies->Add(1);
-	jdayMeasurementIndicies->Add(2);
-	jdayMeasurementIndicies->Add(3);
-	jdayMeasurementIndicies->Add(4);
-	jdayMeasurementIndicies->Add(5);
+	cumbMeasurementIndicies->Add(0);
+	cumbMeasurementIndicies->Add(1);
+	cumbMeasurementIndicies->Add(2);
+	cumbMeasurementIndicies->Add(3);
+	cumbMeasurementIndicies->Add(4);
 
+	//List<int>^ tempMeasurementIndicies = gcnew List<int>;
+	//tempMeasurementIndicies->Add(0);
+	//tempMeasurementIndicies->Add(1);
+	//tempMeasurementIndicies->Add(2);
 
     InputMeasurementKeys = inputMeasurements->ToArray();
 	MinimumMeasurementsToUse = inputMeasurements->Count;
 
-	work = (double *) malloc(sizeof(double)*MaxLwork);
+	m_localTasks = gcnew List<AmbientTask^>; 
 
-	m_localTasks = gcnew List<AnalysisTask^>; 
+ 	m_localTasks->Add(gcnew AmbientTask(cumbMeasurementIndicies, "FDD"));			// Task 0
+	//m_localTasks->Add(gcnew AmbientTask(tempMeasurementIndicies, "FDD"));
 
- 	m_localTasks->Add(gcnew AnalysisTask(jdayMeasurementIndicies, "Prony"));			// Task 0
- 	m_localTasks->Add(gcnew AnalysisTask(jdayMeasurementIndicies, "MatrixPencil"));		// Task 1
- 	m_localTasks->Add(gcnew AnalysisTask(jdayMeasurementIndicies, "HTLS"));				// Task 2
+	List<int>^ cumbTaskIndicies = gcnew List<int>;
 
-	List<int>^ jdayTaskIndicies = gcnew List<int>;
-	jdayTaskIndicies->Add(0);
-	jdayTaskIndicies->Add(1);
-	jdayTaskIndicies->Add(2);
+	cumbTaskIndicies->Add(0);
 
-	m_interAreaTasks = gcnew List<AnalysisTask^>;
-
-	m_interAreaTasks->Add(gcnew AnalysisTask(nullptr, "Prony"));
-	m_interAreaTasks->Add(gcnew AnalysisTask(nullptr, "MatrixPencil"));
-	m_interAreaTasks->Add(gcnew AnalysisTask(nullptr, "HTLS"));
-
-	m_localCrossChecks = gcnew List<CrossCheck^>; 
-
-	m_localCrossChecks->Add(gcnew CrossCheck(jdayTaskIndicies, 0.02, 0.02));
-
-	m_interAreaChecks = gcnew List<CrossCheck^>; 
-
-	m_interAreaChecks->Add(gcnew CrossCheck(jdayTaskIndicies, 0.02, 0.02));
+//	m_interAreaChecks->Add(gcnew CrossCheck(jdayTaskIndicies, 0.02, 0.02));
 
 	// Initialize system path
 	m_systemPath = TVA::IO::FilePath::GetApplicationPath();
 
-	char* outputFileName;
-
-	// Open output files
-	outputFileName = StringToCharBuffer(String::Format("{0}message.txt", m_systemPath));
-	fout_message=fopen(outputFileName, "w");
-	free(outputFileName);
-	if (fout_message==NULL) throw gcnew ArgumentException("Error in opening output message file");
-    
-	// TODO: replace with structured exception handling (use throw gcnew)
-	if (m_displayDetail)
-	{
-		outputFileName = StringToCharBuffer(String::Format("{0}local_task_details.txt", m_systemPath));
-
-	    fout_local_details=fopen(outputFileName,"w");
-
-		if (fout_local_details==NULL)
-		{
-			fprintf(fout_message,"Error in opening local detailed output file data.txt\n");
-			throw gcnew ArgumentException("Error in opening output file");
-		}
-		free(outputFileName);
-
-		outputFileName = StringToCharBuffer(String::Format("{0}interarea_task_details.txt", m_systemPath));
-	    fout_inter_details=fopen(outputFileName,"w");
-		if (fout_inter_details==NULL)
-		{
-			fprintf(fout_message,"Error in opening interarea detailed output file data.txt\n");
-			throw gcnew ArgumentException("Error in opening output file");
-		}
-		free(outputFileName);
-	}
-
-	outputFileName = StringToCharBuffer(String::Format("{0}local_checks.txt", m_systemPath));
-	fout_local_xcheck=fopen(outputFileName,"w");
-	if (fout_local_xcheck==NULL)
-	{
-		fprintf(fout_message,"Error in opening local_crosscheck.txt\n");
-		throw gcnew ArgumentException("Error in opening output file");
-	}
-	free(outputFileName);
-
-	outputFileName = StringToCharBuffer(String::Format("{0}inteaarea.txt", m_systemPath));
-	fout_inter_xcheck=fopen(outputFileName,"w");
-	if (fout_inter_xcheck==NULL)
-	{
-		fprintf(fout_message,"Error in opening interarea_crosscheck.txt\n");
-		throw gcnew ArgumentException("Error in opening output file");
-	}
-	free(outputFileName);
-
-	outputFileName = StringToCharBuffer(String::Format("{0}inteaarea.txt", m_systemPath));
-	fout_mov_local_checks=fopen(outputFileName,"w");
-	if (fout_mov_local_checks==NULL)
-	{
-		fprintf(fout_message,"Error in opening output file moving_local_checks.txt\n");
-		throw gcnew ArgumentException("Error in opening output file");
-	}
-	free(outputFileName);
-
-	outputFileName = StringToCharBuffer(String::Format("{0}moving_interarea_checks.txt", m_systemPath));
-	fout_mov_inter_checks=fopen(outputFileName,"w");
-	if (fout_mov_inter_checks==NULL)
-	{
-		fprintf(fout_message,"Error in opening output file moving_interarea_checks.txt");
-		throw gcnew ArgumentException("Error in opening output file");
-	}
-	free(outputFileName);
+//	messageFile = NULL;
+	localDetailsFile = NULL;
+	interAreaDetailsFile = NULL;
+	localCrosschecksFile = NULL;
+	interAreaCrosschecksFile = NULL;
+	movingLocalCrosschecksFile = NULL;
+	movingInterAreaCrosschecksFile = NULL;
+	previousProcessedFrameIndex = 0;
 
 	// Define global channel count
 	m_channelCount = InputMeasurementKeys->Length;
 
 	// Calculate minimum needed sample size
-	m_minimumSamples = (m_analysisWindow + (int)(m_repeatTime * (m_estimateTriggerThreshold - 1)) )* expectedMeasurementsPerSecond;
+//	m_minimumSamples = (int) ((m_analysisWindow + m_repeatTime * (m_estimateTriggerThreshold - 1))* expectedMeasurementsPerSecond);
+	m_minimumSamples = (int) (m_analysisWindow * expectedMeasurementsPerSecond);
 
 	// Intitalize our rolling window data buffer
 	m_measurementMatrix = gcnew List<array<IMeasurement^, 1>^>;
+	m_newMeasurementMatrix = gcnew List<array<IMeasurement^, 1>^>;
+    
+	// Open file to write
+	if (m_displayDetail)
+	{
+		localDetailsFile = fopen("LocalTaskDetailsFile.txt","w");
+		if (localDetailsFile==NULL)
+			throw gcnew ArgumentException("Error in opening output file");
+		messageFile=fopen("Message.txt", "w");
+		if (messageFile==NULL) 
+			throw gcnew ArgumentException("Error in opening output message file");
+	}
 }
 
 void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int index)
@@ -277,43 +171,40 @@ void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int
 	array<IMeasurement^, 1>^ measurements = TVA::Common::CreateArray<IMeasurement^>(m_channelCount);
 	double* data;
 
-    bool eventFlag = false;						// event flag for each channel
-	List<bool>^ taskEvent= gcnew List<bool>;    // event flag for one task
-	List<ManualResetEvent^>^ manualEvents;		// Wait handles for threaded tasks
-	ManualResetEvent^ manualEvent;				// Current wait handle
-	ThreadState^ taskState;						// Task thread state information (thread parameters)
-
 	List<bool>^ channelEvent = gcnew List<bool>;
+	List<int>^ missPointCount = gcnew List<int>;
 	List<double>^ relativeDeviation = gcnew List<double>;
-	int m_Nx=1,m_Ny=1;
-	double maximumValue,minimumValue;
-	double meanValue,maximumDeviation;
-    int maximumIndex,minimumIndex;
+	List<int>^ successLocalCheck = gcnew List<int>;
+	List<int>^ channelsExceedingThreshold = gcnew List<int>;
+
 	int m;                             // m is the number of channels in the task
 	int N;
+	int i,j,k,task_no;
+	bool activateMonitorFlag = false;   // activate the monitoring process
+	int iPrevious, iNext;
 
-	AnalysisTask^ currentTask;
-    CrossCheck^ currentCheck;
+	AmbientTask^ currentTask;
 
-	List<double>^ crosscheckResultFrequency = gcnew List<double>;
-	List<double>^ crosscheckResultRatio = gcnew List<double>;
-	int numberSuccessLocalCheck,numberSuccessInterAreaCheck;
-	double *movingLocalFrequency = NULL,*movingLocalRatio = NULL;
-	double *movingInterAreaFrequency = NULL,*movingInterAreaRatio = NULL;
-
-    // Loop through all input measurements to see if they exist in this frame
-    for(int x = 0; x < m_channelCount; x++)
+	// Loop through all input measurements to see if they exist in this frame
+    for(i = 0; i < m_channelCount; i++)
 	{
-		measurementKey = inputMeasurements[x];
+		measurementKey = inputMeasurements[i];
 
 		if (frame->Measurements->TryGetValue(measurementKey, measurement))
-			measurements[x] = measurement;
+			measurements[i] = measurement;
 		else
-			measurements[x] = gcnew TVA::Measurements::Measurement(measurementKey.ID, measurementKey.Source, Double::NaN, frame->Ticks);
+			measurements[i] = gcnew TVA::Measurements::Measurement(measurementKey.ID, measurementKey.Source, Double::NaN, frame->Ticks);
 	}
 
 	// Maintain constant row-matrix length
-	m_measurementMatrix->Add(measurements);
+	m_newMeasurementMatrix->Add (measurements);
+	if (m_newMeasurementMatrix->Count < m_repeatTime * this->FramesPerSecond)
+		return;
+
+	for (i=0;i<m_newMeasurementMatrix->Count ;i++)
+		m_measurementMatrix->Add(m_newMeasurementMatrix[i]);
+
+	m_newMeasurementMatrix->Clear ();
 
 	while (m_measurementMatrix->Count > m_minimumSamples)
 		m_measurementMatrix->RemoveAt(0);
@@ -322,503 +213,131 @@ void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int
 	if (m_measurementMatrix->Count >= m_minimumSamples)
 	{
 		// Handle data intialization
+		activateMonitorFlag = true;
+		missPointCount->Clear ();
+		for (j = 0; j < m_channelCount; j++)
+			missPointCount->Add (0);
 		data = (double *) malloc (sizeof(double) * m_minimumSamples * m_channelCount);
-		for (int i = 0; i < m_minimumSamples; i++)
+		for (i = 0; i < m_minimumSamples && activateMonitorFlag ; i++)
 		{
 			// Get data row
 			measurements = m_measurementMatrix[i];
 
-			for (int j = 0; j < m_channelCount; j++)
+			for (j = 0; j < m_channelCount; j++)
 			{
 				// Get data column
 				measurement = measurements[j];
 
 				if (Double::IsNaN(measurement->Value))
 				{
-					// TODO: handle data interpolation
-				}
-
-				// Store all 2-dimension matrix in Fortran format,column-wise
-				data[i + j * m_minimumSamples] = measurement->AdjustedValue;
-			}
-		}
-		/* event detection for each channel */
-		for (int channel_no=0;channel_no<m_channelCount;channel_no++)
-		{
-			findmin(&data[0+channel_no*m_minimumSamples],m_minimumSamples,&minimumValue,&minimumIndex);
-			findmax(&data[0+channel_no*m_minimumSamples],m_minimumSamples,&maximumValue,&maximumIndex);
-			meanValue = findmean(&data[0+channel_no*m_minimumSamples],m_minimumSamples);
-			maximumDeviation = max(abs(minimumValue-meanValue),abs(maximumValue-meanValue));
-			relativeDeviation->Add(maximumDeviation/abs(meanValue));
-			channelEvent->Add(false);
-
-			if (m_channelType[channel_no] == ChannelType::VM)      // voltage magnitude
-			{
-				if (relativeDeviation[channel_no] > m_voltageThreshold)
-				{
-					channelEvent[channel_no] = true;
-					eventFlag = true;
-				}
-				else
-					channelEvent[channel_no] = false;
-			}
-			else if (m_channelType[channel_no] == ChannelType::IM)  // current magnitude
-			{
-				if (relativeDeviation[channel_no] > m_currentThreshold )
-				{
-					channelEvent[channel_no] = true;
-					eventFlag = true;
-				}
-				else
-					channelEvent[channel_no] = false;
-			}
-			//else   //other channels are not used in event detection
-			//	channelEvent[channel_no] = 0;
-		}
-
-		if (!eventFlag)
-		{
-			fprintf(fout_message,"No event detected in all channels.\n\n");
-			throw gcnew ArgumentException("No event detected in all channels");;
-		}
-
-		
-		/* real time moving window loop */
-
-		N = (int) (m_analysisWindow * FramesPerSecond);
-		movingLocalFrequency = (double *) malloc (sizeof(double) * m_estimateTriggerThreshold * m_localCrossChecks->Count);     // used for storing local moving crosschecks
-		movingLocalRatio = (double *) malloc (sizeof(double) * m_estimateTriggerThreshold * m_localCrossChecks->Count); // movingLocalFrequency[i][j] is j-th xcheck in iteration i
-		movingInterAreaFrequency = (double *) malloc (sizeof(double) * m_estimateTriggerThreshold * m_maximumCrossChecks);     // used for storing inter-area moving crosschecks
-		movingInterAreaRatio = (double *) malloc (sizeof(double) * m_estimateTriggerThreshold * m_maximumCrossChecks);
-		
-		for (int m_iter = 0; m_iter < m_estimateTriggerThreshold; m_iter++)
-		{
-
-//			/* iterate for each local task */
-//			for (int task_no=0; task_no<m_localTasks->Count ;task_no++)
-//			{
-//				taskEvent->Add(false);
-//				currentTask = m_localTasks[task_no];
-//
-//				/* set currentTask->data */
-//				m = currentTask->channel->Count;
-//				currentTask->m = m;
-//				currentTask->N = N;
-//				currentTask->type = "Local";
-//				currentTask->data = (double *) malloc(sizeof(double) * N * m);
-// 				for (int k = 0; k < currentTask->m; k++)
-//				{
-//					int j = currentTask->channel[k];
-//					if (j>m_channelCount)    // Incorrect channel
-//					{
-//						fprintf(fout_message,"Invalid channel number.\n");
-//						throw gcnew ArgumentException("Invalid channel number");
-//					}
-//					if (channelEvent[j])
-//						taskEvent[task_no] = true;
-//					for(int i = 0; i<N ;i++)
-////						currentTask->data[i][k]=data[i+i_start][j-1];
-//						currentTask->data[i+k*N] = data[(i+ m_iter * (int)(m_repeatTime * FramesPerSecond) + j * m_minimumSamples)];
-//
-//				}
-//				
-////				matrix_write(currentTask->data , currentTask->N,currentTask->m);
-//
-//				if (!taskEvent[task_no])   // if there is no event in the current task
-//				{
-//					currentTask->outflag = false;
-//					m_localTasks[task_no] = currentTask;
-//					if (m_displayDetail)
-//					{
-//						fprintf(fout_local_details,"Local Task No.%d\nFrom  s to s.\n%s\n\n",task_no+1,currentTask->method);
-//						fprintf(fout_local_details,"No event is detected.\n\n");
-//					}
-//				}
-//				else
-//				{
-//					/* execute an analysis task */
-//					exe_task(currentTask,task_no);
-//					m_localTasks[task_no] = currentTask;
-//					free(currentTask->data);
-//				}
-//			}  
-//			/* end of iteration for each local task */
-
-
-			manualEvents = gcnew List<ManualResetEvent^>;
-
-			/* iterate for each local task */
-			for (int task_no=0; task_no < m_localTasks->Count ; task_no++)
-			{
-				taskEvent->Add(false);
-				currentTask = m_localTasks[task_no];
-
-				/* set currentTask->data */
-				m = currentTask->channel->Count;
-				currentTask->m = m;
-				currentTask->N = N;
-				currentTask->type = "Local";
-				currentTask->data = (double *) malloc(sizeof(double) * N * m);
-
-				// Assigning data to current task
- 				for (int k = 0; k < currentTask->m; k++)
-				{
-					int j = currentTask->channel[k];
-					if (j>m_channelCount)    // Incorrect channel
+					// handle data interpolation
+					if ( i == 0 || i == m_minimumSamples - 1 )  // no interpolation performed if the missing data is the 1st row or last row
 					{
-						fprintf(fout_message,"Invalid channel number.\n");
-						throw gcnew ArgumentException("Invalid channel number");
-					}
-					if (channelEvent[j])
-						taskEvent[task_no] = true;
-
-					for(int i = 0; i<N ;i++)
-						currentTask->data[i+k*N] = data[(i+ m_iter * (int)(m_repeatTime * FramesPerSecond) + j * m_minimumSamples)];
-
-				}
-				
-				if (!taskEvent[task_no])   // if there is no event in the current task
-				{
-					currentTask->outflag = false;
-					if (m_displayDetail)
-					{
-						fprintf(fout_local_details,"Local Task No.%d\nFrom  s to s.\n%s\n\n",task_no+1,currentTask->method);
-						fprintf(fout_local_details,"No event is detected.\n\n");
-					}
-				}
-				else
-				{
-					// Define a new manually reset wait handle for task so we can wait for task to finish
-					manualEvent = gcnew ManualResetEvent(false);
-					manualEvents->Add(manualEvent);
-
-					// Initialize thread parameters
-					taskState = gcnew ThreadState(currentTask, task_no, manualEvent);
-					
-					// Queue analysis task for execution an on independent thread
-					ThreadPool::QueueUserWorkItem(gcnew WaitCallback(this, &EventDetectionAlgorithm::exe_task), taskState);
-				}				
-			}
-
-			// Wait for all tasks to complete...
-			WaitHandle::WaitAll(manualEvents->ToArray());
-	
-			for (int task_no=0; task_no < m_localTasks->Count ; task_no++)
-			{
-				free(m_localTasks[task_no]->data);
-			}
-
-			/* end of iteration for each local task */
-
-			
-			/* crosscheck results from local tasks in each PMU*/
-			numberSuccessLocalCheck = 0;                    // initialize the number of successful local crosschecks
-			for (int check_no=0; check_no<m_localCrossChecks->Count ;check_no++)
-			{
-				currentCheck = m_localCrossChecks[check_no];
-				currentCheck->flag = 1;
-				currentCheck->task_count = currentCheck->task->Count;
-
-				for (int j=0; j < currentCheck->task_count;j++)
-				{
-					int task_no = currentCheck->task[j];
-					currentTask = m_localTasks[task_no];
-					if (!currentTask->outflag)
-					{
-						currentCheck->flag = 0;            // local crosscheck is false because of bad task estimate
+						activateMonitorFlag = false;
+						free(data);
 						break;
 					}
 					else
 					{
-						crosscheckResultFrequency->Add(currentTask->group_f);        // record freq estimates for this crosscheck
-						crosscheckResultRatio->Add(currentTask->group_ratio);// record ratio estimates for this crosscheck
-					}
-				}
-
-				movingLocalFrequency[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = 9999;       // 9999 stands for nonconsistent estimate
-				movingLocalRatio[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = 9999;
-				if (currentCheck->flag)
-				{
-					minimumValue = findmin(crosscheckResultFrequency);
-					maximumValue = findmax(crosscheckResultFrequency);
-					if (maximumValue-minimumValue<currentCheck->freq_range)   // the most dominant frequencies of all tasks are within a range
-					{
-						maximumValue = findmax(crosscheckResultRatio);
-						minimumValue = findmin(crosscheckResultRatio);
-						if (maximumValue-minimumValue<currentCheck->ratio_range)  // damping ratios of all tasks are within a range
+						data[i + j * m_minimumSamples] = 9999;   // needs interpolation later
+				        missPointCount[j] ++;
+						if (missPointCount[j] >= m_maximumMissingPoints)
 						{
-							currentCheck->freq = findmean(crosscheckResultFrequency);
-							currentCheck->ratio = findmean(crosscheckResultRatio);
-							/* print consistent current check */
-/*							fprintf(fout_local_xcheck,"Local Cross Check No %d\nFrom %.3f s to %.3f s.\n Consistent estimates: freq = %.2f Hz, damping ratio = %.4f\n\n",
-									check_no+1,prony_t_start,prony_t_end,currentCheck->freq,currentCheck->ratio);
-	*/						/* record frequency and ratio used for consistent moving window check */
-							movingLocalFrequency[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = currentCheck->freq;
-							movingLocalRatio[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = currentCheck->ratio;
-						}
-						else
-							currentCheck->flag = 0;   // damping ratios in this local crosscheck not within the specified range
-					}
-					else
-					{
-						currentCheck->flag =0;        // frequencies in this local crosscheck not within the specified range
-					}
-				}
-
-				if (currentCheck->flag)	numberSuccessLocalCheck++;          // record successful local crosscheck
-				m_localCrossChecks[check_no] = currentCheck;
-			}   
-			/* end of local crosscheck */
-
-			/* inter-area crosscheck */
-			for (int check_no=0;check_no<m_maximumCrossChecks;check_no++)
-			{
-				movingInterAreaFrequency[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = 9999;       // 9999 stands for nonconsistent estimate
-				movingInterAreaRatio[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = 9999;		
-			}
-			if (numberSuccessLocalCheck>=2)  // more than one succssful local crosscheck, inter-area tasks are activated
-			{
-				/* activate inter-area tasks */
-				List<int>^ interAreaTaskIndicies = gcnew List<int>;
-				/* adding channels in inter-area tasks */
-				int i = 0;
-				for (int check_no=0;check_no<m_localCrossChecks->Count;check_no++)
-				{
-					currentCheck = m_localCrossChecks[check_no];
-					if (!currentCheck->flag) 
-						continue;
-					else
-					{
-						int task_no = currentCheck->task[0];
-						currentTask = m_localTasks[task_no];
-						/* find the maximum deviation channel */
-						int channel_no = currentTask->channel[0];
-						maximumValue = relativeDeviation[channel_no];
-						maximumIndex = 0;
-						for(int k=1;k<m_maximumChannels;k++)
-						{
-							if (!currentTask->channel[k]) break;
-							channel_no = currentTask->channel[k];
-							if (maximumValue < relativeDeviation[channel_no])
-							{
-								maximumValue = relativeDeviation[channel_no];
-								maximumIndex = k;
-							}
-						}
-						m_interAreaTasks[0]->channel->Add(currentTask->channel[maximumIndex]);
-						m_interAreaTasks[1]->channel->Add(currentTask->channel[maximumIndex]);
-						m_interAreaTasks[2]->channel->Add(currentTask->channel[maximumIndex]);
-						i++;
-						if (i>= m_maximumChannels) break;
-					}
-				}
-				/* end of adding channels in inter-area tasks */
-
-	//			/* iteration for each inter-area task */
-	//			for (int task_no = 0;task_no < m_interAreaTasks->Count;task_no++)
-	//			{
-	//				currentTask = m_interAreaTasks[task_no];
-	//				/* set currentTask->data */
-	//				currentTask->m = currentTask->channel->Count;
-	//				currentTask->type = "InterArea";
-	//				currentTask->data = (double *) malloc(sizeof(double) * N * currentTask->m);
-	//				m = m_maximumChannels;    // m updated below is the number of channels in the task
-	//				for (int k=0;k<m_maximumChannels;k++)
-	//				{
-	//					int j = currentTask->channel[k];
- //   					if (j!=0)
-	//    				{
-	//						for(int i = 0; i<N ;i++)
-	//	//						currentTask->data[i][k]=data[i+i_start][j-1];
-	//							currentTask->data[i+k*N] = data[(i+ m_iter * (int)(m_repeatTime * FramesPerSecond) + j*N)];
-
-	////				for(i=i_start;i<i_end && i<m_minimumSamples;i++)
-	//////					    	currentTask->data[i-i_start][k]=data[i][j];
- //// 								currentTask->data[i-i_start+k*N] = data[i+j*m_minimumSamples];
-	//					}
-	//					else
-	//					{
-	//						m = k;
-	//						break;
- //   					}
-	//				}
-	//				/* execute an analysis task */
-
-	//				// TODO: change this
-	//				//exe_task(currentTask,task_no);
-	//	    		m_interAreaTasks[task_no] = currentTask;
-	//				free(currentTask->data);
-	//			}
-	//			/* end of iteration of each inter-area task */
-				
-				/* iteration for each inter-area task */
-				manualEvents = gcnew List<ManualResetEvent^>;
-
-				for (int task_no = 0;task_no < m_interAreaTasks->Count;task_no++)
-				{
-					currentTask = m_interAreaTasks[task_no];
-					/* set currentTask->data */
-					currentTask->m = currentTask->channel->Count;
-					currentTask->type = "InterArea";
-					currentTask->data = (double *) malloc(sizeof(double) * N * currentTask->m);
-					m = m_maximumChannels;    // m updated below is the number of channels in the task
-					for (int k=0;k<m_maximumChannels;k++)
-					{
-						int j = currentTask->channel[k];
-    					if (j!=0)
-	    				{
-							for(int i = 0; i<N ;i++)
-								currentTask->data[i+k*N] = data[(i+ m_iter * (int)(m_repeatTime * FramesPerSecond) + j*N)];
-						}
-						else
-						{
-							m = k;
+							activateMonitorFlag = false;
+							free(data);
 							break;
-    					}
-					}
-					/* execute an analysis task */
-
-					// Define a new manually reset wait handle for task so we can wait for task to finish
-					manualEvent = gcnew ManualResetEvent(false);
-					manualEvents->Add(manualEvent);
-
-					// Initialize thread parameters
-					taskState = gcnew ThreadState(currentTask, task_no, manualEvent);
-					
-					// Queue analysis task for execution an on independent thread
-					ThreadPool::QueueUserWorkItem(gcnew WaitCallback(this, &EventDetectionAlgorithm::exe_task), taskState);
-				}
-
-				// Wait for all tasks to complete...
-				WaitHandle::WaitAll(manualEvents->ToArray());
-		
-				for (int task_no=0; task_no < m_interAreaTasks->Count ; task_no++)
-				{
-					free(m_interAreaTasks[task_no]->data);
-				}
-
-				/* end of iteration of each inter-area task */
-
-
-				/* start inter-area crosscheck */
-				numberSuccessInterAreaCheck = 0;
-				for (int check_no=0;check_no< m_interAreaChecks->Count  ;check_no++)
-				{
-					currentCheck = m_interAreaChecks[check_no];
-					currentCheck->flag = 1;
-					//if (currentCheck->task[0] == 0)
-					//{
-					//	inter_check_count = check_no;    // count total number of inter-area crosschecks
-					//	break;
-					//}
-	    //			else
-    	//			{
-	    				for (int j=0;j<currentCheck->task->Count;j++)
-		    			{
-			    			int task_no = currentCheck->task[j];
-		    				if (task_no==0) 
-		    	    		{
-			    	    		currentCheck->task_count =  j;     // count total number of tasks in this crosscheck
-				    			break;
-							}
-							currentTask = m_interAreaTasks[task_no];
-							if (!currentTask->outflag)
-							{
-					    		currentCheck->flag = 0;            // local crosscheck is false because of bad task estimate
-								break;
-							}
-							else
-							{
-								crosscheckResultFrequency->Add(currentTask->group_f);        // record freq estimates for this crosscheck
-								crosscheckResultRatio->Add(currentTask->group_ratio);// record ratio estimates for this crosscheck
-							}
-						}
-					//}
-
-					if (currentCheck->flag)
-					{
-						minimumValue = findmin(crosscheckResultFrequency);
-						maximumValue = findmax(crosscheckResultFrequency);
-						if (maximumValue-minimumValue<currentCheck->freq_range)   // the most dominant frequencies of all tasks are within a range
-						{
-							maximumValue = findmax(crosscheckResultRatio);
-							minimumValue = findmin(crosscheckResultRatio);
-							if (maximumValue-minimumValue<currentCheck->ratio_range)  // damping ratios of all tasks are within a range
-							{
-								currentCheck->freq = findmean(crosscheckResultFrequency);
-								currentCheck->ratio = findmean(crosscheckResultRatio);
-								/* print consistent current check */
-								//fprintf(fout_inter_xcheck,"Inter-area Cross Check No %d\nFrom %.3f s to %.3f s.\n Consistent estimates: freq = %.2f Hz, damping ratio = %.4f\n\n",
-							 //   		check_no+1,prony_t_start,prony_t_end,currentCheck->freq,currentCheck->ratio);
-								/* record frequency and ratio used for consistent moving window check */
-								movingInterAreaFrequency[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = currentCheck->freq;
-								movingInterAreaRatio[m_iter%m_estimateTriggerThreshold+m_estimateTriggerThreshold*check_no] = currentCheck->ratio;
-							}
-							else
-								currentCheck->flag = 0;   // damping ratios in this local crosscheck not within the specified range
-						}
-						else
-						{
-							currentCheck->flag =0;        // frequencies in this local crosscheck not within the specified range
 						}
 					}
-    				if (currentCheck->flag)	numberSuccessInterAreaCheck++;          // record successful local crosscheck
-					m_interAreaChecks[check_no] = currentCheck;
-				}   
-				/* end of inter-area crosscheck */
+				}
+				else
+					// Store all 2-dimension matrix in Fortran format,column-wise
+				    data[i + j * m_minimumSamples] = measurement->AdjustedValue;
 			}
-
-			/* test for moving window consistent estimation for local crosschecks */
-			for (int check_no=0; check_no<m_localCrossChecks->Count; check_no++)
-			{
-				currentCheck = m_localCrossChecks[check_no];
-				if (m_iter>=m_estimateTriggerThreshold-1 && currentCheck->flag)
-				{
-					findmin(&movingLocalFrequency[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&minimumValue,&minimumIndex);
-					findmax(&movingLocalFrequency[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&maximumValue,&maximumIndex);
-					if (maximumValue-minimumValue<m_consistentFrequencyRange)
-					{
-						findmin(&movingLocalRatio[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&minimumValue,&minimumIndex);
-						findmax(&movingLocalRatio[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&maximumValue,&maximumIndex);
-						//if (maximumValue-minimumValue<m_consistentRatioRange)
-							//fprintf(fout_mov_local_checks,"Consistent Local CrossCheck No %d at %.3f s.\n Consistent estimates: freq = %.2f Hz, damping ratio = %.4f\n\n",
-							//		check_no+1,prony_t_end,findmean(&movingLocalFrequency[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold),findmean(&movingLocalRatio[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold));
-					}
-				}
-			} 
-			
-			/* test for moving window consistent estimation for inter-area crosschecks */
-			for (int check_no=0;check_no<m_interAreaChecks->Count ;check_no++)
-			{
-				currentCheck = m_interAreaChecks[check_no];
-				if (m_iter>=m_estimateTriggerThreshold-1 && currentCheck->flag)
-				{
-					findmin(&movingInterAreaFrequency[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&minimumValue,&minimumIndex);
-					findmax(&movingInterAreaFrequency[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&maximumValue,&maximumIndex);
-					if (maximumValue-minimumValue<m_consistentFrequencyRange)
-					{
-						findmin(&movingInterAreaRatio[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&minimumValue,&minimumIndex);
-						findmax(&movingInterAreaRatio[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold,&maximumValue,&maximumIndex);
-						//if (maximumValue-minimumValue<m_consistentRatioRange)
-						//	fprintf(fout_mov_inter_checks,"Consistent Inter-area CrossCheck No %d at %.3f s.\n Consistent estimates: freq = %.2f Hz, damping ratio = %.4f\n\n",
-						//			check_no+1,prony_t_end,findmean(&movingInterAreaFrequency[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold),findmean(&movingInterAreaRatio[check_no*m_estimateTriggerThreshold],m_estimateTriggerThreshold));
-					}
-				}
-			} 
-
-			/* window move forward */
-			m_iter++;
-			//prony_t_start = prony_t_start + m_repeatTime;
-			//prony_t_end = prony_t_end + m_repeatTime;
 		}
-		free(work);
-		free(movingLocalFrequency);free(movingLocalRatio);
-		free(movingInterAreaFrequency);free(movingInterAreaRatio);
-		fcloseall();
+
+		if (!activateMonitorFlag)
+		{
+			fprintf(messageFile,"\n\n%s.",frame->Timestamp.ToString ());
+			fprintf(messageFile,"%s\n",frame->Timestamp.Millisecond.ToString());
+			fprintf(messageFile,"Too many missing points.\n");
+			return;
+		}
+
+		/* data intepolation for each channel */
+		for (j = 0; j < m_channelCount; j++)
+			for (i = 0; i < m_minimumSamples; i++)
+				if (data[i + j * m_minimumSamples] == 9999)
+				{
+					iPrevious = i - 1;
+					for ( k = i; k < m_minimumSamples; k++)
+						if (data[k + j * m_minimumSamples] != 9999)
+							break;
+					iNext = k;
+					for ( i = iPrevious + 1; i <= iNext - 1 ; i++)
+						data[i + j * m_minimumSamples] =  data[iPrevious + j * m_minimumSamples] + 
+						   (data[iNext + j * m_minimumSamples] - data[iPrevious + j * m_minimumSamples])/(iNext - iPrevious) * ( i - iPrevious) ;
+				}
+
+		/* iterate for each local task */
+		N = (int) (m_analysisWindow * FramesPerSecond);
+		if (m_displayDetail)
+		{
+			fprintf(localDetailsFile,"\n\n%s.",frame->Timestamp.ToString ());
+			fprintf(localDetailsFile,"%s\n",frame->Timestamp.Millisecond.ToString());
+		}
+		for (task_no = 0; task_no < m_localTasks->Count ; task_no++)
+		{
+			currentTask = m_localTasks[task_no];
+			/* initialize currentTask */
+			m = currentTask->channel->Count;
+			currentTask->m = m;
+			currentTask->N = N;
+			currentTask->type = "Local";
+            
+			// Assigning data to current task
+			currentTask->data = (double *) malloc(sizeof(double) * currentTask->N *currentTask->m);
+			for (k = 0; k < currentTask->m; k++)
+			{
+				j = currentTask->channel[k];
+				if (j > m_channelCount)    // Incorrect channel
+				{
+					throw gcnew ArgumentException("Invalid channel number");
+				}
+				for(i = 0; i<N ;i++)
+					currentTask->data[i+k*N] = data[(i+ j * m_minimumSamples)];
+
+			}
+			
+			/* perform analysis task */
+			ExecuteAmbientTask(currentTask,task_no);
+
+			/* write results to files */
+			if (m_displayDetail)
+			{
+				fprintf(localDetailsFile,"\nTask No. %d:\n",task_no);
+				for (i=0; i<currentTask->ambientModeFlag->Count; i++)
+				{
+					if (currentTask->ambientModeFlag[i] == 1)
+						fprintf(localDetailsFile,"Mode %d pass reverse arrangement test:\n",i);
+					else if (currentTask->ambientModeFlag[i] == 2)
+						fprintf(localDetailsFile,"Mode %d:\n",i);
+					else if (currentTask->ambientModeFlag[i] == 3)
+						fprintf(localDetailsFile,"Mode %d may be underestimated:\n",i);
+					else
+						fprintf(localDetailsFile,"Mode %d is not reliable:\n",i);
+					fprintf(localDetailsFile,"Frequency = %.4f Hz, Damping Ratio = %.4f\n",currentTask->ambientModeFrequency [i],currentTask->ambientModeRatio[i]);
+				}
+			}
+		}  // end of /* iterate for each local task */
+	}  // end of if (m_measurementMatrix->Count >= m_minimumSamples)
+	if (index == 10200)
+	{
+		fclose(localDetailsFile);
+		fclose(messageFile);
 	}
 }
 
-void EventDetectionAlgorithm::data_preprocess(double *prony_data,int N,int m,int m_removeMeanValue,int m_normalizeData)
+void EventDetectionAlgorithm::DataPreprocess(double *prony_data,int N,int m,int m_removeMeanValue,int m_normalizeData)
 {
 	double mean,maxabs;
 	int i,j;
@@ -852,7 +371,7 @@ void EventDetectionAlgorithm::data_preprocess(double *prony_data,int N,int m,int
 }
 
 
-double *EventDetectionAlgorithm::prony_func(double *data,int N,int m,int n)
+double *EventDetectionAlgorithm::PronyFunction(double *data,int N,int m,int n)
 {
 	/* Prony's method to find roots */
 	double *A1, *A2;
@@ -868,7 +387,14 @@ double *EventDetectionAlgorithm::prony_func(double *data,int N,int m,int n)
     int ldvl, ldvr, Nev;
     double *vl, *vr, *wi, *wr;
     double *zi;
+	double *work = (double *) malloc(sizeof(double)*MaxLwork);
 
+	if (work == NULL)
+	{
+		fprintf(messageFile,"Error in malloc in PronyFunction.\n");
+		free(work);
+		return NULL;
+	}
 	/* Solve the linear prediction problem. i.e form least square problem A1*x=A2 */
 	A1_row = (N-n)*m;
 	A1_col = n;
@@ -907,7 +433,8 @@ double *EventDetectionAlgorithm::prony_func(double *data,int N,int m,int n)
 	dgelsd_(&Mls, &Nls, &nrhs, A1, &lda, A2, &ldb, S, &rcond, &rank, work, &lwork,iwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgelsd_ fails in prony_func.\n");
+		fprintf(messageFile,"dgelsd_ fails in PronyFunction.\n");
+		free(work);
 		return NULL;
 	}
 
@@ -946,7 +473,8 @@ double *EventDetectionAlgorithm::prony_func(double *data,int N,int m,int n)
 	dgeev_( &jobvl, &jobvr, &Nev, A3, &lda, wr, wi, vl, &ldvl, vr, &ldvr, work, &lwork, &info);
 	if (info!=0)
 	{	
-		fprintf(fout_message,"dgeev_ fails in prony_func.\n");
+		fprintf(messageFile,"dgeev_ fails in PronyFunction.\n");
+		free(work);
 		return NULL;
 	}
 	
@@ -963,11 +491,12 @@ double *EventDetectionAlgorithm::prony_func(double *data,int N,int m,int n)
 	free(c); 
 	free(A3);
     free(vl);free(vr);free(wi);free(wr);
+	free(work);
 	return zi;
 }
 
 
-double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, int *n)
+double *EventDetectionAlgorithm::MatrixPencilFunction(double *data,int N,int m, int *n)
 {
 	/* Matrix Pencil method to find roots */
 	int L, i, row, col, Y_row, Y_col;
@@ -989,6 +518,13 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
     int Nev,ldvl,ldvr;
 	double *wr,*wi,*vl,*vr;
 	double *zi;
+	double *work = (double *) malloc(sizeof(double)*MaxLwork);
+	if (work == NULL)
+	{
+		fprintf(messageFile,"Error in malloc in MatrixPencilFunction.\n");
+		free(work);
+		return NULL;
+	}
 
 	/* Form matrix Y*/
 	L = (int)N/2;
@@ -997,7 +533,8 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
 	Y = (double *) malloc(sizeof(double)*Y_row*Y_col);
     if (Y==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in matrix_pencil_func.\n");
+		fprintf(messageFile,"Error in malloc in MatrixPencilFunction.\n");
+		free(work);free(Y);
 		return NULL;
 	}
 	for (i=0;i<m;i++)
@@ -1022,7 +559,8 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
 	VT = (double *) malloc(sizeof(double)*ldvt*Nsvd);
 	if (VT==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in matrix_pencil_func.\n");
+		fprintf(messageFile,"Error in malloc in MatrixPencilFunction.\n");
+		free(work);free(Y);free(S);free(U);free(VT);
 		return NULL;
 	}
 	iwork = (int*)malloc(sizeof(int)*8*minMN);
@@ -1030,7 +568,8 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
     dgesdd_( &jobz, &Msvd, &Nsvd, Y, &lda, S, U, &ldu, VT, &ldvt, work, &lwork, iwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgesdd_ fails in matrix_pencil_func\n");
+		fprintf(messageFile,"dgesdd_ fails in MatrixPencilFunction\n");
+		free(work);free(Y);free(S);free(U);free(VT);free(iwork);
 		return NULL;
 	}
 
@@ -1052,7 +591,8 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
     V2_prime = (double *) malloc(sizeof(double)*V2prime_row*V2prime_col);
 	if (V1_prime==NULL || V2_prime==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in matrix_pencil_func.\n");
+		fprintf(messageFile,"Error in malloc in MatrixPencilFunction.\n");
+		free(work);free(Y);free(S);free(U);free(VT);free(iwork);free(V1_prime);free(V2_prime);
 		return NULL;
 	}
 	for (i=0;i<m;i++)
@@ -1067,12 +607,12 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
 				V2_prime[row+i*L+col*V2prime_row] = VT[col+(row+1+i*(L+1))*Nsvd];
 			}
 
-	/* Matrix multiplication. A1=V2_prime'*pinv(V1_prime'); */
+	/* Matrix multiplication. A1=V2_prime'*PseudoInverse(V1_prime'); */
 //  SUBROUTINE DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)
 //  Purpose
 //  DGEMM  performs one of the matrix-matrix operations
 //  C := alpha*op( A )*op( B ) + beta*C,
-	A0 = pinv(matrix_transpose(V1_prime,V1prime_row,V1prime_col),V1prime_col, V1prime_row);
+	A0 = PseudoInverse(MatrixTranspose(V1_prime,V1prime_row,V1prime_col),V1prime_col, V1prime_row);
     transA = 'T';
 	transB = 'N';
 	Mmul = V2prime_col;
@@ -1086,7 +626,8 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
 	A1 = (double *) malloc(sizeof(double)*Mmul*Nmul);
 	if (A1==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in matrix_pencil_func.\n");
+		fprintf(messageFile,"Error in malloc in MatrixPencilFunction.\n");
+		free(work);free(Y);free(S);free(U);free(VT);free(iwork);free(V1_prime);free(V2_prime);free(A1);
 		return NULL;
 	}
 	dgemm_(&transA, &transB, &Mmul, &Nmul, &Kmul, &alpha, V2_prime, &lda, A0, &ldb, &beta, A1, &ldc);
@@ -1106,7 +647,9 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
     dgeev_( &jobvl, &jobvr, &Nev, A1, &lda, wr, wi, vl, &ldvl, vr, &ldvr, work, &lwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgeev_ fails in matrix_pencil_func.\n");
+		fprintf(messageFile,"dgeev_ fails in MatrixPencilFunction.\n");
+		free(work);free(Y);free(S);free(U);free(VT);free(iwork);free(V1_prime);free(V2_prime);free(A1);free(wr);free(wi);
+		free(vr);free(vl);
 		return NULL;
 	}
 
@@ -1125,11 +668,12 @@ double *EventDetectionAlgorithm::matrix_pencil_func(double *data,int N,int m, in
 	free(V1_prime);free(V2_prime);
     free(A0);free(A1);
 	free(wr);free(wi);free(vl);free(vr);
+	free(work);
 	return zi;
 }
 
 
-double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
+double *EventDetectionAlgorithm::HTLStackFunction(double *data,int N,int m, int *n)
 {
 	/* HLTStack method to find roots */
 	int i,j,row,col;
@@ -1152,7 +696,13 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 	int Nev,ldvl,ldvr;
 	double *wr,*wi,*vr,*vl,*zi;
 	double *invW22;
-//  char jobu,jobvt;
+	double *work = (double *) malloc(sizeof(double)*MaxLwork);
+	if (work == NULL)
+	{
+		fprintf(messageFile,"Error in malloc in HTLStackFunction.\n");
+		free(work);
+		return NULL;
+	}
 
 	L = (int)N/2;
 	M = N-L+1;
@@ -1161,7 +711,8 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 	Hs = (double *) malloc(sizeof(double)*Hs_row*Hs_col);
     if (Hs==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in HTLStack_func.\n");
+		fprintf(messageFile,"Error in malloc in HTLStackFunction.\n");
+		free(work);free(Hs);
 		return NULL;
 	}
 	for (i=0;i<m;i++)
@@ -1186,7 +737,8 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 	VT = (double *) malloc(sizeof(double)*ldvt*Nsvd);
 	if (VT==NULL)
 	{
-		fprintf(fout_message,"Error in malloc HTLStack_func.\n");
+		fprintf(messageFile,"Error in malloc HTLStackFunction.\n");
+		free(work);free(Hs);free(S);free(U);free(VT);
 		return NULL;
 	}
 	iwork = (int*)malloc(sizeof(int)*8*minMN);
@@ -1194,7 +746,8 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
     dgesdd_( &jobz, &Msvd, &Nsvd, Hs, &lda, S, U, &ldu, VT, &ldvt, work, &lwork, iwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgesdd_ fails HTLStack_func. \n");
+		fprintf(messageFile,"dgesdd_ fails HTLStackFunction. \n");
+		free(work);free(Hs);free(S);free(U);free(VT);free(iwork);
 		return NULL;
 	}
 
@@ -1239,6 +792,7 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 	Nsvd = Uhatup_col*2;
 	lda = Uhatup_row;
 	minMN = min(Msvd,Nsvd);
+	free(S);free(U);free(VT);
 	S = (double *) malloc(sizeof(double)*minMN);
 	ldu = Msvd;
 	U = (double *) malloc(sizeof(double)*ldu*minMN);
@@ -1246,7 +800,8 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 	VT = (double *) malloc(sizeof(double)*ldvt*Nsvd);
 	if (VT==NULL)
 	{
-		fprintf(fout_message,"Error in malloc HTLStack_func.\n");
+		fprintf(messageFile,"Error in malloc HTLStackFunction.\n");
+		free(work);free(Hs);free(S);free(U);free(VT);free(iwork);free(A);free(U_hat_up);free(U_hat_down);
 		return NULL;
 	}
 	iwork = (int*)malloc(sizeof(int)*8*minMN);
@@ -1254,12 +809,13 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
     dgesdd_( &jobz, &Msvd, &Nsvd, A, &lda, S, U, &ldu, VT, &ldvt, work, &lwork, iwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgesdd_ fails HTLStack_func.\n");
+		fprintf(messageFile,"dgesdd_ fails HTLStackFunction.\n");
+		free(work);free(Hs);free(S);free(U);free(VT);free(iwork);free(A);free(U_hat_up);free(U_hat_down);free(iwork);
 		return NULL;
 	}
 
 	/* form W12 and W22*/
-	W = matrix_transpose(VT,ldvt,ldvt);
+	W = MatrixTranspose(VT,ldvt,ldvt);
 	W12 = (double *) malloc(sizeof(double)*K*K);
 	W22 = (double *) malloc(sizeof(double)*K*K);
 	for (i=0;i<K;i++)
@@ -1271,7 +827,7 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 			//W22[i][j] = W[i+K][j+K];
 			W22[i+j*K] = W[i+K+(j+K)*2*K];
 
-//  matrix_write(W,2*K,2*K);
+//  WriteMatrixToFile(W,2*K,2*K);
     transA = 'N';
 	transB = 'N';
 	Mmul = K;
@@ -1283,16 +839,11 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 	ldb = Kmul;
 	ldc = Mmul;
 	C = (double *) malloc(sizeof(double)*Mmul*Nmul);
-	invW22 = matrix_inverse(W22,K);
+	invW22 = MatrixInverse(W22,K);
 	if (invW22 == NULL)
 	{
-		free(Hs);
-		free(iwork);
-		free(S);
-		free(U);free(VT);
-		free(U_hat_up);free(U_hat_down);
-		free(A);free(W);free(W12);free(W22);free(C);
-		free(invW22);
+		free(work);free(Hs);free(iwork);free(S);free(U);free(VT);free(U_hat_up);free(U_hat_down);
+		free(A);free(W);free(W12);free(W22);free(C);free(invW22);
 		return NULL;
 	}
 	dgemm_(&transA, &transB, &Mmul, &Nmul, &Kmul, &alpha, W12, &lda, invW22, &ldb, &beta, C, &ldc);
@@ -1312,7 +863,9 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
     dgeev_( &jobvl, &jobvr, &Nev, C, &lda, wr, wi, vl, &ldvl, vr, &ldvr, work, &lwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgeev_ fails HTLStack_func.\n");
+		fprintf(messageFile,"dgeev_ fails HTLStackFunction.\n");
+		free(work);free(Hs);free(iwork);free(S);free(U);free(VT);free(U_hat_up);free(U_hat_down);
+		free(A);free(W);free(W12);free(W22);free(C);free(invW22);free(wr);free(wi);free(vr);free(vl);
 		return NULL;
 	}
 
@@ -1322,18 +875,17 @@ double *EventDetectionAlgorithm::HTLStack_func(double *data,int N,int m, int *n)
 		zi[2*i] = wr[i];
 		zi[2*i+1] = wi[i];
 	}
-    free(Hs);
-    free(iwork);
-	free(S);
+    free(Hs);free(iwork);free(S);
 	free(U);free(VT);
     free(U_hat_up);free(U_hat_down);
     free(A);free(W);free(W12);free(W22);free(C);
 	free(wr);free(wi);free(vr);free(vl);
 	free(invW22);
+	free(work);
 	return zi;
 }
 
-double *EventDetectionAlgorithm::matrix_transpose(double *matrix, int m, int n)
+double *EventDetectionAlgorithm::MatrixTranspose(double *matrix, int m, int n)
 {
 	int i,j;
 	double *result;
@@ -1341,7 +893,8 @@ double *EventDetectionAlgorithm::matrix_transpose(double *matrix, int m, int n)
 	result = (double *) malloc(sizeof(double)*m*n);
 	if (result==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in matrix_transpose.\n");
+		fprintf(messageFile,"Error in malloc in MatrixTranspose.\n");
+		free(result);
 		return NULL;
 	}
 	for (i=0;i<n;i++)
@@ -1351,18 +904,19 @@ double *EventDetectionAlgorithm::matrix_transpose(double *matrix, int m, int n)
 	return result;
 }
 
-double *EventDetectionAlgorithm::matrix_inverse(double *A, int N)
+double *EventDetectionAlgorithm::MatrixInverse(double *A, int N)
 {
 //	  SUBROUTINE DGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
 //    DGESV computes the solution to a real system of linear equations A * X = B,
     int info, lda, ldb, nrhs;
     int *ipiv;
-	double *B;
+	double *B = (double *) malloc(sizeof(double)*N*N);
 	int i,j;
-	B = (double *) malloc(sizeof(double)*N*N);
+
 	if (B==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in matrix_inverse.\n");
+		fprintf(messageFile,"Error in malloc in MatrixInverse.\n");
+		free(B);
 		return NULL;
 	}
 	for (i=0;i<N;i++)
@@ -1381,19 +935,19 @@ double *EventDetectionAlgorithm::matrix_inverse(double *A, int N)
 	free(ipiv);
     if (info!=0)
 	{
-		fprintf(fout_message,"dgesv_ fails when finding matrix inverse\n");
+		fprintf(messageFile,"dgesv_ fails when finding matrix inverse\n");
+		free(B);
 		return NULL;
 	}
 	else
 		return B;
-
 }
 
-double *EventDetectionAlgorithm::pinv(double *A,int m, int n)
+double *EventDetectionAlgorithm::PseudoInverse(double *A,int m, int n)
 {
     /* find pseudo-inverse of matrix A */
-//  matlab code for pinv
-//	function B = pinv(A)
+//  matlab code for PseudoInverse
+//	function B = PseudoInverse(A)
 //  [U,S,V] = svd(A,0); % if m>n, only compute first n cols of
 //  s = diag(S);
 //  r = sum(s > tol); % rank
@@ -1413,6 +967,13 @@ double *EventDetectionAlgorithm::pinv(double *A,int m, int n)
 	int ldb,ldc,Mmul,Nmul,Kmul;
     char transA,transB;
     double *C;
+	double *work = (double *) malloc(sizeof(double)*MaxLwork);
+	if (work == NULL)
+	{
+		fprintf(messageFile,"Error in malloc in PseudoInverse.\n");
+		free(work);
+		return NULL;
+	}
 
     /* Singular value decompostion */
 	jobz = 'S';
@@ -1427,7 +988,8 @@ double *EventDetectionAlgorithm::pinv(double *A,int m, int n)
 	VT = (double *) malloc(sizeof(double)*ldvt*Nsvd);
 	if (VT==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in pinv.\n");
+		fprintf(messageFile,"Error in malloc in PseudoInverse.\n");
+		free(work);free(S);free(U);free(VT);
 		return NULL;
 	}
 	iwork = (int*)malloc(sizeof(int)*8*minMN);
@@ -1435,7 +997,8 @@ double *EventDetectionAlgorithm::pinv(double *A,int m, int n)
     dgesdd_( &jobz, &Msvd, &Nsvd, A, &lda, S, U, &ldu, VT, &ldvt, work, &lwork, iwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"dgesdd_ fails in pinv.\n");
+		fprintf(messageFile,"dgesdd_ fails in PseudoInverse.\n");
+		free(work);free(S);free(U);free(VT);free(iwork);
 		return NULL;
 	}
 
@@ -1476,7 +1039,7 @@ double *EventDetectionAlgorithm::pinv(double *A,int m, int n)
 	dgemm_(&transA, &transB, &Mmul, &Nmul, &Kmul, &alpha, VT, &lda, W, &ldb, &beta, C, &ldc);
 	/* Matrix multiplication of C and Ur.*/
 	// C is an n*r matrix, Ur is an r*m matrix.
-	// Ur = matrix_transpose(U,m,r), i.e, transpose of first r columns of U; U is an m*n matrix.
+	// Ur = MatrixTranspose(U,m,r), i.e, transpose of first r columns of U; U is an m*n matrix.
 	transA = 'N';
 	transB = 'T';
 	Mmul = n;
@@ -1493,12 +1056,13 @@ double *EventDetectionAlgorithm::pinv(double *A,int m, int n)
  	free(S);free(U);free(VT);
     free(W);
     free(C);
+	free(work);
 	return result;
 }
 
 
-void EventDetectionAlgorithm::cal_output(double *data, int N, int m, int n, double *zi, double dt, double *out_amp, double *out_pha,
-				double *out_damp, double *out_f, double *out_dpratio)
+void EventDetectionAlgorithm::CalculateOutput(double *data, int N, int m, int n, double *zi, double dt, double *outputAmplitude, double *outputPhase,
+				double *outputDamping, double *outputFrequency, double *outputDampRatio)
 {
 	/* calculate modal analysis outputs such as frequency and damping ratios. */
 	int i,j;
@@ -1509,6 +1073,13 @@ void EventDetectionAlgorithm::cal_output(double *data, int N, int m, int n, doub
     double *rwork,*S;
 	int smlsiz,minMN,NLVL,liwork,lrwork;
     double re_lambda,im_lambda;
+	double *work = (double *) malloc(sizeof(double)*MaxLwork);
+	if (work == NULL)
+	{
+		fprintf(messageFile,"Error in malloc in CalculateOutput.\n");
+		free(work);
+		return;
+	}
 
 	/* Solve Vandermonde problem by least square */
 	fai = (double *) malloc(sizeof(double)*N*n*2);  //fai is N*n complex matrix
@@ -1551,16 +1122,18 @@ void EventDetectionAlgorithm::cal_output(double *data, int N, int m, int n, doub
 	rwork = (double *) malloc(sizeof(double)*max(1,lrwork));
 	if (iwork==NULL ||rwork==NULL)
 	{
-		fprintf(fout_message,"Error in malloc in cal_output.\n");
-		throw gcnew ArgumentException("Error in malloc in cal_output");
+		fprintf(messageFile,"Error in malloc in CalculateOutput.\n");
+		free(work);free(iwork);free(rwork);free(fai);free(rhs);
+		throw gcnew ArgumentException("Error in malloc in CalculateOutput");
 	}
 	S = (double *) malloc(sizeof(double)*minMN);
 	lwork = MaxLwork;
     zgelsd_(&Mls, &Nls, &nrhs, fai, &lda, rhs, &ldb, S, &rcond, &rank, work, &lwork, rwork, iwork, &info);
 	if (info!=0)
 	{
-		fprintf(fout_message,"zgelsd_ fails in cal_output\n");
-		throw gcnew ArgumentException("zgelsd_ fails in cal_output");
+		fprintf(messageFile,"zgelsd_ fails in CalculateOutput\n");
+		free(work);free(iwork);free(rwork);free(fai);free(rhs);free(S);
+		throw gcnew ArgumentException("zgelsd_ fails in CalculateOutput");
 	}
     
 	/* Modal outputs calculation */
@@ -1568,85 +1141,31 @@ void EventDetectionAlgorithm::cal_output(double *data, int N, int m, int n, doub
 	{
 		for (j=0;j<m;j++)
 		{
-			//out_amp[i][j] = sqrt(rhs[2*i][j]*rhs[2*i][j]+rhs[2*i+1][j]*rhs[2*i+1][j]);
-			out_amp[i+j*n] = sqrt(rhs[2*i+j*2*N]*rhs[2*i+j*2*N]+rhs[2*i+1+j*2*N]*rhs[2*i+1+j*2*N]);
-			//out_pha[i][j] = atan2(rhs[2*i+1][j],rhs[2*i][j];
-			out_pha[i+j*n] = atan2(rhs[2*i+1+j*2*N],rhs[2*i+j*2*N])/PI*180;
+			//outputAmplitude[i][j] = sqrt(rhs[2*i][j]*rhs[2*i][j]+rhs[2*i+1][j]*rhs[2*i+1][j]);
+			outputAmplitude[i+j*n] = sqrt(rhs[2*i+j*2*N]*rhs[2*i+j*2*N]+rhs[2*i+1+j*2*N]*rhs[2*i+1+j*2*N]);
+			//outputPhase[i][j] = atan2(rhs[2*i+1][j],rhs[2*i][j];
+			outputPhase[i+j*n] = atan2(rhs[2*i+1+j*2*N],rhs[2*i+j*2*N])/PI*180;
 		}
 		re_lambda = log(zi[2*i]*zi[2*i]+zi[2*i+1]*zi[2*i+1])/2; // lambda = log(z) = log(abs(z)) + i*atan2(im(z),re(z))
 		im_lambda = atan2(zi[2*i+1],zi[2*i]);
-		out_damp[i] = re_lambda/dt;
-		out_f[i] = im_lambda/2/PI/dt;
-		out_dpratio[i] = -re_lambda/sqrt(re_lambda*re_lambda+im_lambda*im_lambda);
+		outputDamping[i] = re_lambda/dt;
+		outputFrequency[i] = im_lambda/2/PI/dt;
+		outputDampRatio[i] = -re_lambda/sqrt(re_lambda*re_lambda+im_lambda*im_lambda);
 	}
     free(fai);free(rhs);
     free(iwork);free(rwork);free(S);
+	free(work);
 }
 
-void EventDetectionAlgorithm::display(double *out_amp,double *out_pha,double *out_damp,double *out_f,double *out_dpratio,double *rel_energy,int m_displayDetail, AnalysisTask^ currentTask)
-{
-	int i,j;
-	int m_Nx,m_Ny;
-	double *sort_amp;
-	int k;
-	int disp_n;
-	int n = currentTask->n;
-	int m = currentTask->m;
-	String^ type = currentTask->type;
 
-	m_Nx = 1;
-	m_Ny = 1;
-	sort_amp = (double *) malloc(sizeof(double)*n);
-	for (i=0;i<m;i++)
-	{
-		if (String::Compare(type,"Local") == 0)
-			fprintf(fout_local_details,"Signal No %d\n",i+1);
-		else
-			fprintf(fout_inter_details,"Signal No %d\n",i+1);
-		dcopy_(&n,&rel_energy[i*n],&m_Nx,sort_amp,&m_Ny);   // copy rel_energy(:,i) to sort_amp
-		qsort(sort_amp,n,sizeof(double),comp_nums);
-		disp_n = 0;
-		if (sort_amp[0]<1e-6)
-		{
-			if (String::Compare(type,"Local") == 0)
-			{
-				currentTask->badEstimation = true;
-				fprintf(fout_local_details,"Bad estimates.\n\n\n");
-			}
-			else
-			{
-				currentTask->badEstimation = true;
-				fprintf(fout_inter_details,"Bad estimates.\n\n\n");
-			}
-		}
-		for (j=0;sort_amp[j]>m_energyDisplayThreshold;j++)
-		{
-			k = findnum(sort_amp[j],&rel_energy[i*n],n);
-			if (k==-1) 	continue;
-			disp_n++;
-			if (disp_n>m_maximumDisplayModes) break;
-			if (m_displayDetail)
-			{
-				if (String::Compare(type,"Local") == 0)
-					fprintf(fout_local_details,"amplitude = %.4f, phase = %.4f, damp = %.4f, frequency = %.4f Hz, damping ratio = %.4f, relatvie energy = %.4f\n\n\n",
-					out_amp[i*n+k],out_pha[i*n+k], out_damp[k], out_f[k],out_dpratio[k], rel_energy[i*n+k]);
-				else
-					fprintf(fout_inter_details,"amplitude = %.4f, phase = %.4f, damp = %.4f, frequency = %.4f Hz, damping ratio = %.4f, relatvie energy = %.4f\n\n\n",
-					out_amp[i*n+k],out_pha[i*n+k], out_damp[k], out_f[k],out_dpratio[k], rel_energy[i*n+k]);
-			}
-		}
-	}
-	free(sort_amp);
-}
-
-void EventDetectionAlgorithm::findmax(double *v, int N, double *max, int *k)
+void EventDetectionAlgorithm::FindMaximum(double *v, int N, double *max, int *k)
 {
 	/* find the maximum from vectro v, return the maximum value max and location k */
 	int i;
 	if (N<1) 
 	{
-		fprintf(fout_message,"N must be larger than 1 in function 'findmax'.\n");
-		throw gcnew ArgumentException("Error in findmax");
+		fprintf(messageFile,"N must be larger than 1 in function 'FindMaximum'.\n");
+		throw gcnew ArgumentException("Error in FindMaximum");
 	}
 	*max = v[0];
 	*k = 0;
@@ -1660,19 +1179,19 @@ void EventDetectionAlgorithm::findmax(double *v, int N, double *max, int *k)
 	}
 }
 
-double EventDetectionAlgorithm::findmax(List<double>^ v)
+double EventDetectionAlgorithm::FindMaximum(List<double>^ v)
 {
 	return TVA::Collections::Common::Maximum<double>(v);
 }
 
-void EventDetectionAlgorithm::findmin(double *v, int N, double *min, int *k)
+void EventDetectionAlgorithm::FindMinimum(double *v, int N, double *min, int *k)
 {
 	/* find the minimum from vectro v, return the minmum value max and location k */
 	int i;
 	if (N<1) 
 	{
-		fprintf(fout_message,"N must be larger than 1 in function 'findmin'.\n");
-		throw gcnew ArgumentException("Error in findmin");
+		fprintf(messageFile,"N must be larger than 1 in function 'FindMinimum'.\n");
+		throw gcnew ArgumentException("Error in FindMinimum");
 	}
 	*min = v[0];
 	*k = 0;
@@ -1686,30 +1205,33 @@ void EventDetectionAlgorithm::findmin(double *v, int N, double *min, int *k)
 	}
 }
 
-double EventDetectionAlgorithm::findmin(List<double>^ v)
+double EventDetectionAlgorithm::FindMinimum(List<double>^ v)
 {
 	return TVA::Collections::Common::Minimum<double>(v);
 }
 
-double EventDetectionAlgorithm::findmean(double *v, int N)
+double EventDetectionAlgorithm::FindMeanValue(double *v, int N)
 {
 	/* find the mean value from vectro v */
 	int i;
 	double mean;
 	if (N<1) 
-	{	fprintf(fout_message,"N must be larger than 1 in function 'findmin'.\n");return 0;}
+	{
+		fprintf(messageFile,"N must be larger than 1 in function 'FindMinimum'.\n");
+		throw gcnew ArgumentException("Error in FindMeanValue");
+	}
     mean =0;
 	for (i=0;i<N;i++)
 		mean += v[i];
 	return mean/N;
 }
 
-double EventDetectionAlgorithm::findmean(List<double>^ v)
+double EventDetectionAlgorithm::FindMeanValue(List<double>^ v)
 {
 	return TVA::Math::Common::Average(v);
 }
 
-int EventDetectionAlgorithm::findnum(double num, double *list, int n)
+int EventDetectionAlgorithm::FindNumber(double num, double *list, int n)
 {
 	/* look for num in list, return the index. */
 	int i;
@@ -1719,221 +1241,43 @@ int EventDetectionAlgorithm::findnum(double num, double *list, int n)
 	return -1;
 }
 
-void EventDetectionAlgorithm::matrix_write(double *A,int m,int n)
+void EventDetectionAlgorithm::WriteMatrixToFile(double *A,int m,int n)
 {
 	/* write matrix A into message.txt for debugging purpose */
 	int i,j;
 	for (i=0;i<m;i++)
 	{
 		for (j=0;j<n;j++)
-			fprintf(fout_message,"\t%.16f",A[i+j*m]);
-		fprintf(fout_message,"\n");
+			fprintf(messageFile,"\t%.16f",A[i+j*m]);
+		fprintf(messageFile,"\n");
 	}
-	fclose(fout_message);
+	fclose(messageFile);
 }
 
-void EventDetectionAlgorithm::exe_task(System::Object^ state)
-{
-	/* This fuction performs one single analysis task. The results are stored in currentTask */ 
-	ThreadState^ taskState = safe_cast<ThreadState^>(state);
-	AnalysisTask^ p_task = taskState->p_task;
-	int task_no = taskState->task_no;
-	ManualResetEvent^ manualEvent = taskState->manualEvent;
-	int i,j,k; 
-	int m_Nx=1,m_Ny=1;
-	double* sort_amp = (double*)malloc(sizeof(double) * m_channelCount);
-	int sig_count;
-	double sig_f;
-	double maximumValue;
-    int maximumIndex;
-	AnalysisTask^ currentTask;
-	int n;                             // model order
-	double *zi;                        // identified eigenvalues 
-	double *out_amp,*out_pha,*out_damp,*out_f,*out_dpratio;   // outputs
-	double *rel_energy;
-	int N;
-	int m;
-	String^ type;
+//void EventDetectionAlgorithm::ExecuteTask(System::Object^ state)
+//{
+//	/* This fuction performs one single analysis task. The results are stored in currentTask */ 
+//	ThreadState^ taskState = safe_cast<ThreadState^>(state);
+//	AnalysisTask^ p_task = taskState->p_task;
+//	int task_no = taskState->task_no;
+//	ManualResetEvent^ manualEvent = taskState->manualEvent;
 
-	currentTask = p_task;
-	N = currentTask->N;
-	m = currentTask->m;
-	type = currentTask->type;
-	currentTask->badEstimation = false;
-	/* data preprocessing */
-    data_preprocess(currentTask->data,N,m,m_removeMeanValue,m_normalizeData);
-		
-	/* roots calculation */
-	if (String::Compare(currentTask->method,"Prony")==0)     //Prony's Method
-	{
-		if (currentTask->n ==0)
-			n = (int) floor(N/2.0*11/12)+1;
-		else
-			n = currentTask->n;
-		if (n>128)	n = 128;
-		zi = prony_func(currentTask->data,N,m,n);
-    }
-	else if (String::Compare(currentTask->method,"MatrixPencil")==0)  //Matrix Pencil
-    {
-		zi = matrix_pencil_func(currentTask->data,N,m,&n);  // n is output, which is the parameter M in matrix pencil
-    }
-	else if (String::Compare(currentTask->method,"HTLS")==0) // HTLS
-    {
-		zi = HTLStack_func(currentTask->data,N,m,&n);
-    }
-	else
-	{	fprintf(fout_message,"Invalid analysis method.");
-        throw gcnew ArgumentException("Invalid analysis method");
-    }
 
-    if (zi == NULL)
-	{
-		currentTask->badEstimation = true;
-		currentTask->outflag = false;
-		p_task= currentTask;
-		if (m_displayDetail)
-		{
-			if (String::Compare(currentTask->type,"Local")==0)
-			{
-				//fprintf(fout_local_details,"%s Task No.%d\nFrom  %.3f s to %.3f s.\n%s\n\n",type,task_no+1,prony_t_start,prony_t_end,currentTask->method);
-	            fprintf(fout_local_details," Bad estimates. \n\n");
-			}
-			else
-			{
-				//fprintf(fout_inter_details,"%s Task No.%d\nFrom  %.3f s to %.3f s.\n%s\n\n",type,task_no+1,prony_t_start,prony_t_end,currentTask->method);
-	            fprintf(fout_inter_details," Bad estimates. \n\n");
-			}
-		}
-	}
-
-	/* modal parameters calculation */
-    out_amp = (double *) malloc(sizeof(double)*n*m);
-    out_pha = (double *) malloc(sizeof(double)*n*m);
-    out_damp = (double *) malloc(sizeof(double)*n);
-    out_f = (double *) malloc(sizeof(double)*n);
-    out_dpratio = (double *) malloc(sizeof(double)*n);
-    cal_output(currentTask->data,N,m,n,zi,1.0/FramesPerSecond,out_amp,out_pha,out_damp,out_f,out_dpratio); //out_* are outputs
-	
-	/* find the most dominant mode in each channel by relative energy */
-	currentTask->freq = (double *) malloc(sizeof(double)*m);
-	currentTask->ratio = (double *) malloc(sizeof(double)*m);
-	rel_energy = (double *) malloc(sizeof(double)*n*m);
-  	for (i=0;i<m;i++)
-	{
-		for (j=0;j<n;j++)
-		{
-		//	rel_energy[j][i] = 0;
-			rel_energy[j+i*n] = 0;
-		    if (out_f[j]<1e-6) continue;  //skip negative and zero frequency
-			if (out_amp[j+i*n]>1e6 || out_amp[j+i*n]<1e-6) continue;
-
-			for (k=0;k<N;k++)
-			{
-				//	rel_energy[j][i]+= out_amp[j][i]*exp(out_damp[j]*k*1.0/expectedMeasurementsPerSecond)*cos(2*PI*out_f[j]*k*1.0/expectedMeasurementsPerSecond+out_pha[j][i]);
-				rel_energy[j+i*n]+= out_amp[j+i*n]*exp(out_damp[j]*k*1.0/FramesPerSecond)*2*cos(2*PI*out_f[j]*k*1.0/FramesPerSecond+out_pha[j+i*n]*PI/180)
-				               *out_amp[j+i*n]*exp(out_damp[j]*k*1.0/FramesPerSecond)*2*cos(2*PI*out_f[j]*k*1.0/FramesPerSecond+out_pha[j+i*n]*PI/180);
-		    }
-			rel_energy[j+i*n]/= N;
-		}
-		findmax(&rel_energy[i*n], n, &maximumValue, &maximumIndex);    // find maximum mode energy in each channel
-		if (maximumValue!=0)
-		{
-			for (j=0;j<n;j++)
-				rel_energy[j+i*n]/= maximumValue;         // calculate relative energy
-		}
-		else
-		{
-			currentTask->freq[i] = 9999;
-			currentTask->ratio[i] = 9999;
-			continue;
-		}
-		currentTask->freq[i] = abs(out_f[maximumIndex]);
-	    currentTask->ratio[i] = out_dpratio[maximumIndex];
-	}
-
-	/* detailed result display */
-   	if (m_displayDetail)
-    {
-		//if (strcmp(type,"Local")==0)
-		//	fprintf(fout_local_details,"%s Task No.%d\nFrom  %.3f s to %.3f s.\n%s\n\n",type,task_no+1,prony_t_start,prony_t_end,currentTask->method);
-		//else
-		//	fprintf(fout_inter_details,"%s Task No.%d\nFrom  %.3f s to %.3f s.\n%s\n\n",type,task_no+1,prony_t_start,prony_t_end,currentTask->method);
-		display(out_amp,out_pha,out_damp,out_f,out_dpratio,rel_energy,m_displayDetail,currentTask);
-    }
-
-	/* find whether there is a dominant signal in all channels of the current task */
-	if (m==1)
-	{   // only one channel
-		currentTask->group_f = sort_amp[i];
-		currentTask->group_ratio = currentTask->ratio[findnum(sort_amp[i],currentTask->freq,m)];
-		currentTask->outflag = true;
-	}
-	else
-	{
-		dcopy_(&m,currentTask->freq,&m_Nx,sort_amp,&m_Ny);  // copy currentTask->freq to sort_amp
-		qsort(sort_amp,m,sizeof(double),comp_nums);
-		sig_count = 0;
-		sig_f = 0;
-		for (i=0;i<m;i++)
-		{
-			if (sort_amp[i] == 9999) continue;
-			if (abs(sig_f-sort_amp[i])>1e-6)
-			{
-				sig_f = sort_amp[i];
-				sig_count = 1;
-			}
-			else
-			{
-				sig_count++;
-			}
-			if (m==2 && sig_count==2)
-			{   // two channels
-				currentTask->group_f = sort_amp[i];
-				currentTask->group_ratio = currentTask->ratio[findnum(sort_amp[i],currentTask->freq,m)];
-			    currentTask->outflag = true;
-			    break;
-			}
-			if (sig_count>=m/2 && m>2)         // if more than half of the channels have the same dominant mode
-			{   // more than two channels
-				currentTask->group_f = sort_amp[i];
-				currentTask->group_ratio = currentTask->ratio[findnum(sort_amp[i],currentTask->freq,m)];
-			    currentTask->outflag = true;
-			    break;
-			}
-		}
-	}
-	currentTask->n = n;
-	//p_task= currentTask;
-    free(zi);free(out_amp);free(out_pha);free(out_damp);free(out_f);free(out_dpratio); 
-	free(rel_energy);
-	free(sort_amp);
-
-	// Notify waiting thread that task is complete.
-	manualEvent->Set();
-}
-
-int comp_nums(const void *param1, const void *param2)
+int CompareNumbers(const void *param1, const void *param2)
 {
 	double *num1 = (double *)param1;
 	double *num2 = (double *)param2;
 
     /* compare numbers for use in qsort */
-	//char c='D';   //descending
-	//if (c=='A') // ascending
-		if (*num1 <  *num2)
-			return -1;
-	    else if (*num1 == *num2) 
-			return  0;
-	    else
-			return  1;
-	//else // descending
-	//	if (*num1 >  *num2)
-	//		return -1;
-	//    else if (*num1 == *num2) 
-	//		return  0;
-	//    else
-	//		return  1;
+    // descending
+	if (*num1 >  *num2)
+		return -1;
+    else if (*num1 == *num2) 
+		return  0;
+    else
+		return  1;
 }
+
 
 // Caller responsible for calling "free()" on returned buffer...
 char* StringToCharBuffer(String^ gcStr)
@@ -1944,4 +1288,426 @@ char* StringToCharBuffer(String^ gcStr)
 	Marshal::Copy(gcBytes, 0, (IntPtr)str, gcStr->Length);
 	str[gcStr->Length] = '\0';
 	return str;
+}
+
+void EventDetectionAlgorithm::ExecuteAmbientTask(AmbientTask ^p_task, int task_no)
+{
+	// some parameter setting for FDD
+	int nfft = 8192;   // n for FFT
+	double freqLowerBound = 0.2;
+	double freqUpperBound = 1.5;
+	double MACthreshold = 0.9;
+	double truncateLevel1 = 0.2;
+	double truncateLevel2 = 0.5;   // truncation ratio higher than this level is classified as bad estimate
+	// end of parameter setting
+
+	int i,j,k,ii;                                                          
+	AmbientTask^ currentTask;
+	fftw_complex *in,*out;
+    fftw_plan p;
+	double *y;
+	double *Y,*P;                                          
+	int N;                                                              
+	int m;                                                              
+	String^ type;  
+	double dt;
+	double *frequency;   //frequency
+	double Fs = 30; //sampling frequency
+	int iLower = 0;
+	int iUpper = 0;
+	double *Pxy;
+	char jobz;
+	int Msvd,Nsvd,lda,minMN,ldu,ldvt,lwork,info;
+	double *S,*U,*VT,*rwork;
+	int *iwork;
+	double *work;
+	double *singularValue,*singularVector;
+	double maximumSingularValue;                                                
+    int maximumIndex; 
+	int maxModeNumber = 4;
+	List<double>^ modeLargestSingularValue = gcnew List<double>;
+    List<int>^ modeLargestSingularValueIndex = gcnew List<int>;
+	List<double>^ modeShape = gcnew List<double>;
+	List<double>^ fai1 = gcnew List<double>;
+	List<double>^ fai2 = gcnew List<double>;
+	double MAC;
+	int index1,index2;
+	double realPart,imagPart;
+	double *psdSDOF;
+	double minSingularValue,truncateRatio;
+	int minIndex;
+	double *autoCorrelation,*zi;
+	int n;                             // model order  
+	double outputFrequency,outputRatio;
+	double realLambda,imagLambda;
+	double localMaximumSingularValue;
+	int localMaximumIndex;
+	bool nearbyModeFlag;
+	double *data;
+
+	currentTask = p_task;                                               
+	N = currentTask->N;                                                 
+	m = currentTask->m;                                                 
+	type = currentTask->type;
+	currentTask->ambientModeFlag = gcnew List<int>;
+	currentTask->ambientModeFrequency = gcnew List<double>;
+	currentTask->ambientModeRatio = gcnew List<double>;
+//    dt = 1.0/expectedMeasurementsPerSecond;         // delta t, which is 1/Fs
+    dt = 1.0/Fs;
+
+
+	/* reverse arrangement test */
+	ReverseArrangementTest(currentTask,task_no);
+
+	/* data preprocessing */                                            
+    DataPreprocess(currentTask->data,N,m,m_removeMeanValue,m_normalizeData);
+	if (String::Compare(currentTask->method,"FDD")==0)     //Frequency Domain Decomposition (FDD)
+	{
+		y = (double *) malloc(sizeof(double) * nfft);          
+		Y = (double *) malloc(sizeof(double) * (nfft * 2 * 6) * m);
+		out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nfft);
+		for (j=0;j<m;j++)      // for each signal
+		{
+			for (i=0;i<nfft*6;i++)
+			{
+				Y[2*i + j*nfft*2*6] = 0;      //real part
+				Y[2*i+1 + j*nfft*2*6] = 0;    //imag part
+			}
+			for (k=0;k<6;k++)   // for each taper
+			{
+				/* multiplied by slepian tapers */
+				for (i=0;i<nfft;i++)
+				{
+					if (i < N)
+						y[i] = currentTask->data[i+j*N] * coefficientDPSS[i+k*N];//data[i][j]* coef[i][k], jth signal,kth taper
+					else
+						y[i] = 0;
+				}
+				/* FFT */
+		        p = fftw_plan_dft_r2c_1d(nfft, y, out, FFTW_ESTIMATE);
+		        fftw_execute(p);
+				for (i=0;i<nfft;i++)
+				{
+					Y[2*i + k*nfft*2 + j*nfft*2*6] = out[i][0];
+					Y[2*i+1 + k*nfft*2 + j*nfft*2*6] = out[i][1];
+				}
+			}  // end of each taper
+		}    // end of each signal
+		fftw_destroy_plan(p);
+        fftw_free(out);
+        
+		/* calculate auto- and cross-spectrum */
+		P = (double *) malloc(sizeof(double) * (nfft * 2) * (m * m));
+		for (i=0;i<m;i++)
+			for (j=0;j<m;j++)
+			{
+				for (k=0;k<nfft;k++)
+				{
+					P[2*k + (i+j*m)*2*nfft] = 0;
+					P[2*k+1 + (i+j*m)*2*nfft] = 0;
+				}
+				for (ii=0;ii<6;ii++)
+					for (k=0;k<nfft;k++)
+					{   // store P as [ P11 P21 ...Pm1   P12 P22... Pm2  P1m... Pmm]
+						P[2*k + (i+j*m)*2*nfft] += 1.0/6 * (Y[2*k + ii*2*nfft + i*2*nfft*6] * Y[2*k + ii*2*nfft + j*2*nfft*6] + Y[2*k+1 + ii*2*nfft + i*2*nfft*6] * Y[2*k+1 +ii*2*nfft + j*2*nfft*6]); 
+						P[2*k+1 + (i+j*m)*2*nfft] += 1.0/6 * (Y[2*k+1 + ii*2*nfft + i*2*nfft*6] * Y[2*k + ii*2*nfft + j*2*nfft*6] - Y[2*k + ii*2*nfft + i*2*nfft*6] * Y[2*k+1 +ii*2*nfft + j*2*nfft*6]); 
+					}
+			}
+		free(Y);
+		free(y);
+        
+		/* svd on spetral matrix */
+		frequency = (double *) malloc (sizeof(double) * nfft);
+		for (i=0;i<nfft;i++)
+		{
+			frequency[i] = (double)i/nfft *Fs;
+			if (iLower == 0 && frequency[i]>freqLowerBound)
+				iLower = i;
+			else if (iUpper ==0 && frequency[i]>freqUpperBound)
+				iUpper = i -1;
+		}
+		work = (double *) malloc(sizeof(double)*MaxLwork);
+		jobz = 'S';
+		Msvd = m;
+		Nsvd = m;
+		lda = m;
+		minMN = min(Msvd,Nsvd);
+		S = (double *) malloc(sizeof(double)*minMN);
+		ldu = m;
+		U = (double *) malloc(sizeof(double)*ldu*minMN*2);
+		ldvt = Nsvd;
+		VT = (double *) malloc(sizeof(double)*ldvt*Nsvd*2);
+		iwork = (int*)malloc(sizeof(int)*8*minMN);
+		rwork = (double *) malloc(sizeof(double)*(5*minMN*minMN + 7*minMN));
+		lwork = MaxLwork;
+		Pxy = (double *) malloc (sizeof(double) * m * m * 2);
+		singularValue = (double *) malloc(sizeof(double)*(iUpper-iLower+1));
+		singularVector = (double *) malloc(sizeof(double)*(iUpper-iLower+1)*m*2);
+		for (ii=iLower;ii<=iUpper;ii++)
+		{
+			for (i=0;i<m;i++)          // row index
+				for (j=0;j<m;j++)      // column index
+				{
+					Pxy[2*i + j*2*m] = P[2*ii + (i+j*m)*nfft*2];
+					Pxy[2*i+1 + j*2*m] = P[2*ii+1 + (i+j*m)*nfft*2];
+				}
+			/* svd for each specutrm line*/
+			zgesdd_( &jobz, &Msvd, &Nsvd, Pxy, &lda, S, U, &ldu, VT, &ldvt, work, &lwork, rwork, iwork, &info);
+			if (info!=0)
+			{
+				fprintf(messageFile,"zgesdd_ fails FDD Function. \n");
+				free(work);free(S);free(U);free(VT);free(iwork);free(rwork);
+				return;
+			}
+			singularValue[ii-iLower] = S[0];
+			for (i=0;i<m;i++)
+			{
+				singularVector[2*i + (ii-iLower)*2*m] = U[2*i];
+				singularVector[2*i+1 + (ii-iLower)*2*m] = U[2*i+1];
+			}
+		}
+	    FindMaximum(singularValue,iUpper-iLower+1,&maximumSingularValue,&maximumIndex); 
+		free(P);free(Pxy);free(work);free(S);
+		free(U);
+		free(VT);
+		free(iwork);
+		free(rwork);
+
+		/* mode identification */
+		in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nfft);
+		autoCorrelation = (double *) malloc(sizeof(double) * nfft);
+		psdSDOF = (double *) malloc(sizeof(double) * nfft);
+		data = (double *) malloc(sizeof(double) * (int) (10*Fs +1));
+		for (i=0;i<maxModeNumber;i++)
+		{
+			if (i==0)
+			{
+				modeLargestSingularValue->Add (maximumSingularValue);
+				modeLargestSingularValueIndex->Add (maximumIndex);
+				for (j=0;j<2*m;j++)
+					modeShape->Add (singularVector[j + maximumIndex*2*m]);
+    		}
+			else
+			{
+				FindMaximum(singularValue,iUpper-iLower+1,&localMaximumSingularValue,&localMaximumIndex);
+				if (localMaximumSingularValue < maximumSingularValue/3 )
+					break;
+				nearbyModeFlag = false;
+				for (j=0;j<i;j++)
+					if (abs(frequency[localMaximumIndex+iLower]-currentTask->ambientModeFrequency[j]) < 0.075)
+					{
+						nearbyModeFlag = true;
+						break;               // if the next peak is too close to the previous peak, break
+					}
+				if (nearbyModeFlag)
+					break;
+				else
+				{
+					modeLargestSingularValue->Add (localMaximumSingularValue);
+					modeLargestSingularValueIndex->Add (localMaximumIndex);
+					for (j=0;j<2*m;j++)
+						modeShape->Add (singularVector[j + localMaximumIndex*2*m]);
+				}
+			}
+			fai1->Clear ();
+			for (j=0;j<2*m;j++)
+				fai1->Add(modeShape[j+i*2*m]);
+
+			// look for lower bound index for a mode
+			index1 = modeLargestSingularValueIndex[i];
+			while (1)
+			{
+				index1--;
+				if (index1<0)
+				{
+					index1++;
+					break;
+				}
+				fai2->Clear ();
+				for (j=0;j<2*m;j++)
+					fai2->Add(singularVector[j+index1*2*m]);
+				realPart = 0;
+				imagPart = 0;
+				for (j=0;j<m;j++)
+				{
+					realPart += fai1[2*j] * fai2[2*j] + fai1[2*j+1] * fai2[2*j+1];
+					imagPart += fai1[2*j] * fai2[2*j+1] - fai1[2*j+1] * fai2[2*j];
+				}
+				MAC = realPart * realPart + imagPart * imagPart;
+				//vectorNorm = 0;
+				//for (j=0;j<m;j++)
+				//	vectorNorm += fai1[2*j] * fai1[2*j] + fai1[2*j+1] *fai1[2*j+1];
+				//MAC /= vectorNorm;
+				//vectorNorm = 0;
+				//for (j=0;j<m;j++)
+				//	vectorNorm += fai2[2*j] * fai2[2*j] + fai2[2*j+1] *fai2[2*j+1];
+				//MAC /= vectorNorm;
+				if (MAC < MACthreshold)
+				{
+					index1++;
+					break;
+				}
+			}
+
+			// look for upper bound index for a mode
+			index2 = modeLargestSingularValueIndex[i];
+			while (1)
+			{
+				index2++;
+				if (index2>iUpper)
+				{
+					index2--;
+					break;
+				}
+				fai2->Clear ();
+				for (j=0;j<2*m;j++)
+					fai2->Add(singularVector[j+index2*2*m]);
+				realPart = 0;
+				imagPart = 0;
+				for (j=0;j<m;j++)
+				{
+					realPart += fai1[2*j] * fai2[2*j] + fai1[2*j+1] * fai2[2*j+1];
+					imagPart += fai1[2*j] * fai2[2*j+1] - fai1[2*j+1] * fai2[2*j];
+				}
+				MAC = realPart * realPart + imagPart * imagPart;
+				if (MAC < MACthreshold)
+				{
+					index2--;
+					break;
+				}
+			}
+
+			/* inverse FFT */
+			for (j=0;j<nfft;j++)
+			{
+				if (j>=index1+iLower && j<=index2+iLower)
+					psdSDOF[j] = singularValue[j-iLower];
+				else if (j>= nfft-(index2+iLower) && j<=nfft-(index1+iLower))
+					psdSDOF[j] = singularValue[nfft-j-iLower];
+				else
+					psdSDOF[j] = 0;
+				in[j][0] = psdSDOF[j];
+				in[j][1]  = 0;
+			}
+
+			FindMinimum(&psdSDOF[index1+iLower],index2-index1+1,&minSingularValue,&minIndex);
+			truncateRatio = minSingularValue / modeLargestSingularValue[i];
+			if (truncateRatio > truncateLevel2)
+				currentTask->ambientModeFlag ->Add (4);
+			else if (truncateRatio > truncateLevel1)
+			    currentTask->ambientModeFlag ->Add (3);
+			else
+			{
+				// check the reverse arrangement test
+				for (j=0;j<currentTask->reverseArrTestFlag ->Count ;j++)
+					if (!currentTask->reverseArrTestFlag[j])
+					{
+						currentTask->ambientModeFlag ->Add (2);
+						break;
+					}
+				if (j==currentTask->reverseArrTestFlag ->Count)
+					currentTask->ambientModeFlag->Add (1);
+
+			}
+
+			p = fftw_plan_dft_c2r_1d(nfft, in, autoCorrelation, FFTW_ESTIMATE);   // autoCorrelation * nfft is the actual inverse
+		    fftw_execute(p);
+			
+			/* prony analysis and calculate output*/
+			for (j=49;j<=49+Fs*10;j++)
+				data[j-49] = autoCorrelation[j];
+			zi = MatrixPencilFunction(data,(int) (10*Fs + 1),1,&n);
+			if (n!=2)
+				zi = PronyFunction(data,(int) (10*Fs + 1),1,2);
+			realLambda = log(zi[0]*zi[0]+zi[1]*zi[1])/2; // lambda = log(z) = log(abs(z)) + i*atan2(im(z),re(z))
+			imagLambda = atan2(zi[1],zi[0]);
+			outputFrequency = abs(imagLambda) / 2 / PI /dt;
+			outputRatio = -realLambda / sqrt(realLambda * realLambda + imagLambda * imagLambda);
+			currentTask->ambientModeFrequency ->Add (outputFrequency);
+			currentTask->ambientModeRatio ->Add (outputRatio);
+            
+			/* prepare for the next mode */
+			for (j=index1;j<=index2;j++)
+				singularValue[j] = 0;
+		}
+		fftw_destroy_plan(p);
+        fftw_free(in);
+		free(psdSDOF);
+		free(autoCorrelation);
+		free(data);
+		// end of mode identification
+
+		free(frequency);
+		free(singularValue);
+		free(singularVector);
+	} // end of FDD
+}
+
+void EventDetectionAlgorithm::ReverseArrangementTest(AmbientTask ^p_task, int task_no)
+{
+	int N = 100;
+	int A[100];
+	double x[100];
+	int i,j,k;
+	int n;
+	int sumA;
+	double *y;
+	int L;
+
+	p_task->reverseArrTestFlag = gcnew List<bool>;
+
+	y = p_task->data;
+    L = p_task->N;
+	n = L/N;
+	for (i=0;i<p_task->m ;i++)
+	{
+		for (j=0;j<N;j++)
+			x[j] = y[j*n + i * p_task->N];
+		for (j=0;j<N;j++)
+		{
+			A[j] = 0;
+			for(k=j+1;k<N;k++)
+			{
+				if (x[k]<x[j])
+					A[j]++;
+			}
+		}
+		sumA = 0;
+		for (j=0;j<N;j++)
+			sumA += A[j];
+	
+		if (N==20)
+		{
+			if (sumA > 125 || sumA < 64)
+			{
+				p_task->reverseArrTestFlag->Add (false);   // do not pass test
+			}
+			else
+			{
+				p_task->reverseArrTestFlag->Add (true);    // pass the test
+			}
+		}
+		else if (N==30)
+		{
+			if (sumA > 272 || sumA < 162)
+			{
+				p_task->reverseArrTestFlag->Add (false);   // do not pass test
+			}
+			else
+			{
+				p_task->reverseArrTestFlag->Add (true);    // pass the test
+			}
+		}
+		else if (N==100)
+		{
+			if (sumA > 2804 || sumA < 2145)
+			{
+				p_task->reverseArrTestFlag->Add (false);   // do not pass test
+			}
+			else
+			{
+				p_task->reverseArrTestFlag->Add (true);    // pass the test
+			}
+		}
+	}
 }
