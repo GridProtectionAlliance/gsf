@@ -12,6 +12,9 @@
 '  -----------------------------------------------------------------------------------------------------
 '  09-22-06 - Pinal C. Patel
 '       Original version of source code generated
+'  09-22-06 - Pinal C. Patel
+'       Added the flexibility of providing an absolute URL in config file for externally 
+'       facing web sites
 '
 '*******************************************************************************************************
 
@@ -26,6 +29,7 @@ Imports TVA.IO.Common
 Imports TVA.IO.Compression
 Imports TVA.Identity.Common
 Imports TVA.Security.Cryptography.Common
+Imports TVA.Configuration.Common
 
 Namespace Application
 
@@ -55,6 +59,11 @@ Namespace Application
         ''' Key used for storing the user data.
         ''' </summary>
         Private Const UDKey As String = "ud"
+
+        ''' <summary>
+        ''' Key used for storing external URL in the config file.
+        ''' </summary>
+        Private Const EUKey As String = "ExternalUrl"
 
         ''' <summary>
         ''' Name of the cookie that will contain the current user's credentials.
@@ -127,18 +136,10 @@ Namespace Application
             If m_parent IsNot Nothing Then
                 ExtractWebFiles(False)   ' Make sure that the required web file exist in the application bin directory.
 
-                Dim webPage As String = "Login.aspx"
-                Dim redirUrl As String = GetSafeUrl(webPage)
                 With New StringBuilder()
-                    .Append(redirUrl)
+                    .Append(GetSafeUrl("Login.aspx"))
                     .Append("?r=")              ' Return Url
-                    If redirUrl <> webPage Then
-                        ' Redirection is absolute, so we'll provide absolute return Url.
-                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
-                    Else
-                        ' Redirection is relative, so we'll provide relative return Url.
-                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.PathAndQuery))
-                    End If
+                    .Append(m_parent.Server.UrlEncode(GetReturnUrl()))
                     .Append("&a=")              ' Application Name
                     .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
                     .Append("&c=")              ' Connection String
@@ -169,19 +170,11 @@ Namespace Application
             If m_parent IsNot Nothing Then
                 ExtractWebFiles(False)   ' Make sure that the required web file exist in the application bin directory.
 
-                Dim webPage As String = "ErrorPage.aspx"
-                Dim redirUrl As String = GetSafeUrl(webPage)
                 With New StringBuilder()
-                    .Append(redirUrl)
+                    .Append(GetSafeUrl("ErrorPage.aspx"))
                     .Append("?t=0")             ' Specify the type of error to be "Access Denied".
                     .Append("&r=")              ' Return Url
-                    If redirUrl <> webPage Then
-                        ' Redirection is absolute, so we'll provide absolute return Url.
-                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.AbsoluteUri))
-                    Else
-                        ' Redirection is relative, so we'll provide relative return Url.
-                        .Append(m_parent.Server.UrlEncode(m_parent.Request.Url.PathAndQuery))
-                    End If
+                    .Append(m_parent.Server.UrlEncode(GetReturnUrl()))
                     .Append("&a=")              ' Application Name
                     .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
                     .Append("&c=")              ' Connection String
@@ -300,16 +293,20 @@ Namespace Application
 
         Private Function GetCleanUrl() As String
 
+            Dim url As String = GetReturnUrl()
+            Dim urlParts As String() = url.Split("?"c)
             With New StringBuilder()
                 ' Remove the username and password from querystring if present.
-                .Append(m_parent.Request.Url.AbsolutePath)
-                .Append("?")
-                For Each parameter As String In m_parent.Request.Url.Query.TrimStart("?"c).Split("&"c)
-                    Dim key As String = parameter.Split("="c)(0)
-                    If Not (key = UNKey OrElse key = PWKey) Then
-                        .Append(parameter)
-                    End If
-                Next
+                .Append(urlParts(0))
+                If urlParts.Length > 1 Then
+                    .Append("?")
+                    For Each parameter As String In urlParts(1).Split("&"c)
+                        Dim key As String = parameter.Split("="c)(0)
+                        If Not (key = UNKey OrElse key = PWKey) Then
+                            .Append(parameter)
+                        End If
+                    Next
+                End If
 
                 Return .ToString()
             End With
@@ -319,28 +316,74 @@ Namespace Application
         Private Function GetSafeUrl(ByVal webPage As String) As String
 
             With New StringBuilder()
-                Dim getRequest As WebRequest = Nothing
-                Try
-                    ' First, we'll try to access the specified web page locally by hitting the web site at the
-                    ' default port 80.
-                    getRequest = WebRequest.Create(GetLocalWebSiteUrl(False) & webPage)
-                    getRequest.Credentials = CredentialCache.DefaultCredentials
-
-                    getRequest.GetResponse()
-                Catch ex1 As Exception
+                Dim externalUrl As String = GetExternalUrl()
+                If String.IsNullOrEmpty(externalUrl) Then
                     Try
-                        ' Next, we'll try to access the specified web page locally by hitting the web site at
-                        ' a port other than 80 if it is running on a different port.
-                        getRequest = WebRequest.Create(GetLocalWebSiteUrl(True) & webPage)
+                        ' First try to make a request for the page locally. If we're unable to request the page
+                        ' locally or if an exception is encountered when making the request, we'll use the page
+                        ' at one of the three remote web sites (development/acceptance/production).
+                        Dim getRequest As WebRequest = WebRequest.Create(GetLocalWebSiteUrl() & webPage)
                         getRequest.Credentials = CredentialCache.DefaultCredentials
 
-                        getRequest.GetResponse()
-                    Catch ex2 As Exception
-                        ' If all fails, we use one of three remote web sites (development/acceptance/production).
+                        If getRequest.GetResponse() Is Nothing Then
+                            .Append(GetRemoteWebSiteUrl())
+                        End If
+                    Catch ex As Exception
                         .Append(GetRemoteWebSiteUrl())
                     End Try
-                End Try
+                Else
+                    .Append(externalUrl)
+                End If
+
                 .Append(webPage)
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetReturnUrl() As String
+
+            Dim externalUrl As String = Me.GetExternalUrl()
+            With New StringBuilder()
+                If String.IsNullOrEmpty(externalUrl) Then
+                    ' No absolute URL is specified, so we just use the current page's URL as return URL.
+                    .Append(m_parent.Request.Url.AbsoluteUri)
+                Else
+                    ' An absolute URL is specified, so we'll construct a return URL based on the absolute
+                    ' URL. This is important for redirection to work properly in externally facing web sites.
+                    .Append(externalUrl)
+                    For i As Integer = 1 To m_parent.Request.Url.Segments.Length - 1
+                        .Append(m_parent.Request.Url.Segments(i))
+                    Next
+                    .Append(m_parent.Request.Url.Query)
+                End If
+
+                Return .ToString()
+            End With
+
+        End Function
+
+        Private Function GetExternalUrl() As String
+
+            ' Return the absolute URL to use in redirection if one is specified in the config file.
+            Return CategorizedSettings(SettingsCategory)(EUKey, True).Value
+
+        End Function
+
+        Private Function GetLocalWebSiteUrl() As String
+
+            With New StringBuilder()
+                .Append(m_parent.Request.Url.Scheme)
+                .Append(System.Uri.SchemeDelimiter)
+                .Append(m_parent.Request.Url.Host)
+                If Not m_parent.Request.Url.IsDefaultPort Then
+                    ' Port other than the default port 80 is used to access the web site.
+                    .Append(":")
+                    .Append(m_parent.Request.Url.Port)
+                End If
+                .Append(m_parent.Request.ApplicationPath)
+                .Append("/")
 
                 Return .ToString()
             End With
@@ -360,25 +403,6 @@ Namespace Application
                         .Append("troweb.cha.tva.gov")
                 End Select
                 .Append("/troapplicationsecurity/")
-
-                Return .ToString()
-            End With
-
-        End Function
-
-        Private Function GetLocalWebSiteUrl(ByVal addPort As Boolean) As String
-
-            With New StringBuilder()
-                .Append(m_parent.Request.Url.Scheme)
-                .Append(System.Uri.SchemeDelimiter)
-                .Append(m_parent.Request.Url.Host)
-                If Not m_parent.Request.Url.IsDefaultPort AndAlso addPort Then
-                    ' Port other than the default port 80 is used to access the web site.
-                    .Append(":")
-                    .Append(m_parent.Request.Url.Port)
-                End If
-                .Append(m_parent.Request.ApplicationPath)
-                .Append("/")
 
                 Return .ToString()
             End With
