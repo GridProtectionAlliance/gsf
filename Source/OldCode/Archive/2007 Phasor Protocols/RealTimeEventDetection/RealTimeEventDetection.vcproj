@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="RealTimeEventDetection"
+	Name="OscillationMonitoringSystem"
 	ProjectGUID="{88817BB4-F466-47DF-872E-BFB9159562C3}"
 	RootNamespace="RealTimeEventDetection"
 	SccProjectName="&quot;$/TVA Super Phasor Data Concentrator/Version/2.0/Local/Source&quot;, MSSAAAAA"

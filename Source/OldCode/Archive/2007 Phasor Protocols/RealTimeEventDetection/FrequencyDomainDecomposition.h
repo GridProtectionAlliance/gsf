@@ -23,9 +23,9 @@ using namespace InterfaceAdapters;
 int CompareNumbers(const void *num1, const void *num2);        // function used in qsort
 char* StringToCharBuffer(String^ gcStr);
 
-namespace RealTimeEventDetection
+namespace OscillationMonitoringSystem
 {
-	public ref class EventDetectionAlgorithm : public CalculatedMeasurementAdapterBase
+	public ref class FrequencyDomainDecomposition : public CalculatedMeasurementAdapterBase
 	{
 	private:
 
@@ -118,7 +118,7 @@ namespace RealTimeEventDetection
 		double *PseudoInverse(double *A,int m, int n);           // calculate pseudo-inverse of a matrix
 		void CalculateOutput(double *data, int N, int m, int n, double *zi, double dt, double *outputAmplitude, double *outputPhase,
 						double *outputDamping, double *outputFrequency, double *outputDampRatio);   // calculate output modal paramters
-//		void EventDetectionAlgorithm::ResultDisplay(double *outputAmplitude,double *outputPhase,double *outputDamping,double *outputFrequency,double *outputDampRatio,double *relativeEnergy,int m_displayDetail, AnalysisTask^ currentTask);
+//		void FrequencyDomainDecomposition::ResultDisplay(double *outputAmplitude,double *outputPhase,double *outputDamping,double *outputFrequency,double *outputDampRatio,double *relativeEnergy,int m_displayDetail, AnalysisTask^ currentTask);
 		void FindMaximum(double *v, int N, double *max, int *k);       // find maximum value
 		double FindMaximum(List<double>^ v);                             // find maximum value
 		void FindMinimum(double *v, int N, double *min, int *k);       // find minimum value
@@ -132,7 +132,7 @@ namespace RealTimeEventDetection
 
 	public:
 
-		EventDetectionAlgorithm();
+		FrequencyDomainDecomposition();
 		void TestAlgorithm(IFrame^ frame, int index)
 		{
 			PublishFrame(frame, index); 

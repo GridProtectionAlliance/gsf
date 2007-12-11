@@ -8,7 +8,7 @@
 \*******************************************************************************************************/
 
 #include "stdafx.h"
-#include "RealTimeEventDetection.h"
+#include "FrequencyDomainDecomposition.h"
 
 
 using namespace System;
@@ -17,13 +17,13 @@ using namespace System::Threading;
 using namespace System::Runtime::InteropServices;
 using namespace TVA::Measurements;
 using namespace TVA::Configuration;
-using namespace RealTimeEventDetection;
+using namespace OscillationMonitoringSystem;
 
 // Constructor
-EventDetectionAlgorithm::EventDetectionAlgorithm() {}
+FrequencyDomainDecomposition::FrequencyDomainDecomposition() {}
 
 // Calculation initialization
-void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ configurationSection, cli::array<TVA::Measurements::IMeasurement^, 1>^ outputMeasurements, cli::array<TVA::Measurements::MeasurementKey, 1>^ inputMeasurementKeys, int minimumMeasurementsToUse, int expectedMeasurementsPerSecond, double lagTime, double leadTime)
+void FrequencyDomainDecomposition::Initialize(String^ calculationName, String^ configurationSection, cli::array<TVA::Measurements::IMeasurement^, 1>^ outputMeasurements, cli::array<TVA::Measurements::MeasurementKey, 1>^ inputMeasurementKeys, int minimumMeasurementsToUse, int expectedMeasurementsPerSecond, double lagTime, double leadTime)
 {
 	// Call base class initialization function
 	__super::Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime);
@@ -178,7 +178,7 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	}
 }
 
-void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int index)
+void FrequencyDomainDecomposition::PublishFrame(TVA::Measurements::IFrame^ frame, int index)
 {
 	IMeasurement^ measurement;
 	MeasurementKey measurementKey;
@@ -355,14 +355,14 @@ void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int
 	//}
 }
 
-void EventDetectionAlgorithm::Stop()
+void FrequencyDomainDecomposition::Stop()
 {
 	__super::Stop();
 	fclose(localDetailsFile);
 	fclose(messageFile);
 }
 
-void EventDetectionAlgorithm::DataPreprocess(double *prony_data,int N,int m,int m_removeMeanValue,int m_normalizeData)
+void FrequencyDomainDecomposition::DataPreprocess(double *prony_data,int N,int m,int m_removeMeanValue,int m_normalizeData)
 {
 	double mean,maxabs;
 	int i,j;
@@ -396,7 +396,7 @@ void EventDetectionAlgorithm::DataPreprocess(double *prony_data,int N,int m,int 
 }
 
 
-double *EventDetectionAlgorithm::PronyFunction(double *data,int N,int m,int n)
+double *FrequencyDomainDecomposition::PronyFunction(double *data,int N,int m,int n)
 {
 	/* Prony's method to find roots */
 	double *A1, *A2;
@@ -521,7 +521,7 @@ double *EventDetectionAlgorithm::PronyFunction(double *data,int N,int m,int n)
 }
 
 
-double *EventDetectionAlgorithm::MatrixPencilFunction(double *data,int N,int m, int *n)
+double *FrequencyDomainDecomposition::MatrixPencilFunction(double *data,int N,int m, int *n)
 {
 	/* Matrix Pencil method to find roots */
 	int L, i, row, col, Y_row, Y_col;
@@ -698,7 +698,7 @@ double *EventDetectionAlgorithm::MatrixPencilFunction(double *data,int N,int m, 
 }
 
 
-double *EventDetectionAlgorithm::HTLStackFunction(double *data,int N,int m, int *n)
+double *FrequencyDomainDecomposition::HTLStackFunction(double *data,int N,int m, int *n)
 {
 	/* HLTStack method to find roots */
 	int i,j,row,col;
@@ -910,7 +910,7 @@ double *EventDetectionAlgorithm::HTLStackFunction(double *data,int N,int m, int 
 	return zi;
 }
 
-double *EventDetectionAlgorithm::MatrixTranspose(double *matrix, int m, int n)
+double *FrequencyDomainDecomposition::MatrixTranspose(double *matrix, int m, int n)
 {
 	int i,j;
 	double *result;
@@ -929,7 +929,7 @@ double *EventDetectionAlgorithm::MatrixTranspose(double *matrix, int m, int n)
 	return result;
 }
 
-double *EventDetectionAlgorithm::MatrixInverse(double *A, int N)
+double *FrequencyDomainDecomposition::MatrixInverse(double *A, int N)
 {
 //	  SUBROUTINE DGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
 //    DGESV computes the solution to a real system of linear equations A * X = B,
@@ -968,7 +968,7 @@ double *EventDetectionAlgorithm::MatrixInverse(double *A, int N)
 		return B;
 }
 
-double *EventDetectionAlgorithm::PseudoInverse(double *A,int m, int n)
+double *FrequencyDomainDecomposition::PseudoInverse(double *A,int m, int n)
 {
     /* find pseudo-inverse of matrix A */
 //  matlab code for PseudoInverse
@@ -1086,7 +1086,7 @@ double *EventDetectionAlgorithm::PseudoInverse(double *A,int m, int n)
 }
 
 
-void EventDetectionAlgorithm::CalculateOutput(double *data, int N, int m, int n, double *zi, double dt, double *outputAmplitude, double *outputPhase,
+void FrequencyDomainDecomposition::CalculateOutput(double *data, int N, int m, int n, double *zi, double dt, double *outputAmplitude, double *outputPhase,
 				double *outputDamping, double *outputFrequency, double *outputDampRatio)
 {
 	/* calculate modal analysis outputs such as frequency and damping ratios. */
@@ -1183,7 +1183,7 @@ void EventDetectionAlgorithm::CalculateOutput(double *data, int N, int m, int n,
 }
 
 
-void EventDetectionAlgorithm::FindMaximum(double *v, int N, double *max, int *k)
+void FrequencyDomainDecomposition::FindMaximum(double *v, int N, double *max, int *k)
 {
 	/* find the maximum from vectro v, return the maximum value max and location k */
 	int i;
@@ -1204,12 +1204,12 @@ void EventDetectionAlgorithm::FindMaximum(double *v, int N, double *max, int *k)
 	}
 }
 
-double EventDetectionAlgorithm::FindMaximum(List<double>^ v)
+double FrequencyDomainDecomposition::FindMaximum(List<double>^ v)
 {
 	return TVA::Collections::Common::Maximum<double>(v);
 }
 
-void EventDetectionAlgorithm::FindMinimum(double *v, int N, double *min, int *k)
+void FrequencyDomainDecomposition::FindMinimum(double *v, int N, double *min, int *k)
 {
 	/* find the minimum from vectro v, return the minmum value max and location k */
 	int i;
@@ -1230,12 +1230,12 @@ void EventDetectionAlgorithm::FindMinimum(double *v, int N, double *min, int *k)
 	}
 }
 
-double EventDetectionAlgorithm::FindMinimum(List<double>^ v)
+double FrequencyDomainDecomposition::FindMinimum(List<double>^ v)
 {
 	return TVA::Collections::Common::Minimum<double>(v);
 }
 
-double EventDetectionAlgorithm::FindMeanValue(double *v, int N)
+double FrequencyDomainDecomposition::FindMeanValue(double *v, int N)
 {
 	/* find the mean value from vectro v */
 	int i;
@@ -1251,12 +1251,12 @@ double EventDetectionAlgorithm::FindMeanValue(double *v, int N)
 	return mean/N;
 }
 
-double EventDetectionAlgorithm::FindMeanValue(List<double>^ v)
+double FrequencyDomainDecomposition::FindMeanValue(List<double>^ v)
 {
 	return TVA::Math::Common::Average(v);
 }
 
-int EventDetectionAlgorithm::FindNumber(double num, double *list, int n)
+int FrequencyDomainDecomposition::FindNumber(double num, double *list, int n)
 {
 	/* look for num in list, return the index. */
 	int i;
@@ -1266,7 +1266,7 @@ int EventDetectionAlgorithm::FindNumber(double num, double *list, int n)
 	return -1;
 }
 
-void EventDetectionAlgorithm::WriteMatrixToFile(double *A,int m,int n)
+void FrequencyDomainDecomposition::WriteMatrixToFile(double *A,int m,int n)
 {
 	/* write matrix A into message.txt for debugging purpose */
 	int i,j;
@@ -1279,7 +1279,7 @@ void EventDetectionAlgorithm::WriteMatrixToFile(double *A,int m,int n)
 	fclose(messageFile);
 }
 
-//void EventDetectionAlgorithm::ExecuteTask(System::Object^ state)
+//void FrequencyDomainDecomposition::ExecuteTask(System::Object^ state)
 //{
 //	/* This fuction performs one single analysis task. The results are stored in currentTask */ 
 //	ThreadState^ taskState = safe_cast<ThreadState^>(state);
@@ -1315,7 +1315,7 @@ char* StringToCharBuffer(String^ gcStr)
 	return str;
 }
 
-void EventDetectionAlgorithm::ExecuteAmbientTask(AmbientTask ^p_task, int task_no)
+void FrequencyDomainDecomposition::ExecuteAmbientTask(AmbientTask ^p_task, int task_no)
 {
 	// some parameter setting for FDD
 	int nfft = 8192;   // n for FFT
@@ -1668,7 +1668,7 @@ void EventDetectionAlgorithm::ExecuteAmbientTask(AmbientTask ^p_task, int task_n
 	} // end of FDD
 }
 
-void EventDetectionAlgorithm::ReverseArrangementTest(AmbientTask ^p_task, int task_no)
+void FrequencyDomainDecomposition::ReverseArrangementTest(AmbientTask ^p_task, int task_no)
 {
 	int N = 100;
 	int A[100];
