@@ -1,12 +1,12 @@
 Imports System.IO
 Imports TVA.Measurements
-Imports RealTimeEventDetection
+Imports OscillationMonitoringSystem
 
 Module MainModule
 
     Sub Main()
 
-        Dim calc As New EventDetectionAlgorithm()
+        Dim calc As New FrequencyDomainDecomposition
         Dim dataFrame As Frame
         Dim columns As String()
         Dim rowCount As Integer
