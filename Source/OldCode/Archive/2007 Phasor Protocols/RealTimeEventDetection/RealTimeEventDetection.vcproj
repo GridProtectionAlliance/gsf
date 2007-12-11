@@ -4,7 +4,7 @@
 	Version="9.00"
 	Name="OscillationMonitoringSystem"
 	ProjectGUID="{88817BB4-F466-47DF-872E-BFB9159562C3}"
-	RootNamespace="RealTimeEventDetection"
+	RootNamespace="OscillationMonitoringSystem"
 	SccProjectName="&quot;$/TVA Super Phasor Data Concentrator/Version/2.0/Local/Source&quot;, MSSAAAAA"
 	SccLocalPath=".."
 	SccProvider="MSSCCI:Microsoft Visual SourceSafe"
