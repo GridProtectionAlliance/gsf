@@ -219,7 +219,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RealTimeEventDetection.cpp"
+				RelativePath=".\FrequencyDomainDecomposition.cpp"
 				>
 			</File>
 			<File
@@ -261,7 +261,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RealTimeEventDetection.h"
+				RelativePath=".\FrequencyDomainDecomposition.h"
 				>
 			</File>
 			<File
