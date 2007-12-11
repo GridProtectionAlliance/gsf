@@ -138,6 +138,9 @@ namespace RealTimeEventDetection
 			PublishFrame(frame, index); 
 		}
 
+		// We ovveride stop so we can close files on shutdown
+		virtual void Stop() override;
+
 		// We override this function to customize our initilization process
 		virtual void Initialize(String^ calculationName, String^ configurationSection, cli::array<IMeasurement^, 1>^ outputMeasurements, cli::array<MeasurementKey, 1>^ inputMeasurementKeys, int minimumMeasurementsToUse, int expectedMeasurementsPerSecond, double lagTime, double leadTime) override;
 

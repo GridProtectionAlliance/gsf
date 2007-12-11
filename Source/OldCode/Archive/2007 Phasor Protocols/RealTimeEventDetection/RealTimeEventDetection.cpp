@@ -26,13 +26,13 @@ EventDetectionAlgorithm::EventDetectionAlgorithm() {}
 void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ configurationSection, cli::array<TVA::Measurements::IMeasurement^, 1>^ outputMeasurements, cli::array<TVA::Measurements::MeasurementKey, 1>^ inputMeasurementKeys, int minimumMeasurementsToUse, int expectedMeasurementsPerSecond, double lagTime, double leadTime)
 {
 	// Call base class initialization function
-	//__super::Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime);
+	__super::Initialize(calculationName, configurationSection, outputMeasurements, inputMeasurementKeys, minimumMeasurementsToUse, expectedMeasurementsPerSecond, lagTime, leadTime);
 
 	// Make sure configuration section parameter is defined - if not, use default
 	if (String::IsNullOrEmpty(configurationSection)) ConfigurationSection = DefaultConfigSection;
 
 	// Get categorized settings section from configuration file
-    CategorizedSettingsElementCollection^ settings = TVA::Configuration::Common::CategorizedSettings[ConfigurationSection];
+	CategorizedSettingsElementCollection^ settings = TVA::Configuration::Common::CategorizedSettings[ConfigurationSection];
 
 	// Make sure needed configuration variables exist - since configuration variables will
 	// be added to config file of parent process we add them to a new configuration category
@@ -154,12 +154,27 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	// Open file to write
 	if (m_displayDetail)
 	{
-		localDetailsFile = fopen("LocalTaskDetailsFile.txt","w");
-		if (localDetailsFile==NULL)
-			throw gcnew ArgumentException("Error in opening output file");
-		messageFile=fopen("Message.txt", "w");
-		if (messageFile==NULL) 
-			throw gcnew ArgumentException("Error in opening output message file");
+		char* pstrLocalTaskFile = NULL;
+		char* pstrMessageFile = NULL;
+
+		__try
+		{
+			pstrLocalTaskFile = StringToCharBuffer(String::Concat(m_systemPath, "LocalTaskDetailsFile.txt"));
+			pstrMessageFile = StringToCharBuffer(String::Concat(m_systemPath, "Message.txt"));
+			
+			localDetailsFile = fopen(pstrLocalTaskFile,"w");
+			if (localDetailsFile==NULL)
+				throw gcnew ArgumentException("Error in opening output file");
+
+			messageFile=fopen(pstrMessageFile, "w");
+			if (messageFile==NULL) 
+				throw gcnew ArgumentException("Error in opening output message file");
+		}
+		__finally
+		{
+			if (pstrLocalTaskFile != NULL) free(pstrLocalTaskFile);
+			if (pstrMessageFile != NULL) free(pstrMessageFile);
+		}
 	}
 }
 
@@ -327,14 +342,24 @@ void EventDetectionAlgorithm::PublishFrame(TVA::Measurements::IFrame^ frame, int
 						fprintf(localDetailsFile,"Mode %d is not reliable:\n",i);
 					fprintf(localDetailsFile,"Frequency = %.4f Hz, Damping Ratio = %.4f\n",currentTask->ambientModeFrequency [i],currentTask->ambientModeRatio[i]);
 				}
+
+				fflush(localDetailsFile);
+				fflush(messageFile);
 			}
 		}  // end of /* iterate for each local task */
 	}  // end of if (m_measurementMatrix->Count >= m_minimumSamples)
-	if (index == 10200)
-	{
-		fclose(localDetailsFile);
-		fclose(messageFile);
-	}
+	//if (index == 10200)
+	//{
+	//	fclose(localDetailsFile);
+	//	fclose(messageFile);
+	//}
+}
+
+void EventDetectionAlgorithm::Stop()
+{
+	__super::Stop();
+	fclose(localDetailsFile);
+	fclose(messageFile);
 }
 
 void EventDetectionAlgorithm::DataPreprocess(double *prony_data,int N,int m,int m_removeMeanValue,int m_normalizeData)
