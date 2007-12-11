@@ -142,9 +142,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="data.txt" />
-    <Content Include="LocalTaskDetailsFile.txt" />
-    <Content Include="Message.txt" />
+    <Content Include="Input Data Files\data.txt" />
+    <Content Include="Input Data Files\LocalTaskDetailsFile.txt" />
+    <Content Include="Input Data Files\Message.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
