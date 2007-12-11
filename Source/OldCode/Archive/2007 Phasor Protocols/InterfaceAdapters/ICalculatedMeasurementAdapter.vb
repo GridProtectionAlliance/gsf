@@ -52,4 +52,6 @@ Public Interface ICalculatedMeasurementAdapter
 
     Property MinimumMeasurementsToUse() As Integer
 
+    Property Initialized() As Boolean
+
 End Interface

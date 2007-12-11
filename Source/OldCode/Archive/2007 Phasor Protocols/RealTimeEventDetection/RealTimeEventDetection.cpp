@@ -71,11 +71,11 @@ void EventDetectionAlgorithm::Initialize(String^ calculationName, String^ config
 	m_energyDisplayThreshold = Convert::ToDouble(settings["EnergyDisplayThreshold"]->Value);
 
 	// Initialize the input measurements needed to perform this calculation
-	MeasurementKey^ measurementKey0 = gcnew MeasurementKey(1608, "P2");      // TVA_CUMB-BUS1:ABBV  VM
-    MeasurementKey^ measurementKey1 = gcnew MeasurementKey(1610, "P2");      // TVA_CUMB-BUS2:ABBV  VM
-    MeasurementKey^ measurementKey2 = gcnew MeasurementKey(1612, "P2");      // TVA_CUMB-MARS:ABBI  IM
-    MeasurementKey^ measurementKey3 = gcnew MeasurementKey(1616, "P2");      // TVA_CUMB-JOHN:ABBI  IM
-    MeasurementKey^ measurementKey4 = gcnew MeasurementKey(1620, "P2");      // TVA_CUMB-DAVD:ABBI  IM
+	MeasurementKey^ measurementKey0 = gcnew MeasurementKey(1, "P1");      // 1608, "P2" TVA_CUMB-BUS1:ABBV  VM
+    MeasurementKey^ measurementKey1 = gcnew MeasurementKey(3, "P1");      // 1610, "P2" TVA_CUMB-BUS2:ABBV  VM
+    MeasurementKey^ measurementKey2 = gcnew MeasurementKey(5, "P1");      // 1612, "P2" TVA_CUMB-MARS:ABBI  IM
+    MeasurementKey^ measurementKey3 = gcnew MeasurementKey(7, "P1");      // 1616, "P2" TVA_CUMB-JOHN:ABBI  IM
+    MeasurementKey^ measurementKey4 = gcnew MeasurementKey(9, "P1");      // 1620, "P2" TVA_CUMB-DAVD:ABBI  IM
 	
 	//MeasurementKey^ measurementKey0 = gcnew MeasurementKey(1600, "P0");	
 	//MeasurementKey^ measurementKey1 = gcnew MeasurementKey(1601, "P0");	

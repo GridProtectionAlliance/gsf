@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="blas.lib clapack.lib libf77.lib libi77.lib"
+				AdditionalOptions="blas.lib clapack.lib libf77.lib libi77.lib libfftw.lib coefficientDPSS.lib"
 				AdditionalDependencies="$(NoInherit)"
 				OutputFile="$(ProjectDir)\$(ConfigurationName)\$(ProjectName).dll"
 				LinkIncremental="2"

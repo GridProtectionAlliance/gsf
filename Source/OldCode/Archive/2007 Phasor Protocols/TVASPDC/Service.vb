@@ -60,9 +60,10 @@ Public Class Service
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
         ' Make sure service settings exist
+        Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
         'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoextsql;Initial Catalog=PMU_SDS;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
-        'Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PMU_SDS.mdb", "PMU metaData database connect string")
-        Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoasqlgendat\gendat;Initial Catalog=PhasorMeasurementData;User ID=NaspiApp;pwd=pw4site", "PMU metaData database connect string")
+        'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoasqlgendat\gendat;Initial Catalog=PhasorMeasurementData;User ID=NaspiApp;pwd=pw4site", "PMU metaData database connect string")
+        'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=ESOOPSQL1;Initial Catalog=PhasorMeasurementData;User ID=NaspiApp;pwd=pw4site", "PMU metaData database connect string")
         Settings.Add("ReportingTolerance", "5", "Number of seconds of deviation from UTC time (according to local clock) that last PMU reporting time is allowed before considering it offline")
         Settings.Add("StatusReportingInterval", "10", "How often to update PMU reporting status in database in seconds - this should match time required by update trigger which calculates uptime")
         Settings.Add("DataLossInterval", "35000", "Number of milliseconds to wait for incoming data before restarting connection cycle to device")
@@ -104,6 +105,7 @@ Public Class Service
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Connect", "Starts connection cycle to specified device", AddressOf ConnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Disconnect", "Disconnects specified device", AddressOf DisconnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SendCommand", "Sends command to specified device", AddressOf SendDeviceCommand))
+        ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SysInit", "Starts a controlled system initialization", AddressOf ControlledSystemInitialization, False))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("GC", "Forces a .NET garbage collection", AddressOf ForceGarbageCollection, False))
 
         DisplayStatusMessage(String.Format("*** System Initializing [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
@@ -113,11 +115,13 @@ Public Class Service
     Private Sub ServiceHelper_ServiceStarted(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStarted
 
         Try
+#If Not Debug Then
             ' Start system initialization on an independent thread so that service responds in a timely fashion...
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf InitializeSystem, Nothing)
+#End If
 
             ' We add a scheduled process to automatically request health status every minute - user can change schedule in config file
-            ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
+            'ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
         Catch ex As Exception
             ServiceHelper.GlobalExceptionLogger.Log(ex)
             ServiceHelper.Service.Stop()
@@ -195,7 +199,7 @@ Public Class Service
             End If
 
             ' Load the phasor measurement receivers (one per each established archive)
-            m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("ReportingTolerance"), IntegerSetting("StatusReportingInterval"), IntegerSetting("DataLossInterval"), m_calculatedMeasurements)
+            m_measurementReceivers = LoadMeasurementReceivers(connection, IntegerSetting("ReportingTolerance"), IntegerSetting("StatusReportingInterval"), IntegerSetting("DataLossInterval"))
 
             ' If the phasor measurement concentrators are already defined we must be reloading - so we attempt
             ' an orderly shutdown
@@ -236,7 +240,7 @@ Public Class Service
 
     End Sub
 
-    Private Function LoadMeasurementReceivers(ByVal connection As OleDbConnection, ByVal reportingTolerance As Integer, ByVal statusReportingInterval As Integer, ByVal dataLossInterval As Integer, ByVal calculatedMeasurements As ICalculatedMeasurementAdapter()) As Dictionary(Of String, PhasorMeasurementReceiver)
+    Private Function LoadMeasurementReceivers(ByVal connection As OleDbConnection, ByVal reportingTolerance As Integer, ByVal statusReportingInterval As Integer, ByVal dataLossInterval As Integer) As Dictionary(Of String, PhasorMeasurementReceiver)
 
         Dim measurementReceivers As New Dictionary(Of String, PhasorMeasurementReceiver)
         Dim measurementReceiver As PhasorMeasurementReceiver
@@ -591,9 +595,17 @@ Public Class Service
 
                     ' We start the measurement concentration only after a successful initialization
                     .CalculatedMeasurementAdapter.Start()
+                    .CalculatedMeasurementAdapter.Initialized = True
                 Catch ex As Exception
+                    ' Calculation failed to initialize
+                    .CalculatedMeasurementAdapter.Initialized = False
                     .Parent.DisplayStatusMessage(String.Format("Exception during calculated measurement ""{0}"" initialization: {1}", DirectCast(.CalculatedMeasurementAdapter, IAdapter).Name, ex.Message))
                     .Parent.ServiceHelper.GlobalExceptionLogger.Log(ex)
+
+                    ' Unregister calculation events...
+                    RemoveHandler .CalculatedMeasurementAdapter.StatusMessage, AddressOf .Parent.DisplayStatusMessage
+                    RemoveHandler .CalculatedMeasurementAdapter.NewCalculatedMeasurements, AddressOf .Parent.NewCalculatedMeasurements
+                    RemoveHandler .CalculatedMeasurementAdapter.CalculationException, AddressOf .Parent.CalculationException
                 End Try
             End With
 
@@ -610,7 +622,7 @@ Public Class Service
             ' that calculated measurements can be based on other calculated measurements
             If m_calculatedMeasurements IsNot Nothing Then
                 For x = 0 To m_calculatedMeasurements.Length - 1
-                    m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
+                    If m_calculatedMeasurements(x).Initialized Then m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
                 Next
             End If
 
@@ -642,7 +654,7 @@ Public Class Service
             ' Provide newly parsed measurements to all calculated measurement modules
             If m_calculatedMeasurements IsNot Nothing Then
                 For x = 0 To m_calculatedMeasurements.Length - 1
-                    m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
+                    If m_calculatedMeasurements(x).Initialized Then m_calculatedMeasurements(x).QueueMeasurementsForCalculation(measurements)
                 Next
             End If
 
@@ -673,13 +685,13 @@ Public Class Service
 
     End Function
 
-    Private Sub HealthMonitorProcess(ByVal name As String, ByVal parameters As Object())
+    'Private Sub HealthMonitorProcess(ByVal name As String, ByVal parameters As Object())
 
-        ' We pretend to be a client and send a "Health" command to ourselves...
-        Dim healthRequest As ClientRequest = ClientRequest.Parse("Health")
-        ServiceHelper.ClientRequestHandlers(healthRequest.Command).HandlerMethod(New ClientRequestInfo(New ClientInfo(System.Guid.Empty), healthRequest))
+    '    ' We pretend to be a client and send a "Health" command to ourselves...
+    '    Dim healthRequest As ClientRequest = ClientRequest.Parse("Health")
+    '    ServiceHelper.ClientRequestHandlers(healthRequest.Command).HandlerMethod(New ClientRequestInfo(New ClientInfo(System.Guid.Empty), healthRequest))
 
-    End Sub
+    'End Sub
 
 #End Region
 
@@ -758,6 +770,35 @@ Public Class Service
 
                 ServiceHelper.UpdateStatus(requestInfo.Sender.ClientID, .ToString(), ServiceHelper.UpdateCrlfCount)
             End With
+        End If
+
+    End Sub
+
+    Private Sub ControlledSystemInitialization(ByVal requestInfo As ClientRequestInfo)
+
+        If requestInfo.Request.Arguments.ContainsHelpRequest Then
+            With New StringBuilder()
+                .Append("Starts a controlled system initialization.")
+                .AppendLine()
+                .AppendLine()
+                .Append("   Usage:")
+                .AppendLine()
+                .Append("       SysInit options")
+                .AppendLine()
+                .AppendLine()
+                .Append("   Options:")
+                .AppendLine()
+                .Append("       -?".PadRight(20))
+                .Append("Displays this help message")
+
+                ServiceHelper.UpdateStatus(requestInfo.Sender.ClientID, .ToString(), ServiceHelper.UpdateCrlfCount)
+            End With
+        Else
+            DisplayStatusMessage("Starting controlled system initialization...")
+
+            InitializeSystem(Nothing)
+
+            DisplayStatusMessage("Controlled system initialization complete.")
         End If
 
     End Sub

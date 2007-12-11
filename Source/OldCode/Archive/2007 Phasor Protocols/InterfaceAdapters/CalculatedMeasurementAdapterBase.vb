@@ -40,6 +40,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
     Private m_inputMeasurementKeys As MeasurementKey()
     Private m_inputMeasurementKeysHash As List(Of MeasurementKey)
     Private m_minimumMeasurementsToUse As Integer
+    Private m_initialized As Boolean
 
     Public Sub New()
 
@@ -159,10 +160,19 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
         End Set
     End Property
 
-    Public ReadOnly Property Name() As String Implements IAdapter.Name, IServiceComponent.Name
+    Public Overridable ReadOnly Property Name() As String Implements IAdapter.Name, IServiceComponent.Name
         Get
             Return m_calculationName
         End Get
+    End Property
+
+    Public Overridable Property Initialized() As Boolean Implements ICalculatedMeasurementAdapter.Initialized
+        Get
+            Return m_initialized
+        End Get
+        Set(ByVal value As Boolean)
+            m_initialized = value
+        End Set
     End Property
 
     Public Overrides ReadOnly Property Status() As String Implements IAdapter.Status, IServiceComponent.Status
