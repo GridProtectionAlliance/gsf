@@ -11,11 +11,13 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  ??/??/2003 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code.
 '  01/03/2006 - Pinal C. Patel
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Identity)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Identity).
 '  09/29/2006 - Pinal C. Patel
 '       Added overload for ImpersonateUser() that does not take the "domain" parameter.
+'  12/12/2007 - Darrell Zuercher
+'       Edited Code Comments.
 '
 '*******************************************************************************************************
 
@@ -41,11 +43,11 @@ Namespace Identity
 
         Private Sub New()
 
-            ' This class contains only global functions and is not meant to be instantiated
+            ' This class contains only global functions and is not meant to be instantiated.
 
         End Sub
 
-        ''' <summary>Gets the current user's information</summary>
+        ''' <summary>Gets the current user's information.</summary>
         Public Shared ReadOnly Property CurrentUser() As UserInfo
             Get
                 If m_currentUserInfo Is Nothing Then m_currentUserInfo = New UserInfo(CurrentUserID)
@@ -60,7 +62,7 @@ Namespace Identity
             End Get
         End Property
 
-        ''' <summary>Validates NT authentication given the specified credentials</summary>
+        ''' <summary>Validates NT authentication, given the specified credentials.</summary>
         Public Shared Function AuthenticateUser(ByVal username As String, ByVal password As String, ByVal domain As String) As Boolean
 
             Dim tokenHandle As IntPtr = IntPtr.Zero
