@@ -378,7 +378,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
         With New StringBuilder
             If phasorlabel IsNot Nothing AndAlso Not TypeOf phasorlabel Is DBNull Then
-                .Append(RemoveDuplicateWhiteSpace(TruncateRight(phasorlabel.ToString(), maxLength - 4).Trim()))
+                .Append(TruncateRight(RemoveDuplicateWhiteSpace(phasorlabel.ToString()).Trim(), maxLength - 4))
 
                 Select Case phaseType.ToString().Trim().ToUpper().Chars(0)
                     Case "+"c ' Positive Sequence
@@ -545,23 +545,26 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
-        Dim dataFrame As IDataFrame = DirectCast(frame, IDataFrame)
+        Dim dataFrame As IDataFrame = TryCast(frame, IDataFrame)
 
-        ' Send a descriptor packet at the top of each minute...
-        If index = 0 AndAlso m_publishDescriptor AndAlso dataFrame.Timestamp.Second = 0 Then
+        If dataFrame IsNot Nothing Then
+            ' Send a descriptor packet at the top of each minute...
+            If index = 0 AndAlso m_publishDescriptor AndAlso dataFrame.Timestamp.Second = 0 Then
+                ' Publish binary image over specified communication layer
+                m_configurationFrame.Ticks = dataFrame.Ticks
+                m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
+            End If
+
+            ' JRC: Turned this off at EPG request - just passing through common status flags now...
+            '' Prior to publication, set data validity bits based on reception of all data values
+            'For Each dataCell As IDataCell In dataFrame.Cells
+            '    ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...
+            '    If Not dataCell.AllValuesAssigned Then dataCell.StatusFlags = -1
+            'Next
+
             ' Publish binary image over specified communication layer
-            m_configurationFrame.Ticks = dataFrame.Ticks
-            m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
+            m_communicationServer.Multicast(dataFrame.BinaryImage())
         End If
-
-        ' Prior to publication, set data validity bits based on reception of all data values
-        For Each dataCell As IDataCell In dataFrame.Cells
-            ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...
-            If Not dataCell.AllValuesAssigned Then dataCell.StatusFlags = -1
-        Next
-
-        ' Publish binary image over specified communication layer
-        m_communicationServer.Multicast(dataFrame.BinaryImage())
 
     End Sub
 

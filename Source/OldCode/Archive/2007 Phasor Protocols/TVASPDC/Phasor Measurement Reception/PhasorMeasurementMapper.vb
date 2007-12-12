@@ -20,6 +20,7 @@ Imports System.Threading
 Imports System.IO
 Imports System.Runtime.Serialization.Formatters
 Imports System.Runtime.Serialization.Formatters.Soap
+Imports TVA.Common
 Imports TVA.DateTime
 Imports TVA.Communication
 Imports TVA.Measurements
@@ -59,7 +60,9 @@ Public Class PhasorMeasurementMapper
     Private m_timeAdjustmentTicks As Long
     Private m_attemptingConnection As Boolean
     Private m_undefinedPmus As Dictionary(Of String, Long)
-    Private m_hasVirtualCells As Boolean
+    Private m_name As String
+    Private m_isPDC As Integer
+    Private m_totalVirtualCells As Integer
     Private m_exceptionLogger As GlobalExceptionLogger
 
     Public Sub New( _
@@ -77,6 +80,7 @@ Public Class PhasorMeasurementMapper
         m_configurationCells = configurationCells
         m_signalMeasurements = signalMeasurements
         m_exceptionLogger = exceptionLogger
+        m_isPDC = -1
 
         m_dataStreamMonitor = New Timers.Timer
 
@@ -99,13 +103,10 @@ Public Class PhasorMeasurementMapper
         ' Mapper configuration doesn't change during its lifecycle - so
         ' we only check to see if there are virtual cells once
         For Each cell As ConfigurationCell In m_configurationCells.Values
-            If cell.IsVirtual Then
-                m_hasVirtualCells = True
-                Exit For
-            End If
+            If cell.IsVirtual Then m_totalVirtualCells += 1
         Next
 
-        If m_hasVirtualCells Then
+        If m_totalVirtualCells > 0 Then
             ' When we have virtual cells to contend with, it will be helpful to
             ' quickly do measurement filtering...
             m_activeMeasurementKeys = New List(Of MeasurementKey)
@@ -129,13 +130,13 @@ Public Class PhasorMeasurementMapper
         ' Start timer for delayed connection
         If m_frameParser Is Nothing Then
             ' Purely virtual mappers will be assumed to be connected
-            m_isConnected = m_hasVirtualCells
+            m_isConnected = (m_totalVirtualCells > 0)
         Else
             m_delayedConnection.Enabled = True
         End If
 
         ' Display extra information for mappers with virtual devices
-        If m_hasVirtualCells Then UpdateStatus(String.Format("Connected {0} with virtual devices - {1} active measurements defined", m_source, m_activeMeasurementKeys.Count))
+        If m_totalVirtualCells > 0 Then UpdateStatus(String.Format("Connected {0} with {1} virtual devices - {2} active measurements defined", m_source, m_totalVirtualCells, m_activeMeasurementKeys.Count))
 
     End Sub
 
@@ -285,9 +286,32 @@ Public Class PhasorMeasurementMapper
 
     Public ReadOnly Property Name() As String
         Get
-            With New StringBuilder
-                .Append(m_source)
+            If String.IsNullOrEmpty(m_name) Then
+                With New StringBuilder
+                    .Append(m_source)
 
+                    If m_totalVirtualCells > 0 Then
+                        If IsPDC Then
+                            .AppendFormat(" [PDC: {0} Devices, {1} Virtual]", m_configurationCells.Count, m_totalVirtualCells)
+                        Else
+                            .Append(" [Virtual Device]")
+                        End If
+                    Else
+                        If IsPDC Then .AppendFormat(" [PDC: {0} Devices]", m_configurationCells.Count)
+                    End If
+
+                    m_name = .ToString()
+                End With
+            End If
+
+            Return m_name
+        End Get
+    End Property
+
+    Public ReadOnly Property IsPDC() As Boolean
+        Get
+            If m_isPDC = -1 Then
+                ' Configurations with more than one cell are considered PDC's
                 Dim hasChildren As Boolean = (m_configurationCells.Count > 1)
 
                 If Not hasChildren Then
@@ -297,16 +321,20 @@ Public Class PhasorMeasurementMapper
                     End With
                 End If
 
-                If hasChildren Then .AppendFormat(" [PDC: {0} Devices]", m_configurationCells.Count)
+                If hasChildren Then
+                    m_isPDC = 1
+                Else
+                    m_isPDC = 0
+                End If
+            End If
 
-                Return .ToString()
-            End With
+            Return (m_isPDC <> 0)
         End Get
     End Property
 
     Public ReadOnly Property HasVirtualCells() As Boolean
         Get
-            Return m_hasVirtualCells
+            Return (m_totalVirtualCells > 0)
         End Get
     End Property
 
