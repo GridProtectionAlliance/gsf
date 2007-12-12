@@ -210,8 +210,8 @@ XCOPY "$(SolutionDir)RealTimeCalculatedMeasurements\$(OutDir)RealTimeCalculatedM
 XCOPY "$(SolutionDir)RealTimeCalculatedMeasurements\$(OutDir)RealTimeCalculatedMeasurements.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)RealTimeStabilityAlarm\$(OutDir)RealTimeStabilityAlarm.dll" %25LocalInstall%25
 XCOPY "$(SolutionDir)RealTimeStabilityAlarm\$(OutDir)RealTimeStabilityAlarm.pdb" %25LocalInstall%25
-XCOPY "$(SolutionDir)RealTimeEventDetection\$(ConfigurationName)\RealTimeEventDetection.dll" %25LocalInstall%25
-XCOPY "$(SolutionDir)RealTimeEventDetection\$(ConfigurationName)\RealTimeEventDetection.pdb" %25LocalInstall%25
+XCOPY "$(SolutionDir)OscillationMonitoringSystem\$(ConfigurationName)\OscillationMonitoringSystem.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)OscillationMonitoringSystem\$(ConfigurationName)\OscillationMonitoringSystem.pdb" %25LocalInstall%25
 ECHO $(SolutionName) Local Installation Files Updated...</PostBuildEvent>
   </PropertyGroup>
 </Project>
