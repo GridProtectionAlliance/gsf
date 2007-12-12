@@ -89,8 +89,8 @@ Namespace Identity
 
         End Function
 
-        ''' <summary>Impersonates the specified user</summary>
-        ''' <param name="username">To be provided.</param>
+        ''' <summary>Impersonates the specified user.</summary>
+        ''' <param name="username">The user to be ompersonated.</param>
         Public Shared Function ImpersonateUser(ByVal username As String, ByVal password As String, ByVal domain As String) As WindowsImpersonationContext
 
             Dim impersonatedUser As WindowsImpersonationContext
@@ -98,7 +98,7 @@ Namespace Identity
             Dim dupeTokenHandle As IntPtr = IntPtr.Zero
 
             Try
-                ' Call LogonUser to obtain a handle to an access token.
+                ' Calls LogonUser to obtain a handle to an access token.
                 If Not LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, tokenHandle) Then
                     Throw New InvalidOperationException("Failed to impersonate user " & domain & "\" & username & ".  " & GetErrorMessage(Marshal.GetLastWin32Error()))
                 End If
@@ -108,13 +108,13 @@ Namespace Identity
                     Throw New InvalidOperationException("Failed to impersonate user " & domain & "\" & username & ".  Exception thrown while trying to duplicate token.")
                 End If
 
-                ' The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation
+                ' The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation.
                 impersonatedUser = WindowsIdentity.Impersonate(dupeTokenHandle)
             Catch
-                ' We rethrow any exceptions back to user, we are just using try/catch so we can clean up in finally
+                ' Rethrows any exceptions back to user. This is a try/catch, so it can be cleaned up in finally.
                 Throw
             Finally
-                ' Free the tokens
+                ' Frees the tokens.
                 If Not IntPtr.op_Equality(tokenHandle, IntPtr.Zero) Then CloseHandle(tokenHandle)
                 If Not IntPtr.op_Equality(dupeTokenHandle, IntPtr.Zero) Then CloseHandle(dupeTokenHandle)
             End Try
@@ -123,7 +123,7 @@ Namespace Identity
 
         End Function
 
-        ''' <summary>Ends impersonation of the specified user</summary>
+        ''' <summary>Ends impersonation of the specified user.</summary>
         Public Shared Sub EndImpersonation(ByVal impersonatedUser As WindowsImpersonationContext)
 
             If Not impersonatedUser Is Nothing Then impersonatedUser.Undo()
