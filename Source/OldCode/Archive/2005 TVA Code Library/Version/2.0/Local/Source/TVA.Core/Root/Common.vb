@@ -13,7 +13,9 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/03/2006 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code.
+'  12/13/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
@@ -21,36 +23,38 @@ Option Strict On
 
 Imports System.IO
 
-''' <summary>Defines common global functions</summary>
+''' <summary>Defines common global functions.</summary>
 Public NotInheritable Class Common
 
     Private Sub New()
 
-        ' This class contains only global functions and is not meant to be instantiated
+        ' This class contains only global functions and is not meant to be instantiated.
 
     End Sub
 
-    ''' <summary>Strongly typed immediate (a.k.a. inline) if.</summary>
+    ''' <summary>Returns one of two strongly-typed objects.</summary>
     ''' <returns>One of two objects, depending on the evaluation of given expression.</returns>
     ''' <param name="expression">The expression you want to evaluate.</param>
     ''' <param name="truePart">Returned if expression evaluates to True.</param>
     ''' <param name="falsePart">Returned if expression evaluates to False.</param>
     ''' <typeparam name="T">Return type used for immediate expression</typeparam>
+    ''' <remarks>This function acts as a strongly-typed immediate if (a.k.a. inline if).</remarks>
     Public Shared Function IIf(Of T)(ByVal expression As Boolean, ByVal truePart As T, ByVal falsePart As T) As T
 
         If expression Then Return truePart Else Return falsePart
 
     End Function
 
-    ''' <summary>Strongly typed Array creation function.</summary>
+    ''' <summary>Creates a strongly-typed Array.</summary>
     ''' <returns>New array of specified type.</returns>
     ''' <param name="length">Desired length of new array.</param>
     ''' <typeparam name="T">Return type for new array.</typeparam>
     ''' <remarks>
     ''' <para>
-    ''' The Array.CreateInstance provides better performance and more direct CLR access for array creation (not to mention less
-    ''' confusion on the matter of array lengths), however the returned System.Array is not typed properly.  This function
-    ''' properly casts the return array based on the the type specification helping when Option Strict is enabled.
+    ''' The Array.CreateInstance provides better performance and more direct CLR access for array creation (not to
+    ''' mention less confusion on the matter of array lengths), however the returned System.Array is not typed properly.
+    ''' This function properly casts the return array based on the the type specification helping when Option Strict is
+    ''' enabled.
     ''' </para>
     ''' <para>
     ''' Examples:
@@ -62,15 +66,15 @@ Public NotInheritable Class Common
     ''' </remarks>
     Public Shared Function CreateArray(Of T)(ByVal length As Integer) As T()
 
-        ' The following provides better performance than "Return New T(length) {}"
+        ' The following provides better performance than "Return New T(length) {}".
         Return DirectCast(Array.CreateInstance(GetType(T), length), T())
 
     End Function
 
-    ''' <summary>Strongly typed Array creation function with initial value parameter.</summary>
+    ''' <summary>Creates a strongly-typed Array with an initial value parameter.</summary>
     ''' <returns>New array of specified type.</returns>
     ''' <param name="length">Desired length of new array.</param>
-    ''' <param name="initialValue">Value used to initialize all array elements</param>
+    ''' <param name="initialValue">Value used to initialize all array elements.</param>
     ''' <typeparam name="T">Return type for new array.</typeparam>
     ''' <remarks>
     ''' <para>
@@ -85,7 +89,7 @@ Public NotInheritable Class Common
 
         Dim typedArray As T() = CreateArray(Of T)(length)
 
-        ' Initialize all elements with the default value
+        ' Initializes all elements with the default value.
         For x As Integer = 0 To typedArray.Length - 1
             typedArray(x) = initialValue
         Next
@@ -98,8 +102,8 @@ Public NotInheritable Class Common
     ''' Gets the root type in the inheritace hierarchy from which the specified type inherits. 
     ''' </summary>
     ''' <param name="type">The System.Type whose root type is to be found.</param>
-    ''' <returns>The root type in the inheritace hierarchy from which the specified type inherits.</returns>
-    ''' <remarks>The type returned will never by System.Object even though all types ultimately inerit from it.</remarks>
+    ''' <returns>The root type in the inheritance hierarchy from which the specified type inherits.</returns>
+    ''' <remarks>The type returned will never be System.Object, even though all types ultimately inherit from it.</remarks>
     Public Shared Function GetRootType(ByVal type As Type) As Type
 
         If type.BaseType IsNot GetType(System.Object) Then
@@ -121,7 +125,7 @@ Public NotInheritable Class Common
             ' - http://support.microsoft.com/kb/65122
             ' - http://support.microsoft.com/kb/90493/en-us
             ' - http://www.codeguru.com/cpp/w-p/system/misc/article.php/c2897/
-            ' We'll always have an entry assembly for windows application.
+            ' We will always have an entry assembly for windows application.
             Dim exe As New FileStream(TVA.Assembly.EntryAssembly.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
             Dim dosHeader As Byte() = CreateArray(Of Byte)(64)
             Dim exeHeader As Byte() = CreateArray(Of Byte)(248)
@@ -140,7 +144,7 @@ Public NotInheritable Class Common
 
     End Function
 
-    ''' <summary>Determines if given item is an object (i.e., a reference type) but not a string</summary>
+    ''' <summary>Determines if given item is an object (i.e., a reference type) but not a string.</summary>
     Public Shared Function IsNonStringReference(ByVal item As Object) As Boolean
 
         Return (IsReference(item) And Not TypeOf item Is String)
