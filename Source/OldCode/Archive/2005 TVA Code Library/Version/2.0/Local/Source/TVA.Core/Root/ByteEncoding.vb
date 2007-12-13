@@ -11,13 +11,15 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  04/29/2005 - Pinal C. Patel
-'       Original version of source code generated
+'       Generated original version of source code.
 '  04/05/2006 - J. Ritchie Carroll
-'       Transformed code into System.Text.Encoding styled hierarchy
+'       Transformed code into System.Text.Encoding styled hierarchy.
 '  02/13/2007 - J. Ritchie Carroll
-'       Added ASCII character extraction as an encoding option
+'       Added ASCII character extraction as an encoding option.
 '  04/30/2007 - J. Ritchie Carroll
-'       Cached binary bit images when first called to optimize generation
+'       Cached binary bit images when first called to optimize generation.
+'  12/13/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
@@ -28,7 +30,7 @@ Imports TVA.Common
 Imports TVA.Interop
 Imports TVA.Interop.Bit
 
-''' <summary>Handles conversion of byte buffers to and from user presentable data formats</summary>
+''' <summary>Handles conversion of byte buffers to and from user presentable data formats.</summary>
 Public MustInherit Class ByteEncoding
 
 #Region " Hexadecimal Encoding Class "
@@ -40,26 +42,26 @@ Public MustInherit Class ByteEncoding
 
         Friend Sub New()
 
-            ' This class is meant for internal instatiation only
+            ' This class is meant for internal instatiation only.
 
         End Sub
 
-        ''' <summary>Decodes given string back into a byte buffer</summary>
-        ''' <param name="hexData">Encoded hexadecimal data string to decode</param>
-        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
-        ''' <returns>Decoded bytes</returns>
+        ''' <summary>Decodes given string back into a byte buffer.</summary>
+        ''' <param name="hexData">Encoded hexadecimal data string to decode.</param>
+        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
+        ''' <returns>Decoded bytes.</returns>
         Public Overrides Function GetBytes(ByVal hexData As String, ByVal spacingCharacter As Char) As Byte()
 
             If Not String.IsNullOrEmpty(hexData) Then
-                ' Remove spacing characters, if needed
+                ' Removes spacing characters, if needed.
                 hexData = hexData.Trim()
                 If spacingCharacter <> NoSpacing Then hexData = hexData.Replace(spacingCharacter, "")
 
-                ' Process the string only if it has data in hex format (Example: 48 65 6C 6C 21).
+                ' Processes the string only if it has data in hex format (Example: 48 65 6C 6C 21).
                 If Regex.Matches(hexData, "[^a-fA-F0-9]").Count = 0 Then
-                    ' Trim the end of the string to discard any additional characters if present in the string that
+                    ' Trims the end of the string to discard any additional characters, if present in the string, that
                     ' would prevent the string from being a hex encoded string. 
-                    ' Note: We require each character is represented by its 2 character hex value.
+                    ' Note: Requires that each character be represented by its 2 character hex value.
                     hexData = hexData.Substring(0, hexData.Length - hexData.Length Mod 2)
 
                     Dim bytes As Byte() = CreateArray(Of Byte)(hexData.Length \ 2)
@@ -80,12 +82,12 @@ Public MustInherit Class ByteEncoding
 
         End Function
 
-        ''' <summary>Encodes given buffer into a user presentable representation</summary>
-        ''' <param name="bytes">Bytes to encode</param>
-        ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-        ''' <param name="length">Length of buffer to encode</param>
-        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-        ''' <returns>String of encoded bytes</returns>
+        ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+        ''' <param name="bytes">Bytes to encode.</param>
+        ''' <param name="offset">Offset into buffer to begin encoding.</param>
+        ''' <param name="length">Length of buffer to encode.</param>
+        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        ''' <returns>String of encoded bytes.</returns>
         Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
             Return BytesToString(bytes, offset, length, spacingCharacter, "X2")
@@ -105,26 +107,26 @@ Public MustInherit Class ByteEncoding
 
         Friend Sub New()
 
-            ' This class is meant for internal instatiation only
+            ' This class is meant for internal instatiation only.
 
         End Sub
 
-        ''' <summary>Decodes given string back into a byte buffer</summary>
-        ''' <param name="decData">Encoded decimal data string to decode</param>
-        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
-        ''' <returns>Decoded bytes</returns>
+        ''' <summary>Decodes given string back into a byte buffer.</summary>
+        ''' <param name="decData">Encoded decimal data string to decode.</param>
+        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
+        ''' <returns>Decoded bytes.</returns>
         Public Overrides Function GetBytes(ByVal decData As String, ByVal spacingCharacter As Char) As Byte()
 
             If Not String.IsNullOrEmpty(decData) Then
-                ' Remove spacing characters, if needed
+                ' Removes spacing characters, if needed.
                 decData = decData.Trim()
                 If spacingCharacter <> NoSpacing Then decData = decData.Replace(spacingCharacter, "")
 
-                ' Process the string only if it has data in decimal format (Example: 072 101 108 108 033).
+                ' Processes the string only if it has data in decimal format (Example: 072 101 108 108 033).
                 If Regex.Matches(decData, "[^0-9]").Count = 0 Then
-                    ' Trim the end of the string to discard any additional characters, if present, in the 
-                    ' string that would prevent the string from being a integer encoded string. 
-                    ' Note: We require each character is represented by its 3 character decimal value.
+                    ' Trims the end of the string to discard any additional characters, if present in the 
+                    ' string, that would prevent the string from being an integer encoded string. 
+                    ' Note: Requires that each character be represented by its 3 character decimal value.
                     decData = decData.Substring(0, decData.Length - decData.Length Mod 3)
 
                     Dim bytes As Byte() = CreateArray(Of Byte)(decData.Length \ 3)
@@ -145,12 +147,12 @@ Public MustInherit Class ByteEncoding
 
         End Function
 
-        ''' <summary>Encodes given buffer into a user presentable representation</summary>
-        ''' <param name="bytes">Bytes to encode</param>
-        ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-        ''' <param name="length">Length of buffer to encode</param>
-        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-        ''' <returns>String of encoded bytes</returns>
+        ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+        ''' <param name="bytes">Bytes to encode.</param>
+        ''' <param name="offset">Offset into buffer to begin encoding.</param>
+        ''' <param name="length">Length of buffer to encode.</param>
+        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        ''' <returns>String of encoded bytes.</returns>
         Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
             Return BytesToString(bytes, offset, length, spacingCharacter, "D3")
@@ -171,45 +173,45 @@ Public MustInherit Class ByteEncoding
         Private m_byteImages As String()
         Private m_reverse As Boolean
 
-        ' This class is meant for internal instatiation only
+        ' This class is meant for internal instantiation only.
         Friend Sub New(ByVal targetEndianness As Endianness)
 
             If targetEndianness = Endianness.BigEndian Then
                 If BitConverter.IsLittleEndian Then
-                    ' If OS is little endian and we want big endian, we reverse bit order
+                    ' If OS is little endian and we want big endian, this reverses the bit order.
                     m_reverse = True
                 Else
-                    ' If OS is big endian and we want big endian, we keep OS bit order
+                    ' If OS is big endian and we want big endian, this keeps the OS bit order.
                     m_reverse = False
                 End If
             Else
                 If BitConverter.IsLittleEndian Then
-                    ' If OS is little endian and we want little endian, we keep OS bit order
+                    ' If OS is little endian and we want little endian, this keeps OS bit order.
                     m_reverse = False
                 Else
-                    ' If OS is big endian and we want little endian, we reverse bit order
+                    ' If OS is big endian and we want little endian, this reverses the bit order.
                     m_reverse = True
                 End If
             End If
 
         End Sub
 
-        ''' <summary>Decodes given string back into a byte buffer</summary>
-        ''' <param name="binaryData">Encoded binary data string to decode</param>
-        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
-        ''' <returns>Decoded bytes</returns>
+        ''' <summary>Decodes given string back into a byte buffer.</summary>
+        ''' <param name="binaryData">Encoded binary data string to decode.</param>
+        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
+        ''' <returns>Decoded bytes.</returns>
         Public Overrides Function GetBytes(ByVal binaryData As String, ByVal spacingCharacter As Char) As Byte()
 
             If Not String.IsNullOrEmpty(binaryData) Then
-                ' Remove spacing characters, if needed
+                ' Removes spacing characters, if needed.
                 binaryData = binaryData.Trim
                 If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
 
-                ' Process the string only if it has data in binary format (Example: 01010110 1010101).
+                ' Processes the string only if it has data in binary format (Example: 01010110 1010101).
                 If Regex.Matches(binaryData, "[^0-1]").Count = 0 Then
-                    ' Trim the end of the string to discard any additional characters, if present, in the 
-                    ' string that would prevent the string from being a binary encoded string. 
-                    ' Note: We require each character is represented by its 8 character binary value.
+                    ' Trims the end of the string to discard any additional characters, if present in the 
+                    ' string, that would prevent the string from being a binary encoded string. 
+                    ' Note: Requires each character be represented by its 8 character binary value.
                     binaryData = binaryData.Substring(0, binaryData.Length - binaryData.Length Mod 8)
 
                     Dim bytes As Byte() = CreateArray(Of Byte)(binaryData.Length \ 8)
@@ -251,15 +253,15 @@ Public MustInherit Class ByteEncoding
 
         End Function
 
-        ''' <summary>Encodes given buffer into a user presentable representation</summary>
-        ''' <param name="bytes">Bytes to encode</param>
-        ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-        ''' <param name="length">Length of buffer to encode</param>
-        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-        ''' <returns>String of encoded bytes</returns>
+        ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+        ''' <param name="bytes">Bytes to encode.</param>
+        ''' <param name="offset">Offset into buffer to begin encoding.</param>
+        ''' <param name="length">Length of buffer to encode.</param>
+        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        ''' <returns>String of encoded bytes.</returns>
         Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
-            ' Initialize byte image array on first call for speed in future calls
+            ' Initializes byte image array on first call for speed in future calls.
             If m_byteImages Is Nothing Then
                 m_byteImages = CreateArray(Of String)(256)
 
@@ -316,17 +318,17 @@ Public MustInherit Class ByteEncoding
 
         Friend Sub New()
 
-            ' This class is meant for internal instatiation only
+            ' This class is meant for internal instantiation only.
 
         End Sub
 
-        ''' <summary>Decodes given string back into a byte buffer</summary>
-        ''' <param name="binaryData">Encoded binary data string to decode</param>
-        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
-        ''' <returns>Decoded bytes</returns>
+        ''' <summary>Decodes given string back into a byte buffer.</summary>
+        ''' <param name="binaryData">Encoded binary data string to decode.</param>
+        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
+        ''' <returns>Decoded bytes.</returns>
         Public Overrides Function GetBytes(ByVal binaryData As String, ByVal spacingCharacter As Char) As Byte()
 
-            ' Remove spacing characters, if needed
+            ' Removes spacing characters, if needed.
             binaryData = binaryData.Trim
             If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
 
@@ -334,12 +336,12 @@ Public MustInherit Class ByteEncoding
 
         End Function
 
-        ''' <summary>Encodes given buffer into a user presentable representation</summary>
-        ''' <param name="bytes">Bytes to encode</param>
-        ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-        ''' <param name="length">Length of buffer to encode</param>
-        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-        ''' <returns>String of encoded bytes</returns>
+        ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+        ''' <param name="bytes">Bytes to encode.</param>
+        ''' <param name="offset">Offset into buffer to begin encoding.</param>
+        ''' <param name="length">Length of buffer to encode.</param>
+        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        ''' <returns>String of encoded bytes.</returns>
         Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
             If spacingCharacter = NoSpacing Then
@@ -374,17 +376,17 @@ Public MustInherit Class ByteEncoding
 
         Friend Sub New()
 
-            ' This class is meant for internal instatiation only
+            ' This class is meant for internal instantiation only.
 
         End Sub
 
-        ''' <summary>Decodes given string back into a byte buffer</summary>
-        ''' <param name="binaryData">Encoded binary data string to decode</param>
-        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
-        ''' <returns>Decoded bytes</returns>
+        ''' <summary>Decodes given string back into a byte buffer.</summary>
+        ''' <param name="binaryData">Encoded binary data string to decode.</param>
+        ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
+        ''' <returns>Decoded bytes.</returns>
         Public Overrides Function GetBytes(ByVal binaryData As String, ByVal spacingCharacter As Char) As Byte()
 
-            ' Remove spacing characters, if needed
+            ' Removes spacing characters, if needed.
             binaryData = binaryData.Trim
             If spacingCharacter <> NoSpacing Then binaryData = binaryData.Replace(spacingCharacter, "")
 
@@ -392,12 +394,12 @@ Public MustInherit Class ByteEncoding
 
         End Function
 
-        ''' <summary>Encodes given buffer into a user presentable representation</summary>
-        ''' <param name="bytes">Bytes to encode</param>
-        ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-        ''' <param name="length">Length of buffer to encode</param>
-        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-        ''' <returns>String of encoded bytes</returns>
+        ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+        ''' <param name="bytes">Bytes to encode.</param>
+        ''' <param name="offset">Offset into buffer to begin encoding.</param>
+        ''' <param name="length">Length of buffer to encode.</param>
+        ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        ''' <returns>String of encoded bytes.</returns>
         Public Overrides Function GetString(ByVal bytes() As Byte, ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
             If spacingCharacter = NoSpacing Then
@@ -434,11 +436,11 @@ Public MustInherit Class ByteEncoding
 
     Private Sub New()
 
-        ' This class contains only global functions and is not meant to be instantiated
+        ' This class contains only global functions and is not meant to be instantiated.
 
     End Sub
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into a hexadecimal based presentation format</summary>
+    ''' <summary>Handles encoding and decoding of a byte buffer into a hexadecimal-based presentation format.</summary>
     Public Shared ReadOnly Property Hexadecimal() As HexadecimalEncoding
         Get
             If m_hexadecimalEncoding Is Nothing Then m_hexadecimalEncoding = New HexadecimalEncoding
@@ -446,7 +448,7 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into an integer based presentation format</summary>
+    ''' <summary>Handles encoding and decoding of a byte buffer into an integer-based presentation format.</summary>
     Public Shared ReadOnly Property [Decimal]() As DecimalEncoding
         Get
             If m_decimalEncoding Is Nothing Then m_decimalEncoding = New DecimalEncoding
@@ -454,10 +456,12 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into a big-endian binary (i.e., 0 and 1's) based presentation format</summary>
+    ''' <summary>Handles encoding and decoding of a byte buffer into a big-endian binary (i.e., 0 and 1's) based
+    ''' presentation format.</summary>
     ''' <remarks>
-    ''' Although endianness is typically used in the context of byte order (see TVA.Interop.EndianOrder to handle byte order swapping),
-    ''' this property allows you visualize "bits" in big-endian order, right-to-left (note that bits are normally stored in the same order as their bytes).
+    ''' Although endianness is typically used in the context of byte order (see TVA.Interop.EndianOrder to handle byte 
+    ''' order swapping), this property allows you visualize "bits" in big-endian order, right-to-left (Note that bits
+    ''' are normally stored in the same order as their bytes.).
     ''' </remarks>
     Public Shared ReadOnly Property BigEndianBinary() As BinaryEncoding
         Get
@@ -466,10 +470,12 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into a little-endian binary (i.e., 0 and 1's) based presentation format</summary>
+    ''' <summary>Handles encoding and decoding of a byte buffer into a little-endian binary (i.e., 0 and 1's) based
+    ''' presentation format.</summary>
     ''' <remarks>
-    ''' Although endianness is typically used in the context of byte order (see TVA.Interop.EndianOrder to handle byte order swapping),
-    ''' this property allows you visualize "bits" in little-endian order, left-to-right (note that bits are normally stored in the same order as their bytes).
+    ''' Although endianness is typically used in the context of byte order (see TVA.Interop.EndianOrder to handle byte
+    ''' order swapping), this property allows you visualize "bits" in little-endian order, left-to-right (Note that bits
+    ''' are normally stored in the same order as their bytes.).
     ''' </remarks>
     Public Shared ReadOnly Property LittleEndianBinary() As BinaryEncoding
         Get
@@ -478,7 +484,7 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into a base64 presentation format</summary>
+    ''' <summary>Handles encoding and decoding of a byte buffer into a base64 presentation format.</summary>
     Public Shared ReadOnly Property Base64() As Base64Encoding
         Get
             If m_base64Encoding Is Nothing Then m_base64Encoding = New Base64Encoding
@@ -486,7 +492,7 @@ Public MustInherit Class ByteEncoding
         End Get
     End Property
 
-    ''' <summary>Handles encoding and decoding of a byte buffer into an ASCII character presentation format</summary>
+    ''' <summary>Handles encoding and decoding of a byte buffer into an ASCII character presentation format.</summary>
     Public Shared ReadOnly Property ASCII() As ASCIIEncoding
         Get
             If m_asciiEncoding Is Nothing Then m_asciiEncoding = New ASCIIEncoding
@@ -496,8 +502,8 @@ Public MustInherit Class ByteEncoding
 
 #Region " Inheritable Functionality "
 
-    ''' <summary>Encodes given buffer into a user presentable representation</summary>
-    ''' <param name="bytes">Bytes to encode</param>
+    ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+    ''' <param name="bytes">Bytes to encode.</param>
 
     Public Overridable Function GetString(ByVal bytes As Byte()) As String
 
@@ -505,10 +511,10 @@ Public MustInherit Class ByteEncoding
 
     End Function
 
-    ''' <summary>Encodes given buffer into a user presentable representation</summary>
-    ''' <param name="bytes">Bytes to encode</param>
-    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-    ''' <returns>String of encoded bytes</returns>
+    ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+    ''' <param name="bytes">Bytes to encode.</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+    ''' <returns>String of encoded bytes.</returns>
     Public Overridable Function GetString(ByVal bytes As Byte(), ByVal spacingCharacter As Char) As String
 
         If bytes Is Nothing Then Throw New ArgumentNullException("bytes", "Input buffer cannot be null")
@@ -516,11 +522,11 @@ Public MustInherit Class ByteEncoding
 
     End Function
 
-    ''' <summary>Encodes given buffer into a user presentable representation</summary>
-    ''' <param name="bytes">Bytes to encode</param>
-    ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-    ''' <param name="length">Length of buffer to encode</param>
-    ''' <returns>String of encoded bytes</returns>
+    ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+    ''' <param name="bytes">Bytes to encode.</param>
+    ''' <param name="offset">Offset into buffer to begin encoding.</param>
+    ''' <param name="length">Length of buffer to encode.</param>
+    ''' <returns>String of encoded bytes.</returns>
     Public Overridable Function GetString(ByVal bytes As Byte(), ByVal offset As Integer, ByVal length As Integer) As String
 
         If bytes Is Nothing Then Throw New ArgumentNullException("bytes", "Input buffer cannot be null")
@@ -528,17 +534,17 @@ Public MustInherit Class ByteEncoding
 
     End Function
 
-    ''' <summary>Encodes given buffer into a user presentable representation</summary>
-    ''' <param name="bytes">Bytes to encode</param>
-    ''' <param name="offset">Offset into buffer to bgeing encoding</param>
-    ''' <param name="length">Length of buffer to encode</param>
-    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes</param>
-    ''' <returns>String of encoded bytes</returns>
+    ''' <summary>Encodes given buffer into a user presentable representation.</summary>
+    ''' <param name="bytes">Bytes to encode.</param>
+    ''' <param name="offset">Offset into buffer to begin encoding.</param>
+    ''' <param name="length">Length of buffer to encode.</param>
+    ''' <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+    ''' <returns>String of encoded bytes.</returns>
     Public MustOverride Function GetString(ByVal bytes As Byte(), ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char) As String
 
-    ''' <summary>Decodes given string back into a byte buffer</summary>
-    ''' <param name="value">Encoded string to decode</param>
-    ''' <returns>Decoded bytes</returns>
+    ''' <summary>Decodes given string back into a byte buffer.</summary>
+    ''' <param name="value">Encoded string to decode.</param>
+    ''' <returns>Decoded bytes.</returns>
     Public Overridable Function GetBytes(ByVal value As String) As Byte()
 
         If String.IsNullOrEmpty(value) Then Throw New ArgumentNullException("value", "Input string cannot be null")
@@ -546,13 +552,13 @@ Public MustInherit Class ByteEncoding
 
     End Function
 
-    ''' <summary>Decodes given string back into a byte buffer</summary>
-    ''' <param name="value">Encoded string to decode</param>
-    ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes</param>
+    ''' <summary>Decodes given string back into a byte buffer.</summary>
+    ''' <param name="value">Encoded string to decode.</param>
+    ''' <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
     ''' <returns>Decoded bytes</returns>
     Public MustOverride Function GetBytes(ByVal value As String, ByVal spacingCharacter As Char) As Byte()
 
-    ''' <summary>Handles byte to string conversions for implementations that are available from Byte.ToString</summary>
+    ''' <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
     Protected Function BytesToString(ByVal bytes As Byte(), ByVal offset As Integer, ByVal length As Integer, ByVal spacingCharacter As Char, ByVal format As String) As String
 
         If bytes Is Nothing Then Throw New ArgumentNullException("bytes", "Input buffer cannot be null")
