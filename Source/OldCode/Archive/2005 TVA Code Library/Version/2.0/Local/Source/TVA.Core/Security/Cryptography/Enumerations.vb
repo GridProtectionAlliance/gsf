@@ -11,34 +11,36 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  07/11/2007 - J. Ritchie Carroll
-'       Moved all namespace level enumerations into "Enumerations.vb" file
+'       Moved all namespace level enumerations into "Enumerations.vb" file.
 '  10/11/2007 - J. Ritchie Carroll
-'       Added "Level 5" encryption to further obfuscate data using bit-rotation
+'       Added "Level 5" encryption to further obfuscate data using bit-rotation.
+' 12/13/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
 Namespace Security.Cryptography
 
-    ''' <summary>Cryptographic Strength Enumeration</summary>
+    ''' <summary>Enumerates cryptographic strength.</summary>
     ''' <remarks>
     ''' <para>
-    ''' Encryption algorithms are cumulative, the levels represent tradeoffs on speed vs. cipher strength - level 1
-    ''' will have the fastest encryption speed with the simplest encryption strength - level 5 will have the
+    ''' Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
+    ''' will have the fastest encryption speed with the simplest encryption strength, and level 5 will have the
     ''' strongest cumulative encryption strength with the slowest encryption speed.
     ''' </para>
     ''' </remarks>
     Public Enum EncryptLevel
-        ''' <summary>Use no encryption</summary>
+        ''' <summary>Uses no encryption.</summary>
         None
-        ''' <summary>Adds simple multi-alogorithm XOR based encryption</summary>
+        ''' <summary>Adds simple multi-alogorithm XOR based encryption.</summary>
         Level1
-        ''' <summary>Adds TripleDES based encryption</summary>
+        ''' <summary>Adds TripleDES based encryption.</summary>
         Level2
-        ''' <summary>Adds RC2 based encryption</summary>
+        ''' <summary>Adds RC2 based encryption.</summary>
         Level3
-        ''' <summary>Adds RijndaelManaged based enryption</summary>
+        ''' <summary>Adds RijndaelManaged based enryption.</summary>
         Level4
-        ''' <summary>Adds simple bit-rotation based enryption</summary>
+        ''' <summary>Adds simple bit-rotation based enryption.</summary>
         Level5
     End Enum
 

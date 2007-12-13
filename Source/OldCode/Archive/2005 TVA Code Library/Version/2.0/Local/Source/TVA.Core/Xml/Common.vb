@@ -11,11 +11,13 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  02/23/2003 - J. Ritchie Carroll
-'       Original version of source code generated
+'       Generated original version of source code.
 '  01/23/2006 - J. Ritchie Carroll
-'       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
+'       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Common).
 '  01/24/2007 - J. Ritchie Carroll
-'       Added GetDataSet method to convert an XML string of data into a DataSet object
+'       Added GetDataSet method to convert an XML string of data into a DataSet object.
+'  12/13/2007 - Darrell Zuercher
+'       Edited code comments.
 '
 '*******************************************************************************************************
 
@@ -28,22 +30,23 @@ Namespace Xml
 
         Private Sub New()
 
-            ' This class contains only global functions and is not meant to be instantiated
+            ' This class contains only global functions and is not meant to be instantiated.
 
         End Sub
 
-        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
-        ''' <remarks>This overload just allows start given xml document by using its root element.</remarks>
+        ''' <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
+        ''' <remarks>This overload just allows the start of the given XML document by using its root element.</remarks>
         Public Shared Function GetXmlNode(ByVal xmlDoc As XmlDocument, ByVal xpath As String) As XmlNode
 
             Return GetXmlNode(xmlDoc.DocumentElement, xpath, False)
 
         End Function
 
-        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
+        ''' <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         ''' <remarks>
-        ''' <para>This overload just allows start given xml document by using its root element.</para>
-        ''' <para>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</para>
+        ''' <para>This overload just allows the start of the given XML document by using its root element.</para>
+        ''' <para>Note that the <paramref name="isDirty" /> parameter will be set to True if any items were added to 
+        ''' the tree.</para>
         ''' </remarks>
         Public Shared Function GetXmlNode(ByVal xmlDoc As XmlDocument, ByVal xpath As String, ByRef isDirty As Boolean) As XmlNode
 
@@ -51,22 +54,23 @@ Namespace Xml
 
         End Function
 
-        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
+        ''' <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         Public Shared Function GetXmlNode(ByVal parentNode As XmlNode, ByVal xpath As String) As XmlNode
 
             Return GetXmlNode(parentNode, xpath, False)
 
         End Function
 
-        ''' <summary>Gets an Xml node from given path, creating the entire path it if it doesn't exist.</summary>
-        ''' <remarks>Note that the <paramref name="isDirty" /> parameter will be set to True is any items were added to the tree</remarks>
+        ''' <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
+        ''' <remarks>Note that the <paramref name="isDirty" /> parameter will be set to True if any items were added to 
+        ''' the tree.</remarks>
         Public Shared Function GetXmlNode(ByVal parentNode As XmlNode, ByVal xpath As String, ByRef isDirty As Boolean) As XmlNode
 
             Dim node As XmlNode = Nothing
             Dim element As String
             Dim elements As String()
 
-            ' Remove any slash prefixes
+            ' Removes any slash prefixes.
             Do While xpath.Chars(0) = "/"c
                 xpath = xpath.Substring(1)
             Loop
@@ -95,7 +99,7 @@ Namespace Xml
         End Function
 
         ''' <summary>Safely gets or sets an XML node's attribute.</summary>
-        ''' <remarks>If you assign a value to an attribute that doesn't exist, it will be created</remarks>
+        ''' <remarks>If you assign a value to an attribute that does not exist, the attribute will be created.</remarks>
         Public Shared Property Attribute(ByVal node As XmlNode, ByVal name As String) As String
             Get
                 Dim attr As XmlAttribute = node.Attributes(name)
@@ -121,9 +125,9 @@ Namespace Xml
         End Property
 
         ''' <summary>
-        ''' Gets a data set object from an XML data set formatted as a String
+        ''' Gets a data set object from an XML data set formatted as a String.
         ''' </summary>
-        ''' <param name="xmlData">XML data string in standard DataSet format</param>
+        ''' <param name="xmlData">XML data string in standard DataSet format.</param>
         Public Shared Function GetDataSet(ByVal xmlData As String) As DataSet
 
             Dim dataSet As New DataSet
@@ -131,7 +135,7 @@ Namespace Xml
 
             xmlReader.ReadOuterXml()
 
-            ' Read the outer XML into the Dataset
+            ' Reads the outer XML into the Dataset.
             dataSet.ReadXml(xmlReader)
 
             Return dataSet
