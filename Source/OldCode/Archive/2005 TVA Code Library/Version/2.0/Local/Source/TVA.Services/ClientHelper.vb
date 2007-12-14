@@ -76,7 +76,7 @@ Public Class ClientHelper
 
 #Region " Code Scope: Public "
 
-    <Category("Client Helper")> _
+    <Category("Settings")> _
     Public Property ServiceName() As String
         Get
             Return m_serviceName
@@ -184,6 +184,7 @@ Public Class ClientHelper
 
 #Region " IPersistSettings "
 
+    <Category("Settings")> _
     Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
         Get
             Return m_persistSettings
@@ -193,6 +194,7 @@ Public Class ClientHelper
         End Set
     End Property
 
+    <Category("Settings")> _
     Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
         Get
             Return m_settingsCategoryName

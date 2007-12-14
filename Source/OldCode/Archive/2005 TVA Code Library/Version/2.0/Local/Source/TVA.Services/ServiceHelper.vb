@@ -11,10 +11,14 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  08/29/2006 - Pinal C. Patel
-'       Original version of source code generated
+'       Original version of source code generated.
 '  11/30/2007 - Pinal C. Patel
-'       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
-'       instead of DesignMode property as the former is more accurate than the latter
+'       Modified the "design time" check in EndInit() method to use LicenseManager. UsageMode property
+'       instead of DesignMode property as the former is more accurate than the latter.
+'  12/14/2007 - Pinal C. Patel
+'       Made monitoring of service health optional via the MonitorServiceHealth property as this
+'       feature was causing the highly utilized services to die after running for a prolonged period of 
+'       time. By default monitoring service health is off.
 '
 '*******************************************************************************************************
 
@@ -41,6 +45,7 @@ Public Class ServiceHelper
     Private m_service As ServiceBase
     Private m_pursip As String
     Private m_logStatusUpdates As Boolean
+    Private m_monitorServiceHealth As Boolean
     Private m_requestHistoryLimit As Integer
     Private m_queryableSettingsCategories As String
     Private m_processes As List(Of ServiceProcess)
@@ -154,7 +159,7 @@ Public Class ServiceHelper
     ''' </summary>
     ''' <value></value>
     ''' <returns>True if status updates are to be logged to a text file; otherwise false.</returns>
-    <Category("Service Helper"), DefaultValue(GetType(Boolean), "True")> _
+    <Category("Preferences"), DefaultValue(GetType(Boolean), "True")> _
     Public Property LogStatusUpdates() As Boolean
         Get
             Return m_logStatusUpdates
@@ -165,11 +170,26 @@ Public Class ServiceHelper
     End Property
 
     ''' <summary>
+    ''' Gets or sets a boolean value indicating whether the service health is to be monitored.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>True if the service health is to be monitored; otherwise False.</returns>
+    <Category("Preferences"), DefaultValue(GetType(Boolean), "False")> _
+    Public Property MonitorServiceHealth() As Boolean
+        Get
+            Return m_monitorServiceHealth
+        End Get
+        Set(ByVal value As Boolean)
+            m_monitorServiceHealth = value
+        End Set
+    End Property
+
+    ''' <summary>
     ''' Gets or sets the number of request entries to be kept in the history.
     ''' </summary>
     ''' <value></value>
     ''' <returns>The number of request entries to be kept in the history.</returns>
-    <Category("Service Helper"), DefaultValue(GetType(Integer), "50")> _
+    <Category("Preferences"), DefaultValue(GetType(Integer), "50")> _
     Public Property RequestHistoryLimit() As Integer
         Get
             Return m_requestHistoryLimit
@@ -183,6 +203,12 @@ Public Class ServiceHelper
         End Set
     End Property
 
+    ''' <summary>
+    ''' Gets or sets a comma seperated list of config file settings categories updateable by the service.
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>A comma seperated list of config file settings categories updateable by the service.</returns>
+    <Category("Preferences")> _
     Public Property QueryableSettingsCategories() As String
         Get
             Return m_queryableSettingsCategories
@@ -300,7 +326,6 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", AddressOf ShowSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", AddressOf ShowRequestHistory))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", AddressOf ShowRequestHelp))
-            m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", AddressOf ShowHealthReport))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Status", "Displays the current service status", AddressOf ShowServiceStatus))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Start", "Start a service or system process", AddressOf StartProcess))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Abort", "Aborts a service or system process", AddressOf AbortProcess))
@@ -311,10 +336,14 @@ Public Class ServiceHelper
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", AddressOf SaveSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", AddressOf LoadSchedules))
             m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Command", "Allows for a telnet-like remote command session", AddressOf RemoteCommandSession, False))
+            If m_monitorServiceHealth Then
+                ' Advertise "Health" command only if monitoring service health is enabled.
+                m_clientRequestHandlers.Add(New ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", AddressOf ShowHealthReport))
+            End If
 
             m_serviceComponents.Add(ScheduleManager)
             m_serviceComponents.Add(m_communicationServer)
-            m_performanceMonitor = New PerformanceMonitor()
+            If m_monitorServiceHealth Then m_performanceMonitor = New PerformanceMonitor()
 
             If m_communicationServer IsNot Nothing Then
                 m_communicationServer.Handshake = True
@@ -357,6 +386,7 @@ Public Class ServiceHelper
         Next
 
         If LogFile.IsOpen Then LogFile.Close()
+        If m_performanceMonitor IsNot Nothing Then m_performanceMonitor.Dispose()
 
         ' We do this to prevent any updates from being posted from other threads as this might cause exceptions.
         m_suppressUpdates = True
@@ -571,6 +601,7 @@ Public Class ServiceHelper
 
 #Region " IPersistSettings "
 
+    <Category("Settings")> _
     Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
         Get
             Return m_persistsettings
@@ -580,6 +611,7 @@ Public Class ServiceHelper
         End Set
     End Property
 
+    <Category("Settings")> _
     Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
         Get
             Return m_settingsCategoryName
@@ -600,6 +632,7 @@ Public Class ServiceHelper
                 If .Count > 0 Then
                     m_pursip = .Item("Pursip").GetTypedValue(m_pursip)
                     LogStatusUpdates = .Item("LogStatusUpdates").GetTypedValue(m_logStatusUpdates)
+                    MonitorServiceHealth = .Item("MonitorServiceHealth").GetTypedValue(m_monitorServiceHealth)
                     RequestHistoryLimit = .Item("RequestHistoryLimit").GetTypedValue(m_requestHistoryLimit)
                     QueryableSettingsCategories = .Item("QueryableSettingsCategories").GetTypedValue(m_queryableSettingsCategories)
                 End If
@@ -623,6 +656,10 @@ Public Class ServiceHelper
                     End With
                     With .Item("LogStatusUpdates", True)
                         .Value = m_logStatusUpdates.ToString()
+                        .Description = ""
+                    End With
+                    With .Item("MonitorServiceHealth", True)
+                        .Value = m_monitorServiceHealth.ToString()
                         .Description = ""
                     End With
                     With .Item("RequestHistoryLimit", True)
