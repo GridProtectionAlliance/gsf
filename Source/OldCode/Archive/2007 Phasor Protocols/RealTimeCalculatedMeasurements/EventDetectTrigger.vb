@@ -1,9 +1,9 @@
 '*******************************************************************************************************
 '  EventDetectTrigger.vb - Detect the events if the frequency change rate exceed the 
 '                          pre-set threshold
-'  Copyright © 2007 - TVA, all rights reserved - Gbtc
+'  Copyright © 2008 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2005
+'  Build Environment: VB.NET, Visual Studio 2008
 '  Primary Developer: Jian Zuo(Ryan), Operations Data Analysis [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2S-118
 '       Phone: 423/751-2570

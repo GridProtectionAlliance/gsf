@@ -1,8 +1,8 @@
 '*******************************************************************************************************
 '  ConfigurationFrameDraft6.vb - IEEE C37.118 Draft6 Configuration Frame
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Copyright © 2008 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2005
+'  Build Environment: VB.NET, Visual Studio 2008
 '  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827

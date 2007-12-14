@@ -204,6 +204,8 @@ XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWare.dll" %25LocalInstall%25
 XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWare.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWareHistorianAdapter.dll" %25LocalInstall%25
 XCOPY "$(SolutionDir)DatAWareAdapter\$(OutDir)DatAWareHistorianAdapter.pdb" %25LocalInstall%25
+XCOPY "$(SolutionDir)VirtualHistorianAdapter\$(OutDir)VirtualHistorianAdapter.dll" %25LocalInstall%25
+XCOPY "$(SolutionDir)VirtualHistorianAdapter\$(OutDir)VirtualHistorianAdapter.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)ICCPDataExport\$(OutDir)ICCPDataExport.dll" %25LocalInstall%25
 XCOPY "$(SolutionDir)ICCPDataExport\$(OutDir)ICCPDataExport.pdb" %25LocalInstall%25
 XCOPY "$(SolutionDir)RealTimeCalculatedMeasurements\$(OutDir)RealTimeCalculatedMeasurements.dll" %25LocalInstall%25

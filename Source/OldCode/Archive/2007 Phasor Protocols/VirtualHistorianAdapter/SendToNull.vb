@@ -1,8 +1,8 @@
 '*******************************************************************************************************
 '  SendToNull.vb - Virtual historian adpater (sends data to nowhere - just for debug sessions)
-'  Copyright © 2005 - TVA, all rights reserved - Gbtc
+'  Copyright © 2008 - TVA, all rights reserved - Gbtc
 '
-'  Build Environment: VB.NET, Visual Studio 2005
+'  Build Environment: VB.NET, Visual Studio 2008
 '  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 '      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 '       Phone: 423/751-2827
@@ -10,7 +10,7 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  06/01/2006 - J. Ritchie Carroll
+'  12/14/2007 - J. Ritchie Carroll
 '       Initial version of source generated
 '
 '*******************************************************************************************************
