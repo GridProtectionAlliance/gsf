@@ -150,7 +150,7 @@ Public Class PhasorMeasurementMapper
 
         ' Stop multi-protocol frame parser
         If m_frameParser IsNot Nothing Then
-            ' We perform disconnect on a separate thread since this can give us troubles :(
+            ' We perform disconnect on a separate thread so we can timeout since this can give us troubles :(
             With New Thread(AddressOf m_frameParser.Stop)
                 .Start()
                 If Not .Join(1000) Then .Abort()
