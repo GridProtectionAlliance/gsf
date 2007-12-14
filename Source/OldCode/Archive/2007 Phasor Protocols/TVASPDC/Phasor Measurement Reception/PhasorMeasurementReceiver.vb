@@ -217,6 +217,11 @@ Public Class PhasorMeasurementReceiver
                             End With
                         End If
 
+                        ' For simulations, we will auto-repeat file stream...
+                        If parser.TransportProtocol = TransportProtocol.File Then
+                            parser.AutoRepeatCapturedPlayback = True
+                        End If
+
                         parser.DeviceID = accessID
                         parser.SourceName = source
                     End If

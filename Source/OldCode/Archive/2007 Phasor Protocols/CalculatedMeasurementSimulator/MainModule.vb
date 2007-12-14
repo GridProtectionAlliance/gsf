@@ -6,7 +6,7 @@ Module MainModule
 
     Sub Main()
 
-        Dim calc As New FrequencyDomainDecomposition
+        Dim calc As New DampingMonitor
         Dim dataFrame As Frame
         Dim columns As String()
         Dim rowCount As Integer
