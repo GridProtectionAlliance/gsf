@@ -136,7 +136,7 @@ Public Class PhasorMeasurementMapper
         End If
 
         ' Display extra information for mappers with virtual devices
-        If m_totalVirtualCells > 0 Then UpdateStatus(String.Format("Connected {0} with {1} virtual devices - {2} active measurements defined", m_source, m_totalVirtualCells, m_activeMeasurementKeys.Count))
+        If m_totalVirtualCells > 0 Then UpdateStatus(String.Format("Connected {0} with {1} virtual device(s) - {2} active measurements defined", m_source, m_totalVirtualCells, m_activeMeasurementKeys.Count))
 
     End Sub
 

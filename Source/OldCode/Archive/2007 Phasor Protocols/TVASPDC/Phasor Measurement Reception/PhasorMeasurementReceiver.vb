@@ -208,7 +208,7 @@ Public Class PhasorMeasurementReceiver
                             ' Make sure required INI configuration file parameter gets initialized for BPA streams
                             With DirectCast(parser.ConnectionParameters, BpaPdcStream.ConnectionParameters)
                                 If keys.TryGetValue("inifilename", iniFileName) Then
-                                    .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), keys("inifilename"))
+                                    .ConfigurationFileName = String.Concat(FilePath.GetApplicationPath(), iniFileName)
                                 Else
                                     UpdateStatus(String.Format("Didn't find INI filename setting (e.g., ""inifilename=DEVICE_PDC.ini"") required for BPA PDCstream protocol in connection string for ""{0}"": ""{1}"" - device may fail to connect.", source, parser.ConnectionString))
                                 End If
@@ -217,8 +217,9 @@ Public Class PhasorMeasurementReceiver
                             End With
                         End If
 
-                        ' For simulations, we will auto-repeat file stream...
+                        ' For captured data simulations we will inject a simulated timestamp and auto-repeat file stream...
                         If parser.TransportProtocol = TransportProtocol.File Then
+                            parser.InjectSimulatedTimestamp = True
                             parser.AutoRepeatCapturedPlayback = True
                         End If
 

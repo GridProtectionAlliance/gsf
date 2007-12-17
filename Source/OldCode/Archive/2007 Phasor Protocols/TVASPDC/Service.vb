@@ -49,9 +49,9 @@ Public Class Service
     Private m_maximumMessagesToDisplay As Integer
     Private m_lastDisplayedMessageTime As Long
     Private m_displayedMessageCount As Long
-    Private m_statusMessageQueue As ProcessQueue(Of String)
     Private m_useLocalClockAsRealTime As Boolean
     Private m_allowSortsByArrival As Boolean
+    Private WithEvents m_statusMessageQueue As ProcessQueue(Of String)
 
 #End Region
 
@@ -1020,6 +1020,12 @@ Public Class Service
                 ServiceHelper.LogFile.WriteTimestampedLine(messages(x))
             End If
         Next
+
+    End Sub
+
+    Private Sub m_statusMessageQueue_ProcessException(ByVal ex As System.Exception) Handles m_statusMessageQueue.ProcessException
+
+        ServiceHelper.GlobalExceptionLogger.Log(ex)
 
     End Sub
 

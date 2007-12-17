@@ -29,6 +29,9 @@
 '       Implemented new disconnect overload on communications client that allows timeout on socket
 '       close to fix an issue related non-responsive threads that "lock-up" after sending connection
 '       commands that attempt to close the socket for remotely connected devices
+'  12/14/2007 - J. Ritchie Carroll
+'       Implemented simulated timestamp injection for published frames to allow for real-time
+'       data simulations from archived sample data
 '
 '*******************************************************************************************************
 
@@ -94,6 +97,7 @@ Public Class MultiProtocolFrameParser
     Private m_dataStreamStartTime As Long
     Private m_executeParseOnSeparateThread As Boolean
     Private m_autoRepeatCapturedPlayback As Boolean
+    Private m_injectSimulatedTimestamp As Boolean
     Private m_totalFramesReceived As Long
     Private m_frameRateTotal As Int32
     Private m_byteRateTotal As Int32
@@ -252,6 +256,15 @@ Public Class MultiProtocolFrameParser
         End Get
         Set(ByVal value As Boolean)
             m_autoStartDataParsingSequence = value
+        End Set
+    End Property
+
+    Public Property InjectSimulatedTimestamp() As Boolean
+        Get
+            Return m_injectSimulatedTimestamp
+        End Get
+        Set(ByVal value As Boolean)
+            m_injectSimulatedTimestamp = value
         End Set
     End Property
 
@@ -762,6 +775,7 @@ Public Class MultiProtocolFrameParser
 
         ' We don't stop parsing for exceptions thrown in consumer event handlers
         Try
+            If m_injectSimulatedTimestamp Then frame.Ticks = Date.UtcNow.Ticks
             RaiseEvent ReceivedCommandFrame(frame)
         Catch ex As Exception
             RaiseEvent DataStreamException( _
@@ -786,6 +800,7 @@ Public Class MultiProtocolFrameParser
 
         ' We don't stop parsing for exceptions thrown in consumer event handlers
         Try
+            If m_injectSimulatedTimestamp Then frame.Ticks = Date.UtcNow.Ticks
             RaiseEvent ReceivedConfigurationFrame(frame)
         Catch ex As Exception
             RaiseEvent DataStreamException( _
@@ -804,6 +819,7 @@ Public Class MultiProtocolFrameParser
 
         ' We don't stop parsing for exceptions thrown in consumer event handlers
         Try
+            If m_injectSimulatedTimestamp Then frame.Ticks = Date.UtcNow.Ticks
             RaiseEvent ReceivedDataFrame(frame)
         Catch ex As Exception
             RaiseEvent DataStreamException( _
@@ -822,6 +838,7 @@ Public Class MultiProtocolFrameParser
 
         ' We don't stop parsing for exceptions thrown in consumer event handlers
         Try
+            If m_injectSimulatedTimestamp Then frame.Ticks = Date.UtcNow.Ticks
             RaiseEvent ReceivedHeaderFrame(frame)
         Catch ex As Exception
             RaiseEvent DataStreamException( _
@@ -840,6 +857,7 @@ Public Class MultiProtocolFrameParser
 
         ' We don't stop parsing for exceptions thrown in consumer event handlers
         Try
+            If m_injectSimulatedTimestamp Then frame.Ticks = Date.UtcNow.Ticks
             RaiseEvent ReceivedUndeterminedFrame(frame)
         Catch ex As Exception
             RaiseEvent DataStreamException( _
