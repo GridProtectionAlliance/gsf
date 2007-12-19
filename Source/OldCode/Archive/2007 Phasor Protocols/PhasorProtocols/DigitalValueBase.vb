@@ -26,6 +26,7 @@ Public MustInherit Class DigitalValueBase
     Implements IDigitalValue
 
     Private m_value As Int16
+    Private m_valueAssigned As Boolean
 
     Protected Sub New()
     End Sub
@@ -36,6 +37,7 @@ Public MustInherit Class DigitalValueBase
 
         ' Deserialize digital value
         m_value = info.GetInt16("value")
+        m_valueAssigned = True
 
     End Sub
 
@@ -51,6 +53,7 @@ Public MustInherit Class DigitalValueBase
         MyBase.New(parent, digitalDefinition)
 
         m_value = value
+        m_valueAssigned = (value <> -1)
 
     End Sub
 
@@ -82,6 +85,7 @@ Public MustInherit Class DigitalValueBase
         End Get
         Set(ByVal value As Int16)
             m_value = value
+            m_valueAssigned = True
         End Set
     End Property
 
@@ -92,6 +96,7 @@ Public MustInherit Class DigitalValueBase
         Set(ByVal value As Single)
             Try
                 m_value = Convert.ToInt16(value)
+                m_valueAssigned = True
             Catch ex As OverflowException
                 m_value = Int16.MinValue
             End Try
@@ -106,7 +111,7 @@ Public MustInherit Class DigitalValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (m_value = -1)
+            Return Not m_valueAssigned
         End Get
     End Property
 
@@ -129,6 +134,7 @@ Public MustInherit Class DigitalValueBase
     Protected Overrides Sub ParseBodyImage(ByVal state As IChannelParsingState, ByVal binaryImage() As Byte, ByVal startIndex As Integer)
 
         m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
+        m_valueAssigned = True
 
     End Sub
 

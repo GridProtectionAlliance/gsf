@@ -16,6 +16,7 @@
 '*******************************************************************************************************
 
 Imports System.Runtime.Serialization
+Imports TVA.Math
 
 ''' <summary>This class represents the protocol independent a frequency and dfdt value.</summary>
 <CLSCompliant(False), Serializable()> _
@@ -26,6 +27,8 @@ Public MustInherit Class FrequencyValueBase
 
     Private m_frequency As Single
     Private m_dfdt As Single
+    Private m_frequencyAssigned As Boolean
+    Private m_dfdtAssigned As Boolean
 
     <Serializable()> _
     Public Enum CompositeValueType
@@ -44,6 +47,9 @@ Public MustInherit Class FrequencyValueBase
         m_frequency = info.GetSingle("frequency")
         m_dfdt = info.GetSingle("dfdt")
 
+        m_frequencyAssigned = True
+        m_dfdtAssigned = True
+
     End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
@@ -59,6 +65,9 @@ Public MustInherit Class FrequencyValueBase
 
         m_frequency = frequency
         m_dfdt = dfdt
+
+        m_frequencyAssigned = Not Single.IsNaN(frequency)
+        m_dfdtAssigned = Not Single.IsNaN(dfdt)
 
     End Sub
 
@@ -92,6 +101,7 @@ Public MustInherit Class FrequencyValueBase
         End Get
         Set(ByVal value As Single)
             m_frequency = value
+            m_frequencyAssigned = True
         End Set
     End Property
 
@@ -101,6 +111,7 @@ Public MustInherit Class FrequencyValueBase
         End Get
         Set(ByVal value As Single)
             m_dfdt = value
+            m_dfdtAssigned = True
         End Set
     End Property
 
@@ -118,6 +129,7 @@ Public MustInherit Class FrequencyValueBase
             With Definition
                 m_frequency = value / .ScalingFactor + .Offset
             End With
+            m_frequencyAssigned = True
         End Set
     End Property
 
@@ -135,6 +147,7 @@ Public MustInherit Class FrequencyValueBase
             With Definition
                 m_dfdt = value / .DfDtScalingFactor + .DfDtOffset
             End With
+            m_dfdtAssigned = True
         End Set
     End Property
 
@@ -153,8 +166,10 @@ Public MustInherit Class FrequencyValueBase
             Select Case index
                 Case CompositeValueType.Frequency
                     m_frequency = value
+                    m_frequencyAssigned = True
                 Case CompositeValueType.DfDt
                     m_dfdt = value
+                    m_dfdtAssigned = True
                 Case Else
                     Throw New IndexOutOfRangeException("Specified frequency value composite index, " & index & ", is out of range - there are only two composite values for a frequency value: frequency (0) and df/dt (1)")
             End Select
@@ -169,7 +184,7 @@ Public MustInherit Class FrequencyValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (Single.IsNaN(m_frequency) OrElse Single.IsNaN(m_dfdt))
+            Return (Not m_frequencyAssigned OrElse Not m_dfdtAssigned)
         End Get
     End Property
 
@@ -207,6 +222,9 @@ Public MustInherit Class FrequencyValueBase
         Else
             m_frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
             m_dfdt = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
+
+            m_frequencyAssigned = True
+            m_dfdtAssigned = True
         End If
 
     End Sub

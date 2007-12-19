@@ -25,6 +25,7 @@ Public MustInherit Class AnalogValueBase
     Implements IAnalogValue
 
     Private m_value As Single
+    Private m_valueAssigned As Boolean
 
     Protected Sub New()
     End Sub
@@ -35,6 +36,7 @@ Public MustInherit Class AnalogValueBase
 
         ' Deserialize analog value
         m_value = info.GetSingle("value")
+        m_valueAssigned = True
 
     End Sub
 
@@ -50,6 +52,7 @@ Public MustInherit Class AnalogValueBase
         MyBase.New(parent, analogDefinition)
 
         m_value = value
+        m_valueAssigned = Not Single.IsNaN(value)
 
     End Sub
 
@@ -81,6 +84,7 @@ Public MustInherit Class AnalogValueBase
         End Get
         Set(ByVal value As Single)
             m_value = value
+            m_valueAssigned = True
         End Set
     End Property
 
@@ -94,6 +98,7 @@ Public MustInherit Class AnalogValueBase
         End Get
         Set(ByVal value As Int16)
             m_value = Convert.ToSingle(value)
+            m_valueAssigned = True
         End Set
     End Property
 
@@ -103,6 +108,7 @@ Public MustInherit Class AnalogValueBase
         End Get
         Set(ByVal value As Single)
             m_value = value
+            m_valueAssigned = True
         End Set
     End Property
 
@@ -114,7 +120,7 @@ Public MustInherit Class AnalogValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return Single.IsNaN(m_value)
+            Return Not m_valueAssigned
         End Get
     End Property
 
@@ -148,6 +154,7 @@ Public MustInherit Class AnalogValueBase
             IntegerValue = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex)
         Else
             m_value = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
+            m_valueAssigned = True
         End If
 
     End Sub

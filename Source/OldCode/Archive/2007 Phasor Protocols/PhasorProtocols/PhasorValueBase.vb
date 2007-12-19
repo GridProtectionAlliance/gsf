@@ -34,7 +34,9 @@ Public MustInherit Class PhasorValueBase
 
     Private m_real As Single
     Private m_imaginary As Single
-    Private m_compositeValues As CompositeValues
+    Private m_realAssigned As Boolean
+    Private m_imaginaryAssigned As Boolean
+    Private m_compositeValues As New CompositeValues(2)
 
     ''' <summary>Create phasor from polar coordinates (angle expected in Degrees)</summary>
     ''' <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
@@ -109,13 +111,14 @@ Public MustInherit Class PhasorValueBase
         m_real = info.GetSingle("real")
         m_imaginary = info.GetSingle("imaginary")
 
+        m_realAssigned = True
+        m_imaginaryAssigned = True
+
     End Sub
 
     Protected Sub New(ByVal parent As IDataCell)
 
         MyBase.New(parent)
-
-        m_compositeValues = New CompositeValues(2)
 
     End Sub
 
@@ -126,7 +129,9 @@ Public MustInherit Class PhasorValueBase
 
         m_real = real
         m_imaginary = imaginary
-        m_compositeValues = New CompositeValues(2)
+
+        m_realAssigned = Not Single.IsNaN(real)
+        m_imaginaryAssigned = Not Single.IsNaN(imaginary)
 
     End Sub
 
@@ -142,7 +147,6 @@ Public MustInherit Class PhasorValueBase
 
         MyBase.New(parent, phasorDefinition)
         ParseBinaryImage(Nothing, binaryImage, startIndex)
-        m_compositeValues = New CompositeValues(2)
 
     End Sub
 
@@ -219,6 +223,9 @@ Public MustInherit Class PhasorValueBase
 
             m_real = CalculateRealComponent(angle, magnitude)
             m_imaginary = CalculateImaginaryComponent(angle, magnitude)
+
+            m_realAssigned = True
+            m_imaginaryAssigned = True
         End If
 
     End Sub
@@ -229,6 +236,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Single)
             m_real = value
+            m_realAssigned = True
         End Set
     End Property
 
@@ -238,6 +246,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Single)
             m_imaginary = value
+            m_imaginaryAssigned = True
         End Set
     End Property
 
@@ -251,6 +260,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Int16)
             m_real = value * Definition.ConversionFactor
+            m_realAssigned = True
         End Set
     End Property
 
@@ -264,6 +274,7 @@ Public MustInherit Class PhasorValueBase
         End Get
         Set(ByVal value As Int16)
             m_imaginary = value * Definition.ConversionFactor
+            m_imaginaryAssigned = True
         End Set
     End Property
 
@@ -298,7 +309,7 @@ Public MustInherit Class PhasorValueBase
 
     Public Overrides ReadOnly Property IsEmpty() As Boolean
         Get
-            Return (Single.IsNaN(m_real) OrElse Single.IsNaN(m_imaginary))
+            Return (Not m_realAssigned OrElse Not m_imaginaryAssigned)
         End Get
     End Property
 
@@ -347,6 +358,9 @@ Public MustInherit Class PhasorValueBase
             Else
                 m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex)
                 m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4)
+
+                m_realAssigned = True
+                m_imaginaryAssigned = True
             End If
         Else
             Dim magnitude As Single
@@ -362,6 +376,9 @@ Public MustInherit Class PhasorValueBase
 
             m_real = CalculateRealComponent(angle, magnitude)
             m_imaginary = CalculateImaginaryComponent(angle, magnitude)
+
+            m_realAssigned = True
+            m_imaginaryAssigned = True
         End If
 
     End Sub
