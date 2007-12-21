@@ -179,9 +179,6 @@ Public MustInherit Class DataCellBase
             Return commonFlags
         End Get
         Set(ByVal value As Int32)
-            ' Set lo-word protocol specific status flags
-            m_statusFlags = Convert.ToInt16(value And &HFFFF)
-
             ' Derive common states via common status flags
             DataIsValid = ((value And PhasorProtocols.CommonStatusFlags.DataIsValid) = 0)
             SynchronizationIsValid = ((value And PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) = 0)
