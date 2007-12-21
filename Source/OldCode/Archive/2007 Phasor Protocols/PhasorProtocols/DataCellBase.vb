@@ -179,8 +179,10 @@ Public MustInherit Class DataCellBase
             Return commonFlags
         End Get
         Set(ByVal value As Int32)
+            ' Deriving common states requires clearing of base status flags...
+            If value <> -1 Then StatusFlags = 0
+
             ' Derive common states via common status flags
-            If value <> -1 Then StatusFlags = StatusFlags And Not PhasorProtocols.CommonStatusFlags.ReservedFlags
             DataIsValid = ((value And PhasorProtocols.CommonStatusFlags.DataIsValid) = 0)
             SynchronizationIsValid = ((value And PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) = 0)
             DataSortingType = IIf((value And PhasorProtocols.CommonStatusFlags.DataSortingType) = 0, PhasorProtocols.DataSortingType.ByTimestamp, PhasorProtocols.DataSortingType.ByArrival)

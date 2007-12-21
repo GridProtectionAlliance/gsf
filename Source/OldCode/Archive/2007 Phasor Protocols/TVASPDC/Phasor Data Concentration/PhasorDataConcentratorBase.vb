@@ -555,12 +555,12 @@ Public MustInherit Class PhasorDataConcentratorBase
                 m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
             End If
 
-            ' Prior to publication, set data validity bits based on reception of all data values
-            For Each dataCell As IDataCell In dataFrame.Cells
-                ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...
-                If Not dataCell.AllValuesAssigned Then dataCell.StatusFlags = -1
-                'If Not dataCell.AllValuesAssigned Then dataCell.CommonStatusFlags = dataCell.CommonStatusFlags Or CommonStatusFlags.DataIsValid
-            Next
+            '' Prior to publication, set data validity bits based on reception of all data values
+            'For Each dataCell As IDataCell In dataFrame.Cells
+            '    ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...
+            '    If Not dataCell.AllValuesAssigned Then dataCell.StatusFlags = -1
+            '    'If Not dataCell.AllValuesAssigned Then dataCell.CommonStatusFlags = dataCell.CommonStatusFlags Or CommonStatusFlags.DataIsValid
+            'Next
 
             ' Publish binary image over specified communication layer
             m_communicationServer.Multicast(dataFrame.BinaryImage())
