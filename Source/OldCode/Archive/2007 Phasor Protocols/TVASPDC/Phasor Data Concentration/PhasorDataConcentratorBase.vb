@@ -555,6 +555,9 @@ Public MustInherit Class PhasorDataConcentratorBase
                 m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
             End If
 
+            ' JRC: Removed this step - this only helps when there were missing points during sorting
+            ' this doesn't happen very often and is further complicated by the fact that unused
+            ' measurements are intentionally disabled - so this step is skipped for now...
             '' Prior to publication, set data validity bits based on reception of all data values
             'For Each dataCell As IDataCell In dataFrame.Cells
             '    ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...
