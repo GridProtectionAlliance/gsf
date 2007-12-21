@@ -53,7 +53,7 @@ Public Class ConfigurationCell
 
     End Sub
 
-    Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency)
+    Public Sub New(ByVal parent As ConfigurationFrame, ByVal idCode As UInt16, ByVal nominalFrequency As LineFrequency, ByVal isVirtual As Boolean)
 
         MyBase.New(parent, False, idCode, nominalFrequency, Integer.MaxValue, Integer.MaxValue, Integer.MaxValue)
 
@@ -62,14 +62,14 @@ Public Class ConfigurationCell
         m_frequencyDataFormat = DataFormat.FloatingPoint
         m_phasorDataFormat = DataFormat.FloatingPoint
         m_phasorCoordinateFormat = CoordinateFormat.Polar
+        m_isVirtual = isVirtual
 
     End Sub
 
     Public Sub New(ByVal idCode As UInt16, ByVal idLabel As String, ByVal isVirtual As Boolean)
 
-        MyClass.New(Nothing, idCode, LineFrequency.Hz60)
+        MyClass.New(Nothing, idCode, LineFrequency.Hz60, isVirtual)
         MyClass.IDLabel = idLabel
-        m_isVirtual = isVirtual
 
     End Sub
 

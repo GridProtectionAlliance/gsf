@@ -46,7 +46,7 @@ Public Class IeeeC37_118Concentrator
 
     End Sub
 
-    Protected Overrides Function CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame) As PhasorProtocols.IConfigurationFrame
+    Protected Overrides Sub CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame)
 
         Dim x, y As Integer
 
@@ -64,6 +64,7 @@ Public Class IeeeC37_118Concentrator
             newCell.PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat
             newCell.FrequencyDataFormat = baseCell.FrequencyDataFormat
             newCell.AnalogDataFormat = baseCell.AnalogDataFormat
+            newCell.Tag = baseCell.IsVirtual
 
             ' Add phasor definitions
             For y = 0 To baseCell.PhasorDefinitions.Count - 1
@@ -87,17 +88,23 @@ Public Class IeeeC37_118Concentrator
             m_configurationFrame.Cells.Add(newCell)
         Next
 
-        Return m_configurationFrame
-
-    End Function
+    End Sub
 
     Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As IFrame
 
         ' We create a new IEEE C37.118 data frame based on current configuration frame
         Dim dataFrame As New IeeeC37_118.DataFrame(ticks, m_configurationFrame)
+        Dim dataCell As IeeeC37_118.DataCell
 
         For x As Integer = 0 To m_configurationFrame.Cells.Count - 1
-            dataFrame.Cells.Add(New IeeeC37_118.DataCell(dataFrame, m_configurationFrame.Cells(x)))
+            ' Create a new IEEE C37.118 data cell (i.e., a PMU entry for this frame)
+            dataCell = New IeeeC37_118.DataCell(dataFrame, m_configurationFrame.Cells(x))
+
+            ' Assume good status flags for virtual PMU's
+            If CBool(dataCell.ConfigurationCell.Tag) Then dataCell.StatusFlags = 0
+
+            ' Add data cell to the frame
+            dataFrame.Cells.Add(dataCell)
         Next
 
         Return dataFrame

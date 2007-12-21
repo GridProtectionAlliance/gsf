@@ -264,6 +264,9 @@ Public MustInherit Class PhasorDataConcentratorBase
         Dim signal As SignalReference
         Dim idLabelCellIndex As New Dictionary(Of String, Integer)
         Dim nominalFrequency As LineFrequency
+        Dim keys As Dictionary(Of String, String)
+        Dim virtualDevice As Boolean
+        Dim virtualSetting As String
 
         ' Attempt to parse line frequency enumeration
         Try
@@ -287,7 +290,20 @@ Public MustInherit Class PhasorDataConcentratorBase
         With RetrieveData(pmuFilterSql, connection).Rows
             For x As Integer = 0 To .Count - 1
                 With .Item(x)
-                    cell = New ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency)
+                    ' Parse additional connection info for special parameters
+                    keys = ParseKeyValuePairs(.Item("AdditionalConnectionInfo").ToString())
+
+                    ' See if this is a virtual device
+                    virtualDevice = False
+
+                    If keys.TryGetValue("virtual", virtualSetting) Then
+                        ' Virtual devices consist entirely of composed points, hence there will be
+                        ' no incoming status measurement - so these cell's need to be handled special
+                        virtualDevice = ParseBoolean(virtualSetting)
+                    End If
+
+                    ' Create a new configuration cell
+                    cell = New ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency, virtualDevice)
 
                     ' To allow rectangular phasors and/or scaled values - make adjustments here...
                     cell.PhasorDataFormat = DataFormat.FloatingPoint
@@ -327,9 +343,8 @@ Public MustInherit Class PhasorDataConcentratorBase
             Next
         End With
 
-        ' Define protocol specific configuration frame - if user doesn't need to broadcast a protocol
-        ' specific configuration frame, they can choose to just return protocol independent configuration
-        m_configurationFrame = CreateNewConfigurationFrame(configurationFrame)
+        ' Define protocol specific configuration frame
+        CreateNewConfigurationFrame(configurationFrame)
 
         ' Cache configuration frame for reference
         UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, m_configurationFrame.IDCode))
@@ -403,7 +418,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Function
 
-    Public ReadOnly Property ConfigurationFrame() As IConfigurationFrame
+    Public ReadOnly Property BaseConfigurationFrame() As IConfigurationFrame
         Get
             Return m_configurationFrame
         End Get
@@ -458,7 +473,8 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Protected MustOverride Function CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame) As IConfigurationFrame
+    Protected Overridable Sub CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame)
+    End Sub
 
     ' We filter sorted incoming measurements to just those that are needed in the concentrated output stream
     Public Overrides Sub SortMeasurement(ByVal measurement As IMeasurement)

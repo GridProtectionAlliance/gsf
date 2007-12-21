@@ -43,7 +43,7 @@ Public Class BpaPdcConcentrator
 
     End Sub
 
-    Protected Overrides Function CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame) As PhasorProtocols.IConfigurationFrame
+    Protected Overrides Sub CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame)
 
         'Dim x, y As Integer
 
@@ -80,9 +80,7 @@ Public Class BpaPdcConcentrator
         '    m_configurationFrame.Cells.Add(newCell)
         'Next
 
-        Return m_configurationFrame
-
-    End Function
+    End Sub
 
     Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As IFrame
 
