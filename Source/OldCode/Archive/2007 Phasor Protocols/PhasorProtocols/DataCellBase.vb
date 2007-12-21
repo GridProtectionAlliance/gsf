@@ -68,6 +68,7 @@ Public MustInherit Class DataCellBase
         MyBase.New(parent, alignOnDWordBoundry)
 
         m_configurationCell = configurationCell
+        m_statusFlags = -1
         m_phasorValues = New PhasorValueCollection(maximumPhasors)
         m_analogValues = New AnalogValueCollection(maximumAnalogs)
         m_digitalValues = New DigitalValueCollection(maximumDigitals)
@@ -178,6 +179,9 @@ Public MustInherit Class DataCellBase
             Return commonFlags
         End Get
         Set(ByVal value As Int32)
+            ' Set lo-word protocol specific status flags
+            m_statusFlags = Convert.ToInt16(value And &HFFFF)
+
             ' Derive common states via common status flags
             DataIsValid = ((value And PhasorProtocols.CommonStatusFlags.DataIsValid) = 0)
             SynchronizationIsValid = ((value And PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) = 0)
