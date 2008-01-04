@@ -20,8 +20,8 @@ Partial Class Login
 
         Me.TextBoxUserName.Focus()
         If Not IsPostBack Then
-            'Session("ApplicationName") = "TEST_APP_1"
-            'Session("ConnectionString") = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
+            'Session("ApplicationName") = "NASPI1"
+            'Session("ConnectionString") = "Server=ESOOPSQL1; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
             'Session("ReturnUrl") = "http://mail.yahoo.com"
 
             'c = connection string
@@ -170,7 +170,12 @@ Partial Class Login
                                     If Not conn.State = ConnectionState.Open Then
                                         conn.Open()
                                     End If
-                                    ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), False)
+
+                                    Try
+                                        ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), False)
+                                    Catch ex As Exception
+                                        'Do nothing as this try catch is added only for back up readonly production database.
+                                    End Try
 
                                     ' 11/15/2006 - PCP: This logic has been moved to the WebSecurityProvider component in TVA Code Library.
                                     ''Create Cookie here...
@@ -185,9 +190,12 @@ Partial Class Login
                                     If Not conn.State = ConnectionState.Open Then
                                         conn.Open()
                                     End If
-                                    ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                                    Try
+                                        ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                                    Catch ex As Exception
+                                        'Do nothing as this try catch is added only for back up readonly production database.
+                                    End Try
                                     Response.Redirect("ErrorPage.aspx?t=1", False)
-
                                 End If
 
                             End If
@@ -196,17 +204,23 @@ Partial Class Login
                             If Not conn.State = ConnectionState.Open Then
                                 conn.Open()
                             End If
-                            ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                            Try
+                                ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                            Catch ex As Exception
+                                'Do nothing as this try catch is added only for back up readonly production database.
+                            End Try
                             Response.Redirect("ErrorPage.aspx?t=0", False)
-
                         End If
                     Else
                         If Not conn.State = ConnectionState.Open Then
                             conn.Open()
                         End If
-                        ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                        Try
+                            ExecuteNonQuery("LogAccess", conn, userName, Session("ApplicationName"), True)
+                        Catch ex As Exception
+                            'Do nothing as this try catch is added only for back up readonly production database.
+                        End Try
                         Response.Redirect("ErrorPage.aspx?t=2", False)
-
                     End If
 
                 Else
@@ -274,7 +288,11 @@ Partial Class Login
             End If
 
             Dim qStr As String = "Update Users Set UserIsLockedOut = '1' Where UserName = '" & userName & "'"
-            ExecuteNonQuery(qStr, conn)
+            Try
+                ExecuteNonQuery(qStr, conn)
+            Catch ex As Exception
+                'Do nothing as this try catch is added only for back up readonly production database.
+            End Try
 
         Catch sqlEx As SqlException
             If sqlEx.Number = 18456 Then
@@ -285,7 +303,11 @@ Partial Class Login
                     conn.Open()
                 End If
 
-                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LockUser()", sqlEx.ToString)
+                Try
+                    ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LockUser()", sqlEx.ToString)
+                Catch ex As Exception
+                    'Do nothing as this try catch is added only for back up readonly production database.
+                End Try
 
                 Response.Redirect("ErrorPage.aspx", True)
             End If
@@ -295,9 +317,11 @@ Partial Class Login
             If Not conn.State = ConnectionState.Open Then
                 conn.Open()
             End If
-
-            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LockUser()", ex.ToString)
-
+            Try
+                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx LockUser()", ex.ToString)
+            Catch ex1 As Exception
+                'Do nothing as this try catch is added only for back up readonly production database.
+            End Try
             Response.Redirect("ErrorPage.aspx", True)
 
         Finally
@@ -328,8 +352,11 @@ Partial Class Login
                     conn.Open()
                 End If
 
-                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx GettinMaxLoginAttempts()", sqlEx.ToString)
-
+                Try
+                    ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx GettinMaxLoginAttempts()", sqlEx.ToString)
+                Catch ex As Exception
+                    'Do nothing as this try catch is added only for back up readonly production database.
+                End Try
                 Response.Redirect("ErrorPage.aspx", False)
             End If
 
@@ -339,8 +366,11 @@ Partial Class Login
                 conn.Open()
             End If
 
-            ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx GettinMaxLoginAttempts()", ex.ToString)
-
+            Try
+                ExecuteNonQuery("LogError", conn, Session("ApplicationName"), "Login.aspx GettinMaxLoginAttempts()", ex.ToString)
+            Catch ex1 As Exception
+                'Do nothing as this try catch is added only for back up readonly production database.
+            End Try
             Response.Redirect("ErrorPage.aspx", False)
 
         Finally

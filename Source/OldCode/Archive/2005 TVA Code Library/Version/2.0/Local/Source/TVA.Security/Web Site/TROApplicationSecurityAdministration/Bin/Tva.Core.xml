@@ -1478,6 +1478,11 @@ Tva.Core
 </member><member name="P:Tva.Xml.Common.Attribute(System.Xml.XmlNode,System.String)">
 	<summary>Safely gets or sets an XML node's attribute.</summary>
 	<remarks>If you assign a value to an attribute that doesn't exist, it will be created</remarks>
+</member><member name="M:Tva.Xml.Common.GetDataSet(System.String)">
+	<summary>
+ Gets a data set object from an XML data set formatted as a String
+ </summary>
+	<param name="xmlData">XML data string in standard DataSet format</param>
 </member><member name="T:Tva.Xml.Common">
 	<summary>Defines common global functions related to XML data.</summary>
 </member><member name="M:Tva.ExceptionEventArgs.#ctor(System.Exception)">
@@ -3613,6 +3618,10 @@ Tva.Core
 	<summary>Determines if the quality of the timestamp of this measurement is good</summary>
 </member><member name="M:Tva.Measurements.Measurement.CompareTo(System.Object)">
 	<summary>This implementation of a basic measurement compares itself by value</summary>
+</member><member name="M:Tva.Measurements.Measurement.CompareTo(Tva.Measurements.IMeasurement)">
+	<summary>This implementation of a basic measurement compares itself by value</summary>
+</member><member name="M:Tva.Measurements.Measurement.Equals(Tva.Measurements.IMeasurement)">
+	<summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
 </member><member name="T:Tva.Measurements.Measurement">
 	<summary>Implementation of a basic measured value</summary>
 </member><member name="M:Tva.Interop.IniFile.#ctor">
