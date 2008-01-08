@@ -24,8 +24,9 @@ Namespace Application
             m_enableCaching = True
             m_extendeeControls = New Hashtable()
             m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            m_accConnectionString = "Server=ESOASQLGENDAT\GENDAT; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
+            m_acpConnectionString = "Server=ESOASQLGENDAT\GENDAT; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
             m_prdConnectionString = "Server=TROOPERATIONS\INFRASTRUCTURE; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
+            m_bakConnectionString = "Server=ESOOPSQL1; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
             'Try
             '    m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
             '    m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value

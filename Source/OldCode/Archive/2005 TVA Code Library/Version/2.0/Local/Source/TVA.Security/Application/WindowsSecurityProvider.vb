@@ -11,7 +11,7 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  10-03-06 - Pinal C. Patel
-'       Original version of source code generated
+'       Original version of source code generated.
 '
 '*******************************************************************************************************
 
@@ -83,11 +83,11 @@ Namespace Application
                             Dim connection As SqlConnection = Nothing
                             Try
                                 ' Establish connection with the database.
-                                connection = New SqlConnection(MyBase.ConnectionString)
+                                connection = New SqlConnection(ConnectionString)
                                 connection.Open()
 
                                 ' Submit the access request.
-                                ExecuteNonQuery("dbo.SubmitAccessRequest", connection, MyBase.User.Username, MyBase.ApplicationName)
+                                ExecuteNonQuery("dbo.SubmitAccessRequest", connection, User.Username, ApplicationName)
 
                                 ' Show success message.
                                 MessageBox.Show("Your access request has been submitted and the application will now exit.", _
@@ -163,7 +163,7 @@ Namespace Application
 
         Private Sub m_parent_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Load
 
-            If MyBase.User Is Nothing Then
+            If User Is Nothing Then
                 LoginUser()
             End If
 

@@ -11,10 +11,13 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  09-22-06 - Pinal C. Patel
-'       Original version of source code generated
+'       Original version of source code generated.
 '  09-22-06 - Pinal C. Patel
 '       Added the flexibility of providing an absolute URL in config file for externally 
-'       facing web sites
+'       facing web sites.
+'  12-28-06 - Pinal C. Patel
+'       Modified the DatabaseException event handler to display the actual exception message instead 
+'       of the previously displayed message that assumed that database connectivity failed.
 '
 '*******************************************************************************************************
 
@@ -93,7 +96,7 @@ Namespace Application
 
         Public Overrides Sub LogoutUser()
 
-            If MyBase.User IsNot Nothing AndAlso m_parent IsNot Nothing Then
+            If User IsNot Nothing AndAlso m_parent IsNot Nothing Then
                 ' Delete the session cookie used for "single-signon" purposes.
                 Dim credentialCookie As New System.Web.HttpCookie(CCName)
                 credentialCookie.Expires = System.DateTime.Now.AddDays(-1)
@@ -117,7 +120,7 @@ Namespace Application
 
             If m_parent IsNot Nothing AndAlso m_parent.Session(UDKey) Is Nothing Then
                 ' Cache the current user's data.
-                m_parent.Session.Add(UDKey, MyBase.User)
+                m_parent.Session.Add(UDKey, User)
             End If
 
         End Sub
@@ -141,9 +144,9 @@ Namespace Application
                     .Append("?r=")              ' Return Url
                     .Append(m_parent.Server.UrlEncode(GetReturnUrl()))
                     .Append("&a=")              ' Application Name
-                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append(m_parent.Server.UrlEncode(Encrypt(ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
                     .Append("&c=")              ' Connection String
-                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append(m_parent.Server.UrlEncode(Encrypt(ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
 
                     m_parent.Response.Redirect(.ToString())
                 End With
@@ -176,9 +179,9 @@ Namespace Application
                     .Append("&r=")              ' Return Url
                     .Append(m_parent.Server.UrlEncode(GetReturnUrl()))
                     .Append("&a=")              ' Application Name
-                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append(m_parent.Server.UrlEncode(Encrypt(ApplicationName, Security.Cryptography.EncryptLevel.Level4)))
                     .Append("&c=")              ' Connection String
-                    .Append(m_parent.Server.UrlEncode(Encrypt(MyBase.ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
+                    .Append(m_parent.Server.UrlEncode(Encrypt(ConnectionString, Security.Cryptography.EncryptLevel.Level4)))
 
                     m_parent.Response.Redirect(.ToString())
                 End With
@@ -394,7 +397,7 @@ Namespace Application
 
             With New StringBuilder()
                 .Append("http://")
-                Select Case MyBase.Server
+                Select Case Server
                     Case SecurityServer.Development
                         .Append("chadesoweb.cha.tva.gov")
                     Case SecurityServer.Acceptance
@@ -409,7 +412,7 @@ Namespace Application
 
         End Function
 
-        Private Sub WebSecurityProvider_DbConnectionException(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Exception)) Handles Me.DbConnectionException
+        Private Sub WebSecurityProvider_DatabaseException(ByVal sender As Object, ByVal e As GenericEventArgs(Of System.Exception)) Handles Me.DatabaseException
 
             If m_parent IsNot Nothing Then
                 With New StringBuilder()
@@ -429,7 +432,7 @@ Namespace Application
                     .Append("Login Process Aborted")
                     .Append("</span><br /><br />")
                     .AppendLine()
-                    .Append("[Connection could not be established with the security database]")
+                    .AppendFormat("[{0}]", e.Argument.Message)
                     .AppendLine()
                     .Append("</div>")
                     .AppendLine()
@@ -447,7 +450,7 @@ Namespace Application
 
         Private Sub m_parent_PreInit(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.PreInit
 
-            If MyBase.User Is Nothing Then
+            If User Is Nothing Then
                 ' EndInit() method of the ISupportInitialize interface was not called which in-turn calls the
                 ' LoginUser() method, so we'll call LoginUser() over here implicitly before the web page initializes.
                 ' Engaging the security before the page, or anything inside the page for that matter initializes,

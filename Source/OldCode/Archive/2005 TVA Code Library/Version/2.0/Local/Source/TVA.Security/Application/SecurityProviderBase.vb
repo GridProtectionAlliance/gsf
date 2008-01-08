@@ -11,10 +11,15 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  09-22-06 - Pinal C. Patel
-'       Original version of source code generated
+'       Original version of source code generated.
 '  11/30/2007 - Pinal C. Patel
 '       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
-'       instead of DesignMode property as the former is more accurate than the latter
+'       instead of DesignMode property as the former is more accurate than the latter.
+'  12/28/2007 - Pinal C. Patel
+'       Modified the ConnectionString property to use the backup SQL Server database in case if any of 
+'       the primary databases are unavailable or offline.
+'       Renamed the DbConnectionException event to DatabaseException as this event is raised in the
+'       event of any SQL Server exception that is encountered.
 '
 '*******************************************************************************************************
 
@@ -36,8 +41,9 @@ Namespace Application
         Private m_enableCaching As Boolean
         Private m_extendeeControls As Hashtable
         Private m_devConnectionString As String
-        Private m_accConnectionString As String
+        Private m_acpConnectionString As String
         Private m_prdConnectionString As String
+        Private m_bakConnectionString As String
 
 #End Region
 
@@ -49,7 +55,7 @@ Namespace Application
         Public Event AfterAuthenticate As EventHandler
         Public Event AccessGranted As EventHandler(Of CancelEventArgs)
         Public Event AccessDenied As EventHandler(Of CancelEventArgs)
-        Public Event DbConnectionException As EventHandler(Of GenericEventArgs(Of Exception))
+        Public Event DatabaseException As EventHandler(Of GenericEventArgs(Of Exception))
 
 #End Region
 
@@ -211,16 +217,30 @@ Namespace Application
         ''' </remarks>
         Protected Friend ReadOnly Property ConnectionString() As String
             Get
-                Select Case m_server
-                    Case SecurityServer.Development
-                        Return m_devConnectionString
-                    Case SecurityServer.Acceptance
-                        Return m_accConnectionString
-                    Case SecurityServer.Production
-                        Return m_prdConnectionString
-                    Case Else
-                        Return ""
-                End Select
+                ' First, we'll try connecting to the primary database for the selected SecurityServer. If we're
+                ' successful, we'll return its connection string, and if not, we'll return the connection
+                ' string of the backup database.
+                Try
+                    Dim primaryConnectionString As String = ""
+                    Select Case m_server
+                        Case SecurityServer.Development
+                            primaryConnectionString = m_devConnectionString
+                        Case SecurityServer.Acceptance
+                            primaryConnectionString = m_acpConnectionString
+                        Case SecurityServer.Production
+                            primaryConnectionString = m_prdConnectionString
+                    End Select
+
+                    Using testConnection As New SqlConnection(primaryConnectionString)
+                        testConnection.Open()
+                    End Using
+
+                    ' Return connection string of the primary database.
+                    Return primaryConnectionString
+                Catch ex As Exception
+                    ' Return connection string of the backup database.
+                    Return m_bakConnectionString
+                End Try
             End Get
         End Property
 
@@ -285,10 +305,11 @@ Namespace Application
                 ' We'll try to retrieve user information from the security database.
                 connection = New SqlConnection(ConnectionString)
                 connection.Open()
+
                 m_user = New User(username, password, connection, m_applicationName)
             Catch ex As SqlException
                 ' We'll notifying about the excountered SQL exception by rasing an event.
-                RaiseEvent DbConnectionException(Me, New GenericEventArgs(Of Exception)(ex))
+                RaiseEvent DatabaseException(Me, New GenericEventArgs(Of Exception)(ex))
             Catch ex As Exception
                 ' We'll just ignore all other exceptions.
             Finally
