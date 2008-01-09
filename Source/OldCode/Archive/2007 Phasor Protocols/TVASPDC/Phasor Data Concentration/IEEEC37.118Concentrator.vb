@@ -46,7 +46,7 @@ Public Class IeeeC37_118Concentrator
 
     End Sub
 
-    Protected Overrides Sub CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame)
+    Protected Overrides Sub BaseConfigurationFrameCreated(ByVal baseConfiguration As IConfigurationFrame)
 
         Dim x, y As Integer
 

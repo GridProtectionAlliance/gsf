@@ -365,7 +365,7 @@ Public Class PhasorMeasurementReceiver
     Public Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
         ' Filter incoming measurements to just the ones destined for this archive
-        If String.Compare(measurement.Source, m_archiverSource, True) = 0 Then m_historianAdapter.QueueMeasurementForArchival(measurement)
+        QueueMeasurementsForArchival(New IMeasurement() {measurement})
 
     End Sub
 

@@ -726,17 +726,17 @@ Public Class Service
                     .Append("Receiver for historian ")
                     .Append(receiver.HistorianName)
                     .AppendLine()
-                    .Append(">> PMU/PDC Connection List (")
+                    .Append(">> Device Connection List (")
                     .Append(receiver.Mappers.Count)
                     .Append(" Total)")
                     .AppendLine()
                     .AppendLine()
 
-                    .Append("  Last Data Report Time:   Device Acronym:")
+                    .Append("  Last Data Report Time: Device Acronym:")
                     .AppendLine()
-                    .Append("  ------------------------ ----------------------------------------------------")
+                    .Append("  ---------------------- ------------------------------------------------------")
                     .AppendLine()
-                    '          01-JAN-2006 12:12:24.000 SourceName [Pmu0, Pmu1, Pmu2, Pmu3, Pmu4]
+                    '          01Jan2006 12:12:24.000 SourceName [PDC: n devices] / 30.01 fps
                     '          >> SourceName awaiting config frame - 1000 bytes received
                     '          ** SourceName is not connected
 
@@ -745,24 +745,22 @@ Public Class Service
 
                         If mapper.IsConnected Then
                             If mapper.LastReportTime > 0 Then
-                                .Append((New DateTime(mapper.LastReportTime)).ToString("dd-MMM-yyyy HH:mm:ss.fff"))
-                                .Append(" "c)
-                                .Append(mapper.Name)
-                                .AppendLine()
+                                .Append((New DateTime(mapper.LastReportTime)).ToString("ddMMMyyyy HH:mm:ss.fff"))
+                                .AppendFormat(" {0} / {1:#.00} fps", mapper.Name, mapper.CalculatedFrameRate)
                             Else
                                 .Append(">> ")
                                 .Append(mapper.Name)
                                 .Append(" awaiting config frame - ")
                                 .Append(mapper.TotalBytesReceived)
                                 .Append(" bytes received")
-                                .AppendLine()
                             End If
                         Else
                             .Append("** ")
                             .Append(mapper.Name)
                             .Append(" is not connected")
-                            .AppendLine()
                         End If
+
+                        .AppendLine()
                     Next
 
                     .AppendLine()

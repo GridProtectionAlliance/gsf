@@ -19,6 +19,7 @@ Option Strict Off
 Imports System.Runtime.Serialization
 Imports TVA.Common
 Imports TVA.Measurements
+Imports TVA.DateTime.Common
 Imports PhasorProtocols
 
 <CLSCompliant(False), Serializable()> _
@@ -33,12 +34,18 @@ Public Class ConfigurationCell
     Private m_totalDataQualityErrors As Long
     Private m_totalTimeQualityErrors As Long
     Private m_totalPmuErrors As Long
-    Private m_isVirtual As Boolean
 
     Private m_analogDataFormat As PhasorProtocols.DataFormat
     Private m_frequencyDataFormat As PhasorProtocols.DataFormat
     Private m_phasorDataFormat As PhasorProtocols.DataFormat
     Private m_phasorCoordinateFormat As PhasorProtocols.CoordinateFormat
+
+    Private m_isVirtual As Boolean
+    Private m_dataStreamStartTime As Long
+    Private m_calculatedFrameRate As Double
+    Private m_frameRateTotal As Integer
+
+    Private WithEvents m_rateCalcTimer As Timers.Timer
 
     Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
@@ -63,6 +70,14 @@ Public Class ConfigurationCell
         m_phasorDataFormat = DataFormat.FloatingPoint
         m_phasorCoordinateFormat = CoordinateFormat.Polar
         m_isVirtual = isVirtual
+
+        If isVirtual Then
+            ' We initialize a frame rate calculator for virtual cells...
+            m_rateCalcTimer = New Timers.Timer
+            m_rateCalcTimer.Interval = 1000
+            m_rateCalcTimer.AutoReset = True
+            m_rateCalcTimer.Enabled = False
+        End If
 
     End Sub
 
@@ -229,6 +244,30 @@ Public Class ConfigurationCell
             m_phasorCoordinateFormat = value
         End Set
     End Property
+
+    Public ReadOnly Property CalculatedFrameRate() As Double
+        Get
+            Return m_calculatedFrameRate
+        End Get
+    End Property
+
+    Public Sub IncrementFrameCount()
+
+        If Not m_rateCalcTimer.Enabled Then m_rateCalcTimer.Enabled = True
+        m_frameRateTotal += 1
+
+    End Sub
+
+    Private Sub m_rateCalcTimer_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_rateCalcTimer.Elapsed
+
+        Dim time As Double = TicksToSeconds(Date.Now.Ticks - m_dataStreamStartTime)
+
+        m_calculatedFrameRate = m_frameRateTotal / time
+
+        m_frameRateTotal = 0
+        m_dataStreamStartTime = Date.Now.Ticks
+
+    End Sub
 
     Public Overrides Sub GetObjectData(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 

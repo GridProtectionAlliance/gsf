@@ -344,7 +344,7 @@ Public MustInherit Class PhasorDataConcentratorBase
         End With
 
         ' Define protocol specific configuration frame
-        CreateNewConfigurationFrame(configurationFrame)
+        BaseConfigurationFrameCreated(configurationFrame)
 
         ' Cache configuration frame for reference
         UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, m_configurationFrame.IDCode))
@@ -473,7 +473,10 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Protected Overridable Sub CreateNewConfigurationFrame(ByVal baseConfiguration As IConfigurationFrame)
+    Protected Overridable Sub BaseConfigurationFrameCreated(ByVal baseConfiguration As IConfigurationFrame)
+
+        ' This is optionally overridden to create a protocol specific configuration frame if needed
+
     End Sub
 
     ' We filter sorted incoming measurements to just those that are needed in the concentrated output stream
@@ -571,9 +574,9 @@ Public MustInherit Class PhasorDataConcentratorBase
                 m_communicationServer.Multicast(m_configurationFrame.BinaryImage())
             End If
 
-            ' JRC: Removed this step - this only helps when there were missing points during sorting
-            ' this doesn't happen very often and is further complicated by the fact that unused
-            ' measurements are intentionally disabled - so this step is skipped for now...
+            ' JRC: Removed this step - this only helps when there were missing points during sorting, however
+            ' this doesn't happen very often and is further complicated by the fact that unused measurements
+            ' are intentionally disabled and hence not sorted - so this step is skipped for now...
             '' Prior to publication, set data validity bits based on reception of all data values
             'For Each dataCell As IDataCell In dataFrame.Cells
             '    ' As a missing data marker, we set all status bits - this is how the BPA PDC traditionally handled this...

@@ -284,6 +284,25 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
+    Public ReadOnly Property CalculatedFrameRate() As Double
+        Get
+            If m_frameParser Is Nothing Then
+                If m_totalVirtualCells > 0 Then
+                    ' Return the frame rate of the first virtual device
+                    With m_configurationCells.Values.GetEnumerator()
+                        Do While .MoveNext
+                            If .Current.IsVirtual Then Return .Current.CalculatedFrameRate
+                        Loop
+                    End With
+                End If
+
+                Return 0.0R
+            Else
+                Return m_frameParser.FrameRate
+            End If
+        End Get
+    End Property
+
     Public ReadOnly Property Name() As String
         Get
             If String.IsNullOrEmpty(m_name) Then
@@ -340,7 +359,7 @@ Public Class PhasorMeasurementMapper
 
     Public Sub ReceivedNewVirtualMeasurements(ByVal cell As ConfigurationCell, ByVal measurements As List(Of IMeasurement))
 
-        ' We use this function to verify that the virutal device is actually reporting - that is, that
+        ' We use this function to verify that the virtual device is actually reporting - that is, that
         ' the composed points that make up this virtual device are actually being calculated...
         Dim measurement As IMeasurement
 
@@ -352,8 +371,12 @@ Public Class PhasorMeasurementMapper
                 Dim ticks As Long = measurement.Ticks
 
                 If ticks > 0 Then
+                    ' We count received measurements to calculate virtual frame rate
+                    cell.IncrementFrameCount()
+
                     If ticks > cell.LastReportTime Then cell.LastReportTime = ticks
                     If ticks > m_lastReportTime Then m_lastReportTime = ticks
+
                     Exit For
                 End If
             End If
