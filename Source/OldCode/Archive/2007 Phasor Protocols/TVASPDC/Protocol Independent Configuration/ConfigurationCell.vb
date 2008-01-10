@@ -29,11 +29,11 @@ Public Class ConfigurationCell
 
     ' We add statistic tracking and cached signal type information to our protocol independent configuration cell
     Private m_lastReportTime As Long
-    Private m_signalSynonyms As Dictionary(Of SignalType, String())
     Private m_totalFrames As Long
     Private m_totalDataQualityErrors As Long
     Private m_totalTimeQualityErrors As Long
     Private m_totalPmuErrors As Long
+    Private m_signalSynonyms As Dictionary(Of SignalType, String())
 
     Private m_analogDataFormat As PhasorProtocols.DataFormat
     Private m_frequencyDataFormat As PhasorProtocols.DataFormat
@@ -74,7 +74,7 @@ Public Class ConfigurationCell
         If isVirtual Then
             ' We initialize a frame rate calculator for virtual cells...
             m_rateCalcTimer = New Timers.Timer
-            m_rateCalcTimer.Interval = 1000
+            m_rateCalcTimer.Interval = 5000
             m_rateCalcTimer.AutoReset = True
             m_rateCalcTimer.Enabled = False
         End If

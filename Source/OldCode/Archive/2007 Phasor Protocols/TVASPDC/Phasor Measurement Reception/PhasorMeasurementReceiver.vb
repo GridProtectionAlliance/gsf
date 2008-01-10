@@ -228,9 +228,12 @@ Public Class PhasorMeasurementReceiver
                     End If
 
                     If ParseBoolean(row("IsConcentrator").ToString()) Then
-                        UpdateStatus(String.Format("Loading expected PMU list for ""{0}"":", source))
-
                         Dim loadedPmuStatus As New StringBuilder
+
+                        loadedPmuStatus.AppendLine()
+                        loadedPmuStatus.AppendLine()
+                        loadedPmuStatus.AppendFormat("Loading expected PMU list for ""{0}"":", source)
+                        loadedPmuStatus.AppendLine()
                         loadedPmuStatus.AppendLine()
 
                         ' Making a connection to a concentrator - this may support multiple PMU's

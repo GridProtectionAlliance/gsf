@@ -371,10 +371,15 @@ Public Class PhasorMeasurementMapper
                 Dim ticks As Long = measurement.Ticks
 
                 If ticks > 0 Then
-                    ' We count received measurements to calculate virtual frame rate
-                    cell.IncrementFrameCount()
+                    If ticks > cell.LastReportTime Then
+                        ' We update last report time for this device
+                        cell.LastReportTime = ticks
 
-                    If ticks > cell.LastReportTime Then cell.LastReportTime = ticks
+                        ' We count received measurements to calculate virtual frame rate
+                        cell.IncrementFrameCount()
+                    End If
+
+                    ' We also update last report time for the mapper
                     If ticks > m_lastReportTime Then m_lastReportTime = ticks
 
                     Exit For

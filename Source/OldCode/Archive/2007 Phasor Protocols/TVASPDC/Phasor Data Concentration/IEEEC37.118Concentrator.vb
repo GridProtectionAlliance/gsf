@@ -43,18 +43,19 @@ Public Class IeeeC37_118Concentrator
 
         m_timeBase = timeBase
         m_version = version
+        PublishDescriptor = True
 
     End Sub
 
-    Protected Overrides Sub BaseConfigurationFrameCreated(ByVal baseConfiguration As IConfigurationFrame)
+    Protected Overrides Function CreateNewConfigurationFrame(ByVal baseConfigurationFrame As ConfigurationFrame) As IConfigurationFrame
 
         Dim x, y As Integer
 
         ' We create a new IEEE C37.118 configuration frame 2 based on input configuration
-        m_configurationFrame = New IeeeC37_118.ConfigurationFrame(IeeeC37_118.FrameType.ConfigurationFrame2, m_timeBase, baseConfiguration.IDCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond), m_version)
+        m_configurationFrame = New IeeeC37_118.ConfigurationFrame(IeeeC37_118.FrameType.ConfigurationFrame2, m_timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond), m_version)
 
-        For x = 0 To baseConfiguration.Cells.Count - 1
-            Dim baseCell As ConfigurationCell = DirectCast(baseConfiguration.Cells(x), ConfigurationCell)
+        For x = 0 To baseConfigurationFrame.Cells.Count - 1
+            Dim baseCell As ConfigurationCell = DirectCast(baseConfigurationFrame.Cells(x), ConfigurationCell)
             Dim newCell As New IeeeC37_118.ConfigurationCell(m_configurationFrame, baseCell.IDCode, baseCell.NominalFrequency)
 
             ' Update other cell level attributes
@@ -88,7 +89,12 @@ Public Class IeeeC37_118Concentrator
             m_configurationFrame.Cells.Add(newCell)
         Next
 
-    End Sub
+        ' Cache C37.118 configuration frame
+        CacheConfigurationFrame(m_configurationFrame)
+
+        Return m_configurationFrame
+
+    End Function
 
     Protected Overrides Function CreateNewFrame(ByVal ticks As Long) As IFrame
 

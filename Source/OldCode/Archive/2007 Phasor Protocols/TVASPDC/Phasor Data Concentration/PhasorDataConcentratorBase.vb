@@ -41,6 +41,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     Private m_name As String
     Private m_configurationFrame As IConfigurationFrame
+    Private m_baseConfigurationFrame As ConfigurationFrame
     Private m_signalReferences As Dictionary(Of MeasurementKey, SignalReference)
     Private m_publishDescriptor As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
@@ -225,7 +226,6 @@ Public MustInherit Class PhasorDataConcentratorBase
         m_signalReferences = New Dictionary(Of MeasurementKey, SignalReference)
         m_communicationServer = communicationServer
         m_exceptionLogger = exceptionLogger
-        m_publishDescriptor = True
 
         If String.IsNullOrEmpty(name) Then
             m_name = Me.GetType().Name
@@ -261,6 +261,7 @@ Public MustInherit Class PhasorDataConcentratorBase
         ByVal nominalFrequencyValue As Byte, _
         ByVal idCode As UInt16)
 
+        Dim cell As ConfigurationCell
         Dim signal As SignalReference
         Dim idLabelCellIndex As New Dictionary(Of String, Integer)
         Dim nominalFrequency As LineFrequency
@@ -278,8 +279,7 @@ Public MustInherit Class PhasorDataConcentratorBase
         End Try
 
         ' Define protocol independent configuration frame based on PMU filter expression
-        Dim configurationFrame As New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond))
-        Dim cell As ConfigurationCell
+        m_baseConfigurationFrame = New ConfigurationFrame(idCode, DateTime.UtcNow.Ticks, Convert.ToInt16(FramesPerSecond))
 
         ' We'll give a full config frame of validated PMU's when debugging...
         'If String.IsNullOrEmpty(pmuFilterSql) Then pmuFilterSql = "SELECT * FROM Pmu WHERE Interconnection = 'Eastern' AND Validated <> 0"
@@ -303,7 +303,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                     End If
 
                     ' Create a new configuration cell
-                    cell = New ConfigurationCell(configurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency, virtualDevice)
+                    cell = New ConfigurationCell(m_baseConfigurationFrame, Convert.ToUInt16(.Item("ID")), nominalFrequency, virtualDevice)
 
                     ' To allow rectangular phasors and/or scaled values - make adjustments here...
                     cell.PhasorDataFormat = DataFormat.FloatingPoint
@@ -338,33 +338,13 @@ Public MustInherit Class PhasorDataConcentratorBase
                         Convert.ToInt32(.Item("DfDtScale")), _
                         Convert.ToSingle(.Item("DfDtOffset")))
 
-                    configurationFrame.Cells.Add(cell)
+                    m_baseConfigurationFrame.Cells.Add(cell)
                 End With
             Next
         End With
 
-        ' Define protocol specific configuration frame
-        BaseConfigurationFrameCreated(configurationFrame)
-
-        ' Cache configuration frame for reference
-        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, m_configurationFrame.IDCode))
-
-        Try
-            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
-            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
-            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(Name), m_configurationFrame.IDCode))
-
-            With New SoapFormatter
-                .AssemblyFormat = FormatterAssemblyStyle.Simple
-                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
-                .Serialize(configFile, m_configurationFrame)
-            End With
-
-            configFile.Close()
-        Catch ex As Exception
-            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {3}", Name, m_configurationFrame.IDCode, ex.Message))
-            m_exceptionLogger.Log(ex)
-        End Try
+        ' Notify base class of defined base configuration frame so it can create protocol specific configuration frame if needed
+        m_configurationFrame = CreateNewConfigurationFrame(m_baseConfigurationFrame)
 
         ' Define measurement to signal cross reference dictionary
         ' Initialize measurement list for each pmu keyed on the signal reference field
@@ -418,9 +398,34 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Function
 
-    Public ReadOnly Property BaseConfigurationFrame() As IConfigurationFrame
+    ' Derived concentrators can use this function to serialize their protocol specific configuration frames...
+    Protected Sub CacheConfigurationFrame(ByVal configurationFrame As IConfigurationFrame)
+
+        ' Cache configuration frame for reference
+        UpdateStatus(String.Format("Caching new {0} [{1}] configuration frame...", Name, configurationFrame.IDCode))
+
+        Try
+            Dim cachePath As String = String.Format("{0}ConfigurationCache\", GetApplicationPath())
+            If Not Directory.Exists(cachePath) Then Directory.CreateDirectory(cachePath)
+            Dim configFile As FileStream = File.Create(String.Format("{0}{1}.{2}.configuration.xml", cachePath, RemoveWhiteSpace(Name), configurationFrame.IDCode))
+
+            With New SoapFormatter
+                .AssemblyFormat = FormatterAssemblyStyle.Simple
+                .TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                .Serialize(configFile, configurationFrame)
+            End With
+
+            configFile.Close()
+        Catch ex As Exception
+            UpdateStatus(String.Format("Failed to serialize {0} [{1}] configuration frame: {2}", Name, configurationFrame.IDCode, ex.Message))
+            m_exceptionLogger.Log(ex)
+        End Try
+
+    End Sub
+
+    Public ReadOnly Property BaseConfigurationFrame() As ConfigurationFrame
         Get
-            Return m_configurationFrame
+            Return m_baseConfigurationFrame
         End Get
     End Property
 
@@ -473,11 +478,12 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Protected Overridable Sub BaseConfigurationFrameCreated(ByVal baseConfiguration As IConfigurationFrame)
+    Protected Overridable Function CreateNewConfigurationFrame(ByVal baseConfigurationFrame As ConfigurationFrame) As IConfigurationFrame
 
         ' This is optionally overridden to create a protocol specific configuration frame if needed
+        Return baseConfigurationFrame
 
-    End Sub
+    End Function
 
     ' We filter sorted incoming measurements to just those that are needed in the concentrated output stream
     Public Overrides Sub SortMeasurement(ByVal measurement As IMeasurement)

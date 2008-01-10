@@ -132,7 +132,7 @@ Public Class MultiProtocolFrameParser
         m_phasorProtocol = PhasorProtocol.IeeeC37_118V1
         m_transportProtocol = TransportProtocol.Tcp
 
-        m_rateCalcTimer.Interval = 1000
+        m_rateCalcTimer.Interval = 5000
         m_rateCalcTimer.AutoReset = True
         m_rateCalcTimer.Enabled = False
 

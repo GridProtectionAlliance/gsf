@@ -699,6 +699,9 @@ Public Class Service
 
     Private Sub ShowCurrentConnections(ByVal requestInfo As ClientRequestInfo)
 
+        Dim framesPerSecond As String
+        Dim maximumLength As Integer
+
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
                 .Append("Displays current PMU/PDC connections.")
@@ -732,11 +735,13 @@ Public Class Service
                     .AppendLine()
                     .AppendLine()
 
-                    .Append("  Last Data Report Time: Device Acronym:")
+                    .Append("  Last Data Report Time: Device Acronym:                            Frames/Sec:")
                     .AppendLine()
                     .Append("  ---------------------- ------------------------------------------------------")
+                    '                                 123456789012345678901234567890123456789012345678901234567890
+                    '                                          1         2         3         4         5         6
                     .AppendLine()
-                    '          01Jan2006 12:12:24.000 SourceName [PDC: n devices] / 30.01 fps
+                    '          01Jan2006 12:12:24.000 SourceName [PDC: n devices]                      30.01
                     '          >> SourceName awaiting config frame - 1000 bytes received
                     '          ** SourceName is not connected
 
@@ -745,8 +750,11 @@ Public Class Service
 
                         If mapper.IsConnected Then
                             If mapper.LastReportTime > 0 Then
-                                .Append((New DateTime(mapper.LastReportTime)).ToString("ddMMMyyyy HH:mm:ss.fff"))
-                                .AppendFormat(" {0} / {1:#.00} fps", mapper.Name, mapper.CalculatedFrameRate)
+                                framesPerSecond = " " & Convert.ToInt32(mapper.CalculatedFrameRate).ToString()
+                                maximumLength = 54 - framesPerSecond.Length
+                                .Append((New DateTime(mapper.LastReportTime)).ToString("ddMMMyyyy HH:mm:ss.fff "))
+                                .Append(TruncateRight(mapper.Name, maximumLength).PadRight(maximumLength))
+                                .Append(framesPerSecond)
                             Else
                                 .Append(">> ")
                                 .Append(mapper.Name)
