@@ -253,7 +253,12 @@ Public Class ConfigurationCell
 
     Public Sub IncrementFrameCount()
 
-        If Not m_rateCalcTimer.Enabled Then m_rateCalcTimer.Enabled = True
+        If Not m_rateCalcTimer.Enabled Then
+            m_frameRateTotal = 0
+            m_dataStreamStartTime = Date.Now.Ticks
+            m_rateCalcTimer.Enabled = True
+        End If
+
         m_frameRateTotal += 1
 
     End Sub
