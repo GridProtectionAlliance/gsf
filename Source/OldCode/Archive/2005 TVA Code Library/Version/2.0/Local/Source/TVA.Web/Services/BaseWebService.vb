@@ -72,28 +72,41 @@ Namespace Services
 
             '' Don't allow users to spoof authentication :)
             'TVA.Configuration.Common.CategorizedSettings("WebServicesDetails").Add("TestUser", My.User.CurrentPrincipal.Identity.Name, "test", False)
-
             'TVA.Configuration.Common.SaveSettings()
             'If passThroughAuthentication Then
-            '    Dim userName As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
-            '    If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
-            '    If String.Compare(userID, userName, True) <> 0 Then Return False
+            ' Dim userName As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+            ' If userName.Contains("\") Then userName = userName.Split("\"c)(1).Trim()
+            ' If String.Compare(userID, userName, True) <> 0 Then Return False
             'End If
 
+            Dim primaryConnectionString As String
+            Dim backupConnectString As String
             Dim connectionString As String
-
             With System.Configuration.ConfigurationManager.AppSettings
                 Select Case server
                     Case SecurityServer.Development
-                        connectionString = .Item("DevelopmentSecurityServer")
+                        primaryConnectionString = .Item("DevelopmentSecurityServer")
                     Case SecurityServer.Acceptance
-                        connectionString = .Item("AcceptanceSecurityServer")
+                        primaryConnectionString = .Item("AcceptanceSecurityServer")
                     Case SecurityServer.Production
-                        connectionString = .Item("ProductionSecurityServer")
+                        primaryConnectionString = .Item("ProductionSecurityServer")
                     Case Else
-                        connectionString = .Item("DevelopmentSecurityServer")
+                        primaryConnectionString = .Item("DevelopmentSecurityServer")
                 End Select
+
+                backupConnectString = .Item("BackUpSecurityServer")
             End With
+
+            'First try connecting to PrimaryDb
+            Try
+                Using checkConnection As New SqlConnection(primaryConnectionString)
+                    checkConnection.Open()
+                End Using
+
+                connectionString = primaryConnectionString
+            Catch ex As Exception
+                connectionString = backupConnectString
+            End Try
 
             Try
                 With New User(userID, password, New SqlConnection(connectionString))
@@ -101,9 +114,11 @@ Namespace Services
                     ' otherwise only user name is used to verify user is in role and it becomes the responsibility
                     ' of the owning application to handle user authentication...
                     If Not passThroughAuthentication AndAlso Not .IsAuthenticated() Then Return False
+
                     If .FindRole(roleName) IsNot Nothing Then Return True
                 End With
             Catch
+
             End Try
 
             Return False
