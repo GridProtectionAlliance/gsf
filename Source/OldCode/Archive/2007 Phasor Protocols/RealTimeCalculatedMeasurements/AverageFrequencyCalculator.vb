@@ -23,7 +23,19 @@ Public Class AverageFrequencyCalculator
 
     Inherits CalculatedMeasurementAdapterBase
 
+    Const LoFrequency As Double = 57.0R
+    Const HiFrequency As Double = 62.0R
+
     Private m_averageFrequency As Double
+    Private m_maximumFrequency As Double
+    Private m_minimumFrequency As Double
+
+    ' IMPORTANT: Make sure output SQL definition defines points in the following order
+    Private Enum Output
+        Avg
+        Max
+        Min
+    End Enum
 
     Public Sub New()
     End Sub
@@ -31,8 +43,14 @@ Public Class AverageFrequencyCalculator
     Public Overrides ReadOnly Property Status() As String
         Get
             With New StringBuilder
-                .Append(" Last calculated frequency: ")
+                .Append("    Last average frequency: ")
                 .Append(m_averageFrequency)
+                .AppendLine()
+                .Append("    Last maximum frequency: ")
+                .Append(m_maximumFrequency)
+                .AppendLine()
+                .Append("    Last minimum frequency: ")
+                .Append(m_minimumFrequency)
                 .AppendLine()
                 .Append(MyBase.Status)
                 Return .ToString()
@@ -58,6 +76,8 @@ Public Class AverageFrequencyCalculator
             If .Count > 0 Then
                 Dim frequency As Double
                 Dim frequencyTotal As Double
+                Dim maximumFrequency As Double = LoFrequency
+                Dim minimumFrequency As Double = HiFrequency
                 Dim total As Integer
 
                 ' Calculate average magnitude
@@ -65,18 +85,29 @@ Public Class AverageFrequencyCalculator
                     frequency = measurement.AdjustedValue
 
                     ' Validate frequency
-                    If frequency > 57 AndAlso frequency < 62 Then
-                        frequencyTotal += measurement.AdjustedValue
+                    If frequency > LoFrequency AndAlso frequency < HiFrequency Then
+                        frequencyTotal += frequency
+                        If frequency > maximumFrequency Then maximumFrequency = frequency
+                        If frequency < minimumFrequency Then minimumFrequency = frequency
                         total += 1
                     End If
                 Next
 
-                m_averageFrequency = (frequencyTotal / total)
+                If total > 0 Then
+                    m_averageFrequency = (frequencyTotal / total)
+                    m_maximumFrequency = maximumFrequency
+                    m_minimumFrequency = minimumFrequency
+                End If
 
-                ' Provide calculated measurement for external consumption
-                PublishNewCalculatedMeasurement(Measurement.Clone(OutputMeasurements(0), m_averageFrequency, frame.Ticks))
+                ' Provide calculated measurements for external consumption
+                PublishNewCalculatedMeasurements(New IMeasurement() { _
+                    Measurement.Clone(OutputMeasurements(Output.Avg), m_averageFrequency, frame.Ticks), _
+                    Measurement.Clone(OutputMeasurements(Output.Max), m_maximumFrequency, frame.Ticks), _
+                    Measurement.Clone(OutputMeasurements(Output.Min), m_minimumFrequency, frame.Ticks)})
             Else
                 m_averageFrequency = 0.0R
+                m_maximumFrequency = 0.0R
+                m_minimumFrequency = 0.0R
 
                 ' TODO: Raise warning when minimum set of frequency's are not available for calculation - but not 30 times per second :)
                 'RaiseCalculationException(
