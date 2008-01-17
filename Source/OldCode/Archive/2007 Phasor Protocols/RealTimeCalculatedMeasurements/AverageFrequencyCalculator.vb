@@ -15,6 +15,7 @@
 '
 '*******************************************************************************************************
 
+'Imports System.IO
 Imports System.Text
 Imports TVA.Measurements
 Imports InterfaceAdapters
@@ -30,6 +31,8 @@ Public Class AverageFrequencyCalculator
     Private m_maximumFrequency As Double
     Private m_minimumFrequency As Double
 
+    'Private m_logFile As StreamWriter
+
     ' IMPORTANT: Make sure output SQL definition defines points in the following order
     Private Enum Output
         Avg
@@ -38,6 +41,9 @@ Public Class AverageFrequencyCalculator
     End Enum
 
     Public Sub New()
+
+        'm_logFile = File.CreateText(TVA.IO.FilePath.GetApplicationPath() & "FrequencyLog.txt")
+
     End Sub
 
     Public Overrides ReadOnly Property Status() As String
@@ -80,9 +86,22 @@ Public Class AverageFrequencyCalculator
                 Dim minimumFrequency As Double = HiFrequency
                 Dim total As Integer
 
+                'm_logFile.WriteLine("------------------------------------------------------------")
+                'm_logFile.Write("Frame @ ")
+                'm_logFile.Write(frame.Timestamp.ToString())
+                'm_logFile.Write(" - ")
+                'm_logFile.Write(frame.Measurements.Count)
+                'm_logFile.WriteLine(" measurements")
+                'm_logFile.WriteLine("")
+
                 ' Calculate average magnitude
                 For Each measurement As IMeasurement In .Values
                     frequency = measurement.AdjustedValue
+
+                    'm_logFile.Write("    ")
+                    'm_logFile.Write(measurement.Key.ToString())
+                    'm_logFile.Write(" = ")
+                    'm_logFile.WriteLine(frequency.ToString("0.00000000000000"))
 
                     ' Validate frequency
                     If frequency > LoFrequency AndAlso frequency < HiFrequency Then
@@ -98,6 +117,15 @@ Public Class AverageFrequencyCalculator
                     m_maximumFrequency = maximumFrequency
                     m_minimumFrequency = minimumFrequency
                 End If
+
+                'm_logFile.WriteLine("")
+                'm_logFile.Write("Avg = ")
+                'm_logFile.WriteLine(m_averageFrequency.ToString("0.00000000000000"))
+                'm_logFile.Write("Max = ")
+                'm_logFile.WriteLine(m_maximumFrequency.ToString("0.00000000000000"))
+                'm_logFile.Write("Min = ")
+                'm_logFile.WriteLine(m_minimumFrequency.ToString("0.00000000000000"))
+                'If frame.Timestamp.Second = 0 AndAlso frame.Timestamp.Millisecond = 0 Then m_logFile.Flush()
 
                 ' Provide calculated measurements for external consumption
                 PublishNewCalculatedMeasurements(New IMeasurement() { _
