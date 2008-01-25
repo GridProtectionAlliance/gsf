@@ -17,23 +17,24 @@
 
 Namespace Collections
 
+    <Obsolete("This class is still under development", True)> _
     Public Class IndexedLinkedList(Of T)
 
         Implements IList(Of T), ICollection
 
-        Private m_processQueue As LinkedList(Of T)
+        Private m_list As LinkedList(Of T)
         Private m_currentNode As LinkedListNode(Of T)
         Private m_currentPosition As Integer
 
         Public Sub New()
 
-            m_processQueue = New LinkedList(Of T)
+            m_list = New LinkedList(Of T)
 
         End Sub
 
         Public Sub New(ByVal collection As IEnumerable(Of T))
 
-            m_processQueue = New LinkedList(Of T)(collection)
+            m_list = New LinkedList(Of T)(collection)
 
         End Sub
 
@@ -41,29 +42,30 @@ Namespace Collections
 
             If comparer Is Nothing Then comparer = Generic.Comparer(Of T).Default
 
-            Dim num As Integer = index
-            Dim num2 As Integer = ((index + length) - 1)
+            Dim startIndex As Integer = index
+            Dim stopIndex As Integer = (index + length) - 1
+            Dim result As Integer
+            Dim halfPoint As Integer
 
-            Do While (num <= num2)
-                Dim num4 As Integer
-                Dim num3 As Integer = (num + ((num2 - num) >> 1))
+            Do While startIndex <= stopIndex
+                halfPoint = (startIndex + ((stopIndex - startIndex) >> 1))
+
                 Try
-                    num4 = comparer.Compare(array(num3), value)
+                    result = comparer.Compare(array(halfPoint), value)
                 Catch exception As Exception
                     Throw New InvalidOperationException("InvalidOperation: IComparerFailed", exception)
                 End Try
-                If (num4 = 0) Then
-                    Return num3
-                End If
 
-                If (num4 < 0) Then
-                    num = (num3 + 1)
+                If result = 0 Then Return halfPoint
+
+                If result < 0 Then
+                    startIndex = halfPoint + 1
                 Else
-                    num2 = (num3 - 1)
+                    stopIndex = halfPoint - 1
                 End If
             Loop
 
-            Return Not num
+            Return Not startIndex
 
         End Function
 
@@ -73,7 +75,7 @@ Namespace Collections
         ''' <param name="item">The item to add to the list.</param>
         Public Overridable Sub Add(ByVal item As T) Implements IList(Of T).Add
 
-            m_processQueue.AddLast(item)
+            m_list.AddLast(item)
 
         End Sub
 
@@ -99,7 +101,7 @@ Namespace Collections
         ''' <exception cref="ArgumentNullException">array is null.</exception>
         Public Overridable Sub CopyTo(ByVal array() As T, ByVal arrayIndex As Integer) Implements IList(Of T).CopyTo
 
-            m_processQueue.CopyTo(array, arrayIndex)
+            m_list.CopyTo(array, arrayIndex)
 
         End Sub
 
@@ -107,7 +109,7 @@ Namespace Collections
         ''' <returns>An enumerator for the list.</returns>
         Public Overridable Function GetEnumerator() As IEnumerator(Of T) Implements IEnumerable(Of T).GetEnumerator
 
-            Return m_processQueue.GetEnumerator()
+            Return m_list.GetEnumerator()
 
         End Function
 
@@ -139,14 +141,14 @@ Namespace Collections
         ''' <returns>The number of elements actually contained in the list.</returns>
         Public Overridable ReadOnly Property Count() As Integer Implements IList(Of T).Count
             Get
-                Return m_processQueue.Count
+                Return m_list.Count
             End Get
         End Property
 
         ''' <summary>Removes all elements from the list.</summary>
         Public Overridable Sub Clear() Implements IList(Of T).Clear
 
-            m_processQueue.Clear()
+            m_list.Clear()
 
         End Sub
 
@@ -155,7 +157,7 @@ Namespace Collections
         ''' <param name="item">The object to locate in the list. The value can be null for reference types.</param>
         Public Overridable Function Contains(ByVal item As T) As Boolean Implements IList(Of T).Contains
 
-            Return m_processQueue.Contains(item)
+            Return m_list.Contains(item)
 
         End Function
 
@@ -165,7 +167,7 @@ Namespace Collections
         ''' <param name="item">The object to remove from the list. The value can be null for reference types.</param>
         Public Overridable Function Remove(ByVal item As T) As Boolean Implements IList(Of T).Remove
 
-            m_processQueue.Remove(item)
+            m_list.Remove(item)
 
         End Function
 
@@ -197,7 +199,7 @@ Namespace Collections
         ''' </summary>
         Private Function IEnumerableGetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
 
-            Return DirectCast(m_processQueue, IEnumerable).GetEnumerator()
+            Return DirectCast(m_list, IEnumerable).GetEnumerator()
 
         End Function
 
@@ -221,7 +223,7 @@ Namespace Collections
         ''' </remarks>
         Public ReadOnly Property SyncRoot() As IList(Of T)
             Get
-                Return m_processQueue
+                Return m_list
             End Get
         End Property
 
@@ -235,7 +237,7 @@ Namespace Collections
         ''' </remarks>
         Private ReadOnly Property ICollectionSyncRoot() As Object Implements ICollection.SyncRoot
             Get
-                Return m_processQueue
+                Return m_list
             End Get
         End Property
 

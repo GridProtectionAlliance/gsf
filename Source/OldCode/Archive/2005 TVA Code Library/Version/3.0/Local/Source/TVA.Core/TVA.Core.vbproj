@@ -178,6 +178,8 @@
     <Compile Include="Security\Cryptography\Enumerations.vb" />
     <Compile Include="Services\Enumerations.vb" />
     <Compile Include="Services\IServiceComponent.vb" />
+    <Compile Include="Threading\Enumerations.vb" />
+    <Compile Include="Threading\ManagedThreadPool.vb" />
     <Compile Include="Threading\QueueThread.vb" />
     <Compile Include="Threading\RunThread.vb" />
     <Compile Include="Threading\ThreadBase.vb" />
@@ -212,6 +214,7 @@
     <Compile Include="Measurements\TemporalMeasurement.vb" />
     <Compile Include="ErrorManagement\SmtpTraceListener.vb" />
     <Compile Include="Text\Common.vb" />
+    <Compile Include="Threading\WorkItem.vb" />
     <Compile Include="Xml\Common.vb" />
     <Compile Include="Root\ByteEncoding.vb" />
     <Compile Include="Configuration\IPersistSettings.vb" />
