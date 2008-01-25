@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7E20F0D7-CD03-4C51-ADB2-03C522A71A84}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>TVA.Security</RootNamespace>
+    <AssemblyName>TVA.Security</AssemblyName>
+    <MyType>Windows</MyType>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <OptionStrict>On</OptionStrict>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>TVA.Security.xml</DocumentationFile>
+    <NoWarn>
+    </NoWarn>
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>TVA.Security.xml</DocumentationFile>
+    <NoWarn>
+    </NoWarn>
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Application\AccessDenied.Designer.vb">
+      <DependentUpon>AccessDenied.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Application\AccessDenied.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Application\Application.vb" />
+    <Compile Include="Application\Enumerations.vb" />
+    <Compile Include="Application\Group.vb" />
+    <Compile Include="Application\Role.vb" />
+    <Compile Include="Application\SecurityProviderBase.Designer.vb">
+      <DependentUpon>SecurityProviderBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Application\SecurityProviderBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Application\User.vb" />
+    <Compile Include="Application\WebSecurityProvider.Designer.vb">
+      <DependentUpon>WebSecurityProvider.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Application\WebSecurityProvider.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Application\WindowsSecurityProvider.Designer.vb">
+      <DependentUpon>WindowsSecurityProvider.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Application\WindowsSecurityProvider.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
+      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
+      <Name>TVA.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TVA.IO.Compression\TVA.IO.Compression.vcproj">
+      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
+      <Name>TVA.IO.Compression</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.WebFiles.dat" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.WebSecurityProvider.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Application\AccessDenied.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>AccessDenied.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Embedded Resources\Application.WindowsSecurityProvider.bmp" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

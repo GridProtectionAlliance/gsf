@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>TVA</RootNamespace>
+    <AssemblyName>TVA.Core</AssemblyName>
+    <MyType>Windows</MyType>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <SignAssembly>false</SignAssembly>
+    <OptionStrict>Off</OptionStrict>
+    <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <PublishUrl>http://localhost/TVA.Core/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>TVA.Core.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>TVA.Core.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Messaging" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collections\IndexedLinkedList.vb" />
+    <Compile Include="Diagnostics\PerformanceCounter.vb" />
+    <Compile Include="Diagnostics\PerformanceMonitor.vb" />
+    <Compile Include="Collections\DictionaryList.vb" />
+    <Compile Include="Console\Arguments.vb" />
+    <Compile Include="Console\Common.vb" />
+    <Compile Include="Drawing\Image.vb" />
+    <Compile Include="ErrorManagement\GELDialog.Designer.vb">
+      <DependentUpon>GELDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorManagement\GELDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ErrorManagement\GELHttpModule.vb" />
+    <Compile Include="ErrorManagement\GlobalExceptionLogger.Designer.vb">
+      <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorManagement\GlobalExceptionLogger.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Interop\VBArrayDescriptor.vb" />
+    <Compile Include="IO\Enumerations.vb" />
+    <Compile Include="IO\IsamDataFileBase.Designer.vb">
+      <DependentUpon>IsamDataFileBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="IO\IsamDataFileBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="IO\LogFile.Designer.vb">
+      <DependentUpon>LogFile.vb</DependentUpon>
+    </Compile>
+    <Compile Include="IO\LogFile.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Measurements\FrameQueue.vb" />
+    <Compile Include="Measurements\MeasurementKey.vb" />
+    <Compile Include="Net\Ftp\AsyncResult.vb" />
+    <Compile Include="Net\Ftp\ControlChannel.vb" />
+    <Compile Include="Net\Ftp\DataStream.vb" />
+    <Compile Include="Net\Ftp\Directory.vb" />
+    <Compile Include="Net\Ftp\Exception.vb" />
+    <Compile Include="Net\Ftp\File.vb" />
+    <Compile Include="Net\Ftp\FileTransferer.vb" />
+    <Compile Include="Net\Ftp\FileWatcher.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Net\Ftp\Response.vb" />
+    <Compile Include="Net\Ftp\Session.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Net\Ftp\SessionConnected.vb" />
+    <Compile Include="Net\Ftp\SessionDisconnected.vb" />
+    <Compile Include="Net\Smtp\Common.vb" />
+    <Compile Include="Net\Smtp\SimpleMailMessage.vb" />
+    <Compile Include="Root\UInt24.vb" />
+    <Compile Include="Root\Int24.vb" />
+    <Compile Include="Scheduling\Enumerations.vb" />
+    <Compile Include="Scheduling\Schedule.vb" />
+    <Compile Include="Scheduling\ScheduleEventArgs.vb" />
+    <Compile Include="Scheduling\ScheduleManager.Designer.vb">
+      <DependentUpon>ScheduleManager.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Scheduling\ScheduleManager.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Scheduling\SchedulePart.vb" />
+    <Compile Include="Parsing\BinaryDataParserBase.Designer.vb">
+      <DependentUpon>BinaryDataParserBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Parsing\BinaryDataParserBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Root\Enumerations.vb" />
+    <Compile Include="Root\GenericEventArgs.vb" />
+    <Compile Include="Parsing\IBinaryDataConsumer.vb" />
+    <Compile Include="Parsing\IBinaryDataProvider.vb" />
+    <Compile Include="Root\IdentifiableItem.vb" />
+    <Compile Include="Collections\Enumerations.vb" />
+    <Compile Include="Configuration\Common.vb" />
+    <Compile Include="Data\Enumerations.vb" />
+    <Compile Include="DateTime\TimeTagBase.vb" />
+    <Compile Include="DateTime\Enumerations.vb" />
+    <Compile Include="Measurements\Frame.vb" />
+    <Compile Include="Security\Cryptography\Common.vb" />
+    <Compile Include="Configuration\ConfigurationFile.vb" />
+    <Compile Include="Configuration\CategorizedSettingsElementCollection.vb" />
+    <Compile Include="Configuration\CategorizedSettingsElement.vb" />
+    <Compile Include="Configuration\CategorizedSettingsSection.vb" />
+    <Compile Include="Measurements\ImmediateMeasurements.vb" />
+    <Compile Include="Security\Cryptography\Enumerations.vb" />
+    <Compile Include="Services\Enumerations.vb" />
+    <Compile Include="Services\IServiceComponent.vb" />
+    <Compile Include="Threading\QueueThread.vb" />
+    <Compile Include="Threading\RunThread.vb" />
+    <Compile Include="Threading\ThreadBase.vb" />
+    <Compile Include="Root\Common.vb" />
+    <Compile Include="Data\Common.vb" />
+    <Compile Include="Root\Assembly.vb" />
+    <Compile Include="Interop\Bit.vb" />
+    <Compile Include="Collections\Common.vb" />
+    <Compile Include="Collections\KeyedProcessQueue.vb">
+    </Compile>
+    <Compile Include="Collections\ProcessQueue.vb" />
+    <Compile Include="Identity\UserInfo.vb" />
+    <Compile Include="Interop\BitwiseCast.vb" />
+    <Compile Include="Identity\Common.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="DateTime\Common.vb" />
+    <Compile Include="DateTime\NtpTimeTag.vb" />
+    <Compile Include="DateTime\Win32TimeZone.vb" />
+    <Compile Include="Interop\EndianOrder.vb" />
+    <Compile Include="DateTime\UnixTimeTag.vb" />
+    <Compile Include="Interop\WindowsApi.vb" />
+    <Compile Include="Interop\IniFile.vb" />
+    <Compile Include="IO\Common.vb" />
+    <Compile Include="IO\FilePath.vb" />
+    <Compile Include="Math\Common.vb" />
+    <Compile Include="Math\CompositeValues.vb" />
+    <Compile Include="Math\RealTimeSlope.vb" />
+    <Compile Include="Measurements\IFrame.vb" />
+    <Compile Include="Measurements\IMeasurement.vb" />
+    <Compile Include="Measurements\Measurement.vb" />
+    <Compile Include="Measurements\ConcentratorBase.vb" />
+    <Compile Include="Measurements\TemporalMeasurement.vb" />
+    <Compile Include="ErrorManagement\SmtpTraceListener.vb" />
+    <Compile Include="Text\Common.vb" />
+    <Compile Include="Xml\Common.vb" />
+    <Compile Include="Root\ByteEncoding.vb" />
+    <Compile Include="Configuration\IPersistSettings.vb" />
+    <Compile Include="Root\ObjectState.vb" />
+    <Compile Include="Root\ProcessProgress.vb" />
+    <Compile Include="Root\Serialization.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Collections\TVA.Collections.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
+    <EmbeddedResource Include="ErrorManagement\GELDialog.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GELDialog.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ErrorManagement\GlobalExceptionLogger.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GlobalExceptionLogger.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IO\IsamDataFileBase.resx">
+      <DependentUpon>IsamDataFileBase.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
+    <EmbeddedResource Include="Embedded Resources\Net.Ftp.Session.bmp" />
+    <EmbeddedResource Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Exception\" />
+    <Folder Include="Net\Http\" />
+    <Folder Include="Remoting\" />
+    <Folder Include="Web\" />
+    <Folder Include="Windows\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

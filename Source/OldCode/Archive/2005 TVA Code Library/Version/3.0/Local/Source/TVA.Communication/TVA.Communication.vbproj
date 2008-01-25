@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>TVA.Communication</RootNamespace>
+    <AssemblyName>TVA.Communication</AssemblyName>
+    <MyType>Windows</MyType>
+    <OptionStrict>On</OptionStrict>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\TVA.snk</AssemblyOriginatorKeyFile>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>TVA.Communication.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DocumentationFile>TVA.Communication.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Common.vb" />
+    <Compile Include="CommunicationClientBase.Designer.vb">
+      <DependentUpon>CommunicationClientBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="CommunicationClientBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Enumerations.vb" />
+    <Compile Include="FileClient.Designer.vb">
+      <DependentUpon>FileClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FileClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ICommunicationClient.vb" />
+    <Compile Include="ICommunicationServer.vb" />
+    <Compile Include="Internal Code\GoodbyeMessage.vb" />
+    <Compile Include="Internal Code\HandshakeMessage.vb" />
+    <Compile Include="Internal Code\PayloadAwareHelper.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="CommunicationServerBase.designer.vb">
+      <DependentUpon>CommunicationServerBase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="CommunicationServerBase.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal Code\CommunicationHelper.vb" />
+    <Compile Include="StateInfo.vb" />
+    <Compile Include="SerialClient.Designer.vb">
+      <DependentUpon>SerialClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="SerialClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TcpClient.Designer.vb">
+      <DependentUpon>TcpClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TcpClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TcpServer.Designer.vb">
+      <DependentUpon>TcpServer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TcpServer.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UdpClient.Designer.vb">
+      <DependentUpon>UdpClient.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UdpClient.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UdpServer.Designer.vb">
+      <DependentUpon>UdpServer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UdpServer.vb">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\CommunicationClientBase.bmp" />
+    <EmbeddedResource Include="Embedded Resources\CommunicationServerBase.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
+      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
+      <Name>TVA.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TVA.IO.Compression\TVA.IO.Compression.vcproj">
+      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
+      <Name>TVA.IO.Compression</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
