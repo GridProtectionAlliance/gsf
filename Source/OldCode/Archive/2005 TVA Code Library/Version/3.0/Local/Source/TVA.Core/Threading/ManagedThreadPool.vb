@@ -48,19 +48,6 @@ Namespace Threading
 
         End Function
 
-        Public Shared ReadOnly Property QueuedWorkItems() As WorkItem()
-            Get
-                With New List(Of WorkItem)
-                    SyncLock m_queuedCallBacks
-                        .AddRange(m_queuedCallBacks)
-                        .AddRange(m_activeThreads.Keys)
-                    End SyncLock
-
-                    Return .ToArray()
-                End With
-            End Get
-        End Property
-
         Private Shared Sub HandleItem(ByVal ignored As Object)
 
             Dim item As WorkItem
@@ -89,6 +76,19 @@ Namespace Threading
             End Try
 
         End Sub
+
+        Public Shared ReadOnly Property QueuedWorkItems() As WorkItem()
+            Get
+                With New List(Of WorkItem)
+                    SyncLock m_queuedCallBacks
+                        .AddRange(m_queuedCallBacks)
+                        .AddRange(m_activeThreads.Keys)
+                    End SyncLock
+
+                    Return .ToArray()
+                End With
+            End Get
+        End Property
 
         Public Shared Function QueryStatus(ByVal item As WorkItem) As WorkItemStatus
 
