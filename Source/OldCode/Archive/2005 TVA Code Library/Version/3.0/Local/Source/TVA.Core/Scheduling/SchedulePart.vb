@@ -101,15 +101,15 @@ Namespace Scheduling
         Public Function Matches(ByVal dateAndTime As System.DateTime) As Boolean
 
             Select Case m_dateTimePart
-                Case DateTimePart.Minute
+                Case TVA.DateTime.DateTimePart.Minute
                     Return m_values.Contains(dateAndTime.Minute)
-                Case DateTimePart.Hour
+                Case TVA.DateTime.DateTimePart.Hour
                     Return m_values.Contains(dateAndTime.Hour)
-                Case DateTimePart.Day
+                Case TVA.DateTime.DateTimePart.Day
                     Return m_values.Contains(dateAndTime.Day)
-                Case DateTimePart.Month
+                Case TVA.DateTime.DateTimePart.Month
                     Return m_values.Contains(dateAndTime.Month)
-                Case DateTimePart.DayOfWeek
+                Case TVA.DateTime.DateTimePart.DayOfWeek
                     Return m_values.Contains(Convert.ToInt32(dateAndTime.DayOfWeek))
             End Select
 
