@@ -55,7 +55,7 @@ EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 12
-		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/3.0/Local/Source/TVA\u0020Code\u0020Library\u0022,\u0020GVTAAAAA
+		SccProjectName0 = \u0022$/TVA\u0020Code\u0020Library/Version/3.0/Local\u0022,\u0020MPTAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
 		SccProjectFilePathRelativizedFromConnection0 = Source\\
