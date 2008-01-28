@@ -16,6 +16,8 @@
 '       Added bypass optimizations for high-speed socket access
 '  12/01/2006 - Pinal C. Patel
 '       Modified code for handling "PayloadAware" transmissions
+'  01/28/3008 - J. Ritchie Carroll
+'       Placed accepted TCP socket connections on their own threads instead of thread pool
 '
 '*******************************************************************************************************
 
@@ -321,10 +323,15 @@ Public Class TcpServer
                     ' We can accept incoming client connection requests.
                     Dim tcpClient As New StateInfo(Of Socket)()
                     tcpClient.Client = m_tcpServer.Accept()  ' Accept client connection.
-                    tcpClient.Client.LingerState = New LingerOption(True, 10)
+
+                    ' TODO: JRC - I think this should be an option - turning off for the moment...
+                    'tcpClient.Client.LingerState = New LingerOption(True, 10)
 
                     ' Start the client on a seperate thread so all the connected clients run independently.
-                    ThreadPool.QueueUserWorkItem(AddressOf ReceiveClientData, tcpClient)
+                    'ThreadPool.QueueUserWorkItem(AddressOf ReceiveClientData, tcpClient)
+                    With New Thread(AddressOf ReceiveClientData)
+                        .Start(tcpClient)
+                    End With
                 End If
             Loop
         Catch ex As ThreadAbortException
