@@ -76,11 +76,9 @@ Partial Class Main
         'TcpClient
         '
         Me.TcpClient.ConnectionString = "Server=localhost; Port=8500"
-        Me.TcpClient.Encryption = TVA.Security.Cryptography.EncryptLevel.Level2
         Me.TcpClient.HandshakePassphrase = "TVASPDC"
         Me.TcpClient.PayloadAware = True
         Me.TcpClient.PersistSettings = True
-        Me.TcpClient.SecureSession = True
         Me.TcpClient.SettingsCategoryName = "RemoteMonitorSocket"
         CType(Me.ClientHelper, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.TcpClient, System.ComponentModel.ISupportInitialize).EndInit()

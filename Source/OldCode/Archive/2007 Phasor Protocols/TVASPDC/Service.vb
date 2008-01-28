@@ -92,14 +92,13 @@ Public Class Service
             .LogToEventLog = False
             .LogToFile = True
             .PersistSettings = True
-            .LogFile.FileFullOperation = LogFileFullOperation.Rollover
+            With .LogFile
+                .FileFullOperation = LogFileFullOperation.Rollover
+                .Name = "SystemLog.txt"
+                .PersistSettings = True
+            End With
         End With
 
-        With ServiceHelper.LogFile
-            .FileFullOperation = LogFileFullOperation.Rollover
-            .Name = "SystemLog.txt"
-            .PersistSettings = True
-        End With
 
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("List", "Displays current PMU/PDC connections", AddressOf ShowCurrentConnections))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Connect", "Starts connection cycle to specified device", AddressOf ConnectDevice))
@@ -121,7 +120,7 @@ Public Class Service
 #End If
 
             ' We add a scheduled process to automatically request health status every minute - user can change schedule in config file
-            'ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
+            ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
         Catch ex As Exception
             ServiceHelper.GlobalExceptionLogger.Log(ex)
             ServiceHelper.Service.Stop()
@@ -685,13 +684,13 @@ Public Class Service
 
     End Function
 
-    'Private Sub HealthMonitorProcess(ByVal name As String, ByVal parameters As Object())
+    Private Sub HealthMonitorProcess(ByVal name As String, ByVal parameters As Object())
 
-    '    ' We pretend to be a client and send a "Health" command to ourselves...
-    '    Dim healthRequest As ClientRequest = ClientRequest.Parse("Health")
-    '    ServiceHelper.ClientRequestHandlers(healthRequest.Command).HandlerMethod(New ClientRequestInfo(New ClientInfo(System.Guid.Empty), healthRequest))
+        ' We pretend to be a client and send a "Health" command to ourselves...
+        Dim healthRequest As ClientRequest = ClientRequest.Parse("Health")
+        ServiceHelper.ClientRequestHandlers(healthRequest.Command).HandlerMethod(New ClientRequestInfo(New ClientInfo(System.Guid.Empty), healthRequest))
 
-    'End Sub
+    End Sub
 
 #End Region
 

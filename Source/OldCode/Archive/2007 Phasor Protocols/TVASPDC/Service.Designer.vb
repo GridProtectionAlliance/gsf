@@ -71,17 +71,16 @@ Partial Class Service
         'TcpServer
         '
         Me.TcpServer.ConfigurationString = "Port=8500"
-        Me.TcpServer.Encryption = TVA.Security.Cryptography.EncryptLevel.Level2
         Me.TcpServer.HandshakePassphrase = "TVASPDC"
         Me.TcpServer.MaximumClients = 50
         Me.TcpServer.PayloadAware = True
         Me.TcpServer.PersistSettings = True
-        Me.TcpServer.SecureSession = True
         Me.TcpServer.SettingsCategoryName = "RemoteMonitorSocket"
         '
         'ServiceHelper
         '
         Me.ServiceHelper.CommunicationServer = Me.TcpServer
+        Me.ServiceHelper.MonitorServiceHealth = True
         Me.ServiceHelper.PersistSettings = True
         Me.ServiceHelper.QueryableSettingsCategories = "ServiceSettings, SH.LogFile, SH.GlobalExceptionLogger,ScheduleManager,RemoteMonit" & _
             "orSocket"

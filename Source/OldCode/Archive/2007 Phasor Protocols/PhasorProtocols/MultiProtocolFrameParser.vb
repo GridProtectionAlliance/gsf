@@ -632,7 +632,7 @@ Public Class MultiProtocolFrameParser
         If m_deviceSupportsCommands AndAlso m_autoStartDataParsingSequence Then
             m_initialBytesReceived = 0
             m_initiatingDataStream = True
-            ThreadPool.QueueUserWorkItem(AddressOf StartDataParsingSequence)
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf StartDataParsingSequence, Nothing)
         End If
 
     End Sub
@@ -656,8 +656,6 @@ Public Class MultiProtocolFrameParser
                 attempts += 1
                 If attempts >= 20 Then Exit Do
             Loop
-        Catch
-            Throw
         Finally
             m_initiatingDataStream = False
         End Try

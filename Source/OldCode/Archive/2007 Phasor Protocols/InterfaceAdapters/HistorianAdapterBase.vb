@@ -139,7 +139,7 @@ Public MustInherit Class HistorianAdapterBase
         End SyncLock
 
         ' We throw status message updates on the thread pool so we don't slow sorting operations
-        ThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
+        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
 
     End Sub
 
@@ -150,7 +150,7 @@ Public MustInherit Class HistorianAdapterBase
         End SyncLock
 
         ' We throw status message updates on the thread pool so we don't slow sorting operations
-        ThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
+        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
 
     End Sub
 
