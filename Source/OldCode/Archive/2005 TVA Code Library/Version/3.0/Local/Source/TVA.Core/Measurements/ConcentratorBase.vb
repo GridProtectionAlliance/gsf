@@ -131,7 +131,7 @@ Namespace Measurements
             m_monitorTimer = New Timers.Timer
 
             ' Creates a new queue for managing real-time frames
-            m_frameQueue = New FrameQueue(m_ticksPerFrame, AddressOf CreateNewFrame)
+            m_frameQueue = New FrameQueue(m_ticksPerFrame, CInt(1 + m_lagTime + m_leadTime) * framesPerSecond, AddressOf CreateNewFrame)
 
             ' Monitors the total number of unpublished samples every second. This is a useful statistic to 
             ' monitor, if total number of unpublished samples exceed lag time, measurement concentration could 
@@ -214,9 +214,17 @@ Namespace Measurements
         End Property
 
         ''' <summary>Gets the current publishing frame.</summary>
+        ''' <remarks>This value may be null right after frame has published.</remarks>
         Public ReadOnly Property CurrentFrame() As IFrame
             Get
                 Return m_frameQueue.Head
+            End Get
+        End Property
+
+        ''' <summary>Gets the last published frame.</summary>
+        Public ReadOnly Property LastFrame() As IFrame
+            Get
+                Return m_frameQueue.Last
             End Get
         End Property
 
@@ -536,7 +544,7 @@ Namespace Measurements
                     Else
                         ' Determines if a data frame has already been published or is publishing.
                         If frame.Published Then
-                            ' Counts a discarded measurement, if the frame is already publishing.
+                            ' Counts as a discarded measurement, if the frame is already publishing.
                             discardMeasurement = True
                         Else
                             ' Makes sure the starting sort time for this frame is initialized.
@@ -590,7 +598,7 @@ Namespace Measurements
                             distance = (currentTimeTicks - ticks) / TicksPerSecond
 
                             If distance <= m_leadTime AndAlso distance >= -m_leadTime Then
-                                ' The new time measurement looks good, so this function assumes th time is 
+                                ' The new time measurement looks good, so this function assumes the time is 
                                 ' "real time," so long as another thread has not changed the real time value 
                                 ' already. Using the interlocked compare exchange method introduces the 
                                 ' possibility that we may have had newer ticks than another thread that just 
@@ -622,7 +630,7 @@ Namespace Measurements
         Public Overridable ReadOnly Property Status() As String
             Get
                 Dim currentTime As Date = Date.UtcNow
-                Dim currentFrame As IFrame = m_frameQueue.Head
+                Dim lastFrame As IFrame = m_frameQueue.Last
 
                 With New StringBuilder
                     .Append("     Data concentration is: ")
@@ -718,30 +726,36 @@ Namespace Measurements
                     .Append("Current frame publishing detail:")
                     .AppendLine()
                     .AppendLine()
-                    .Append("    Current frame = ")
-                    .Append(currentFrame.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
-                    .Append(" - sort time: ")
+                    .Append("       Last frame = ")
 
-                    ' Calculates maximum sort time for publishing frame.
-                    If currentFrame.StartSortTime > 0 AndAlso currentFrame.LastSortTime > 0 Then
-                        .Append(TicksToSeconds(currentFrame.LastSortTime - currentFrame.StartSortTime).ToString("0.0000"))
-                        .Append(" seconds")
+                    If lastFrame Is Nothing Then
+                        .Append("<none>")
                     Else
-                        .Append("undetermined")
+                        .Append(lastFrame.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
+                        .Append(" - sort time: ")
+
+                        ' Calculates maximum sort time for publishing frame.
+                        If lastFrame.StartSortTime > 0 AndAlso lastFrame.LastSortTime > 0 Then
+                            .Append(TicksToSeconds(lastFrame.LastSortTime - lastFrame.StartSortTime).ToString("0.0000"))
+                            .Append(" seconds")
+                        Else
+                            .Append("undetermined")
+                        End If
+
+                        .AppendLine()
+                        .Append(" Last measurement = ")
+                        .Append(Measurement.ToString(lastFrame.LastSortedMeasurement))
+
+                        ' Calculates total time from last measurement ticks.
+                        If lastFrame.LastSortTime > 0 Then
+                            .Append(" - ")
+                            .Append(TicksToSeconds(NotLessThan(lastFrame.LastSortTime - lastFrame.LastSortedMeasurement.Ticks, 0L)).ToString("0.0000"))
+                            .Append(" seconds from source time")
+                        Else
+                            .Append(" - deviation from source time undetermined")
+                        End If
                     End If
 
-                    .AppendLine()
-                    .Append(" Last measurement = ")
-                    .Append(Measurement.ToString(currentFrame.LastSortedMeasurement))
-
-                    ' Calculates total time from last measurement ticks.
-                    If currentFrame.LastSortTime > 0 Then
-                        .Append(" - ")
-                        .Append(TicksToSeconds(NotLessThan(currentFrame.LastSortTime - currentFrame.LastSortedMeasurement.Ticks, 0L)).ToString("0.0000"))
-                        .Append(" seconds from source time")
-                    Else
-                        .Append(" - deviation from source time undetermined")
-                    End If
                     .AppendLine()
 
                     Return .ToString()
