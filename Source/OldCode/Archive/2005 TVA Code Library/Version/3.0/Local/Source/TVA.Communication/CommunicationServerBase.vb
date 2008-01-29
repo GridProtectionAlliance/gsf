@@ -642,6 +642,9 @@ Public MustInherit Class CommunicationServerBase
                 .Append("            Server runtime: ")
                 .Append(SecondsToText(RunTime()))
                 .AppendLine()
+                .Append("      Configuration string: ")
+                .Append(m_configurationString)
+                .AppendLine()
                 .Append("        Subscribed clients: ")
                 SyncLock m_clientIDs
                     .Append(m_clientIDs.Count())
