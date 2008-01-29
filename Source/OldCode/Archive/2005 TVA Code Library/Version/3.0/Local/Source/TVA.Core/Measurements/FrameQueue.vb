@@ -144,17 +144,17 @@ Namespace Measurements
 
                         If m_frameList.Count > 0 Then
                             ' Insert frame into proper sorted position...
-                            Dim node As LinkedListNode(Of IFrame) = m_frameList.First
+                            Dim node As LinkedListNode(Of IFrame) = m_frameList.Last
 
                             Do
-                                node = node.Previous
-
                                 If destinationTicks > node.Value.Ticks Then
                                     m_frameList.AddAfter(node, frame)
                                     nodeAdded = True
                                     Exit Do
                                 End If
-                            Loop Until node Is m_frameList.First
+
+                                node = node.Previous
+                            Loop Until node Is Nothing
                         End If
 
                         If Not nodeAdded Then
