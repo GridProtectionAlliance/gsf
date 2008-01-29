@@ -517,7 +517,7 @@ Public MustInherit Class PhasorDataConcentratorBase
 
     End Sub
 
-    Protected Overrides Function AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement) As Boolean
+    Protected Overrides Sub AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement)
 
         ' Make sure the measurement is a "SignalReferenceMeasurement" wrapper (it should be)
         Dim wrappedMeasurement As SignalReferenceMeasurement = TryCast(measurement, SignalReferenceMeasurement)
@@ -559,14 +559,12 @@ Public MustInherit Class PhasorDataConcentratorBase
 
             ' Track total measurements sorted for frame - this will become total measurements published
             frame.PublishedMeasurements += 1
-
-            Return True
         Else
             ' I don't expect this to occur - but just in case
             Throw New InvalidCastException(String.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a ""SignalReferenceMeasurement"" but got a ""{0}""", TypeName(measurement)))
         End If
 
-    End Function
+    End Sub
 
     Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
