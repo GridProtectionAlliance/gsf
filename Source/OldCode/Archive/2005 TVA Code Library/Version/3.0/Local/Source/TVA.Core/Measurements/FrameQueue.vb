@@ -60,50 +60,49 @@ Namespace Measurements
 
         Public Sub Pop()
 
-            Dim lastFrame As IFrame = m_head
-            Dim publishedTicks As Long = lastFrame.Ticks
-
-            m_head = Nothing
-
-            ' Frame's already been handled so there's no rush in removing it
-            If Monitor.TryEnter(m_frameList) Then
-                Try
-                    ' Got a lock, so we go ahead and remove it...
-                    RemoveProcessedFrame(publishedTicks)
-                Finally
-                    Monitor.Exit(m_frameList)
-                End Try
-            Else
-                ThreadPool.UnsafeQueueUserWorkItem(AddressOf Pop, publishedTicks)
-            End If
-
             ' We track latest published ticks - don't want to allow slow moving measurements
             ' to inject themselves after a certain publication timeframe has passed - this
             ' avoids any possible out-of-sequence frame publication...
-            m_last = lastFrame
-            m_publishedTicks = publishedTicks
+            m_last = m_head
+            m_head = Nothing
+            m_publishedTicks = m_last.Ticks
+
+            ' Frame's already been handled so there's no rush in removing it
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf Pop, m_publishedTicks)
 
         End Sub
 
         Private Sub Pop(ByVal state As Object)
 
-            SyncLock m_frameList
-                RemoveProcessedFrame(CLng(state))
-            End SyncLock
+            Dim publishedTicks As Long = CLng(state)
 
-        End Sub
+            ' We didn't try for an immediate lock to remove top frame from original
+            ' "Pop" call so now we're running on an independent thread and we'll hang
+            ' around until we can get that work done. This process "smooths" the
+            ' frame publication process by not waiting on lock synchrnonization
+            ' for queue clean up...
+            Do While True
+                ' Attempt a lock, no need to wait...
+                If Monitor.TryEnter(m_frameList) Then
+                    Try
+                        m_frameHash.Remove(publishedTicks)
+                        m_frameList.RemoveFirst()
 
-        ' Consumer expected to lock m_frameList before calling this function
-        Private Sub RemoveProcessedFrame(ByVal publishedTicks As Long)
+                        If m_frameList.Count > 0 Then
+                            m_head = m_frameList.First.Value
+                        Else
+                            m_head = Nothing
+                        End If
 
-            m_frameHash.Remove(publishedTicks)
-            m_frameList.RemoveFirst()
-
-            If m_frameList.Count > 0 Then
-                m_head = m_frameList.First.Value
-            Else
-                m_head = Nothing
-            End If
+                        Exit Do
+                    Finally
+                        Monitor.Exit(m_frameList)
+                    End Try
+                Else
+                    ' Snooze for a bit and try again...
+                    Thread.Sleep(1)
+                End If
+            Loop
 
         End Sub
 
@@ -136,7 +135,7 @@ Namespace Measurements
 
             ' Make sure ticks are newer than latest published ticks...
             If destinationTicks > m_publishedTicks Then
-                ' Wait for queue lock
+                ' Wait for queue lock - we wait because calling function demands a destination frame
                 SyncLock m_frameList
                     If Not m_frameHash.TryGetValue(destinationTicks, frame) Then
                         ' Didn't find frame for this timestamp so we create one
