@@ -84,7 +84,7 @@ Namespace Measurements
             ' deadlock that could be caused by waiting for locks between the frame
             ' queue and frame measurements, i.e., sorting vs. publication contention
             Do While True
-                ' Attempt a lock, no need to wait...
+                ' Attempt a lock...
                 If Monitor.TryEnter(m_frameList, 1) Then
                     Try
                         m_frameHash.Remove(publishedTicks)
