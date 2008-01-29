@@ -85,7 +85,7 @@ Namespace Measurements
             ' queue and frame measurements, i.e., sorting vs. publication contention
             Do While True
                 ' Attempt a lock, no need to wait...
-                If Monitor.TryEnter(m_frameList) Then
+                If Monitor.TryEnter(m_frameList, 1) Then
                     Try
                         m_frameHash.Remove(publishedTicks)
                         m_frameList.RemoveFirst()
