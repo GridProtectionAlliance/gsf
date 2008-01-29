@@ -33,7 +33,7 @@ Namespace Measurements
         Public Sub New(ByVal ticks As Long)
 
             m_ticks = ticks
-            m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)
+            m_measurements = New Dictionary(Of MeasurementKey, IMeasurement)(100)
             m_publishedMeasurements = -1
 
         End Sub

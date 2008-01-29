@@ -542,32 +542,25 @@ Namespace Measurements
                         discardMeasurement = True
                         lastTicks = 0
                     Else
-                        ' Determines if a data frame has already been published or is publishing.
-                        If frame.Published Then
-                            ' Counts as a discarded measurement, if the frame is already publishing.
-                            discardMeasurement = True
+                        ' Makes sure the starting sort time for this frame is initialized.
+                        If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
+
+                        ' Calls user customizable function to assign new measurement to its frame.
+                        If AssignMeasurementToFrame(frame, measurement) Then
+                            ' Tracks the last sorted measurement in this frame.
+                            frame.LastSortTime = Date.UtcNow.Ticks
+                            frame.LastSortedMeasurement = measurement
                         Else
-                            ' Makes sure the starting sort time for this frame is initialized.
-                            If frame.StartSortTime = 0 Then frame.StartSortTime = Date.UtcNow.Ticks
+                            ' Track the total number of measurements that failed to sort because the
+                            ' system ran out of time trying to get a lock.
+                            Interlocked.Increment(m_missedSortsByLockTimeout)
 
-                            ' Calls user customizable function to assign new measurement to its frame. This 
-                            ' is a non-blocking operation, so if it fails to get a lock to handle assignment 
-                            ' it queues this work on an independent thread.
-                            If AssignMeasurementToFrame(frame, measurement) Then
-                                ' Tracks the last sorted measurement in this frame.
-                                frame.LastSortTime = Date.UtcNow.Ticks
-                                frame.LastSortedMeasurement = measurement
-                            Else
-                                ' Did not get lock to assign measurement to frame, so it queues it up for 
-                                ' assignment on an independent thread.
-                                Dim state As New KeyValuePair(Of IMeasurement, IFrame)(measurement, frame)
-                                ThreadPool.UnsafeQueueUserWorkItem(AddressOf AssignMeasurementToFrame, state)
-                                Interlocked.Increment(m_threadPoolSorts)
-                            End If
-
-                            ' Tracks the absolute latest measurement values.
-                            If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
+                            ' Count this as a discarded measurement if it was never assigned to the frame.
+                            discardMeasurement = True
                         End If
+
+                        ' Tracks the absolute latest measurement values.
+                        If m_trackLatestMeasurements Then m_latestMeasurements.UpdateMeasurementValue(measurement)
                     End If
                 End If
 
@@ -794,31 +787,31 @@ Namespace Measurements
         ''' <para>Override is optional. A measurement will simply be assigned to frame's measurement list 
         ''' otherwise.</para>
         ''' <para>
-        ''' If overriden, make sure the frame's measurement dictionary (if used) "attempts" a lock prior to 
-        ''' assignment. Please do not create a blocking lock here, as this can create contention in the system 
-        ''' and sorting must go on. Return a value of False if you fail to get a lock 
-        ''' (i.e., Monitor.TryEnter(frame.Measurements) returns False) and assignment will be tried again from 
-        ''' thread pool with an externally acquired lock.
+        ''' If overriden, user must perform their own synchrnonization as needed, for example:
+        ''' <code>
+        ''' SyncLock frame.Measurements
+        '''     If frame.Published Then
+        '''         Return False
+        '''     Else
+        '''         frame.Measurements(measurement.Key) = measurement
+        '''         Return True
+        '''     End If
+        ''' End Synclock
+        ''' </code>
         ''' </para>
         ''' </remarks>
         Protected Overridable Function AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement) As Boolean
 
             Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
 
-            ' The only lock contention expected here will be from other threads attempting to sort measurements 
-            ' into this frame, or during frame publication (we make a copy of the measurements then publish). 
-            ' Since we do not want to interfere with the the frame publication procedure, we only "attempt" the 
-            ' lock. If we do not get lock, the system will queue assignment up for later processing.
-            If Monitor.TryEnter(measurements) Then
-                Try
+            SyncLock measurements
+                If frame.Published Then
+                    Return False
+                Else
                     measurements(measurement.Key) = measurement
                     Return True
-                Finally
-                    Monitor.Exit(measurements)
-                End Try
-            End If
-
-            Return False
+                End If
+            End SyncLock
 
         End Function
 
@@ -857,7 +850,7 @@ Namespace Measurements
             Dim frame As IFrame
             Dim ticks As Long
             Dim frameIndex As Integer
-            Dim measurements As IDictionary(Of MeasurementKey, IMeasurement)
+            'Dim measurements As IDictionary(Of MeasurementKey, IMeasurement)
 
             Do While True
                 Try
@@ -871,22 +864,19 @@ Namespace Measurements
                         ' Frame timestamps are evenly distributed, so all we need to do is just wait for the
                         ' lagtime to pass and begin publishing.
                         If DistanceFromRealTime(ticks) >= m_lagTime Then
-                            ' Marks the frame as published to prevent any further sorting into this frame.
-                            frame.Published = True
+                            ' Mark the frame as published to prevent any further sorting into this frame.
+                            ' Assignment of this flag is synchronized to ensure sorting into frame ceases.
+                            SyncLock frame.Measurements
+                                frame.Published = True
+                            End SyncLock
 
                             ' Calculate index of this frame within its second
                             frameIndex = Convert.ToInt32((ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame)
 
                             ' Publish the current frame.
-                            measurements = frame.Measurements
-                            Monitor.Enter(measurements)
-
                             Try
                                 PublishFrame(frame, frameIndex)
                             Finally
-                                ' Exit sync lock
-                                Monitor.Exit(measurements)
-
                                 ' Remove the frame from the queue whether it successfully published or not
                                 m_frameQueue.Pop()
                             End Try
@@ -910,59 +900,6 @@ Namespace Measurements
                 ' We'll snooze a millisecond between loops to allow system time to breathe
                 Thread.Sleep(1)
             Loop
-
-        End Sub
-
-        ' If lock was not aquired during measurement assignment to frame while sorting, work was queued up
-        ' on an indepedent thread so it could take as long as necessary without delaying sort operations.
-        Private Sub AssignMeasurementToFrame(ByVal state As Object)
-
-            Dim frame As IFrame
-            Dim measurement As IMeasurement
-            Dim measurements As IDictionary(Of MeasurementKey, IMeasurement)
-            Dim publicationTime As Long
-            Dim assigned As Boolean
-
-            With DirectCast(state, KeyValuePair(Of IMeasurement, IFrame))
-                measurement = .Key
-                frame = .Value
-            End With
-
-            measurements = frame.Measurements
-            publicationTime = measurement.Ticks + m_lagTicks
-
-            ' Since this code is executing on an independent thread, it's now safe to keep
-            ' trying for a lock until frame is published or it's passed publication time.
-            Do Until frame.Published OrElse RealTimeTicks > publicationTime
-                If Monitor.TryEnter(measurements) Then
-                    Try
-                        ' Calls user customizable assignment function.
-                        assigned = AssignMeasurementToFrame(frame, measurement)
-
-                        ' Tracks last sorted measurement in this frame.
-                        If assigned Then
-                            frame.LastSortTime = Date.UtcNow.Ticks
-                            frame.LastSortedMeasurement = measurement
-                        End If
-
-                        Exit Do
-                    Finally
-                        Monitor.Exit(measurements)
-                    End Try
-                Else
-                    Thread.Sleep(1)
-                End If
-            Loop
-
-            If Not assigned Then
-                ' Count this as a discarded measurement if it was never assigned to the frame.
-                Interlocked.Increment(m_discardedMeasurements)
-                m_lastDiscardedMeasurement = measurement
-
-                ' Track the total number of measurements that failed to sort because the
-                ' system ran out of time trying to get a lock.
-                Interlocked.Increment(m_missedSortsByLockTimeout)
-            End If
 
         End Sub
 
@@ -1318,6 +1255,59 @@ Namespace Measurements
         '        End If
         '    End SyncLock
         'End With
+        ' If lock was not aquired during measurement assignment to frame while sorting, work was queued up
+        ' on an indepedent thread so it could take as long as necessary without delaying sort operations.
+
+        'Private Sub AssignMeasurementToFrame(ByVal state As Object)
+
+        '    Dim frame As IFrame
+        '    Dim measurement As IMeasurement
+        '    Dim measurements As IDictionary(Of MeasurementKey, IMeasurement)
+        '    Dim publicationTime As Long
+        '    Dim assigned As Boolean
+
+        '    With DirectCast(state, KeyValuePair(Of IMeasurement, IFrame))
+        '        measurement = .Key
+        '        frame = .Value
+        '    End With
+
+        '    measurements = frame.Measurements
+        '    publicationTime = measurement.Ticks + m_lagTicks
+
+        '    ' Since this code is executing on an independent thread, it's now safe to keep
+        '    ' trying for a lock until frame is published or it's passed publication time.
+        '    Do Until frame.Published OrElse RealTimeTicks > publicationTime
+        '        If Monitor.TryEnter(measurements) Then
+        '            Try
+        '                ' Calls user customizable assignment function.
+        '                assigned = AssignMeasurementToFrame(frame, measurement)
+
+        '                ' Tracks last sorted measurement in this frame.
+        '                If assigned Then
+        '                    frame.LastSortTime = Date.UtcNow.Ticks
+        '                    frame.LastSortedMeasurement = measurement
+        '                End If
+
+        '                Exit Do
+        '            Finally
+        '                Monitor.Exit(measurements)
+        '            End Try
+        '        Else
+        '            Thread.Sleep(1)
+        '        End If
+        '    Loop
+
+        '    If Not assigned Then
+        '        ' Count this as a discarded measurement if it was never assigned to the frame.
+        '        Interlocked.Increment(m_discardedMeasurements)
+        '        m_lastDiscardedMeasurement = measurement
+
+        '        ' Track the total number of measurements that failed to sort because the
+        '        ' system ran out of time trying to get a lock.
+        '        Interlocked.Increment(m_missedSortsByLockTimeout)
+        '    End If
+
+        'End Sub
 
 #End Region
 

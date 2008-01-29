@@ -83,16 +83,28 @@ Namespace Measurements
             ' for queue clean up - the separate thread should also avoid a potential
             ' deadlock that could be caused by waiting for locks between the frame
             ' queue and frame measurements, i.e., sorting vs. publication contention
-            SyncLock m_frameList
-                m_frameHash.Remove(publishedTicks)
-                m_frameList.RemoveFirst()
+            Do While True
+                ' Attempt a lock, no need to wait...
+                If Monitor.TryEnter(m_frameList) Then
+                    Try
+                        m_frameHash.Remove(publishedTicks)
+                        m_frameList.RemoveFirst()
 
-                If m_frameList.Count > 0 Then
-                    m_head = m_frameList.First.Value
+                        If m_frameList.Count > 0 Then
+                            m_head = m_frameList.First.Value
+                        Else
+                            m_head = Nothing
+                        End If
+
+                        Exit Do
+                    Finally
+                        Monitor.Exit(m_frameList)
+                    End Try
                 Else
-                    m_head = Nothing
+                    ' Snooze for a bit and try again...
+                    Thread.Sleep(1)
                 End If
-            End SyncLock
+            Loop
 
         End Sub
 
