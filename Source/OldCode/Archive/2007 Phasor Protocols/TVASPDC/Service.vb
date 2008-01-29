@@ -99,7 +99,6 @@ Public Class Service
             End With
         End With
 
-
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("List", "Displays current PMU/PDC connections", AddressOf ShowCurrentConnections))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Connect", "Starts connection cycle to specified device", AddressOf ConnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Disconnect", "Disconnects specified device", AddressOf DisconnectDevice))
@@ -108,6 +107,7 @@ Public Class Service
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("GC", "Forces a .NET garbage collection", AddressOf ForceGarbageCollection, False))
 
         DisplayStatusMessage(String.Format("*** System Initializing [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
+        Thread.Sleep(0)
 
     End Sub
 
