@@ -82,7 +82,7 @@ Namespace Measurements
         Private m_measurementsSortedByArrival As Long                           ' Total number of measurements that were sorted by arrival
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
-        Private m_missedSortsByLockTimeout As Long                              ' Total number of unsorted measurements due to timeout waiting for lock
+        Private m_missedSortsByTimeout As Long                              ' Total number of unsorted measurements due to timeout waiting for lock
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_totalSortTime As Long                                         ' Total cumulative frame sorting times (in ticks) - used to calculate average
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
@@ -462,14 +462,14 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Places measurement data point in its proper sample and row/cell position.</summary>
+        ''' <summary>Places measurement data point in its proper row/cell position.</summary>
         Public Overridable Sub SortMeasurement(ByVal measurement As IMeasurement)
 
             SortMeasurements(New IMeasurement() {measurement})
 
         End Sub
 
-        ''' <summary>Places multiple measurement data points in their proper samples and row/cell positions.</summary>
+        ''' <summary>Places multiple measurement data points in their proper row/cell positions.</summary>
         Public Overridable Sub SortMeasurements(ByVal measurements As ICollection(Of IMeasurement))
 
             ' This function is called continually with new measurements and handles the "time-alignment" 
@@ -495,8 +495,8 @@ Namespace Measurements
                 If Not measurement.TimestampQualityIsGood Then
                     If m_allowSortsByArrival Then
                         ' Device reports measurement timestamp as bad. Since the measurement may have been
-                        ' delayed by prior concentration or long network  distance, this function assumes
-                        ' that our local real time value is better than the  device measurement, so we set
+                        ' delayed by prior concentration or long network distance, this function assumes
+                        ' that our local real time value is better than the device measurement, so we set
                         ' the measurement's timestamp to real time and sort the measurement by arrival time.
                         measurement.Ticks = RealTimeTicks
                         Interlocked.Increment(m_measurementsSortedByArrival)
@@ -551,8 +551,8 @@ Namespace Measurements
                             frame.LastSortedMeasurement = measurement
                         Else
                             ' Track the total number of measurements that failed to sort because the
-                            ' system ran out of time trying to get a lock.
-                            Interlocked.Increment(m_missedSortsByLockTimeout)
+                            ' system ran out of time.
+                            Interlocked.Increment(m_missedSortsByTimeout)
 
                             ' Count this as a discarded measurement if it was never assigned to the frame.
                             discardMeasurement = True
@@ -635,13 +635,13 @@ Namespace Measurements
                     .Append("    Total process run time: ")
                     .Append(SecondsToText(RunTime))
                     .AppendLine()
-                    .Append("          Defined lag time: ")
+                    .Append("    Measurement wait delay: ")
                     .Append(m_lagTime)
-                    .Append(" seconds")
+                    .Append(" seconds (lag time)")
                     .AppendLine()
-                    .Append("         Defined lead time: ")
+                    .Append("     Local clock tolerance: ")
                     .Append(m_leadTime)
-                    .Append(" seconds")
+                    .Append(" seconds (lead time)")
                     .AppendLine()
                     .Append("    Local clock time (UTC): ")
                     .Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"))
@@ -680,7 +680,7 @@ Namespace Measurements
                     .Append(m_measurementsSortedByArrival)
                     .AppendLine()
                     .Append("   Missed sorts by timeout: ")
-                    .Append(m_missedSortsByLockTimeout)
+                    .Append(m_missedSortsByTimeout)
                     .AppendLine()
                     .Append("Average sorting time/frame: ")
                     .Append(AverageSortingTimePerFrame.ToString("0.0000"))
@@ -689,8 +689,8 @@ Namespace Measurements
                     .Append("Published measurement loss: ")
                     .Append((m_discardedMeasurements / m_totalMeasurements).ToString("##0.0000%"))
                     .AppendLine()
-                    .Append(" Loss due to lock timeouts: ")
-                    .Append((m_missedSortsByLockTimeout / m_totalMeasurements).ToString("##0.0000%"))
+                    .Append("      Loss due to timeouts: ")
+                    .Append((m_missedSortsByTimeout / m_totalMeasurements).ToString("##0.0000%"))
                     .AppendLine()
                     .Append(" Measurement time accuracy: ")
                     .Append((1.0R - m_measurementsSortedByArrival / m_totalMeasurements).ToString("##0.0000%"))
@@ -749,7 +749,7 @@ Namespace Measurements
             End Get
         End Property
 
-        ''' <summary>Shuts down concentrator, and clears sample queue in an orderly fashion.</summary>
+        ''' <summary>Shuts down concentrator in an orderly fashion.</summary>
         Public Overridable Sub Dispose() Implements IDisposable.Dispose
 
             ' If user calls dispose, then class is pulled out of garage collection finilzation queue.
@@ -778,10 +778,10 @@ Namespace Measurements
         ''' to its frame.</summary>
         ''' <returns>True if measurement was successfully assigned to frame</returns>
         ''' <remarks>
-        ''' <para>Override is optional. A measurement will simply be assigned to frame's measurement list 
-        ''' otherwise.</para>
+        ''' <para>Override is optional. A measurement will simply be assigned to frame's keyed measurement
+        ''' dictionary otherwise.</para>
         ''' <para>
-        ''' If overriden, user must perform their own synchrnonization as needed, for example:
+        ''' If overridden user must perform their own synchronization as needed, for example:
         ''' <code>
         ''' SyncLock frame.Measurements
         '''     If frame.Published Then
@@ -793,6 +793,10 @@ Namespace Measurements
         ''' End Synclock
         ''' </code>
         ''' </para>
+        ''' <para>Note that the frame.Measurements dictionary is used internally to synchrnonize assignment
+        ''' of the frame.Published flag. If your custom frame makes use of the frame.Measurements
+        ''' dictionary you must implement a locking scheme similar to the sample code above to
+        ''' prevent changes to the measurement dictionary during frame publication.</para>
         ''' </remarks>
         Protected Overridable Function AssignMeasurementToFrame(ByVal frame As IFrame, ByVal measurement As IMeasurement) As Boolean
 

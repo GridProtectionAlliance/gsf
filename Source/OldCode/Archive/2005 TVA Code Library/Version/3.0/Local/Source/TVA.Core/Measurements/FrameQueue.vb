@@ -18,6 +18,7 @@
 '*******************************************************************************************************
 
 Imports System.Threading
+Imports TVA.Threading
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 
@@ -68,7 +69,13 @@ Namespace Measurements
             m_publishedTicks = m_last.Ticks
 
             ' Frame's already been handled so there's no rush in removing it
+#If ThreadDebug Then
+            With ManagedThreadPool.QueueUserWorkItem(AddressOf Pop, m_publishedTicks)
+                .Tag = "TVA.Measurements.FrameQueue.Pop()"
+            End With
+#Else
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf Pop, m_publishedTicks)
+#End If
 
         End Sub
 
