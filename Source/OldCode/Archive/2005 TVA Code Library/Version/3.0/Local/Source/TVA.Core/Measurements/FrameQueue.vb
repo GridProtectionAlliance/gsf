@@ -69,7 +69,7 @@ Namespace Measurements
             m_publishedTicks = m_last.Ticks
 
             ' Frame's already been handled so there's no rush in removing it
-#If ThreadDebug Then
+#If ThreadTracking Then
             With ManagedThreadPool.QueueUserWorkItem(AddressOf Pop, m_publishedTicks)
                 .Tag = "TVA.Measurements.FrameQueue.Pop()"
             End With

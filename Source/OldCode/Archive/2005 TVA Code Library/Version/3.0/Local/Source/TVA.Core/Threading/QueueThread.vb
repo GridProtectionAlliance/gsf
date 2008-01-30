@@ -65,7 +65,13 @@ Namespace Threading
                 Params.CopyTo(.Parameters, 0)
             End With
 
+#If ThreadTracking Then
+            With ManagedThreadPool.QueueUserWorkItem(AddressOf ThreadProc, qt)
+                .Tag = "TVA.Threading.QueueThread.ThreadProc()"
+            End With
+#Else
             ThreadPool.QueueUserWorkItem(AddressOf ThreadProc, qt)
+#End If
 
         End Sub
 

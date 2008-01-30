@@ -60,7 +60,7 @@
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
-    <DefineConstants>ThreadDebug=True</DefineConstants>
+    <DefineConstants>ThreadTracking=True</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

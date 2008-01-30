@@ -82,7 +82,13 @@ Namespace Math
 
             If m_xValues.Count >= m_pointCount AndAlso Not m_calculating Then
                 ' Performs curve fit calculation on seperate thread, since it could be time consuming.
+#If ThreadTracking Then
+                With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf PerformCalculation)
+                    .Tag = "TVA.Math.RealTimeSlope.PerformCalculation()"
+                End With
+#Else
                 ThreadPool.QueueUserWorkItem(AddressOf PerformCalculation)
+#End If
             End If
 
         End Sub
