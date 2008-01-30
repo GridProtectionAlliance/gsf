@@ -10,33 +10,27 @@ Namespace Threading
 
         Public Shared Function QueueUserWorkItem(ByVal callback As ContextCallback) As WorkItem
 
-            Return QueueUserWorkItem(callback, Nothing, False)
+            Return QueueUserWorkItem(callback, Nothing, Nothing)
 
         End Function
 
-        Public Shared Function QueueUserWorkItem(ByVal callback As ContextCallback, ByVal useCurrentExecutionContext As Boolean) As WorkItem
+        Public Shared Function QueueUserWorkItem(ByVal callback As ContextCallback, ByVal ctx As ExecutionContext) As WorkItem
 
-            Return QueueUserWorkItem(callback, Nothing, useCurrentExecutionContext)
+            Return QueueUserWorkItem(callback, Nothing, ctx)
 
         End Function
 
         Public Shared Function QueueUserWorkItem(ByVal callback As ContextCallback, ByVal state As Object) As WorkItem
 
-            Return QueueUserWorkItem(callback, state, False)
+            Return QueueUserWorkItem(callback, state, Nothing)
 
         End Function
 
-        Public Shared Function QueueUserWorkItem(ByVal callback As ContextCallback, ByVal state As Object, ByVal useCurrentExecutionContext As Boolean) As WorkItem
+        Public Shared Function QueueUserWorkItem(ByVal callback As ContextCallback, ByVal state As Object, ByVal ctx As ExecutionContext) As WorkItem
 
             If callback Is Nothing Then Throw New ArgumentNullException("callback")
 
-            Dim item As WorkItem
-
-            If useCurrentExecutionContext Then
-                item = New WorkItem(callback, state, ExecutionContext.Capture)
-            Else
-                item = New WorkItem(callback, state, Nothing)
-            End If
+            Dim item As New WorkItem(callback, state, ctx)
 
             SyncLock m_queuedCallBacks
                 m_queuedCallBacks.AddLast(item)
