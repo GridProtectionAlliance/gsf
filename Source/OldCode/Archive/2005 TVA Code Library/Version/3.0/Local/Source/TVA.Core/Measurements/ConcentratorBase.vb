@@ -83,7 +83,6 @@ Namespace Measurements
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
         Private m_missedSortsByLockTimeout As Long                              ' Total number of unsorted measurements due to timeout waiting for lock
-        Private m_threadPoolSorts As Long                                       ' Total number of sorts deferred to thread pool because initial try lock failed
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_totalSortTime As Long                                         ' Total cumulative frame sorting times (in ticks) - used to calculate average
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
@@ -680,9 +679,6 @@ Namespace Measurements
                     .Append("    Total sorts by arrival: ")
                     .Append(m_measurementsSortedByArrival)
                     .AppendLine()
-                    .Append("   Total thread pool sorts: ")
-                    .Append(m_threadPoolSorts)
-                    .AppendLine()
                     .Append("   Missed sorts by timeout: ")
                     .Append(m_missedSortsByLockTimeout)
                     .AppendLine()
@@ -695,9 +691,6 @@ Namespace Measurements
                     .AppendLine()
                     .Append(" Loss due to lock timeouts: ")
                     .Append((m_missedSortsByLockTimeout / m_totalMeasurements).ToString("##0.0000%"))
-                    .AppendLine()
-                    .Append("   Thread pool utilization: ")
-                    .Append((m_threadPoolSorts / m_totalMeasurements).ToString("##0.0000%"))
                     .AppendLine()
                     .Append(" Measurement time accuracy: ")
                     .Append((1.0R - m_measurementsSortedByArrival / m_totalMeasurements).ToString("##0.0000%"))
@@ -783,6 +776,7 @@ Namespace Measurements
 
         ''' <summary>Consumers can choose to override this method to handle custom assignment of a measurement 
         ''' to its frame.</summary>
+        ''' <returns>True if measurement was successfully assigned to frame</returns>
         ''' <remarks>
         ''' <para>Override is optional. A measurement will simply be assigned to frame's measurement list 
         ''' otherwise.</para>
@@ -850,7 +844,6 @@ Namespace Measurements
             Dim frame As IFrame
             Dim ticks As Long
             Dim frameIndex As Integer
-            'Dim measurements As IDictionary(Of MeasurementKey, IMeasurement)
 
             Do While True
                 Try
@@ -1308,6 +1301,16 @@ Namespace Measurements
         '    End If
 
         'End Sub
+
+        'Private m_threadPoolSorts As Long                                       ' Total number of sorts deferred to thread pool because initial try lock failed
+
+        '.Append("   Total thread pool sorts: ")
+        '.Append(m_threadPoolSorts)
+        '.AppendLine()
+
+        '.Append("   Thread pool utilization: ")
+        '.Append((m_threadPoolSorts / m_totalMeasurements).ToString("##0.0000%"))
+        '.AppendLine()
 
 #End Region
 
