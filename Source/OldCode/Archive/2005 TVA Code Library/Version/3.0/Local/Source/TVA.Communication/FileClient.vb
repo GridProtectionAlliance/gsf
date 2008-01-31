@@ -24,6 +24,7 @@ Imports System.ComponentModel
 Imports TVA.Common
 Imports TVA.IO.Common
 Imports TVA.ErrorManagement
+Imports TVA.Threading
 
 ''' <summary>
 ''' Represents a File-based communication client.
@@ -38,8 +39,13 @@ Public Class FileClient
     Private m_receiveInterval As Double
     Private m_startingOffset As Long
     Private m_fileClient As StateInfo(Of FileStream)
+#If ThreadTracking Then
+    Private m_receivingThread As ManagedThread
+    Private m_connectionThread As ManagedThread
+#Else
     Private m_receivingThread As Thread
     Private m_connectionThread As Thread
+#End If
     Private m_connectionData As Dictionary(Of String, String)
     Private WithEvents m_receiveDataTimer As System.Timers.Timer
 
@@ -145,7 +151,12 @@ Public Class FileClient
 
         If MyBase.Enabled AndAlso MyBase.IsConnected _
                 AndAlso m_receiveOnDemand AndAlso Not m_receivingThread.IsAlive Then
+#If ThreadTracking Then
+            m_receivingThread = New ManagedThread(AddressOf ReceiveFileData)
+            m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()"
+#Else
             m_receivingThread = New Thread(AddressOf ReceiveFileData)
+#End If
             m_receivingThread.Start()
         End If
 
@@ -167,7 +178,12 @@ Public Class FileClient
 
         If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(ConnectionString()) Then
             If File.Exists(m_connectionData("file")) Then
+#If ThreadTracking Then
+                m_connectionThread = New ManagedThread(AddressOf ConnectToFile)
+                m_connectionThread.Name = "TVA.Communication.FileClient.ConnectToFile()"
+#Else
                 m_connectionThread = New Thread(AddressOf ConnectToFile)
+#End If
                 m_connectionThread.Start()
             Else
                 Throw New FileNotFoundException(m_connectionData("file") & " does not exist.")
@@ -298,7 +314,12 @@ Public Class FileClient
                         m_receiveDataTimer.Start()
                     Else
                         ' We need to start receiving data continuously.
-                        m_receivingThread = New Thread(AddressOf ReceiveFileData)
+#If ThreadTracking Then
+                        m_connectionThread = New ManagedThread(AddressOf ConnectToFile)
+                        m_connectionThread.Name = "TVA.Communication.FileClient.ConnectToFile()"
+#Else
+                        m_connectionThread = New Thread(AddressOf ConnectToFile)
+#End If
                         m_receivingThread.Start()
                     End If
                 End If
@@ -357,7 +378,12 @@ Public Class FileClient
 
         If MyBase.Enabled AndAlso MyBase.IsConnected AndAlso _
                 m_receiveInterval > 0 AndAlso Not m_receivingThread.IsAlive Then
+#If ThreadTracking Then
+            m_receivingThread = New ManagedThread(AddressOf ReceiveFileData)
+            m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()"
+#Else
             m_receivingThread = New Thread(AddressOf ReceiveFileData)
+#End If
             m_receivingThread.Start()
         End If
 

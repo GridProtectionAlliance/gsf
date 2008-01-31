@@ -25,6 +25,7 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Security.Cryptography.Common
+Imports TVA.Threading
 
 ''' <summary>
 ''' Represents a UDP-based communication server.
@@ -199,7 +200,12 @@ Public Class UdpServer
                     If serverPort > 0 Then
                         m_udpServer.Client.Bind(New IPEndPoint(IPAddress.Any, serverPort))
 
+#If ThreadTracking Then
+                        With New ManagedThread(AddressOf ReceiveClientData)
+                            .Name = "TVA.Communication.UdpServer.ReceiveClientData() [" & ServerID.ToString() & "]"
+#Else
                         With New Thread(AddressOf ReceiveClientData)
+#End If
                             .Start()
                         End With
                     Else

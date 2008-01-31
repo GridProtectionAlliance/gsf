@@ -13,7 +13,11 @@ Namespace Threading
 
         Implements IDisposable
 
+#If ThreadTracking Then
+        Protected WorkerThread As ManagedThread
+#Else
         Protected WorkerThread As Thread
+#End If
 
         Protected Overrides Sub Finalize()
 
@@ -23,7 +27,12 @@ Namespace Threading
 
         Public Overridable Sub Start()
 
+#If ThreadTracking Then
+            WorkerThread = New ManagedThread(AddressOf ThreadExec)
+            WorkerThread.Name = "TVA.Threading.ThreadBase.ThreadExec() [" & Me.GetType().Name & "]"
+#Else
             WorkerThread = New Thread(AddressOf ThreadExec)
+#End If
             WorkerThread.Start()
 
         End Sub
@@ -45,7 +54,11 @@ Namespace Threading
 
         End Sub
 
+#If ThreadTracking Then
+        Public ReadOnly Property Thread() As ManagedThread
+#Else
         Public ReadOnly Property Thread() As Thread
+#End If
             Get
                 Return WorkerThread
             End Get

@@ -24,6 +24,7 @@ Imports System.ComponentModel
 Imports TVA.Common
 Imports TVA.IO.Common
 Imports TVA.ErrorManagement
+Imports TVA.Threading
 
 ''' <summary>
 ''' Represents a serial port communication client.
@@ -33,7 +34,11 @@ Public Class SerialClient
 
 #Region " Member Declaration "
 
+#If ThreadTracking Then
+    Private m_connectionThread As ManagedThread
+#Else
     Private m_connectionThread As Thread
+#End If
     Private m_connectionData As Dictionary(Of String, String)
     Private WithEvents m_serialClient As SerialPort
 
@@ -77,7 +82,12 @@ Public Class SerialClient
                 If m_connectionData.ContainsKey("rtsenable") Then .RtsEnable = Convert.ToBoolean(m_connectionData("rtsenable"))
             End With
 
+#If ThreadTracking Then
+            m_connectionThread = New ManagedThread(AddressOf ConnectToPort)
+            m_connectionThread.Name = "TVA.Communication.SerialClient.ConnectToPort()"
+#Else
             m_connectionThread = New Thread(AddressOf ConnectToPort)
+#End If
             m_connectionThread.Start()
         End If
 

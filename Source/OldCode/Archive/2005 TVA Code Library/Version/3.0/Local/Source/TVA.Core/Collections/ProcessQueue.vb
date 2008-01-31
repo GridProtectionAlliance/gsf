@@ -40,6 +40,7 @@ Imports System.Threading
 Imports System.Text
 Imports TVA.Common
 Imports TVA.DateTime.Common
+Imports TVA.Threading
 
 Namespace Collections
 
@@ -198,7 +199,11 @@ Namespace Collections
         Private m_stopTime As Long
         Private m_debugMode As Boolean
         Private m_isDisposed As Boolean
+#If ThreadTracking Then
+        Private m_realTimeProcessThread As ManagedThread
+#Else
         Private m_realTimeProcessThread As Thread
+#End If
         Private m_realTimeProcessThreadPriority As ThreadPriority
         Private WithEvents m_processTimer As System.Timers.Timer
 
@@ -802,7 +807,12 @@ Namespace Collections
             ' intervaled queues, processing occurs only when data is available to be processed.
             If m_processingIsRealTime Then
                 ' Start real-time processing thread
+#If ThreadTracking Then
+                m_realTimeProcessThread = New ManagedThread(AddressOf RealTimeThreadProc)
+                m_realTimeProcessThread.Name = "TVA.Collections.ProcessQueue.RealTimeThreadProc() [" & Name & "]"
+#Else
                 m_realTimeProcessThread = New Thread(AddressOf RealTimeThreadProc)
+#End If
                 m_realTimeProcessThread.Priority = m_realTimeProcessThreadPriority
                 m_realTimeProcessThread.Start()
             Else

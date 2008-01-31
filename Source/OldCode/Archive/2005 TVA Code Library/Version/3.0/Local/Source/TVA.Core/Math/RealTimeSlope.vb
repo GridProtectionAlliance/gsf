@@ -84,7 +84,7 @@ Namespace Math
                 ' Performs curve fit calculation on seperate thread, since it could be time consuming.
 #If ThreadTracking Then
                 With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf PerformCalculation)
-                    .Tag = "TVA.Math.RealTimeSlope.PerformCalculation()"
+                    .Name = "TVA.Math.RealTimeSlope.PerformCalculation()"
                 End With
 #Else
                 ThreadPool.QueueUserWorkItem(AddressOf PerformCalculation)

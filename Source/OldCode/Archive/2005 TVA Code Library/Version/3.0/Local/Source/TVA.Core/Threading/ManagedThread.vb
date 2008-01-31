@@ -11,6 +11,7 @@ Namespace Threading
         Private m_thread As Thread
         Private m_type As ThreadType
         Private m_status As ThreadStatus
+        Private m_name As String
         Private m_startTime As Long
         Private m_stopTime As Long
         Private m_ctxCallback As ContextCallback
@@ -112,6 +113,22 @@ Namespace Threading
             End Set
         End Property
 
+        Public ReadOnly Property IsAlive() As Boolean
+            Get
+                Return (m_status = ThreadStatus.Started OrElse m_status = ThreadStatus.Executing)
+            End Get
+        End Property
+
+        Public Property Name() As String
+            Get
+                Return m_name
+            End Get
+            Set(ByVal value As String)
+                m_name = value
+                If m_type = ThreadType.StandardThread Then m_thread.Name = value
+            End Set
+        End Property
+
         Public ReadOnly Property StartTime() As Long
             Get
                 Return m_startTime
@@ -176,7 +193,7 @@ Namespace Threading
         Public Sub Join()
 
             If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot join a thread that was queued into thread pool.")
-            If Not (m_status = ThreadStatus.Started OrElse m_status = ThreadStatus.Executing) Then Throw New InvalidOperationException("Cannont join a thread that has not been started.")
+            If Not IsAlive Then Throw New InvalidOperationException("Cannont join a thread that has not been started.")
 
             m_thread.Join()
 
@@ -185,7 +202,7 @@ Namespace Threading
         Public Function Join(ByVal millisecondsTimeout As Integer) As Boolean
 
             If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot join a thread that was queued into thread pool.")
-            If Not (m_status = ThreadStatus.Started OrElse m_status = ThreadStatus.Executing) Then Throw New InvalidOperationException("Cannont join a thread that has not been started.")
+            If Not IsAlive Then Throw New InvalidOperationException("Cannont join a thread that has not been started.")
 
             Return m_thread.Join(millisecondsTimeout)
 
@@ -196,6 +213,21 @@ Namespace Threading
             Return Join(CInt(timeout.TotalMilliseconds))
 
         End Function
+
+        Public Property Priority() As ThreadPriority
+            Get
+                If m_type = ThreadType.QueuedThread Then
+                    Return ThreadPriority.Normal
+                Else
+                    Return m_thread.Priority
+                End If
+            End Get
+            Set(ByVal value As ThreadPriority)
+                If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot change priority of a thread that was queued into thread pool.")
+
+                m_thread.Priority = value
+            End Set
+        End Property
 
 #End Region
 

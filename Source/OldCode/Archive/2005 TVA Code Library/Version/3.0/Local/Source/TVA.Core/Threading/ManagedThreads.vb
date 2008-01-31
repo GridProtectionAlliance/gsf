@@ -75,7 +75,7 @@ Namespace Threading
                     '
                     ' Thread 1 - Completed in 25 seconds
                     '      Type: Standard Thread
-                    '       Tag: TVASPDC.Service.CalculatedMeasurementInitialization.Initialize()
+                    '      Name: TVASPDC.Service.CalculatedMeasurementInitialization.Initialize()
 
                     .AppendFormat("Managed Thread Count: {0}{1}", items.Length, Environment.NewLine)
                     .AppendLine()
@@ -92,7 +92,7 @@ Namespace Threading
                                     [Enum].GetName(GetType(ThreadType), item.Type), _
                                     Environment.NewLine)
 
-                        .AppendFormat("      Tag: {0}{1}", _
+                        .AppendFormat("     Name: {0}{1}", _
                                       item.Tag.ToString(), _
                                       Environment.NewLine)
                         .AppendLine()
@@ -152,7 +152,7 @@ Namespace Threading
 
                 ' Handle abort or dequeue
                 If node Is Nothing Then
-                    If allowAbort AndAlso (item.Status = ThreadStatus.Started OrElse item.Status = ThreadStatus.Executing) Then
+                    If allowAbort AndAlso item.IsAlive Then
                         ' Started items may be aborted, even if running in thread pool
                         item.Thread.Abort()
                     End If

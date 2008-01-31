@@ -3,10 +3,15 @@
 Imports System.Text
 Imports System.Threading
 Imports TVA.DateTime.Common
+Imports TVA.Threading
 
 Public Class ServiceProcess
 
+#If ThreadTracking Then
+    Private m_processThread As ManagedThread
+#Else
     Private m_processThread As Thread
+#End If
     Private m_name As String
     Private m_parameters As Object()
     Private m_executionMethod As ExecutionMethodSignature
@@ -134,7 +139,12 @@ Public Class ServiceProcess
     Public Sub Start()
 
         ' Start the execution on a seperate thread.
+#If ThreadTracking Then
+        m_processThread = New ManagedThread(AddressOf InvokeExecutionMethod)
+        m_processThread.Name = "TVA.Services.ServiceProcess.InvokeExecutionMethod() [" & m_name & "]"
+#Else
         m_processThread = New Thread(AddressOf InvokeExecutionMethod)
+#End If
         m_processThread.Start()
 
     End Sub

@@ -29,6 +29,7 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.ErrorManagement
+Imports TVA.Threading
 
 ''' <summary>
 ''' Represents a TCP-based communication client.
@@ -43,7 +44,11 @@ Public Class TcpClient
 
     Private m_payloadAware As Boolean
     Private m_tcpClient As StateInfo(Of Socket)
+#If ThreadTracking Then
+    Private m_connectionThread As ManagedThread
+#Else
     Private m_connectionThread As Thread
+#End If
     Private m_connectionData As Dictionary(Of String, String)
 
 #End Region
@@ -100,7 +105,12 @@ Public Class TcpClient
 
         If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(MyBase.ConnectionString) Then
             ' Start the thread on which the client will attempt to connect to the server.
+#If ThreadTracking Then
+            m_connectionThread = New ManagedThread(AddressOf ConnectToServer)
+            m_connectionThread.Name = "TVA.Communication.TcpClient.ConnectToServer()"
+#Else
             m_connectionThread = New Thread(AddressOf ConnectToServer)
+#End If
             m_connectionThread.Start()
         End If
 
@@ -119,11 +129,15 @@ Public Class TcpClient
             m_tcpClient.Client.Shutdown(SocketShutdown.Both)
 
             ' JRC: Allowing call with disconnect timeout...
-            If timeout <= 0 Then
-                m_tcpClient.Client.Close()
-            Else
-                m_tcpClient.Client.Close(timeout)
-            End If
+            Try
+                If timeout <= 0 Then
+                    m_tcpClient.Client.Close()
+                Else
+                    m_tcpClient.Client.Close(timeout)
+                End If
+            Catch
+                ' This very rarely throws an exception - so we just ignore it...
+            End Try
         End If
 
     End Sub
@@ -256,7 +270,12 @@ Public Class TcpClient
 
                 If m_tcpClient.Client.Connected Then ' Client connected to the server successfully.
                     ' Start a seperate thread for the client to receive data from the server.
+#If ThreadTracking Then
+                    With New ManagedThread(AddressOf ReceiveServerData)
+                        .Name = "TVA.Communication.TcpClient.ReceiveServerData() [" & m_tcpClient.ID.ToString() & "]"
+#Else
                     With New Thread(AddressOf ReceiveServerData)
+#End If
                         .Start()
                     End With
 

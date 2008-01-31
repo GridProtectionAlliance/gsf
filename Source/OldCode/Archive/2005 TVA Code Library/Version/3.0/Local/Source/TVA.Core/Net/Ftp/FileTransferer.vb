@@ -5,6 +5,7 @@ Imports System.IO
 Imports System.Threading
 Imports System.Net.Sockets
 Imports TVA.IO.FilePath
+Imports TVA.Threading
 
 Namespace Net.Ftp
 
@@ -143,10 +144,15 @@ Namespace Net.Ftp
 
         Friend Sub StartAsyncTransfer()
 
-            Dim thread As New Thread(New ThreadStart(AddressOf TransferThreadProc))
-
-            thread.Name = "Transfer file thread: " & m_remoteFile
-            thread.Start()
+#If ThreadTracking Then
+            With New ManagedThread(AddressOf TransferThreadProc)
+                .Name = "TVA.Net.Ftp.FileTransferer.TransferThreadProc() [" & m_remoteFile & "]"
+#Else
+            With New Thread(AddressOf TransferThreadProc)
+                .Name = "Transfer file thread: " & m_remoteFile
+#End If
+                .Start()
+            End With
 
         End Sub
 

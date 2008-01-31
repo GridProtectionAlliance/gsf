@@ -71,7 +71,7 @@ Namespace Measurements
             ' Frame's already been handled so there's no rush in removing it
 #If ThreadTracking Then
             With ManagedThreadPool.QueueUserWorkItem(AddressOf Pop, m_publishedTicks)
-                .Tag = "TVA.Measurements.FrameQueue.Pop()"
+                .Name = "TVA.Measurements.FrameQueue.Pop()"
             End With
 #Else
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf Pop, m_publishedTicks)

@@ -39,8 +39,16 @@ Partial Class UdpClient
 
         m_payloadAware = False
         m_destinationReachableCheck = False
+#If ThreadTracking Then
+        m_receivingThread = New TVA.Threading.ManagedThread(AddressOf ReceiveServerData)
+        m_receivingThread.Name = "TVA.Communication.UdpClient.ReceiveServerData()"
+
+        m_connectionThread = New TVA.Threading.ManagedThread(AddressOf ConnectToServer)
+        m_connectionThread.Name = "TVA.Communication.UdpClient.ConnectToServer()"
+#Else
         m_receivingThread = New System.Threading.Thread(AddressOf ReceiveServerData)
         m_connectionThread = New System.Threading.Thread(AddressOf ConnectToServer)
+#End If
         MyBase.ConnectionString = "Server=localhost; RemotePort=8888; LocalPort=8888"
         MyBase.Protocol = TransportProtocol.Udp
         MyBase.ReceiveBufferSize = MaximumUdpDatagramSize

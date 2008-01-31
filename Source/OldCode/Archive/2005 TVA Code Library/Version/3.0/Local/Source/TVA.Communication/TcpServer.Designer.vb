@@ -36,7 +36,12 @@ Partial Class TcpServer
 
         ' Setup the instance defaults.
         m_payloadAware = False
+#If ThreadTracking Then
+        m_listenerThread = New TVA.Threading.ManagedThread(AddressOf ListenForConnections)
+        m_listenerThread.Name = "TVA.Communication.TcpServer.ListenForConnections()"
+#Else
         m_listenerThread = New System.Threading.Thread(AddressOf ListenForConnections)
+#End If
         m_tcpClients = New Dictionary(Of Guid, StateInfo(Of System.Net.Sockets.Socket))
         m_pendingTcpClients = New List(Of StateInfo(Of System.Net.Sockets.Socket))
         MyBase.ConfigurationString = "Port=8888"

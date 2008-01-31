@@ -39,6 +39,7 @@ Imports TVA.Collections.Common
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 Imports TVA.Math.Common
+Imports TVA.Threading
 
 Namespace Measurements
 
@@ -66,7 +67,11 @@ Namespace Measurements
         Friend Event LagTimeUpdated(ByVal lagTime As Double)                    ' Raised, for the benefit of dependent classes, when lag time is updated
 
         Private m_frameQueue As FrameQueue                                      ' Queue of frames to be published
+#If ThreadTracking Then
+        Private m_publicationThread As ManagedThread                            ' Managed Real-time thread that handles frame publication
+#Else
         Private m_publicationThread As Thread                                   ' Real-time thread that handles frame publication
+#End If
         Private m_framesPerSecond As Integer                                    ' Frames per second
         Private m_ticksPerFrame As Decimal                                      ' Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
         Private m_lagTime As Double                                             ' Allowed past time deviation tolerance
@@ -82,7 +87,7 @@ Namespace Measurements
         Private m_measurementsSortedByArrival As Long                           ' Total number of measurements that were sorted by arrival
         Private m_discardedMeasurements As Long                                 ' Total number of discarded measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
-        Private m_missedSortsByTimeout As Long                              ' Total number of unsorted measurements due to timeout waiting for lock
+        Private m_missedSortsByTimeout As Long                                  ' Total number of unsorted measurements due to timeout waiting for lock
         Private m_publishedFrames As Long                                       ' Total number of published frames
         Private m_totalSortTime As Long                                         ' Total cumulative frame sorting times (in ticks) - used to calculate average
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
@@ -271,7 +276,12 @@ Namespace Measurements
                 m_totalSortTime = 0
                 m_stopTime = 0
                 m_startTime = Date.UtcNow.Ticks
+#If ThreadTracking Then
+                m_publicationThread = New ManagedThread(AddressOf PublishFrames)
+                m_publicationThread.Name = "TVA.Measurements.ConcentratorBase.PublishFrames() [" & Me.GetType.Name & "]"
+#Else
                 m_publicationThread = New Thread(AddressOf PublishFrames)
+#End If
                 m_publicationThread.Priority = ThreadPriority.Highest
                 m_publicationThread.Start()
                 m_monitorTimer.Start()

@@ -29,6 +29,7 @@ Imports System.ComponentModel
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.Security.Cryptography.Common
+Imports TVA.Threading
 
 ''' <summary>
 ''' Represents a TCP-based communication server.
@@ -46,7 +47,11 @@ Public Class TcpServer
     Private m_tcpClients As Dictionary(Of Guid, StateInfo(Of Socket))
     Private m_pendingTcpClients As List(Of StateInfo(Of Socket))
     Private m_configurationData As Dictionary(Of String, String)
+#If ThreadTracking Then
+    Private m_listenerThread As ManagedThread
+#Else
     Private m_listenerThread As Thread
+#End If
 
 #End Region
 
@@ -140,7 +145,12 @@ Public Class TcpServer
 
         If Enabled AndAlso Not IsRunning AndAlso ValidConfigurationString(ConfigurationString) Then
             ' Start the thread on which the server will listen for incoming connections.
+#If ThreadTracking Then
+            m_listenerThread = New ManagedThread(AddressOf ListenForConnections)
+            m_listenerThread.Name = "TVA.Communication.TcpServer.ListenForConnections() [" & ServerID.ToString() & "]"
+#Else
             m_listenerThread = New Thread(AddressOf ListenForConnections)
+#End If
             m_listenerThread.Start()
         End If
 
@@ -324,12 +334,17 @@ Public Class TcpServer
                     Dim tcpClient As New StateInfo(Of Socket)()
                     tcpClient.Client = m_tcpServer.Accept()  ' Accept client connection.
 
-                    ' TODO: JRC - I think this should be an option - turning off for the moment...
-                    'tcpClient.Client.LingerState = New LingerOption(True, 10)
+                    tcpClient.Client.LingerState = New LingerOption(True, 10)
 
                     ' Start the client on a seperate thread so all the connected clients run independently.
                     'ThreadPool.QueueUserWorkItem(AddressOf ReceiveClientData, tcpClient)
+
+#If ThreadTracking Then
+                    With New ManagedThread(AddressOf ReceiveClientData)
+                        .Name = "TVA.Communication.TcpServer.ReceiveClientData() [" & ServerID.ToString() & "]"
+#Else
                     With New Thread(AddressOf ReceiveClientData)
+#End If
                         .Start(tcpClient)
                     End With
                 End If

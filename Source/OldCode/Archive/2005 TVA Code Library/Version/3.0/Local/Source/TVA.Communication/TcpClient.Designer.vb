@@ -35,7 +35,12 @@ Partial Class TcpClient
         InitializeComponent()
 
         m_payloadAware = False
+#If ThreadTracking Then
+        m_connectionThread = New TVA.Threading.ManagedThread(AddressOf ConnectToServer)
+        m_connectionThread.Name = "TVA.Communication.TcpClient.ConnectToServer()"
+#Else
         m_connectionThread = New System.Threading.Thread(AddressOf ConnectToServer)
+#End If
         MyBase.ConnectionString = "Server=localhost; Port=8888"
         MyBase.Protocol = TransportProtocol.Tcp
 

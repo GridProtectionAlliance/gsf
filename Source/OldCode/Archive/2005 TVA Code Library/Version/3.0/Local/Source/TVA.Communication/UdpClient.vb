@@ -28,6 +28,7 @@ Imports TVA.Common
 Imports TVA.Serialization
 Imports TVA.Communication.CommunicationHelper
 Imports TVA.ErrorManagement
+Imports TVA.Threading
 
 ''' <summary>
 ''' Represents a UDP-based communication client.
@@ -46,8 +47,13 @@ Public Class UdpClient
     Private m_destinationReachableCheck As Boolean
     Private m_udpServer As IPEndPoint
     Private m_udpClient As StateInfo(Of Socket)
+#If ThreadTracking Then
+    Private m_receivingThread As ManagedThread
+    Private m_connectionThread As ManagedThread
+#Else
     Private m_receivingThread As Thread
     Private m_connectionThread As Thread
+#End If
     Private m_connectionData As Dictionary(Of String, String)
 
 #End Region
@@ -163,7 +169,12 @@ Public Class UdpClient
 
         If MyBase.Enabled AndAlso Not MyBase.IsConnected AndAlso ValidConnectionString(MyBase.ConnectionString) Then
             ' Start the thread on which the client will be initialized.
+#If ThreadTracking Then
+            m_connectionThread = New ManagedThread(AddressOf ConnectToServer)
+            m_connectionThread.Name = "TVA.Communication.UdpClient.ConnectToServer()"
+#Else
             m_connectionThread = New Thread(AddressOf ConnectToServer)
+#End If
             m_connectionThread.Start()
         End If
 
@@ -382,7 +393,13 @@ Public Class UdpClient
                 If MyBase.ReceiveTimeout <> -1 Then m_udpClient.Client.ReceiveTimeout = MyBase.ReceiveTimeout
 
                 ' Start listening for data from the server on a seperate thread.
+#If ThreadTracking Then
+                m_receivingThread = New ManagedThread(AddressOf ReceiveServerData)
+                m_receivingThread.Name = "TVA.Communication.UdpClient.ReceiveServerData() [" & ClientID.ToString() & "]"
+#Else
                 m_receivingThread = New Thread(AddressOf ReceiveServerData)
+#End If
+
                 m_receivingThread.Start()
 
                 Exit Do ' The process of initiating the connection is complete.

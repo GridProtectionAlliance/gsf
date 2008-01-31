@@ -19,7 +19,12 @@ Partial Class SerialClient
         'This call is required by the Component Designer.
         InitializeComponent()
 
+#If ThreadTracking Then
+        m_connectionThread = New TVA.Threading.ManagedThread(AddressOf ConnectToPort)
+        m_connectionThread.Name = "TVA.Communication.SerialClient.ConnectToPort()"
+#Else
         m_connectionThread = New System.Threading.Thread(AddressOf ConnectToPort)
+#End If
         m_serialClient = New System.IO.Ports.SerialPort()
         MyBase.ConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False"
         MyBase.Protocol = TransportProtocol.Serial

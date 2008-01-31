@@ -38,8 +38,16 @@ Partial Class FileClient
         m_receiveInterval = -1
         m_startingOffset = 0
         m_fileClient = New StateInfo(Of System.IO.FileStream)()
+#If ThreadTracking Then
+        m_receivingThread = New TVA.Threading.ManagedThread(AddressOf ReceiveFileData)
+        m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()"
+
+        m_connectionThread = New TVA.Threading.ManagedThread(AddressOf ConnectToFile)
+        m_connectionThread.Name = "TVA.Communication.FileClient.ConnectToFile()"
+#Else
         m_receivingThread = New System.Threading.Thread(AddressOf ReceiveFileData)
         m_connectionThread = New System.Threading.Thread(AddressOf ConnectToFile)
+#End If
         m_receiveDataTimer = New System.Timers.Timer()
         MyBase.ConnectionString = "File=DataFile.txt"
         MyBase.Protocol = TransportProtocol.File

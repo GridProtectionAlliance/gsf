@@ -33,6 +33,7 @@ Imports System.ComponentModel
 Imports System.Threading
 Imports TVA.Services
 Imports TVA.Configuration
+Imports TVA.Threading
 
 Namespace Scheduling
 
@@ -46,7 +47,11 @@ Namespace Scheduling
         Private m_schedules As List(Of Schedule)
         Private m_persistSettings As Boolean
         Private m_settingsCategoryName As String
+#If ThreadTracking Then
+        Private m_startTimerThread As ManagedThread
+#Else
         Private m_startTimerThread As Thread
+#End If
         Private m_scheduleDueEventHandlerList As List(Of EventHandler(Of ScheduleEventArgs))
 
         Private WithEvents m_timer As System.Timers.Timer
@@ -168,7 +173,12 @@ Namespace Scheduling
         Public Sub Start()
 
             If m_enabled AndAlso Not m_timer.Enabled Then
+#If ThreadTracking Then
+                m_startTimerThread = New ManagedThread(AddressOf StartTimer)
+                m_startTimerThread.Name = "TVA.Scheduling.ScheduleManager.StartTimer()"
+#Else
                 m_startTimerThread = New Thread(AddressOf StartTimer)
+#End If
                 m_startTimerThread.Start()
             End If
 
