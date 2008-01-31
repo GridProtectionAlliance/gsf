@@ -27,6 +27,7 @@ Imports TVA.Measurements
 Imports TVA.IO.FilePath
 Imports TVA.Text.Common
 Imports TVA.ErrorManagement
+Imports TVA.Threading
 Imports PhasorProtocols
 Imports PhasorProtocols.Common
 
@@ -151,7 +152,12 @@ Public Class PhasorMeasurementMapper
         ' Stop multi-protocol frame parser
         If m_frameParser IsNot Nothing Then
             ' We perform disconnect on a separate thread so we can timeout since this can give us troubles :(
+#If ThreadTracking Then
+            With New ManagedThread(AddressOf m_frameParser.Stop)
+                .Name = "TVASPDC.PhasorMeasurementMapper.Disconnect(m_frameParser.Stop) [" & Name & "]"
+#Else
             With New Thread(AddressOf m_frameParser.Stop)
+#End If
                 .Start()
                 If Not .Join(1000) Then .Abort()
             End With
@@ -634,7 +640,16 @@ Public Class PhasorMeasurementMapper
 
     Private Sub m_frameParser_ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame) Handles m_frameParser.ReceivedConfigurationFrame
 
-        If Not m_receivedConfigFrame Then ThreadPool.UnsafeQueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
+        If Not m_receivedConfigFrame Then
+#If ThreadTracking Then
+            With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
+                .Name = "TVASPDC.PhasorMeasurementMapper.CacheConfigurationFrame()"
+            End With
+#Else
+                ThreadPool.UnsafeQueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
+#End If
+        End If
+
         m_receivedConfigFrame = True
 
     End Sub

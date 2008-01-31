@@ -19,6 +19,7 @@ Imports System.Text
 Imports System.Threading
 Imports System.Runtime.CompilerServices
 Imports TVA.Measurements
+Imports TVA.Threading
 
 Public MustInherit Class HistorianAdapterBase
 
@@ -34,7 +35,11 @@ Public MustInherit Class HistorianAdapterBase
     Public Event UnarchivedMeasurements(ByVal total As Integer) Implements IHistorianAdapter.UnarchivedMeasurements
 
     Private m_measurementQueue As List(Of IMeasurement)
+#If ThreadTracking Then
+    Private m_dataProcessingThread As ManagedThread
+#Else
     Private m_dataProcessingThread As Thread
+#End If
     Private m_processedMeasurements As Long
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_monitorTimer As Timers.Timer
@@ -90,7 +95,13 @@ Public MustInherit Class HistorianAdapterBase
             AttemptConnection()
 
             ' Start data processing thread
+#If ThreadTracking Then
+            m_dataProcessingThread = New ManagedThread(AddressOf ProcessMeasurements)
+            m_dataProcessingThread.Name = "InterfaceAdapters.HistorianAdapterBase.ProcessMeasurements() [" & Name & "]"
+#Else
             m_dataProcessingThread = New Thread(AddressOf ProcessMeasurements)
+#End If
+
             m_dataProcessingThread.Start()
 
             UpdateStatus(String.Format("Connection to {0} established.", Name))
@@ -139,7 +150,13 @@ Public MustInherit Class HistorianAdapterBase
         End SyncLock
 
         ' We throw status message updates on the thread pool so we don't slow sorting operations
+#If ThreadTracking Then
+        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
+            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
+        End With
+#Else
         ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
+#End If
 
     End Sub
 
@@ -150,7 +167,13 @@ Public MustInherit Class HistorianAdapterBase
         End SyncLock
 
         ' We throw status message updates on the thread pool so we don't slow sorting operations
+#If ThreadTracking Then
+        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
+            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
+        End With
+#Else
         ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
+#End If
 
     End Sub
 

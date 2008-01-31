@@ -564,7 +564,13 @@ Public Class Service
                 .LagTime = lagTime
                 .LeadTime = leadTime
 
+#If ThreadTracking Then
+                With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf Initialize, .This)
+                    .Name = "TVASPDC.Service.CalculatedMeasurementInitialization.Initialize()"
+                End With
+#Else
                 ThreadPool.QueueUserWorkItem(AddressOf Initialize, .This)
+#End If
             End With
 
         End Sub

@@ -49,6 +49,7 @@
     <DocumentationFile>TVASPDC.xml</DocumentationFile>
     <NoWarn>42030,42104,42108,42109</NoWarn>
     <WarningsAsErrors>42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+    <DefineConstants>ThreadTracking=True</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -59,6 +60,7 @@
     <DocumentationFile>TVASPDC.xml</DocumentationFile>
     <NoWarn>42030,42104,42108,42109</NoWarn>
     <WarningsAsErrors>42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+    <DefineConstants>ThreadTracking=True</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

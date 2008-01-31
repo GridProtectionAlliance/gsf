@@ -632,7 +632,14 @@ Public Class MultiProtocolFrameParser
         If m_deviceSupportsCommands AndAlso m_autoStartDataParsingSequence Then
             m_initialBytesReceived = 0
             m_initiatingDataStream = True
+
+#If ThreadTracking Then
+            With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf StartDataParsingSequence)
+                .Name = "PhasorProtocols.MultiProtocolFrameParser.StartDataParsingSequence()"
+            End With
+#Else
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf StartDataParsingSequence, Nothing)
+#End If
         End If
 
     End Sub

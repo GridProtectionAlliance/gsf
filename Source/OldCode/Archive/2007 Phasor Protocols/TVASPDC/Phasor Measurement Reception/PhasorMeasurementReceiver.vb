@@ -394,7 +394,13 @@ Public Class PhasorMeasurementReceiver
                 ' Since this is just for handling "reporting" status of virtual devices and
                 ' we need to return thread control to the calculated measurement, we throw this
                 ' update activity onto the thread pool - no rush, order not important
+#If ThreadTracking Then
+                With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf UpdateVirtualDevices, queuedMeasurements)
+                    .Name = "TVASPDC.PhasorMeasurementReceiver.UpdateVirtualDevices()"
+                End With
+#Else
                 ThreadPool.UnsafeQueueUserWorkItem(AddressOf UpdateVirtualDevices, queuedMeasurements)
+#End If
             End If
         End If
 
