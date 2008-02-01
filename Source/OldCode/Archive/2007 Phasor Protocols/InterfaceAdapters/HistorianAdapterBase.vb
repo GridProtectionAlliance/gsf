@@ -149,14 +149,16 @@ Public MustInherit Class HistorianAdapterBase
             m_measurementQueue.Add(measurement)
         End SyncLock
 
-        ' We throw status message updates on the thread pool so we don't slow sorting operations
-#If ThreadTracking Then
-        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
-            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
-        End With
-#Else
-        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
-#End If
+        IncrementProcessedMeasurements(1)
+
+        '        ' We throw status message updates on the thread pool so we don't slow sorting operations
+        '#If ThreadTracking Then
+        '        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
+        '            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
+        '        End With
+        '#Else
+        '        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
+        '#End If
 
     End Sub
 
@@ -166,14 +168,16 @@ Public MustInherit Class HistorianAdapterBase
             m_measurementQueue.AddRange(measurements)
         End SyncLock
 
-        ' We throw status message updates on the thread pool so we don't slow sorting operations
-#If ThreadTracking Then
-        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
-            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
-        End With
-#Else
-        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
-#End If
+        IncrementProcessedMeasurements(measurements.Count)
+
+        '        ' We throw status message updates on the thread pool so we don't slow sorting operations
+        '#If ThreadTracking Then
+        '        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
+        '            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
+        '        End With
+        '#Else
+        '        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
+        '#End If
 
     End Sub
 
@@ -184,14 +188,11 @@ Public MustInherit Class HistorianAdapterBase
 
     'End Sub
 
-    ' Since multiple threads may be calling this status update at the same time, we synchronize access to this code to prevent
-    ' multiple messages being displayed at nearly the same time - we do this using the method implementation attribute
     <MethodImpl(MethodImplOptions.Synchronized)> _
-    Private Sub IncrementProcessedMeasurements(ByVal state As Object)
+    Private Sub IncrementProcessedMeasurements(ByVal totalAdded As Long)
 
         ' Check to see if total number of added points will exceed process interval used to show periodic
         ' messages of how many points have been archived so far...
-        Dim totalAdded As Integer = Convert.ToInt32(state)
         Dim showMessage As Boolean = (m_processedMeasurements + totalAdded >= (m_processedMeasurements \ ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval)
 
         m_processedMeasurements += totalAdded

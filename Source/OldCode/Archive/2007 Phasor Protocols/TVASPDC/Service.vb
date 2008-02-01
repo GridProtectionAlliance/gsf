@@ -33,6 +33,7 @@ Imports TVA.DateTime.Common
 Imports TVA.Collections
 Imports TVA.ErrorManagement
 Imports TVA.Services
+Imports TVA.Threading
 Imports InterfaceAdapters
 Imports PhasorProtocols
 
@@ -58,6 +59,8 @@ Public Class Service
 #Region " Service Event Handlers "
 
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
+
+        Dim _forceBuildNumInc As Integer = 1
 
         ' Make sure service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
@@ -103,6 +106,7 @@ Public Class Service
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Connect", "Starts connection cycle to specified device", AddressOf ConnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Disconnect", "Disconnects specified device", AddressOf DisconnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SendCommand", "Sends command to specified device", AddressOf SendDeviceCommand))
+        ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("ThreadList", "Displays details for managed threads", AddressOf ActiveThreadList))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SysInit", "Starts a controlled system initialization", AddressOf ControlledSystemInitialization, False))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("GC", "Forces a .NET garbage collection", AddressOf ForceGarbageCollection, False))
 
@@ -962,6 +966,46 @@ Public Class Service
                         End Select
                     End If
                 End If
+            End If
+        End With
+
+    End Sub
+
+    Private Sub ActiveThreadList(ByVal requestInfo As ClientRequestInfo)
+
+        With requestInfo.Request.Arguments
+            If .ContainsHelpRequest Then
+                With New StringBuilder()
+                    .Append("Displays detail for all active managed threads.")
+                    .AppendLine()
+                    .AppendLine()
+                    .Append("   Usage:")
+                    .AppendLine()
+                    .Append("       ThreadList options")
+                    .AppendLine()
+                    .AppendLine()
+                    .Append("   Options:")
+                    .AppendLine()
+                    .Append("       -?".PadRight(30))
+                    .Append("Displays this help message")
+                    .AppendLine()
+
+                    ServiceHelper.UpdateStatus(requestInfo.Sender.ClientID, .ToString(), ServiceHelper.UpdateCrlfCount)
+                End With
+            Else
+                With New StringBuilder
+#If ThreadTracking Then
+                    .Append("This build has thread tracking enabled.")
+#Else
+                    .Append("This build does not have thread tracking enabled.")
+#End If
+                    .AppendLine()
+                    .AppendLine()
+
+                    .Append(ManagedThreads.ActiveThreadStatus)
+
+                    ServiceHelper.UpdateStatus(requestInfo.Sender.ClientID, .ToString(), ServiceHelper.UpdateCrlfCount)
+                End With
             End If
         End With
 
