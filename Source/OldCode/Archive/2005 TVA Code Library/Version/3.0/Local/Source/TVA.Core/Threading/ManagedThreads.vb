@@ -187,13 +187,16 @@ Namespace Threading
 
                 ' Handle abort or dequeue
                 If node Is Nothing Then
-                    If allowAbort AndAlso item.IsAlive Then
+                    If allowAbort Then
                         ' Started items may be aborted, even if running in thread pool
-                        If stateInfo Is Nothing Then
-                            item.Thread.Abort()
-                        Else
-                            item.Thread.Abort(stateInfo)
-                        End If
+                        Try
+                            If stateInfo Is Nothing Then
+                                item.Thread.Abort()
+                            Else
+                                item.Thread.Abort(stateInfo)
+                            End If
+                        Finally
+                        End Try
                     End If
                 Else
                     ' Remove item from queue if queued thread has yet to start
