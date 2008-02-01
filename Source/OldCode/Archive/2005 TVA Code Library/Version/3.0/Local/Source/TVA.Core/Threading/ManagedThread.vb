@@ -4,6 +4,14 @@ Imports TVA.DateTime.Common
 
 Namespace Threading
 
+    ''' <summary>
+    ''' Defines a managed thread
+    ''' </summary>
+    ''' <remarks>
+    ''' This class works like any normal thread but provides the benefit of automatic tracking
+    ''' through the ManagedThreads collection, total thread runtime and the ability to run
+    ''' the thread in an alternate execution context
+    ''' </remarks>
     Public NotInheritable Class ManagedThread
 
 #Region " Member Declaration "
@@ -25,6 +33,9 @@ Namespace Threading
 
 #Region " Constructors "
 
+        ''' <summary>
+        ''' Initializes a new instance of the ManagedThread class.
+        ''' </summary>
         Public Sub New(ByVal callback As ThreadStart)
 
             MyClass.New(ThreadType.StandardThread, callback, Nothing, Nothing)
@@ -32,6 +43,9 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Initializes a new instance of the ManagedThread class, specifying a delegate that allows an object to be passed to the thread when the thread is started.
+        ''' </summary>
         Public Sub New(ByVal callback As ParameterizedThreadStart)
 
             MyClass.New(ThreadType.StandardThread, callback, Nothing, Nothing)
@@ -39,6 +53,10 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Initializes a new instance of the ManagedThread class, specifying a delegate that allows an object to be passed to the thread when the thread is started
+        ''' and allowing the user to specify an alternate execution context for the thread.
+        ''' </summary>
         Public Sub New(ByVal callback As ContextCallback, ByVal ctx As ExecutionContext)
 
             MyClass.New(ThreadType.StandardThread, callback, Nothing, ctx)
@@ -80,6 +98,9 @@ Namespace Threading
 
 #Region " Code Scope: Public "
 
+        ''' <summary>
+        ''' An object containing data to be used by the thread's execution method.
+        ''' </summary>
         Public Property State() As Object
             Get
                 Return m_state
@@ -89,6 +110,9 @@ Namespace Threading
             End Set
         End Property
 
+        ''' <summary>
+        ''' An object that allows additional user defined information to be tracked along with this thread.
+        ''' </summary>
         Public Property Tag() As Object
             Get
                 Return m_tag
@@ -98,12 +122,18 @@ Namespace Threading
             End Set
         End Property
 
+        ''' <summary>
+        ''' Returns the managed thread type (either StandardThread or QueuedThread)
+        ''' </summary>
         Public ReadOnly Property Type() As ThreadType
             Get
                 Return m_type
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a value containing the curretn status of the current thread.
+        ''' </summary>
         Public Property Status() As ThreadStatus
             Get
                 Return m_status
@@ -113,12 +143,18 @@ Namespace Threading
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets a value indicating the execution status of the current thread.
+        ''' </summary>
         Public ReadOnly Property IsAlive() As Boolean
             Get
                 Return (m_status = ThreadStatus.Started OrElse m_status = ThreadStatus.Executing)
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the name of the thread.
+        ''' </summary>
         Public Property Name() As String
             Get
                 Return m_name
@@ -129,12 +165,18 @@ Namespace Threading
             End Set
         End Property
 
+        ''' <summary>
+        ''' Get the time, in ticks, that the thread started executing
+        ''' </summary>
         Public ReadOnly Property StartTime() As Long
             Get
                 Return m_startTime
             End Get
         End Property
 
+        ''' <summary>
+        ''' Get the time, in ticks, that the thread finished executing
+        ''' </summary>
         Public ReadOnly Property StopTime() As Long
             Get
                 Return m_stopTime
@@ -162,12 +204,28 @@ Namespace Threading
             End Get
         End Property
 
+        ''' <summary>
+        ''' Raises a ThreadAbortException in the thread on which it is invoked, to begin the process of terminating the thread. Calling this method usually terminates the thread.
+        ''' </summary>
         Public Sub Abort()
 
-            ManagedThreads.Cancel(Me, True)
+            ManagedThreads.Cancel(Me, True, Nothing)
 
         End Sub
 
+        ''' <summary>
+        ''' Raises a ThreadAbortException in the thread on which it is invoked, to begin the process of terminating the thread. Calling this method usually terminates the thread.
+        ''' </summary>
+        ''' <param name="stateInfo">An object that contains application-specific information, such as state, which can be used by the thread being aborted.</param>
+        Public Sub Abort(ByVal stateInfo As Object)
+
+            ManagedThreads.Cancel(Me, True, stateInfo)
+
+        End Sub
+
+        ''' <summary>
+        ''' Causes a thread to be scheduled for execution.
+        ''' </summary>
         Public Sub Start()
 
             If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot manually start a thread that was queued into thread pool.")
@@ -178,6 +236,10 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Causes a thread to be scheduled for execution.
+        ''' </summary>
+        ''' <param name="parameter">An object that contains data to be used by the method the thread executes.</param>
         Public Sub Start(ByVal parameter As Object)
 
             If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot manually start a thread that was queued into thread pool.")
@@ -190,6 +252,12 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Blocks the calling thread until a thread terminates or the specified time elapses, while continuing to perform standard COM and SendMessage pumping.
+        ''' </summary>
+        ''' <remarks>
+        ''' This is only available for standard threads - queued threads don't have an associated thread until they are executing.
+        ''' </remarks>
         Public Sub Join()
 
             If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot join a thread that was queued into thread pool.")
@@ -199,6 +267,14 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Blocks the calling thread until a thread terminates or the specified time elapses, while continuing to perform standard COM and SendMessage pumping.
+        ''' </summary>
+        ''' <param name="millisecondsTimeout">The number of milliseconds to wait for the thread to terminate. </param>
+        ''' <returns>true if the thread has terminated; false if the thread has not terminated after the amount of time specified by the millisecondsTimeout parameter has elapsed.</returns>
+        ''' <remarks>
+        ''' This is only available for standard threads - queued threads don't have an associated thread until they are executing.
+        ''' </remarks>
         Public Function Join(ByVal millisecondsTimeout As Integer) As Boolean
 
             If m_type = ThreadType.QueuedThread Then Throw New InvalidOperationException("Cannot join a thread that was queued into thread pool.")
@@ -208,12 +284,28 @@ Namespace Threading
 
         End Function
 
+        ''' <summary>
+        ''' Blocks the calling thread until a thread terminates or the specified time elapses, while continuing to perform standard COM and SendMessage pumping.
+        ''' </summary>
+        ''' <param name="timeout">A TimeSpan set to the amount of time to wait for the thread to terminate. </param>
+        ''' <returns>true if the thread terminated; false if the thread has not terminated after the amount of time specified by the timeout parameter has elapsed.</returns>
+        ''' <remarks>
+        ''' This is only available for standard threads - queued threads don't have an associated thread until they are executing.
+        ''' </remarks>
         Public Function Join(ByVal timeout As TimeSpan) As Boolean
 
             Return Join(CInt(timeout.TotalMilliseconds))
 
         End Function
 
+        ''' <summary>
+        ''' Gets or sets a value indicating the scheduling priority of a thread.
+        ''' </summary>
+        ''' <returns>One of the ThreadPriority values. The default value is Normal.</returns>
+        ''' <remarks>
+        ''' Changing of this value is only available to standard threads - you can't change the priorty of queued threads since they are already
+        ''' allocated and owned by the .NET thread pool.
+        ''' </remarks>
         Public Property Priority() As ThreadPriority
             Get
                 If m_type = ThreadType.QueuedThread Then
@@ -259,6 +351,8 @@ Namespace Threading
                         m_ctxCallback.Invoke(m_state)
                     End If
                 Else
+                    ' If user specified an alternate execution context, we invoke
+                    ' their delegate under that context
                     ExecutionContext.Run(m_ctx, m_ctxCallback, m_state)
                 End If
             Finally

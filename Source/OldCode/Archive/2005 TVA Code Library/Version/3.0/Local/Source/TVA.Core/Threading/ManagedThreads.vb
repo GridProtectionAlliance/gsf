@@ -4,6 +4,9 @@ Imports TVA.DateTime.Common
 
 Namespace Threading
 
+    ''' <summary>
+    ''' Maintains a reference to all managed threads
+    ''' </summary>
     Public Class ManagedThreads
 
         Private Shared m_queuedThreads As LinkedList(Of ManagedThread)
@@ -16,6 +19,12 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Add an item to the active thread list
+        ''' </summary>
+        ''' <remarks>
+        ''' Typically only used by standard threads when user calls "Start"
+        ''' </remarks>
         Friend Shared Sub Add(ByVal item As ManagedThread)
 
             ' Standard threads are simply added to the active thread list when started
@@ -26,6 +35,9 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Remove completed thread from active thread list
+        ''' </summary>
         Friend Shared Sub Remove(ByVal item As ManagedThread)
 
             SyncLock m_queuedThreads
@@ -34,6 +46,12 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Queue thread for processing
+        ''' </summary>
+        ''' <remarks>
+        ''' Typically only used by queued threads to add work items to the queue
+        ''' </remarks>
         Friend Shared Sub Queue(ByVal item As ManagedThread)
 
             SyncLock m_queuedThreads
@@ -42,6 +60,10 @@ Namespace Threading
 
         End Sub
 
+        ''' <summary>
+        ''' Removes first item from the queue and transfers the item the active thread list
+        ''' </summary>
+        ''' <returns>Next item to be processed</returns>
         Friend Shared Function Pop() As ManagedThread
 
             Dim item As ManagedThread
@@ -65,6 +87,9 @@ Namespace Threading
 
         End Function
 
+        ''' <summary>
+        ''' Returns a descriptive status of all queued and active mananged threads
+        ''' </summary>
         Public Shared ReadOnly Property ActiveThreadStatus() As String
             Get
                 With New StringBuilder
@@ -93,7 +118,7 @@ Namespace Threading
                                     Environment.NewLine)
 
                         .AppendFormat("     Name: {0}{1}", _
-                                      item.Tag.ToString(), _
+                                      item.Name, _
                                       Environment.NewLine)
                         .AppendLine()
                     Next
@@ -124,6 +149,9 @@ Namespace Threading
             End Get
         End Property
 
+        ''' <summary>
+        ''' Returns a copy of the currently queued and active threads
+        ''' </summary>
         Public Shared ReadOnly Property QueuedThreads() As ManagedThread()
             Get
                 With New List(Of ManagedThread)
@@ -137,7 +165,14 @@ Namespace Threading
             End Get
         End Property
 
-        Public Shared Sub Cancel(ByVal item As ManagedThread, ByVal allowAbort As Boolean)
+        ''' <summary>
+        ''' Removes a queued thread from thread pool if still queued, if allowAbort is True
+        ''' aborts the thread if executing (standard or queued)
+        ''' </summary>
+        ''' <param name="item">Thread to cancel</param>
+        ''' <param name="allowAbort">Set to True to abort thread if executing</param>
+        ''' <param name="stateInfo">An object that contains application-specific information, such as state, which can be used by the thread being aborted.</param>
+        Public Shared Sub Cancel(ByVal item As ManagedThread, ByVal allowAbort As Boolean, ByVal stateInfo As Object)
 
             If item Is Nothing Then Throw New ArgumentNullException("item")
 
@@ -154,7 +189,11 @@ Namespace Threading
                 If node Is Nothing Then
                     If allowAbort AndAlso item.IsAlive Then
                         ' Started items may be aborted, even if running in thread pool
-                        item.Thread.Abort()
+                        If stateInfo Is Nothing Then
+                            item.Thread.Abort()
+                        Else
+                            item.Thread.Abort(stateInfo)
+                        End If
                     End If
                 Else
                     ' Remove item from queue if queued thread has yet to start

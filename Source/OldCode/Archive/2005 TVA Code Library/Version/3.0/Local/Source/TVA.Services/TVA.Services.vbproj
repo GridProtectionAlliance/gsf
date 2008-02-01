@@ -42,7 +42,7 @@
     <OutputPath>..\bin\</OutputPath>
     <DocumentationFile>TVA.Services.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
-    <DefineConstants>ThreadTracking=True</DefineConstants>
+    <DefineConstants>ThreadTracking=False</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
