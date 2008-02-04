@@ -49,6 +49,9 @@ Namespace FNet
         ''' <summary>Default nominal frequency for FNET devices is 60Hz</summary>
         Public Const DefaultNominalFrequency As LineFrequency = LineFrequency.Hz60
 
+        ''' <summary>Default real-time ticks offset for FNET</summary>
+        Public Const DefaultTicksOffset As Long = 110000000
+
     End Class
 
 End Namespace

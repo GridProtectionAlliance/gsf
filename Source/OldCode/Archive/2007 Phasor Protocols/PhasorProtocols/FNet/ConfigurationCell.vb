@@ -19,6 +19,7 @@ Imports System.Runtime.Serialization
 Imports System.Text
 Imports PhasorProtocols.Common
 Imports PhasorProtocols.FNet.Common
+Imports TVA.DateTime.Common
 
 Namespace FNet
 
@@ -27,6 +28,7 @@ Namespace FNet
 
         Inherits ConfigurationCellBase
 
+        Private m_ticksOffset As Long
         Private m_longitude As Single
         Private m_latitude As Single
         Private m_numberOfSatellites As Integer = 1 ' We'll initially assume synchronization is good until told otherwise
@@ -42,15 +44,17 @@ Namespace FNet
             MyBase.New(info, context)
 
             ' Deserialize configuration cell
+            m_ticksOffset = info.GetInt64("ticksOffset")
             m_longitude = info.GetSingle("longitude")
             m_latitude = info.GetSingle("latitude")
             m_numberOfSatellites = info.GetInt32("numberOfSatellites")
 
         End Sub
 
-        Public Sub New(ByVal parent As ConfigurationFrame, ByVal nominalFrequency As LineFrequency)
+        Public Sub New(ByVal parent As ConfigurationFrame, ByVal nominalFrequency As LineFrequency, ByVal ticksOffset As Long)
 
             MyBase.New(parent, False, 0, nominalFrequency, MaximumPhasorValues, MaximumAnalogValues, MaximumDigitalValues)
+            m_ticksOffset = ticksOffset
 
         End Sub
 
@@ -102,6 +106,15 @@ Namespace FNet
             End Get
             Set(ByVal value As UInt16)
                 Parent.IDCode = value
+            End Set
+        End Property
+
+        Public Property TicksOffset() As Long
+            Get
+                Return m_ticksOffset
+            End Get
+            Set(ByVal value As Long)
+                m_ticksOffset = value
             End Set
         End Property
 
@@ -184,6 +197,7 @@ Namespace FNet
             MyBase.GetObjectData(info, context)
 
             ' Serialize configuration cell
+            info.AddValue("ticksOffset", m_ticksOffset)
             info.AddValue("longitude", m_longitude)
             info.AddValue("latitude", m_latitude)
             info.AddValue("numberOfSatellites", m_numberOfSatellites)
@@ -197,6 +211,8 @@ Namespace FNet
             Get
                 Dim baseAttributes As Dictionary(Of String, String) = MyBase.Attributes
 
+                baseAttributes.Add("Time Offset (ticks)", m_ticksOffset)
+                baseAttributes.Add("Time Offset (seconds)", m_ticksOffset / TicksPerSecond)
                 baseAttributes.Add("Longitude", Longitude)
                 baseAttributes.Add("Latitude", Latitude)
                 baseAttributes.Add("Number of Satellites", NumberOfSatellites)

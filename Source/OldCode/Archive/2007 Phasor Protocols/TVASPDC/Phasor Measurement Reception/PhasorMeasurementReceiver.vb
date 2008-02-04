@@ -215,6 +215,13 @@ Public Class PhasorMeasurementReceiver
                                 .RefreshConfigurationFileOnChange = True
                                 .ParseWordCountFromByte = False
                             End With
+                        ElseIf parser.PhasorProtocol = PhasorProtocol.FNet Then
+                            ' Check for overriden FNET parameters
+                            With DirectCast(parser.ConnectionParameters, FNet.ConnectionParameters)
+                                Dim fnetParam As String
+                                If keys.TryGetValue("ticksoffset", fnetParam) Then .TicksOffset = CLng(fnetParam)
+                                If keys.TryGetValue("stationname", fnetParam) Then .StationName = fnetParam
+                            End With
                         End If
 
                         ' For captured data simulations we will inject a simulated timestamp and auto-repeat file stream...

@@ -26,6 +26,7 @@ Namespace FNet
 
         Inherits ConnectionParametersBase
 
+        Private m_ticksOffset As Long
         Private m_frameRate As Int16
         Private m_nominalFrequency As LineFrequency
         Private m_stationName As String
@@ -33,6 +34,7 @@ Namespace FNet
         Protected Sub New(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
             ' Deserialize connection parameters
+            m_ticksOffset = info.GetInt64("ticksOffset")
             m_frameRate = info.GetInt16("frameRate")
             m_nominalFrequency = info.GetValue("nominalFrequency", GetType(LineFrequency))
             m_stationName = info.GetString("stationName")
@@ -41,10 +43,21 @@ Namespace FNet
 
         Public Sub New()
 
+            m_ticksOffset = DefaultTicksOffset
             m_frameRate = DefaultFrameRate
             m_nominalFrequency = DefaultNominalFrequency
 
         End Sub
+
+        <Category("Optional Connection Parameters"), Description("FNET devices normally report time in 11 seconds past real-time, this parameter adjusts for this artificial delay.  Note parameter is in ticks (1 second = 10000000 ticks)."), DefaultValue(DefaultTicksOffset)> _
+        Public Property TicksOffset() As Long
+            Get
+                Return m_ticksOffset
+            End Get
+            Set(ByVal value As Long)
+                m_ticksOffset = value
+            End Set
+        End Property
 
         <Category("Optional Connection Parameters"), Description("Configured frame rate for FNET device."), DefaultValue(DefaultFrameRate)> _
         Public Property FrameRate() As Int16
@@ -83,6 +96,7 @@ Namespace FNet
         Public Overrides Sub GetObjectData(ByVal info As SerializationInfo, ByVal context As StreamingContext)
 
             ' Serialize connection parameters
+            info.AddValue("ticksOffset", m_ticksOffset)
             info.AddValue("frameRate", m_frameRate)
             info.AddValue("nominalFrequency", m_nominalFrequency, GetType(LineFrequency))
             info.AddValue("stationName", m_stationName)

@@ -37,12 +37,12 @@ Namespace FNet
 
         End Sub
 
-        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency, ByVal stationName As String)
+        Public Sub New(ByVal idCode As UInt16, ByVal ticks As Long, ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency, ByVal stationName As String, ByVal ticksOffset As Long)
 
             MyBase.New(idCode, New ConfigurationCellCollection, ticks, frameRate)
 
             ' FNet protocol sends data for one device
-            Cells.Add(New ConfigurationCell(Me, nominalFrequency))
+            Cells.Add(New ConfigurationCell(Me, nominalFrequency, ticksOffset))
 
             With Cells(0)
                 ' Assign station name
@@ -92,8 +92,18 @@ Namespace FNet
             End Get
         End Property
 
-        ' Since FNet only supports a single device there will only be one cell, so we just share nominal frequency, longitude,
-        ' latitude and number of satellites with our only child and expose the value at the parent level for convience
+        ' Since FNet only supports a single device there will only be one cell, so we just share ticks offset,
+        ' nominal frequency, longitude, latitude and number of satellites with our only child and expose the
+        ' value at the parent level for convience
+        Public Property TicksOffset() As Long
+            Get
+                Return Cells(0).TicksOffset
+            End Get
+            Set(ByVal value As Long)
+                Cells(0).TicksOffset = value
+            End Set
+        End Property
+
         Public Property NominalFrequency() As LineFrequency
             Get
                 Return Cells(0).NominalFrequency

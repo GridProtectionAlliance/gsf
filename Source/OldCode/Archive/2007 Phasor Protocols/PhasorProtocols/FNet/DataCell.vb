@@ -217,9 +217,9 @@ Namespace FNet
                 Parent.SampleIndex = Convert.ToInt32(data(Element.SampleIndex))
 
                 ' Get timestamp of data record
-                Parent.Ticks = ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, configurationCell.FrameRate)
+                Parent.Ticks = configurationCell.TicksOffset + ParseTimestamp(data(Element.Date), data(Element.Time), Parent.SampleIndex, configurationCell.FrameRate)
 
-                ' Parse out first frequency (can be long/lat at top of minute)
+                ' Parse out first analog value (can be long/lat at top of minute)
                 m_analogValue = Convert.ToSingle(data(Element.Analog))
 
                 If Convert.ToInt32(data(Element.Time).Substring(4, 2)) = 0 Then

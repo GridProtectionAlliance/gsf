@@ -53,6 +53,7 @@ Namespace FNet
 #Region " Private Member Declarations "
 
         Private m_configurationFrame As ConfigurationFrame
+        Private m_ticksOffset As Long
         Private m_frameRate As Int16
         Private m_nominalFrequency As LineFrequency
         Private m_stationName As String
@@ -63,14 +64,14 @@ Namespace FNet
 
         Public Sub New()
 
-            ' FNet devices default to 10 frames per second and 60Hz
-            MyClass.New(DefaultFrameRate, DefaultNominalFrequency)
+            ' FNet devices default to 10 frames per second, 60Hz and 11 second time offset
+            MyClass.New(DefaultFrameRate, DefaultNominalFrequency, DefaultTicksOffset)
 
         End Sub
 
         Public Sub New(ByVal configurationFrame As IConfigurationFrame)
 
-            MyClass.New(configurationFrame.FrameRate, DefaultNominalFrequency)
+            MyClass.New(configurationFrame.FrameRate, DefaultNominalFrequency, DefaultTicksOffset)
 
             m_configurationFrame = CastToDerivedConfigurationFrame(configurationFrame)
 
@@ -81,15 +82,16 @@ Namespace FNet
 
         Public Sub New(ByVal configurationFrame As ConfigurationFrame)
 
-            MyClass.New(configurationFrame.FrameRate, configurationFrame.NominalFrequency)
+            MyClass.New(configurationFrame.FrameRate, configurationFrame.NominalFrequency, configurationFrame.TicksOffset)
             m_configurationFrame = configurationFrame
 
         End Sub
 
-        Public Sub New(ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency)
+        Public Sub New(ByVal frameRate As Int16, ByVal nominalFrequency As LineFrequency, ByVal ticksOffset As Long)
 
             m_frameRate = frameRate
             m_nominalFrequency = nominalFrequency
+            m_ticksOffset = ticksOffset
 
         End Sub
 
@@ -115,6 +117,15 @@ Namespace FNet
             End Get
             Set(ByVal value As IConfigurationFrame)
                 m_configurationFrame = CastToDerivedConfigurationFrame(value)
+            End Set
+        End Property
+
+        Public Property TicksOffset() As Long
+            Get
+                Return m_ticksOffset
+            End Get
+            Set(ByVal value As Long)
+                m_ticksOffset = value
             End Set
         End Property
 
@@ -156,6 +167,7 @@ Namespace FNet
                     MyBase.ConnectionParameters = parameters
 
                     ' Assign new incoming connection parameter values
+                    m_ticksOffset = parameters.TicksOffset
                     m_frameRate = parameters.FrameRate
                     m_nominalFrequency = parameters.NominalFrequency
                     m_stationName = parameters.StationName
@@ -202,7 +214,7 @@ Namespace FNet
                     ' Make sure all the needed data elements exist (could be a bad frame)
                     If data.Length >= 8 Then
                         ' Create virtual configuration frame
-                        m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency, m_stationName)
+                        m_configurationFrame = New ConfigurationFrame(Convert.ToUInt16(data(Element.UnitID)), Date.Now.Ticks, m_frameRate, m_nominalFrequency, m_stationName, m_ticksOffset)
 
                         ' Notify clients of new configuration frame
                         RaiseReceivedConfigurationFrame(m_configurationFrame)
