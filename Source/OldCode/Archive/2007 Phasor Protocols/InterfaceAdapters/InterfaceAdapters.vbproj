@@ -29,7 +29,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>InterfaceAdapters.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42030,42032,42036,42104,42108,42109</NoWarn>
-    <DefineConstants>ThreadTracking=True</DefineConstants>
+    <DefineConstants>ThreadTracking=False</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
