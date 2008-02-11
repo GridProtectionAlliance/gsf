@@ -18,7 +18,7 @@
 '*******************************************************************************************************
 
 Imports System.Threading
-Imports TVA.Threading
+Imports TVA.Collections
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 
@@ -30,6 +30,7 @@ Namespace Measurements
 
         Private m_frameList As LinkedList(Of IFrame)        ' We keep this list sorted by timestamp so frames are processed in order
         Private m_frameHash As Dictionary(Of Long, IFrame)  ' This list not guaranteed to be sorted, but used for fast frame lookup
+        Private m_popQueue As ProcessQueue(Of Long)
         Private m_publishedTicks As Long
         Private m_head, m_last As IFrame
         Private m_ticksPerFrame As Decimal
@@ -39,8 +40,11 @@ Namespace Measurements
 
             m_frameList = New LinkedList(Of IFrame)
             m_frameHash = New Dictionary(Of Long, IFrame)(initialCapacity)
+            m_popQueue = ProcessQueue(Of Long).CreateRealTimeQueue(AddressOf PopStub, AddressOf CanPop)
+
             m_ticksPerFrame = ticksPerFrame
             m_createNewFrameFunction = createNewFrameFunction
+            m_popQueue.Start()
 
         End Sub
 
@@ -69,19 +73,11 @@ Namespace Measurements
             m_publishedTicks = m_last.Ticks
 
             ' Frame's already been handled so there's no rush in removing it
-#If ThreadTracking Then
-            With ManagedThreadPool.QueueUserWorkItem(AddressOf Pop, m_publishedTicks)
-                .Name = "TVA.Measurements.FrameQueue.Pop()"
-            End With
-#Else
-            ThreadPool.UnsafeQueueUserWorkItem(AddressOf Pop, m_publishedTicks)
-#End If
+            m_popQueue.Add(m_publishedTicks)
 
         End Sub
 
-        Private Sub Pop(ByVal state As Object)
-
-            Dim publishedTicks As Long = CLng(state)
+        Private Function CanPop(ByVal publishedTicks As Long) As Boolean
 
             ' We didn't try for an immediate lock to remove top frame from original
             ' "Pop" call so now we're running on an independent thread and we'll hang
@@ -90,28 +86,34 @@ Namespace Measurements
             ' for queue clean up - the separate thread should also avoid a potential
             ' deadlock that could be caused by waiting for locks between the frame
             ' queue and frame measurements, i.e., sorting vs. publication contention
-            Do While True
-                ' Attempt a lock...
-                If Monitor.TryEnter(m_frameList, 1) Then
-                    Try
-                        m_frameHash.Remove(publishedTicks)
-                        m_frameList.RemoveFirst()
 
-                        If m_frameList.Count > 0 Then
-                            m_head = m_frameList.First.Value
-                        Else
-                            m_head = Nothing
-                        End If
+            ' Attempt a lock, if we get it handle pop - otherwise return False and
+            ' process queue will retry...
+            If Monitor.TryEnter(m_frameList) Then
+                Try
+                    m_frameList.RemoveFirst()
 
-                        Exit Do
-                    Finally
-                        Monitor.Exit(m_frameList)
-                    End Try
-                Else
-                    ' Snooze for a bit and try again...
-                    Thread.Sleep(1)
-                End If
-            Loop
+                    If m_frameList.Count > 0 Then
+                        m_head = m_frameList.First.Value
+                    Else
+                        m_head = Nothing
+                    End If
+
+                    m_frameHash.Remove(publishedTicks)
+                Finally
+                    Monitor.Exit(m_frameList)
+                End Try
+
+                Return True
+            End If
+
+            Return False
+
+        End Function
+
+        Private Sub PopStub(ByVal publishedTicks As Long)
+
+            ' CanPop does the real work - nothing for us to do now... :)
 
         End Sub
 
