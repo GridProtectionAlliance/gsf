@@ -110,7 +110,7 @@ Public Class Service
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SysInit", "Starts a controlled system initialization", AddressOf ControlledSystemInitialization, False))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("GC", "Forces a .NET garbage collection", AddressOf ForceGarbageCollection, False))
 
-        DisplayStatusMessage(String.Format("*** System Initializing [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
+        DisplayStatusMessage(String.Format("*** System Initializing - [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
 
     End Sub
 
