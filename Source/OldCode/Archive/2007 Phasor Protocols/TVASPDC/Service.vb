@@ -86,10 +86,10 @@ Public Class Service
         m_statusMessageQueue.Start()
 
         ' Create health and status exporters
-        m_healthExporter = New MultipleDestinationExporter("HealthExporter", 60000, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Health.txt", True, "TVA", "esocss", "pwd4ctrl")})
+        m_healthExporter = New MultipleDestinationExporter("HealthExporter", Timeout.Infinite, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Health.txt", True, "TVA", "esocss", "pwd4ctrl")})
         ServiceHelper.ServiceComponents.Add(m_healthExporter)
 
-        m_statusExporter = New MultipleDestinationExporter("StatusExporter", 60000, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Status.txt", True, "TVA", "esocss", "pwd4ctrl")})
+        m_statusExporter = New MultipleDestinationExporter("StatusExporter", Timeout.Infinite, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Status.txt", True, "TVA", "esocss", "pwd4ctrl")})
         ServiceHelper.ServiceComponents.Add(m_statusExporter)
 
         ' Determine if local system is configured with a real-time clock

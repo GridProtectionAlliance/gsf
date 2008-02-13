@@ -20,6 +20,7 @@ Imports System.IO
 Imports System.Data.OleDb
 Imports System.Threading
 Imports TVA.Common
+Imports TVA.IO
 Imports TVA.Measurements
 Imports TVA.Configuration.Common
 Imports TVA.IO.FilePath
@@ -36,20 +37,14 @@ Public Class MeasurementExporter
 
     Private Const DefaultConfigSection As String = "ICCPDataExportModule"
 
-    ' Initialization might take some time due to network share logon - so we postpone any frame publication until we're finished
-    Private m_initialized As Boolean
     Private m_measurementTags As Dictionary(Of MeasurementKey, String)
     Private m_signalTypes As Dictionary(Of MeasurementKey, String)
     Private m_useReferenceAngle As Boolean
     Private m_referenceAngleKey As MeasurementKey
     Private m_exportInterval As Integer
-    Private m_exportCount As Integer
-    Private m_exportFileName As String()
-    Private m_totalExports As Long
     Private m_statusDisplayed As Boolean
     Private m_sqrtOf3 As Double
-    Private m_disposed As Boolean
-    Private WithEvents m_exportQueue As ProcessQueue(Of IFrame)
+    Private WithEvents m_dataExporter As MultipleDestinationExporter
 
     Private Enum ICCPDataQuality
         Good = 0
@@ -67,12 +62,6 @@ Public Class MeasurementExporter
             ' be added to config file of parent process we add them to a new configuration category
             .Add("ExportInterval", "5", "Data export interval, in seconds")
             .Add("UseReferenceAngle", "True", "Require existance of reference angle to export relative angles")
-            .Add("ExportCount", "1", "Total number of export files to produce")
-            .Add("ExportShare1", "\\152.85.98.6\pmu", "UNC path (\\server\share) name for export file")
-            .Add("ExportShare1.Domain", "SOCOPPMU", "Domain used for authentication to UNC path (computer name for local accounts)", False)
-            .Add("ExportShare1.UserName", "shukri", "User name used for authentication to UNC path")
-            .Add("ExportShare1.Password", "shukri", "Encrypted password used for authentication to UNC path", True)
-            .Add("ExportShare1.FileName", "\PMU.txt", "Path and file name of ICCP data export - must be prefixed with directory separator")
 
             ' Save updates to config file, if any
             SaveSettings()
@@ -80,28 +69,13 @@ Public Class MeasurementExporter
             ' Load needed settings
             m_exportInterval = Convert.ToInt32(.Item("ExportInterval").Value)
             m_useReferenceAngle = ParseBoolean(.Item("UseReferenceAngle").Value)
-            m_exportCount = Convert.ToInt32(.Item("ExportCount").Value)
-            m_exportFileName = CreateArray(Of String)(m_exportCount)
-
-            Dim exportShare As String
-
-            For x As Integer = 0 To m_exportCount - 1
-                exportShare = String.Format("ExportShare{0}", x + 1)
-                m_exportFileName(x) = .Item(exportShare).Value & .Item(String.Format("{0}.FileName", exportShare)).Value
-
-                ' Attempt connection to external network share
-                Try
-                    ConnectToNetworkShare( _
-                        .Item(exportShare).Value, _
-                        .Item(String.Format("{0}.UserName", exportShare)).Value, _
-                        .Item(String.Format("{0}.Password", exportShare)).Value, _
-                        .Item(String.Format("{0}.Domain", exportShare)).Value)
-                Catch ex As Exception
-                    ' Something unexpected happened during attempt to connect to network share - so we'll report it...
-                    RaiseCalculationException(ex)
-                End Try
-            Next
         End With
+
+        ' Define default export location - user can override in config file later...
+        Dim defaultDestinations As ExportDestination() = New ExportDestination() _
+            {New ExportDestination("\\152.85.98.24\pmu\PMU.txt", True, "TVA", "esocss", "pwd4ctrl")}
+
+        m_dataExporter = New MultipleDestinationExporter(MyBase.ConfigurationSection, m_exportInterval * 1000, defaultDestinations)
 
         ' Create new measurement dictionaries
         m_measurementTags = New Dictionary(Of MeasurementKey, String)
@@ -151,50 +125,6 @@ Public Class MeasurementExporter
         ' We track latest measurements so we can use these values when points are missing
         TrackLatestMeasurements = True
 
-        ' Set up a synchronous process queue to handle exports that will limit total export time to export interval - queue should
-        ' never have more than one item queued at once...
-        m_exportQueue = ProcessQueue(Of IFrame).CreateSynchronousQueue(AddressOf ExportMeasurements, 10, m_exportInterval * 1000, False, False)
-
-    End Sub
-
-    Public Overrides Sub Start()
-
-        MyBase.Start()
-        If m_exportQueue IsNot Nothing Then m_exportQueue.Start()
-
-        ' Mark initialization as complete
-        m_initialized = True
-
-    End Sub
-
-    Public Overrides Sub [Stop]()
-
-        MyBase.[Stop]()
-        If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
-
-    End Sub
-
-    Public Overrides Sub Dispose()
-
-        If Not m_disposed Then
-            m_disposed = True
-
-            GC.SuppressFinalize(Me)
-
-            MyBase.Dispose()
-
-            ' We'll be nice and disconnect network shares when this class is disposed...
-            For x As Integer = 1 To m_exportCount
-                DisconnectFromNetworkShare(CategorizedStringSetting(ConfigurationSection, String.Format("ExportShare{0}", x)))
-            Next
-        End If
-
-    End Sub
-
-    Protected Overrides Sub Finalize()
-
-        Dispose()
-
     End Sub
 
     Public Overrides ReadOnly Property Status() As String
@@ -209,17 +139,7 @@ Public Class MeasurementExporter
                 .Append("     Reference angle point: ")
                 .Append(m_referenceAngleKey.ToString())
                 .AppendLine()
-                .Append("   Defined export interval: ")
-                .Append(m_exportInterval)
-                .Append(" seconds")
-                .AppendLine()
-                .Append("    ICCP export file names: ")
-                .Append(ListToString(m_exportFileName, ","c))
-                .AppendLine()
-                .Append("      Total exports so far: ")
-                .Append(m_totalExports)
-                .AppendLine()
-                If m_exportQueue IsNot Nothing Then .Append(m_exportQueue.Status)
+                If m_dataExporter IsNot Nothing Then .Append(m_dataExporter.Status)
                 .Append(MyBase.Status)
                 Return .ToString()
             End With
@@ -242,157 +162,107 @@ Public Class MeasurementExporter
         Dim ticks As Long = frame.Ticks
 
         ' We only export data at the specified interval
-        If m_initialized AndAlso (New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0 Then
-            ' Measurement export to a file may take more than 1/30 of a second - so we do this work asyncrhonously
-            m_exportQueue.Add(frame)
-        End If
+        If (New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0 Then
+            Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
 
-    End Sub
+            If measurements.Count > 0 Then
+                Dim fileData As New StringBuilder
+                Dim measurement, referenceAngle As IMeasurement
+                Dim measurementTag, signalType As String
+                Dim measurementValue As Double
+                Dim measurementQuality As ICCPDataQuality
 
-    Private Sub ExportMeasurements(ByVal frame As IFrame)
-
-        Dim measurements As IDictionary(Of MeasurementKey, IMeasurement) = frame.Measurements
-
-        ' Make sure there are measurements to export
-        If measurements.Count > 0 Then
-            Dim exportData As New StringBuilder
-            Dim measurement, referenceAngle As IMeasurement
-            Dim measurementTag, signalType As String
-            Dim measurementValue As Double
-            Dim measurementQuality As ICCPDataQuality
-            Dim fileStream As StreamWriter
-
-            ' We need to get calculated reference angle value in order to export relative phase angles
-            ' If the value is not here, we don't export
-            If m_useReferenceAngle AndAlso Not measurements.TryGetValue(m_referenceAngleKey, referenceAngle) Then
-                ' We were unable to find reference angle in this data concentration pass, lag time too small?
-                RaiseCalculationException(New InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small.  File creation was skipped."))
-                Exit Sub
-            End If
-
-            ' Export all defined ICCP measurements
-            For Each inputMeasurementKey As MeasurementKey In InputMeasurementKeys
-                ' Look up measurement's tag name
-                If m_measurementTags.TryGetValue(inputMeasurementKey, measurementTag) Then
-                    ' See if measurement exists in this frame
-                    If measurements.TryGetValue(inputMeasurementKey, measurement) Then
-                        ' Get measurement's adjusted value
-                        measurementValue = measurement.AdjustedValue
-
-                        ' Interpret data quality flags
-                        measurementQuality = IIf(measurement.ValueQualityIsGood, IIf(measurement.TimestampQualityIsGood, ICCPDataQuality.Good, ICCPDataQuality.Suspect), ICCPDataQuality.Bad)
-                    Else
-                        ' Didn't find measurement in this frame, try using most recent adjusted value
-                        measurementValue = LatestMeasurements(inputMeasurementKey)
-
-                        ' Interpret data quality flags
-                        measurementQuality = IIf(Double.IsNaN(measurementValue), ICCPDataQuality.Bad, ICCPDataQuality.Suspect)
-
-                        ' We'll export zero instead of NaN for bad data
-                        If measurementQuality = ICCPDataQuality.Bad Then measurementValue = 0.0R
-                    End If
-
-                    ' Export tag name field
-                    exportData.Append(measurementTag)
-                    exportData.Append(","c)
-
-                    ' Export measurement value, making any needed adjustments
-                    If m_signalTypes.TryGetValue(inputMeasurementKey, signalType) Then
-                        If String.Compare(signalType, "VPHA") = 0 OrElse String.Compare(signalType, "IPHA") = 0 Then
-                            ' This is a phase angle measurement, export the value relative to the reference angle (if available)
-                            If referenceAngle Is Nothing Then
-                                exportData.Append(measurementValue)
-                            Else
-                                exportData.Append(referenceAngle.AdjustedValue - measurementValue)
-                            End If
-                        ElseIf String.Compare(signalType, "VPHM") = 0 Then
-                            ' Voltage from PMU's is line-to-neutral volts, we convert this to line-to-line kilovolts
-                            exportData.Append(measurementValue * m_sqrtOf3 / 1000.0R)
-                        Else
-                            ' All other measurements are exported using their raw value
-                            exportData.Append(measurementValue)
-                        End If
-                    Else
-                        ' We were unable to find signal type for this key - this is unexpected
-                        RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find signal type for measurement {0}", inputMeasurementKey)))
-                    End If
-
-                    ' Export measurement quality
-                    exportData.Append(","c)
-                    exportData.Append(measurementQuality)
-
-                    ' Terminate line
-                    exportData.AppendLine(",,")
-                Else
-                    ' We were unable to find measurement tag for this key - this is unexpected
-                    RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find measurement tag for measurement {0}", inputMeasurementKey)))
+                ' We need to get calculated reference angle value in order to export relative phase angles
+                ' If the value is not here, we don't export
+                If m_useReferenceAngle AndAlso Not measurements.TryGetValue(m_referenceAngleKey, referenceAngle) Then
+                    ' We were unable to find reference angle in this data concentration pass, lag time too small?
+                    RaiseCalculationException(New InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small.  File creation was skipped."))
+                    Exit Sub
                 End If
-            Next
 
-            ' Loop through each defined export file
-            For x As Integer = 0 To m_exportCount - 1
-                Try
-                    Try
-                        ' We'll wait on file lock for up to one second - then give up with IO exception
-                        WaitForWriteLock(m_exportFileName(x), 1)
-                    Catch ex As ThreadAbortException
-                        ' This exception is normal, we'll just rethrow this back up the try stack
-                        Throw ex
-                    Catch ex As FileNotFoundException
-                        ' This would be an expected exception, nothing to do - even if we checked for
-                        ' this before we called the wait function, another process could have deleted
-                        ' the file before we attempt a file lock (this was happening with AREVA tool)...
-                    End Try
+                ' Export all defined ICCP measurements
+                For Each inputMeasurementKey As MeasurementKey In InputMeasurementKeys
+                    ' Look up measurement's tag name
+                    If m_measurementTags.TryGetValue(inputMeasurementKey, measurementTag) Then
+                        ' See if measurement exists in this frame
+                        If measurements.TryGetValue(inputMeasurementKey, measurement) Then
+                            ' Get measurement's adjusted value
+                            measurementValue = measurement.AdjustedValue
 
-                    ' Create a new export file
-                    fileStream = File.CreateText(m_exportFileName(x))
+                            ' Interpret data quality flags
+                            measurementQuality = IIf(measurement.ValueQualityIsGood, IIf(measurement.TimestampQualityIsGood, ICCPDataQuality.Good, ICCPDataQuality.Suspect), ICCPDataQuality.Bad)
+                        Else
+                            ' Didn't find measurement in this frame, try using most recent adjusted value
+                            measurementValue = LatestMeasurements(inputMeasurementKey)
 
-                    ' Export file data
-                    fileStream.Write(exportData.ToString())
+                            ' Interpret data quality flags
+                            measurementQuality = IIf(Double.IsNaN(measurementValue), ICCPDataQuality.Bad, ICCPDataQuality.Suspect)
 
-                    ' Close stream
-                    fileStream.Close()
+                            ' We'll export zero instead of NaN for bad data
+                            If measurementQuality = ICCPDataQuality.Bad Then measurementValue = 0.0R
+                        End If
 
-                    ' Track successful exports
-                    m_totalExports += 1
-                Catch ex As ThreadAbortException
-                    ' This exception is normal, we'll just rethrow this back up the try stack
-                    Throw ex
-                Catch ex As Exception
-                    ' Something unexpected happened during export - we'll report it but keep going, could be
-                    ' that export destination was offline (not uncommon when system is being rebooted, etc.)
-                    RaiseCalculationException(ex)
-                End Try
-            Next
+                        ' Export tag name field
+                        fileData.Append(measurementTag)
+                        fileData.Append(","c)
 
-            ' We display export status every other minute
-            If frame.Timestamp.Minute Mod 2 = 0 Then
-                ' Make sure message is only displayed once during the minute :)
-                If Not m_statusDisplayed Then
-                    UpdateStatus(String.Format("{0} successful ICCP exports...", m_totalExports))
-                    m_statusDisplayed = True
+                        ' Export measurement value, making any needed adjustments
+                        If m_signalTypes.TryGetValue(inputMeasurementKey, signalType) Then
+                            If String.Compare(signalType, "VPHA") = 0 OrElse String.Compare(signalType, "IPHA") = 0 Then
+                                ' This is a phase angle measurement, export the value relative to the reference angle (if available)
+                                If referenceAngle Is Nothing Then
+                                    fileData.Append(measurementValue)
+                                Else
+                                    fileData.Append(referenceAngle.AdjustedValue - measurementValue)
+                                End If
+                            ElseIf String.Compare(signalType, "VPHM") = 0 Then
+                                ' Voltage from PMU's is line-to-neutral volts, we convert this to line-to-line kilovolts
+                                fileData.Append(measurementValue * m_sqrtOf3 / 1000.0R)
+                            Else
+                                ' All other measurements are exported using their raw value
+                                fileData.Append(measurementValue)
+                            End If
+                        Else
+                            ' We were unable to find signal type for this key - this is unexpected
+                            RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find signal type for measurement {0}", inputMeasurementKey)))
+                        End If
+
+                        ' Export measurement quality
+                        fileData.Append(","c)
+                        fileData.Append(measurementQuality)
+
+                        ' Terminate line - AREVA ICCP file link expects these two terminating commas, weird...
+                        fileData.AppendLine(",,")
+                    Else
+                        ' We were unable to find measurement tag for this key - this is unexpected
+                        RaiseCalculationException(New InvalidOperationException(String.Format("Failed to find measurement tag for measurement {0}", inputMeasurementKey)))
+                    End If
+                Next
+
+                ' Measurement export to a file may take more than 1/30 of a second - so we queue this work up...
+                m_dataExporter.ExportData(fileData.ToString())
+
+                ' We display export status every other minute
+                If frame.Timestamp.Minute Mod 2 = 0 Then
+                    ' Make sure message is only displayed once during the minute :)
+                    If Not m_statusDisplayed Then
+                        UpdateStatus(String.Format("{0} successful ICCP exports...", m_dataExporter.TotalExports))
+                        m_statusDisplayed = True
+                    End If
+                Else
+                    m_statusDisplayed = False
                 End If
             Else
-                m_statusDisplayed = False
+                ' No data was available in the frame, lag time set too tight?
+                RaiseCalculationException(New InvalidOperationException("No measurements were available for ICCP data export, possible reasons: system is initializing, receiving no data or lag time is too small.  File creation was skipped."))
             End If
-        Else
-            ' No data was available in the frame, lag time set too tight?
-            RaiseCalculationException(New InvalidOperationException("No measurements were available for ICCP data export, possible reasons: system is initializing, receiving no data or lag time is too small.  File creation was skipped."))
         End If
 
     End Sub
 
-    Protected Overrides Sub UpdateStatus(ByVal message As String)
+    Protected Overrides Sub UpdateStatus(ByVal message As String) Handles m_dataExporter.StatusMessage
 
         MyBase.UpdateStatus(String.Format("[{0}]: {1}", MyBase.ConfigurationSection, message))
-
-    End Sub
-
-    Private Sub m_exportQueue_ProcessException(ByVal ex As System.Exception) Handles m_exportQueue.ProcessException
-
-        ' Something unexpected happened during export - so we'll report it. Since this code only gets executed every few seconds
-        ' we go ahead and publish any error messages as needed (no volume control applied)
-        RaiseCalculationException(ex)
 
     End Sub
 
