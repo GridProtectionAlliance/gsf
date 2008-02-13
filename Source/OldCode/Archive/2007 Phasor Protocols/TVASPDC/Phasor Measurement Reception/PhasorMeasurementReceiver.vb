@@ -529,7 +529,6 @@ Public Class PhasorMeasurementReceiver
                 Connect()
             Case ServiceState.Shutdown
                 Disconnect()
-                UpdateStatus("Receiver disconnected due to service shutdown...")
         End Select
 
     End Sub
