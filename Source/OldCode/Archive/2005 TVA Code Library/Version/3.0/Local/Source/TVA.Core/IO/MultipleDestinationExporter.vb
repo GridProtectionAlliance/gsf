@@ -155,7 +155,9 @@ Namespace IO
 
                 ' We'll be nice and disconnect network shares when this class is disposed...
                 For x As Integer = 1 To m_exportCount
-                    DisconnectFromNetworkShare(CategorizedStringSetting(m_configSection, String.Format("ExportDestination{0}", x)))
+                    If m_exportDestinations(x).ConnectToShare Then
+                        DisconnectFromNetworkShare(m_exportDestinations(x).Share)
+                    End If
                 Next
             End If
 
