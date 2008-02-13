@@ -42,13 +42,10 @@ Namespace IO
 
         Public Event StatusMessage(ByVal status As String)
 
+        Private m_exportDestinations As ExportDestination()
         Private m_configSection As String
         Private m_exportTimeout As Integer
-        Private m_exportCount As Integer
-        Private m_exportFileNames As String()
-        Private m_exportDestinations As ExportDestination()
         Private m_totalExports As Long
-        Private m_statusDisplayed As Boolean
         Private m_disposed As Boolean
         Private WithEvents m_exportQueue As ProcessQueue(Of String)
 
@@ -104,19 +101,19 @@ Namespace IO
                 SaveSettings()
 
                 ' Load needed settings
-                m_exportCount = Int32.Parse(.Item("ExportCount").Value)
-                m_exportFileNames = CreateArray(Of String)(m_exportCount)
-                m_exportDestinations = CreateArray(Of ExportDestination)(m_exportCount)
-
                 Dim entryRoot As String
+                Dim filename As String
                 Dim destination As ExportDestination
+                Dim exportCount As Integer = Integer.Parse(.Item("ExportCount").Value)
 
-                For x As Integer = 0 To m_exportCount - 1
+                m_exportDestinations = CreateArray(Of ExportDestination)(exportCount)
+
+                For x As Integer = 0 To exportCount - 1
                     entryRoot = String.Format("ExportDestination{0}", x + 1)
-                    m_exportFileNames(x) = .Item(entryRoot).Value & .Item(String.Format("{0}.FileName", entryRoot)).Value
+                    filename = .Item(entryRoot).Value & .Item(String.Format("{0}.FileName", entryRoot)).Value
 
                     ' Load export destination from configuration entries
-                    destination.DestinationFile = m_exportFileNames(x)
+                    destination.DestinationFile = filename
                     destination.ConnectToShare = ParseBoolean(.Item(String.Format("{0}.ConnectToShare", entryRoot)).Value)
                     destination.Domain = .Item(String.Format("{0}.Domain", entryRoot)).Value
                     destination.UserName = .Item(String.Format("{0}.UserName", entryRoot)).Value
@@ -154,7 +151,7 @@ Namespace IO
                 If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
 
                 ' We'll be nice and disconnect network shares when this class is disposed...
-                For x As Integer = 1 To m_exportCount
+                For x As Integer = 0 To m_exportDestinations.Length - 1
                     If m_exportDestinations(x).ConnectToShare Then
                         DisconnectFromNetworkShare(m_exportDestinations(x).Share)
                     End If
@@ -207,7 +204,7 @@ Namespace IO
                     .Append(m_configSection)
                     .AppendLine()
                     .Append("       Export destinations: ")
-                    .Append(ListToString(m_exportFileNames, ","c))
+                    .Append(ListToString(m_exportDestinations, ","c))
                     .AppendLine()
                     .Append(" Cumulative export timeout: ")
                     .Append(m_exportTimeout)
@@ -236,14 +233,18 @@ Namespace IO
         Private Sub WriteExportFiles(ByVal fileData As String)
 
             ' Make sure there are measurements to export
+            Dim fileName As String
             Dim fileStream As StreamWriter
 
             ' Loop through each defined export file
-            For x As Integer = 0 To m_exportCount - 1
+            For x As Integer = 0 To m_exportDestinations.Length - 1
                 Try
+                    '  Get next export file name
+                    fileName = m_exportDestinations(x).DestinationFile
+
                     Try
                         ' We'll wait on file lock for up to one second - then give up with IO exception
-                        WaitForWriteLock(m_exportFileNames(x), 1)
+                        WaitForWriteLock(fileName, 1)
                     Catch ex As ThreadAbortException
                         ' This exception is normal, we'll just rethrow this back up the try stack
                         Throw ex
@@ -254,7 +255,7 @@ Namespace IO
                     End Try
 
                     ' Create a new export file
-                    fileStream = File.CreateText(m_exportFileNames(x))
+                    fileStream = File.CreateText(fileName)
 
                     ' Export file data
                     fileStream.Write(fileData)

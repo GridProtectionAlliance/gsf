@@ -77,6 +77,12 @@ Namespace IO
             End Get
         End Property
 
+        Public Overrides Function ToString() As String
+
+            Return DestinationFile
+
+        End Function
+
     End Structure
 
 End Namespace
