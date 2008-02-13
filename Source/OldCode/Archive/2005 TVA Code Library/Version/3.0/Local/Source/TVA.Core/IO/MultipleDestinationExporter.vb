@@ -310,6 +310,8 @@ Namespace IO
                     If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
                 Case ServiceState.Resumed
                     If m_exportQueue IsNot Nothing Then m_exportQueue.Start()
+                Case ServiceState.Shutdown
+                    If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
             End Select
 
         End Sub
