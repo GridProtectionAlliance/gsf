@@ -286,7 +286,7 @@ Namespace IO
 
         Private Sub UpdateStatus(ByVal status As String)
 
-            RaiseEvent StatusMessage(String.Format("[{0}]: {1}", m_configSection, status))
+            RaiseEvent StatusMessage(status)
 
         End Sub
 
