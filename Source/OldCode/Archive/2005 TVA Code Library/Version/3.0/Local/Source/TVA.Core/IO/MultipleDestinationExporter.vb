@@ -198,6 +198,12 @@ Namespace IO
             End Get
         End Property
 
+        Public ReadOnly Property TotalExports() As Long
+            Get
+                Return m_totalExports
+            End Get
+        End Property
+
         Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
             Get
                 With New StringBuilder
