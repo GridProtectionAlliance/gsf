@@ -24,6 +24,7 @@ Imports TVA.Text.Common
 Imports TVA.IO.FilePath
 Imports TVA.Collections
 Imports TVA.Collections.Common
+Imports TVA.Services
 
 Namespace IO
 
@@ -35,7 +36,7 @@ Namespace IO
     ''' </remarks>
     Public Class MultipleDestinationExporter
 
-        Implements IDisposable
+        Implements IServiceComponent
 
         Private Const DefaultConfigSection As String = "ExportDestinations"
         Private Const DefaultExportTimeout As Integer = Timeout.Infinite
@@ -197,7 +198,7 @@ Namespace IO
             End Get
         End Property
 
-        Public ReadOnly Property Status() As String
+        Public ReadOnly Property Status() As String Implements Services.IServiceComponent.Status
             Get
                 With New StringBuilder
                     .Append("     Configuration Section: ")
@@ -287,6 +288,29 @@ Namespace IO
 
             ' Something unexpected happened during export
             UpdateStatus("Export exception: " & ex.Message)
+
+        End Sub
+
+        Public ReadOnly Property Name() As String Implements Services.IServiceComponent.Name
+            Get
+                Return m_configSection
+            End Get
+        End Property
+
+        Public Sub ProcessStateChanged(ByVal processName As String, ByVal newState As Services.ProcessState) Implements Services.IServiceComponent.ProcessStateChanged
+
+            ' This component is not abstractly associated with any particular service process...
+
+        End Sub
+
+        Public Sub ServiceStateChanged(ByVal newState As Services.ServiceState) Implements Services.IServiceComponent.ServiceStateChanged
+
+            Select Case newState
+                Case ServiceState.Paused
+                    If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
+                Case ServiceState.Resumed
+                    If m_exportQueue IsNot Nothing Then m_exportQueue.Start()
+            End Select
 
         End Sub
 
