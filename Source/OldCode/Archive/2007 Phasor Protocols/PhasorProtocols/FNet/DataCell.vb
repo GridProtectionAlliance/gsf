@@ -268,6 +268,7 @@ Namespace FNet
         Private Function ParseTimestamp(ByVal fnetDate As String, ByVal fnetTime As String, ByVal sampleIndex As Integer, ByVal frameRate As Integer) As Long
 
             fnetDate = fnetDate.PadLeft(6, "0"c)
+            fnetTime = fnetTime.PadLeft(6, "0"c)
 
             If sampleIndex = 10 Then
                 Return New Date( _
