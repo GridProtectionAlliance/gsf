@@ -110,6 +110,7 @@
     </Compile>
     <Compile Include="Interop\VBArrayDescriptor.vb" />
     <Compile Include="IO\Enumerations.vb" />
+    <Compile Include="IO\ExportDestination.vb" />
     <Compile Include="IO\IsamDataFileBase.Designer.vb">
       <DependentUpon>IsamDataFileBase.vb</DependentUpon>
     </Compile>
@@ -122,6 +123,7 @@
     <Compile Include="IO\LogFile.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="IO\MultipleDestinationExporter.vb" />
     <Compile Include="Measurements\FrameQueue.vb" />
     <Compile Include="Measurements\MeasurementKey.vb" />
     <Compile Include="Net\Ftp\AsyncResult.vb" />
