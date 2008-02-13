@@ -67,6 +67,7 @@ Namespace IO
         Public Sub New(ByVal configSection As String, ByVal exportTimeout As Integer, ByVal defaultDestinations As ExportDestination())
 
             m_configSection = configSection
+            m_exportTimeout = exportTimeout
 
             ' So as to not delay class construction due to share authentication, we perform initialzation on another thread...
 #If ThreadTracking Then
