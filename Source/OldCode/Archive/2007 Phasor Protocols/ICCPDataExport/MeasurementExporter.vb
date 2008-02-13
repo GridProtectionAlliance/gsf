@@ -335,6 +335,9 @@ Public Class MeasurementExporter
                     Try
                         ' We'll wait on file lock for up to one second - then give up with IO exception
                         WaitForWriteLock(m_exportFileName(x), 1)
+                    Catch ex As ThreadAbortException
+                        ' This exception is normal, we'll just rethrow this back up the try stack
+                        Throw ex
                     Catch ex As FileNotFoundException
                         ' This would be an expected exception, nothing to do - even if we checked for
                         ' this before we called the wait function, another process could have deleted
