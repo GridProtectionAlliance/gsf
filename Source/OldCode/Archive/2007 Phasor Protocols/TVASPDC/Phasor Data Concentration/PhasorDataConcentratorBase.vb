@@ -668,6 +668,9 @@ Public MustInherit Class PhasorDataConcentratorBase
                 ' Resume concentrator
                 Me.Enabled = True
                 UpdateStatus("Data concentration resumed...")
+            Case ServiceState.Shutdown
+                [Stop]()
+                UpdateStatus(String.Format("Data concentration stopped due to service shutdown...", Name))
         End Select
 
     End Sub

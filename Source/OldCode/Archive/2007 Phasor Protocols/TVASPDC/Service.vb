@@ -53,6 +53,8 @@ Public Class Service
     Private m_useLocalClockAsRealTime As Boolean
     Private m_allowSortsByArrival As Boolean
     Private WithEvents m_statusMessageQueue As ProcessQueue(Of String)
+    Private WithEvents m_healthExporter As MultipleDestinationExporter
+    Private WithEvents m_statusExporter As MultipleDestinationExporter
 
 #End Region
 
@@ -62,7 +64,7 @@ Public Class Service
 
         Dim _forceBuildNumInc As Integer = 1
 
-        ' Make sure service settings exist
+        ' Make sure default service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
         'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoextsql;Initial Catalog=PMU_SDS;User ID=ESOPublic;pwd=4all2see", "PMU metaData database connect string")
         'Settings.Add("PMUDatabase", "Provider=SQLOLEDB;Data Source=esoasqlgendat\gendat;Initial Catalog=PhasorMeasurementData;User ID=NaspiApp;pwd=pw4site", "PMU metaData database connect string")
@@ -79,9 +81,16 @@ Public Class Service
         Settings.Add("AllowSortsByArrival", "False", "Set to True to allow sorting of measurements by arrival for bad timestamps")
         SaveSettings()
 
-        ' Set message display queue
+        ' Create message display queue
         m_statusMessageQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf DisplayStatusMessages, 50, Timeout.Infinite, False, False)
         m_statusMessageQueue.Start()
+
+        ' Create health and status exporters
+        m_healthExporter = New MultipleDestinationExporter("HealthExporter", 60000, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Health.txt", True, "TVA", "esocss", "pwd4ctrl")})
+        ServiceHelper.ServiceComponents.Add(m_healthExporter)
+
+        m_statusExporter = New MultipleDestinationExporter("StatusExporter", 60000, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Status.txt", True, "TVA", "esocss", "pwd4ctrl")})
+        ServiceHelper.ServiceComponents.Add(m_statusExporter)
 
         ' Determine if local system is configured with a real-time clock
         m_useLocalClockAsRealTime = BooleanSetting("UseLocalClockAsRealTime")
@@ -124,37 +133,13 @@ Public Class Service
 
             ' We add a scheduled process to automatically request health status every minute - user can change schedule in config file
             ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
+
+            ' We add a scheduled process to automatically export status information every 30 minutes - user can change schedule in config file
+            ServiceHelper.AddScheduledProcess(AddressOf StatusExportProcess, "StatusExport", "*/30 * * * *")
         Catch ex As Exception
             ServiceHelper.GlobalExceptionLogger.Log(ex)
             ServiceHelper.Service.Stop()
         End Try
-
-    End Sub
-
-    Private Sub ServiceHelper_ServiceStopping(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStopping
-
-        ' Attempt an orderly shutdown...
-
-        ' Stop data measurement receivers
-        If m_measurementReceivers IsNot Nothing Then
-            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
-                receiver.Disconnect()
-            Next
-        End If
-
-        ' Stop data concentrators
-        If m_measurementConcentrators IsNot Nothing Then
-            For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
-                concentrator.Stop()
-            Next
-        End If
-
-        ' Stop calculated measurements
-        If m_calculatedMeasurements IsNot Nothing Then
-            For x As Integer = 0 To m_calculatedMeasurements.Length - 1
-                m_calculatedMeasurements(x).Stop()
-            Next
-        End If
 
     End Sub
 
@@ -698,6 +683,28 @@ Public Class Service
         ' We pretend to be a client and send a "Health" command to ourselves...
         Dim healthRequest As ClientRequest = ClientRequest.Parse("Health")
         ServiceHelper.ClientRequestHandlers(healthRequest.Command).HandlerMethod(New ClientRequestInfo(New ClientInfo(System.Guid.Empty), healthRequest))
+
+        ' We also export the health information
+        m_healthExporter.ExportData(ServiceHelper.PerformanceMonitor.Status)
+
+    End Sub
+
+    Private Sub StatusExportProcess(ByVal name As String, ByVal parameters As Object())
+
+        With New StringBuilder()
+            .Append(String.Format("Status of components used by {0}:", ServiceName))
+            .AppendLine()
+            For Each serviceComponent As IServiceComponent In ServiceHelper.ServiceComponents
+                If serviceComponent IsNot Nothing Then
+                    .AppendLine()
+                    .Append(String.Format("Status of {0}:", serviceComponent.Name))
+                    .AppendLine()
+                    .Append(serviceComponent.Status)
+                End If
+            Next
+
+            m_statusExporter.ExportData(.ToString())
+        End With
 
     End Sub
 

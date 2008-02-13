@@ -293,6 +293,9 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                 ' Resume concentrator
                 Me.Enabled = True
                 UpdateStatus(String.Format("""{0}"" measurement calculation resumed...", Name))
+            Case ServiceState.Shutdown
+                [Stop]()
+                UpdateStatus(String.Format("""{0}"" measurement calculation stopped due to service shutdown...", Name))
         End Select
 
     End Sub

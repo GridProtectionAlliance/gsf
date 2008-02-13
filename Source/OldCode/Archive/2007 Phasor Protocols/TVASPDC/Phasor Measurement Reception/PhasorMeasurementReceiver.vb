@@ -527,6 +527,9 @@ Public Class PhasorMeasurementReceiver
             Case ServiceState.Resumed
                 UpdateStatus("Receiver reconnecting due to resume request from service manager...")
                 Connect()
+            Case ServiceState.Shutdown
+                Disconnect()
+                UpdateStatus("Receiver disconnected due to service shutdown...")
         End Select
 
     End Sub
