@@ -1046,7 +1046,7 @@ Public Class Service
 #Region " Broadcast Message Handling "
 
     ' Display status messages bubbled up from phasor measurement receiver and its internal components
-    Public Sub DisplayStatusMessage(ByVal status As String)
+    Public Sub DisplayStatusMessage(ByVal status As String) Handles m_healthExporter.StatusMessage, m_statusExporter.StatusMessage
 
         ' We queue up status messages for display on a separate thread so we don't slow any important activity
         m_statusMessageQueue.Add(status)
