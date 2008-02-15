@@ -459,6 +459,7 @@ Public Class PhasorMeasurementReceiver
         If Not m_intializing Then
             Dim connection As OleDbConnection
             Dim reporting As Integer
+            Dim releasePool As Boolean
 
             Try
                 connection = New OleDbConnection(m_connectionString)
@@ -483,10 +484,12 @@ Public Class PhasorMeasurementReceiver
                     Next
                 Next
             Catch ex As Exception
+                releasePool = True
                 UpdateStatus(String.Format("[{0}] ERROR: Failed to update PMU reporting status due to exception: {1}", DateTime.Now, ex.Message))
                 m_exceptionLogger.Log(ex)
             Finally
                 If connection IsNot Nothing Then connection.Close()
+                If releasePool Then OleDbConnection.ReleaseObjectPool()
             End Try
         End If
 

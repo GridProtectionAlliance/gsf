@@ -86,41 +86,45 @@ Public Class MeasurementExporter
 
         ' Need to open database connection to load measurement tags and signal types.
         ' Note that data connection string defined in config file of parent process.
-        Dim connection As New OleDbConnection(StringSetting("PMUDatabase"))
+        Dim connection As OleDbConnection
         Dim inputMeasurementKey As MeasurementKey
 
-        connection.Open()
+        Try
+            connection = New OleDbConnection(StringSetting("PMUDatabase"))
+            connection.Open()
 
-        ' Populate measurement tag and signal type dictionaries
-        For x As Integer = 0 To inputMeasurementKeys.Length - 1
-            ' Get input measurement identification key
-            inputMeasurementKey = inputMeasurementKeys(x)
+            ' Populate measurement tag and signal type dictionaries
+            For x As Integer = 0 To inputMeasurementKeys.Length - 1
+                ' Get input measurement identification key
+                inputMeasurementKey = inputMeasurementKeys(x)
 
-            ' Get point tag and signal type information for each input measurement
-            With RetrieveRow(String.Format( _
-                    "SELECT PointTag, SignalAcronym FROM MeasurementDetail WHERE HistorianAcronym='{0}' AND PointID={1}", _
-                        inputMeasurementKey.Source, _
-                        inputMeasurementKey.ID), _
-                    connection)
+                ' Get point tag and signal type information for each input measurement
+                With RetrieveRow(String.Format( _
+                        "SELECT PointTag, SignalAcronym FROM MeasurementDetail WHERE HistorianAcronym='{0}' AND PointID={1}", _
+                            inputMeasurementKey.Source, _
+                            inputMeasurementKey.ID), _
+                        connection)
 
-                ' Load measurement tag name (remove any dashes or colons)
-                m_measurementTags.Add(inputMeasurementKey, .Item("PointTag").ToString().Replace("-"c, "_"c).Replace(":"c, "_"c))
+                    ' Load measurement tag name (remove any dashes or colons)
+                    m_measurementTags.Add(inputMeasurementKey, .Item("PointTag").ToString().Replace("-"c, "_"c).Replace(":"c, "_"c))
 
-                ' Load measurement signal type
-                m_signalTypes.Add(inputMeasurementKey, .Item("SignalAcronym").ToString())
-            End With
-        Next
+                    ' Load measurement signal type
+                    m_signalTypes.Add(inputMeasurementKey, .Item("SignalAcronym").ToString())
+                End With
+            Next
 
-        If m_useReferenceAngle Then
-            ' Lastly, we also need to determine which angle is the reference angle
-            With RetrieveRow("SELECT * FROM CalcOutputReferenceAngleMeasurement", connection)
-                m_referenceAngleKey = New MeasurementKey( _
-                    Convert.ToInt32(.Item("MeasurementID")), _
-                    .Item("ArchiveSource").ToString())
-            End With
-        End If
-
-        connection.Close()
+            If m_useReferenceAngle Then
+                ' Lastly, we also need to determine which angle is the reference angle
+                With RetrieveRow("SELECT * FROM CalcOutputReferenceAngleMeasurement", connection)
+                    m_referenceAngleKey = New MeasurementKey( _
+                        Convert.ToInt32(.Item("MeasurementID")), _
+                        .Item("ArchiveSource").ToString())
+                End With
+            End If
+        Finally
+            If connection IsNot Nothing Then connection.Close()
+            OleDbConnection.ReleaseObjectPool()
+        End Try
 
         ' We track latest measurements so we can use these values when points are missing
         TrackLatestMeasurements = True

@@ -477,10 +477,12 @@ Namespace BpaPdcStream
                     startIndex += 4
 
                     For x As Integer = 0 To m_pdcBlockPmuCount - 1
-                        parentFrame.Cells.Add(New DataCell(parentFrame, parentFrame.ConfigurationFrame.Cells(index + x), binaryImage, startIndex))
-                        cellLength = parentFrame.Cells(index + x).BinaryLength
-                        startIndex += cellLength
-                        m_pdcBlockLength += cellLength
+                        If index + x < parentFrame.ConfigurationFrame.Cells.Count Then
+                            parentFrame.Cells.Add(New DataCell(parentFrame, parentFrame.ConfigurationFrame.Cells(index + x), binaryImage, startIndex))
+                            cellLength = parentFrame.Cells(index + x).BinaryLength
+                            startIndex += cellLength
+                            m_pdcBlockLength += cellLength
+                        End If
                     Next
                 Else
                     ' Parse PMU's sample number

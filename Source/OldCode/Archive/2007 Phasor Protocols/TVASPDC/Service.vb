@@ -222,6 +222,7 @@ Public Class Service
             ServiceHelper.GlobalExceptionLogger.Log(ex)
         Finally
             If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
+            OleDbConnection.ReleaseObjectPool()
             DisplayStatusMessage("PMU database connection closed.")
         End Try
 
@@ -1077,8 +1078,9 @@ Public Class Service
                 ' We curtail output messages as needed
                 ServiceHelper.UpdateStatus(messages(x), 2)
             ElseIf ServiceHelper.LogStatusUpdates Then
-                ' But we always log messages
-                ServiceHelper.LogFile.WriteTimestampedLine(messages(x))
+                ' But we always log messages if file is open - note that
+                ' during shutdown file may have already been closed...
+                If ServiceHelper.LogFile.IsOpen Then ServiceHelper.LogFile.WriteTimestampedLine(messages(x))
             End If
         Next
 
