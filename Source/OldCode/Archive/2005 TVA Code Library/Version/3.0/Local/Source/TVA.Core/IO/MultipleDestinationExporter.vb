@@ -103,7 +103,6 @@ Namespace IO
 
                 ' Load needed settings
                 Dim entryRoot As String
-                Dim filename As String
                 Dim destination As ExportDestination
                 Dim exportCount As Integer = Integer.Parse(.Item("ExportCount").Value)
 
@@ -111,10 +110,9 @@ Namespace IO
 
                 For x As Integer = 0 To exportCount - 1
                     entryRoot = String.Format("ExportDestination{0}", x + 1)
-                    filename = .Item(entryRoot).Value & .Item(String.Format("{0}.FileName", entryRoot)).Value
 
                     ' Load export destination from configuration entries
-                    destination.DestinationFile = filename
+                    destination.DestinationFile = .Item(entryRoot).Value & .Item(String.Format("{0}.FileName", entryRoot)).Value
                     destination.ConnectToShare = ParseBoolean(.Item(String.Format("{0}.ConnectToShare", entryRoot)).Value)
                     destination.Domain = .Item(String.Format("{0}.Domain", entryRoot)).Value
                     destination.UserName = .Item(String.Format("{0}.UserName", entryRoot)).Value
@@ -180,7 +178,7 @@ Namespace IO
         ''' Total allowed time for all exports to execute in milliseconds.
         ''' </summary>
         ''' <remarks>
-        ''' Set to Timeout.Infinite (-1) for timeout.
+        ''' Set to Timeout.Infinite (-1) for no timeout.
         ''' </remarks>
         Public Property ExportTimeout() As Integer
             Get
