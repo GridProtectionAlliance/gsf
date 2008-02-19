@@ -29,6 +29,8 @@
 '  11/02/2007 - J. Ritchie Carroll
 '       Changed code to use new FrameQueue class instead of KeyedProcessQueue to
 '       allow more finite control of locking to reduce thread contention.
+'  02/19/2008 - J. Ritchie Carroll
+'       Added code to detect and avoid redundant calls to Dispose().
 '
 '*******************************************************************************************************
 
@@ -93,6 +95,7 @@ Namespace Measurements
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
         Private m_lastDiscardedMeasurement As IMeasurement                      ' Last measurement that was discarded by the concentrator
+        Private m_disposed As Boolean                                           ' Disposed flag detects redundant calls to dispose method
         Private WithEvents m_monitorTimer As Timers.Timer                       ' Sample monitor
 
 #End Region
@@ -765,15 +768,30 @@ Namespace Measurements
         ''' <summary>Shuts down concentrator in an orderly fashion.</summary>
         Public Overridable Sub Dispose() Implements IDisposable.Dispose
 
-            ' If user calls dispose, then class is pulled out of garage collection finilzation queue.
+            ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) below.
+            Dispose(True)
             GC.SuppressFinalize(Me)
-            [Stop]()
 
         End Sub
 
 #End Region
 
 #Region " Protected Methods Implementation "
+
+        ''' <summary>Shuts down concentrator in an orderly fashion.</summary>
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+            If Not m_disposed Then
+                If disposing Then
+                    [Stop]()
+                    If m_frameQueue IsNot Nothing Then m_frameQueue.Dispose()
+                    m_frameQueue = Nothing
+                End If
+            End If
+
+            m_disposed = True
+
+        End Sub
 
         ''' <summary>Consumers must override this method in order to publish a frame.</summary>
         Protected MustOverride Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
@@ -830,8 +848,7 @@ Namespace Measurements
         ''' fashion.</summary>
         Protected Overrides Sub Finalize()
 
-            MyBase.Finalize()
-            Dispose()
+            Dispose(True)
 
         End Sub
 

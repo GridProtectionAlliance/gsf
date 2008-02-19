@@ -14,6 +14,8 @@
 '       Initial version of source generated
 '  11/08/2007 - J. Ritchie Carroll
 '       Optimized "Pop" call to be a no-wait operation
+'  02/19/2008 - J. Ritchie Carroll
+'       Added code to detect and avoid redundant calls to Dispose().
 '
 '*******************************************************************************************************
 
@@ -28,6 +30,8 @@ Namespace Measurements
 
     Public Class FrameQueue
 
+        Implements IDisposable
+
         Private m_frameList As LinkedList(Of IFrame)        ' We keep this list sorted by timestamp so frames are processed in order
         Private m_frameHash As Dictionary(Of Long, IFrame)  ' This list not guaranteed to be sorted, but used for fast frame lookup
         Private m_popQueue As ProcessQueue(Of Long)
@@ -35,6 +39,7 @@ Namespace Measurements
         Private m_head, m_last As IFrame
         Private m_ticksPerFrame As Decimal
         Private m_createNewFrameFunction As CreateNewFrameFunctionSignature
+        Private m_disposed As Boolean = False
 
         Public Sub New(ByVal ticksPerFrame As Decimal, ByVal initialCapacity As Integer, ByVal createNewFrameFunction As CreateNewFrameFunctionSignature)
 
@@ -45,6 +50,33 @@ Namespace Measurements
             m_ticksPerFrame = ticksPerFrame
             m_createNewFrameFunction = createNewFrameFunction
             m_popQueue.Start()
+
+        End Sub
+
+        Protected Overrides Sub Finalize()
+
+            Dispose(True)
+
+        End Sub
+
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+            If Not m_disposed Then
+                If disposing Then
+                    If m_popQueue IsNot Nothing Then m_popQueue.Stop()
+                    m_popQueue = Nothing
+                End If
+            End If
+
+            m_disposed = True
+
+        End Sub
+
+        Public Sub Dispose() Implements IDisposable.Dispose
+
+            ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+            Dispose(True)
+            GC.SuppressFinalize(Me)
 
         End Sub
 
