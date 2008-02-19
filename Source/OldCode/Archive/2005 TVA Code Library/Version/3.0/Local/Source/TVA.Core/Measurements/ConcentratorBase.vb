@@ -288,6 +288,7 @@ Namespace Measurements
                 m_publicationThread.Priority = ThreadPriority.Highest
                 m_publicationThread.Start()
                 m_monitorTimer.Start()
+                m_frameQueue.Start()
             End If
 
             m_enabled = True
@@ -298,6 +299,7 @@ Namespace Measurements
         Public Overridable Sub [Stop]()
 
             If m_enabled Then
+                m_frameQueue.Stop()
                 If m_publicationThread IsNot Nothing Then m_publicationThread.Abort()
                 m_publicationThread = Nothing
                 m_monitorTimer.Stop()
