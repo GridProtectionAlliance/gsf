@@ -294,7 +294,7 @@ Public MustInherit Class CalculatedMeasurementAdapterBase
                 Me.Enabled = True
                 UpdateStatus(String.Format("""{0}"" measurement calculation resumed...", Name))
             Case ServiceState.Shutdown
-                [Stop]()
+                Dispose()
         End Select
 
     End Sub

@@ -669,7 +669,7 @@ Public MustInherit Class PhasorDataConcentratorBase
                 Me.Enabled = True
                 UpdateStatus("Data concentration resumed...")
             Case ServiceState.Shutdown
-                [Stop]()
+                Dispose()
         End Select
 
     End Sub
