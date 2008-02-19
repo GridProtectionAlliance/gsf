@@ -156,6 +156,31 @@ Namespace FNet
             End Set
         End Property
 
+        Public Overrides ReadOnly Property Status() As String
+            Get
+                If m_configurationFrame Is Nothing Then
+                    Return MyBase.Status
+                Else
+                    With New StringBuilder
+                        .Append("        Reported longitude: ")
+                        .Append(m_configurationFrame.Longitude)
+                        .Append("°"c)
+                        .AppendLine()
+                        .Append("         Reported latitude: ")
+                        .Append(m_configurationFrame.Latitude)
+                        .Append("°"c)
+                        .AppendLine()
+                        .Append("      Number of satellites:")
+                        .Append(m_configurationFrame.NumberOfSatellites)
+                        .AppendLine()
+                        .Append(MyBase.Status)
+
+                        Return .ToString()
+                    End With
+                End If
+            End Get
+        End Property
+
         Public Overrides Property ConnectionParameters() As IConnectionParameters
             Get
                 Return MyBase.ConnectionParameters
