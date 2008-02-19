@@ -62,7 +62,7 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
-        Dim _forceBuildNumInc As Integer = 2
+        Dim _forceBuildNumInc As Integer = 3
 
         ' Make sure default service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
