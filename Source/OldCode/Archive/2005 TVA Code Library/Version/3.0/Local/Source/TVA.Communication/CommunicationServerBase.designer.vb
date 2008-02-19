@@ -59,12 +59,15 @@ Partial Class CommunicationServerBase
     'Component overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-        [Stop]()        ' Stop the server.
-        SaveSettings()  ' Saves settings to the config file.
-        If disposing AndAlso components IsNot Nothing Then
-            components.Dispose()
+        If Not m_disposed Then
+            [Stop]()        ' Stop the server.
+            SaveSettings()  ' Saves settings to the config file.
+            If disposing AndAlso components IsNot Nothing Then
+                components.Dispose()
+            End If
+            MyBase.Dispose(disposing)
         End If
-        MyBase.Dispose(disposing)
+        m_disposed = True
     End Sub
 
     'Required by the Component Designer

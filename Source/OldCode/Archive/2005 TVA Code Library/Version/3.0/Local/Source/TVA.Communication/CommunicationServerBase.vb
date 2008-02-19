@@ -17,6 +17,8 @@
 '  11/30/2007 - Pinal C. Patel
 '       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
 '       instead of DesignMode property as the former is more accurate than the latter
+'  02/19/2008 - Pinal C. Patel
+'       Added code to detect and avoid redundant calls to Dispose().
 '
 '*******************************************************************************************************
 
@@ -61,6 +63,7 @@ Public MustInherit Class CommunicationServerBase
     Private m_isRunning As Boolean
     Private m_persistSettings As Boolean
     Private m_settingsCategoryName As String
+    Private m_disposed As Boolean
 
     Private m_startTime As Long
     Private m_stopTime As Long
