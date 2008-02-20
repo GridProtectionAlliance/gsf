@@ -33,6 +33,8 @@
 '  11/05/2007 - J. Ritchie Carroll
 '       Modified flush to complete tasks on calling thread - this avoids errors when timer
 '       gets disposed before flush call.
+'  02/20/2008 - J. Ritchie Carroll
+'       Implemented standard IDisposable pattern.
 '
 '*******************************************************************************************************
 
@@ -57,7 +59,7 @@ Namespace Collections
     ''' </remarks>
     Public Class ProcessQueue(Of T)
 
-        Implements IList(Of T), ICollection
+        Implements IList(Of T), ICollection, IDisposable
 
 #Region " Public Member Declarations "
 
@@ -198,7 +200,7 @@ Namespace Collections
         Private m_startTime As Long
         Private m_stopTime As Long
         Private m_debugMode As Boolean
-        Private m_isDisposed As Boolean
+        Private m_disposed As Boolean
 #If ThreadTracking Then
         Private m_realTimeProcessThread As ManagedThread
 #Else
@@ -871,8 +873,8 @@ Namespace Collections
         ''' function call, requeueing of items on exception or process timeout is temporarily disabled.
         ''' </para>
         ''' <para>
-        ''' The process queue does not implement a finalizer. If the user fails to call this method before the class
-        ''' is destructed, there may be items that remain unprocessed in the queue.
+        ''' The process queue does not clear queue prior to destruction. If the user fails to call this method before the
+        ''' class is destructed, there may be items that remain unprocessed in the queue.
         ''' </para>
         ''' </remarks>
         Public Sub Flush()
@@ -1080,9 +1082,38 @@ Namespace Collections
             End Get
         End Property
 
+        Public Sub Dispose() Implements IDisposable.Dispose
+
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+
+        End Sub
+
 #End Region
 
 #Region " Protected Methods Implementation "
+
+        Protected Overrides Sub Finalize()
+
+            Dispose(True)
+
+        End Sub
+
+        Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+            If Not m_disposed Then
+                If disposing Then
+                    [Stop]()
+                    If m_processTimer IsNot Nothing Then m_processTimer.Dispose()
+                    m_processTimer = Nothing
+                    If m_processQueue IsNot Nothing Then m_processQueue.Clear()
+                    m_processQueue = Nothing
+                End If
+            End If
+
+            m_disposed = True
+
+        End Sub
 
         ''' <summary>
         ''' Allows derived classes to access the interfaced internal process queue directly.
@@ -2226,7 +2257,7 @@ Namespace Collections
                             removedItems += 1
                         End If
                     Next
-                    
+
                     Return removedItems
                 Else
                     ' Otherwise, we will call native implementation.
