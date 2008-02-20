@@ -48,7 +48,7 @@ Public Class PhasorMeasurementReceiver
     Private m_measurementWarningThreshold As Integer
     Private m_measurementDumpingThreshold As Integer
     Private m_intializing As Boolean
-    Private m_isDisposed As Boolean
+    Private m_disposed As Boolean
     Private m_hasVirtualDevices As Boolean
     Private m_exceptionLogger As GlobalExceptionLogger
 
@@ -81,27 +81,26 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Public Sub Connect()
+    Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
-        m_historianAdapter.Connect()
-        m_reportingStatus.Enabled = True
+        If Not m_disposed Then
+            If disposing Then
+                If m_reportingStatus IsNot Nothing Then m_reportingStatus.Dispose()
+                m_reportingStatus = Nothing
 
-    End Sub
+                If m_mappers IsNot Nothing Then
+                    For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                        mapper.Dispose()
+                    Next
 
-    Public Sub Disconnect()
+                    m_mappers.Clear()
+                End If
 
-        m_reportingStatus.Enabled = False
-
-        ' Disconnect from PDC/PMU devices...
-        If m_mappers IsNot Nothing Then
-            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                mapper.Disconnect()
-            Next
+                m_mappers = Nothing
+            End If
         End If
 
-        m_mappers = Nothing
-
-        m_historianAdapter.Disconnect()
+        m_disposed = True
 
     End Sub
 
@@ -112,13 +111,40 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
+    Public Sub Connect()
+
+        m_historianAdapter.Connect()
+
+        ' Connect to devices...
+        If m_mappers IsNot Nothing Then
+            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                mapper.Connect()
+            Next
+        End If
+
+        m_reportingStatus.Enabled = True
+
+    End Sub
+
+    Public Sub Disconnect()
+
+        m_reportingStatus.Enabled = False
+
+        ' Disconnect from devices...
+        If m_mappers IsNot Nothing Then
+            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                mapper.Disconnect()
+            Next
+        End If
+
+        m_historianAdapter.Disconnect()
+
+    End Sub
+
     Public Sub Initialize(ByVal connection As OleDbConnection)
 
         ' Disconnect archiver and all phasor measurement mappers...
         Disconnect()
-
-        ' Restart connect cycle to archiver
-        Connect()
 
         UpdateStatus("Initializing phasor measurement receiver...")
 
@@ -429,15 +455,6 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
-    Protected Overridable Sub Dispose(ByVal disposing As Boolean)
-
-        If Not m_isDisposed Then
-            m_isDisposed = True
-            If disposing Then Disconnect()
-        End If
-
-    End Sub
-
     Private Sub UpdateStatus(ByVal status As String) Handles m_historianAdapter.StatusMessage
 
         RaiseEvent StatusMessage(String.Format("[{0}]: {1}", m_archiverSource, status))
@@ -531,7 +548,7 @@ Public Class PhasorMeasurementReceiver
                 UpdateStatus("Receiver reconnecting due to resume request from service manager...")
                 Connect()
             Case ServiceState.Shutdown
-                Disconnect()
+                Dispose()
         End Select
 
     End Sub

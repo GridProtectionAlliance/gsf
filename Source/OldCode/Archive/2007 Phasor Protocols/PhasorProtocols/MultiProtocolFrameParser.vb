@@ -114,6 +114,7 @@ Public Class MultiProtocolFrameParser
     Private m_enabled As Boolean
     Private m_connectionParameters As IConnectionParameters
     Private m_clientConnectionAttempts As Integer
+    Private m_disposed As Boolean
 
 #End Region
 
@@ -143,6 +144,33 @@ Public Class MultiProtocolFrameParser
         MyClass.New()
         m_phasorProtocol = phasorProtocol
         m_transportProtocol = transportProtocol
+
+    End Sub
+
+    Protected Overrides Sub Finalize()
+
+        Dispose(True)
+
+    End Sub
+
+    Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+        If Not m_disposed Then
+            If disposing Then
+                [Stop]()
+                If m_rateCalcTimer IsNot Nothing Then m_rateCalcTimer.Dispose()
+                m_rateCalcTimer = Nothing
+            End If
+        End If
+
+        m_disposed = True
+
+    End Sub
+
+    Public Sub Dispose() Implements IDisposable.Dispose
+
+        Dispose(True)
+        GC.SuppressFinalize(Me)
 
     End Sub
 
@@ -386,11 +414,9 @@ Public Class MultiProtocolFrameParser
         m_enabled = False
         m_rateCalcTimer.Enabled = False
 
-        ' Sockets can start behaving poorly on shutdown - this has exposed itself as a thread-lockup during disconnect.
-        ' As a result, we timeout on disconnect if it takes longer than 1 second...
-        If m_communicationClient IsNot Nothing Then m_communicationClient.Disconnect(1000)
-        If m_communicationServer IsNot Nothing Then m_communicationServer.Stop()
-        If m_frameParser IsNot Nothing Then m_frameParser.Stop()
+        If m_communicationClient IsNot Nothing Then m_communicationClient.Dispose()
+        If m_communicationServer IsNot Nothing Then m_communicationServer.Dispose()
+        If m_frameParser IsNot Nothing Then m_frameParser.Dispose()
 
         m_lastFrameReceivedTime = 0
         m_configurationFrame = Nothing

@@ -40,6 +40,7 @@ Public Class Version3Adapter
     Private m_buffer As Byte()
     Private m_connectionException As Exception
     Private WithEvents m_connection As TcpClient
+    Private m_disposed As Boolean
 
     Public Sub New()
 
@@ -107,7 +108,7 @@ Public Class Version3Adapter
 
     Protected Overrides Sub AttemptDisconnection()
 
-        If m_connection IsNot Nothing Then If m_connection.IsConnected Then m_connection.Disconnect()
+        If m_connection IsNot Nothing Then m_connection.Dispose()
         m_connection = Nothing
 
     End Sub

@@ -43,6 +43,7 @@ Public MustInherit Class HistorianAdapterBase
     Private m_processedMeasurements As Long
     Private WithEvents m_connectionTimer As Timers.Timer
     Private WithEvents m_monitorTimer As Timers.Timer
+    Private m_disposed As Boolean
 
     Private Const ProcessedMeasurementInterval As Integer = 100000
 
@@ -117,9 +118,6 @@ Public MustInherit Class HistorianAdapterBase
         Try
             Dim performedDisconnect As Boolean
 
-            ' Attempt disconnection from historian (consumer to call historian API disconnect function)
-            AttemptDisconnection()
-
             ' Stop data processing thread
             If m_dataProcessingThread IsNot Nothing Then
                 m_dataProcessingThread.Abort()
@@ -128,6 +126,9 @@ Public MustInherit Class HistorianAdapterBase
 
             m_dataProcessingThread = Nothing
 
+            ' Attempt disconnection from historian (consumer to call historian API disconnect function)
+            AttemptDisconnection()
+
             If performedDisconnect Then UpdateStatus(String.Format("Disconnected from {0}", Name))
         Catch ex As Exception
             UpdateStatus(String.Format("Exception occured during disconnect from {0}: {1}", Name, ex.Message))
@@ -135,9 +136,28 @@ Public MustInherit Class HistorianAdapterBase
 
     End Sub
 
-    Public Overrides Sub Dispose()
+    Protected Overrides Sub Dispose(ByVal disposing As Boolean)
 
-        Disconnect()
+        If Not m_disposed Then
+            If disposing Then
+                If m_connectionTimer IsNot Nothing Then m_connectionTimer.Dispose()
+                m_connectionTimer = Nothing
+
+                If m_monitorTimer IsNot Nothing Then m_monitorTimer.Dispose()
+                m_monitorTimer = Nothing
+
+                If m_dataProcessingThread IsNot Nothing Then m_dataProcessingThread.Abort()
+                m_dataProcessingThread = Nothing
+
+                Try
+                    AttemptDisconnection()
+                Catch ex As Exception
+                    RaiseArchivalException(ex)
+                End Try
+            End If
+        End If
+
+        m_disposed = True
 
     End Sub
 
@@ -151,15 +171,6 @@ Public MustInherit Class HistorianAdapterBase
 
         IncrementProcessedMeasurements(1)
 
-        '        ' We throw status message updates on the thread pool so we don't slow sorting operations
-        '#If ThreadTracking Then
-        '        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
-        '            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
-        '        End With
-        '#Else
-        '        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, 1)
-        '#End If
-
     End Sub
 
     Public Overridable Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement)) Implements IHistorianAdapter.QueueMeasurementsForArchival
@@ -170,23 +181,7 @@ Public MustInherit Class HistorianAdapterBase
 
         IncrementProcessedMeasurements(measurements.Count)
 
-        '        ' We throw status message updates on the thread pool so we don't slow sorting operations
-        '#If ThreadTracking Then
-        '        With ManagedThreadPool.QueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
-        '            .Name = "InterfaceAdapters.HistorianAdapterBase.IncrementProcessedMeasurements() [" & Name & "]"
-        '        End With
-        '#Else
-        '        ThreadPool.UnsafeQueueUserWorkItem(AddressOf IncrementProcessedMeasurements, measurements.Count)
-        '#End If
-
     End Sub
-
-    'Private Sub IncrementProcessedMeasurements()
-
-    '    Interlocked.Increment(m_processedMeasurements)
-    '    If m_processedMeasurements Mod ProcessedMeasurementInterval = 0 Then UpdateStatus(m_processedMeasurements.ToString("#,##0") & " measurements have been queued for archival so far...")
-
-    'End Sub
 
     <MethodImpl(MethodImplOptions.Synchronized)> _
     Private Sub IncrementProcessedMeasurements(ByVal totalAdded As Long)

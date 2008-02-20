@@ -53,6 +53,7 @@ Public MustInherit Class FrameParserBase
     Private m_initialized As Boolean
     Private m_enabled As Boolean
     Private m_connectionParameters As IConnectionParameters
+    Private m_disposed As Boolean
 
 #End Region
 
@@ -336,6 +337,22 @@ Public MustInherit Class FrameParserBase
     Protected Overridable Sub RaiseDataStreamException(ByVal ex As Exception)
 
         RaiseEvent DataStreamException(ex)
+
+    End Sub
+
+    Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+
+        If Not m_disposed Then
+            MyBase.Dispose(disposing)
+
+            If disposing Then
+                If m_bufferQueue IsNot Nothing Then m_bufferQueue.Dispose()
+                m_bufferQueue = Nothing
+                m_enabled = False
+            End If
+        End If
+
+        m_disposed = True
 
     End Sub
 

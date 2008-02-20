@@ -18,6 +18,8 @@
 ''' <summary>This interface represents the protocol independent representation of a frame parser.</summary>
 Public Interface IFrameParser
 
+    Inherits IDisposable
+
     Event ReceivedConfigurationFrame(ByVal frame As IConfigurationFrame)
     Event ReceivedDataFrame(ByVal frame As IDataFrame)
     Event ReceivedHeaderFrame(ByVal frame As IHeaderFrame)

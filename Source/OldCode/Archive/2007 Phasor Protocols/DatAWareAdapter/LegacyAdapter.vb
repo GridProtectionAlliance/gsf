@@ -37,6 +37,7 @@ Public Class LegacyAdapter
     Private m_clientStream As NetworkStream
     Private m_bufferSize As Integer
     Private m_buffer As Byte()
+    Private m_disposed As Boolean
 
     Public Sub New()
 

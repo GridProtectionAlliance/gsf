@@ -116,7 +116,7 @@ Public Class Service
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Disconnect", "Disconnects specified device", AddressOf DisconnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SendCommand", "Sends command to specified device", AddressOf SendDeviceCommand))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("ThreadList", "Displays details for managed threads", AddressOf ActiveThreadList))
-        ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SysInit", "Starts a controlled system initialization", AddressOf ControlledSystemInitialization, False))
+        ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SysInit", "Performs a system initialization", AddressOf SystemInitialization))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("GC", "Forces a .NET garbage collection", AddressOf ForceGarbageCollection, False))
 
         DisplayStatusMessage(String.Format("*** System Initializing - [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
@@ -169,7 +169,7 @@ Public Class Service
             If m_calculatedMeasurements IsNot Nothing Then
                 For x = 0 To m_calculatedMeasurements.Length - 1
                     ServiceHelper.ServiceComponents.Remove(m_calculatedMeasurements(x))
-                    m_calculatedMeasurements(x).Stop()
+                    m_calculatedMeasurements(x).Dispose()
                 Next
             End If
 
@@ -193,7 +193,7 @@ Public Class Service
             If m_measurementConcentrators IsNot Nothing Then
                 For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
                     ServiceHelper.ServiceComponents.Remove(concentrator)
-                    concentrator.Stop()
+                    concentrator.Dispose()
                 Next
             End If
 
@@ -267,7 +267,12 @@ Public Class Service
 
                         AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
                         AddHandler measurementReceiver.NewMeasurements, AddressOf NewParsedMeasurements
+
+                        ' Initialize receiver devices
                         measurementReceiver.Initialize(connection)
+
+                        ' Start device connections...
+                        measurementReceiver.Connect()
 
                         measurementReceivers.Add(archiveSource, measurementReceiver)
                     End With
@@ -796,11 +801,11 @@ Public Class Service
 
     End Sub
 
-    Private Sub ControlledSystemInitialization(ByVal requestInfo As ClientRequestInfo)
+    Private Sub SystemInitialization(ByVal requestInfo As ClientRequestInfo)
 
         If requestInfo.Request.Arguments.ContainsHelpRequest Then
             With New StringBuilder()
-                .Append("Starts a controlled system initialization.")
+                .Append("Performs a system initialization.")
                 .AppendLine()
                 .AppendLine()
                 .Append("   Usage:")
@@ -816,11 +821,11 @@ Public Class Service
                 ServiceHelper.UpdateStatus(requestInfo.Sender.ClientID, .ToString(), ServiceHelper.UpdateCrlfCount)
             End With
         Else
-            DisplayStatusMessage("Starting controlled system initialization...")
+            DisplayStatusMessage("Starting system initialization...")
 
             InitializeSystem(Nothing)
 
-            DisplayStatusMessage("Controlled system initialization complete.")
+            DisplayStatusMessage("System initialization complete.")
         End If
 
     End Sub

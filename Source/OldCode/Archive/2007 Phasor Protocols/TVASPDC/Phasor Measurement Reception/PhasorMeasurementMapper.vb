@@ -38,6 +38,8 @@ Imports PhasorProtocols.Common
 <CLSCompliant(False)> _
 Public Class PhasorMeasurementMapper
 
+    Implements IDisposable
+
     Public Event NewParsedMeasurements(ByVal measurements As ICollection(Of IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
     Public Event Connected()
@@ -65,6 +67,7 @@ Public Class PhasorMeasurementMapper
     Private m_isPDC As Integer
     Private m_totalVirtualCells As Integer
     Private m_exceptionLogger As GlobalExceptionLogger
+    Private m_disposed As Boolean
 
     Public Sub New( _
         ByVal frameParser As MultiProtocolFrameParser, _
@@ -118,6 +121,33 @@ Public Class PhasorMeasurementMapper
 
             m_activeMeasurementKeys.Sort()
         End If
+
+    End Sub
+
+    Protected Overrides Sub Finalize()
+
+        Dispose(True)
+
+    End Sub
+
+    Protected Overridable Sub Dispose(ByVal disposing As Boolean)
+
+        If Not m_disposed Then
+            If disposing Then
+                If m_frameParser IsNot Nothing Then m_frameParser.Dispose()
+                If m_dataStreamMonitor IsNot Nothing Then m_dataStreamMonitor.Dispose()
+                If m_delayedConnection IsNot Nothing Then m_delayedConnection.Dispose()
+            End If
+        End If
+
+        m_disposed = True
+
+    End Sub
+
+    Public Sub Dispose() Implements IDisposable.Dispose
+
+        Dispose(True)
+        GC.SuppressFinalize(Me)
 
     End Sub
 
@@ -646,7 +676,7 @@ Public Class PhasorMeasurementMapper
                 .Name = "TVASPDC.PhasorMeasurementMapper.CacheConfigurationFrame()"
             End With
 #Else
-                ThreadPool.UnsafeQueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf CacheConfigurationFrame, frame)
 #End If
         End If
 

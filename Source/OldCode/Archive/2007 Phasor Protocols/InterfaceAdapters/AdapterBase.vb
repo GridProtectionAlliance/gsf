@@ -19,18 +19,31 @@ Public MustInherit Class AdapterBase
 
     Implements IAdapter
 
-    Public Event StatusMessage(ByVal status As String) Implements IAdapter.StatusMessage
+    Public Sub Dispose() Implements IDisposable.Dispose
 
-    Public MustOverride Sub Dispose() Implements IDisposable.Dispose
+        Dispose(True)
+        GC.SuppressFinalize(Me)
+
+    End Sub
+
+    Public Event StatusMessage(ByVal status As String) Implements IAdapter.StatusMessage
 
     Public MustOverride ReadOnly Property Name() As String Implements IAdapter.Name
 
     Public MustOverride ReadOnly Property Status() As String Implements IAdapter.Status
+
+    Protected Overrides Sub Finalize()
+
+        Dispose(True)
+
+    End Sub
 
     Protected Overridable Sub UpdateStatus(ByVal message As String)
 
         RaiseEvent StatusMessage(message)
 
     End Sub
+
+    Protected MustOverride Sub Dispose(ByVal disposing As Boolean)
 
 End Class
