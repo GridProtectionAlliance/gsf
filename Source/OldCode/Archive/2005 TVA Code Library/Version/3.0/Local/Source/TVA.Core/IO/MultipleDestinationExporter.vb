@@ -32,7 +32,7 @@ Namespace IO
     ''' Handles exporting the same file to multiple destinations that are defined in the configuration file.  Includes feature for network share authentication.
     ''' </summary>
     ''' <remarks>
-    ''' Currently only designed for text files. Useful for updating the same file on multiple servers (e.g., load balanced web server).
+    ''' This class is useful for updating the same file on multiple servers (e.g., load balanced web server).
     ''' </remarks>
     Public Class MultipleDestinationExporter
 
@@ -47,8 +47,9 @@ Namespace IO
         Private m_configSection As String
         Private m_exportTimeout As Integer
         Private m_totalExports As Long
+        Private m_textEncoding As Encoding
         Private m_disposed As Boolean
-        Private WithEvents m_exportQueue As ProcessQueue(Of String)
+        Private WithEvents m_exportQueue As ProcessQueue(Of Byte())
 
         Public Sub New()
 
@@ -66,8 +67,9 @@ Namespace IO
 
             m_configSection = configSection
             m_exportTimeout = exportTimeout
+            m_textEncoding = Encoding.Default   ' We use default ANSI page encoding for text based exports...
 
-            ' So as to not delay class construction due to share authentication, we perform initialzation on another thread...
+            ' So as to not delay class construction due to share authentication, we perform initialization on another thread...
 #If ThreadTracking Then
         With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf Initialize, defaultDestinations)
             .Name = "TVA.IO.MultipleDestinationExporter.Initialize()"
@@ -83,7 +85,7 @@ Namespace IO
             Dim defaultDestinations As ExportDestination() = DirectCast(state, ExportDestination())
 
             ' Set up a synchronous process queue to handle exports that will limit total export time to export interval
-            m_exportQueue = ProcessQueue(Of String).CreateSynchronousQueue(AddressOf WriteExportFiles, 10, m_exportTimeout, False, False)
+            m_exportQueue = ProcessQueue(Of Byte()).CreateSynchronousQueue(AddressOf WriteExportFiles, 10, m_exportTimeout, False, False)
 
             With CategorizedSettings(m_configSection)
                 ' Make sure the default configuration variables exist
@@ -142,26 +144,34 @@ Namespace IO
 
         Public Sub Dispose() Implements System.IDisposable.Dispose
 
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+
+        End Sub
+
+        Protected Sub Dispose(ByVal disposing As Boolean)
+
             If Not m_disposed Then
-                m_disposed = True
+                If disposing Then
+                    If m_exportQueue IsNot Nothing Then m_exportQueue.Dispose()
+                    m_exportQueue = Nothing
 
-                GC.SuppressFinalize(Me)
-
-                If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
-
-                ' We'll be nice and disconnect network shares when this class is disposed...
-                For x As Integer = 0 To m_exportDestinations.Length - 1
-                    If m_exportDestinations(x).ConnectToShare Then
-                        DisconnectFromNetworkShare(m_exportDestinations(x).Share)
-                    End If
-                Next
+                    ' We'll be nice and disconnect network shares when this class is disposed...
+                    For x As Integer = 0 To m_exportDestinations.Length - 1
+                        If m_exportDestinations(x).ConnectToShare Then
+                            DisconnectFromNetworkShare(m_exportDestinations(x).Share)
+                        End If
+                    Next
+                End If
             End If
+
+            m_disposed = True
 
         End Sub
 
         Protected Overrides Sub Finalize()
 
-            Dispose()
+            Dispose(True)
 
         End Sub
 
@@ -224,31 +234,60 @@ Namespace IO
         End Property
 
         ''' <summary>
+        ''' Gets or sets the encoding to be used to encode text data being exported.
+        ''' </summary>
+        ''' <value>The encoding to be used to encode text data being exported.</value>
+        ''' <returns>The encoding to be used to encode text data being exported.</returns>
+        Public Overridable Property TextEncoding() As Encoding
+            Get
+                Return m_textEncoding
+            End Get
+            Set(ByVal value As Encoding)
+                If value Is Nothing Then
+                    m_textEncoding = Encoding.Default
+                Else
+                    m_textEncoding = value
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Start multiple file export.
         ''' </summary>
-        ''' <param name="fileData">Data to export into each destination.</param>
+        ''' <param name="fileData">Text based data to export to each destination.</param>
         Public Sub ExportData(ByVal fileData As String)
+
+            ' Queue data for export - multiple exports may take some time, so we do this on another thread...
+            If m_exportQueue IsNot Nothing Then m_exportQueue.Add(m_textEncoding.GetBytes(fileData))
+
+        End Sub
+
+        ''' <summary>
+        ''' Start multiple file export.
+        ''' </summary>
+        ''' <param name="fileData">Binary data to export to each destination.</param>
+        Public Sub ExportData(ByVal fileData As Byte())
 
             ' Queue data for export - multiple exports may take some time, so we do this on another thread...
             If m_exportQueue IsNot Nothing Then m_exportQueue.Add(fileData)
 
         End Sub
 
-        Private Sub WriteExportFiles(ByVal fileData As String)
+        Private Sub WriteExportFiles(ByVal fileData As Byte())
 
             ' Make sure there are measurements to export
-            Dim fileName As String
-            Dim fileStream As StreamWriter
+            Dim filename As String
+            Dim exportFile As FileStream
 
             ' Loop through each defined export file
             For x As Integer = 0 To m_exportDestinations.Length - 1
                 Try
                     '  Get next export file name
-                    fileName = m_exportDestinations(x).DestinationFile
+                    filename = m_exportDestinations(x).DestinationFile
 
                     Try
                         ' We'll wait on file lock for up to one second - then give up with IO exception
-                        WaitForWriteLock(fileName, 1)
+                        WaitForWriteLock(filename, 1)
                     Catch ex As ThreadAbortException
                         ' This exception is normal, we'll just rethrow this back up the try stack
                         Throw ex
@@ -259,13 +298,13 @@ Namespace IO
                     End Try
 
                     ' Create a new export file
-                    fileStream = File.CreateText(fileName)
+                    exportFile = File.Create(filename)
 
                     ' Export file data
-                    fileStream.Write(fileData)
+                    exportFile.Write(fileData, 0, fileData.Length)
 
                     ' Close stream
-                    fileStream.Close()
+                    exportFile.Close()
 
                     ' Track successful exports
                     m_totalExports += 1
@@ -314,7 +353,7 @@ Namespace IO
                 Case ServiceState.Resumed
                     If m_exportQueue IsNot Nothing Then m_exportQueue.Start()
                 Case ServiceState.Shutdown
-                    If m_exportQueue IsNot Nothing Then m_exportQueue.Stop()
+                    Dispose()
             End Select
 
         End Sub
