@@ -42,7 +42,6 @@ Public Class PhasorMeasurementMapper
 
     Public Event NewParsedMeasurements(ByVal measurements As ICollection(Of IMeasurement))
     Public Event ParsingStatus(ByVal message As String)
-    Public Event Connected()
 
     Private WithEvents m_frameParser As MultiProtocolFrameParser
     Private WithEvents m_dataStreamMonitor As Timers.Timer
@@ -610,7 +609,6 @@ Public Class PhasorMeasurementMapper
         m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
 
         UpdateStatus(String.Format("Connection to {0} established.", m_source))
-        RaiseEvent Connected()
 
     End Sub
 
