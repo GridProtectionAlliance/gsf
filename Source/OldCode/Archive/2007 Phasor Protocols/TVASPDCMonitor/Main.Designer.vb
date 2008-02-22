@@ -8,17 +8,9 @@ Partial Class Main
     Shared Sub Main(ByVal args() As String)
 
         TVA.Console.Common.EnableRaisingEvents()
-        AddHandler TVA.Console.Common.ConsoleClosing, AddressOf Console_ConsoleClosing
 
         m_consoleWindow = New Main(args)
         m_consoleWindow.Main_Load()
-        m_consoleWindow.Dispose()
-
-    End Sub
-
-    Private Shared Sub Console_ConsoleClosing(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs)
-
-        ' Disconnect from the service before the console window closes.
         m_consoleWindow.Dispose()
 
     End Sub
