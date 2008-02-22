@@ -926,8 +926,9 @@ Namespace Measurements
                     RaiseEvent ProcessException(ex)
                 End Try
 
-                ' We'll snooze a millisecond between loops to allow system time to breathe
-                Thread.Sleep(1)
+                ' We'll snooze a millisecond between loops to allow system time to breathe as long
+                ' the system doesn't seem to be falling behind...
+                If m_frameQueue.Count <= m_lagTime * m_framesPerSecond Then Thread.Sleep(1)
             Loop
 
         End Sub
