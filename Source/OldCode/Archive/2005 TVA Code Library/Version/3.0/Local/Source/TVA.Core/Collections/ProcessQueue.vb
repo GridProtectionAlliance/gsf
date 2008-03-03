@@ -1093,12 +1093,6 @@ Namespace Collections
 
 #Region " Protected Methods Implementation "
 
-        Protected Overrides Sub Finalize()
-
-            Dispose(True)
-
-        End Sub
-
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_disposed Then
