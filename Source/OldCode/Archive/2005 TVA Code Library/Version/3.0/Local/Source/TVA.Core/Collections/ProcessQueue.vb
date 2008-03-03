@@ -1093,6 +1093,14 @@ Namespace Collections
 
 #Region " Protected Methods Implementation "
 
+        ''' <summary>We implement finalizer for this class to ensure queue shuts down in an orderly 
+        ''' fashion.</summary>
+        Protected Overrides Sub Finalize()
+
+            Dispose(True)
+
+        End Sub
+
         Protected Overridable Sub Dispose(ByVal disposing As Boolean)
 
             If Not m_disposed Then
