@@ -107,6 +107,7 @@ Namespace Collections
         Private m_processItemFunction As ProcessItemFunctionSignature
         Private m_processItemsFunction As ProcessItemsFunctionSignature
         Private m_canProcessItemFunction As CanProcessItemFunctionSignature
+        Private m_disposed As Boolean
 
 #End Region
 
@@ -519,6 +520,22 @@ Namespace Collections
                 Return DirectCast(InternalList, DictionaryList(Of TKey, TValue))
             End Get
         End Property
+
+        Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+
+            If Not m_disposed Then
+                MyBase.Dispose(disposing)
+
+                If disposing Then
+                    m_processItemFunction = Nothing
+                    m_processItemsFunction = Nothing
+                    m_canProcessItemFunction = Nothing
+                End If
+            End If
+
+            m_disposed = True
+
+        End Sub
 
 #End Region
 

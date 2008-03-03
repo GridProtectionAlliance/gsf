@@ -1108,6 +1108,9 @@ Namespace Collections
                     m_processTimer = Nothing
                     If m_processQueue IsNot Nothing Then m_processQueue.Clear()
                     m_processQueue = Nothing
+                    m_processItemFunction = Nothing
+                    m_processItemsFunction = Nothing
+                    m_canProcessItemFunction = Nothing
                 End If
             End If
 
