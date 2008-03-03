@@ -91,6 +91,7 @@ Namespace Measurements
         Private m_publishedMeasurements As Long                                 ' Total number of published measurements
         Private m_missedSortsByTimeout As Long                                  ' Total number of unsorted measurements due to timeout waiting for lock
         Private m_publishedFrames As Long                                       ' Total number of published frames
+        Private m_totalWaitTime As Long                                         ' Total cumulative frame wait time (till publish) - used to calculate average
         Private m_totalSortTime As Long                                         ' Total cumulative frame sorting times (in ticks) - used to calculate average
         Private m_trackLatestMeasurements As Boolean                            ' Determines whether or not to track latest measurements
         Private m_latestMeasurements As ImmediateMeasurements                   ' Absolute latest received measurement values
@@ -275,10 +276,19 @@ Namespace Measurements
         Public Overridable Sub Start()
 
             If Not m_enabled Then
-                ' Start real-time process queue
+                ' Reset statistics
+                m_totalMeasurements = 0
+                m_measurementsSortedByArrival = 0
+                m_discardedMeasurements = 0
+                m_publishedMeasurements = 0
+                m_missedSortsByTimeout = 0
+                m_publishedFrames = 0
                 m_totalSortTime = 0
+                m_totalWaitTime = 0
                 m_stopTime = 0
                 m_startTime = Date.UtcNow.Ticks
+
+                ' Start real-time frame publication thread
 #If ThreadTracking Then
                 m_publicationThread = New ManagedThread(AddressOf PublishFrames)
                 m_publicationThread.Name = "TVA.Measurements.ConcentratorBase.PublishFrames() [" & Me.GetType.Name & "]"
@@ -474,6 +484,21 @@ Namespace Measurements
         Public ReadOnly Property AverageSortingTimePerFrame() As Double
             Get
                 Return TotalSortingTime / m_publishedFrames
+            End Get
+        End Property
+
+        ''' <summary>Gets the total number of milliseconds frames have waiting for publication since concentrator started.</summary>
+        Public ReadOnly Property TotalWaitingTime() As Long
+            Get
+                Return m_totalWaitTime
+            End Get
+        End Property
+
+        ''' <summary>Gets the average required waiting time till frame is published, in milliseconds.</summary>
+        ''' <remarks>If user publication function exceed available publishing time (1/framesPerSecond), concentration will fall behind.</remarks>
+        Public ReadOnly Property AverateWaitingTimePerFrame() As Double
+            Get
+                Return TotalWaitingTime / m_publishedFrames
             End Get
         End Property
 
@@ -701,6 +726,14 @@ Namespace Measurements
                     .Append(AverageSortingTimePerFrame.ToString("0.0000"))
                     .Append(" seconds")
                     .AppendLine()
+                    .Append(" Average time till publish: ")
+                    .Append(AverateWaitingTimePerFrame.ToString("0.0000"))
+                    .Append(" milliseconds")
+                    .AppendLine()
+                    .Append(" User function utilization: ")
+                    .Append(((m_ticksPerFrame - SecondsToTicks(AverateWaitingTimePerFrame / 1000.0R)) / m_ticksPerFrame).ToString("##0.0000%"))
+                    .Append(" of available time used")
+                    .AppendLine()
                     .Append("Published measurement loss: ")
                     .Append((m_discardedMeasurements / m_totalMeasurements).ToString("##0.0000%"))
                     .AppendLine()
@@ -880,43 +913,45 @@ Namespace Measurements
             Dim frame As IFrame
             Dim ticks As Long
             Dim frameIndex As Integer
+            Dim distance As Integer
 
             Do While True
                 Try
-                    ' Get top frame (this is not synchronized to reduce contention, see FrameQueue)
+                    ' Get top frame, this blocks current thread until new head is assigned
                     frame = m_frameQueue.Head
 
                     If frame IsNot Nothing Then
                         ' Get ticks for this frame
                         ticks = frame.Ticks
 
-                        ' Frame timestamps are evenly distributed, so all we need to do is just wait for the
-                        ' lagtime to pass and begin publishing.
-                        If DistanceFromRealTime(ticks) >= m_lagTime Then
-                            ' Mark the frame as published to prevent any further sorting into this frame.
-                            ' Assignment of this flag is synchronized to ensure sorting into frame ceases.
-                            SyncLock frame.Measurements
-                                frame.Published = True
-                            End SyncLock
+                        ' Wait for needed lagtime to pass before we begin publishing
+                        distance = CInt((m_lagTime - DistanceFromRealTime(ticks)) * 1000.0R)
+                        If distance > 0 Then Thread.Sleep(distance)
 
-                            ' Calculate index of this frame within its second
-                            frameIndex = Convert.ToInt32((ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame)
+                        ' Mark the frame as published to prevent any further sorting into this frame.
+                        ' Assignment of this flag is synchronized to ensure sorting into frame ceases.
+                        SyncLock frame.Measurements
+                            frame.Published = True
+                        End SyncLock
 
-                            ' Publish the current frame.
-                            Try
-                                PublishFrame(frame, frameIndex)
-                            Finally
-                                ' Remove the frame from the queue whether it successfully published or not
-                                m_frameQueue.Pop()
-                            End Try
+                        ' Calculate index of this frame within its second
+                        frameIndex = Convert.ToInt32((ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame)
 
-                            ' Calculate total time required to sort measurements into this frame so far.
-                            If frame.StartSortTime > 0 AndAlso frame.LastSortTime > 0 Then m_totalSortTime += (frame.LastSortTime - frame.StartSortTime)
+                        ' Publish the current frame.
+                        Try
+                            PublishFrame(frame, frameIndex)
+                        Finally
+                            ' Remove the frame from the queue whether it successfully published or not
+                            m_frameQueue.Pop()
+                        End Try
 
-                            ' Update publication statistics.
-                            m_publishedFrames += 1
-                            m_publishedMeasurements += frame.PublishedMeasurements
-                        End If
+                        ' Calculate total time required to sort measurements into this frame so far.
+                        If frame.StartSortTime > 0 AndAlso frame.LastSortTime > 0 Then m_totalSortTime += (frame.LastSortTime - frame.StartSortTime)
+
+                        ' Update publication statistics.
+                        m_publishedFrames += 1
+                        m_publishedMeasurements += frame.PublishedMeasurements
+                        m_totalWaitTime += distance
                     End If
                 Catch ex As ThreadAbortException
                     ' Time to leave...
@@ -925,10 +960,6 @@ Namespace Measurements
                     ' Not stopping for exceptions - but we'll let user know there are issues...
                     RaiseEvent ProcessException(ex)
                 End Try
-
-                ' We'll snooze a millisecond between loops to allow system time to breathe as long
-                ' the system doesn't seem to be falling behind...
-                If m_frameQueue.Count <= m_lagTime * m_framesPerSecond Then Thread.Sleep(1)
             Loop
 
         End Sub

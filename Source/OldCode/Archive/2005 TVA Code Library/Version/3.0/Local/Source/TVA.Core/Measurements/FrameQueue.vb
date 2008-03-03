@@ -35,6 +35,7 @@ Namespace Measurements
         Private m_frameList As LinkedList(Of IFrame)        ' We keep this list sorted by timestamp so frames are processed in order
         Private m_frameHash As Dictionary(Of Long, IFrame)  ' This list not guaranteed to be sorted, but used for fast frame lookup
         Private m_popQueue As ProcessQueue(Of Long)
+        Private m_syncSignal As AutoResetEvent
         Private m_publishedTicks As Long
         Private m_head, m_last As IFrame
         Private m_ticksPerFrame As Decimal
@@ -46,6 +47,7 @@ Namespace Measurements
             m_frameList = New LinkedList(Of IFrame)
             m_frameHash = New Dictionary(Of Long, IFrame)(initialCapacity)
             m_popQueue = ProcessQueue(Of Long).CreateRealTimeQueue(AddressOf PopStub, AddressOf CanPop)
+            m_syncSignal = New AutoResetEvent(False)
 
             m_ticksPerFrame = ticksPerFrame
             m_createNewFrameFunction = createNewFrameFunction
@@ -62,8 +64,15 @@ Namespace Measurements
 
             If Not m_disposed Then
                 If disposing Then
-                    If m_popQueue IsNot Nothing Then m_popQueue.Stop()
+                    If m_popQueue IsNot Nothing Then m_popQueue.Dispose()
                     m_popQueue = Nothing
+                    If m_syncSignal IsNot Nothing Then m_syncSignal.Close()
+                    m_syncSignal = Nothing
+                    If m_frameList IsNot Nothing Then m_frameList.Clear()
+                    m_frameList = Nothing
+                    If m_frameHash IsNot Nothing Then m_frameHash.Clear()
+                    m_frameHash = Nothing
+                    m_createNewFrameFunction = Nothing
                 End If
             End If
 
@@ -123,8 +132,10 @@ Namespace Measurements
         Private Function CanPop(ByVal publishedTicks As Long) As Boolean
 
             ' We didn't try for an immediate lock to remove top frame from original
-            ' "Pop" call so now we're running on an independent thread and we'll hang
-            ' around until we can get that work done. This process "smooths" the
+            ' "Pop" call - this call was running on the already burdened publication
+            ' thread and we need to give consumer as much of the available timeslice
+            ' as possible. So now we're running on an independent thread and we'll
+            ' hang around until we can get our work done. This process "smooths" the
             ' frame publication process by not waiting on lock synchrnonization
             ' for queue clean up - the separate thread should also avoid a potential
             ' deadlock that could be caused by waiting for locks between the frame
@@ -137,9 +148,9 @@ Namespace Measurements
                     m_frameList.RemoveFirst()
 
                     If m_frameList.Count > 0 Then
-                        m_head = m_frameList.First.Value
+                        Me.Head = m_frameList.First.Value
                     Else
-                        m_head = Nothing
+                        Me.Head = Nothing
                     End If
 
                     m_frameHash.Remove(publishedTicks)
@@ -160,12 +171,21 @@ Namespace Measurements
 
         End Sub
 
-        Public ReadOnly Property Head() As IFrame
+        Public Property Head() As IFrame
             Get
-                ' We track the head separately to avoid sync-lock on frame list
-                ' to safely access first item...
+                ' Wait until new head has been assigned...
+                m_syncSignal.WaitOne()
+
+                ' We track the head separately to avoid sync-lock on frame list to safely access first item...
                 Return m_head
             End Get
+            Private Set(ByVal value As IFrame)
+                ' New head assigned
+                m_head = value
+
+                ' Release waiting thread...
+                m_syncSignal.Set()
+            End Set
         End Property
 
         Public ReadOnly Property Last() As IFrame
@@ -212,7 +232,7 @@ Namespace Measurements
 
                         If Not nodeAdded Then
                             m_frameList.AddFirst(frame)
-                            m_head = frame
+                            Me.Head = frame
                         End If
 
                         ' Since we'll be requesting this frame over and over, we'll use
