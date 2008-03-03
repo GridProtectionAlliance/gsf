@@ -926,7 +926,14 @@ Namespace Measurements
 
                         ' Wait for needed lagtime to pass before we begin publishing
                         distance = CInt((m_lagTime - DistanceFromRealTime(ticks)) * 1000.0R)
-                        If distance > 0 Then Thread.Sleep(distance)
+
+                        If distance > 0 Then
+                            If distance > 1 Then Thread.Sleep(distance - 1)
+
+                            Do Until DistanceFromRealTime(ticks) >= m_lagTime
+                                Thread.Sleep(1)
+                            Loop
+                        End If
 
                         ' Mark the frame as published to prevent any further sorting into this frame.
                         ' Assignment of this flag is synchronized to ensure sorting into frame ceases.
