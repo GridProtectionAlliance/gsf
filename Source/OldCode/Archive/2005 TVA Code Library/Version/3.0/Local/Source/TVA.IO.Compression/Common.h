@@ -1,5 +1,6 @@
 // JRC 2004 - Common.h
-// Note 2005: Removed from project settings "__DllMainCRTStartup@12"
+// JRC 2005: Removed from project settings "__DllMainCRTStartup@12"
+// PCP 2008: Moved CompressLevel enumeration to TVA.Core.dll
 
 #pragma once
 #pragma unmanaged
@@ -32,14 +33,14 @@ namespace TVA
 	{
 		namespace Compression
 		{
-			public __value enum CompressLevel : int
-			{
-				DefaultCompression = Z_DEFAULT_COMPRESSION,
-				NoCompression = Z_NO_COMPRESSION,
-				BestSpeed = Z_BEST_SPEED,
-				BestCompression = Z_BEST_COMPRESSION,
-				MultiPass = 10
-			};
+			//public __value enum CompressLevel : int
+			//{
+			//	DefaultCompression = Z_DEFAULT_COMPRESSION,
+			//	NoCompression = Z_NO_COMPRESSION,
+			//	BestSpeed = Z_BEST_SPEED,
+			//	BestCompression = Z_BEST_COMPRESSION,
+			//	MultiPass = 10
+			//};
 
 			public __delegate void ProgressEventHandler(__int64 bytesCompleted, __int64 bytesTotal);
 

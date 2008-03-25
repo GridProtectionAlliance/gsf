@@ -919,7 +919,7 @@ Public MustInherit Class CommunicationServerBase
     ''' <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
     Protected Overridable Function GetPreparedData(ByVal data As Byte()) As Byte()
 
-        data = CompressData(data, m_compression)
+        If m_compression <> CompressLevel.NoCompression Then data = CompressData(data, m_compression)
         If Not m_secureSession Then
             Dim key As String = m_handshakePassphrase
             If String.IsNullOrEmpty(key) Then
@@ -927,6 +927,7 @@ Public MustInherit Class CommunicationServerBase
             End If
             data = EncryptData(data, key, m_encryption)
         End If
+
         Return data
 
     End Function
@@ -946,7 +947,8 @@ Public MustInherit Class CommunicationServerBase
             End If
             data = DecryptData(data, key, m_encryption)
         End If
-        data = UncompressData(data, m_compression)
+        If m_compression <> CompressLevel.NoCompression Then data = UncompressData(data, m_compression)
+
         Return data
 
     End Function

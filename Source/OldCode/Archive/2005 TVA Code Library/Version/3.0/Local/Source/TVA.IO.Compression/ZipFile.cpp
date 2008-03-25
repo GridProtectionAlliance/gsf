@@ -47,13 +47,13 @@ int ZipFile::CompressedFile::get_DOSDateTime()
 	return fileInfo.dosDate;
 }
 
-DateTime ZipFile::CompressedFile::get_FileDateTime()
+System::DateTime ZipFile::CompressedFile::get_FileDateTime()
 {
 	if (fileInfo.dosDate)
-		return DateTime(fileInfo.tmu_date.tm_year, fileInfo.tmu_date.tm_mon + 1, fileInfo.tmu_date.tm_mday, 
+		return System::DateTime(fileInfo.tmu_date.tm_year, fileInfo.tmu_date.tm_mon + 1, fileInfo.tmu_date.tm_mday, 
 			fileInfo.tmu_date.tm_hour, fileInfo.tmu_date.tm_min, fileInfo.tmu_date.tm_sec);
 	else
-		return DateTime::MinValue;
+		return System::DateTime::MinValue;
 }
 
 String* ZipFile::CompressedFile::get_FileName()
@@ -558,7 +558,7 @@ void ZipFile::Extract(String* FileSpec, String* DestPath, UpdateOption Overwrite
 				// See if destination file already exists
 				if (File::Exists(destFileName))
 				{
-					DateTime lastUpdate = File::GetLastWriteTime(destFileName);
+					System::DateTime lastUpdate = File::GetLastWriteTime(destFileName);
 
 					switch (OverwriteWhen)
 					{
@@ -569,10 +569,10 @@ void ZipFile::Extract(String* FileSpec, String* DestPath, UpdateOption Overwrite
 							writeFile = true;
 							break;
 						case UpdateOption::ZipFileIsNewer:
-							writeFile = (DateTime::Compare(file->get_FileDateTime(), lastUpdate) > 0);
+							writeFile = (System::DateTime::Compare(file->get_FileDateTime(), lastUpdate) > 0);
 							break;
 						case UpdateOption::DiskFileIsNewer:
-							writeFile = (DateTime::Compare(file->get_FileDateTime(), lastUpdate) < 0);
+							writeFile = (System::DateTime::Compare(file->get_FileDateTime(), lastUpdate) < 0);
 							break;
 						default:
 							writeFile = false;
@@ -723,7 +723,7 @@ void ZipFile::UpdateFilesInZip(ZipFile* TempZipFile, String* FileSpec, String* C
 	String* fullFileName;
 	String* adjustedFileName;
 	CompressedFile* file;
-	DateTime lastUpdate;
+	System::DateTime lastUpdate;
 	bool updateFile;
 
 	while (filesEnum->MoveNext())
@@ -744,10 +744,10 @@ void ZipFile::UpdateFilesInZip(ZipFile* TempZipFile, String* FileSpec, String* C
 					updateFile = true;
 					break;
 				case UpdateOption::ZipFileIsNewer:
-					updateFile = (DateTime::Compare(file->get_FileDateTime(), lastUpdate) > 0);
+					updateFile = (System::DateTime::Compare(file->get_FileDateTime(), lastUpdate) > 0);
 					break;
 				case UpdateOption::DiskFileIsNewer:
-					updateFile = (DateTime::Compare(file->get_FileDateTime(), lastUpdate) < 0);
+					updateFile = (System::DateTime::Compare(file->get_FileDateTime(), lastUpdate) < 0);
 					break;
 				default:
 					updateFile = false;
@@ -1061,7 +1061,7 @@ void ZipFile::AddFileToZip(ZipFile* DestZip, ZipFile* EventSource, String* FullF
 		if (!EventSource) EventSource = DestZip;
 
 		// Define zip file date/time to be stored
-		DateTime fileDate = File::GetLastWriteTime(FullFileName);
+		System::DateTime fileDate = File::GetLastWriteTime(FullFileName);
 		
 		// Create the compressed file information to be stored in zip
 		zip_fileinfo fileInfo;

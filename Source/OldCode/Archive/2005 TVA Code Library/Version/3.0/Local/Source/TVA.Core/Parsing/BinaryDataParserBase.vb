@@ -159,51 +159,55 @@ Namespace Parsing
 
             ' Process all assemblies in the application bin directory.
             For Each dll As String In Directory.GetFiles(dllDirectory, "*.dll")
-                ' Load the assembly in the curent app domain.
-                asm = Reflection.Assembly.LoadFrom(dll)
+                Try
+                    ' Load the assembly in the curent app domain.
+                    asm = Reflection.Assembly.LoadFrom(dll)
 
-                ' Process all of the public types in the assembly.
-                For Each asmType As Type In asm.GetExportedTypes()
-                    typeCtor = asmType.GetConstructor(Type.EmptyTypes)
-                    If typeCtor IsNot Nothing AndAlso Not asmType.IsAbstract AndAlso _
-                            TVA.Common.GetRootType(asmType) Is GetType(TOutput) Then
-                        ' The type meets the following criteria:
-                        ' - has a default public constructor
-                        ' - is not abstract and can be instantiated.
-                        ' - root type is same as the type specified for the output
+                    ' Process all of the public types in the assembly.
+                    For Each asmType As Type In asm.GetExportedTypes()
+                        typeCtor = asmType.GetConstructor(Type.EmptyTypes)
+                        If typeCtor IsNot Nothing AndAlso Not asmType.IsAbstract AndAlso _
+                                TVA.Common.GetRootType(asmType) Is GetType(TOutput) Then
+                            ' The type meets the following criteria:
+                            ' - has a default public constructor
+                            ' - is not abstract and can be instantiated.
+                            ' - root type is same as the type specified for the output
 
-                        Dim outputType As New TypeInfo()
-                        outputType.RuntimeType = asmType
+                            Dim outputType As New TypeInfo()
+                            outputType.RuntimeType = asmType
 
-                        ' We employ 2 of the best peforming ways of instantiating objects using reflection.
-                        ' See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
-                        If m_optimizeParsing Then
-                            ' Invokation approach: Reflection.Emit + Delegate
-                            ' This is hands-down that most fastest way of instantiating objects using reflection.
-                            Dim dynamicTypeCtor As MethodBuilder = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public Or MethodAttributes.Static, asmType, Type.EmptyTypes)
-                            With dynamicTypeCtor.GetILGenerator()
-                                .Emit(Emit.OpCodes.Nop)
-                                .Emit(Emit.OpCodes.Newobj, typeCtor)
-                                .Emit(Emit.OpCodes.Ret)
-                            End With
-                        Else
-                            ' Invokation approach: DynamicMethod + Delegate
-                            ' This method is very fast compared to rest of the approaches, but not as fast as the one above.
-                            Dim dynamicTypeCtor As New DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, True)
-                            With dynamicTypeCtor.GetILGenerator()
-                                .Emit(Emit.OpCodes.Nop)
-                                .Emit(Emit.OpCodes.Newobj, typeCtor)
-                                .Emit(Emit.OpCodes.Ret)
-                            End With
+                            ' We employ 2 of the best peforming ways of instantiating objects using reflection.
+                            ' See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
+                            If m_optimizeParsing Then
+                                ' Invokation approach: Reflection.Emit + Delegate
+                                ' This is hands-down that most fastest way of instantiating objects using reflection.
+                                Dim dynamicTypeCtor As MethodBuilder = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public Or MethodAttributes.Static, asmType, Type.EmptyTypes)
+                                With dynamicTypeCtor.GetILGenerator()
+                                    .Emit(Emit.OpCodes.Nop)
+                                    .Emit(Emit.OpCodes.Newobj, typeCtor)
+                                    .Emit(Emit.OpCodes.Ret)
+                                End With
+                            Else
+                                ' Invokation approach: DynamicMethod + Delegate
+                                ' This method is very fast compared to rest of the approaches, but not as fast as the one above.
+                                Dim dynamicTypeCtor As New DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, True)
+                                With dynamicTypeCtor.GetILGenerator()
+                                    .Emit(Emit.OpCodes.Nop)
+                                    .Emit(Emit.OpCodes.Newobj, typeCtor)
+                                    .Emit(Emit.OpCodes.Ret)
+                                End With
 
-                            ' Create a delegate to the constructor that'll be called to create a new instance of the type.
-                            outputType.CreateNew = CType(dynamicTypeCtor.CreateDelegate(GetType(DefaultConstructor)), DefaultConstructor)
+                                ' Create a delegate to the constructor that'll be called to create a new instance of the type.
+                                outputType.CreateNew = CType(dynamicTypeCtor.CreateDelegate(GetType(DefaultConstructor)), DefaultConstructor)
+                            End If
+
+                            ' We'll hold all of the matching types in this list temporarily until their IDs are determined.
+                            outputTypes.Add(outputType)
                         End If
-
-                        ' We'll hold all of the matching types in this list temporarily until their IDs are determined.
-                        outputTypes.Add(outputType)
-                    End If
-                Next
+                    Next
+                Catch ex As Exception
+                    ' Absorb any exception we might encounter while loading an assembly or processing it.
+                End Try
             Next
 
             If m_optimizeParsing Then

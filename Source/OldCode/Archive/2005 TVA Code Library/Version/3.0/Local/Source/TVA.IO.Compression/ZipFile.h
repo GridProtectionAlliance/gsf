@@ -49,7 +49,7 @@ namespace TVA
 							__property int get_InternalFileAttributes();
 							__property int get_ExternalFileAttributes();
 							__property int get_DOSDateTime();
-							__property DateTime get_FileDateTime();
+							__property System::DateTime get_FileDateTime();
 							__property String* get_FileName();
 							__property String* get_FileComment();
 							__property System::Byte get_ExtraData() [];

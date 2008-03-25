@@ -109,6 +109,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Interop\VBArrayDescriptor.vb" />
+    <Compile Include="IO\Compression\Enumerations.vb" />
     <Compile Include="IO\Enumerations.vb" />
     <Compile Include="IO\ExportDestination.vb" />
     <Compile Include="IO\IsamDataFileBase.Designer.vb">
