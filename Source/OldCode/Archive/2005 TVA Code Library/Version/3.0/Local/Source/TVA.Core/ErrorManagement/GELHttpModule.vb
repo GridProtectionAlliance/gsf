@@ -42,7 +42,7 @@ Namespace ErrorManagement
         '      <add name="LogToEventLog" value="False" description="True if an encountered exception is to be logged to the Event Log; otherwise False." encrypted="false" />
         '      <add name="LogToScreenshot" value="False" description="True if a screenshot is to be taken when an exception is encountered; otherwise False." encrypted="false" />
         '      <add name="EmailServer" value="mailhost.cha.tva.gov" description="Name of the email server to be used for sending the email message." encrypted="false" />
-        '      <add name="EmailRecipients" value="mpthakka@tva.gov" description="Comma-seperated list of recipients email addresses for the email message." encrypted="false" />
+        '      <add name="EmailRecipients" value="pcpatel@tva.gov" description="Comma-seperated list of recipients email addresses for the email message." encrypted="false" />
         '      <add name="ContactPersonName" value="" description="Name of the person that the end-user can contact when an exception is encountered." encrypted="false" />
         '      <add name="ContactPersonPhone" value="" description="Phone number of the person that the end-user can contact when an exception is encountered." encrypted="false" />
         '    </globalExceptionLogger>
