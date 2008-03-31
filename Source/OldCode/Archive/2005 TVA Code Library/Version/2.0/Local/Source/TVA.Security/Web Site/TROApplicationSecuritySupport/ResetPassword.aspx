@@ -75,6 +75,8 @@
         
     </STYLE>
     <meta http-equiv="Page-Exit" content="progid:DXImageTransform.Microsoft.Fade(duration=.25)" />
+    <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+    <META HTTP-EQUIV="Expires" CONTENT="-1">
 </head>
 <body>
     <form id="form1" runat="server">
