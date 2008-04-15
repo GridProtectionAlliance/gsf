@@ -14,6 +14,8 @@
 '       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Common).
 '  03/06/2007 - J. Ritchie Carroll
 '       Added "CompareBuffers" method to compare to binary buffers.
+'  04/15/2008 - Pinal C. Patel
+'       Changed the return type for "CompareBuffers" from Boolean to Integer.
 '  08/22/2007 - Darrell Zuercher
 '       Edited code comments.
 '
@@ -72,7 +74,7 @@ Namespace IO
         End Function
 
         ''' <summary>Returns comparision results of two binary buffers.</summary>
-        Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal buffer2 As Byte()) As Boolean
+        Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal buffer2 As Byte()) As Integer
 
             If buffer1 Is Nothing AndAlso buffer2 Is Nothing Then
                 ' Both buffers are assumed equal if both are nothing.
@@ -108,7 +110,7 @@ Namespace IO
 
         End Function
 
-        Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal offset1 As Integer, ByVal length1 As Integer, ByVal buffer2 As Byte(), ByVal offset2 As Integer, ByVal length2 As Integer) As Boolean
+        Public Shared Function CompareBuffers(ByVal buffer1 As Byte(), ByVal offset1 As Integer, ByVal length1 As Integer, ByVal buffer2 As Byte(), ByVal offset2 As Integer, ByVal length2 As Integer) As Integer
 
             If buffer1 Is Nothing AndAlso buffer2 Is Nothing Then
                 ' Both buffers are assumed equal if both are nothing.
