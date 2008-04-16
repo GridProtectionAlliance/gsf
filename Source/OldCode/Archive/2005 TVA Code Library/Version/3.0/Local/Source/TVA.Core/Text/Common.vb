@@ -27,6 +27,8 @@
 '       Edited code comments.
 '  09/25/2007 - J. Ritchie Carroll
 '       Added TitleCase function to format a string with the first letter of each word capitalized
+'  04/16/2008 - Pinal C. Patel
+'       Made the keys of the string dictionary returned by ParseKeyValuePairs function case-insensitive.
 '
 '*******************************************************************************************************
 
@@ -159,7 +161,7 @@ Namespace Text
         ''' <code>
         ''' IP=localhost; Port=1002; MaxEvents=50; UseTimeout=True
         ''' </code>
-        ''' Note that "keys" will be stored in dictionary as "lower case".
+        ''' Note that "keys" are case-insensitive.
         ''' </remarks>
         Public Shared Function ParseKeyValuePairs(ByVal value As String) As Dictionary(Of String, String)
 
@@ -175,11 +177,11 @@ Namespace Text
         ''' <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string).</param>
         ''' <returns>Dictionary of key/value pairs.</returns>
         ''' <remarks>
-        ''' Parses a key value string that contains one or many pairs. Note that "keys" will be stored in dictionary as "lower case".
+        ''' Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
         ''' </remarks>
         Public Shared Function ParseKeyValuePairs(ByVal value As String, ByVal parameterDelimeter As Char, ByVal keyValueDelimeter As Char) As Dictionary(Of String, String)
 
-            Dim keyValuePairs As New Dictionary(Of String, String)
+            Dim keyValuePairs As New Dictionary(Of String, String)(StringComparer.CurrentCultureIgnoreCase)
             Dim elements As String()
 
             ' Parses out connect string parameters
@@ -187,7 +189,7 @@ Namespace Text
                 ' Parses out parameter's key/value elements
                 elements = parameter.Split(keyValueDelimeter)
                 If elements.Length = 2 Then
-                    keyValuePairs.Add(elements(0).ToString().Trim().ToLower(), elements(1).ToString().Trim())
+                    keyValuePairs.Add(elements(0).ToString().Trim(), elements(1).ToString().Trim())
                 End If
             Next
 
