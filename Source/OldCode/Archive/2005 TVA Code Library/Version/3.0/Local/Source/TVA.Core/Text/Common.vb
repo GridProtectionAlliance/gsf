@@ -29,6 +29,7 @@
 '       Added TitleCase function to format a string with the first letter of each word capitalized
 '  04/16/2008 - Pinal C. Patel
 '       Made the keys of the string dictionary returned by ParseKeyValuePairs function case-insensitive.
+'       Added JoinKeyValuePairs overloads that does the exact opposite of ParseKeyValuePairs.
 '
 '*******************************************************************************************************
 
@@ -149,6 +150,36 @@ Namespace Text
             Next
 
             Return segments
+
+        End Function
+
+        ''' <summary>
+        ''' Combines a dictionary of key-value pairs in to a string.
+        ''' </summary>
+        ''' <param name="pairs">Dictionary of key-value pairs.</param>
+        ''' <returns>A string of key-value pairs.</returns>
+        Public Shared Function JoinKeyValuePairs(ByVal pairs As Dictionary(Of String, String)) As String
+
+            Return JoinKeyValuePairs(pairs, ";"c, "="c)
+
+        End Function
+
+        ''' <summary>
+        ''' Combines a dictionary of key-value pairs in to a string.
+        ''' </summary>
+        ''' <param name="pairs">Dictionary of key-value pairs.</param>
+        ''' <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
+        ''' <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
+        ''' <returns>A string of key-value pairs.</returns>
+        Public Shared Function JoinKeyValuePairs(ByVal pairs As Dictionary(Of String, String), ByVal parameterDelimeter As Char, ByVal keyValueDelimeter As Char) As String
+
+            With New StringBuilder()
+                For Each key As String In pairs.Keys
+                    .AppendFormat("{0}{1}{2}{3}", key, keyValueDelimeter, pairs(key), parameterDelimeter)
+                Next
+
+                Return .ToString()
+            End With
 
         End Function
 
