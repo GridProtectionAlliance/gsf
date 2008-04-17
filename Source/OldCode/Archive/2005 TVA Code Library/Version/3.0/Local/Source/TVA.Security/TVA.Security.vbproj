@@ -95,8 +95,16 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Radius\Enumerations.vb" />
+    <Compile Include="Radius\RadiusClient.vb" />
+    <Compile Include="Radius\RadiusPacket.vb" />
+    <Compile Include="Radius\RadiusPacketAttribute.vb" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TVA.Communication\TVA.Communication.vbproj">
+      <Project>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</Project>
+      <Name>TVA.Communication</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
       <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
       <Name>TVA.Core</Name>
