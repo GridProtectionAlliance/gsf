@@ -152,6 +152,22 @@ Namespace Radius
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the value of the specified attribute if it is present in the packet.
+        ''' </summary>
+        ''' <param name="type">Type of the attribute whose value is to be retrieved.</param>
+        ''' <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
+        Public Function GetAttributeValue(ByVal type As AttributeType) As Byte()
+
+            For Each attrib As RadiusPacketAttribute In m_attributes
+                ' Attribute found, return its value.
+                If attrib.Type = type Then Return attrib.Value
+            Next
+
+            Return Nothing  ' Attribute is not present in the packet.
+
+        End Function
+
 #Region " Interface Implementations "
 
 #Region " IBinaryDataProvider "
