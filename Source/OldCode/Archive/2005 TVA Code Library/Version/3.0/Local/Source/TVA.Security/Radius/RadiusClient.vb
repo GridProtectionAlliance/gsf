@@ -27,10 +27,14 @@ Namespace Radius
 
 #Region " Member Declaration "
 
-        Private m_disposed As Boolean
         Private m_requestAttempts As Short
         Private m_reponseTimeout As Integer
         Private m_sharedSecret As String
+        Private m_newPinModeMessage1 As String
+        Private m_newPinModeMessage2 As String
+        Private m_newPinModeMessage3 As String
+        Private m_nextTokenModeMessage As String
+        Private m_disposed As Boolean
         Private m_responseBytes As Byte()
 
         Private WithEvents m_udpClient As UdpClient
@@ -43,6 +47,33 @@ Namespace Radius
         ''' Default port of the RADIUS server.
         ''' </summary>
         Public Const DefaultServerPort As Integer = 1812
+
+        ''' <summary>
+        ''' Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not Step 1 (ensuring that the user account is in 
+        ''' the "New Pin" mode) of creating a new pin was successful.
+        ''' </summary>
+        Public Const DefaultNewPinModeMessage1 As String = "Enter a new PIN"
+
+        ''' <summary>
+        ''' Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not Step 2 (new pin is accepted in attempt #1)
+        '''  of creating a new pin was successful.
+        ''' </summary>
+        Public Const DefaultNewPinModeMessage2 As String = "Please re-enter new PIN"
+
+        ''' <summary>
+        ''' Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not Step 3 (new pin is accepted in attempts #2) 
+        ''' of creating a new pin was successful.
+        ''' </summary>
+        Public Const DefaultNewPinModeMessage3 As String = "PIN Accepted"
+
+        ''' <summary>
+        ''' Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not a user account is in the "Next Token" mode.
+        ''' </summary>
+        Public Const DefaultNextTokenModeMessage As String = "Wait for token to change"
 
         ''' <summary>
         ''' Creates an instance of RADIUS client for sending request to a RADIUS server.
@@ -67,6 +98,10 @@ Namespace Radius
             Me.SharedSecret = sharedSecret
             Me.RequestAttempts = 1
             Me.ReponseTimeout = 30000
+            Me.NewPinModeMessage1 = DefaultNewPinModeMessage1
+            Me.NewPinModeMessage2 = DefaultNewPinModeMessage2
+            Me.NewPinModeMessage3 = DefaultNewPinModeMessage3
+            Me.NextTokenModeMessage = DefaultNextTokenModeMessage
             m_udpClient = New UdpClient(String.Format("Server={0}; RemotePort={1}; LocalPort=0", serverName, serverPort))
             m_udpClient.Handshake = False
             m_udpClient.PayloadAware = False
@@ -174,6 +209,89 @@ Namespace Radius
         End Property
 
         ''' <summary>
+        ''' Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not Step 1 (ensuring that the user account is in  the 
+        ''' "New Pin" mode) of creating a new pin was successful.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Text for "New Pin" mode's first message.</returns>
+        Public Property NewPinModeMessage1() As String
+            Get
+                Return m_newPinModeMessage1
+            End Get
+            Set(ByVal value As String)
+                CheckDisposed()
+                If Not String.IsNullOrEmpty(value) Then
+                    m_newPinModeMessage1 = value
+                Else
+                    Throw New ArgumentNullException("NewPinModeMessage1")
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not Step 2 (new pin is accepted in attempt #1) of creating 
+        ''' a new pin was successful.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Text for "New Pin" mode's second message.</returns>
+        Public Property NewPinModeMessage2() As String
+            Get
+                Return m_newPinModeMessage2
+            End Get
+            Set(ByVal value As String)
+                CheckDisposed()
+                If Not String.IsNullOrEmpty(value) Then
+                    m_newPinModeMessage2 = value
+                Else
+                    Throw New ArgumentNullException("NewPinModeMessage2")
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not Step 3 (new pin is accepted in attempts #2) of creating 
+        ''' a new pin was successful.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Text for "New Pin" mode's third message.</returns>
+        Public Property NewPinModeMessage3() As String
+            Get
+                Return m_newPinModeMessage3
+            End Get
+            Set(ByVal value As String)
+                CheckDisposed()
+                If Not String.IsNullOrEmpty(value) Then
+                    m_newPinModeMessage3 = value
+                Else
+                    Throw New ArgumentNullException("NewPinModeMessage3")
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+        ''' server response to determine whether or not a user account is in the "Next Token" mode.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Text for "Next Token" mode.</returns>
+        Public Property NextTokenModeMessage() As String
+            Get
+                Return m_nextTokenModeMessage
+            End Get
+            Set(ByVal value As String)
+                CheckDisposed()
+                If Not String.IsNullOrEmpty(value) Then
+                    m_nextTokenModeMessage = value
+                Else
+                    Throw New ArgumentNullException("NextTokenModeMessage")
+                End If
+            End Set
+        End Property
+
+        ''' <summary>
         ''' Send a request to the server and waits for a response back.
         ''' </summary>
         ''' <param name="request">Request to be sent to the server.</param>
@@ -218,6 +336,52 @@ Namespace Radius
             End If
 
             Return response
+
+        End Function
+
+        ''' <summary>
+        ''' Create a new pin for the user.
+        ''' </summary>
+        ''' <param name="username">Name of the user.</param>
+        ''' <param name="token">Current token of the user.</param>
+        ''' <param name="pin">New pin of the user.</param>
+        ''' <returns>True if a new pin is created for the user successfully; otherwise False.</returns>
+        Public Function CreateNewPin(ByVal username As String, ByVal token As String, ByVal pin As String) As Boolean
+
+            CheckDisposed()
+            If Not String.IsNullOrEmpty(pin) Then
+                Dim reply As Byte()
+                Dim response As RadiusPacket
+
+                ' Step 1: Send username and token for password, receive a challenge response with reply 
+                '         message worded "Enter a new PIN". [Verification]
+                ' Step 2: Send username and new ping for password, receive a challenge response with reply
+                '         message worded "Please re-enter.  [Attempt #1]
+                ' Step 3: Send username and new ping for password, receive a challenge response with reply
+                '         message worded "PIN Accepted".    [Attempt #2]
+
+                response = Authenticate(username, token)
+                If IsUserInNewPinMode(response) Then
+                    ' User account is really in "New Pin" mode.
+                    response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State))
+                    reply = response.GetAttributeValue(AttributeType.ReplyMessage)
+                    If Not RadiusPacket.ToText(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage2.ToLower()) Then
+                        Return False    ' New pin not accepted in attempt #1.
+                    End If
+
+                    response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State))
+                    reply = response.GetAttributeValue(AttributeType.ReplyMessage)
+                    If Not RadiusPacket.ToText(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage3.ToLower()) Then
+                        Return False    ' New pin not accepted in attempt #2.
+                    End If
+
+                    Return True         ' All is good - new pin is created for the user.
+                Else
+                    Return False
+                End If
+            Else
+                Throw New ArgumentNullException("pin")
+            End If
 
         End Function
 
@@ -295,6 +459,64 @@ Namespace Radius
                 Return ProcessRequest(request)
             Else
                 Throw New ArgumentException("Username and Password cannot be null.")
+            End If
+
+        End Function
+
+        ''' <summary>
+        ''' Determines whether or not the response indicates that the user account is in "New Pin" mode.
+        ''' </summary>
+        ''' <param name="response">Response packet sent by the server.</param>
+        ''' <returns>True if the user account is in "New Pin" mode; otherwise False.</returns>
+        ''' <remarks>
+        ''' A user's account can be in the "New Pin" mode when set on the server.
+        ''' </remarks>
+        Public Function IsUserInNewPinMode(ByVal response As RadiusPacket) As Boolean
+
+            CheckDisposed()
+            If response IsNot Nothing Then
+                Dim messageBytes As Byte() = response.GetAttributeValue(AttributeType.ReplyMessage)
+                If messageBytes IsNot Nothing Then
+                    ' Unfortunately, the only way of determining whether or not a user account is in the 
+                    ' "New Pin" mode is from the text present in the ReplyMessage attribute of the 
+                    ' AccessChallenge response from server. 
+                    Dim messageString As String = RadiusPacket.ToText(messageBytes, 0, messageBytes.Length)
+                    If messageString.ToLower().Contains(m_newPinModeMessage1.ToLower()) Then
+                        Return True ' User account is in "New Pin" mode.
+                    End If
+                End If
+            Else
+                Throw New ArgumentNullException("response")
+            End If
+
+        End Function
+
+        ''' <summary>
+        ''' Determines whether or not the response indicates that the user account is in "Next Token" mode.
+        ''' </summary>
+        ''' <param name="response">Response packet sent by the server.</param>
+        ''' <returns>True if the user account is in "Next Token" mode; otherwise False.</returns>
+        ''' <remarks>
+        ''' A user's account can enter the "Next Token" mode after the user enters incorrect passwords for a few 
+        ''' times (3 times by default) and then enters the correct password. Note that repeatedly entering
+        ''' incorrect passwords will disable the user account.
+        ''' </remarks>
+        Public Function IsUserInNextTokenMode(ByVal response As RadiusPacket) As Boolean
+
+            CheckDisposed()
+            If response IsNot Nothing Then
+                Dim messageBytes As Byte() = response.GetAttributeValue(AttributeType.ReplyMessage)
+                If messageBytes IsNot Nothing Then
+                    ' Unfortunately, the only way of determining whether or not a user account is in the 
+                    ' "Next Token" mode is from the text present in the ReplyMessage attribute of the 
+                    ' AccessChallenge response from server. 
+                    Dim messageString As String = RadiusPacket.ToText(messageBytes, 0, messageBytes.Length)
+                    If messageString.ToLower().Contains(m_nextTokenModeMessage.ToLower()) Then
+                        Return True ' User account is in "Next Token" mode.
+                    End If
+                End If
+            Else
+                Throw New ArgumentNullException("response")
             End If
 
         End Function
