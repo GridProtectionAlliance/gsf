@@ -97,7 +97,7 @@ Namespace Radius
 
             Me.SharedSecret = sharedSecret
             Me.RequestAttempts = 1
-            Me.ReponseTimeout = 30000
+            Me.ReponseTimeout = 15000
             Me.NewPinModeMessage1 = DefaultNewPinModeMessage1
             Me.NewPinModeMessage2 = DefaultNewPinModeMessage2
             Me.NewPinModeMessage3 = DefaultNewPinModeMessage3
