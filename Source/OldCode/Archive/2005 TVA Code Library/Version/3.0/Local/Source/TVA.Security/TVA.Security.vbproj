@@ -119,9 +119,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Application.WebFiles.dat" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Application.WebSecurityProvider.bmp" />
   </ItemGroup>
   <ItemGroup>

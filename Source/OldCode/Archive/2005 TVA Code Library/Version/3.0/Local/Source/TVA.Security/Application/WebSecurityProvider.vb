@@ -206,10 +206,19 @@ Namespace Application
             If m_parent IsNot Nothing Then
                 ' First we have to find the page's form. We cannot use Page.Form property because it's not set yet.
                 Dim form As HtmlForm = Nothing
-                For Each ctrl As Control In m_parent.Controls
-                    form = TryCast(ctrl, HtmlForm)
-                    If form IsNot Nothing Then Exit For
-                Next
+                If m_parent.Master Is Nothing Then
+                    ' Page doesn't have a Master Page.
+                    For Each ctrl As Control In m_parent.Controls
+                        form = TryCast(ctrl, HtmlForm)
+                        If form IsNot Nothing Then Exit For
+                    Next
+                Else
+                    ' Page has a Master Page, so the form resides there.
+                    For Each ctrl As Control In m_parent.Master.Controls
+                        form = TryCast(ctrl, HtmlForm)
+                        If form IsNot Nothing Then Exit For
+                    Next
+                End If
 
                 ' Next we check if the page has been locked previously. If so, we don't need to repeat the process,
                 ' instead we find the security control and return it.

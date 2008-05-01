@@ -340,7 +340,7 @@ Namespace Application
                         .Clear()
                         With .Item("Server", True)
                             .Value = m_server.ToString()
-                            .Description = "Security server against which users are authenticated."
+                            .Description = "Security server (Development; Acceptance; Production) against which users are authenticated."
                         End With
                         With .Item("ApplicationName", True)
                             .Value = m_applicationName
@@ -348,7 +348,7 @@ Namespace Application
                         End With
                         With .Item("AuthenticationMode", True)
                             .Value = m_authenticationMode.ToString()
-                            .Description = "Mode of authentication to be used for authenticating users of the application."
+                            .Description = "Mode of authentication (AD; RSA) to be used for authenticating users of the application."
                         End With
                     End With
                     TVA.Configuration.Common.SaveSettings()
