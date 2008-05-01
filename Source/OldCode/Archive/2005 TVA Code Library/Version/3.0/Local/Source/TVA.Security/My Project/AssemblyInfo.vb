@@ -2,6 +2,7 @@ Imports System
 Imports System.Reflection
 Imports System.Runtime.InteropServices
 Imports System.Security.Permissions
+Imports System.Web.UI
 
 ' General Information about an assembly is controlled through the following 
 ' set of attributes. Change these attribute values to modify the information
@@ -36,3 +37,11 @@ Imports System.Security.Permissions
 
 <Assembly: AssemblyVersion("3.0.0.0")> 
 <Assembly: AssemblyFileVersion("3.0.0.0")> 
+
+' Entries for embedded resources used by the composite controls.
+<Assembly: WebResource("TVA.Security.Application.Controls.Help.gif", "img/gif")> 
+<Assembly: WebResource("TVA.Security.Application.Controls.Help.png", "img/png")> 
+<Assembly: WebResource("TVA.Security.Application.Controls.Help.pdf", "Application/pdf")> 
+<Assembly: WebResource("TVA.Security.Application.Controls.StyleSheet.css", "text/css")> 
+<Assembly: WebResource("TVA.Security.Application.Controls.LogoInternal.jpg", "img/jpeg")> 
+<Assembly: WebResource("TVA.Security.Application.Controls.LogoExternal.jpg", "img/jpeg")> 

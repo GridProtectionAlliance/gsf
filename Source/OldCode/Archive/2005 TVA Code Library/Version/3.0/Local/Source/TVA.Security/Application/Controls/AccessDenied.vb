@@ -1,6 +1,6 @@
 ' 10-16-06
 
-Namespace Application
+Namespace Application.Controls
 
     Public Class AccessDenied
 

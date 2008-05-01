@@ -11,22 +11,63 @@
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
 '  09/22/2006 - Pinal C. Patel
-'       Original version of source code generated
+'       Original version of source code generated.
+' 04/22/2008 - Pinal C. Patel
+'       Added AuthenticationMode enumeration.
 '
 '*******************************************************************************************************
 
 Namespace Application
 
-    Public Enum SecurityServer As Integer
+    ''' <summary>
+    ''' Specifies the server to be used for authentication.
+    ''' </summary>
+    Public Enum SecurityServer
+        ''' <summary>
+        ''' Use the development server.
+        ''' </summary>
         Development
+        ''' <summary>
+        ''' Use the acceptance server.
+        ''' </summary>
         Acceptance
+        ''' <summary>
+        ''' Use the production server.
+        ''' </summary>
         Production
     End Enum
 
-    Public Enum ValidRoleAction As Integer
+    ''' <summary>
+    ''' Specifies the control property to be set if the current user is in a specified role.
+    ''' </summary>
+    Public Enum ValidRoleAction
+        ''' <summary>
+        ''' No control property is be set.
+        ''' </summary>
         None
+        ''' <summary>
+        ''' Control's Visible property is to be set.
+        ''' </summary>
         Visible
+        ''' <summary>
+        ''' Control's Enabled property is to be set.
+        ''' </summary>
         Enabled
+    End Enum
+
+    ''' <summary>
+    ''' Specifies the mode of authentication.
+    ''' </summary>
+    Public Enum AuthenticationMode
+        ''' <summary>
+        ''' Internal users are authenticated against the Active Directory and external users are 
+        ''' authenticated against credentials stored in the security database.
+        ''' </summary>
+        AD
+        ''' <summary>
+        ''' Users are authenticated against the RSA Security server.
+        ''' </summary>
+        RSA
     End Enum
 
 End Namespace

@@ -1,4 +1,4 @@
-Namespace Application
+Namespace Application.Controls
 
     <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
 Partial Class AccessDenied

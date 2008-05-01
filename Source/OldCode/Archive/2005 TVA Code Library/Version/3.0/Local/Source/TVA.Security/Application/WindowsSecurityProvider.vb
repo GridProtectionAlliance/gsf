@@ -21,6 +21,7 @@ Imports System.Windows.Forms
 Imports System.ComponentModel
 Imports System.Data.SqlClient
 Imports TVA.Data.Common
+Imports TVA.Security.Application.Controls
 
 Namespace Application
 
@@ -33,19 +34,15 @@ Namespace Application
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public Code "
 
         <Category("Configuration")> _
-        Public Property Parent() As System.Windows.Forms.Form
+        Public Property Parent() As Form
             Get
                 Return m_parent
             End Get
-            Set(ByVal value As System.Windows.Forms.Form)
-                If value IsNot Nothing Then
-                    m_parent = value
-                Else
-                    Throw New ArgumentException("Parent cannot be null.")
-                End If
+            Set(ByVal value As Form)
+                m_parent = value
             End Set
         End Property
 
@@ -58,90 +55,84 @@ Namespace Application
 
 #End Region
 
-#Region " Protected Code "
-
-        Protected Overrides Sub CacheUserData()
-
-            ' We don't need to implement this method is windows environment.
-
-        End Sub
-
-        Protected Overrides Sub RetrieveUserData()
-
-            ' We don't need to implement this method is windows environment.
-
-        End Sub
+#Region " Code Scope: Protected Code "
 
         Protected Overrides Sub ShowLoginScreen()
 
-            If m_parent IsNot Nothing Then
-                With New AccessDenied()
-                    Dim result As DialogResult = .ShowDialog(m_parent)
-                    Select Case result
-                        Case DialogResult.Yes
-                            ' The user wants to submit a request for access to the application.
-                            Dim connection As SqlConnection = Nothing
-                            Try
-                                ' Establish connection with the database.
-                                connection = New SqlConnection(ConnectionString)
-                                connection.Open()
+            Throw New NotImplementedException()
 
-                                ' Submit the access request.
-                                ExecuteNonQuery("dbo.SubmitAccessRequest", connection, User.Username, ApplicationName)
+            'If m_parent IsNot Nothing Then
+            '    With New AccessDenied()
+            '        Dim result As DialogResult = .ShowDialog(m_parent)
+            '        Select Case result
+            '            Case DialogResult.Yes
+            '                ' The user wants to submit a request for access to the application.
+            '                Dim connection As SqlConnection = Nothing
+            '                Try
+            '                    ' Establish connection with the database.
+            '                    connection = New SqlConnection(ConnectionString)
+            '                    connection.Open()
 
-                                ' Show success message.
-                                MessageBox.Show("Your access request has been submitted and the application will now exit.", _
-                                    "Request Submitted", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                            Catch ex As SqlException
-                                If ex.Number = 50000 Then
-                                    ' A pending access request for the user already exists.
-                                    MessageBox.Show("A pending access request already exists. The application will now exist.", _
-                                        "Request Pending", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                                Else
-                                    ' An unknown exception was encountered.
-                                    With New StringBuilder()
-                                        .Append("Access request could not be submitted due to an exception.")
-                                        .AppendLine()
-                                        .AppendLine()
-                                        .Append(ex.ToString())
-                                        MessageBox.Show(.ToString(), "Access Request", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                                    End With
-                                End If
-                            Catch ex As Exception
-                                With New StringBuilder()
-                                    .Append("Access request could not be submitted due to an exception.")
-                                    .AppendLine()
-                                    .AppendLine()
-                                    .Append(ex.ToString())
-                                    MessageBox.Show(.ToString(), "Access Request", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                                End With
-                            Finally
-                                If connection IsNot Nothing Then
-                                    ' Close connection with the database.
-                                    connection.Close()
-                                    connection.Dispose()
-                                End If
-                            End Try
-                        Case DialogResult.No
-                            ' The user wants to exit the application.
-                            MessageBox.Show("The application will now exit.", _
-                                "Application Exiting", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                    End Select
+            '                    ' Submit the access request.
+            '                    ExecuteNonQuery("dbo.SubmitAccessRequest", connection, User.Username, ApplicationName)
 
-                    ' This worked out to be the best way to exit the application.
-                    Process.GetCurrentProcess().Kill()
-                End With
-            Else
-                Throw New InvalidOperationException("Parent must be set.")
-            End If
+            '                    ' Show success message.
+            '                    MessageBox.Show("Your access request has been submitted and the application will now exit.", _
+            '                        "Request Submitted", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            '                Catch ex As SqlException
+            '                    If ex.Number = 50000 Then
+            '                        ' A pending access request for the user already exists.
+            '                        MessageBox.Show("A pending access request already exists. The application will now exist.", _
+            '                            "Request Pending", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            '                    Else
+            '                        ' An unknown exception was encountered.
+            '                        With New StringBuilder()
+            '                            .Append("Access request could not be submitted due to an exception.")
+            '                            .AppendLine()
+            '                            .AppendLine()
+            '                            .Append(ex.ToString())
+            '                            MessageBox.Show(.ToString(), "Access Request", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            '                        End With
+            '                    End If
+            '                Catch ex As Exception
+            '                    With New StringBuilder()
+            '                        .Append("Access request could not be submitted due to an exception.")
+            '                        .AppendLine()
+            '                        .AppendLine()
+            '                        .Append(ex.ToString())
+            '                        MessageBox.Show(.ToString(), "Access Request", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            '                    End With
+            '                Finally
+            '                    If connection IsNot Nothing Then
+            '                        ' Close connection with the database.
+            '                        connection.Close()
+            '                        connection.Dispose()
+            '                    End If
+            '                End Try
+            '            Case DialogResult.No
+            '                ' The user wants to exit the application.
+            '                MessageBox.Show("The application will now exit.", _
+            '                    "Application Exiting", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            '        End Select
+
+            '        ' This worked out to be the best way to exit the application.
+            '        Process.GetCurrentProcess().Kill()
+            '    End With
+            'Else
+            '    Throw New InvalidOperationException("Parent must be set.")
+            'End If
 
         End Sub
 
         Protected Overrides Sub HandleAccessGranted()
 
+            Throw New NotImplementedException()
+
         End Sub
 
         Protected Overrides Sub HandleAccessDenied()
+
+            Throw New NotImplementedException()
 
         End Sub
 
@@ -159,7 +150,7 @@ Namespace Application
 
 #End Region
 
-#Region " Private Methods "
+#Region " Code Scope: Private Methods "
 
         Private Sub m_parent_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles m_parent.Load
 

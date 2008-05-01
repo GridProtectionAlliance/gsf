@@ -65,13 +65,17 @@
     <Import Include="System.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Application\AccessDenied.Designer.vb">
+    <Compile Include="Application\Controls\AccessDenied.Designer.vb">
       <DependentUpon>AccessDenied.vb</DependentUpon>
     </Compile>
-    <Compile Include="Application\AccessDenied.vb">
+    <Compile Include="Application\Controls\AccessDenied.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Application\Application.vb" />
+    <Compile Include="Application\Controls\ControlContainer.vb" />
+    <Compile Include="Application\Controls\ChangePassword.vb" />
+    <Compile Include="Application\Controls\Enumerations.vb" />
+    <Compile Include="Application\Controls\Login.vb" />
     <Compile Include="Application\Enumerations.vb" />
     <Compile Include="Application\Group.vb" />
     <Compile Include="Application\Role.vb" />
@@ -121,11 +125,27 @@
     <EmbeddedResource Include="Embedded Resources\Application.WebSecurityProvider.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Application\AccessDenied.resx">
+    <EmbeddedResource Include="Application\Controls\AccessDenied.resx">
       <SubType>Designer</SubType>
       <DependentUpon>AccessDenied.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Embedded Resources\Application.WindowsSecurityProvider.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.Controls.LogoExternal.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.Controls.LogoInternal.jpg" />
+    <EmbeddedResource Include="Embedded Resources\Application.Controls.StyleSheet.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.Controls.Help.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.Controls.Help.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded Resources\Application.Controls.Help.pdf" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

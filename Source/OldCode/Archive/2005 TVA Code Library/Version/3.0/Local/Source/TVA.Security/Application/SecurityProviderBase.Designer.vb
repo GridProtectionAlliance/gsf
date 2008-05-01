@@ -21,48 +21,14 @@ Namespace Application
             'This call is required by the Component Designer.
             InitializeComponent()
 
-            m_enableCaching = True
+            m_settingsCategoryName = "SecurityProvider"
             m_extendeeControls = New Hashtable()
-            m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            m_acpConnectionString = "Server=ESOASQLGENDAT\GENDAT; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            m_prdConnectionString = "Server=TROOPERATIONS\INFRASTRUCTURE; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            m_bakConnectionString = "Server=ESOOPSQL1; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            'Try
-            '    m_devConnectionString = "Server=RGOCDSQL; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            '    m_devConnectionString = CategorizedSettings(ConfigurationElement)("Development").Value
-            'Catch ex As Exception
-            '    ' We can safely ignore any exceptions encountered.
-            'End Try
-            'Try
-            '    m_accConnectionString = "Server=ESOASQLGENDAT\GENDAT; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            '    m_accConnectionString = CategorizedSettings(ConfigurationElement)("Acceptance").Value
-            'Catch ex As Exception
-            '    ' We can safely ignore any exceptions encountered.
-            'End Try
-            'Try
-            '    m_prdConnectionString = "Server=ESOOPSQL1; Database=ApplicationSecurity; UID=appsec; PWD=123-xyz"
-            '    m_prdConnectionString = CategorizedSettings(ConfigurationElement)("Production").Value
-            'Catch ex As Exception
-            '    ' We can safely ignore any exceptions encountered.
-            'End Try
 
         End Sub
 
         'Component overrides dispose to clean up the component list.
         <System.Diagnostics.DebuggerNonUserCode()> _
         Protected Overrides Sub Dispose(ByVal disposing As Boolean)
-            'Try
-            '    ' Save security database connection strings to the config file.
-            '    CategorizedSettings(ConfigurationElement).Add("Development", m_devConnectionString, _
-            '        "Connection string for connecting to development security database.", True)
-            '    CategorizedSettings(ConfigurationElement).Add("Acceptance", m_accConnectionString, _
-            '        "Connection string for connecting to acceptance security database.", True)
-            '    CategorizedSettings(ConfigurationElement).Add("Production", m_prdConnectionString, _
-            '        "Connection string for connecting to production security database.", True)
-            '    SaveSettings()
-            'Catch ex As Exception
-            '    ' We can safely ignore any exceptions encountered.
-            'End Try
             If disposing AndAlso components IsNot Nothing Then
                 components.Dispose()
             End If

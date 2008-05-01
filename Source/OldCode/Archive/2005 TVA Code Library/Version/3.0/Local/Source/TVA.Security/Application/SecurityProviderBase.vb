@@ -26,24 +26,23 @@
 Imports System.Reflection
 Imports System.ComponentModel
 Imports System.Data.SqlClient
+Imports TVA.Configuration
 
 Namespace Application
 
     <ProvideProperty("ValidRoles", GetType(Object)), ProvideProperty("ValidRoleAction", GetType(Object))> _
     Public MustInherit Class SecurityProviderBase
-        Implements IExtenderProvider, ISupportInitialize
+        Implements IExtenderProvider, ISupportInitialize, IPersistSettings
 
 #Region " Member Declaration "
 
         Private m_user As User
         Private m_server As SecurityServer
         Private m_applicationName As String
-        Private m_enableCaching As Boolean
+        Private m_authenticationMode As AuthenticationMode
+        Private m_persistSettings As Boolean
+        Private m_settingsCategoryName As String
         Private m_extendeeControls As Hashtable
-        Private m_devConnectionString As String
-        Private m_acpConnectionString As String
-        Private m_prdConnectionString As String
-        Private m_bakConnectionString As String
 
 #End Region
 
@@ -59,7 +58,7 @@ Namespace Application
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public Code "
 
         <Category("Configuration")> _
         Public Property Server() As SecurityServer
@@ -86,12 +85,12 @@ Namespace Application
         End Property
 
         <Category("Configuration")> _
-        Public Property EnableCaching() As Boolean
+        Public Property AuthenticationMode() As AuthenticationMode
             Get
-                Return m_enableCaching
+                Return m_authenticationMode
             End Get
-            Set(ByVal value As Boolean)
-                m_enableCaching = value
+            Set(ByVal value As AuthenticationMode)
+                m_authenticationMode = value
             End Set
         End Property
 
@@ -104,7 +103,7 @@ Namespace Application
 
         Public Function UserHasApplicationAccess() As Boolean
 
-            Return (m_user IsNot Nothing AndAlso Not m_user.IsLockedOut AndAlso _
+            Return (m_user IsNot Nothing AndAlso m_user.IsDefined AndAlso Not m_user.IsLockedOut AndAlso _
                         m_user.IsAuthenticated AndAlso m_user.FindApplication(m_applicationName) IsNot Nothing)
 
         End Function
@@ -119,39 +118,56 @@ Namespace Application
                 RaiseEvent BeforeLogin(Me, beforeLoginEventData)
                 If beforeLoginEventData.Cancel Then Exit Sub
 
-                If m_enableCaching Then RetrieveUserData()
-                ' m_user will be initialized by RetrieveUserData() if user data was cached previously.
                 If m_user Is Nothing Then
                     ' We don't have data about the user, so we must get it.
                     Dim username As String = GetUsername()  ' Get the username from inheriting class if it has.
                     Dim password As String = GetPassword()  ' Get the password from inheriting class if it has.
 
-                    ' This will get us the login ID of the current user. This will be null in case of web app if:
-                    ' 1) Secured web page is being accessed from outside.
-                    ' 2) Secured web page is being accessed from inside, but "Integrated Windows Authentication"
-                    '    is turned off for the web site.
-                    ' Note: In case of a windows app, we'll always get the login ID of the current user.
-                    Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
+                    Select Case m_authenticationMode
+                        Case Security.Application.AuthenticationMode.AD
+                            ' This will get us the login ID of the current user. This will be null in case of web 
+                            ' application if:
+                            ' 1) Secured web page is being accessed from outside.
+                            ' 2) Secured web page is being accessed from inside, but 
+                            '    "Integrated Windows Authentication" is turned off for the web site.
+                            ' Note: In case of a windows app, we'll always get the login ID of the current user.
+                            Dim userLoginID As String = System.Threading.Thread.CurrentPrincipal.Identity.Name
 
-                    If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
-                        ' First, if we get the username and password from the inheriting class, we'll use it to 
-                        ' initialize the user data. This is very important for the following scenarios to work:
-                        ' o Internal user wants to access a secure page for which he/she does not have access, but
-                        '   have the credentials of a user who has access to this page and want to use the 
-                        '   credentials in order to access the secure web page.
-                        ' o Developer of an external facing web site wants to test the security without turning-off
-                        '   "Integrated Windows Authentication" for the web site, as doing so disable the debugging
-                        '   capabilities from the Visual Studio IDE.
-                        ' Note: Both of the scenarios above require that the person trying do access the secured web 
-                        '       page with someone else's credentials does not access to the web page. 
-                        InitializeUser(username, password)
-                    ElseIf Not String.IsNullOrEmpty(userLoginID) Then
-                        InitializeUser(userLoginID.Split("\"c)(1))
-                    Else
-                        ' If both the above attempts fail to initialize the user data, we'll have to show the login
-                        ' screen, capture the user credentials and then initialize the user data.
-                        ShowLoginScreen()
-                    End If
+                            ' The order of conditional execution is important for the following scenarios to work:
+                            ' o Internal user wants to access a secure page for which he/she does not have access, 
+                            '   but has the credentials of a user who has access to this page and want to use the 
+                            '   credentials in order to access the secure web page.
+                            ' o Developer of an externally facing web site ("Anonymous access" is on) wants to test 
+                            '   the security without turning-off "Integrated Windows Authentication" for the web 
+                            '   site, as doing so will disable the debugging capabilities from the Visual Studio IDE.
+                            ' Note: Both of the scenarios above require that the person trying do access the secured 
+                            '       web page with someone else's credentials does not have access to the web page. 
+                            If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
+                                ' We have the username and password provided to us by the derived class. Since the
+                                ' username and password have been captured and verified by the derived class, we 
+                                ' will not authenticate these credentials again.
+                                InitializeUser(username, password, False)
+                            ElseIf Not String.IsNullOrEmpty(userLoginID) Then
+                                ' We don't have the username and password from the derived class, but we have the
+                                ' login ID of the current user. Since no authentication has been performed yet, we
+                                ' will authenticate the login ID just to comfirm.
+                                InitializeUser(userLoginID.Split("\"c)(1), String.Empty, True)
+                            Else
+                                ' We don't have any option other than prompting for credentials.
+                                ShowLoginScreen()
+                            End If
+                        Case Security.Application.AuthenticationMode.RSA
+                            ' In the case of RSA authentication mode, we must always prompt the user for the
+                            ' credentials when the user accesses a secure application for the first time.
+                            If Not String.IsNullOrEmpty(username) AndAlso Not String.IsNullOrEmpty(password) Then
+                                ' Derived class has captured user credentials and authenticated them successfully.
+                                InitializeUser(username, password, False)
+                            Else
+                                ' User is accessing the secure application for the first time, so the derived class 
+                                ' must capture user credentials and authenticate them.
+                                ShowLoginScreen()
+                            End If
+                    End Select
                 End If
 
                 If m_user IsNot Nothing Then
@@ -160,9 +176,6 @@ Namespace Application
                     If beforeAuthenticateEventData.Cancel Then Exit Sub
 
                     If UserHasApplicationAccess() Then
-                        ' Upon successful login, we'll cache the user data if specified in the configuration.
-                        If m_enableCaching Then CacheUserData()
-
                         ' User has been authenticated successfully and has access to the specified application.
                         Dim accessGrantedEventData As New CancelEventArgs()
                         RaiseEvent AccessGranted(Me, accessGrantedEventData)
@@ -196,166 +209,9 @@ Namespace Application
         ''' </summary>
         Public MustOverride Sub LogoutUser()
 
-#End Region
+#Region " Interface Implementation "
 
-#Region " Protected Code "
-
-        ''' <summary>
-        ''' Category name under which settings are to be saved in the config file.
-        ''' </summary>
-        Protected Const SettingsCategory As String = "SecurityProvider"
-
-        ''' <summary>
-        ''' 
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns></returns>
-        ''' <remarks>
-        ''' This property must be accessible only by components inheriting from this component that exists in this 
-        ''' assembly. This is done so that the database connection string is not exposed even when a component that
-        ''' exists outside of this assembly inherits from this component.
-        ''' </remarks>
-        Protected Friend ReadOnly Property ConnectionString() As String
-            Get
-                ' First, we'll try connecting to the primary database for the selected SecurityServer. If we're
-                ' successful, we'll return its connection string, and if not, we'll return the connection
-                ' string of the backup database.
-                Try
-                    Dim primaryConnectionString As String = ""
-                    Select Case m_server
-                        Case SecurityServer.Development
-                            primaryConnectionString = m_devConnectionString
-                        Case SecurityServer.Acceptance
-                            primaryConnectionString = m_acpConnectionString
-                        Case SecurityServer.Production
-                            primaryConnectionString = m_prdConnectionString
-                    End Select
-
-                    Using testConnection As New SqlConnection(primaryConnectionString)
-                        testConnection.Open()
-                    End Using
-
-                    ' Return connection string of the primary database.
-                    Return primaryConnectionString
-                Catch ex As Exception
-                    ' Return connection string of the backup database.
-                    Return m_bakConnectionString
-                End Try
-            End Get
-        End Property
-
-        Protected Sub UpdateUserData(ByVal userData As User)
-
-            m_user = userData
-
-        End Sub
-
-        ''' <summary>
-        ''' Caches user data to be used later.
-        ''' </summary>
-        Protected MustOverride Sub CacheUserData()
-
-        ''' <summary>
-        ''' Retrieves previously cached user data.
-        ''' </summary>
-        Protected MustOverride Sub RetrieveUserData()
-
-        ''' <summary>
-        ''' Shows a login screen where user can enter his/her credentials.
-        ''' </summary>
-        ''' <remarks></remarks>
-        Protected MustOverride Sub ShowLoginScreen()
-
-        ''' <summary>
-        ''' Performs any necessary actions that must be performed upon successful login.
-        ''' </summary>
-        Protected MustOverride Sub HandleAccessGranted()
-
-        ''' <summary>
-        ''' Performs any necessary actions that must be performed upon unsuccessful login.
-        ''' </summary>
-        Protected MustOverride Sub HandleAccessDenied()
-
-        ''' <summary>
-        ''' Gets the name that the user provided on the login screen.
-        ''' </summary>
-        ''' <returns></returns>
-        Protected MustOverride Function GetUsername() As String
-
-        ''' <summary>
-        ''' Gets the password that the user provided on the login screen.
-        ''' </summary>
-        ''' <returns></returns>
-        Protected MustOverride Function GetPassword() As String
-
-#End Region
-
-#Region " Private Code "
-
-        Private Sub InitializeUser(ByVal username As String)
-
-            InitializeUser(username, Nothing)
-
-        End Sub
-
-        Private Sub InitializeUser(ByVal username As String, ByVal password As String)
-
-            Dim connection As SqlConnection = Nothing
-            Try
-                ' We'll try to retrieve user information from the security database.
-                connection = New SqlConnection(ConnectionString)
-                connection.Open()
-
-                m_user = New User(username, password, connection, m_applicationName)
-            Catch ex As SqlException
-                ' We'll notifying about the excountered SQL exception by rasing an event.
-                RaiseEvent DatabaseException(Me, New GenericEventArgs(Of Exception)(ex))
-            Catch ex As Exception
-                ' We'll just ignore all other exceptions.
-            Finally
-                If connection IsNot Nothing Then
-                    connection.Close()
-                    connection.Dispose()
-                End If
-            End Try
-
-        End Sub
-
-        Private Sub ProcessControls()
-
-            For Each extendee As Object In m_extendeeControls.Keys
-                ProcessControl(extendee, DirectCast(m_extendeeControls(extendee), ControlProperties))
-            Next
-
-        End Sub
-
-        Private Sub ProcessControl(ByVal extendee As Object, ByVal extendedProperties As ControlProperties)
-
-            If Not extendedProperties.ActionTaken AndAlso _
-                    extendedProperties.ValidRoleAction <> ValidRoleAction.None AndAlso _
-                    extendedProperties.ValidRoles IsNot Nothing Then
-                Dim controlProperty As PropertyInfo = _
-                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
-
-                If m_user IsNot Nothing AndAlso controlProperty IsNot Nothing Then
-                    ' User has been logged in and the control property exists.
-                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
-
-                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Replace(",", ";").Split(";"c)
-                        If m_user.FindRole(role, m_applicationName) IsNot Nothing Then
-                            ' We'll set the property to True if the current user belongs either one of the valid roles.
-                            controlProperty.SetValue(extendee, True, Nothing)
-                            Exit For
-                        End If
-                    Next
-                End If
-            End If
-
-        End Sub
-
-#End Region
-
-#Region " IExtenderProvider Implementation "
+#Region " IExtenderProvider "
 
         Public Function CanExtend(ByVal extendee As Object) As Boolean Implements System.ComponentModel.IExtenderProvider.CanExtend
 
@@ -415,7 +271,7 @@ Namespace Application
 
 #End Region
 
-#Region " ISupportInitialize Implementation "
+#Region " ISupportInitialize "
 
         Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
 
@@ -426,7 +282,167 @@ Namespace Application
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
             If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
+                LoadSettings()
                 LoginUser()
+            End If
+
+        End Sub
+
+#End Region
+
+#Region " IPersistSettings "
+
+        <Category("Persistance")> _
+        Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
+            Get
+                Return m_persistSettings
+            End Get
+            Set(ByVal value As Boolean)
+                m_persistSettings = value
+            End Set
+        End Property
+
+        <Category("Persistance")> _
+        Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
+            Get
+                Return m_settingsCategoryName
+            End Get
+            Set(ByVal value As String)
+                If Not String.IsNullOrEmpty(value) Then
+                    m_settingsCategoryName = value
+                Else
+                    Throw New ArgumentNullException("SettingsCategoryName")
+                End If
+            End Set
+        End Property
+
+        Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                        Server = .Item("Server", True).GetTypedValue(m_server)
+                        ApplicationName = .Item("ApplicationName", True).GetTypedValue(m_applicationName)
+                        AuthenticationMode = .Item("AuthenticationMode", True).GetTypedValue(m_authenticationMode)
+                    End With
+                Catch ex As Exception
+                    ' Absorb any encountered exception.
+                End Try
+            End If
+
+        End Sub
+
+        Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
+
+            If m_persistSettings Then
+                Try
+                    With TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName)
+                        .Clear()
+                        With .Item("Server", True)
+                            .Value = m_server.ToString()
+                            .Description = "Security server against which users are authenticated."
+                        End With
+                        With .Item("ApplicationName", True)
+                            .Value = m_applicationName
+                            .Description = "Name of the application that is being secured as defined in the security database."
+                        End With
+                        With .Item("AuthenticationMode", True)
+                            .Value = m_authenticationMode.ToString()
+                            .Description = "Mode of authentication to be used for authenticating users of the application."
+                        End With
+                    End With
+                    TVA.Configuration.Common.SaveSettings()
+                Catch ex As Exception
+                    ' Absorb any encountered exception.
+                End Try
+            End If
+
+        End Sub
+
+#End Region
+
+#End Region
+
+#End Region
+
+#Region " Code Scope: Protected Code "
+
+        ''' <summary>
+        ''' Shows a login screen where user can enter his/her credentials.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Protected MustOverride Sub ShowLoginScreen()
+
+        ''' <summary>
+        ''' Performs any necessary actions that must be performed upon successful login.
+        ''' </summary>
+        Protected MustOverride Sub HandleAccessGranted()
+
+        ''' <summary>
+        ''' Performs any necessary actions that must be performed upon unsuccessful login.
+        ''' </summary>
+        Protected MustOverride Sub HandleAccessDenied()
+
+        ''' <summary>
+        ''' Gets the name that the user provided on the login screen.
+        ''' </summary>
+        ''' <returns></returns>
+        Protected MustOverride Function GetUsername() As String
+
+        ''' <summary>
+        ''' Gets the password that the user provided on the login screen.
+        ''' </summary>
+        ''' <returns></returns>
+        Protected MustOverride Function GetPassword() As String
+
+#End Region
+
+#Region " Code Scope: Private Code "
+
+        Private Sub InitializeUser(ByVal username As String, ByVal password As String, ByVal authenticate As Boolean)
+
+            Try
+                m_user = New User(username, password, m_applicationName, _
+                                  m_server, m_authenticationMode, authenticate)
+
+                m_user.LogAccess(Not UserHasApplicationAccess())    ' Log access attempt to security database.
+            Catch ex As SqlException
+                ' We'll notifying about the excountered SQL exception by rasing an event.
+                RaiseEvent DatabaseException(Me, New GenericEventArgs(Of Exception)(ex))
+            Catch ex As Exception
+                ' We'll just ignore all other exceptions.
+            End Try
+
+        End Sub
+
+        Private Sub ProcessControls()
+
+            For Each extendee As Object In m_extendeeControls.Keys
+                ProcessControl(extendee, DirectCast(m_extendeeControls(extendee), ControlProperties))
+            Next
+
+        End Sub
+
+        Private Sub ProcessControl(ByVal extendee As Object, ByVal extendedProperties As ControlProperties)
+
+            If Not extendedProperties.ActionTaken AndAlso _
+                    extendedProperties.ValidRoleAction <> ValidRoleAction.None AndAlso _
+                    extendedProperties.ValidRoles IsNot Nothing Then
+                Dim controlProperty As PropertyInfo = _
+                    extendee.GetType().GetProperty(extendedProperties.ValidRoleAction.ToString())
+
+                If m_user IsNot Nothing AndAlso controlProperty IsNot Nothing Then
+                    ' User has been logged in and the control property exists.
+                    controlProperty.SetValue(extendee, False, Nothing)   ' By default we'll set the property to False.
+
+                    For Each role As String In extendedProperties.ValidRoles.Replace(" ", "").Replace(",", ";").Split(";"c)
+                        If m_user.FindRole(role, m_applicationName) IsNot Nothing Then
+                            ' We'll set the property to True if the current user belongs either one of the valid roles.
+                            controlProperty.SetValue(extendee, True, Nothing)
+                            Exit For
+                        End If
+                    Next
+                End If
             End If
 
         End Sub
