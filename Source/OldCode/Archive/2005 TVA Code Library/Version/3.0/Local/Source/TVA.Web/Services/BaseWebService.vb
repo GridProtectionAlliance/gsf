@@ -79,37 +79,9 @@ Namespace Services
             ' If String.Compare(userID, userName, True) <> 0 Then Return False
             'End If
 
-            Dim primaryConnectionString As String
-            Dim backupConnectString As String
-            Dim connectionString As String
-            With System.Configuration.ConfigurationManager.AppSettings
-                Select Case server
-                    Case SecurityServer.Development
-                        primaryConnectionString = .Item("DevelopmentSecurityServer")
-                    Case SecurityServer.Acceptance
-                        primaryConnectionString = .Item("AcceptanceSecurityServer")
-                    Case SecurityServer.Production
-                        primaryConnectionString = .Item("ProductionSecurityServer")
-                    Case Else
-                        primaryConnectionString = .Item("DevelopmentSecurityServer")
-                End Select
-
-                backupConnectString = .Item("BackUpSecurityServer")
-            End With
-
-            'First try connecting to PrimaryDb
             Try
-                Using checkConnection As New SqlConnection(primaryConnectionString)
-                    checkConnection.Open()
-                End Using
-
-                connectionString = primaryConnectionString
-            Catch ex As Exception
-                connectionString = backupConnectString
-            End Try
-
-            Try
-                With New User(userID, password, New SqlConnection(connectionString))
+                ' 04/25/2008 - PCP: Modified to use new User class contructor. 
+                With New User(userID, password, server)
                     ' When not using pass through authentication, web service validates user name and password
                     ' otherwise only user name is used to verify user is in role and it becomes the responsibility
                     ' of the owning application to handle user authentication...

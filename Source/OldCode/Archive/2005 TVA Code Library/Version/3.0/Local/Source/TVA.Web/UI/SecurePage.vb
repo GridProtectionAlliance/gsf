@@ -10,6 +10,10 @@ Namespace UI
 
 #Region " Member Declaration "
 
+        Private m_applicationName As String
+        Private m_securityServer As SecurityServer
+        Private m_authenticationMode As AuthenticationMode
+
         Private WithEvents m_securityProvider As WebSecurityProvider
 
 #End Region
@@ -30,7 +34,7 @@ Namespace UI
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public Code "
 
         ''' <summary>
         ''' Initializes a new instance of TVA.Web.UI.SecurePage class.
@@ -58,7 +62,7 @@ Namespace UI
         ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
         Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer)
 
-            MyClass.New(applicationName, securityServer, True)
+            MyClass.New(applicationName, securityServer, AuthenticationMode.AD)
 
         End Sub
 
@@ -67,18 +71,13 @@ Namespace UI
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
         ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
-        ''' <param name="enableCaching">
-        ''' Boolean value indicating whether the current user's information is to be cached upon successful login 
-        ''' for improved performance.
-        ''' </param>
-        Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal enableCaching As Boolean)
+        ''' <param name="authenticationMode">One of the TVA.Security.Application.AuthenticationMode values.</param>
+        Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal authenticationMode As AuthenticationMode)
 
             MyBase.New()
-            m_securityProvider = New WebSecurityProvider()
-            m_securityProvider.Parent = Me
-            m_securityProvider.ApplicationName = applicationName
-            m_securityProvider.Server = securityServer
-            m_securityProvider.EnableCaching = enableCaching
+            m_applicationName = applicationName
+            m_securityServer = securityServer
+            m_authenticationMode = authenticationMode
 
         End Sub
 
@@ -96,7 +95,7 @@ Namespace UI
 
 #End Region
 
-#Region " Protected Code "
+#Region " Code Scope: Protected Code "
 
         ''' <summary>
         ''' Raises the TVA.Web.UI.SecureUserControl.LoginSuccessful event.
@@ -107,6 +106,11 @@ Namespace UI
         ''' application.
         ''' </remarks>
         Public Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
+
+            ' Upon successful login, we cache the security control for performance. Performing the caching 
+            ' over here will guarantee that the security control gets cached regardless of weather or not the 
+            ' implementer cancels the login process after login has been performed successfully. 
+            WebSecurityProvider.SaveToCache(Me, m_securityProvider)
 
             RaiseEvent LoginSuccessful(Me, e)
 
@@ -128,7 +132,39 @@ Namespace UI
 
 #End Region
 
-#Region " Private Code "
+#Region " Code Scope: Private Code "
+
+        Private Sub Page_PreInit(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreInit
+
+            ' This is the earliest stage in the page life-cycle we can engage the security. So for performace,
+            ' we first look to see if we have a security control we cached previously. If so, we'll use it,
+            ' and if we don't we'll initialize a new one.
+            m_securityProvider = WebSecurityProvider.LoadFromCache(Me)
+            If m_securityProvider IsNot Nothing Then
+                ' Cached - use it.
+                m_securityProvider.LoginUser()  ' Perform the login operation.
+            Else
+                ' Not cached - initialize new.
+                m_securityProvider = New WebSecurityProvider()
+                m_securityProvider.Parent = Me
+                m_securityProvider.PersistSettings = True
+                m_securityProvider.ApplicationName = m_applicationName
+                m_securityProvider.Server = m_securityServer
+                m_securityProvider.AuthenticationMode = m_authenticationMode
+                m_securityProvider.EndInit()    ' This will load settings from config file & perform login.
+            End If
+
+        End Sub
+
+        Private Sub Page_Unload(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Unload
+
+            ' We're done with the security control so we'll set the member variable to Nothing. This will cause 
+            ' all the event handlers to the security control events to be removed. If we don't do this then the 
+            ' the security control will have reference to this page via the event handlers and since it is cached,
+            ' this page will also be cached - which we don't want to happen.
+            m_securityProvider = Nothing
+
+        End Sub
 
         Private Sub m_securityProvider_AccessDenied(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessDenied
 
@@ -138,7 +174,7 @@ Namespace UI
 
         Private Sub m_securityProvider_AccessGranted(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessGranted
 
-            Me.OnLoginSuccessful(e)
+            OnLoginSuccessful(e)
 
         End Sub
 

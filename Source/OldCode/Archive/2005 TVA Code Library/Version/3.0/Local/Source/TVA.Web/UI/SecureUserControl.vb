@@ -12,8 +12,9 @@ Namespace UI
 
         Private m_applicationName As String
         Private m_securityServer As SecurityServer
-        Private m_enableCaching As Boolean
+        Private m_authenticationMode As AuthenticationMode
         Private m_isLoginUnsuccessful As Boolean
+
         Private WithEvents m_securityProvider As WebSecurityProvider
 
 #End Region
@@ -34,7 +35,7 @@ Namespace UI
 
 #End Region
 
-#Region " Public Code "
+#Region " Code Scope: Public Code "
 
         ''' <summary>
         ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
@@ -71,16 +72,13 @@ Namespace UI
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
         ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
-        ''' <param name="enableCaching">
-        ''' Boolean value indicating whether the current user's information is to be cached upon successful login 
-        ''' for improved performance.
-        ''' </param>
-        Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal enableCaching As Boolean)
+        ''' <param name="authenticationMode">One of the TVA.Security.Application.AuthenticationMode values.</param>
+        Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal authenticationMode As AuthenticationMode)
 
             MyBase.New()
             m_applicationName = applicationName
             m_securityServer = securityServer
-            m_enableCaching = enableCaching
+            m_authenticationMode = authenticationMode
 
         End Sub
 
@@ -98,7 +96,7 @@ Namespace UI
 
 #End Region
 
-#Region " Protected Code "
+#Region " Code Scope: Protected Code "
 
         ''' <summary>
         ''' Raises the TVA.Web.UI.SecureUserControl.LoginSuccessful event.
@@ -109,6 +107,11 @@ Namespace UI
         ''' application.
         ''' </remarks>
         Public Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
+
+            ' Upon successful login, we cache the security control for performance. Performing the caching 
+            ' over here will guarantee that the security control gets cached regardless of weather or not the 
+            ' implementer cancels the login process after login has been performed successfully. 
+            WebSecurityProvider.SaveToCache(Me.Page, m_securityProvider)
 
             RaiseEvent LoginSuccessful(Me, e)
 
@@ -139,46 +142,49 @@ Namespace UI
 
 #End Region
 
-#Region " Private Code "
+#Region " Code Scope: Private Code "
 
         Private Sub Page_Init(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Init
 
-            ' Initialize the WebSecurityProvider component that will handle the security.
-            Dim secureParent As SecurePage = TryCast(Me.Page, SecurePage)
-            ' We'll check if this control is being used inside a secure page (i.e. page that is already 
-            ' implementing security). If so, we'll just use the page-level security and not go through the login
-            ' process again since it'll be redundant anyways.
-            If secureParent IsNot Nothing AndAlso secureParent.SecurityProvider IsNot Nothing Then
-                ' Security has been implemented at page-level so we'll just it instead. This means that we'll be
-                ' checking the current user's access for the application that's defined at the page-level and
-                ' ignore WebSecurityProvider information that is specified at the control-level.
-                With secureParent
-                    m_securityProvider = .SecurityProvider
-                    If .SecurityProvider.UserHasApplicationAccess() Then
-                        ' Current user has access to the application as defined at the page-level so we'll raise
-                        ' the LoginSuccessful event so that the consumer can perform any necessary operations there.
-                        OnLoginSuccessful(New CancelEventArgs())
-                    Else
-                        ' Current user does not have access to the application as defined at the page-level so 
-                        ' we'll raise the LoginUnsuccessful event so that we can perform any necessary operations 
-                        ' that we need to and so can the consumer.
-                        OnLoginUnsuccessful(New CancelEventArgs())
-                    End If
-                End With
+            ' This is the earliest stage in the control life-cycle we can engage the security. So for performace,
+            ' we first look to see if we have a security control we cached previously either at the page or at 
+            ' this control or another control . If so, we'll use it, and if we don't we'll initialize a new one.
+            m_securityProvider = WebSecurityProvider.LoadFromCache(Me.Page)
+            If m_securityProvider IsNot Nothing Then
+                ' The fact that the security control was cached means that the login process was successful for
+                ' the current user. So, at a control level all we need to verify user access and raise appropriate
+                ' events (they come in handy for taking appropriate action at a control level). 
+                If m_securityProvider.UserHasApplicationAccess() Then
+                    ' This will always be the case.
+                    OnLoginSuccessful(New CancelEventArgs())
+                Else
+                    ' This will never be the case, and here's why: 
+                    ' 1) If this control is in a secure page, the page level security will prevent this control
+                    '    from being loaded and processed, so this event will never get fired.
+                    ' 2) If this control is in a non-secure page, the security control would not be in the cache,
+                    '    as the security control is cached only upon successful login.
+                    OnLoginUnsuccessful(New CancelEventArgs())
+                End If
             Else
-                ' We'll initialize the WebSecurityProvider component with the specified information since the page
-                ' in which this control is being used does not implement security.
+                ' Not cached - initialize new.
                 m_securityProvider = New WebSecurityProvider()
                 m_securityProvider.Parent = Me.Page
+                m_securityProvider.PersistSettings = True
                 m_securityProvider.ApplicationName = m_applicationName
                 m_securityProvider.Server = m_securityServer
-                m_securityProvider.EnableCaching = m_enableCaching
-
-                ' We must explicitly call the LoginUser() method because when this event is fired, the page's  
-                ' Pre_Init event has already fired and the WebSecurityProvider will not implicitly initiate the 
-                ' login process.
-                m_securityProvider.LoginUser()
+                m_securityProvider.AuthenticationMode = m_authenticationMode
+                m_securityProvider.EndInit()    ' This will load settings from config file & perform login.
             End If
+
+        End Sub
+
+        Private Sub Page_Unload(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Unload
+
+            ' We're done with the security control so we'll set the member variable to Nothing. This will cause 
+            ' all the event handlers to the security control events to be removed. If we don't do this then the 
+            ' the security control will have reference to this control's page via the event handlers and since 
+            ' it is cached, the page will also be cached - which we don't want to happen.
+            m_securityProvider = Nothing
 
         End Sub
 
