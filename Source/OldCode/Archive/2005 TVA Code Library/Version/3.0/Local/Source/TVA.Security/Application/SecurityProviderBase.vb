@@ -48,12 +48,39 @@ Namespace Application
 
 #Region " Event Declaration "
 
+        ''' <summary>
+        ''' Occurs before the login process is started.
+        ''' </summary>
         Public Event BeforeLogin As EventHandler(Of CancelEventArgs)
-        Public Event BeforeAuthenticate As EventHandler(Of CancelEventArgs)
+
+        ''' <summary>
+        ''' Occurs after the login process is complete.
+        ''' </summary>
         Public Event AfterLogin As EventHandler
+
+        ''' <summary>
+        ''' Occurs before user is authenticated for application access.
+        ''' </summary>
+        Public Event BeforeAuthenticate As EventHandler(Of CancelEventArgs)
+
+        ''' <summary>
+        ''' Occurs after user has been authenticated for application access.
+        ''' </summary>
         Public Event AfterAuthenticate As EventHandler
+
+        ''' <summary>
+        ''' Occurs when user has access to the application.
+        ''' </summary>
         Public Event AccessGranted As EventHandler(Of CancelEventArgs)
+
+        ''' <summary>
+        ''' Occurs when user does not have access to the application.
+        ''' </summary>
         Public Event AccessDenied As EventHandler(Of CancelEventArgs)
+
+        ''' <summary>
+        ''' Occurs when a database exception is encountered during the login process.
+        ''' </summary>
         Public Event DatabaseException As EventHandler(Of GenericEventArgs(Of Exception))
 
 #End Region
