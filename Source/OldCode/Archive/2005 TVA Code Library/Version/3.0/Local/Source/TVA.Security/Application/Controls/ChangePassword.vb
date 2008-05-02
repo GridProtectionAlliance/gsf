@@ -25,10 +25,12 @@ Namespace Application.Controls
         ''' <summary>
         ''' Creates an instance of the change password control.
         ''' </summary>
+        ''' <param name="container">Control containing this control.</param>
         ''' <param name="securityProvider">Current security control.</param>
-        Public Sub New(ByVal securityProvider As WebSecurityProvider)
+        Public Sub New(ByVal container As ControlContainer, ByVal securityProvider As WebSecurityProvider)
 
             MyBase.New()
+            m_container = container
             m_securityProvider = securityProvider
 
         End Sub

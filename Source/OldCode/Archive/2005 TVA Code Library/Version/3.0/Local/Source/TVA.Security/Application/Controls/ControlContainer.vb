@@ -29,8 +29,8 @@ Namespace Application.Controls
             m_controls = New Dictionary(Of String, Control)(StringComparer.CurrentCultureIgnoreCase)
 
             ' Add the default controls.
-            AddControl("Login", New Login(securityProvider))
-            AddControl("Change Password", New ChangePassword(securityProvider))
+            AddControl("Login", New Login(Me, securityProvider))
+            AddControl("Change Password", New ChangePassword(Me, securityProvider))
 
             ' Set the default property values.
             Me.Width = Unit.Parse("75px")
@@ -132,12 +132,6 @@ Namespace Application.Controls
             If Not m_controls.ContainsKey(linkText) Then
                 ' A control doesn't already exist with the specified link text.
                 m_controls.Add(linkText, control)
-
-                Dim containerProperty As PropertyInfo = control.GetType().GetProperty("Container")
-                If containerProperty IsNot Nothing Then
-                    ' Set the Contriner property of the control.
-                    containerProperty.SetValue(control, Me, Nothing)
-                End If
             End If
 
         End Sub
