@@ -166,14 +166,28 @@ Namespace UI
                     OnLoginUnsuccessful(New CancelEventArgs())
                 End If
             Else
-                ' Not cached - initialize new.
+                ' This means that this secure control is being used in an unsecure page instead of a secure page.
+                ' This can be the case when the implementer intends to have this secure control "secured" when
+                ' used inside of a secure page, but keep it "unsecured" when used inside of an unsecured page.
                 m_securityProvider = New WebSecurityProvider()
                 m_securityProvider.Parent = Me.Page
                 m_securityProvider.PersistSettings = True
                 m_securityProvider.ApplicationName = m_applicationName
                 m_securityProvider.Server = m_securityServer
                 m_securityProvider.AuthenticationMode = m_authenticationMode
-                m_securityProvider.EndInit()    ' This will load settings from config file & perform login.
+                Try
+                    ' We now load settings from config file & attempt to perform login, but most likely the 
+                    ' implementer is going to cancel the login process through one of the events exposed by
+                    ' the security provider control.
+                    m_securityProvider.EndInit()
+                Catch ex As Exception
+                    ' We will encounter an exception if we require user to provide their credentials (when control
+                    ' is secured using RSA authentication or AD authentication but we don't have the user's login 
+                    ' ID) because the security provider control is going to attempt to remove all page controls in
+                    ' order to lock-down the page (which is prohibited during the page's DataBind, Init, Load, 
+                    ' PreRender and Unload phases) and show the input control for security provider. So, this secure
+                    ' control is essential going to remain unauthenticated when user credentials are required. 
+                End Try
             End If
 
         End Sub
