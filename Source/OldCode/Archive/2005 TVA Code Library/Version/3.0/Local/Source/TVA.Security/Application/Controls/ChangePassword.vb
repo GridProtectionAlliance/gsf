@@ -185,7 +185,7 @@ Namespace Application.Controls
                     End With
                 Else
                     ' User clicked on the Change Password link, so cannot allow a new pin to be created.
-                    Me.Enabled = False
+                    submitButton.Enabled = False
                     With New StringBuilder()
                         .Append("A new pin cannot be created unless it is verified to be required during the Login ")
                         .Append("step. You can create a new pin only if you are redirected to this screen from the")
@@ -255,6 +255,7 @@ Namespace Application.Controls
                             Case AuthenticationMode.AD
                                 m_container.UpdateMessageText("Your password has been changed!<br />You can now use your new password to login.", MessageType.Information)
                             Case AuthenticationMode.RSA
+                                CType(sender, Button).Enabled = False
                                 Page.Session.Remove(Login.NewPinVerify)
                                 m_container.UpdateMessageText("Your new pin has been created!<br />Please wait for the token to change before next login.", MessageType.Information)
                         End Select
