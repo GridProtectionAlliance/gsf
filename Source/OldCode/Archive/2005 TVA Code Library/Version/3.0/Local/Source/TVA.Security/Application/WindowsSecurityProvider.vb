@@ -57,7 +57,7 @@ Namespace Application
 
 #Region " Code Scope: Protected Code "
 
-        Protected Overrides Sub ShowLoginScreen()
+        Protected Overrides Sub ShowLoginPrompt()
 
             Throw New NotImplementedException()
 

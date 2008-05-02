@@ -129,7 +129,7 @@ Namespace Application
 
 #Region " Code Scope: Protected Code "
 
-        Protected Overrides Sub ShowLoginScreen()
+        Protected Overrides Sub ShowLoginPrompt()
 
             ' Lock the page and show the "Login" control.
             LockPage("Login")

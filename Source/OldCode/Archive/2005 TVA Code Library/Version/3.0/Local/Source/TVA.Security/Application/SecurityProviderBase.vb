@@ -181,7 +181,7 @@ Namespace Application
                                 InitializeUser(userLoginID.Split("\"c)(1), String.Empty, True)
                             Else
                                 ' We don't have any option other than prompting for credentials.
-                                ShowLoginScreen()
+                                ShowLoginPrompt()
                             End If
                         Case Security.Application.AuthenticationMode.RSA
                             ' In the case of RSA authentication mode, we must always prompt the user for the
@@ -192,7 +192,7 @@ Namespace Application
                             Else
                                 ' User is accessing the secure application for the first time, so the derived class 
                                 ' must capture user credentials and authenticate them.
-                                ShowLoginScreen()
+                                ShowLoginPrompt()
                             End If
                     End Select
                 End If
@@ -395,10 +395,10 @@ Namespace Application
 #Region " Code Scope: Protected Code "
 
         ''' <summary>
-        ''' Shows a login screen where user can enter his/her credentials.
+        ''' Shows a login prompt where user can enter his/her credentials.
         ''' </summary>
         ''' <remarks></remarks>
-        Protected MustOverride Sub ShowLoginScreen()
+        Protected MustOverride Sub ShowLoginPrompt()
 
         ''' <summary>
         ''' Performs any necessary actions that must be performed upon successful login.
