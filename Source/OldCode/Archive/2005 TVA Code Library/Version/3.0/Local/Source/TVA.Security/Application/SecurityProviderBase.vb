@@ -69,6 +69,16 @@ Namespace Application
         Public Event AfterLoginPrompt As EventHandler
 
         ''' <summary>
+        ''' Occurs before user data is initialized.
+        ''' </summary>
+        Public Event BeforeInitializeData As EventHandler
+
+        ''' <summary>
+        ''' Occurs after user data has been initialized.
+        ''' </summary>
+        Public Event AfterInitializeData As EventHandler
+
+        ''' <summary>
         ''' Occurs before user is authenticated for application access.
         ''' </summary>
         Public Event BeforeAuthenticate As EventHandler(Of CancelEventArgs)
@@ -491,15 +501,20 @@ Namespace Application
         Private Sub InitializeUser(ByVal username As String, ByVal password As String, ByVal authenticate As Boolean)
 
             Try
+                RaiseEvent BeforeInitializeData(Me, EventArgs.Empty)
+
                 m_user = New User(username, password, m_applicationName, _
                                   m_server, m_authenticationMode, authenticate)
+
+                RaiseEvent AfterInitializeData(Me, EventArgs.Empty)
 
                 m_user.LogAccess(Not UserHasApplicationAccess())    ' Log access attempt to security database.
             Catch ex As SqlException
                 ' We'll notifying about the excountered SQL exception by rasing an event.
                 RaiseEvent DatabaseException(Me, New GenericEventArgs(Of Exception)(ex))
             Catch ex As Exception
-                ' We'll just ignore all other exceptions.
+                ' We'll bubble-up all other encountered exceptions.
+                Throw
             End Try
 
         End Sub
