@@ -200,9 +200,8 @@ Namespace Application.Controls
                     ' User clicked on the Change Password link, so cannot allow a new pin to be created.
                     submitButton.Enabled = False
                     With New StringBuilder()
-                        .Append("A new pin cannot be created unless it is verified to be required during the Login ")
-                        .Append("step. You can create a new pin only if you are redirected to this screen from the")
-                        .Append("Login screen.")
+                        .Append("This screen is only active as part of an automated process. To create a new pin, ")
+                        .Append("you must call the Operations Duty Specialist at 423-751-1700.")
 
                         m_container.UpdateMessageText(.ToString(), MessageType.Error)
                     End With
