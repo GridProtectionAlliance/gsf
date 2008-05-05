@@ -123,14 +123,18 @@ Namespace Application.Controls
 
             Me.Controls.Clear()
             Me.Controls.Add(container)
+
+            ' Setup client-side scripts.
             Page.SetFocus(m_usernameTextBox)
-            'With New StringBuilder()
-            '    .Append("if (typeof(Page_ClientValidate) == 'function') {")
-            '    .Append("if (Page_ClientValidate() == false) { return false; }}")
-            '    .Append("this.disabled = true;")
-            '    .AppendFormat("document.all.{0}.disabled = true;", submitButton.ClientID)
-            '    .AppendFormat("{0};", Page.GetPostBackEventReference(submitButton))
-            'End With
+            With New StringBuilder()
+                .Append("if (typeof(Page_ClientValidate) == 'function') {")
+                .Append("if (Page_ClientValidate() == false) { return false; }}")
+                .Append("this.disabled = true;")
+                .AppendFormat("document.all.{0}.disabled = true;", submitButton.ClientID)
+                .AppendFormat("{0};", Page.ClientScript.GetPostBackEventReference(submitButton, Nothing))
+
+                submitButton.OnClientClick = .ToString()
+            End With
 
             If m_securityProvider.AuthenticationMode = AuthenticationMode.RSA Then
                 ' If RSA authentication is used, we'll provided a hint about the username and password, as there 
