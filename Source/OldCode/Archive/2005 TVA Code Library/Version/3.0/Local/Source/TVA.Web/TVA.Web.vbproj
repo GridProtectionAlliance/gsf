@@ -75,6 +75,9 @@
     <Compile Include="Services\Common.vb" />
     <Compile Include="Services\IBusinessObjectsAdapter.vb" />
     <Compile Include="Services\MessageBase.vb" />
+    <Compile Include="UI\SecureMasterPage.vb">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="UI\SecurePage.vb">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>

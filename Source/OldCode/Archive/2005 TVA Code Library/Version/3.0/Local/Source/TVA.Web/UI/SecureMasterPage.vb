@@ -1,16 +1,14 @@
-' 12/14/2006
+﻿' 05/05/2008
 
 Imports System.ComponentModel
 Imports TVA.Security.Application
 
 Namespace UI
 
-    Public Class SecureUserControl
-        Inherits System.Web.UI.UserControl
+    Public Class SecureMasterPage
+        Inherits System.Web.UI.MasterPage
 
 #Region " Member Declaration "
-
-        Private m_loginUnsuccessful As Boolean
 
         Private WithEvents m_securityProvider As WebSecurityProvider
 
@@ -35,7 +33,7 @@ Namespace UI
 #Region " Code Scope: Public Code "
 
         ''' <summary>
-        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureMasterPage class.
         ''' </summary>
         Public Sub New()
 
@@ -44,7 +42,7 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureMasterPage class.
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
         Public Sub New(ByVal applicationName As String)
@@ -54,7 +52,7 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureMasterPage class.
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
         ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
@@ -65,7 +63,7 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Initializes a new instance of TVA.Web.UI.SecureUserControl class.
+        ''' Initializes a new instance of TVA.Web.UI.SecureMasterPage class.
         ''' </summary>
         ''' <param name="applicationName">Name of the application as in the security database.</param>
         ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
@@ -98,7 +96,7 @@ Namespace UI
 #Region " Code Scope: Protected Code "
 
         ''' <summary>
-        ''' Raises the TVA.Web.UI.SecureUserControl.LoginSuccessful event.
+        ''' Raises the TVA.Web.UI.SecureMasterPage.LoginSuccessful event.
         ''' </summary>
         ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
         ''' <remarks>
@@ -112,7 +110,7 @@ Namespace UI
         End Sub
 
         ''' <summary>
-        ''' Raises the TVA.Web.UI.SecureUserControl.LoginUnsuccessful event.
+        ''' Raises the TVA.Web.UI.SecureMasterPage.LoginUnsuccessful event.
         ''' </summary>
         ''' <param name="e">A System.ComponentModel.CancelEventArgs that contains the event data.</param>
         ''' <remarks>
@@ -131,7 +129,7 @@ Namespace UI
 
         Private Sub Page_Init(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Init
 
-            ' This is the earliest stage in the control life-cycle we can engage the security.
+            ' This is the earliest stage in the masterpage life-cycle we can engage the security.
             m_securityProvider.Parent = Me.Page
             m_securityProvider.LoginUser()
 
@@ -147,48 +145,20 @@ Namespace UI
 
         End Sub
 
-        Private Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
-
-            If m_loginUnsuccessful Then
-                ' It has been determined that this secure control is not to be made visible.
-                Me.Visible = False
-            End If
-
-        End Sub
-
         Private Sub m_securityProvider_BeforeLoginPrompt(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.BeforeLoginPrompt
 
-            ' This will only happen when:
-            ' 1) This secure control is being used inside of an unsecure page AND
-            ' 2) This control is secured using RSA authentication or AD authentication but we don't the login
-            '    ID of the current user.
-            ' Since, we need user credentials for authentication, we'll need to lock-down (remove all page controls)
-            ' to show the login prompt. But we cannot do that because it is prohibited during the page's DataBind, 
-            ' Init, Load, PreRender and Unload phases (remember that LoginUser() was invoked from the PageInit event, 
-            ' so we're still in that event). So, what we'll do instead is hide this secure control.
-            e.Cancel = True
-            m_loginUnsuccessful = True
+            ' If this secure masterpage is master of a secure page, we'll let the secure page handle login prompt.
+            If TypeOf Me.Page Is SecurePage Then e.Cancel = True
 
-            ' NOTE TO SELF: If an implementer wants to use a secure control inside of an unsecure page, and still
-            ' keep the secure control visible, they'll have to cancel the login process through an advanced
-            ' implementation of security at the control level.
+            ' NOTE TO SELF: If an implementer wants to use a secure masterpage along with an unsecure page, they'll 
+            ' have to cancel the login process through an advanced implementation of security at the control level.
 
         End Sub
 
         Private Sub m_securityProvider_AccessDenied(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessDenied
 
-            ' This will only happen when:
-            ' 1) This secure control is being used inside of an unsecure page AND
-            ' 2) This control is secured using AD authentication AND
-            ' 3) We have the login ID of the current user AND
-            ' 4) Current user does not have access to the application to which this secure control belongs.
-            ' So, what we're going to do is instead of locking down the entire page because the user does not have 
-            ' access to the application, we just hide this secure control (done during PreRender phase). But, even
-            ' if we wanted to lock-down the page (remove all page control), we couldn't because this is prohibited
-            ' during the page's DataBind, Init, Load, PreRender and Unload phases (remember that LoginUser() was 
-            ' invoked from the PageInit event, so we're still in that event).
-            e.Cancel = True
-            m_loginUnsuccessful = True
+            ' If this secure masterpage is master of a secure page, we'll let the secure page handle access denial.
+            If TypeOf Me.Page Is SecurePage Then e.Cancel = True
 
             OnLoginUnsuccessful(e)
 

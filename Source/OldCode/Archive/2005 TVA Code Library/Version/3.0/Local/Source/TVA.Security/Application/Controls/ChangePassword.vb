@@ -198,7 +198,7 @@ Namespace Application.Controls
                     End With
                 Else
                     ' User clicked on the Change Password link, so cannot allow a new pin to be created.
-                    submitButton.Enabled = False
+                    Me.Enabled = False
                     With New StringBuilder()
                         .Append("This screen is only active as part of an automated process. To create a new pin, ")
                         .Append("you must call the Operations Duty Specialist at 423-751-1700.")
@@ -267,7 +267,7 @@ Namespace Application.Controls
                             Case AuthenticationMode.AD
                                 m_container.UpdateMessageText("Your password has been changed!<br />You can now use your new password to login.", MessageType.Information)
                             Case AuthenticationMode.RSA
-                                CType(sender, Button).Enabled = False
+                                Me.Enabled = False
                                 Page.Session.Remove(Login.NewPinVerify)
                                 m_container.UpdateMessageText("Your new pin has been created!<br />Please wait for the token to change before next login.", MessageType.Information)
                         End Select
