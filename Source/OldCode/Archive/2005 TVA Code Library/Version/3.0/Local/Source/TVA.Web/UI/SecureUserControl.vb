@@ -10,10 +10,7 @@ Namespace UI
 
 #Region " Member Declaration "
 
-        Private m_applicationName As String
-        Private m_securityServer As SecurityServer
-        Private m_authenticationMode As AuthenticationMode
-        Private m_isLoginUnsuccessful As Boolean
+        Private m_loginUnsuccessful As Boolean
 
         Private WithEvents m_securityProvider As WebSecurityProvider
 
@@ -76,9 +73,11 @@ Namespace UI
         Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal authenticationMode As AuthenticationMode)
 
             MyBase.New()
-            m_applicationName = applicationName
-            m_securityServer = securityServer
-            m_authenticationMode = authenticationMode
+            m_securityProvider = New WebSecurityProvider()
+            m_securityProvider.PersistSettings = True
+            m_securityProvider.ApplicationName = applicationName
+            m_securityProvider.Server = securityServer
+            m_securityProvider.AuthenticationMode = authenticationMode
 
         End Sub
 
@@ -106,12 +105,7 @@ Namespace UI
         ''' This method is to be called when the login process is complete and  the current user has access to the 
         ''' application.
         ''' </remarks>
-        Public Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
-
-            ' Upon successful login, we cache the security control for performance. Performing the caching 
-            ' over here will guarantee that the security control gets cached regardless of weather or not the 
-            ' implementer cancels the login process after login has been performed successfully. 
-            WebSecurityProvider.SaveToCache(Me.Page, m_securityProvider)
+        Protected Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
 
             RaiseEvent LoginSuccessful(Me, e)
 
@@ -125,16 +119,7 @@ Namespace UI
         ''' This method is to be called when the login process is complete and the current user does not have 
         ''' access to the application.
         ''' </remarks>
-        Public Sub OnLoginUnsuccessful(ByVal e As CancelEventArgs)
-
-            ' At control-level, we don't want the page using the control to be redirected to the default access 
-            ' denied page if the current user doesn't have access to the application, so we cancel further 
-            ' processing of the login process if this method is called from the AccessDenied event of the 
-            ' WebSecurityProvider (remember if this control is being used inside a secure page than we'll just be 
-            ' the page-level security and not go through the login process again); instead we'll set a member 
-            ' variable that'll be used during the PreRender event to hide the control. 
-            e.Cancel = True
-            m_isLoginUnsuccessful = True
+        Protected Sub OnLoginUnsuccessful(ByVal e As CancelEventArgs)
 
             RaiseEvent LoginUnsuccessful(Me, e)
 
@@ -146,49 +131,9 @@ Namespace UI
 
         Private Sub Page_Init(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Init
 
-            ' This is the earliest stage in the control life-cycle we can engage the security. So for performace,
-            ' we first look to see if we have a security control we cached previously either at the page or at 
-            ' this control or another control . If so, we'll use it, and if we don't we'll initialize a new one.
-            m_securityProvider = WebSecurityProvider.LoadFromCache(Me.Page)
-            If m_securityProvider IsNot Nothing Then
-                ' The fact that the security control was cached means that the login process was successful for
-                ' the current user. So, at a control level all we need to verify user access and raise appropriate
-                ' events (they come in handy for taking appropriate action at a control level). 
-                If m_securityProvider.UserHasApplicationAccess() Then
-                    ' This will always be the case.
-                    OnLoginSuccessful(New CancelEventArgs())
-                Else
-                    ' This will never be the case, and here's why: 
-                    ' 1) If this control is in a secure page, the page level security will prevent this control
-                    '    from being loaded and processed, so this event will never get fired.
-                    ' 2) If this control is in a non-secure page, the security control would not be in the cache,
-                    '    as the security control is cached only upon successful login.
-                    OnLoginUnsuccessful(New CancelEventArgs())
-                End If
-            Else
-                ' This means that this secure control is being used in an unsecure page instead of a secure page.
-                ' This can be the case when the implementer intends to have this secure control "secured" when
-                ' used inside of a secure page, but keep it "unsecured" when used inside of an unsecured page.
-                m_securityProvider = New WebSecurityProvider()
-                m_securityProvider.Parent = Me.Page
-                m_securityProvider.PersistSettings = True
-                m_securityProvider.ApplicationName = m_applicationName
-                m_securityProvider.Server = m_securityServer
-                m_securityProvider.AuthenticationMode = m_authenticationMode
-                Try
-                    ' We now load settings from config file & attempt to perform login, but most likely the 
-                    ' implementer is going to cancel the login process through one of the events exposed by
-                    ' the security provider control.
-                    m_securityProvider.EndInit()
-                Catch ex As Exception
-                    ' We will encounter an exception if we require user to provide their credentials (when control
-                    ' is secured using RSA authentication or AD authentication but we don't have the user's login 
-                    ' ID) because the security provider control is going to attempt to remove all page controls in
-                    ' order to lock-down the page (which is prohibited during the page's DataBind, Init, Load, 
-                    ' PreRender and Unload phases) and show the input control for security provider. So, this secure
-                    ' control is essential going to remain unauthenticated when user credentials are required. 
-                End Try
-            End If
+            ' This is the earliest stage in the control life-cycle we can engage the security.
+            m_securityProvider.Parent = Me.Page
+            m_securityProvider.LoginUser()
 
         End Sub
 
@@ -204,18 +149,46 @@ Namespace UI
 
         Private Sub Page_PreRender(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreRender
 
-            If m_isLoginUnsuccessful Then
-                ' By the time this event is raised, the login process will be complete unless it is cancelled.
-                ' If the consumer cancelled the login process or some part of it, then the member valriable we're 
-                ' checking will never be set even if the current user is not authorized; in this case the control 
-                ' we still be visible, even when the user is unauthorized and we'll assume that the consumer want 
-                ' to do something custom so we just won't intervene.
+            If m_loginUnsuccessful Then
+                ' It has been determined that this secure control is not to be made visible.
                 Me.Visible = False
             End If
 
         End Sub
 
+        Private Sub m_securityProvider_BeforeLoginPrompt(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.BeforeLoginPrompt
+
+            ' This will only happen when:
+            ' 1) This secure control is being used inside of an unsecure page AND
+            ' 2) This control is secured using RSA authentication or AD authentication but we don't the login
+            '    ID of the current user.
+            ' Since, we need user credentials for authentication, we'll need to lock-down (remove all page controls)
+            ' to show the login prompt. But we cannot do that because it is prohibited during the page's DataBind, 
+            ' Init, Load, PreRender and Unload phases (remember that LoginUser() was invoked from the PageInit event, 
+            ' so we're still in that event). So, what we'll do instead is hide this secure control.
+            e.Cancel = True
+            m_loginUnsuccessful = True
+
+            ' NOTE TO SELF: If an implementer wants to use a secure control inside of an unsecure page, and still
+            ' keep the secure control visible, they'll have to cancel the login process through an advanced
+            ' implementation of security at the control level.
+
+        End Sub
+
         Private Sub m_securityProvider_AccessDenied(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessDenied
+
+            ' This will only happen when:
+            ' 1) This secure control is being used inside of an unsecure page AND
+            ' 2) This control is secured using AD authentication AND
+            ' 3) We have the login ID of the current user AND
+            ' 4) Current user does not have access to the application to which this secure control belongs.
+            ' So, what we're going to do is instead of locking down the entire page because the user does not have 
+            ' access to the application, we just hide this secure control (done during PreRender phase). But, even
+            ' if we wanted to lock-down the page (remove all page control), we couldn't because this is prohibited
+            ' during the page's DataBind, Init, Load, PreRender and Unload phases (remember that LoginUser() was 
+            ' invoked from the PageInit event, so we're still in that event).
+            e.Cancel = True
+            m_loginUnsuccessful = True
 
             OnLoginUnsuccessful(e)
 

@@ -10,7 +10,7 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  09-22-06 - Pinal C. Patel
+'  09/22/2006 - Pinal C. Patel
 '       Original version of source code generated.
 '  11/30/2007 - Pinal C. Patel
 '       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
@@ -57,6 +57,16 @@ Namespace Application
         ''' Occurs after the login process is complete.
         ''' </summary>
         Public Event AfterLogin As EventHandler
+
+        ''' <summary>
+        ''' Occurs before the login prompt is shown.
+        ''' </summary>
+        Public Event BeforeLoginPrompt As EventHandler(Of CancelEventArgs)
+
+        ''' <summary>
+        ''' Occurs after the login prompt has been shown.
+        ''' </summary>
+        Public Event AfterLoginPrompt As EventHandler
 
         ''' <summary>
         ''' Occurs before user is authenticated for application access.
@@ -122,12 +132,20 @@ Namespace Application
         End Property
 
         <Browsable(False)> _
-        Public ReadOnly Property User() As User
+        Public Property User() As User
             Get
                 Return m_user
             End Get
+            Protected Set(ByVal value As User)
+                ' We'll only allow derived class to update this data.
+                m_user = value
+            End Set
         End Property
 
+        ''' <summary>
+        ''' Determines whether or not the current user has access to the application.
+        ''' </summary>
+        ''' <returns>True if the current user has access to the application; otherwise False.</returns>
         Public Function UserHasApplicationAccess() As Boolean
 
             Return (m_user IsNot Nothing AndAlso m_user.IsDefined AndAlso Not m_user.IsLockedOut AndAlso _
@@ -181,7 +199,7 @@ Namespace Application
                                 InitializeUser(userLoginID.Split("\"c)(1), String.Empty, True)
                             Else
                                 ' We don't have any option other than prompting for credentials.
-                                ShowLoginPrompt()
+                                CaptureCredentials()
                             End If
                         Case Security.Application.AuthenticationMode.RSA
                             ' In the case of RSA authentication mode, we must always prompt the user for the
@@ -191,8 +209,8 @@ Namespace Application
                                 InitializeUser(username, password, False)
                             Else
                                 ' User is accessing the secure application for the first time, so the derived class 
-                                ' must capture user credentials and authenticate them.
-                                ShowLoginPrompt()
+                                ' must capture user credentials by prompting them for it and authenticate them.
+                                CaptureCredentials()
                             End If
                     End Select
                 End If
@@ -426,19 +444,15 @@ Namespace Application
 
 #Region " Code Scope: Private Code "
 
-        Private Sub InitializeUser(ByVal username As String, ByVal password As String, ByVal authenticate As Boolean)
+        Private Sub CaptureCredentials()
 
-            Try
-                m_user = New User(username, password, m_applicationName, _
-                                  m_server, m_authenticationMode, authenticate)
+            Dim beforeLoginPromptEventData As New CancelEventArgs()
+            RaiseEvent BeforeLoginPrompt(Me, beforeLoginPromptEventData)
+            If beforeLoginPromptEventData.Cancel Then Exit Sub
 
-                m_user.LogAccess(Not UserHasApplicationAccess())    ' Log access attempt to security database.
-            Catch ex As SqlException
-                ' We'll notifying about the excountered SQL exception by rasing an event.
-                RaiseEvent DatabaseException(Me, New GenericEventArgs(Of Exception)(ex))
-            Catch ex As Exception
-                ' We'll just ignore all other exceptions.
-            End Try
+            ShowLoginPrompt()   ' Prompt user for credentials.
+
+            RaiseEvent AfterLoginPrompt(Me, EventArgs.Empty)
 
         End Sub
 
@@ -471,6 +485,22 @@ Namespace Application
                     Next
                 End If
             End If
+
+        End Sub
+
+        Private Sub InitializeUser(ByVal username As String, ByVal password As String, ByVal authenticate As Boolean)
+
+            Try
+                m_user = New User(username, password, m_applicationName, _
+                                  m_server, m_authenticationMode, authenticate)
+
+                m_user.LogAccess(Not UserHasApplicationAccess())    ' Log access attempt to security database.
+            Catch ex As SqlException
+                ' We'll notifying about the excountered SQL exception by rasing an event.
+                RaiseEvent DatabaseException(Me, New GenericEventArgs(Of Exception)(ex))
+            Catch ex As Exception
+                ' We'll just ignore all other exceptions.
+            End Try
 
         End Sub
 

@@ -10,10 +10,6 @@ Namespace UI
 
 #Region " Member Declaration "
 
-        Private m_applicationName As String
-        Private m_securityServer As SecurityServer
-        Private m_authenticationMode As AuthenticationMode
-
         Private WithEvents m_securityProvider As WebSecurityProvider
 
 #End Region
@@ -75,9 +71,12 @@ Namespace UI
         Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal authenticationMode As AuthenticationMode)
 
             MyBase.New()
-            m_applicationName = applicationName
-            m_securityServer = securityServer
-            m_authenticationMode = authenticationMode
+            m_securityProvider = New WebSecurityProvider()
+            m_securityProvider.Parent = Me
+            m_securityProvider.PersistSettings = True
+            m_securityProvider.ApplicationName = applicationName
+            m_securityProvider.Server = securityServer
+            m_securityProvider.AuthenticationMode = authenticationMode
 
         End Sub
 
@@ -105,12 +104,7 @@ Namespace UI
         ''' This method is to be called when the login process is complete and  the current user has access to the 
         ''' application.
         ''' </remarks>
-        Public Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
-
-            ' Upon successful login, we cache the security control for performance. Performing the caching 
-            ' over here will guarantee that the security control gets cached regardless of weather or not the 
-            ' implementer cancels the login process after login has been performed successfully. 
-            WebSecurityProvider.SaveToCache(Me, m_securityProvider)
+        Protected Sub OnLoginSuccessful(ByVal e As CancelEventArgs)
 
             RaiseEvent LoginSuccessful(Me, e)
 
@@ -124,7 +118,7 @@ Namespace UI
         ''' This method is to be called when the login process is complete and the current user does not have 
         ''' access to the application.
         ''' </remarks>
-        Public Sub OnLoginUnsuccessful(ByVal e As CancelEventArgs)
+        Protected Sub OnLoginUnsuccessful(ByVal e As CancelEventArgs)
 
             RaiseEvent LoginUnsuccessful(Me, e)
 
@@ -136,23 +130,8 @@ Namespace UI
 
         Private Sub Page_PreInit(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreInit
 
-            ' This is the earliest stage in the page life-cycle we can engage the security. So for performace,
-            ' we first look to see if we have a security control we cached previously. If so, we'll use it,
-            ' and if we don't we'll initialize a new one.
-            m_securityProvider = WebSecurityProvider.LoadFromCache(Me)
-            If m_securityProvider IsNot Nothing Then
-                ' Cached - use it.
-                m_securityProvider.LoginUser()  ' Perform the login operation.
-            Else
-                ' Not cached - initialize new.
-                m_securityProvider = New WebSecurityProvider()
-                m_securityProvider.Parent = Me
-                m_securityProvider.PersistSettings = True
-                m_securityProvider.ApplicationName = m_applicationName
-                m_securityProvider.Server = m_securityServer
-                m_securityProvider.AuthenticationMode = m_authenticationMode
-                m_securityProvider.EndInit()    ' This will load settings from config file & perform login.
-            End If
+            ' This is the earliest stage in the page life-cycle we can engage the security. 
+            m_securityProvider.LoginUser()
 
         End Sub
 

@@ -181,14 +181,16 @@ Namespace Application.Controls
                     If user.IsAuthenticated Then
                         ' User's credentials have been verified, so we'll save them for use by the security control.
                         ' We'll save both the username and password in 2 places:
-                        ' 1) Cookie for single-signon.
-                        ' 2) Session for use by security control.
+                        ' 1) Session for use by security control.
+                        ' 2) Cookie for single-signon, but not when RSA security is employed.
                         Dim username As String = Encrypt(m_usernameTextBox.Text)
                         Dim password As String = Encrypt(m_passwordTextBox.Text)
                         Page.Session.Add(WebSecurityProvider.UsernameKey, username)
-                        Page.Response.Cookies(WebSecurityProvider.CredentialCookie)(WebSecurityProvider.UsernameKey) = username
                         Page.Session.Add(WebSecurityProvider.PasswordKey, password)
-                        Page.Response.Cookies(WebSecurityProvider.CredentialCookie)(WebSecurityProvider.PasswordKey) = password
+                        If m_securityProvider.AuthenticationMode <> AuthenticationMode.RSA Then
+                            Page.Response.Cookies(WebSecurityProvider.CredentialCookie)(WebSecurityProvider.UsernameKey) = username
+                            Page.Response.Cookies(WebSecurityProvider.CredentialCookie)(WebSecurityProvider.PasswordKey) = password
+                        End If
 
                         m_container.Redirect(String.Empty)  ' Refresh.
                     Else

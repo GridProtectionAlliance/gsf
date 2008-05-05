@@ -50,15 +50,18 @@ Namespace Application
 
 #Region " Code Scope: Public Code "
 
+        ''' <summary>
+        ''' Key used for accessing security data in the session.
+        ''' </summary>
         Public Const DataKey As String = "SP.Data"
 
         ''' <summary>
-        ''' Key used for storing the username.
+        ''' Key used for accessing the username in the session.
         ''' </summary>
         Public Const UsernameKey As String = "SP.Username"
 
         ''' <summary>
-        ''' Key used for storing the password.
+        ''' Key used for accessing the password in the session.
         ''' </summary>
         Public Const PasswordKey As String = "SP.Password"
 
@@ -83,13 +86,15 @@ Namespace Application
         Public Overrides Sub LogoutUser()
 
             If User IsNot Nothing AndAlso m_parent IsNot Nothing Then
-                ' Delete the session cookie used for "single-signon" purposes.
-                Dim cookie As New System.Web.HttpCookie(CredentialCookie)
-                cookie.Expires = System.DateTime.Now.AddDays(-1)
-                m_parent.Response.Cookies.Add(cookie)
-
                 ' Abandon the session so all of the session data is removed upon refresh.
                 m_parent.Session.Abandon()
+
+                ' Delete the session cookie for "single-signon" purposes if one is created.
+                If m_parent.Request.Cookies(CredentialCookie) IsNot Nothing Then
+                    Dim cookie As New System.Web.HttpCookie(CredentialCookie)
+                    cookie.Expires = System.DateTime.Now.AddDays(-1)
+                    m_parent.Response.Cookies.Add(cookie)
+                End If
 
                 m_parent.Response.Redirect(m_parent.Request.Url.AbsoluteUri)    'Refresh.
             End If
@@ -98,6 +103,12 @@ Namespace Application
 
 #Region " Shared "
 
+        ''' <summary>
+        ''' Saves security data to the session.
+        ''' </summary>
+        ''' <param name="page">Page through which session can be accessed.</param>
+        ''' <param name="data">Security data to be saved in the session.</param>
+        ''' <returns>True if security data is saved; otherwise False.</returns>
         Public Shared Function SaveToCache(ByVal page As Page, ByVal data As WebSecurityProvider) As Boolean
 
             If page.Session(DataKey) Is Nothing Then
@@ -111,6 +122,11 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Loads security data from the session.
+        ''' </summary>
+        ''' <param name="page">Page through which session can be accessed.</param>
+        ''' <returns>Security data if it exists in the session; otherwise Nothing.</returns>
         Public Shared Function LoadFromCache(ByVal page As Page) As WebSecurityProvider
 
             Dim data As WebSecurityProvider = TryCast(page.Session(DataKey), WebSecurityProvider)
@@ -159,8 +175,9 @@ Namespace Application
                     If m_parent.Session(UsernameKey) IsNot Nothing Then
                         ' Retrieve previously saved username from session.
                         username = m_parent.Session(UsernameKey).ToString()
-                    ElseIf m_parent.Request.Cookies(CredentialCookie) IsNot Nothing Then
-                        ' Retrieve previously saved username from cookie.
+                    ElseIf AuthenticationMode <> AuthenticationMode.RSA AndAlso _
+                            m_parent.Request.Cookies(CredentialCookie) IsNot Nothing Then
+                        ' Retrieve previously saved username from cookie, but not when RSA security is employed.
                         username = m_parent.Request.Cookies(CredentialCookie)(UsernameKey).ToString()
                     End If
                 Catch ex As Exception
@@ -182,8 +199,9 @@ Namespace Application
                     If m_parent.Session(UsernameKey) IsNot Nothing Then
                         ' Retrieve previously saved password from session.
                         password = m_parent.Session(PasswordKey).ToString()
-                    ElseIf m_parent.Request.Cookies(CredentialCookie) IsNot Nothing Then
-                        ' Retrieve previously saved password from cookie.
+                    ElseIf AuthenticationMode <> AuthenticationMode.RSA AndAlso _
+                            m_parent.Request.Cookies(CredentialCookie) IsNot Nothing Then
+                        ' Retrieve previously saved password from cookie, but not when RSA security is employed.
                         password = m_parent.Request.Cookies(CredentialCookie)(PasswordKey).ToString()
                     End If
                 Catch ex As Exception
@@ -244,7 +262,7 @@ Namespace Application
                     Return DirectCast(controlTable.Rows(0).Cells(0).Controls(0), ControlContainer)
                 End If
             Else
-                Throw New InvalidOperationException("Page must be set in order to lock it.")
+                Throw New InvalidOperationException("Parent property is not set.")
             End If
 
         End Function
@@ -268,6 +286,41 @@ Namespace Application
                         m_parent.Form.Controls.Remove(ctrl)
                     End If
                 Next
+            End If
+
+        End Sub
+
+        Private Sub WebSecurityProvider_BeforeLogin(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles Me.BeforeLogin
+
+            If m_parent IsNot Nothing Then
+                ' Right before the login process starts, we'll check to see if we have the security data cached in
+                ' the session (done when user has access to the application). If so, we'll use the cached data and
+                ' save us credential verification and a trip to the database. This is primarily done to improves 
+                ' performance in scenarios where a secure web page contains many secure user controls.
+                Dim cachedData As WebSecurityProvider = WebSecurityProvider.LoadFromCache(m_parent)
+                If cachedData IsNot Nothing Then
+                    ' We have cached data.
+                    User = cachedData.User  ' Here's where we save credential verification and database trip.
+                    Server = cachedData.Server
+                    ApplicationName = cachedData.ApplicationName
+                    AuthenticationMode = cachedData.AuthenticationMode
+                Else
+                    ' We don't have cached data, so we'll load settings from config file and continue.
+                    LoadSettings()
+                End If
+            Else
+                Throw New InvalidOperationException("Parent property is not set.")
+            End If
+
+        End Sub
+
+        Private Sub WebSecurityProvider_AccessGranted(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles Me.AccessGranted
+
+            If m_parent IsNot Nothing Then
+                ' User has access to the application, so we'll cache the security data for subsequent uses.
+                WebSecurityProvider.SaveToCache(m_parent, Me)
+            Else
+                Throw New InvalidOperationException("Parent property is not set.")
             End If
 
         End Sub
@@ -304,6 +357,8 @@ Namespace Application
                     m_parent.Response.Write(.ToString())
                     m_parent.Response.End()
                 End With
+            Else
+                Throw New InvalidOperationException("Parent property is not set.")
             End If
 
         End Sub
