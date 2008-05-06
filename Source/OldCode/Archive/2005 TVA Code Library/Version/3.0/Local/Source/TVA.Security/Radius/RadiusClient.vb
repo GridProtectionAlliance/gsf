@@ -346,6 +346,7 @@ Namespace Radius
         ''' <param name="token">Current token of the user.</param>
         ''' <param name="pin">New pin of the user.</param>
         ''' <returns>True if a new pin is created for the user successfully; otherwise False.</returns>
+        ''' <remarks>NOTE: This method is specific to RSA RADIUS implementation.</remarks>
         Public Function CreateNewPin(ByVal username As String, ByVal token As String, ByVal pin As String) As Boolean
 
             CheckDisposed()
@@ -469,7 +470,8 @@ Namespace Radius
         ''' <param name="response">Response packet sent by the server.</param>
         ''' <returns>True if the user account is in "New Pin" mode; otherwise False.</returns>
         ''' <remarks>
-        ''' A user's account can be in the "New Pin" mode when set on the server.
+        ''' <para>A user's account can be in the "New Pin" mode when set on the server.</para>
+        ''' <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
         ''' </remarks>
         Public Function IsUserInNewPinMode(ByVal response As RadiusPacket) As Boolean
 
@@ -497,9 +499,12 @@ Namespace Radius
         ''' <param name="response">Response packet sent by the server.</param>
         ''' <returns>True if the user account is in "Next Token" mode; otherwise False.</returns>
         ''' <remarks>
+        ''' <para>
         ''' A user's account can enter the "Next Token" mode after the user enters incorrect passwords for a few 
         ''' times (3 times by default) and then enters the correct password. Note that repeatedly entering
         ''' incorrect passwords will disable the user account.
+        ''' </para>
+        ''' <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
         ''' </remarks>
         Public Function IsUserInNextTokenMode(ByVal response As RadiusPacket) As Boolean
 
