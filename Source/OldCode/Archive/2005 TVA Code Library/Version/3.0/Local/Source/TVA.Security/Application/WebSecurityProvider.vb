@@ -10,14 +10,19 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  09-22-06 - Pinal C. Patel
+'  09/22/2006 - Pinal C. Patel
 '       Original version of source code generated.
-'  09-22-06 - Pinal C. Patel
+'  09/22/2006 - Pinal C. Patel
 '       Added the flexibility of providing an absolute URL in config file for externally 
 '       facing web sites.
-'  12-28-06 - Pinal C. Patel
+'  12/28/2006 - Pinal C. Patel
 '       Modified the DatabaseException event handler to display the actual exception message instead 
 '       of the previously displayed message that assumed that database connectivity failed.
+'  05/06/2008 - Pinal C. Patel
+'       Replaced the user input method from embedded compiled web pages to composite controls that are
+'       hosted inside of the web page being secured.
+'       Made caching security data to be done here instead of base class and added shared methods 
+'       SaveToCache and LoadFromCache to this.
 '
 '*******************************************************************************************************
 
@@ -32,6 +37,9 @@ Imports TVA.Security.Application.Controls
 
 Namespace Application
 
+    ''' <summary>
+    ''' Security provider control for web applications.
+    ''' </summary>
     <ToolboxBitmap(GetType(WebSecurityProvider)), DisplayName("WebSecurityProvider")> _
     Public Class WebSecurityProvider
 
@@ -73,6 +81,11 @@ Namespace Application
         ''' </remarks>
         Public Const CredentialCookie As String = "SP.Credentials"
 
+        ''' <summary>
+        ''' Gets or sets the Web Page being secured.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Web Page being secured.</returns>
         <Category("Configuration")> _
         Public Property Parent() As Page
             Get
@@ -83,6 +96,9 @@ Namespace Application
             End Set
         End Property
 
+        ''' <summary>
+        ''' Logs out the logged in user.
+        ''' </summary>
         Public Overrides Sub LogoutUser()
 
             If User IsNot Nothing AndAlso m_parent IsNot Nothing Then

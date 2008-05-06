@@ -20,6 +20,12 @@
 '       the primary databases are unavailable or offline.
 '       Renamed the DbConnectionException event to DatabaseException as this event is raised in the
 '       event of any SQL Server exception that is encountered.
+'  05/06/2008 - Pinal C. Patel
+'       Added AuthenticationMode property and modified LoginUser() method to add support for RSA 
+'       authentication.
+'       Implemented TVA.Configuration.IPersistSettings interface to allow for the property values to 
+'       saved and retrieved from the config file.
+'       Moved security database connection strings to the User class - better fit.
 '
 '*******************************************************************************************************
 
@@ -30,6 +36,9 @@ Imports TVA.Configuration
 
 Namespace Application
 
+    ''' <summary>
+    ''' Base class of the security provider control.
+    ''' </summary>
     <ProvideProperty("ValidRoles", GetType(Object)), ProvideProperty("ValidRoleAction", GetType(Object))> _
     Public MustInherit Class SecurityProviderBase
         Implements IExtenderProvider, ISupportInitialize, IPersistSettings
@@ -51,62 +60,78 @@ Namespace Application
         ''' <summary>
         ''' Occurs before the login process is started.
         ''' </summary>
+        <Description("Occurs before the login process is started.")> _
         Public Event BeforeLogin As EventHandler(Of CancelEventArgs)
 
         ''' <summary>
         ''' Occurs after the login process is complete.
         ''' </summary>
+        <Description("Occurs after the login process is complete.")> _
         Public Event AfterLogin As EventHandler
 
         ''' <summary>
         ''' Occurs before the login prompt is shown.
         ''' </summary>
+        <Description("Occurs before the login prompt is shown.")> _
         Public Event BeforeLoginPrompt As EventHandler(Of CancelEventArgs)
 
         ''' <summary>
         ''' Occurs after the login prompt has been shown.
         ''' </summary>
+        <Description("Occurs after the login prompt has been shown.")> _
         Public Event AfterLoginPrompt As EventHandler
 
         ''' <summary>
         ''' Occurs before user data is initialized.
         ''' </summary>
+        <Description("Occurs before user data is initialized.")> _
         Public Event BeforeInitializeData As EventHandler
 
         ''' <summary>
         ''' Occurs after user data has been initialized.
         ''' </summary>
+        <Description("Occurs after user data has been initialized.")> _
         Public Event AfterInitializeData As EventHandler
 
         ''' <summary>
         ''' Occurs before user is authenticated for application access.
         ''' </summary>
+        <Description("Occurs before user is authenticated for application access.")> _
         Public Event BeforeAuthenticate As EventHandler(Of CancelEventArgs)
 
         ''' <summary>
         ''' Occurs after user has been authenticated for application access.
         ''' </summary>
+        <Description("Occurs after user has been authenticated for application access.")> _
         Public Event AfterAuthenticate As EventHandler
 
         ''' <summary>
         ''' Occurs when user has access to the application.
         ''' </summary>
+        <Description("Occurs when user has access to the application.")> _
         Public Event AccessGranted As EventHandler(Of CancelEventArgs)
 
         ''' <summary>
         ''' Occurs when user does not have access to the application.
         ''' </summary>
+        <Description("Occurs when user does not have access to the application.")> _
         Public Event AccessDenied As EventHandler(Of CancelEventArgs)
 
         ''' <summary>
         ''' Occurs when a database exception is encountered during the login process.
         ''' </summary>
+        <Description("Occurs when a database exception is encountered during the login process.")> _
         Public Event DatabaseException As EventHandler(Of GenericEventArgs(Of Exception))
 
 #End Region
 
 #Region " Code Scope: Public Code "
 
+        ''' <summary>
+        ''' Gets or sets the security database server against which users are authenticated.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>One of the TVA.Security.Application.SecurityServer values.</returns>
         <Category("Configuration")> _
         Public Property Server() As SecurityServer
             Get
@@ -117,6 +142,11 @@ Namespace Application
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the application name as defined in the security database that is being secured.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Name of the application as defined in the security database that is being secured.</returns>
         <Category("Configuration")> _
         Public Property ApplicationName() As String
             Get
@@ -131,6 +161,11 @@ Namespace Application
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the mode of authentication to be used for authenticating users of the application.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>One of the TVA.Security.Application.AuthenticationMode values.</returns>
         <Category("Configuration")> _
         Public Property AuthenticationMode() As AuthenticationMode
             Get
@@ -141,6 +176,11 @@ Namespace Application
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets data about the current user.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Instance of TVA.Security.Application.User class.</returns>
         <Browsable(False)> _
         Public Property User() As User
             Get
@@ -328,12 +368,19 @@ Namespace Application
 
 #Region " ISupportInitialize "
 
+        ''' <summary>
+        ''' To be called before the control is initialized.
+        ''' </summary>
         Public Sub BeginInit() Implements System.ComponentModel.ISupportInitialize.BeginInit
 
             ' Nothing needs to be done when the component begins initializing.
 
         End Sub
 
+        ''' <summary>
+        ''' To be called after the control is initialized.
+        ''' </summary>
+        ''' <remarks>Loads property values from the config file and performs the login operation.</remarks>
         Public Sub EndInit() Implements System.ComponentModel.ISupportInitialize.EndInit
 
             If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
@@ -347,6 +394,11 @@ Namespace Application
 
 #Region " IPersistSettings "
 
+        ''' <summary>
+        ''' Gets or sets a boolean value indicating whether or not property values are to be saved in the config file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if property values are to be saved in the config file; otherwise False.</returns>
         <Category("Persistance")> _
         Public Property PersistSettings() As Boolean Implements IPersistSettings.PersistSettings
             Get
@@ -357,6 +409,12 @@ Namespace Application
             End Set
         End Property
 
+        ''' <summary>
+        ''' Gets or sets the category name under which the property values are to be saved in the config file if 
+        ''' they are to be saved in the config file.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Category name under which the property values are to be saved in the config file.</returns>
         <Category("Persistance")> _
         Public Property SettingsCategoryName() As String Implements IPersistSettings.SettingsCategoryName
             Get
@@ -371,6 +429,9 @@ Namespace Application
             End Set
         End Property
 
+        ''' <summary>
+        ''' Loads property values from the config file.
+        ''' </summary>
         Public Overridable Sub LoadSettings() Implements IPersistSettings.LoadSettings
 
             If m_persistSettings Then
@@ -387,6 +448,9 @@ Namespace Application
 
         End Sub
 
+        ''' <summary>
+        ''' Saves property values to the config file.
+        ''' </summary>
         Public Overridable Sub SaveSettings() Implements IPersistSettings.SaveSettings
 
             If m_persistSettings Then
@@ -395,11 +459,11 @@ Namespace Application
                         .Clear()
                         With .Item("Server", True)
                             .Value = m_server.ToString()
-                            .Description = "Security server (Development; Acceptance; Production) against which users are authenticated."
+                            .Description = "Security database server (Development; Acceptance; Production) against which users are authenticated."
                         End With
                         With .Item("ApplicationName", True)
                             .Value = m_applicationName
-                            .Description = "Name of the application that is being secured as defined in the security database."
+                            .Description = "Name of the application as defined in the security database that is being secured."
                         End With
                         With .Item("AuthenticationMode", True)
                             .Value = m_authenticationMode.ToString()

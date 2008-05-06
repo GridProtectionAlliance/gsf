@@ -1,5 +1,25 @@
-' 09-26-06
-' PCP: 10/11/2007 - Added GeneratePassword() shared function and enforced strong password rule in EncryptPassword()
+'*******************************************************************************************************
+'  TVA.Security.Application.User.vb - User defined in the security database
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  09/26/2006 - Pinal C. Patel
+'       Original version of source code generated.
+'  10/22/2007 - Pinal C. Patel
+'       Added GeneratePassword() shared function and enforced strong password rule in EncryptPassword().
+'  05/06/2008 - Pinal C. Patel
+'       Modified contructors so security database connection string is not to be passed in.
+'       Added methods: RefreshData, Authenticate, ChangePassword, LogAccess and LogError.
+'       Added support to authenticate user credentials against RSA server using RADIUS.
+'
+'*******************************************************************************************************
 
 Imports System.Data
 Imports System.Data.SqlClient
@@ -14,6 +34,9 @@ Imports TVA.Security.Cryptography.Common
 
 Namespace Application
 
+    ''' <summary>
+    ''' Represents a user defined in the security database.
+    ''' </summary>
     <Serializable()> _
     Public Class User
 
@@ -83,24 +106,49 @@ Namespace Application
 
 #Region " Code Scope: Public "
 
+        ''' <summary>
+        ''' Creates an instance of a user defined in the security database.
+        ''' </summary>
+        ''' <param name="username">Username of the user.</param>
+        ''' <param name="password">Password of the user.</param>
         Public Sub New(ByVal username As String, ByVal password As String)
 
             MyClass.New(username, password, String.Empty)
 
         End Sub
 
+        ''' <summary>
+        ''' Creates an instance of a user defined in the security database.
+        ''' </summary>
+        ''' <param name="username">Username of the user.</param>
+        ''' <param name="password">Password of the user.</param>
+        ''' <param name="applicationName">Name of the application for which user data is to be retrieved.</param>
         Public Sub New(ByVal username As String, ByVal password As String, ByVal applicationName As String)
 
             MyClass.New(username, password, applicationName, SecurityServer.Development, AuthenticationMode.AD)
 
         End Sub
 
+        ''' <summary>
+        ''' Creates an instance of a user defined in the security database.
+        ''' </summary>
+        ''' <param name="username">Username of the user.</param>
+        ''' <param name="password">Password of the user.</param>
+        ''' <param name="securityServer">Security server from which user data is to be retrieved.</param>
         Public Sub New(ByVal username As String, ByVal password As String, ByVal securityServer As SecurityServer)
 
             MyClass.New(username, password, String.Empty, securityServer, AuthenticationMode.AD)
 
         End Sub
 
+        ''' <summary>
+        ''' Creates an instance of a user defined in the security database.
+        ''' </summary>
+        ''' <param name="username">Username of the user.</param>
+        ''' <param name="password">Password of the user.</param>
+        ''' <param name="applicationName">Name of the application for which user data is to be retrieved.</param>
+        ''' <param name="securityServer">Security server from which user data is to be retrieved.</param>
+        ''' <param name="authenticationMode">Mode of authentication to be used for authenticating credentials.</param>
         Public Sub New(ByVal username As String, ByVal password As String, ByVal applicationName As String, _
                        ByVal securityServer As SecurityServer, ByVal authenticationMode As AuthenticationMode)
 
@@ -108,66 +156,123 @@ Namespace Application
 
         End Sub
 
+        ''' <summary>
+        ''' Gets the user's username.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Username of the user.</returns>
         Public ReadOnly Property Username() As String
             Get
                 Return m_username
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's password.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Password of the user.</returns>
         Public ReadOnly Property Password() As String
             Get
                 Return m_password
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's first name.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>First name of the user.</returns>
         Public ReadOnly Property FirstName() As String
             Get
                 Return m_firstName
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's last name.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Last name of the user.</returns>
         Public ReadOnly Property LastName() As String
             Get
                 Return m_lastName
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's company name.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Company name of the user.</returns>
         Public ReadOnly Property CompanyName() As String
             Get
                 Return m_companyName
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's phone number.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Phone number of the user.</returns>
         Public ReadOnly Property PhoneNumber() As String
             Get
                 Return m_phoneNumber
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's email address.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Email address of the user.</returns>
         Public ReadOnly Property EmailAddress() As String
             Get
                 Return m_emailAddress
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's security question.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Security question of the user.</returns>
         Public ReadOnly Property SecurityQuestion() As String
             Get
                 Return m_securityQuestion
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the user's security answer.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Security answer of the user.</returns>
         Public ReadOnly Property SecurityAnswer() As String
             Get
                 Return m_securityAnswer
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a boolean value indicating whether or not the user is defined as an external user in the security
+        ''' database. An external user is someone outside of TVA who does not have a TVA domain account.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if user is an external user; otherwise False.</returns>
         Public ReadOnly Property IsExternal() As Boolean
             Get
                 Return m_isExternal
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a boolean value indicating whether or not the user's has been locked because of numerous
+        ''' unsuccessful login attempts.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>True if the user account is locked; otherwise False.</returns>
         Public ReadOnly Property IsLockedOut() As Boolean
             Get
                 Return m_isLockedOut
@@ -197,11 +302,10 @@ Namespace Application
         End Property
 
         ''' <summary>
-        ''' 
+        ''' Gets a boolean value indicating whether or not the user is defined in the security database.
         ''' </summary>
         ''' <value></value>
-        ''' <returns></returns>
-        ''' <remarks>User is defined in the security database.</remarks>
+        ''' <returns>True if the user is defined in the security database; otherwise False.</returns>
         Public ReadOnly Property IsDefined() As Boolean
             Get
                 Return m_isDefined
@@ -209,29 +313,45 @@ Namespace Application
         End Property
 
         ''' <summary>
-        ''' 
+        ''' Gets a boolean value indicating whether or not the user's credentials have been authenticated.
         ''' </summary>
         ''' <value></value>
-        ''' <returns></returns>
-        ''' <remarks>User has been successfully authenticated.</remarks>
+        ''' <returns>True if the user's credentials have been authenticated; otherwise False.</returns>
         Public ReadOnly Property IsAuthenticated() As Boolean
             Get
                 Return m_isAuthenticated
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a list of all the groups the user belongs to.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Groups to which the user belongs.</returns>
         Public ReadOnly Property Groups() As List(Of Group)
             Get
                 Return m_groups
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a list of roles that belong to the specified application, or all roles if no application is 
+        ''' specified, to which the user is assigned. 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>List of roles to which the user is assigned.</returns>
         Public ReadOnly Property Roles() As List(Of Role)
             Get
                 Return m_roles
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a list of roles that belong to the specified application to which the user is assigned.
+        ''' </summary>
+        ''' <param name="applicationName">Name of the application for which user roles are to be retrieved.</param>
+        ''' <value></value>
+        ''' <returns>List of roles to which the user is assigned.</returns>
         Public ReadOnly Property Roles(ByVal applicationName As String) As List(Of Role)
             Get
                 '**** Added By Mehul
@@ -249,6 +369,11 @@ Namespace Application
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets a list of all applications to which the user has access if application name is not specified.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>List of all applications to which the user has access.</returns>
         Public ReadOnly Property Applications() As List(Of Application)
             Get
                 Return m_applications
@@ -532,6 +657,11 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Finds the specified group.
+        ''' </summary>
+        ''' <param name="groupName">Name of the group to be found.</param>
+        ''' <returns>Group if one is found; otherwise Nothing.</returns>
         Public Function FindGroup(ByVal groupName As String) As Group
 
             If m_groups IsNot Nothing Then
@@ -546,6 +676,11 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Finds the specified role.
+        ''' </summary>
+        ''' <param name="roleName">Name of the role to be found.</param>
+        ''' <returns>Role if one is found; otherwise Nothing.</returns>
         Public Function FindRole(ByVal roleName As String) As Role
 
             If m_roles IsNot Nothing Then
@@ -560,6 +695,12 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Finds the specified role.
+        ''' </summary>
+        ''' <param name="roleName">Name of the role to be found.</param>
+        ''' <param name="applicationName">Name of the application to which the role belongs.</param>
+        ''' <returns>Role if one is found; otherwise Nothing.</returns>
         Public Function FindRole(ByVal roleName As String, ByVal applicationName As String) As Role
 
             Dim role As Role = FindRole(roleName)
@@ -571,6 +712,11 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Finds the specified application.
+        ''' </summary>
+        ''' <param name="applicationName">Name of the application to be found.</param>
+        ''' <returns>Application if one is found; otherwise Nothing.</returns>
         Public Function FindApplication(ByVal applicationName As String) As Application
 
             If m_applications IsNot Nothing Then
@@ -611,6 +757,12 @@ Namespace Application
 
 #Region " Shared "
 
+        ''' <summary>
+        ''' Generates a random password of specified length with at least one uppercase character, one lowercase
+        ''' character and one digit.
+        ''' </summary>
+        ''' <param name="length">Length of the random password.</param>
+        ''' <returns>Random password of the specified lenght.</returns>
         Public Shared Function GeneratePassword(ByVal length As Integer) As String
 
             If length >= MinimumPasswordLength Then
@@ -656,6 +808,11 @@ Namespace Application
 
         End Function
 
+        ''' <summary>
+        ''' Encrypts the password to a one-way hash using the SHA1 hash algorithm.
+        ''' </summary>
+        ''' <param name="password">Password to be encrypted.</param>
+        ''' <returns>Encrypted password.</returns>
         Public Shared Function EncryptPassword(ByVal password As String) As String
 
             If Regex.IsMatch(password, StrongPasswordRegex) Then
@@ -686,6 +843,18 @@ Namespace Application
 
 #Region " Code Scope: Friend "
 
+        ''' <summary>
+        ''' Creates an instance of a user defined in the security database.
+        ''' </summary>
+        ''' <param name="username">Username of the user.</param>
+        ''' <param name="password">Password of the user.</param>
+        ''' <param name="applicationName">Name of the application for which user data is to be retrieved.</param>
+        ''' <param name="securityServer">Security server from which user data is to be retrieved.</param>
+        ''' <param name="authenticationMode">Mode of authentication to be used for authenticating credentials.</param>
+        ''' <param name="authenticate">True if user credentials are to be authenticated; otherwise False.</param>
+        ''' <remarks>
+        ''' This constructor is only to be used internally by the security provider control and its sub-components.
+        ''' </remarks>
         Friend Sub New(ByVal username As String, ByVal password As String, ByVal applicationName As String, _
                        ByVal securityServer As SecurityServer, ByVal authenticationMode As AuthenticationMode, ByVal authenticate As Boolean)
 

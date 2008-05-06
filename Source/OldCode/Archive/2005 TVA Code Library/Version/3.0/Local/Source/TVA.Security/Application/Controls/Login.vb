@@ -1,4 +1,19 @@
-﻿' PCP: 04/22/2008
+﻿'*******************************************************************************************************
+'  TVA.Security.Application.Controls.Login.vb - Control for logging in to a web site
+'  Copyright © 2006 - TVA, all rights reserved - Gbtc
+'
+'  Build Environment: VB.NET, Visual Studio 2005
+'  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+'      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+'       Phone: 423/751-2250
+'       Email: pcpatel@tva.gov
+'
+'  Code Modification History:
+'  -----------------------------------------------------------------------------------------------------
+'  04/22/2008 - Pinal C. Patel
+'       Original version of source code generated.
+'
+'*******************************************************************************************************
 
 Imports System.Text
 Imports System.Web.UI.WebControls
@@ -6,6 +21,9 @@ Imports TVA.Security.Cryptography.Common
 
 Namespace Application.Controls
 
+    ''' <summary>
+    ''' Provides user interface (UI) for logging in to a secure Web Site.
+    ''' </summary>
     Public Class Login
         Inherits CompositeControl
 

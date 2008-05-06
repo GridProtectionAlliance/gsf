@@ -10,8 +10,10 @@
 '
 '  Code Modification History:
 '  -----------------------------------------------------------------------------------------------------
-'  10-03-06 - Pinal C. Patel
+'  10/03/2006 - Pinal C. Patel
 '       Original version of source code generated.
+'  05/06/2008 - Pinal C. Patel
+'       Removed previous implementation to be implemented when needed.
 '
 '*******************************************************************************************************
 
