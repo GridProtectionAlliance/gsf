@@ -249,7 +249,7 @@ Namespace Application
                                 InitializeUser(userLoginID.Split("\"c)(1), String.Empty, True)
                             Else
                                 ' We don't have any option other than prompting for credentials.
-                                CaptureCredentials()
+                                If Not CaptureCredentials() Then Exit Sub ' Implementer wants to abort.
                             End If
                         Case Security.Application.AuthenticationMode.RSA
                             ' In the case of RSA authentication mode, we must always prompt the user for the
@@ -260,7 +260,7 @@ Namespace Application
                             Else
                                 ' User is accessing the secure application for the first time, so the derived class 
                                 ' must capture user credentials by prompting them for it and authenticate them.
-                                CaptureCredentials()
+                                If Not CaptureCredentials() Then Exit Sub ' Implementer wants to abort.
                             End If
                     End Select
                 End If
@@ -518,18 +518,6 @@ Namespace Application
 
 #Region " Code Scope: Private Code "
 
-        Private Sub CaptureCredentials()
-
-            Dim beforeLoginPromptEventData As New CancelEventArgs()
-            RaiseEvent BeforeLoginPrompt(Me, beforeLoginPromptEventData)
-            If beforeLoginPromptEventData.Cancel Then Exit Sub
-
-            ShowLoginPrompt()   ' Prompt user for credentials.
-
-            RaiseEvent AfterLoginPrompt(Me, EventArgs.Empty)
-
-        End Sub
-
         Private Sub ProcessControls()
 
             For Each extendee As Object In m_extendeeControls.Keys
@@ -582,6 +570,20 @@ Namespace Application
             End Try
 
         End Sub
+
+        Private Function CaptureCredentials() As Boolean
+
+            Dim beforeLoginPromptEventData As New CancelEventArgs()
+            RaiseEvent BeforeLoginPrompt(Me, beforeLoginPromptEventData)
+            If beforeLoginPromptEventData.Cancel Then Return False
+
+            ShowLoginPrompt()   ' Prompt user for credentials.
+
+            RaiseEvent AfterLoginPrompt(Me, EventArgs.Empty)
+
+            Return True         ' Indicate that credentials are/will be captured.
+
+        End Function
 
 #End Region
 

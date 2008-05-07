@@ -330,11 +330,15 @@ Namespace Application
 
         End Sub
 
-        Private Sub WebSecurityProvider_AccessGranted(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles Me.AccessGranted
+        Private Sub WebSecurityProvider_AfterLogin(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.AfterLogin
 
             If m_parent IsNot Nothing Then
-                ' User has access to the application, so we'll cache the security data for subsequent uses.
-                WebSecurityProvider.SaveToCache(m_parent, Me)
+                If UserHasApplicationAccess() Then
+                    ' User has access to the application, so we'll cache the security data for subsequent uses.
+                    ' We cache the data here instead of the AccessGranted phase in order to allow the implementer 
+                    ' to stop the login process before it completes.
+                    WebSecurityProvider.SaveToCache(m_parent, Me)
+                End If
             Else
                 Throw New InvalidOperationException("Parent property is not set.")
             End If
