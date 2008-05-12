@@ -22,7 +22,10 @@
 '       Replaced the user input method from embedded compiled web pages to composite controls that are
 '       hosted inside of the web page being secured.
 '       Made caching security data to be done here instead of base class and added shared methods 
-'       SaveToCache and LoadFromCache to this.
+'       SaveToCache() and LoadFromCache() to facilitate this.
+'  05/12/2008 - Pinal C. Patel
+'       Added capability to allow a secure page to be locked forcefully using query string variable.
+'       Added capability to allow logging out a user after certain period of inactivity.
 '
 '*******************************************************************************************************
 
@@ -46,6 +49,7 @@ Namespace Application
 #Region " Member Declaration "
 
         Private m_locked As Boolean
+        Private m_inactivityTimeout As Integer
 
         Private WithEvents m_parent As Page
 
@@ -82,6 +86,12 @@ Namespace Application
         Public Const CredentialCookie As String = "SP.Credentials"
 
         ''' <summary>
+        ''' Query string key that can be used for force a secure page in lock-down mode.
+        ''' </summary>
+        ''' <remarks>Valid values are "Denied" and "Prompt".</remarks>
+        Public Const LockModeKey As String = "LockMode"
+
+        ''' <summary>
         ''' Gets or sets the Web Page being secured.
         ''' </summary>
         ''' <value></value>
@@ -93,6 +103,21 @@ Namespace Application
             End Get
             Set(ByVal value As Page)
                 m_parent = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Gets or sets the time (in minutes) of inactivity after which a user will be automatically logged out.
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns>Time (in minutes) of inactivity after which a user will be automatically logged out.</returns>
+        <Category("Configuration")> _
+        Public Property InactivityTimeout() As Integer
+            Get
+                Return m_inactivityTimeout
+            End Get
+            Set(ByVal value As Integer)
+                m_inactivityTimeout = value
             End Set
         End Property
 
@@ -112,7 +137,7 @@ Namespace Application
                     m_parent.Response.Cookies.Add(cookie)
                 End If
 
-                m_parent.Response.Redirect(m_parent.Request.Url.AbsoluteUri)    'Refresh.
+                m_parent.Response.Redirect(m_parent.Request.Url.PathAndQuery)   ' Refresh.
             End If
 
         End Sub
@@ -168,18 +193,47 @@ Namespace Application
 
         End Sub
 
-        Protected Overrides Sub HandleAccessGranted()
-
-            ' We don't need to do anything special here.
-
-        End Sub
-
         Protected Overrides Sub HandleAccessDenied()
 
             ' Lock the page show and show the "Access Denied" message.
             With LockPage(String.Empty)
                 .MessageText = "<h5>ACCESS DENIED</h5>You are not authorized to view this page."
             End With
+
+        End Sub
+
+        Protected Overrides Sub HandleAccessGranted()
+
+            If m_parent IsNot Nothing Then
+                If m_inactivityTimeout <= 0 Then Exit Sub
+
+                ' Upon successful login, we'll register client-side script that'll logout the user if no user 
+                ' activity takes place for the specified inavtivity period.
+                With New System.Text.StringBuilder()
+                    .Append("<script language=""javascript"">")
+                    .AppendLine()
+                    .Append("   function Logout()")
+                    .AppendLine()
+                    .Append("   {")
+                    .AppendLine()
+                    .Append("       alert('Your session has been timed out due to inactivity.');")
+                    .AppendLine()
+                    .AppendFormat("       window.location = '?{0}=Prompt';", LockModeKey)
+                    .AppendLine()
+                    .Append("   }")
+                    .AppendLine()
+                    .Append("</script>")
+                    .AppendLine()
+                    m_parent.ClientScript.RegisterClientScriptBlock([GetType](), "Logout", .ToString())
+                End With
+                m_parent.ClientScript.RegisterStartupScript([GetType](), _
+                                                            "InactivityTimeout", _
+                                                            String.Format("setTimeout('Logout()', {0});", _
+                                                                          m_inactivityTimeout * 60 * 1000), _
+                                                            True)
+            Else
+                Throw New InvalidOperationException("Parent property is not set.")
+            End If
 
         End Sub
 
@@ -323,6 +377,23 @@ Namespace Application
                 Else
                     ' We don't have cached data, so we'll load settings from config file and continue.
                     LoadSettings()
+                End If
+
+                If m_parent.Request(LockModeKey) IsNot Nothing Then
+                    ' User wants to force the page in lock-down mode.
+                    Select Case m_parent.Request(LockModeKey)
+                        Case "Denied"
+                            ' "Access Denied" message is to be displayed.
+                            e.Cancel = True
+                            HandleAccessDenied()
+                        Case "Prompt"
+                            ' Input prompt is to be displayed. This can be used by the user to enter credentials
+                            ' of a different user to gain access to the site. In order to achieve this, we have to
+                            ' logout the current user if the user is logged-in already (most likely to be the case).
+                            e.Cancel = True
+                            ShowLoginPrompt()
+                            If User IsNot Nothing Then LogoutUser()
+                    End Select
                 End If
             Else
                 Throw New InvalidOperationException("Parent property is not set.")
