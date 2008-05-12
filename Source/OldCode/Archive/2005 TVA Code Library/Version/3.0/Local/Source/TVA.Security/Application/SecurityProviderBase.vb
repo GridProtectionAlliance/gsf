@@ -493,14 +493,14 @@ Namespace Application
         Protected MustOverride Sub ShowLoginPrompt()
 
         ''' <summary>
-        ''' Performs any necessary actions that must be performed upon successful login.
-        ''' </summary>
-        Protected MustOverride Sub HandleAccessGranted()
-
-        ''' <summary>
         ''' Performs any necessary actions that must be performed upon unsuccessful login.
         ''' </summary>
         Protected MustOverride Sub HandleAccessDenied()
+
+        ''' <summary>
+        ''' Performs any necessary actions that must be performed upon successful login.
+        ''' </summary>
+        Protected MustOverride Sub HandleAccessGranted()
 
         ''' <summary>
         ''' Gets the name that the user provided on the login screen.

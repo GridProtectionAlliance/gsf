@@ -126,13 +126,13 @@ Namespace Application
 
         End Sub
 
-        Protected Overrides Sub HandleAccessGranted()
+        Protected Overrides Sub HandleAccessDenied()
 
             Throw New NotImplementedException()
 
         End Sub
 
-        Protected Overrides Sub HandleAccessDenied()
+        Protected Overrides Sub HandleAccessGranted()
 
             Throw New NotImplementedException()
 
