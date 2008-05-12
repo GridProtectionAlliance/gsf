@@ -12,12 +12,14 @@
 '  -----------------------------------------------------------------------------------------------------
 '  04/21/2008 - Pinal C. Patel
 '       Original version of source code generated.
+'  05/12/2008 - Pinal C. Patel
+'       Modified Redirect() method to strip out query string variable used to force page lock.
 '
 '*******************************************************************************************************
 
 Imports System.Web.UI
 Imports System.Web.UI.WebControls
-Imports System.Reflection
+Imports System.Text.RegularExpressions
 
 Namespace Application.Controls
 
@@ -161,9 +163,21 @@ Namespace Application.Controls
         Public Sub Redirect(ByVal url As String)
 
             If Not String.IsNullOrEmpty(url) Then
+                ' Redirect to the specified URL.
                 Page.Response.Redirect(url, False)
             Else
-                Page.Response.Redirect(Page.Request.Url.AbsoluteUri, False)
+                ' No URL is specified, so redirect to the current URL. We will however remove the key that can
+                ' be used to force a web page lock-down from the query string if it is present before redirecting. 
+                ' Doing so will allow the end-user's request for login or changing password to be processed, or 
+                ' else the page would always remain in lock-down mode.
+                If Page.Request(WebSecurityProvider.LockModeKey) Is Nothing Then
+                    ' No "LockDown" key is present in query string.
+                    Page.Response.Redirect(Page.Request.Url.PathAndQuery, False)
+                Else
+                    ' "LockDown" key is present in the query string, so strip it out before redirect.
+                    Dim pattern As String = String.Format("[\?&]({0}=[^&=]+)", WebSecurityProvider.LockModeKey)
+                    Page.Response.Redirect(Regex.Replace(Page.Request.Url.PathAndQuery, pattern, ""), False)
+                End If
             End If
 
         End Sub
