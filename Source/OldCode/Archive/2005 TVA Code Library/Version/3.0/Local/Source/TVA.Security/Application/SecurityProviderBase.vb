@@ -26,6 +26,8 @@
 '       Implemented TVA.Configuration.IPersistSettings interface to allow for the property values to 
 '       saved and retrieved from the config file.
 '       Moved security database connection strings to the User class - better fit.
+'  05/13/2008 - Pinal C. Patel
+'       Added overload for LoginUser() that allows the user's username and password to be passed in.
 '
 '*******************************************************************************************************
 
@@ -208,6 +210,17 @@ Namespace Application
         ''' </summary>
         Public Sub LoginUser()
 
+            LoginUser(String.Empty, String.Empty)
+
+        End Sub
+
+        ''' <summary>
+        ''' Logs in the specified user.
+        ''' </summary>
+        ''' <param name="username">Username of the user to login.</param>
+        ''' <param name="password">Password of the user to login.</param>
+        Public Sub LoginUser(ByVal username As String, ByVal password As String)
+
             If Not String.IsNullOrEmpty(m_applicationName) Then
                 Dim beforeLoginEventData As New CancelEventArgs()
                 RaiseEvent BeforeLogin(Me, beforeLoginEventData)
@@ -215,8 +228,8 @@ Namespace Application
 
                 If m_user Is Nothing Then
                     ' We don't have data about the user, so we must get it.
-                    Dim username As String = GetUsername()  ' Get the username from inheriting class if it has.
-                    Dim password As String = GetPassword()  ' Get the password from inheriting class if it has.
+                    If String.IsNullOrEmpty(username) Then username = GetUsername() ' Get username from inheriting class if it has.
+                    If String.IsNullOrEmpty(password) Then password = GetPassword() ' Get password from inheriting class if it has.
 
                     Select Case m_authenticationMode
                         Case Security.Application.AuthenticationMode.AD

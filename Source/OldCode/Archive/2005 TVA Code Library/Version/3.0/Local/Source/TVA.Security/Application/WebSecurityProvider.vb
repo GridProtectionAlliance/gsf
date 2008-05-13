@@ -111,6 +111,11 @@ Namespace Application
         ''' </summary>
         ''' <value></value>
         ''' <returns>Time (in minutes) of inactivity after which a user will be automatically logged out.</returns>
+        ''' <remarks>
+        ''' When using this feature in an AJAX enabled web page, user activity is not automatically registered as
+        ''' only segments of the web page are re-rendered on post backs instead of the entire web page. However, 
+        ''' user activity can be registered manually by calling the client-side function RegisterActivity().
+        ''' </remarks>
         <Category("Configuration")> _
         Public Property InactivityTimeout() As Integer
             Get
@@ -205,32 +210,47 @@ Namespace Application
         Protected Overrides Sub HandleAccessGranted()
 
             If m_parent IsNot Nothing Then
-                If m_inactivityTimeout <= 0 Then Exit Sub
+                If m_inactivityTimeout > 0 AndAlso _
+                        Not m_parent.ClientScript.IsClientScriptBlockRegistered("ActivityMonitor") Then
+                    ' Upon successful login, we'll register client-side script that'll logout the user if no user 
+                    ' activity takes place for the specified inavtivity period.
+                    With New System.Text.StringBuilder()
+                        .Append("<script language=""javascript"">")
+                        .AppendLine()
+                        .Append("   var timeoutID;")
+                        .AppendLine()
+                        .Append("   function Logout()")
+                        .AppendLine()
+                        .Append("   {")
+                        .AppendLine()
+                        .Append("       alert('Your session has been timed out due to inactivity.');")
+                        .AppendLine()
+                        .AppendFormat("       window.location = '?{0}=Prompt';", LockModeKey)
+                        .AppendLine()
+                        .Append("   }")
+                        .AppendLine()
+                        .Append("   function RegisterActivity()")
+                        .AppendLine()
+                        .Append("   {")
+                        .AppendLine()
+                        .AppendFormat("       var timeout = {0};", m_inactivityTimeout)
+                        .AppendLine()
+                        .Append("       if (timeoutID != null) {clearTimeout(timeoutID);}")
+                        .AppendLine()
+                        .Append("       timeoutID = setTimeout('Logout()', timeout * 60 * 1000);")
+                        .AppendLine()
+                        .Append("   }")
+                        .AppendLine()
+                        .Append("</script>")
+                        .AppendLine()
 
-                ' Upon successful login, we'll register client-side script that'll logout the user if no user 
-                ' activity takes place for the specified inavtivity period.
-                With New System.Text.StringBuilder()
-                    .Append("<script language=""javascript"">")
-                    .AppendLine()
-                    .Append("   function Logout()")
-                    .AppendLine()
-                    .Append("   {")
-                    .AppendLine()
-                    .Append("       alert('Your session has been timed out due to inactivity.');")
-                    .AppendLine()
-                    .AppendFormat("       window.location = '?{0}=Prompt';", LockModeKey)
-                    .AppendLine()
-                    .Append("   }")
-                    .AppendLine()
-                    .Append("</script>")
-                    .AppendLine()
-                    m_parent.ClientScript.RegisterClientScriptBlock([GetType](), "Logout", .ToString())
-                End With
-                m_parent.ClientScript.RegisterStartupScript([GetType](), _
-                                                            "InactivityTimeout", _
-                                                            String.Format("setTimeout('Logout()', {0});", _
-                                                                          m_inactivityTimeout * 60 * 1000), _
-                                                            True)
+                        m_parent.ClientScript.RegisterClientScriptBlock([GetType](), "ActivityMonitor", .ToString())
+                    End With
+
+                    m_parent.ClientScript.RegisterStartupScript([GetType](), _
+                                                                "InitializeMonitoring", _
+                                                                "RegisterActivity();" & Environment.NewLine, True)
+                End If
             Else
                 Throw New InvalidOperationException("Parent property is not set.")
             End If
