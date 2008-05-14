@@ -112,9 +112,10 @@ Namespace Application
         ''' <value></value>
         ''' <returns>Time (in minutes) of inactivity after which a user will be automatically logged out.</returns>
         ''' <remarks>
-        ''' When using this feature in an AJAX enabled web page, user activity is not automatically registered as
-        ''' only segments of the web page are re-rendered on post backs instead of the entire web page. However, 
-        ''' user activity can be registered manually by calling the client-side function RegisterActivity().
+        ''' This feature can come in very handy for AJAX enabled web pages to shed unnecessary load off the web 
+        ''' server of AJAX requests being made from inactive user sessions. Although basic user activity like 
+        ''' user interaction with the web page is registered, other user activities can be registered manually by 
+        ''' calling the client-side function RegisterActivity().
         ''' </remarks>
         <Category("Configuration")> _
         Public Property InactivityTimeout() As Integer
@@ -219,37 +220,42 @@ Namespace Application
                         .AppendLine()
                         .Append("   var timeoutID;")
                         .AppendLine()
+                        ' This is the client-side method that will logout the user if inactive.
                         .Append("   function Logout()")
                         .AppendLine()
                         .Append("   {")
                         .AppendLine()
-                        .Append("       alert('Your session has been timed out due to inactivity.');")
+                        .Append("       window.alert('Your session has been timed out due to inactivity.');")
                         .AppendLine()
                         .AppendFormat("       window.location = '?{0}=Prompt';", LockModeKey)
                         .AppendLine()
                         .Append("   }")
                         .AppendLine()
+                        ' This is the client-side method that can be called to register user activity.
                         .Append("   function RegisterActivity()")
                         .AppendLine()
                         .Append("   {")
                         .AppendLine()
                         .AppendFormat("       var timeout = {0};", m_inactivityTimeout)
                         .AppendLine()
-                        .Append("       if (timeoutID != null) {clearTimeout(timeoutID);}")
+                        .Append("       if (timeoutID != null) {window.clearTimeout(timeoutID);}")
                         .AppendLine()
-                        .Append("       timeoutID = setTimeout('Logout()', timeout * 60 * 1000);")
+                        .Append("       timeoutID = window.setTimeout('Logout()', timeout * 60 * 1000);")
                         .AppendLine()
                         .Append("   }")
+                        .AppendLine()
+                        ' We handle basic page-level client-side events to register basic user activiry.
+                        .Append("   window.onload = RegisterActivity;")
+                        .AppendLine()
+                        .Append("   window.onblur = RegisterActivity;")
+                        .AppendLine()
+                        .Append("   window.onfocus = RegisterActivity;")
                         .AppendLine()
                         .Append("</script>")
                         .AppendLine()
 
                         m_parent.ClientScript.RegisterClientScriptBlock([GetType](), "ActivityMonitor", .ToString())
                     End With
-
-                    m_parent.ClientScript.RegisterStartupScript([GetType](), _
-                                                                "InitializeMonitoring", _
-                                                                "RegisterActivity();" & Environment.NewLine, True)
                 End If
             Else
                 Throw New InvalidOperationException("Parent property is not set.")
