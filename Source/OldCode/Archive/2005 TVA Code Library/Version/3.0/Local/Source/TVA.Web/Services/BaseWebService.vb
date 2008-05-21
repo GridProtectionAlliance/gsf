@@ -1,5 +1,7 @@
 ' 02/14/2007
 
+Option Strict Off
+
 Imports System.Xml
 Imports System.Data.SqlClient
 Imports TVA.Security.Cryptography

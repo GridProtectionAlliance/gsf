@@ -15,6 +15,8 @@
 '
 '*******************************************************************************************************
 
+Option Strict Off
+
 Imports System.Data
 Imports System.Data.SqlClient
 Imports TVA.Configuration.Common

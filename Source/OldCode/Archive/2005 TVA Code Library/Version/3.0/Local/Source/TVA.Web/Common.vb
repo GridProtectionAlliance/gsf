@@ -17,6 +17,8 @@
 '
 '*******************************************************************************************************
 
+Option Strict Off
+
 Imports System.Text
 Imports System.Environment
 
