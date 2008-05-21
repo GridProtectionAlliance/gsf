@@ -58,7 +58,7 @@ Namespace UI
         ''' <param name="securityServer">One of the TVA.Security.Application.SecurityServer values.</param>
         Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer)
 
-            MyClass.New(applicationName, securityServer, True)
+            MyClass.New(applicationName, securityServer, AuthenticationMode.AD)
 
         End Sub
 

@@ -165,6 +165,8 @@ Namespace UI
         <Obsolete("This constructor will be removed in a future build.")> _
         Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal enableCaching As Boolean)
 
+            MyClass.New(applicationName, securityServer)
+
         End Sub
 
 #End Region
