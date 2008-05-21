@@ -1,4 +1,5 @@
-' 12/14/2006
+' PCP - 12/14/2006
+' PCP - 05/21/2008: Added back a obsolte contructor to maintain backwards compatibility.
 
 Imports System.ComponentModel
 Imports TVA.Security.Application
@@ -197,6 +198,15 @@ Namespace UI
         Private Sub m_securityProvider_AccessGranted(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles m_securityProvider.AccessGranted
 
             OnLoginSuccessful(e)
+
+        End Sub
+
+#End Region
+
+#Region " Obsolete "
+
+        <Obsolete("This constructor will be removed in a future build.")> _
+        Public Sub New(ByVal applicationName As String, ByVal securityServer As SecurityServer, ByVal enableCaching As Boolean)
 
         End Sub
 
