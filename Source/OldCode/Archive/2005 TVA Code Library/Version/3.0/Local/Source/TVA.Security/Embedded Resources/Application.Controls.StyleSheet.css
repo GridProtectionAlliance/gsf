@@ -7,27 +7,32 @@
 	empty-cells: hide;
 	border-collapse: collapse;
 }
+
 .Container input
 {
 	font-family: Tahoma;
 	font-size: small;
 	width: 75px;	
 }
+
 .Container a:link 
 {
 	font-weight: bold;
 	text-decoration: underline;
 }
+
 .Container a:visited
 {
 	font-weight: bold;
 	text-decoration: underline;
 }
+
 .Container a:hover
 {
 	font-weight: bold;
 	text-decoration: none;
 }
+
 /* Style definition for the table with control links. */
 .ControlLinks
 {
@@ -35,22 +40,27 @@
 	color: #FFFFFF;
 	height: 25px;
 }
+
 .ControlLinks a:link
 {
 	color: #FFFFFF;
 }
+
 .ControlLinks a:visited
 {
 	color: #FFFFFF;
 }
+
 .ControlLinks a:hover
 {
 	color: #FFFFFF;
 }
+
 .ActiveControlLink
 {
 	background-color: #F3F3F3;	
 }
+
 .ActiveControlCaption
 {
 	padding: 5px;
@@ -58,17 +68,20 @@
 	text-transform: uppercase;
 	text-align: center;
 }
+
 .ActiveControlContent
 {
 	padding: 5px;
 	text-align: center;
 }
+
 /* Style definition for the header and footer sections. */
 .HeaderSection
 {
 	background-color: #FFFFFF;
 	text-align: left;
 }
+
 .FooterSection
 {
 	background-color: #808080;
@@ -76,24 +89,28 @@
 	font-weight: bold;
 	height: 25px;
 }
+
 /* Style definition for other text regions. */
 .HelpText
 {
 	padding: 10px;
 	text-align: justify;
 }
+
 .InformationMessage
 {
 	padding: 10px;
 	color: #0000FF;
 	text-align: justify;	
 }
+
 .WarningMessage
 {
 	padding: 10px;
 	color: #FF9933;
 	text-align: justify;
 }
+
 .ErrorMessage
 {
 	padding: 10px;
