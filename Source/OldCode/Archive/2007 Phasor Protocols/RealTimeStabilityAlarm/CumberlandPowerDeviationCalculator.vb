@@ -12,6 +12,8 @@
 '  -----------------------------------------------------------------------------------------------------
 '  11/08/2006 - J. Ritchie Carroll
 '       Initial version of source generated
+'  05/27/2008 - J. Ritchie Carroll
+'       Added Montgomery line to power calculation
 '
 '*******************************************************************************************************
 
@@ -45,6 +47,8 @@ Public Class CumberlandPowerDeviationCalculator
     Private m_johnIA As New MeasurementKey(1619, "P2")      ' TVA_CUMB-JOHN:ABBIH
     Private m_davdIM As New MeasurementKey(1620, "P2")      ' TVA_CUMB-DAVD:ABBI
     Private m_davdIA As New MeasurementKey(1623, "P2")      ' TVA_CUMB-DAVD:ABBIH
+    Private m_mntgIM As New MeasurementKey(3890, "P2")      ' TVA_CUMB-MNTG:ABBI
+    Private m_mntgIA As New MeasurementKey(3889, "P2")      ' TVA_CUMB-MNTG:ABBIH
 
     ' Define the output measurements that will be produced by this calculation
     Private m_cumbPower As New Measurement(2711, "P2")      ' TVA_CUMB-MW
@@ -98,6 +102,8 @@ Public Class CumberlandPowerDeviationCalculator
                 .Add(m_johnIA)
                 .Add(m_davdIM)
                 .Add(m_davdIA)
+                .Add(m_mntgIM)
+                .Add(m_mntgIA)
                 MyClass.InputMeasurementKeys = .ToArray()
                 MyClass.MinimumMeasurementsToUse = .Count
             End With
@@ -121,7 +127,7 @@ Public Class CumberlandPowerDeviationCalculator
     ''' </remarks>
     Protected Overrides Sub PublishFrame(ByVal frame As IFrame, ByVal index As Integer)
 
-        Dim bus1VM, bus1VA, bus2VM, bus2VA, marsIM, marsIA, johnIM, johnIA, davdIM, davdIA As IMeasurement
+        Dim bus1VM, bus1VA, bus2VM, bus2VA, marsIM, marsIA, johnIM, johnIA, davdIM, davdIA, mntgIM, mntgIA As IMeasurement
         Dim busVM, busVA, cumbMW As Double
 
         '#If DEBUG Then
@@ -142,7 +148,9 @@ Public Class CumberlandPowerDeviationCalculator
                 .TryGetValue(m_johnIM, johnIM) AndAlso _
                 .TryGetValue(m_johnIA, johnIA) AndAlso _
                 .TryGetValue(m_davdIM, davdIM) AndAlso _
-                .TryGetValue(m_davdIA, davdIA) _
+                .TryGetValue(m_davdIA, davdIA) AndAlso _
+                .TryGetValue(m_mntgIM, mntgIM) AndAlso _
+                .TryGetValue(m_mntgIA, mntgIA) _
             Then
                 ' In case bus 1 is de-energized, we fall back on bus 2
                 If bus1VM.AdjustedValue > EnergizedThreshold Then
@@ -155,14 +163,16 @@ Public Class CumberlandPowerDeviationCalculator
 
                 'MW = (MARS:ABBI*Cos((MARS:ABBIH-BUS1:ABBVH)/57.2958)
                 '     + JOHN:ABBI*Cos((JOHN:ABBIH-BUS1:ABBVH)/57.2958)
-                '     + DAVD:ABBI*Cos((DAVD:ABBIH-BUS1:ABBVH)/57.2958))
+                '     + DAVD:ABBI*Cos((DAVD:ABBIH-BUS1:ABBVH)/57.2958)
+                '     + MNTG:ABBI*Cos((MNTG:ABBIH-BUS1:ABBVH)/57.2958))
                 '     * BUS1:ABBV / 333333.3
 
                 ' Calculate cumberland power based on combined line measurements at cumberland substation
                 cumbMW = ( _
                     marsIM.AdjustedValue * Cos((marsIA.AdjustedValue - busVA) / DegreesToRadians) + _
                     johnIM.AdjustedValue * Cos((johnIA.AdjustedValue - busVA) / DegreesToRadians) + _
-                    davdIM.AdjustedValue * Cos((davdIA.AdjustedValue - busVA) / DegreesToRadians)) * _
+                    davdIM.AdjustedValue * Cos((davdIA.AdjustedValue - busVA) / DegreesToRadians) + _
+                    mntgIM.AdjustedValue * Cos((mntgIA.AdjustedValue - busVA) / DegreesToRadians)) * _
                     busVM / MegaVoltsOver3
 
                 ' Add latest calculated power to data sample
