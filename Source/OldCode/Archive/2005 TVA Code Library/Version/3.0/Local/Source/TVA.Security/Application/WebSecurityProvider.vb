@@ -216,7 +216,7 @@ Namespace Application
                     ' Upon successful login, we'll register client-side script that'll logout the user if no user 
                     ' activity takes place for the specified inavtivity period.
                     With New System.Text.StringBuilder()
-                        .Append("<script language=""javascript"">")
+                        .Append("<script type=""text/javascript"">")
                         .AppendLine()
                         .Append("   var timeoutID;")
                         .AppendLine()
