@@ -65,6 +65,8 @@ Public Class CumberlandPowerDeviationCalculator
 
     Public Sub New()
 
+        Dim _forceBuildNumInc As Integer = 2
+
         m_powerDataSample = New List(Of Double)
 
         '#If DEBUG Then
