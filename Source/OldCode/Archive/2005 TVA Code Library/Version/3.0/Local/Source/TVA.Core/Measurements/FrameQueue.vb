@@ -40,6 +40,8 @@ Namespace Measurements
         Private m_head, m_last As IFrame
         Private m_ticksPerFrame As Decimal
         Private m_createNewFrameFunction As CreateNewFrameFunctionSignature
+        Private m_missedLocks As Long
+        Private m_lockAttempts As Long
         Private m_disposed As Boolean = False
 
         Public Sub New(ByVal ticksPerFrame As Decimal, ByVal initialCapacity As Integer, ByVal createNewFrameFunction As CreateNewFrameFunctionSignature)
@@ -100,6 +102,18 @@ Namespace Measurements
 
         End Sub
 
+        Public ReadOnly Property MissedLocks() As Long
+            Get
+                Return m_missedLocks
+            End Get
+        End Property
+
+        Public ReadOnly Property LockAttempts() As Long
+            Get
+                Return m_lockAttempts
+            End Get
+        End Property
+
         Public Property TicksPerFrame() As Decimal
             Get
                 Return m_ticksPerFrame
@@ -143,15 +157,20 @@ Namespace Measurements
 
             ' Attempt a lock, if we get it handle pop - otherwise return False and
             ' process queue will retry...
+            m_lockAttempts += 1
+
             If Monitor.TryEnter(m_frameList) Then
                 Try
                     m_frameList.RemoveFirst()
 
                     If m_frameList.Count > 0 Then
-                        Me.Head = m_frameList.First.Value
+                        m_head = m_frameList.First.Value
                     Else
-                        Me.Head = Nothing
+                        m_head = Nothing
                     End If
+
+                    ' Release waiting thread...
+                    m_syncSignal.Set()
 
                     m_frameHash.Remove(publishedTicks)
                 Finally
@@ -161,6 +180,7 @@ Namespace Measurements
                 Return True
             End If
 
+            m_missedLocks += 1
             Return False
 
         End Function
@@ -171,7 +191,7 @@ Namespace Measurements
 
         End Sub
 
-        Public Property Head() As IFrame
+        Public ReadOnly Property Head() As IFrame
             Get
                 ' Wait until new head has been assigned...
                 m_syncSignal.WaitOne()
@@ -179,13 +199,6 @@ Namespace Measurements
                 ' We track the head separately to avoid sync-lock on frame list to safely access first item...
                 Return m_head
             End Get
-            Private Set(ByVal value As IFrame)
-                ' New head assigned
-                m_head = value
-
-                ' Release waiting thread...
-                m_syncSignal.Set()
-            End Set
         End Property
 
         Public ReadOnly Property Last() As IFrame
@@ -232,7 +245,8 @@ Namespace Measurements
 
                         If Not nodeAdded Then
                             m_frameList.AddFirst(frame)
-                            Me.Head = frame
+                            m_head = frame
+                            m_syncSignal.Set()
                         End If
 
                         ' Since we'll be requesting this frame over and over, we'll use
