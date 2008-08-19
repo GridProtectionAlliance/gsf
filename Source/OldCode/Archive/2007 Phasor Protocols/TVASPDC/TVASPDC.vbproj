@@ -96,6 +96,13 @@
     <Import Include="System.Data" />
     <Import Include="System.Diagnostics" />
     <Import Include="System.Linq" />
+    <Import Include="TVA" />
+    <Import Include="TVA.Assembly" />
+    <Import Include="TVA.Collections" />
+    <Import Include="TVA.Common" />
+    <Import Include="TVA.Interop.Bit" />
+    <Import Include="TVA.Math.Common" />
+    <Import Include="TVA.Measurements" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugUI.Designer.vb">

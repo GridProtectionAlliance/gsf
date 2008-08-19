@@ -105,6 +105,9 @@ Public MustInherit Class HistorianAdapterBase
 
             m_dataProcessingThread.Start()
 
+            ' Start data monitor...
+            m_monitorTimer.Start()
+
             UpdateStatus(String.Format("Connection to {0} established.", Name))
         Catch ex As Exception
             UpdateStatus(String.Format("WARNING: Connection to {0} failed: {1}", Name, ex.Message))
@@ -125,6 +128,9 @@ Public MustInherit Class HistorianAdapterBase
             End If
 
             m_dataProcessingThread = Nothing
+
+            ' Stop data monitor...
+            m_monitorTimer.Stop()
 
             ' Attempt disconnection from historian (consumer to call historian API disconnect function)
             AttemptDisconnection()

@@ -205,14 +205,14 @@ Friend Class ChannelValueMeasurement(Of T As IChannelDefinition)
     End Function
 
     ''' <summary>This implementation of a basic measurement compares itself by value</summary>
-    Public Overridable Function CompareTo(ByVal other As Measurements.IMeasurement) As Integer Implements System.IComparable(Of Measurements.IMeasurement).CompareTo
+    Public Overridable Function CompareTo(ByVal other As IMeasurement) As Integer Implements System.IComparable(Of IMeasurement).CompareTo
 
         Return Value.CompareTo(other.Value)
 
     End Function
 
     ''' <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
-    Public Overridable Overloads Function Equals(ByVal other As Measurements.IMeasurement) As Boolean Implements System.IEquatable(Of Measurements.IMeasurement).Equals
+    Public Overridable Overloads Function Equals(ByVal other As IMeasurement) As Boolean Implements System.IEquatable(Of IMeasurement).Equals
 
         Return (CompareTo(other) = 0)
 

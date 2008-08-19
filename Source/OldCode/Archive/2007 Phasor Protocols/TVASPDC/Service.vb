@@ -62,7 +62,7 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
-        Dim _forceBuildNumInc As Integer = 4
+        Dim _forceBuildNumInc As Integer = 6
 
         ' Make sure default service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
@@ -88,9 +88,11 @@ Public Class Service
         ' Create health and status exporters
         m_healthExporter = New MultipleDestinationExporter("HealthExporter", Timeout.Infinite, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Health.txt", True, "TVA", "esocss", "pwd4ctrl")})
         ServiceHelper.ServiceComponents.Add(m_healthExporter)
+        AddHandler m_healthExporter.StatusMessage, AddressOf DisplayStatusMessage
 
         m_statusExporter = New MultipleDestinationExporter("StatusExporter", Timeout.Infinite, New ExportDestination() {New ExportDestination("\\pmuweb\NASPI\Status.txt", True, "TVA", "esocss", "pwd4ctrl")})
         ServiceHelper.ServiceComponents.Add(m_statusExporter)
+        AddHandler m_statusExporter.StatusMessage, AddressOf DisplayStatusMessage
 
         ' Determine if local system is configured with a real-time clock
         m_useLocalClockAsRealTime = BooleanSetting("UseLocalClockAsRealTime")
@@ -119,17 +121,22 @@ Public Class Service
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("SysInit", "Performs a system initialization", AddressOf SystemInitialization))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("GC", "Forces a .NET garbage collection", AddressOf ForceGarbageCollection, False))
 
-        DisplayStatusMessage(String.Format("*** System Initializing - [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
-
     End Sub
 
     Private Sub ServiceHelper_ServiceStarted(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStarted
 
         Try
+            DisplayStatusMessage(String.Format("*** System Initializing - [UTC: {0}] ***", Date.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")))
+            DisplayStatusMessage(String.Format("Current system file path: {0}", GetApplicationPath()))
+
 #If Not Debug Then
             ' Start system initialization on an independent thread so that service responds in a timely fashion...
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf InitializeSystem, Nothing)
 #End If
+
+            '' In order to log connectivity status of exporters, we reauthenticate
+            'm_healthExporter.Reauthenticate()
+            'm_statusExporter.Reauthenticate()
 
             ' We add a scheduled process to automatically request health status every minute - user can change schedule in config file
             ServiceHelper.AddScheduledProcess(AddressOf HealthMonitorProcess, "HealthMonitor", "* * * * *")
@@ -140,6 +147,13 @@ Public Class Service
             ServiceHelper.GlobalExceptionLogger.Log(ex)
             ServiceHelper.Service.Stop()
         End Try
+
+    End Sub
+
+    Private Sub ServiceHelper_ServiceStopping(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStopping
+
+        If m_healthExporter IsNot Nothing Then RemoveHandler m_healthExporter.StatusMessage, AddressOf DisplayStatusMessage
+        If m_statusExporter IsNot Nothing Then RemoveHandler m_statusExporter.StatusMessage, AddressOf DisplayStatusMessage
 
     End Sub
 
@@ -1052,7 +1066,7 @@ Public Class Service
 #Region " Broadcast Message Handling "
 
     ' Display status messages bubbled up from phasor measurement receiver and its internal components
-    Public Sub DisplayStatusMessage(ByVal status As String) Handles m_healthExporter.StatusMessage, m_statusExporter.StatusMessage
+    Public Sub DisplayStatusMessage(ByVal status As String)
 
         ' We queue up status messages for display on a separate thread so we don't slow any important activity
         m_statusMessageQueue.Add(status)

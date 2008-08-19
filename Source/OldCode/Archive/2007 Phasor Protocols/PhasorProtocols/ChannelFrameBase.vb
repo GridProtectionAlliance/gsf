@@ -20,8 +20,8 @@ Imports System.Buffer
 Imports TVA.DateTime
 Imports TVA.DateTime.Common
 Imports TVA.IO.Compression.Common
-Imports PhasorProtocols.Common
 Imports TVA.Measurements
+Imports PhasorProtocols.Common
 
 ''' <summary>This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.</summary>
 <CLSCompliant(False), Serializable()> _
@@ -161,11 +161,11 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
         End Set
     End Property
 
-    Public Property LastSortedMeasurement() As TVA.Measurements.IMeasurement Implements TVA.Measurements.IFrame.LastSortedMeasurement
+    Public Property LastSortedMeasurement() As IMeasurement Implements IFrame.LastSortedMeasurement
         Get
             Return m_lastSortedMeasurement
         End Get
-        Set(ByVal value As TVA.Measurements.IMeasurement)
+        Set(ByVal value As IMeasurement)
             m_lastSortedMeasurement = value
         End Set
     End Property
@@ -297,7 +297,7 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
     End Function
 
     ' We sort frames by timestamp
-    Public Function CompareTo(ByVal other As Measurements.IFrame) As Integer Implements System.IComparable(Of Measurements.IFrame).CompareTo
+    Public Function CompareTo(ByVal other As IFrame) As Integer Implements System.IComparable(Of IFrame).CompareTo
 
         Return m_ticks.CompareTo(other.Ticks)
 
@@ -305,13 +305,13 @@ Public MustInherit Class ChannelFrameBase(Of T As IChannelCell)
 
     Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo
 
-        Dim other As Measurements.IFrame = TryCast(obj, Measurements.IFrame)
+        Dim other As IFrame = TryCast(obj, IFrame)
         If other IsNot Nothing Then Return CompareTo(other)
         Throw New ArgumentException("Frame can only be compared with other IFrames...")
 
     End Function
 
-    Public Overloads Function Equals(ByVal other As Measurements.IFrame) As Boolean Implements System.IEquatable(Of Measurements.IFrame).Equals
+    Public Overloads Function Equals(ByVal other As IFrame) As Boolean Implements System.IEquatable(Of IFrame).Equals
 
         Return (CompareTo(other) = 0)
 
