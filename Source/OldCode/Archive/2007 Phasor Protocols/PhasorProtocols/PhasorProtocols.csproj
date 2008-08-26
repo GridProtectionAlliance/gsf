@@ -1,0 +1,283 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>PhasorProtocols</RootNamespace>
+    <AssemblyName>PhasorProtocols</AssemblyName>
+    <MyType>Windows</MyType>
+    <OptionStrict>Off</OptionStrict>
+    <SignAssembly>false</SignAssembly>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>PhasorProtocols.xml</DocumentationFile>
+    <NOWARN>1591</NOWARN>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1011;-Microsoft.Design#CA1009;-Microsoft.Design#CA1031;-Microsoft.Design#CA1002;-Microsoft.Design#CA1045;-Microsoft.Design#CA1065;-Microsoft.Design#CA1008;-Microsoft.Design#CA1028;-Microsoft.Design#CA1033;-Microsoft.Design#CA1027;-Microsoft.Design#CA1034;-Microsoft.Design#CA1036;-Microsoft.Design#CA1044;-Microsoft.Design#CA1030;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Naming#CA1702;-Microsoft.Naming#CA1700;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1710;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1707;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1721;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1811;-Microsoft.Performance#CA1822;-Microsoft.Performance#CA1819;-Microsoft.Security#CA2122;-Microsoft.Security#CA2123;-Microsoft.Usage#CA2214;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2211;-Microsoft.Usage#CA2233;-Microsoft.Usage#CA1801</CodeAnalysisRules>
+    <DefineConstants>CODE_ANALYSIS;</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>PhasorProtocols.xml</DocumentationFile>
+    <NOWARN>1591</NOWARN>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <DefineConstants>
+    </DefineConstants>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1011;-Microsoft.Design#CA1009;-Microsoft.Design#CA1031;-Microsoft.Design#CA1002;-Microsoft.Design#CA1045;-Microsoft.Design#CA1065;-Microsoft.Design#CA1008;-Microsoft.Design#CA1028;-Microsoft.Design#CA1033;-Microsoft.Design#CA1027;-Microsoft.Design#CA1034;-Microsoft.Design#CA1036;-Microsoft.Design#CA1044;-Microsoft.Design#CA1030;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Naming#CA1702;-Microsoft.Naming#CA1700;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1710;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1707;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1721;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1811;-Microsoft.Performance#CA1822;-Microsoft.Performance#CA1819;-Microsoft.Security#CA2122;-Microsoft.Security#CA2123;-Microsoft.Usage#CA2214;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2211;-Microsoft.Usage#CA2233;-Microsoft.Usage#CA1801</CodeAnalysisRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="TVA.Communication, Version=3.0.88.187, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\TVA Code Library\Build\Output\Debug\TVA.Communication.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Core, Version=3.0.88.187, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\TVA Code Library\Build\Output\Debug\TVA.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="TVA.IO.Compression, Version=3.0.88.187, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\TVA Code Library\Build\Output\Debug\TVA.IO.Compression.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnalogDefinitionBase.cs" />
+    <Compile Include="AnalogDefinitionCollection.cs" />
+    <Compile Include="AnalogValueBase.cs" />
+    <Compile Include="AnalogValueCollection.cs" />
+    <Compile Include="BpaPdcStream\AnalogDefinition.cs" />
+    <Compile Include="BpaPdcStream\AnalogValue.cs" />
+    <Compile Include="BpaPdcStream\Common.cs" />
+    <Compile Include="BpaPdcStream\CommonFrameHeader.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationCell.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationCellCollection.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationFrame.cs" />
+    <Compile Include="BpaPdcStream\ConnectionParameters.cs" />
+    <Compile Include="BpaPdcStream\DataCell.cs" />
+    <Compile Include="BpaPdcStream\DataCellCollection.cs" />
+    <Compile Include="BpaPdcStream\DataCellParsingState.cs" />
+    <Compile Include="BpaPdcStream\DataFrame.cs" />
+    <Compile Include="BpaPdcStream\DigitalDefinition.cs" />
+    <Compile Include="BpaPdcStream\DigitalValue.cs" />
+    <Compile Include="BpaPdcStream\Enumerations.cs" />
+    <Compile Include="BpaPdcStream\FrameParser.cs" />
+    <Compile Include="BpaPdcStream\FrequencyDefinition.cs" />
+    <Compile Include="BpaPdcStream\FrequencyValue.cs" />
+    <Compile Include="BpaPdcStream\ICommonFrameHeader.cs" />
+    <Compile Include="BpaPdcStream\PhasorDefinition.cs" />
+    <Compile Include="BpaPdcStream\PhasorValue.cs" />
+    <Compile Include="ChannelBase.cs" />
+    <Compile Include="ChannelCellBase.cs" />
+    <Compile Include="ChannelCellCollectionBase.cs" />
+    <Compile Include="ChannelCellParsingStateBase.cs" />
+    <Compile Include="ChannelCollectionBase.cs" />
+    <Compile Include="ChannelDefinitionBase.cs" />
+    <Compile Include="ChannelDefinitionCollectionBase.cs" />
+    <Compile Include="ChannelFrameBase.cs" />
+    <Compile Include="ChannelFrameCollectionBase.cs" />
+    <Compile Include="ChannelFrameParsingStateBase.cs" />
+    <Compile Include="ChannelParsingStateBase.cs" />
+    <Compile Include="ChannelValueBase.cs" />
+    <Compile Include="ChannelValueCollectionBase.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="ConfigurationCellBase.cs" />
+    <Compile Include="ConfigurationCellCollection.cs" />
+    <Compile Include="ConfigurationCellParsingState.cs" />
+    <Compile Include="ConfigurationFrameBase.cs" />
+    <Compile Include="ConfigurationFrameCollection.cs" />
+    <Compile Include="ConfigurationFrameParsingState.cs" />
+    <Compile Include="CommandCellCollection.cs" />
+    <Compile Include="CommandFrameParsingState.cs" />
+    <Compile Include="CommandCell.cs" />
+    <Compile Include="CommandFrameBase.cs" />
+    <Compile Include="ChannelValueMeasurement.cs" />
+    <Compile Include="ConnectionParametersBase.cs" />
+    <Compile Include="FNet\Common.cs" />
+    <Compile Include="FNet\ConfigurationCell.cs" />
+    <Compile Include="FNet\ConfigurationCellCollection.cs" />
+    <Compile Include="FNet\ConfigurationFrame.cs" />
+    <Compile Include="FNet\ConnectionParameters.cs" />
+    <Compile Include="FNet\DataCell.cs" />
+    <Compile Include="FNet\DataCellCollection.cs" />
+    <Compile Include="FNet\DataFrame.cs" />
+    <Compile Include="FNet\Enumerations.cs" />
+    <Compile Include="FNet\FrameParser.cs" />
+    <Compile Include="FNet\FrequencyDefinition.cs" />
+    <Compile Include="FNet\FrequencyValue.cs" />
+    <Compile Include="FNet\PhasorDefinition.cs" />
+    <Compile Include="FNet\PhasorValue.cs" />
+    <Compile Include="FrameParserBase.cs" />
+    <Compile Include="IConnectionParameters.cs" />
+    <Compile Include="IFrameParser.cs" />
+    <Compile Include="Enumerations.cs" />
+    <Compile Include="MultiProtocolFrameParser.cs" />
+    <Compile Include="ICommandFrameParsingState.cs" />
+    <Compile Include="ICommandFrame.cs" />
+    <Compile Include="HeaderFrameParsingState.cs" />
+    <Compile Include="Ieee1344\CommonFrameHeader.cs" />
+    <Compile Include="Ieee1344\ConfigurationCell.cs" />
+    <Compile Include="Ieee1344\ConfigurationCellCollection.cs" />
+    <Compile Include="Ieee1344\DataCell.cs" />
+    <Compile Include="Ieee1344\DataCellCollection.cs" />
+    <Compile Include="Ieee1344\DigitalValue.cs" />
+    <Compile Include="Ieee1344\Enumerations.cs" />
+    <Compile Include="Ieee1344\FrequencyDefinition.cs" />
+    <Compile Include="Ieee1344\FrequencyValue.cs" />
+    <Compile Include="Ieee1344\ICommonFrameHeader.cs" />
+    <Compile Include="IeeeC37_118\ConfigurationFrameDraft6.cs" />
+    <Compile Include="IeeeC37_118\Enumerations.cs" />
+    <Compile Include="IeeeC37_118\HeaderFrame.cs" />
+    <Compile Include="IHeaderFrameParsingState.cs" />
+    <Compile Include="HeaderFrameBase.cs" />
+    <Compile Include="HeaderCell.cs" />
+    <Compile Include="HeaderCellCollection.cs" />
+    <Compile Include="IHeaderFrame.cs" />
+    <Compile Include="ICommandCell.cs" />
+    <Compile Include="IHeaderCell.cs" />
+    <Compile Include="DataCellBase.cs" />
+    <Compile Include="DataCellCollection.cs" />
+    <Compile Include="DataCellParsingState.cs" />
+    <Compile Include="DataFrameBase.cs" />
+    <Compile Include="DataFrameCollection.cs" />
+    <Compile Include="DataFrameParsingState.cs" />
+    <Compile Include="DigitalDefinitionBase.cs" />
+    <Compile Include="DigitalDefinitionCollection.cs" />
+    <Compile Include="DigitalValueBase.cs" />
+    <Compile Include="DigitalValueCollection.cs" />
+    <Compile Include="FrequencyDefinitionBase.cs" />
+    <Compile Include="FrequencyDefinitionCollection.cs" />
+    <Compile Include="FrequencyValueBase.cs" />
+    <Compile Include="FrequencyValueCollection.cs" />
+    <Compile Include="IAnalogDefintion.cs" />
+    <Compile Include="IAnalogValue.cs" />
+    <Compile Include="IChannel.cs" />
+    <Compile Include="IChannelCell.cs" />
+    <Compile Include="IChannelCellCollection.cs" />
+    <Compile Include="IChannelCellParsingState.cs" />
+    <Compile Include="IChannelCollection.cs" />
+    <Compile Include="IChannelDefinition.cs" />
+    <Compile Include="IChannelFrame.cs" />
+    <Compile Include="IChannelFrameParsingState.cs" />
+    <Compile Include="IChannelParsingState.cs" />
+    <Compile Include="IChannelValue.cs" />
+    <Compile Include="IConfigurationCell.cs" />
+    <Compile Include="IConfigurationCellParsingState.cs" />
+    <Compile Include="IConfigurationFrame.cs" />
+    <Compile Include="IConfigurationFrameParsingState.cs" />
+    <Compile Include="IDataCell.cs" />
+    <Compile Include="IDataCellParsingState.cs" />
+    <Compile Include="IDataFrame.cs" />
+    <Compile Include="IDataFrameParsingState.cs" />
+    <Compile Include="IDigitalDefinition.cs" />
+    <Compile Include="IDigitalValue.cs" />
+    <Compile Include="Ieee1344\CommandFrame.cs" />
+    <Compile Include="Ieee1344\Common.cs" />
+    <Compile Include="Ieee1344\ConfigurationFrame.cs" />
+    <Compile Include="Ieee1344\DataFrame.cs" />
+    <Compile Include="Ieee1344\DigitalDefinition.cs" />
+    <Compile Include="Ieee1344\FrameParser.cs" />
+    <Compile Include="Ieee1344\HeaderFrame.cs" />
+    <Compile Include="Ieee1344\PhasorDefinition.cs" />
+    <Compile Include="Ieee1344\PhasorValue.cs" />
+    <Compile Include="IeeeC37_118\AnalogDefinition.cs" />
+    <Compile Include="IeeeC37_118\AnalogValue.cs" />
+    <Compile Include="IeeeC37_118\CommandFrame.cs" />
+    <Compile Include="IeeeC37_118\Common.cs" />
+    <Compile Include="IeeeC37_118\ConfigurationCell.cs" />
+    <Compile Include="IeeeC37_118\ConfigurationCellCollection.cs" />
+    <Compile Include="IeeeC37_118\ConfigurationFrame.cs" />
+    <Compile Include="IeeeC37_118\DataCell.cs" />
+    <Compile Include="IeeeC37_118\DataCellCollection.cs" />
+    <Compile Include="IeeeC37_118\DataFrame.cs" />
+    <Compile Include="IeeeC37_118\DigitalDefinition.cs" />
+    <Compile Include="IeeeC37_118\DigitalValue.cs" />
+    <Compile Include="IeeeC37_118\CommonFrameHeader.cs" />
+    <Compile Include="IeeeC37_118\FrameParser.cs" />
+    <Compile Include="IeeeC37_118\FrequencyDefinition.cs" />
+    <Compile Include="IeeeC37_118\FrequencyValue.cs" />
+    <Compile Include="IeeeC37_118\ICommonFrameHeader.cs" />
+    <Compile Include="IeeeC37_118\PhasorDefinition.cs" />
+    <Compile Include="IeeeC37_118\PhasorValue.cs" />
+    <Compile Include="IFrequencyDefinition.cs" />
+    <Compile Include="IFrequencyValue.cs" />
+    <Compile Include="IPhasorDefinition.cs" />
+    <Compile Include="IPhasorValue.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PhasorDefinitionBase.cs" />
+    <Compile Include="PhasorDefinitionCollection.cs" />
+    <Compile Include="PhasorValueBase.cs" />
+    <Compile Include="PhasorValueCollection.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Relationship Diagrams\Analog Definition Relationships.cd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Relationship Diagrams\Analog Value Relationships.cd" />
+    <None Include="Relationship Diagrams\CommandCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\CommandCell Relationships.cd" />
+    <None Include="Relationship Diagrams\CommandFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\ConfigurationCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\ConfigurationCell Relationships.cd" />
+    <None Include="Relationship Diagrams\ConfigurationFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\DataCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\DataCell Relationships.cd" />
+    <None Include="Relationship Diagrams\DataFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\Digital Definition Relationships.cd" />
+    <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
+    <None Include="Relationship Diagrams\FrameParser Relationships.cd" />
+    <None Include="Relationship Diagrams\Frequency Definition Relationships.cd" />
+    <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
+    <None Include="Relationship Diagrams\HeaderCell Collection Relationships.cd" />
+    <None Include="Relationship Diagrams\HeaderCell Relationships.cd" />
+    <None Include="Relationship Diagrams\HeaderFrame Relationships.cd" />
+    <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
+    <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
+  </ItemGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)/Microsoft.CSharp.targets" />
+</Project>

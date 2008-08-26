@@ -58,7 +58,7 @@ Public Class Main
 
         ' Initiate connection with the service and wait util the connection is made.
         ClientHelper.Connect()
-        ClientHelper.CommunicationClient.WaitForConnection(-1)
+        ClientHelper.RemotingClient.WaitForConnection(-1)
 
         Do While True
             userInput = Console.ReadLine()  ' Wait for a command from the user.

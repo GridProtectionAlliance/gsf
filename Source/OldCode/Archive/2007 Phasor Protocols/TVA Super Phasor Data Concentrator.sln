@@ -24,8 +24,6 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TVASPDCMonitor", "TVASPDCMo
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "InterfaceAdapters", "InterfaceAdapters\InterfaceAdapters.vbproj", "{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PhasorProtocols", "PhasorProtocols\PhasorProtocols.vbproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
-EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWareHistorianAdapter", "DatAWareAdapter\DatAWareHistorianAdapter.vbproj", "{F452CF72-30CA-4245-B054-F9E73783FD78}"
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ICCPDataExport", "ICCPDataExport\ICCPDataExport.vbproj", "{BF6572C0-A38E-4555-8BD8-704BB65DE061}"
@@ -44,6 +42,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OscillationMonitoringSystem
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "VirtualHistorianAdapter", "VirtualHistorianAdapter\VirtualHistorianAdapter.vbproj", "{A139B16F-A59E-4E4F-A464-8EF4C45F0F3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhasorProtocols", "PhasorProtocols\PhasorProtocols.csproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 13
@@ -60,41 +60,41 @@ Global
 		SccProjectTopLevelParentUniqueName3 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath3 = .
 		SccProjectFilePathRelativizedFromConnection3 = InterfaceAdapters\\
-		SccProjectUniqueName4 = PhasorProtocols\\PhasorProtocols.vbproj
+		SccProjectUniqueName4 = RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
+		SccProjectTopLevelParentUniqueName4 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath4 = .
-		SccProjectFilePathRelativizedFromConnection4 = PhasorProtocols\\
-		SccProjectUniqueName5 = RealTimeCalculatedMeasurements\\RealTimeCalculatedMeasurements.vbproj
+		SccProjectFilePathRelativizedFromConnection4 = RealTimeCalculatedMeasurements\\
+		SccProjectUniqueName5 = RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
 		SccProjectTopLevelParentUniqueName5 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath5 = .
-		SccProjectFilePathRelativizedFromConnection5 = RealTimeCalculatedMeasurements\\
-		SccProjectUniqueName6 = RealTimeStabilityAlarm\\RealTimeStabilityAlarm.vbproj
+		SccProjectFilePathRelativizedFromConnection5 = RealTimeStabilityAlarm\\
+		SccProjectUniqueName6 = Setup\\Setup.vdproj
 		SccProjectTopLevelParentUniqueName6 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath6 = .
-		SccProjectFilePathRelativizedFromConnection6 = RealTimeStabilityAlarm\\
-		SccProjectUniqueName7 = Setup\\Setup.vdproj
+		SccProjectFilePathRelativizedFromConnection6 = Setup\\
+		SccProjectUniqueName7 = TVASPDC\\TVASPDC.vbproj
 		SccProjectTopLevelParentUniqueName7 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath7 = .
-		SccProjectFilePathRelativizedFromConnection7 = Setup\\
-		SccProjectUniqueName8 = TVASPDC\\TVASPDC.vbproj
+		SccProjectFilePathRelativizedFromConnection7 = TVASPDC\\
+		SccProjectUniqueName8 = TVASPDCMonitor\\TVASPDCMonitor.vbproj
 		SccProjectTopLevelParentUniqueName8 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath8 = .
-		SccProjectFilePathRelativizedFromConnection8 = TVASPDC\\
-		SccProjectUniqueName9 = TVASPDCMonitor\\TVASPDCMonitor.vbproj
+		SccProjectFilePathRelativizedFromConnection8 = TVASPDCMonitor\\
+		SccProjectUniqueName9 = CalculatedMeasurementSimulator\\CalculatedMeasurementSimulator.vbproj
 		SccProjectTopLevelParentUniqueName9 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath9 = .
-		SccProjectFilePathRelativizedFromConnection9 = TVASPDCMonitor\\
-		SccProjectUniqueName10 = CalculatedMeasurementSimulator\\CalculatedMeasurementSimulator.vbproj
+		SccProjectFilePathRelativizedFromConnection9 = CalculatedMeasurementSimulator\\
+		SccProjectUniqueName10 = OscillationMonitoringSystem\\OscillationMonitoringSystem.vcproj
 		SccProjectTopLevelParentUniqueName10 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath10 = .
-		SccProjectFilePathRelativizedFromConnection10 = CalculatedMeasurementSimulator\\
-		SccProjectUniqueName11 = OscillationMonitoringSystem\\OscillationMonitoringSystem.vcproj
+		SccProjectFilePathRelativizedFromConnection10 = OscillationMonitoringSystem\\
+		SccProjectUniqueName11 = VirtualHistorianAdapter\\VirtualHistorianAdapter.vbproj
 		SccProjectTopLevelParentUniqueName11 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
 		SccLocalPath11 = .
-		SccProjectFilePathRelativizedFromConnection11 = OscillationMonitoringSystem\\
-		SccProjectUniqueName12 = VirtualHistorianAdapter\\VirtualHistorianAdapter.vbproj
-		SccProjectTopLevelParentUniqueName12 = TVA\u0020Super\u0020Phasor\u0020Data\u0020Concentrator.sln
+		SccProjectFilePathRelativizedFromConnection11 = VirtualHistorianAdapter\\
+		SccProjectUniqueName12 = PhasorProtocols\\PhasorProtocols.csproj
 		SccLocalPath12 = .
-		SccProjectFilePathRelativizedFromConnection12 = VirtualHistorianAdapter\\
+		SccProjectFilePathRelativizedFromConnection12 = PhasorProtocols\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,16 +135,6 @@ Global
 		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}.Release|Win32.ActiveCfg = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.Build.0 = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Win32.ActiveCfg = Release|Any CPU
 		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F452CF72-30CA-4245-B054-F9E73783FD78}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -221,6 +211,16 @@ Global
 		{A139B16F-A59E-4E4F-A464-8EF4C45F0F3E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A139B16F-A59E-4E4F-A464-8EF4C45F0F3E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A139B16F-A59E-4E4F-A464-8EF4C45F0F3E}.Release|Win32.ActiveCfg = Release|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

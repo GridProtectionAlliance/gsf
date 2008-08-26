@@ -79,10 +79,10 @@ Partial Class Service
         '
         'ServiceHelper
         '
-        Me.ServiceHelper.CommunicationServer = Me.TcpServer
+        Me.ServiceHelper.RemotingServer = Me.TcpServer
         Me.ServiceHelper.MonitorServiceHealth = True
         Me.ServiceHelper.PersistSettings = True
-        Me.ServiceHelper.QueryableSettingsCategories = "ServiceSettings, SH.LogFile, SH.GlobalExceptionLogger,ScheduleManager,RemoteMonit" & _
+        Me.ServiceHelper.QueryableSettingsCategories = "ServiceSettings, SH.LogFile, SH.ExceptionLogger,ScheduleManager,RemoteMonit" & _
             "orSocket"
         Me.ServiceHelper.Service = Me
         Me.ServiceHelper.SettingsCategoryName = "ServiceSettings"

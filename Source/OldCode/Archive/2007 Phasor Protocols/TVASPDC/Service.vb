@@ -62,7 +62,7 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
-        Dim _forceBuildNumInc As Integer = 6
+        Dim _forceBuildNumInc As Integer = 8
 
         ' Make sure default service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
@@ -102,7 +102,7 @@ Public Class Service
 
         ServiceHelper.LogStatusUpdates = BooleanSetting("EnableLogFile")
 
-        With ServiceHelper.GlobalExceptionLogger
+        With ServiceHelper.ExceptionLogger
             .LogToEventLog = False
             .LogToFile = True
             .PersistSettings = True
@@ -133,7 +133,6 @@ Public Class Service
             ' Start system initialization on an independent thread so that service responds in a timely fashion...
             ThreadPool.UnsafeQueueUserWorkItem(AddressOf InitializeSystem, Nothing)
 #End If
-
             '' In order to log connectivity status of exporters, we reauthenticate
             'm_healthExporter.Reauthenticate()
             'm_statusExporter.Reauthenticate()
@@ -144,7 +143,7 @@ Public Class Service
             ' We add a scheduled process to automatically export status information every 30 minutes - user can change schedule in config file
             ServiceHelper.AddScheduledProcess(AddressOf StatusExportProcess, "StatusExport", "*/30 * * * *")
         Catch ex As Exception
-            ServiceHelper.GlobalExceptionLogger.Log(ex)
+            ServiceHelper.ExceptionLogger.Log(ex)
             ServiceHelper.Service.Stop()
         End Try
 
@@ -152,8 +151,37 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStopping(ByVal sender As Object, ByVal e As System.EventArgs) Handles ServiceHelper.ServiceStopping
 
+        Dim x As Integer
+
         If m_healthExporter IsNot Nothing Then RemoveHandler m_healthExporter.StatusMessage, AddressOf DisplayStatusMessage
         If m_statusExporter IsNot Nothing Then RemoveHandler m_statusExporter.StatusMessage, AddressOf DisplayStatusMessage
+
+        If m_calculatedMeasurements IsNot Nothing Then
+            For x = 0 To m_calculatedMeasurements.Length - 1
+                ServiceHelper.ServiceComponents.Remove(m_calculatedMeasurements(x))
+                m_calculatedMeasurements(x).Dispose()
+            Next
+        End If
+
+        m_calculatedMeasurements = Nothing
+
+        If m_measurementReceivers IsNot Nothing Then
+            For Each receiver As PhasorMeasurementReceiver In m_measurementReceivers.Values
+                ServiceHelper.ServiceComponents.Remove(receiver)
+                receiver.Dispose()
+            Next
+        End If
+
+        m_measurementReceivers = Nothing
+
+        If m_measurementConcentrators IsNot Nothing Then
+            For Each concentrator As PhasorDataConcentratorBase In m_measurementConcentrators
+                ServiceHelper.ServiceComponents.Remove(concentrator)
+                concentrator.Dispose()
+            Next
+        End If
+
+        m_measurementConcentrators = Nothing
 
     End Sub
 
@@ -233,7 +261,7 @@ Public Class Service
             m_displayedMessageCount = 0
         Catch ex As Exception
             DisplayStatusMessage(String.Format("Failure during initialization: {0}", ex.Message))
-            ServiceHelper.GlobalExceptionLogger.Log(ex)
+            ServiceHelper.ExceptionLogger.Log(ex)
         Finally
             If connection IsNot Nothing AndAlso connection.State = ConnectionState.Open Then connection.Close()
             OleDbConnection.ReleaseObjectPool()
@@ -277,7 +305,7 @@ Public Class Service
                             dataLossInterval, _
                             warningThreshold, _
                             dumpingThreshold, _
-                            ServiceHelper.GlobalExceptionLogger)
+                            ServiceHelper.ExceptionLogger)
 
                         AddHandler measurementReceiver.StatusMessage, AddressOf DisplayStatusMessage
                         AddHandler measurementReceiver.NewMeasurements, AddressOf NewParsedMeasurements
@@ -292,7 +320,7 @@ Public Class Service
                     End With
                 Catch ex As Exception
                     DisplayStatusMessage(String.Format("Failed to load measurement receiver for archive ""{0}"" from assembly ""{1}"" due to exception: {2}", archiveSource, externalAssemblyName, ex.Message))
-                    ServiceHelper.GlobalExceptionLogger.Log(ex)
+                    ServiceHelper.ExceptionLogger.Log(ex)
                 End Try
             Next
         End With
@@ -340,7 +368,7 @@ Public Class Service
                                         Convert.ToDouble(.Item("LeadTime")), _
                                         timeBase, _
                                         version, _
-                                        ServiceHelper.GlobalExceptionLogger)
+                                        ServiceHelper.ExceptionLogger)
                             Case "BPAPDCSTREAM"
                                 Dim iniFileName As String
 
@@ -357,7 +385,7 @@ Public Class Service
                                     Convert.ToDouble(.Item("LagTime")), _
                                     Convert.ToDouble(.Item("LeadTime")), _
                                     iniFileName, _
-                                    ServiceHelper.GlobalExceptionLogger)
+                                    ServiceHelper.ExceptionLogger)
                         End Select
 
                         If measurementConcentrator IsNot Nothing Then
@@ -384,7 +412,7 @@ Public Class Service
                         End If
                     Catch ex As Exception
                         DisplayStatusMessage(String.Format("Failed to load measurement concentrator ""{0}"" due to exception: {1}", .Item("Name").ToString(), ex.Message))
-                        ServiceHelper.GlobalExceptionLogger.Log(ex)
+                        ServiceHelper.ExceptionLogger.Log(ex)
                     End Try
                 End With
             Next
@@ -451,7 +479,7 @@ Public Class Service
                                 End With
                             Catch ex As Exception
                                 DisplayStatusMessage(String.Format("Failed to load output measurement for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
-                                ServiceHelper.GlobalExceptionLogger.Log(ex)
+                                ServiceHelper.ExceptionLogger.Log(ex)
                             End Try
                         End If
 
@@ -474,7 +502,7 @@ Public Class Service
                                 End With
                             Catch ex As Exception
                                 DisplayStatusMessage(String.Format("Failed to load input measurements for ""{0}"": {1}", calculatedMeasurementName, ex.Message))
-                                ServiceHelper.GlobalExceptionLogger.Log(ex)
+                                ServiceHelper.ExceptionLogger.Log(ex)
                             End Try
                         End If
 
@@ -486,7 +514,7 @@ Public Class Service
                             calculatedMeasurementAdapter = DirectCast(Activator.CreateInstance(externalAssembly.GetType(.Item("TypeName").ToString())), ICalculatedMeasurementAdapter)
                         Catch ex As Exception
                             DisplayStatusMessage(String.Format("Failed to load type ""{0}"" from assembly ""{1}"" for ""{2}"" due to exception: {3}", .Item("TypeName").ToString(), externalAssemblyName, calculatedMeasurementName, ex.Message))
-                            ServiceHelper.GlobalExceptionLogger.Log(ex)
+                            ServiceHelper.ExceptionLogger.Log(ex)
                         End Try
 
                         If calculatedMeasurementAdapter IsNot Nothing Then
@@ -527,7 +555,7 @@ Public Class Service
                     End With
                 Catch ex As Exception
                     DisplayStatusMessage(String.Format("Failed to load calculated measurement ""{0}"" from assembly ""{1}"" due to exception: {2}", calculatedMeasurementName, externalAssemblyName, ex.Message))
-                    ServiceHelper.GlobalExceptionLogger.Log(ex)
+                    ServiceHelper.ExceptionLogger.Log(ex)
                 End Try
             Next
         End With
@@ -613,7 +641,7 @@ Public Class Service
                     ' Calculation failed to initialize
                     .CalculatedMeasurementAdapter.Initialized = False
                     .Parent.DisplayStatusMessage(String.Format("Exception during calculated measurement ""{0}"" initialization: {1}", DirectCast(.CalculatedMeasurementAdapter, IAdapter).Name, ex.Message))
-                    .Parent.ServiceHelper.GlobalExceptionLogger.Log(ex)
+                    .Parent.ServiceHelper.ExceptionLogger.Log(ex)
 
                     ' Unregister calculation events...
                     RemoveHandler .CalculatedMeasurementAdapter.StatusMessage, AddressOf .Parent.DisplayStatusMessage
@@ -684,7 +712,7 @@ Public Class Service
     Private Sub CalculationException(ByVal source As String, ByVal ex As Exception)
 
         DisplayStatusMessage(String.Format("ERROR: ""{0}"" threw an exception: {1}", source, ex.Message))
-        ServiceHelper.GlobalExceptionLogger.Log(ex)
+        ServiceHelper.ExceptionLogger.Log(ex)
 
     End Sub
 
@@ -756,7 +784,7 @@ Public Class Service
             End With
         Else
             With New StringBuilder
-                .AppendFormat("System Uptime: {0}", SecondsToText(ServiceHelper.CommunicationServer.RunTime))
+                .AppendFormat("System Uptime: {0}", SecondsToText(ServiceHelper.RemotingServer.RunTime))
                 .AppendLine()
                 .AppendLine()
 
@@ -1055,7 +1083,7 @@ Public Class Service
             Return foundMapper
         Catch ex As Exception
             ServiceHelper.UpdateStatus(clientID, String.Format("Failed to lookup specified mapper due to exception: {0}", ex.Message), ServiceHelper.UpdateCrlfCount)
-            ServiceHelper.GlobalExceptionLogger.Log(ex)
+            ServiceHelper.ExceptionLogger.Log(ex)
             Return False
         End Try
 
@@ -1099,7 +1127,7 @@ Public Class Service
             ElseIf ServiceHelper.LogStatusUpdates Then
                 ' But we always log messages if file is open - note that
                 ' during shutdown file may have already been closed...
-                If ServiceHelper.LogFile.IsOpen Then ServiceHelper.LogFile.WriteTimestampedLine(messages(x))
+                If ServiceHelper.StatusLog.IsOpen Then ServiceHelper.StatusLog.WriteTimestampedLine(messages(x))
             End If
         Next
 
@@ -1107,7 +1135,7 @@ Public Class Service
 
     Private Sub m_statusMessageQueue_ProcessException(ByVal ex As System.Exception) Handles m_statusMessageQueue.ProcessException
 
-        ServiceHelper.GlobalExceptionLogger.Log(ex)
+        ServiceHelper.ExceptionLogger.Log(ex)
 
     End Sub
 

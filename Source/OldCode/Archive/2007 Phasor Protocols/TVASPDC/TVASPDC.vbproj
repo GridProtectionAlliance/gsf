@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{B0F2E805-909C-4D0C-9428-2809D954636F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -172,7 +172,7 @@
       <Project>{45B13CE3-0EE6-4BF7-B36E-638F2BD68071}</Project>
       <Name>InterfaceAdapters</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PhasorProtocols\PhasorProtocols.vbproj">
+    <ProjectReference Include="..\PhasorProtocols\PhasorProtocols.csproj">
       <Project>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</Project>
       <Name>PhasorProtocols</Name>
     </ProjectReference>

@@ -60,7 +60,7 @@ Partial Class Main
         '
         'ClientHelper
         '
-        Me.ClientHelper.CommunicationClient = Me.TcpClient
+        Me.ClientHelper.RemotingClient = Me.TcpClient
         Me.ClientHelper.PersistSettings = True
         Me.ClientHelper.ServiceName = "TVASPDC"
         Me.ClientHelper.SettingsCategoryName = "RemoteMonitorSettings"
