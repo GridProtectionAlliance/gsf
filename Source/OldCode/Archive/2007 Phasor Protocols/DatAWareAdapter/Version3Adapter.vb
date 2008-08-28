@@ -119,6 +119,16 @@ Public Class Version3Adapter
         End Get
     End Property
 
+    Public Overrides ReadOnly Property Status() As String
+        Get
+            With New StringBuilder
+                If m_connection IsNot Nothing Then .Append(m_connection.Status)
+                .Append(MyBase.Status)
+                Return .ToString()
+            End With
+        End Get
+    End Property
+
     Protected Overrides Sub ArchiveMeasurements(ByVal measurements As IMeasurement())
 
         If m_connection IsNot Nothing AndAlso m_connection.IsConnected Then

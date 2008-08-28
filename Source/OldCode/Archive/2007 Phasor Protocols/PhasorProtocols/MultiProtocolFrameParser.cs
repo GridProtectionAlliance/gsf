@@ -993,8 +993,8 @@ namespace PhasorProtocols
             if (m_lastFrameReceivedTime > 0)
             {
                 // To keep precise timing on "frames per second", we wait for defined frame rate interval
-                //double sleepTime = m_definedFrameRate - (double)TVA.DateTime.Common.get_TicksToSeconds(DateTime.Now.Ticks - m_lastFrameReceivedTime);
-                double sleepTime = m_definedFrameRate - ((double)(TVA.DateTime.PrecisionTimer.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)TVA.DateTime.Common.TicksPerSecond);
+                double sleepTime = m_definedFrameRate - ((double)(DateTime.Now.Ticks - m_lastFrameReceivedTime) / (double)TVA.DateTime.Common.TicksPerSecond);
+                //double sleepTime = m_definedFrameRate - ((double)(TVA.DateTime.PrecisionTimer.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)TVA.DateTime.Common.TicksPerSecond);
 
                 if (sleepTime > 0)
                 {
@@ -1002,8 +1002,8 @@ namespace PhasorProtocols
                 }
             }
 
-            //m_lastFrameReceivedTime = DateTime.Now.Ticks;
-            m_lastFrameReceivedTime = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+            m_lastFrameReceivedTime = DateTime.Now.Ticks;
+            //m_lastFrameReceivedTime = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
 
         }
 
@@ -1107,8 +1107,8 @@ namespace PhasorProtocols
             {
                 if (m_injectSimulatedTimestamp)
                 {
-                    //frame.Ticks = DateTime.UtcNow.Ticks;
-                    frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
                 }
                 if (ReceivedCommandFrame != null)
                     ReceivedCommandFrame(frame);
@@ -1143,8 +1143,8 @@ namespace PhasorProtocols
             {
                 if (m_injectSimulatedTimestamp)
                 {
-                    //frame.Ticks = DateTime.UtcNow.Ticks;
-                    frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
                 }
                 if (ReceivedConfigurationFrame != null)
                     ReceivedConfigurationFrame(frame);
@@ -1172,8 +1172,8 @@ namespace PhasorProtocols
             {
                 if (m_injectSimulatedTimestamp)
                 {
-                    //frame.Ticks = DateTime.UtcNow.Ticks;
-                    frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
                 }
                 if (ReceivedDataFrame != null)
                     ReceivedDataFrame(frame);
@@ -1201,8 +1201,8 @@ namespace PhasorProtocols
             {
                 if (m_injectSimulatedTimestamp)
                 {
-                    //frame.Ticks = DateTime.UtcNow.Ticks;
-                    frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
                 }
                 if (ReceivedHeaderFrame != null)
                     ReceivedHeaderFrame(frame);
@@ -1230,8 +1230,8 @@ namespace PhasorProtocols
             {
                 if (m_injectSimulatedTimestamp)
                 {
-                    //frame.Ticks = DateTime.UtcNow.Ticks;
-                    frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
                 }
                 if (ReceivedUndeterminedFrame != null)
                     ReceivedUndeterminedFrame(frame);

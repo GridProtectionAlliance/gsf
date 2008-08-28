@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{F452CF72-30CA-4245-B054-F9E73783FD78}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -69,6 +69,7 @@
     <Import Include="System.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ListeningAdapter.vb" />
     <Compile Include="Version3Adapter.vb" />
     <Compile Include="LegacyAdapter.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

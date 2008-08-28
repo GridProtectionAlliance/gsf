@@ -392,7 +392,7 @@ Public Class PhasorMeasurementMapper
         End Get
     End Property
 
-    Public Sub ReceivedNewVirtualMeasurements(ByVal cell As ConfigurationCell, ByVal measurements As List(Of IMeasurement))
+    Public Sub ReceivedNewVirtualMeasurements(ByVal cell As ConfigurationCell, ByVal measurements As ICollection(Of IMeasurement))
 
         ' We use this function to verify that the virtual device is actually reporting - that is, that
         ' the composed points that make up this virtual device are actually being calculated...

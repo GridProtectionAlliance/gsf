@@ -18,7 +18,9 @@
 Imports System.Text
 Imports System.Data.OleDb
 Imports System.Threading
+Imports System.Reflection
 Imports TVA.Common
+Imports TVA.Assembly
 Imports TVA.DateTime.Common
 Imports TVA.Data.Common
 Imports TVA.Communication
@@ -44,6 +46,7 @@ Public Class PhasorMeasurementReceiver
     Private m_connectionString As String
     Private m_dataLossInterval As Integer
     Private m_mappers As Dictionary(Of String, PhasorMeasurementMapper)
+    Private m_listeningAdapters As List(Of IListeningAdapter)
     Private m_reportingTolerance As Integer
     Private m_measurementWarningThreshold As Integer
     Private m_measurementDumpingThreshold As Integer
@@ -88,19 +91,42 @@ Public Class PhasorMeasurementReceiver
                 If m_reportingStatus IsNot Nothing Then m_reportingStatus.Dispose()
                 m_reportingStatus = Nothing
 
-                If m_mappers IsNot Nothing Then
-                    For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-                        mapper.Dispose()
-                    Next
+                DisposeAdapters()
 
-                    m_mappers.Clear()
-                End If
-
-                m_mappers = Nothing
+                If m_historianAdapter IsNot Nothing Then m_historianAdapter.Dispose()
             End If
         End If
 
         m_disposed = True
+
+    End Sub
+
+    Private Sub DisposeAdapters()
+
+        If m_mappers IsNot Nothing Then
+            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                RemoveHandler mapper.ParsingStatus, AddressOf UpdateStatus
+                RemoveHandler mapper.NewParsedMeasurements, AddressOf NewParsedMeasurements
+                mapper.Dispose()
+            Next
+
+            m_mappers.Clear()
+        End If
+
+        m_mappers = Nothing
+
+        ' Disconnect from any listening adapters...
+        If m_listeningAdapters IsNot Nothing Then
+            For Each listener As IListeningAdapter In m_listeningAdapters
+                RemoveHandler listener.StatusMessage, AddressOf UpdateStatus
+                RemoveHandler listener.NewMeasurements, AddressOf QueueMeasurementsForArchival
+                listener.Dispose()
+            Next
+
+            m_listeningAdapters.Clear()
+        End If
+
+        m_listeningAdapters = Nothing
 
     End Sub
 
@@ -137,6 +163,13 @@ Public Class PhasorMeasurementReceiver
             Next
         End If
 
+        ' Disconnect from any listening adapters...
+        If m_listeningAdapters IsNot Nothing Then
+            For Each listener As IListeningAdapter In m_listeningAdapters
+                listener.Disconnect()
+            Next
+        End If
+
         m_historianAdapter.Disconnect()
 
     End Sub
@@ -145,6 +178,9 @@ Public Class PhasorMeasurementReceiver
 
         ' Disconnect archiver and all phasor measurement mappers...
         Disconnect()
+
+        ' This function will recreate mappers and adapters, so we need to dispose of any existing ones...
+        DisposeAdapters()
 
         UpdateStatus("Initializing phasor measurement receiver...")
 
@@ -155,6 +191,7 @@ Public Class PhasorMeasurementReceiver
             Dim configurationCells As Dictionary(Of UInt16, ConfigurationCell)
             Dim signalMeasurements As Dictionary(Of String, IMeasurement)
             Dim configCell As ConfigurationCell
+            Dim connectionString As String
             Dim keys As Dictionary(Of String, String)
             Dim transport As String
             Dim iniFileName As String
@@ -164,10 +201,12 @@ Public Class PhasorMeasurementReceiver
             Dim timeAdjustmentTicks As Long
             Dim accessID As UInt16
             Dim virtualDevice As Boolean
-            Dim virtualSetting As String
+            Dim alternateSource As Boolean
+            Dim setting As String
             Dim x, y As Integer
 
             m_mappers = New Dictionary(Of String, PhasorMeasurementMapper)(StringComparer.OrdinalIgnoreCase)
+            m_listeningAdapters = New List(Of IListeningAdapter)
 
             ' Initialize each data connection
             With RetrieveData(String.Format("SELECT * FROM ActiveDeviceConnections WHERE Historian='{0}'", m_archiverSource), connection)
@@ -179,24 +218,35 @@ Public Class PhasorMeasurementReceiver
                     configurationCells = New Dictionary(Of UInt16, ConfigurationCell)
                     signalMeasurements = New Dictionary(Of String, IMeasurement)
 
+                    connectionString = row("ConnectionString").ToString()
                     source = row("Acronym").ToString().ToUpper().Trim()
                     timezone = row("TimeZone").ToString()
                     timeAdjustmentTicks = Convert.ToInt64(row("TimeOffsetTicks"))
                     accessID = Convert.ToUInt16(row("AccessID"))
 
-                    ' Initialize connection string
-                    parser.ConnectionString = row("ConnectionString").ToString()
-
                     ' We pre-parse the connection string for special parameters
-                    keys = ParseKeyValuePairs(parser.ConnectionString)
+                    keys = ParseKeyValuePairs(connectionString)
 
                     ' See if this is a virtual device
                     virtualDevice = False
 
-                    If keys.TryGetValue("virtual", virtualSetting) Then
+                    If keys.TryGetValue("virtual", setting) Then
                         ' Virtual devices consist entirely of composed points so there
                         ' will be no physical device to connect to
-                        virtualDevice = ParseBoolean(virtualSetting)
+                        virtualDevice = ParseBoolean(setting)
+                    End If
+
+                    ' See if this is non-standard streaming data source
+                    alternateSource = False
+
+                    If keys.TryGetValue("source", setting) Then
+                        ' Non-standard data sources will use a plug-in adapter to directly
+                        ' stream in data points (no standard phasor parsing)
+                        alternateSource = True
+
+                        ' Because of their nature, non-standard data sources will act like
+                        ' a virtual device (points coming from another source)
+                        virtualDevice = True
                     End If
 
                     If virtualDevice Then
@@ -206,6 +256,9 @@ Public Class PhasorMeasurementReceiver
                         ' We track whether or not this receiver has virtual devices
                         If Not m_hasVirtualDevices Then m_hasVirtualDevices = True
                     Else
+                        ' Initialize connection string
+                        parser.ConnectionString = connectionString
+
                         ' Define phasor protocol
                         Try
                             parser.PhasorProtocol = DirectCast([Enum].Parse(GetType(PhasorProtocol), row("PhasorProtocol").ToString(), True), PhasorProtocol)
@@ -273,7 +326,7 @@ Public Class PhasorMeasurementReceiver
                         With RetrieveData(String.Format("SELECT ID, AccessID, Acronym FROM PdcPmus WHERE PdcID={0} AND Historian='{1}' ORDER BY IOIndex", row("ID"), m_archiverSource), connection)
                             For y = 0 To .Rows.Count - 1
                                 With .Rows(y)
-                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), .Item("Acronym").ToString().ToUpper().Trim(), False)
+                                    configCell = New ConfigurationCell(Convert.ToUInt16(.Item("AccessID")), .Item("Acronym").ToString().ToUpper().Trim(), virtualDevice)
                                     configCell.Tag = .Item("ID")
                                     configurationCells.Add(configCell.IDCode, configCell)
 
@@ -316,6 +369,41 @@ Public Class PhasorMeasurementReceiver
 
                     UpdateStatus(String.Format("Loaded {0} active measurements for {1}...", signalMeasurements.Count, source))
 
+                    ' Initialize alternate data-source
+                    If alternateSource Then
+                        Dim externalAssemblyName As String
+                        Dim externalAssemblyTypeName As String
+                        Dim externalAssembly As Assembly
+                        Dim listeningAdapter As IListeningAdapter
+
+                        If keys.TryGetValue("source", setting) Then externalAssemblyName = setting
+                        If keys.TryGetValue("typename", setting) Then externalAssemblyTypeName = setting
+
+                        Try
+                            ' Load the external assembly for the historian adapter
+                            externalAssembly = Assembly.LoadFrom(Service.PrefixLocalPath(externalAssemblyName))
+
+                            ' Create a new instance of the historian adpater
+                            listeningAdapter = DirectCast(Activator.CreateInstance(externalAssembly.GetType(externalAssemblyTypeName)), IListeningAdapter)
+                            listeningAdapter.Initialize(connectionString)
+
+                            AddHandler listeningAdapter.StatusMessage, AddressOf UpdateStatus
+                            AddHandler listeningAdapter.NewMeasurements, AddressOf NewAlternateDataSourceMeasuremeents
+
+                            ' Start connection cycle for listening adapter
+                            listeningAdapter.Connect()
+
+                            m_listeningAdapters.Add(listeningAdapter)
+                        Catch ex As Exception
+                            UpdateStatus(String.Format("Failed to load data source listener ""{0}"" from assembly ""{1}"" due to exception: {2}", externalAssemblyTypeName, externalAssemblyName, ex.Message))
+                            m_exceptionLogger.Log(ex)
+                        End Try
+                    End If
+
+                    ' Create a new mapper for this connection - in virtual and alternate data sources, the mapper is still used as
+                    ' a place holder for status and statistical information even though it technically does no parsing or mapping
+                    ' TODO: Eventually may want to make this a base class and let each implementation decide its needs, e.g., you
+                    ' would have dervied PhasorMapper, VirtualDeviceMapper, AlternateDataSourceMapper
                     With New PhasorMeasurementMapper(parser, m_archiverSource, source, configurationCells, signalMeasurements, m_dataLossInterval, m_exceptionLogger)
                         ' Add timezone mapping if not UTC...
                         If String.Compare(timezone, "GMT Standard Time", True) <> 0 Then
@@ -398,6 +486,9 @@ Public Class PhasorMeasurementReceiver
         End Get
     End Property
 
+    ''' <summary>
+    ''' This function is used to archive and handle reporting status of non-standard data sources
+    ''' </summary>
     Public Sub QueueMeasurementForArchival(ByVal measurement As IMeasurement)
 
         ' Filter incoming measurements to just the ones destined for this archive
@@ -405,6 +496,9 @@ Public Class PhasorMeasurementReceiver
 
     End Sub
 
+    ''' <summary>
+    ''' This function is used to archive and handle reporting status of non-standard data sources
+    ''' </summary>
     Public Sub QueueMeasurementsForArchival(ByVal measurements As ICollection(Of IMeasurement))
 
         ' Filter incoming measurements to just the ones destined for this archive
@@ -441,17 +535,19 @@ Public Class PhasorMeasurementReceiver
 
     Private Sub UpdateVirtualDevices(ByVal state As Object)
 
-        Dim queuedMeasurements As List(Of IMeasurement) = DirectCast(state, List(Of IMeasurement))
+        Dim queuedMeasurements As ICollection(Of IMeasurement) = TryCast(state, ICollection(Of IMeasurement))
 
-        For Each mapper As PhasorMeasurementMapper In m_mappers.Values
-            ' No need to send data to mapper unless it references any virtual cells
-            If mapper.HasVirtualCells Then
-                ' Pass the calculated points along to any virutal devices...
-                For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
-                    If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
-                Next
-            End If
-        Next
+        If queuedMeasurements IsNot Nothing Then
+            For Each mapper As PhasorMeasurementMapper In m_mappers.Values
+                ' No need to send data to mapper unless it references any virtual cells
+                If mapper.HasVirtualCells Then
+                    ' Pass the calculated points along to any virutal devices...
+                    For Each cell As ConfigurationCell In mapper.ConfigurationCells.Values
+                        If cell.IsVirtual Then mapper.ReceivedNewVirtualMeasurements(cell, queuedMeasurements)
+                    Next
+                End If
+            Next
+        End If
 
     End Sub
 
@@ -468,6 +564,27 @@ Public Class PhasorMeasurementReceiver
 
         ' Bubble real-time parsed measurements outside of receiver as needed...
         RaiseEvent NewMeasurements(measurements)
+
+    End Sub
+
+    Private Sub NewAlternateDataSourceMeasuremeents(ByVal measurements As ICollection(Of IMeasurement))
+
+        ' Handle parsed measurements like any other data source
+        NewParsedMeasurements(measurements)
+
+        ' Update status for purely virtual alternate data source
+        If Not m_intializing AndAlso m_hasVirtualDevices AndAlso m_mappers IsNot Nothing Then
+            ' Since this is just for handling "reporting" status of virtual devices and
+            ' we need to return thread control to the calculated measurement, we throw this
+            ' update activity onto the thread pool - no rush, order not important
+#If ThreadTracking Then
+            With TVA.Threading.ManagedThreadPool.QueueUserWorkItem(AddressOf UpdateVirtualDevices, measurements)
+                .Name = "TVASPDC.PhasorMeasurementReceiver.UpdateVirtualDevices()"
+            End With
+#Else
+            ThreadPool.UnsafeQueueUserWorkItem(AddressOf UpdateVirtualDevices, measurements)
+#End If
+        End If
 
     End Sub
 

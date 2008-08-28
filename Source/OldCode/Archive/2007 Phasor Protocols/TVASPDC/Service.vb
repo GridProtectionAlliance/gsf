@@ -716,7 +716,7 @@ Public Class Service
 
     End Sub
 
-    Private Function PrefixLocalPath(ByVal assemblyPath As String) As String
+    Public Shared Function PrefixLocalPath(ByVal assemblyPath As String) As String
 
         If String.Compare(JustPath(assemblyPath), "\") = 0 Then
             Return GetApplicationPath() & assemblyPath
