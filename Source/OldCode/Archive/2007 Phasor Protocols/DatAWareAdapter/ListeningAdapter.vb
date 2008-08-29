@@ -62,6 +62,7 @@ Public Class ListeningAdapter
 
         ' Create new DatAWare data parser
         m_parser = New DataParser()
+        m_parser.UnparsedDataReuseLimit = 1
         m_parser.Start()
 
         ' Connect to DatAWare archiver using TCP
