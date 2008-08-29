@@ -1,21 +1,3 @@
-using System.Diagnostics;
-using System;
-//using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-//using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using TVA.DateTime;
-//using TVA.DateTime.Common;
-using TVA.Parsing;
-using TVA.Measurements;
-//using PhasorProtocols.Common;
-//using PhasorProtocols.IeeeC37_118.Common;
-
 //*******************************************************************************************************
 //  CommonFrameHeader.vb - IEEE C37.118 Common frame header functions
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -33,26 +15,27 @@ using TVA.Measurements;
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using TVA;
+using TVA.Interop;
+using TVA.DateTime;
+using TVA.Parsing;
+using TVA.Measurements;
 
 namespace PhasorProtocols
 {
     namespace IeeeC37_118
     {
-
         // This class generates and parses a frame header specfic to C37.118
         [CLSCompliant(false), Serializable()]
         public sealed class CommonFrameHeader
         {
-
-
             #region " Internal Common Frame Header Instance Class "
 
             // This class is used to temporarily hold parsed frame header
             private class CommonFrameHeaderInstance : ICommonFrameHeader
             {
-
-
-
                 private FrameType m_frameType;
                 private byte m_version;
                 private ushort m_frameLength;
@@ -64,22 +47,11 @@ namespace PhasorProtocols
 
                 public CommonFrameHeaderInstance()
                 {
-
                 }
 
                 protected CommonFrameHeaderInstance(SerializationInfo info, StreamingContext context)
                 {
-
                     throw (new NotImplementedException());
-
-                }
-
-                IFrame IFrame.This
-                {
-                    get
-                    {
-                        return this;
-                    }
                 }
 
                 public System.Type DerivedType
@@ -180,31 +152,7 @@ namespace PhasorProtocols
                     }
                 }
 
-                public long StartSortTime
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                    set
-                    {
-                        throw (new NotImplementedException());
-                    }
-                }
-
-                public long LastSortTime
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                    set
-                    {
-                        throw (new NotImplementedException());
-                    }
-                }
-
-                public TVA.Measurements.IMeasurement LastSortedMeasurement
+                public IMeasurement LastSortedMeasurement
                 {
                     get
                     {
@@ -302,9 +250,7 @@ namespace PhasorProtocols
 
                 public void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
                 {
-
                     throw (new NotImplementedException());
-
                 }
 
                 public object Cells
@@ -368,14 +314,9 @@ namespace PhasorProtocols
 
                 public int CompareTo(object obj)
                 {
-
                     IFrame other = obj as IFrame;
-                    if (other != null)
-                    {
-                        return CompareTo(other);
-                    }
-                    throw (new ArgumentException("Frame can only be compared with other IFrames..."));
-
+                    if (other != null) return CompareTo(other);
+                    throw new ArgumentException("Frame can only be compared with other IFrames...");
                 }
 
                 public IFrame Clone()
@@ -417,9 +358,7 @@ namespace PhasorProtocols
 
                 public void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
                 {
-
-                    throw (new NotImplementedException());
-
+                    throw new NotImplementedException();
                 }
 
                 public Dictionary<string, string> Attributes
@@ -469,7 +408,6 @@ namespace PhasorProtocols
                         m_tag = value;
                     }
                 }
-
             }
 
             #endregion
@@ -478,14 +416,11 @@ namespace PhasorProtocols
 
             private CommonFrameHeader()
             {
-
                 // This class contains only global functions and is not meant to be instantiated
-
             }
 
             public static ICommonFrameHeader ParseBinaryImage(ConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
             {
-
                 if (binaryImage[startIndex] != PhasorProtocols.Common.SyncByte)
                 {
                     throw (new InvalidOperationException("Bad data stream, expected sync byte AA as first byte in IEEE C37.118 frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0')));
@@ -516,12 +451,10 @@ namespace PhasorProtocols
                 frameHeader.InternalTimeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
 
                 return (ICommonFrameHeader)frameHeader;
-
             }
 
             public static byte[] BinaryImage(ICommonFrameHeader frameHeader)
             {
-
                 byte[] buffer = new byte[BinaryLength];
 
                 buffer[0] = PhasorProtocols.Common.SyncByte;
@@ -532,19 +465,16 @@ namespace PhasorProtocols
                 EndianOrder.BigEndian.CopyBytes(frameHeader.FractionOfSecond | (int)frameHeader.TimeQualityFlags, buffer, 10);
 
                 return buffer;
-
             }
 
             public static void Clone(ICommonFrameHeader sourceFrameHeader, ICommonFrameHeader destinationFrameHeader)
             {
-
                 destinationFrameHeader.FrameType = sourceFrameHeader.FrameType;
                 destinationFrameHeader.Version = sourceFrameHeader.Version;
                 destinationFrameHeader.FrameLength = sourceFrameHeader.FrameLength;
                 destinationFrameHeader.IDCode = sourceFrameHeader.IDCode;
                 destinationFrameHeader.Ticks = sourceFrameHeader.Ticks;
                 destinationFrameHeader.InternalTimeQualityFlags = sourceFrameHeader.InternalTimeQualityFlags;
-
             }
 
             public static byte Version(byte newVersion)
@@ -586,9 +516,6 @@ namespace PhasorProtocols
             {
                 frameHeader.InternalTimeQualityFlags = (frameHeader.InternalTimeQualityFlags & ~(int)IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) | (int)value;
             }
-
         }
-
     }
-
 }

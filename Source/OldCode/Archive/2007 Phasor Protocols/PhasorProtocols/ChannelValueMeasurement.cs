@@ -43,7 +43,6 @@ namespace PhasorProtocols
 
         public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
         {
-
             m_parent = parent;
             m_valueIndex = valueIndex;
             m_id = -1;
@@ -53,7 +52,6 @@ namespace PhasorProtocols
             m_multiplier = 1.0D;
             m_dataQualityIsGood = -1;
             m_timeQualityIsGood = -1;
-
         }
 
         protected IChannelValue<T> Parent
@@ -65,14 +63,6 @@ namespace PhasorProtocols
             set
             {
                 m_parent = value;
-            }
-        }
-
-        IMeasurement IMeasurement.This
-        {
-            get
-            {
-                return this;
             }
         }
 

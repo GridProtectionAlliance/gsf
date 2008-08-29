@@ -1,21 +1,3 @@
-using System.Diagnostics;
-using System;
-//using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-//using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using TVA.DateTime;
-//using TVA.DateTime.Common;
-using TVA.Parsing;
-using TVA.Measurements;
-//using PhasorProtocols.Common;
-//using PhasorProtocols.IeeeC37_118.Common;
-
 //*******************************************************************************************************
 //  CommonFrameHeader.vb - BPA PDCstream Common frame header functions
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -33,24 +15,27 @@ using TVA.Measurements;
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using TVA;
+using TVA.Interop;
+using TVA.DateTime;
+using TVA.Parsing;
+using TVA.Measurements;
 
 namespace PhasorProtocols
 {
     namespace BpaPdcStream
     {
-
         // This class generates and parses a frame header specfic to BPA PDCstream
         [CLSCompliant(false), Serializable()]
         public sealed class CommonFrameHeader
         {
-
-
             #region " Internal Common Frame Header Instance Class "
 
             // This class is used to temporarily hold parsed frame header
             private class CommonFrameHeaderInstance : ICommonFrameHeader
             {
-
                 private byte m_packetFlag;
                 private short m_wordCount;
                 private ushort m_idCode;
@@ -61,22 +46,11 @@ namespace PhasorProtocols
 
                 public CommonFrameHeaderInstance()
                 {
-
                 }
 
                 protected CommonFrameHeaderInstance(SerializationInfo info, StreamingContext context)
                 {
-
                     throw (new NotImplementedException());
-
-                }
-
-                IFrame IFrame.This
-                {
-                    get
-                    {
-                        return this;
-                    }
                 }
 
                 public System.Type DerivedType
@@ -200,31 +174,7 @@ namespace PhasorProtocols
                     }
                 }
 
-                public long StartSortTime
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                    set
-                    {
-                        throw (new NotImplementedException());
-                    }
-                }
-
-                public long LastSortTime
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                    set
-                    {
-                        throw (new NotImplementedException());
-                    }
-                }
-
-                public TVA.Measurements.IMeasurement LastSortedMeasurement
+                public IMeasurement LastSortedMeasurement
                 {
                     get
                     {
@@ -328,19 +278,13 @@ namespace PhasorProtocols
 
                 public int CompareTo(object obj)
                 {
-
                     IFrame other = obj as IFrame;
-                    if (other != null)
-                    {
-                        return CompareTo(other);
-                    }
-                    throw (new ArgumentException("Frame can only be compared with other IFrames..."));
-
+                    if (other != null) return CompareTo(other);
+                    throw new ArgumentException("Frame can only be compared with other IFrames...");
                 }
 
                 IFrame IFrame.Clone()
                 {
-
                     return this;
                 }
 
@@ -366,9 +310,7 @@ namespace PhasorProtocols
 
                 public void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
                 {
-
                     throw (new NotImplementedException());
-
                 }
 
                 public Dictionary<string, string> Attributes
@@ -424,15 +366,12 @@ namespace PhasorProtocols
 
             private CommonFrameHeader()
             {
-
                 // This class contains only global functions and is not meant to be instantiated
-
             }
 
             // Note: in order to parse timestamp from data frame, this parse procedure needs six more bytes above and beyond common frame header binary length
             public static ICommonFrameHeader ParseBinaryImage(ConfigurationFrame configurationFrame, bool parseWordCountFromByte, byte[] binaryImage, int startIndex)
             {
-
                 if (binaryImage[startIndex] != PhasorProtocols.Common.SyncByte)
                 {
                     throw (new InvalidOperationException("Bad data stream, expected sync byte AA as first byte in BPA PDCstream frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0')));
@@ -495,12 +434,10 @@ namespace PhasorProtocols
                 }
 
                 return (ICommonFrameHeader)commonFrameHeader;
-
             }
 
             public static byte[] BinaryImage(ICommonFrameHeader frameHeader)
             {
-
                 byte[] buffer = new byte[BinaryLength];
 
                 buffer[0] = PhasorProtocols.Common.SyncByte;
@@ -508,21 +445,15 @@ namespace PhasorProtocols
                 EndianOrder.BigEndian.CopyBytes(frameHeader.WordCount, buffer, 2);
 
                 return buffer;
-
             }
 
             public static void Clone(ICommonFrameHeader sourceFrameHeader, ICommonFrameHeader destinationFrameHeader)
             {
-
                 destinationFrameHeader.PacketNumber = sourceFrameHeader.PacketNumber;
                 destinationFrameHeader.WordCount = sourceFrameHeader.WordCount;
                 destinationFrameHeader.Ticks = sourceFrameHeader.Ticks;
                 destinationFrameHeader.SampleNumber = sourceFrameHeader.SampleNumber;
-
             }
-
         }
-
     }
-
 }

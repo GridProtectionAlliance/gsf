@@ -1,18 +1,3 @@
-using System.Diagnostics;
-using System;
-//using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-//using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using System.Buffer;
-//using PhasorProtocols.Common;
-using TVA.Measurements;
-
 //*******************************************************************************************************
 //  DataCellBase.vb - Data cell base class
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -30,15 +15,19 @@ using TVA.Measurements;
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using TVA;
+using TVA.Interop;
+using TVA.Measurements;
+
 namespace PhasorProtocols
 {
     /// <summary>This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.</summary>
     [CLSCompliant(false), Serializable()]
     public abstract class DataCellBase : ChannelCellBase, IDataCell
     {
-
-
-
         private IConfigurationCell m_configurationCell;
         private short m_statusFlags;
         private PhasorValueCollection m_phasorValues;
@@ -65,8 +54,6 @@ namespace PhasorProtocols
         protected DataCellBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize data cell values
             m_configurationCell = (IConfigurationCell)info.GetValue("configurationCell", typeof(IConfigurationCell));
             m_statusFlags = info.GetInt16("statusFlags");
@@ -74,14 +61,11 @@ namespace PhasorProtocols
             m_frequencyValue = (IFrequencyValue)info.GetValue("frequencyValue", typeof(IFrequencyValue));
             m_analogValues = (AnalogValueCollection)info.GetValue("analogValues", typeof(AnalogValueCollection));
             m_digitalValues = (DigitalValueCollection)info.GetValue("digitalValues", typeof(DigitalValueCollection));
-
         }
 
         protected DataCellBase(IDataFrame parent, bool alignOnDWordBoundary, IConfigurationCell configurationCell, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
             : base(parent, alignOnDWordBoundary)
         {
-
-
             m_configurationCell = configurationCell;
             m_statusFlags = -1;
             m_phasorValues = new PhasorValueCollection(maximumPhasors);
@@ -94,29 +78,23 @@ namespace PhasorProtocols
             m_key = PhasorProtocols.Common.UndefinedKey;
             m_ticks = -1;
             m_multiplier = 1.0D;
-
         }
 
         protected DataCellBase(IDataFrame parent, bool alignOnDWordBoundary, int maximumPhasors, int maximumAnalogs, int maximumDigitals, IDataCellParsingState state, byte[] binaryImage, int startIndex)
             : this(parent, alignOnDWordBoundary, state.ConfigurationCell, maximumPhasors, maximumAnalogs, maximumDigitals)
         {
-
             ParseBinaryImage(state, binaryImage, startIndex);
-
         }
 
         protected DataCellBase(IDataFrame parent, bool alignOnDWordBoundary, IConfigurationCell configurationCell, short statusFlags, PhasorValueCollection phasorValues, IFrequencyValue frequencyValue, AnalogValueCollection analogValues, DigitalValueCollection digitalValues)
             : base(parent, alignOnDWordBoundary)
         {
-
-
             m_configurationCell = configurationCell;
             m_statusFlags = statusFlags;
             m_phasorValues = phasorValues;
             m_frequencyValue = frequencyValue;
             m_analogValues = analogValues;
             m_digitalValues = digitalValues;
-
         }
 
         // Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As int, ByVal binaryImage As Byte(), ByVal startIndex As int)
@@ -125,8 +103,6 @@ namespace PhasorProtocols
         protected DataCellBase(IDataCell dataCell)
             : this(dataCell.Parent, dataCell.AlignOnDWordBoundary, dataCell.ConfigurationCell, dataCell.StatusFlags, dataCell.PhasorValues, dataCell.FrequencyValue, dataCell.AnalogValues, dataCell.DigitalValues)
         {
-
-
         }
 
         public virtual new IDataFrame Parent
@@ -136,15 +112,6 @@ namespace PhasorProtocols
                 return (IDataFrame)base.Parent;
             }
         }
-
-        //// "This" method exists in two inherited interfaces, so we shadow method to avoid ambiguity
-        //public IDataCell This
-        //{
-        //    get
-        //    {
-        //        return this;
-        //    }
-        //}
 
         public virtual IConfigurationCell ConfigurationCell
         {
@@ -340,7 +307,6 @@ namespace PhasorProtocols
 
         protected override void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
         {
-
             IDataCellParsingState parsingState = (IDataCellParsingState)state;
             int x;
 
@@ -374,12 +340,10 @@ namespace PhasorProtocols
                 m_digitalValues.Add(parsingState.CreateNewDigitalValueFunction(this, m_configurationCell.DigitalDefinitions[x], binaryImage, startIndex));
                 startIndex += m_digitalValues[x].BinaryLength;
             }
-
         }
 
         public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
         {
-
             base.GetObjectData(info, context);
 
             // Serialize data cell values
@@ -389,7 +353,6 @@ namespace PhasorProtocols
             info.AddValue("frequencyValue", m_frequencyValue, typeof(IFrequencyValue));
             info.AddValue("analogValues", m_analogValues, typeof(AnalogValueCollection));
             info.AddValue("digitalValues", m_digitalValues, typeof(DigitalValueCollection));
-
         }
 
         public override Dictionary<string, string> Attributes
@@ -570,14 +533,6 @@ namespace PhasorProtocols
             set
             {
                 m_tagName = value;
-            }
-        }
-
-        IMeasurement IMeasurement.This
-        {
-            get
-            {
-                return this;
             }
         }
 

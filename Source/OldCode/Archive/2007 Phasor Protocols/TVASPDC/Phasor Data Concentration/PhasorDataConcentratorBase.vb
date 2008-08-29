@@ -80,12 +80,6 @@ Public MustInherit Class PhasorDataConcentratorBase
 
 #Region " IMeasurement Wrapper "
 
-        Public ReadOnly Property This() As IMeasurement Implements IMeasurement.This
-            Get
-                Return Me
-            End Get
-        End Property
-
         Public Property ID() As Integer Implements IMeasurement.ID
             Get
                 Return m_measurement.ID

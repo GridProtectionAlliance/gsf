@@ -1,22 +1,3 @@
-using System.Diagnostics;
-using System;
-//using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-//using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.IO;
-using TVA.DateTime;
-using TVA.Parsing;
-using TVA.Measurements;
-//using TVA.IO.Compression.Common;
-//using PhasorProtocols.Common;
-//using PhasorProtocols.Ieee1344.Common;
-
 //*******************************************************************************************************
 //  CommonFrameHeader.vb - IEEE 1344 Common frame header functions
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -34,18 +15,24 @@ using TVA.Measurements;
 //
 //*******************************************************************************************************
 
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using TVA;
+using TVA.Interop;
+using TVA.DateTime;
+using TVA.Parsing;
+using TVA.Measurements;
 
 namespace PhasorProtocols
 {
     namespace Ieee1344
     {
-
         // This class generates and parses a frame header specfic to C37.118
         [CLSCompliant(false), Serializable()]
         public sealed class CommonFrameHeader
         {
-
-
             #region " Internal Common Frame Header Instance Class "
 
             // This class is used to temporarily hold parsed frame header
@@ -61,14 +48,11 @@ namespace PhasorProtocols
 
                 public CommonFrameHeaderInstance()
                 {
-
                 }
 
                 protected CommonFrameHeaderInstance(SerializationInfo info, StreamingContext context)
                 {
-
                     throw (new NotImplementedException());
-
                 }
 
                 ~CommonFrameHeaderInstance()
@@ -81,14 +65,6 @@ namespace PhasorProtocols
                     GC.SuppressFinalize(this);
                     if (m_frameQueue != null) m_frameQueue.Dispose();
                     m_frameQueue = null;
-                }
-
-                IFrame IFrame.This
-                {
-                    get
-                    {
-                        return this;
-                    }
                 }
 
                 public System.Type DerivedType
@@ -132,7 +108,6 @@ namespace PhasorProtocols
 
                 public void AppendFrameImage(byte[] binaryImage, int offset, int length)
                 {
-
                     // Validate CRC of frame image being appended
                     if (!ChecksumIsValid(binaryImage, offset, length))
                     {
@@ -154,15 +129,12 @@ namespace PhasorProtocols
 
                     // Include frame image
                     m_frameQueue.Write(binaryImage, offset, length - CommonFrameHeader.BinaryLength);
-
                 }
 
                 private bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
                 {
-
                     int sumLength = length - 2;
                     return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == TVA.IO.Compression.Common.CRC16(ushort.MaxValue, buffer, startIndex, sumLength);
-
                 }
 
                 public bool IsFirstFrame
@@ -296,31 +268,7 @@ namespace PhasorProtocols
                     }
                 }
 
-                public long StartSortTime
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                    set
-                    {
-                        throw (new NotImplementedException());
-                    }
-                }
-
-                public long LastSortTime
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                    set
-                    {
-                        throw (new NotImplementedException());
-                    }
-                }
-
-                public TVA.Measurements.IMeasurement LastSortedMeasurement
+                public IMeasurement LastSortedMeasurement
                 {
                     get
                     {
@@ -388,9 +336,7 @@ namespace PhasorProtocols
 
                 public void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
                 {
-
                     throw (new NotImplementedException());
-
                 }
 
                 public object Cells
@@ -432,66 +378,38 @@ namespace PhasorProtocols
 
                 public bool Equals(TVA.Measurements.IFrame other)
                 {
-
                     return (CompareTo(other) == 0);
-
                 }
 
                 public int CompareTo(TVA.Measurements.IFrame other)
                 {
-
                     return m_ticks.CompareTo(other.Ticks);
-
                 }
 
                 public int CompareTo(object obj)
                 {
-
                     IFrame other = obj as IFrame;
                     if (other != null)
                     {
                         return CompareTo(other);
                     }
                     throw (new ArgumentException("Frame can only be compared with other IFrames..."));
-
                 }
 
                 IFrame IFrame.Clone()
                 {
-
                     return this;
-
                 }
 
                 public IDictionary<MeasurementKey, IMeasurement> Measurements
                 {
                     get
                     {
-                        return this.IFrameMeasurements;
-                    }
-                }
-
-                public IDictionary<MeasurementKey, IMeasurement> IFrameMeasurements
-                {
-                    get
-                    {
-                        throw (new NotImplementedException());
+                        return null;
                     }
                 }
 
                 public int PublishedMeasurements
-                {
-                    get
-                    {
-                        return this.IFramePublishedMeasurements;
-                    }
-                    set
-                    {
-                        this.IFramePublishedMeasurements = value;
-                    }
-                }
-
-                public int IFramePublishedMeasurements
                 {
                     get
                     {
@@ -565,14 +483,11 @@ namespace PhasorProtocols
 
             private CommonFrameHeader()
             {
-
                 // This class contains only global functions and is not meant to be instantiated
-
             }
 
             public static ICommonFrameHeader ParseBinaryImage(ConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
             {
-
                 CommonFrameHeaderInstance headerFrame = new CommonFrameHeaderInstance();
                 uint secondOfCentury;
 
@@ -596,12 +511,10 @@ namespace PhasorProtocols
                 }
 
                 return headerFrame;
-
             }
 
             public static byte[] BinaryImage(ICommonFrameHeader frameHeader)
             {
-
                 byte[] buffer = new byte[BinaryLength];
 
                 // Make sure frame length gets included in status flags for generated binary image
@@ -611,15 +524,12 @@ namespace PhasorProtocols
                 EndianOrder.BigEndian.CopyBytes(frameHeader.InternalSampleCount, buffer, 4);
 
                 return buffer;
-
             }
 
             public static void Clone(ICommonFrameHeader sourceFrameHeader, ICommonFrameHeader destinationFrameHeader)
             {
-
                 destinationFrameHeader.Ticks = sourceFrameHeader.Ticks;
                 destinationFrameHeader.InternalSampleCount = sourceFrameHeader.InternalSampleCount;
-
             }
 
             public static NtpTimeTag TimeTag(ICommonFrameHeader frameHeader)
@@ -641,6 +551,7 @@ namespace PhasorProtocols
             {
                 return (short)(frameHeader.InternalSampleCount & ~Common.FrameTypeMask);
             }
+
             public static void SetSampleCount(ICommonFrameHeader frameHeader, short value)
             {
                 if (value > Common.MaximumSampleCount)
@@ -738,9 +649,6 @@ namespace PhasorProtocols
                     SetFrameLength(frameHeader, (ushort)(value + BinaryLength + 2));
                 }
             }
-
         }
-
     }
-
 }
