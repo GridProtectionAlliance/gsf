@@ -1,21 +1,3 @@
-using System.Diagnostics;
-using System;
-//using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-//using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using System.Buffer;
-using System.Text;
-//using TVA.DateTime.Common;
-//using TVA.Math.Common;
-//using PhasorProtocols.Common;
-//using PhasorProtocols.BpaPdcStream.Common;
-
 //*******************************************************************************************************
 //  DataPacket.vb - PDCstream data packet
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -33,19 +15,22 @@ using System.Text;
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Text;
+using TVA;
+using TVA.Interop;
+using TVA.DateTime;
 
 namespace PhasorProtocols
 {
     namespace BpaPdcStream
     {
-
         // This is essentially a "row" of PMU data at a given timestamp
         [CLSCompliant(false), Serializable()]
         public class DataFrame : DataFrameBase, ICommonFrameHeader
         {
-
-
-
             private byte m_packetNumber;
             private short m_sampleNumber;
             private string[] m_legacyLabels;
@@ -54,28 +39,21 @@ namespace PhasorProtocols
             public DataFrame()
                 : base(new DataCellCollection())
             {
-
                 m_packetNumber = 1;
-
             }
 
             protected DataFrame(SerializationInfo info, StreamingContext context)
                 : base(info, context)
             {
-
-
                 // Deserialize data frame
                 m_packetNumber = info.GetByte("packetNumber");
                 m_sampleNumber = info.GetInt16("sampleNumber");
-
             }
 
             public DataFrame(short sampleNumber)
                 : this()
             {
-
                 m_sampleNumber = sampleNumber;
-
             }
 
             // If you are going to create multiple data packets, you can use this constructor
@@ -84,25 +62,18 @@ namespace PhasorProtocols
             public DataFrame(byte packetNumber, short sampleNumber)
                 : this(sampleNumber)
             {
-
                 this.PacketNumber = packetNumber;
-
             }
 
             public DataFrame(ICommonFrameHeader parsedFrameHeader, IConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
                 : base(new DataFrameParsingState(new DataCellCollection(), parsedFrameHeader.FrameLength, configurationFrame, BpaPdcStream.DataCell.CreateNewDataCell), binaryImage, startIndex)
             {
-
-
                 CommonFrameHeader.Clone(parsedFrameHeader, this);
-
             }
 
             public DataFrame(IDataFrame dataFrame)
                 : base(dataFrame)
             {
-
-
             }
 
             public override System.Type DerivedType
@@ -193,11 +164,11 @@ namespace PhasorProtocols
                 }
             }
 
-            public TVA.DateTime.NtpTimeTag NtpTimeTag
+            public NtpTimeTag NtpTimeTag
             {
                 get
                 {
-                    return new TVA.DateTime.NtpTimeTag(TVA.DateTime.Common.get_TicksToSeconds(Ticks));
+                    return new NtpTimeTag(TVA.DateTime.Common.get_TicksToSeconds(Ticks));
                 }
             }
 
@@ -212,26 +183,20 @@ namespace PhasorProtocols
             [CLSCompliant(false)]
             protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
             {
-
                 // PDCstream uses simple XOR checksum
                 return TVA.Math.Common.Xor16BitCheckSum(buffer, offset, length);
-
             }
 
             // Oddly enough, check sum for frames in BPA PDC stream is little-endian
             protected override void AppendChecksum(byte[] buffer, int startIndex)
             {
-
                 EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
-
             }
 
             protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
             {
-
                 int sumLength = BinaryLength - 2;
                 return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
-
             }
 
             protected override ushort HeaderLength
@@ -310,9 +275,9 @@ namespace PhasorProtocols
                 // configuration cell count - we save this count to calculate the offsets later
                 frameParsingState.CellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10);
 
-                if (frameParsingState.CellCount > ConfigurationFrame.Cells.Count)
+                if (frameParsingState.CellCount > configurationFrame.Cells.Count)
                 {
-                    throw (new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + frameParsingState.CellCount + ") in stream does not match defined count in configuration file (" + ConfigurationFrame.Cells.Count + ")"));
+                    throw (new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + frameParsingState.CellCount + ") in stream does not match defined count in configuration file (" + configurationFrame.Cells.Count + ")"));
                 }
 
                 m_parsedCellCount = frameParsingState.CellCount;
@@ -322,7 +287,7 @@ namespace PhasorProtocols
                 this.ConfigurationFrame = configurationFrame;
 
                 // We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
-                if (ConfigurationFrame.StreamType == StreamType.Legacy)
+                if (configurationFrame.StreamType == StreamType.Legacy)
                 {
                     int index = 12;
                     m_legacyLabels = new string[frameParsingState.CellCount];
@@ -333,12 +298,10 @@ namespace PhasorProtocols
                         index += 8;
                     }
                 }
-
             }
 
             protected override void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
             {
-
                 // We override normal frame body image parsing because any cells in PDCxchng format
                 // will contain several PMU's within a "PDC Block" - when we encounter these we must
                 // advance the cell index by the number of PMU's parsed instead of one at a time
@@ -370,18 +333,15 @@ namespace PhasorProtocols
                         index++;
                     }
                 }
-
             }
 
             public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
             {
-
                 base.GetObjectData(info, context);
 
                 // Serialize data frame
                 info.AddValue("packetNumber", m_packetNumber);
                 info.AddValue("sampleNumber", m_sampleNumber);
-
             }
 
             public override Dictionary<string, string> Attributes
@@ -406,8 +366,6 @@ namespace PhasorProtocols
                     return baseAttributes;
                 }
             }
-
         }
-
     }
 }
