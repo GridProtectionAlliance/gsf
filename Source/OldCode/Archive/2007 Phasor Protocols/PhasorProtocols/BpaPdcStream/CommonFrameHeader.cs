@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using TVA;
 using TVA.Interop;
 using TVA.DateTime;
