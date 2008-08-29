@@ -1,16 +1,3 @@
-using System.Diagnostics;
-using System;
-////using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-////using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-
 //*******************************************************************************************************
 //  PhasorDefinition.vb - PDCstream Phasor definition
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -28,18 +15,19 @@ using System.Text;
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Text;
+using TVA;
 
 namespace PhasorProtocols
 {
     namespace BpaPdcStream
     {
-
         [CLSCompliant(false), Serializable()]
         public class PhasorDefinition : PhasorDefinitionBase
         {
-
-
-
             private float m_ratio;
             private float m_calFactor;
             private float m_shunt;
@@ -52,28 +40,21 @@ namespace PhasorProtocols
             protected PhasorDefinition(SerializationInfo info, StreamingContext context)
                 : base(info, context)
             {
-
-
                 // Deserialize phasor definition
                 m_ratio = info.GetSingle("ratio");
                 m_calFactor = info.GetSingle("calFactor");
                 m_shunt = info.GetSingle("shunt");
                 m_voltageReferenceIndex = info.GetInt32("voltageReferenceIndex");
-
             }
 
             public PhasorDefinition(ConfigurationCell parent)
                 : base(parent)
             {
-
-
             }
 
             public PhasorDefinition(ConfigurationCell parent, int index, string entryValue)
                 : base(parent)
             {
-
-
                 string[] entry = entryValue.Split(',');
                 string entryType = entry[0].Trim().Substring(0, 1).ToUpper();
                 PhasorDefinition defaultPhasor;
@@ -104,63 +85,41 @@ namespace PhasorProtocols
                 }
 
                 if (entry.Length > 1)
-                {
-                    Ratio = (float)(double.Parse(entry[1].Trim()));
-                }
+                    Ratio = (float)double.Parse(entry[1].Trim());
                 else
-                {
                     Ratio = defaultPhasor.Ratio;
-                }
+
                 if (entry.Length > 2)
-                {
-                    CalFactor = (float)(double.Parse(entry[2].Trim()));
-                }
+                    CalFactor = (float)double.Parse(entry[2].Trim());
                 else
-                {
                     ConversionFactor = defaultPhasor.ConversionFactor;
-                }
+
                 if (entry.Length > 3)
-                {
-                    Offset = (float)(double.Parse(entry[3].Trim()));
-                }
+                    Offset = (float)double.Parse(entry[3].Trim());
                 else
-                {
                     Offset = defaultPhasor.Offset;
-                }
+
                 if (entry.Length > 4)
-                {
-                    Shunt = (float)(double.Parse(entry[4].Trim()));
-                }
+                    Shunt = (float)double.Parse(entry[4].Trim());
                 else
-                {
                     Shunt = defaultPhasor.Shunt;
-                }
+
                 if (entry.Length > 5)
-                {
-                    VoltageReferenceIndex = int.Parse(entry[5].Trim());
-                }
+                    VoltageReferenceIndex = (int)double.Parse(entry[5].Trim());
                 else
-                {
                     VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex;
-                }
+
                 if (entry.Length > 6)
-                {
                     Label = entry[6].Trim();
-                }
                 else
-                {
                     Label = defaultPhasor.Label;
-                }
 
                 this.Index = index;
-
             }
 
             public PhasorDefinition(ConfigurationCell parent, IPhasorDefinition phasorDefinition)
                 : base(parent, phasorDefinition)
             {
-
-
             }
 
             public override System.Type DerivedType
@@ -306,7 +265,6 @@ namespace PhasorProtocols
 
             public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
             {
-
                 base.GetObjectData(info, context);
 
                 // Serialize phasor definition
@@ -314,7 +272,6 @@ namespace PhasorProtocols
                 info.AddValue("calFactor", m_calFactor);
                 info.AddValue("shunt", m_shunt);
                 info.AddValue("voltageReferenceIndex", m_voltageReferenceIndex);
-
             }
 
             public override Dictionary<string, string> Attributes
@@ -331,9 +288,6 @@ namespace PhasorProtocols
                     return baseAttributes;
                 }
             }
-
         }
-
     }
-
 }
