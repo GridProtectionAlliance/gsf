@@ -16,19 +16,19 @@ using System.Security.Permissions;
 
 // Review the values of the assembly attributes
 
-[assembly:AssemblyTitle("TVA .NET Code Library: Core")]
-[assembly:AssemblyDescription("Shared .NET Core Functions Library")]
-[assembly:AssemblyCompany("TVA")]
-[assembly:AssemblyProduct("Shared .NET Code Library for TVA")]
-[assembly:AssemblyCopyright("Copyright © 2006, TVA - All rights reserved")]
-[assembly:AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")]
+[assembly: AssemblyTitle("TVA .NET Code Library: Core")]
+[assembly: AssemblyDescription("Shared .NET Core Functions Library")]
+[assembly: AssemblyCompany("TVA")]
+[assembly: AssemblyProduct("Shared .NET Code Library for TVA")]
+[assembly: AssemblyCopyright("Copyright © 2006, TVA - All rights reserved")]
+[assembly: AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")]
 
-[assembly:ComVisible(false)]
-[assembly:CLSCompliant(true)]
-[assembly:SecurityPermission(SecurityAction.RequestMinimum, Execution=true)]
+[assembly: ComVisible(false)]
+[assembly: CLSCompliant(true)]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 //The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly:Guid("DE848EB2-F6F6-4413-9D5F-6708A05E064B")]
+[assembly: Guid("DE848EB2-F6F6-4413-9D5F-6708A05E064B")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -41,5 +41,5 @@ using System.Security.Permissions;
 // by using the '*' as shown below:
 // <Assembly: AssemblyVersion("3.0.116.286")>
 
-[assembly:AssemblyVersion("3.0.116.286")]
-[assembly:AssemblyFileVersion("3.0.116.286")]
+[assembly: AssemblyVersion("3.0.116.286")]
+[assembly: AssemblyFileVersion("3.0.116.286")]
