@@ -21,6 +21,10 @@ using System;
 
 namespace TVA
 {
+    /// <summary>
+    /// Generic event arguments class.
+    /// </summary>
+    /// <typeparam name="T">Type of argument for this event arguments instance.</typeparam>
     public class GenericEventArgs<T> : EventArgs
     {
         private T m_argument;
