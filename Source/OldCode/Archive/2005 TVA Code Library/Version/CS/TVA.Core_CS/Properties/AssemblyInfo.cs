@@ -1,14 +1,7 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
-
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
@@ -20,7 +13,7 @@ using System.Security.Permissions;
 [assembly: AssemblyDescription("Shared .NET Core Functions Library")]
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyProduct("Shared .NET Code Library for TVA")]
-[assembly: AssemblyCopyright("Copyright © 2006, TVA - All rights reserved")]
+[assembly: AssemblyCopyright("Copyright © 2006-2009, TVA - All rights reserved")]
 [assembly: AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")]
 
 [assembly: ComVisible(false)]
