@@ -22,13 +22,12 @@ using System;
 namespace TVA
 {
     /// <summary>
-    /// Generic object state class
+    /// Generic object state class.
     /// </summary>
     /// <remarks>
-    /// Tracks current and previous states of a labeled object
+    /// Tracks current and previous states of a labeled object.
     /// </remarks>
-    /// <typeparam name="TState">
-    /// </typeparam>
+    /// <typeparam name="TState">Object state to track.</typeparam>
     [Serializable()]
     public class ObjectState<TState>
     {
