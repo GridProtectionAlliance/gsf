@@ -1,14 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.IO;
-using System.Xml.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-
 //*******************************************************************************************************
 //  TVA.Serialization.vb - Common serialization related functions
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -23,149 +12,177 @@ using System.Runtime.Serialization.Formatters.Binary;
 //  -----------------------------------------------------------------------------------------------------
 //  06/08/2006 - Pinal C. Patel
 //       Original version of source code generated
+//  09/09/2008 - J. Ritchie Carroll
+//      Converted to C#
+//  09/09/2008 - J. Ritchie Carroll
+//      Added TryGetObject overloads
 //
 //*******************************************************************************************************
 
-
+using System;
+using System.IO;
+using System.Xml.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TVA
 {
-	public sealed class Serialization
-	{
-		
-		
-		private Serialization()
-		{
-			
-			// This class contains only global functions and is not meant to be instantiated
-			
-		}
-		
-		/// <summary>
-		/// Creates a clone of a serializable object.
-		/// </summary>
-		public static T CloneObject<T>(T sourceObject)
-		{
-			
-			return GetObject<T>(GetBytes(sourceObject));
-			
-		}
-		
-		/// <summary>
-		/// Performs XML deserialization on the XML string and returns the typed object for it.
-		/// </summary>
-		public static T GetObject<T>(string serializedObject)
-		{
-			
-			object deserializedObject = null;
-			try
-			{
-				XmlSerializer deserializer = new XmlSerializer(typeof(T));
-				deserializedObject = deserializer.Deserialize(new StringReader(serializedObject));
-			}
-			catch (Exception)
-			{
-				
-			}
-			return ((T) deserializedObject);
-			
-		}
-		
-		/// <summary>
-		/// Performs binary deserialization on the byte array and returns the typed object for it.
-		/// </summary>
-		public static T GetObject<T>(byte[] serializedObject)
-		{
-			
-			object deserializedObject = GetObject(serializedObject);
-			if (deserializedObject is T) // Cannot use TryCast because of the templated parameter restriction.
-			{
-				return ((T) (GetObject(serializedObject)));
-			}
-			else
-			{
-				return null;
-			}
-			
-		}
-		
-		/// <summary>
-		/// Performs binary deserialization on the byte array and returns the object for it.
-		/// </summary>
-		public static object GetObject(byte[] serializedObject)
-		{
-			
-			object deserializedObject = null;
-			try
-			{
-				BinaryFormatter deserializer = new BinaryFormatter();
-				deserializedObject = deserializer.Deserialize(GetStream(serializedObject));
-			}
-			catch (Exception)
-			{
-				
-			}
-			return deserializedObject;
-			
-		}
-		
-		/// <summary>
-		/// Performs XML serialization on the serializable object and returns the output as string.
-		/// </summary>
-		public static string GetString(object serializableObject)
-		{
-			
-			StringWriter serializedObject = new StringWriter();
-			if (serializableObject.GetType().IsSerializable)
-			{
-				// The specified object if marked as serializable.
-				XmlSerializer serializer = new XmlSerializer(serializableObject.GetType());
-				serializer.Serialize(serializedObject, serializableObject);
-			}
-			return serializedObject.ToString();
-			
-		}
-		
-		/// <summary>
-		/// Performs binary serialization on the serializable object and returns the output as byte array.
-		/// </summary>
-		public static byte[] GetBytes(object serializableObject)
-		{
-			
-			return GetStream(serializableObject).ToArray();
-			
-		}
-		
-		/// <summary>
-		/// Gets a System.IO.MemoryStream from the bytes of a previously serialized object.
-		/// </summary>
-		/// <param name="serializedObject">The bytes of a previously serialized object.</param>
-		/// <returns>A System.IO.MemoryStream from the bytes of a previously serialized object.</returns>
-		public static MemoryStream GetStream(byte[] serializedObject)
-		{
-			
-			return new MemoryStream(serializedObject);
-			
-		}
-		
-		/// <summary>
-		/// Gets a System.IO.MemoryStream from a serializable object.
-		/// </summary>
-		/// <param name="serializableObject">The serializable object.</param>
-		/// <returns>A System.IO.MemoryStream if the specified object can be serialized; otherwise an empty stream.</returns>
-		public static MemoryStream GetStream(object serializableObject)
-		{
-			
-			MemoryStream dataStream = new MemoryStream();
-			if (serializableObject.GetType().IsSerializable)
-			{
-				BinaryFormatter serializer = new BinaryFormatter();
-				serializer.Serialize(dataStream, serializableObject);
-			}
-			return dataStream;
-			
-		}
-		
-	}
-	
+    public sealed class Serialization
+    {
+        private Serialization()
+        {
+            // This class contains only global functions and is not meant to be instantiated
+        }
+
+        /// <summary>
+        /// Creates a clone of a serializable object.
+        /// </summary>
+        public static T CloneObject<T>(T sourceObject)
+        {
+            return GetObject<T>(GetBytes(sourceObject));
+        }
+
+        /// <summary>
+        /// Performs XML deserialization on the XML string and returns the typed object for it.
+        /// </summary>
+        /// <remarks>
+        /// This function will throw an error during deserialization if the input data is invalid,
+        /// consider using TryGetObject to prevent needing to implement exception handling.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// An error occurred during deserialization. The original exception is available using 
+        /// the InnerException property.
+        /// </exception>
+        public static T GetObject<T>(string serializedObject)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            return (T)serializer.Deserialize(new StringReader(serializedObject));
+        }
+
+        /// <summary>
+        /// Attempts XML deserialization on the XML string and returns the typed object for it.
+        /// </summary>
+        public static bool TryGetObject<T>(string serializedObject, out T deserializedObject)
+        {
+            try
+            {
+                deserializedObject = GetObject<T>(serializedObject);
+                return true;
+            }
+            catch
+            {
+                deserializedObject = default(T);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Performs binary deserialization on the byte array and returns the typed object for it.
+        /// </summary>
+        /// <remarks>
+        /// This function will throw an error during deserialization if the input data is invalid,
+        /// consider using TryGetObject to prevent needing to implement exception handling.
+        /// </remarks>
+        /// <exception cref="SerializationException">Serialized object data is invalid or length is 0.</exception>
+        /// <exception cref="SecurityException">The caller does not have the required permission. </exception>
+        public static T GetObject<T>(byte[] serializedObject)
+        {
+            BinaryFormatter serializer = new BinaryFormatter();
+            return (T)serializer.Deserialize(new MemoryStream(serializedObject));
+        }
+
+        /// <summary>
+        /// Attempts binary deserialization on the byte array and returns the typed object for it.
+        /// </summary>
+        public static bool TryGetObject<T>(byte[] serializedObject, out T deserializedObject)
+        {
+            try
+            {
+                deserializedObject = GetObject<T>(serializedObject);
+                return true;
+            }
+            catch
+            {
+                deserializedObject = default(T);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Performs binary deserialization on the byte array and returns the object for it.
+        /// </summary>
+        /// <remarks>
+        /// This function will throw an error during deserialization if the input data is invalid,
+        /// consider using TryGetObject to prevent needing to implement exception handling.
+        /// </remarks>
+        /// <exception cref="SerializationException">Serialized object data is invalid or length is 0.</exception>
+        /// <exception cref="SecurityException">The caller does not have the required permission. </exception>
+        public static object GetObject(byte[] serializedObject)
+        {
+            BinaryFormatter serializer = new BinaryFormatter();
+            return serializer.Deserialize(new MemoryStream(serializedObject));
+        }
+
+        /// <summary>
+        /// Attempts binary deserialization on the byte array and returns the typed object for it.
+        /// </summary>
+        public static bool TryGetObject(byte[] serializedObject, out object deserializedObject)
+        {
+            try
+            {
+                deserializedObject = GetObject(serializedObject);
+                return true;
+            }
+            catch
+            {
+                deserializedObject = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Performs XML serialization on the serializable object and returns the output as string.
+        /// </summary>
+        /// <param name="serializableObject">The serializable object.</param>
+        /// <returns>An XML representation of the object if the specified object can be serialized; otherwise an empty string.</returns>
+        public static string GetString(object serializableObject)
+        {
+            StringWriter serializedObject = new StringWriter();
+
+            if (serializableObject.GetType().IsSerializable)
+            {
+                XmlSerializer serializer = new XmlSerializer(serializableObject.GetType());
+                serializer.Serialize(serializedObject, serializableObject);
+            }
+
+            return serializedObject.ToString();
+        }
+
+        /// <summary>
+        /// Performs binary serialization on the serializable object and returns the output as byte array.
+        /// </summary>
+        /// <param name="serializableObject">The serializable object.</param>
+        /// <returns>A byte array representation of the object if the specified object can be serialized; otherwise an empty array.</returns>
+        public static byte[] GetBytes(object serializableObject)
+        {
+            return GetStream(serializableObject).ToArray();
+        }
+
+        /// <summary>
+        /// Performs binary serialization on the serializable object and returns the serialized object as a stream.
+        /// </summary>
+        /// <param name="serializableObject">The serializable object.</param>
+        /// <returns>A memory stream representation of the object if the specified object can be serialized; otherwise an empty stream.</returns>
+        public static MemoryStream GetStream(object serializableObject)
+        {
+            MemoryStream dataStream = new MemoryStream();
+
+            if (serializableObject.GetType().IsSerializable)
+            {
+                BinaryFormatter serializer = new BinaryFormatter();
+                serializer.Serialize(dataStream, serializableObject);
+            }
+
+            return dataStream;
+        }
+    }
 }
