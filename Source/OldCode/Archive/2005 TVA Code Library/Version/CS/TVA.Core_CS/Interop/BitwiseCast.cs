@@ -29,13 +29,8 @@ namespace TVA
         /// useful in languages that do not allow override of numerical overflow checks.  For example, C#
         /// provides an "unchecked" keyword to allow for bitwise casting.
         /// </remarks>
-        public sealed class BitwiseCast
+        public static class BitwiseCast
         {
-            private BitwiseCast()
-            {
-                // This class contains only global functions and is not meant to be instantiated
-            }
-
             /// <summary>Performs proper bitwise conversion between unsigned and signed value</summary>
             /// <remarks>
             /// <para>This function is useful because Convert.ToInt16 will throw an OverflowException for values greater than Int16.MaxValue.</para>
@@ -44,11 +39,11 @@ namespace TVA
             [CLSCompliant(false)]
             public static short ToInt16(ushort unsignedInt)
             {
+                //return BitConverter.ToInt16(BitConverter.GetBytes(unsignedInt), 0);
                 unchecked
                 {
                     return (short)unsignedInt;
                 }
-                //return BitConverter.ToInt16(BitConverter.GetBytes(unsignedInt), 0);
             }
 
             /// <summary>Performs proper bitwise conversion between unsigned and signed value</summary>
@@ -70,11 +65,11 @@ namespace TVA
             [CLSCompliant(false)]
             public static int ToInt32(uint unsignedInt)
             {
+                //return BitConverter.ToInt32(BitConverter.GetBytes(unsignedInt), 0);
                 unchecked
                 {
                     return (int)unsignedInt;
                 }
-                //return BitConverter.ToInt32(BitConverter.GetBytes(unsignedInt), 0);
             }
 
             /// <summary>Performs proper bitwise conversion between unsigned and signed value</summary>
@@ -85,11 +80,11 @@ namespace TVA
             [CLSCompliant(false)]
             public static long ToInt64(ulong unsignedInt)
             {
+                //return BitConverter.ToInt64(BitConverter.GetBytes(unsignedInt), 0);
                 unchecked
                 {
                     return (long)unsignedInt;
                 }
-                //return BitConverter.ToInt64(BitConverter.GetBytes(unsignedInt), 0);
             }
 
             /// <summary>Performs proper bitwise conversion between signed and unsigned value</summary>
@@ -100,11 +95,11 @@ namespace TVA
             [CLSCompliant(false)]
             public static ushort ToUInt16(short signedInt)
             {
+                //return BitConverter.ToUInt16(BitConverter.GetBytes(signedInt), 0);
                 unchecked
                 {
                     return (ushort)signedInt;
                 }
-                //return BitConverter.ToUInt16(BitConverter.GetBytes(signedInt), 0);
             }
 
             /// <summary>Performs proper bitwise conversion between signed and unsigned value</summary>
@@ -126,11 +121,11 @@ namespace TVA
             [CLSCompliant(false)]
             public static uint ToUInt32(int signedInt)
             {
+                //return BitConverter.ToUInt32(BitConverter.GetBytes(signedInt), 0);
                 unchecked
                 {
                     return (uint)signedInt;
                 }
-                //return BitConverter.ToUInt32(BitConverter.GetBytes(signedInt), 0);
             }
 
             /// <summary>Performs proper bitwise conversion between signed and unsigned value</summary>
@@ -141,11 +136,11 @@ namespace TVA
             [CLSCompliant(false)]
             public static ulong ToUInt64(long signedInt)
             {
+                //return BitConverter.ToUInt64(BitConverter.GetBytes(signedInt), 0);
                 unchecked
                 {
                     return (ulong)signedInt;
                 }
-                //return BitConverter.ToUInt64(BitConverter.GetBytes(signedInt), 0);
             }
         }
     }
