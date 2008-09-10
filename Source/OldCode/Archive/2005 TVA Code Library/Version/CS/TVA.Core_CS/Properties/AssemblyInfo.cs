@@ -13,7 +13,7 @@ using System.Security.Permissions;
 [assembly: AssemblyDescription("Shared .NET Core Functions Library")]
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyProduct("Shared .NET Code Library for TVA")]
-[assembly: AssemblyCopyright("Copyright © 2006-2009, TVA - All rights reserved")]
+[assembly: AssemblyCopyright("Copyright © 2006-2008, TVA - All rights reserved")]
 [assembly: AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")]
 
 [assembly: ComVisible(false)]
