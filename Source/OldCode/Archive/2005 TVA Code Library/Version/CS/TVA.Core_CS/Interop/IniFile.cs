@@ -17,6 +17,8 @@
 //  01/05/2007 - J. Ritchie Carroll
 //       Breaking change: Renamed "IniFileName" property to "FileName"
 //       Updated "SectionNames" to use List(Of String) instead of ArrayList
+//  09/10/2008 - J. Ritchie Carroll
+//      Converted to C#
 //
 //*******************************************************************************************************
 
