@@ -42,7 +42,7 @@ namespace TVA
         /// Little-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.
         /// Big-endian ordering means bits are ordered such that the bit whose in-memory representation is left-most is the most-significant-bit in a byte.
         /// </remarks>
-        public class EndianOrder
+        public sealed class EndianOrder
         {
             // Create shared big-endian class
             public static EndianOrder BigEndian = new EndianOrder(Endianness.BigEndian);
