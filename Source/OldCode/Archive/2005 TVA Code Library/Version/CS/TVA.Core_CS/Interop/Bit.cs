@@ -35,13 +35,8 @@ namespace TVA
 {
     namespace Interop
     {
-        public sealed class Bit
+        public static class Bit
         {
-            private Bit()
-            {
-                // This class contains only global functions and is not meant to be instantiated
-            }
-
             /// <summary>No bits set (8-bit)</summary>
             public const byte Nill = 0x0;
 

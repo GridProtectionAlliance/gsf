@@ -26,13 +26,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TVA
 {
-    public sealed class Serialization
+    public static class Serialization
     {
-        private Serialization()
-        {
-            // This class contains only global functions and is not meant to be instantiated
-        }
-
         /// <summary>
         /// Creates a clone of a serializable object.
         /// </summary>

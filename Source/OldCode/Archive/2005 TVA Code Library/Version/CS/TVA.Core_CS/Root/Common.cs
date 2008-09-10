@@ -27,13 +27,8 @@ using System.IO;
 /// <summary>Defines common global functions.</summary>
 namespace TVA
 {
-    public sealed class Common
+    public static class Common
     {
-        private Common()
-        {
-            // This class contains only global functions and is not meant to be instantiated.
-        }
-
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
         /// <param name="expression">The expression you want to evaluate.</param>
