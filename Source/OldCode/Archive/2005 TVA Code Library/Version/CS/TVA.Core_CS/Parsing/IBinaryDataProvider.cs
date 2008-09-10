@@ -1,11 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-
 //*******************************************************************************************************
 //  IBinaryDataProvider.vb - Binary data provider interface
 //  Copyright © 2007 - TVA, all rights reserved - Gbtc
@@ -20,27 +12,29 @@ using System;
 //  -----------------------------------------------------------------------------------------------------
 //  03/01/2007 - Pinal C. Patel
 //       Original version of source code generated
+//  09/10/2008 - J. Ritchie Carroll
+//      Converted to C#
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace TVA
 {
-	namespace Parsing
-	{
-		
-		/// <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
-		public interface IBinaryDataProvider
-		{
-			
-			byte[] BinaryImage{
-				get;
-			}
-			
-			int BinaryLength{
-				get;
-			}
-			
-		}
-		
-	}
+    namespace Parsing
+    {
+        /// <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
+        public interface IBinaryDataProvider
+        {
+            byte[] BinaryImage
+            {
+                get;
+            }
+
+            int BinaryLength
+            {
+                get;
+            }
+        }
+    }
 }
