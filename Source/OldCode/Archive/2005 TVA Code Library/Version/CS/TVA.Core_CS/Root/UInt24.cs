@@ -1,15 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.Runtime.InteropServices;
-using System.Globalization;
-//using TVA.Common;
-using TVA.Interop.Bit;
-
 //*******************************************************************************************************
 //  TVA.UInt24.vb - Representation of a 3-byte, 24-bit unsigned integer
 //  Copyright © 2007 - TVA, all rights reserved - Gbtc
@@ -24,10 +12,17 @@ using TVA.Interop.Bit;
 //  -----------------------------------------------------------------------------------------------------
 //  10/09/2007 - J. Ritchie Carroll
 //       Original version of source code generated
+//  09/09/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
-
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.Globalization;
+using System.ComponentModel;
 
 /// <summary>Represents a 24-bit unsigned integer.</summary>
 /// <remarks>
@@ -53,27 +48,26 @@ using TVA.Interop.Bit;
 /// </remarks>
 namespace TVA
 {
-	[Serializable(), CLSCompliant(false)]public struct UInt24
+	[Serializable(), CLSCompliant(false)]
+    public struct UInt24 : IComparable, IFormattable, IConvertible, IComparable<UInt24>, IComparable<UInt32>, IEquatable<UInt24>, IEquatable<UInt32>
 	{
-		
-		
 		#region " Public Constants "
 		
 		/// <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
-		public const UInt32 BitMask = 4278190080;
+        public const uint BitMask = 0xff000000;
 		
 		/// <summary>Represents the largest possible value of an UInt24 as an UInt32. This field is constant.</summary>
-		public const UInt32 MaxValue32 = 16777215;
-		
-		/// <summary>Represents the smallest possible value of an UInt24 as an UInt32. This field is constant.</summary>
-		public const UInt32 MinValue32 = 0;
+        public const uint MaxValue32 = 0x00ffffff;
+
+        /// <summary>Represents the smallest possible value of an UInt24 as an UInt32. This field is constant.</summary>
+        public const uint MinValue32 = 0x00000000;
 		
 		#endregion
 		
 		#region " Member Fields "
 		
 		// We internally store the UInt24 value in a 4-byte integer for convenience
-		private UInt32 m_value;
+		private uint m_value;
 		
 		private static UInt24 m_maxValue;
 		private static UInt24 m_minValue;
@@ -83,30 +77,24 @@ namespace TVA
 		#region " Constructors "
 		
 		static UInt24()
-		{
-			
+		{			
 			m_maxValue = new UInt24(MaxValue32);
-			m_minValue = new UInt24(MinValue32);
-			
+			m_minValue = new UInt24(MinValue32);			
 		}
 		
 		/// <summary>Creates 24-bit unsigned integer from an existing 24-bit unsigned integer.</summary>
 		public UInt24(UInt24 value)
-		{
-			
-			m_value = ApplyBitMask(System.Convert.ToUInt32(value));
-			
+		{			
+			m_value = ApplyBitMask((uint)value);			
 		}
 		
 		/// <summary>Creates 24-bit unsigned integer from a 32-bit unsigned integer.</summary>
 		/// <param name="value">32-bit unsigned integer to use as new 24-bit unsigned integer value.</param>
 		/// <exception cref="OverflowException">Source values over 24-bit max range will cause an overflow exception.</exception>
-		public UInt24(UInt32 value)
-		{
-			
+		public UInt24(uint value)
+		{			
 			ValidateNumericRange(value);
-			m_value = ApplyBitMask(value);
-			
+			m_value = ApplyBitMask(value);			
 		}
 		
 		/// <summary>Creates 24-bit unsigned integer from three bytes at a specified position in a byte array.</summary>
@@ -118,9 +106,7 @@ namespace TVA
 		/// </remarks>
 		public UInt24(byte[] value, int startIndex)
 		{
-			
-			m_value = ApplyBitMask(System.Convert.ToUInt32(UInt24.GetValue(value, startIndex)));
-			
+			m_value = ApplyBitMask((uint)UInt24.GetValue(value, startIndex));
 		}
 		
 		#endregion
@@ -134,11 +120,9 @@ namespace TVA
 		/// <para>Bytes will be returned in endian order of currently executing process architecture (little-endian on Intel platforms).</para>
 		/// </remarks>
 		public byte[] GetBytes()
-		{
-			
+		{			
 			// Return serialized 3-byte representation of UInt24
-			return UInt24.GetBytes(this);
-			
+			return UInt24.GetBytes(this);			
 		}
 		
 		/// <summary>Returns the specified UInt24 value as an array of three bytes.</summary>
@@ -149,11 +133,10 @@ namespace TVA
 		/// <para>Bytes will be returned in endian order of currently executing process architecture (little-endian on Intel platforms).</para>
 		/// </remarks>
 		public static byte[] GetBytes(UInt24 value)
-		{
-			
+		{			
 			// We use a 32-bit integer to store 24-bit integer internally
-			byte[] int32Bytes = BitConverter.GetBytes(System.Convert.ToUInt32(value));
-			byte[] int24Bytes = TVA.Common.CreateArray<byte>(3);
+			byte[] int32Bytes = BitConverter.GetBytes((uint)value);
+			byte[] int24Bytes = new byte[3];
 			
 			if (BitConverter.IsLittleEndian)
 			{
@@ -167,8 +150,7 @@ namespace TVA
 			}
 			
 			// Return serialized 3-byte representation of UInt24
-			return int24Bytes;
-			
+			return int24Bytes;			
 		}
 		
 		/// <summary>Returns a 24-bit unsigned integer from three bytes at a specified position in a byte array.</summary>
@@ -180,10 +162,9 @@ namespace TVA
 		/// <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
 		/// </remarks>
 		public static UInt24 GetValue(byte[] value, int startIndex)
-		{
-			
+		{			
 			// We use a 32-bit integer to store 24-bit integer internally
-			byte[] bytes = TVA.Common.CreateArray<byte>(4);
+			byte[] bytes = new byte[4];
 			
 			if (BitConverter.IsLittleEndian)
 			{
@@ -197,8 +178,7 @@ namespace TVA
 			}
 			
 			// Deserialize value
-			return ((UInt24) (ApplyBitMask(BitConverter.ToUInt32(bytes, 0))));
-			
+			return (UInt24)ApplyBitMask(BitConverter.ToUInt32(bytes, 0));
 		}
 		
 		#endregion
@@ -210,293 +190,213 @@ namespace TVA
 		#region " Comparison Operators "
 		
 		public static bool operator ==(UInt24 value1, UInt24 value2)
-		{
-			
-			return value1.Equals(value2);
-			
+		{			
+			return value1.Equals(value2);			
 		}
 		
-		public static bool operator ==(UInt32 value1, UInt24 value2)
-		{
-			
-			return value1.Equals(System.Convert.ToUInt32(value2));
-			
+		public static bool operator ==(uint value1, UInt24 value2)
+		{			
+			return value1.Equals((uint)value2);			
 		}
 		
-		public static bool operator ==(UInt24 value1, UInt32 value2)
-		{
-			
-			return System.Convert.ToUInt32(value1).Equals(value2);
-			
+		public static bool operator ==(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1).Equals(value2);			
 		}
 		
 		public static bool operator !=(UInt24 value1, UInt24 value2)
-		{
-			
-			return ! value1.Equals(value2);
-			
+		{			
+			return !value1.Equals(value2);			
 		}
 		
-		public static bool operator !=(UInt32 value1, UInt24 value2)
-		{
-			
-			return ! value1.Equals(System.Convert.ToUInt32(value2));
-			
+		public static bool operator !=(uint value1, UInt24 value2)
+		{			
+			return !value1.Equals((uint)value2);			
 		}
 		
-		public static bool operator !=(UInt24 value1, UInt32 value2)
-		{
-			
-			return ! System.Convert.ToUInt32(value1).Equals(value2);
-			
+		public static bool operator !=(UInt24 value1, uint value2)
+		{			
+			return !((uint)value1).Equals(value2);			
 		}
 		
 		public static bool operator <(UInt24 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(value2) < 0);
-			
+		{			
+			return (value1.CompareTo(value2) < 0);			
 		}
 		
-		public static bool operator <(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(System.Convert.ToUInt32(value2)) < 0);
-			
+		public static bool operator <(uint value1, UInt24 value2)
+		{			
+			return (value1.CompareTo((uint)value2) < 0);			
 		}
 		
-		public static bool operator <(UInt24 value1, UInt32 value2)
-		{
-			
-			return (value1.CompareTo(value2) < 0);
-			
+		public static bool operator <(UInt24 value1, uint value2)
+		{			
+			return (value1.CompareTo(value2) < 0);			
 		}
 		
 		public static bool operator <=(UInt24 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(value2) <= 0);
-			
+		{			
+			return (value1.CompareTo(value2) <= 0);			
 		}
 		
-		public static bool operator <=(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(System.Convert.ToUInt32(value2)) <= 0);
-			
+		public static bool operator <=(uint value1, UInt24 value2)
+		{			
+			return (value1.CompareTo((uint)value2) <= 0);			
 		}
 		
-		public static bool operator <=(UInt24 value1, UInt32 value2)
-		{
-			
-			return (value1.CompareTo(value2) <= 0);
-			
+		public static bool operator <=(UInt24 value1, uint value2)
+		{			
+			return (value1.CompareTo(value2) <= 0);			
 		}
 		
 		public static bool operator >(UInt24 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(value2) > 0);
-			
+		{			
+			return (value1.CompareTo(value2) > 0);			
 		}
 		
-		public static bool operator >(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(System.Convert.ToUInt32(value2)) > 0);
-			
+		public static bool operator >(uint value1, UInt24 value2)
+		{			
+			return (value1.CompareTo((uint)value2) > 0);			
 		}
 		
-		public static bool operator >(UInt24 value1, UInt32 value2)
-		{
-			
-			return (value1.CompareTo(value2) > 0);
-			
+		public static bool operator >(UInt24 value1, uint value2)
+		{			
+			return (value1.CompareTo(value2) > 0);			
 		}
 		
 		public static bool operator >=(UInt24 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(value2) >= 0);
-			
+		{			
+			return (value1.CompareTo(value2) >= 0);			
 		}
 		
-		public static bool operator >=(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1.CompareTo(System.Convert.ToUInt32(value2)) >= 0);
-			
+		public static bool operator >=(uint value1, UInt24 value2)
+		{			
+			return (value1.CompareTo((uint)value2) >= 0);			
 		}
 		
-		public static bool operator >=(UInt24 value1, UInt32 value2)
-		{
-			
-			return (value1.CompareTo(value2) >= 0);
-			
+		public static bool operator >=(UInt24 value1, uint value2)
+		{			
+			return (value1.CompareTo(value2) >= 0);	
 		}
 		
 		#endregion
 		
 		#region " Type Conversion Operators "
 		
-		#region " Narrowing Conversions "
+		#region " Explicit Narrowing Conversions "
 		
-		public static explicit operator UInt24 (string value)
-		{
-			
+		public static explicit operator UInt24(string value)
+		{			
 			return new UInt24(Convert.ToUInt32(value));
-			
 		}
 		
-		public static explicit operator UInt24 (decimal value)
-		{
-			
+		public static explicit operator UInt24(decimal value)
+		{			
 			return new UInt24(Convert.ToUInt32(value));
-			
 		}
 		
-		public static explicit operator UInt24 (double value)
-		{
-			
+		public static explicit operator UInt24(double value)
+		{			
 			return new UInt24(Convert.ToUInt32(value));
-			
 		}
 		
-		public static explicit operator UInt24 (float value)
-		{
-			
+		public static explicit operator UInt24(float value)
+		{			
 			return new UInt24(Convert.ToUInt32(value));
-			
 		}
 		
-		public static explicit operator UInt24 (UInt64 value)
-		{
-			
+		public static explicit operator UInt24(ulong value)
+		{			
 			return new UInt24(Convert.ToUInt32(value));
-			
 		}
 		
-		public static explicit operator UInt24 (UInt32 value)
-		{
-			
+		public static explicit operator UInt24(uint value)
+		{			
 			return new UInt24(value);
-			
 		}
 		
-		public static explicit operator UInt24 (Int24 value)
-		{
-			
-			return new UInt24(System.Convert.ToUInt32(value));
-			
+		public static explicit operator UInt24(Int24 value)
+		{			
+			return new UInt24((uint)value);
 		}
 		
-		public static explicit operator Int24 (UInt24 value)
-		{
-			
-			return new Int24(System.Convert.ToInt32(value));
-			
+		public static explicit operator Int24(UInt24 value)
+		{			
+			return new Int24((int)value);
 		}
 		
-		public static explicit operator short (UInt24 value)
-		{
-			
-			return ((short) (System.Convert.ToUInt32(value)));
-			
+		public static explicit operator short(UInt24 value)
+		{			
+			return (short)((uint)value);
 		}
 		
-		public static explicit operator UInt16 (UInt24 value)
-		{
-			
-			return System.Convert.ToUInt16(System.Convert.ToUInt32(value));
-			
+		public static explicit operator ushort(UInt24 value)
+		{			
+			return (ushort)((uint)value);			
 		}
 		
-		public static explicit operator byte (UInt24 value)
-		{
-			
-			return ((byte) (System.Convert.ToUInt32(value)));
-			
+		public static explicit operator byte(UInt24 value)
+		{			
+			return (byte)((uint)value);			
 		}
 		
 		#endregion
 		
-		#region " Widening Conversions "
+		#region " Implicit Widening Conversions "
 		
-		public static UInt24 operator operator(byte value)
-		{
-			
-			return new UInt24(Convert.ToUInt32(value));
-			
+		public static implicit operator UInt24(byte value)
+		{			
+			return new UInt24((uint)value);
 		}
 		
-		public static UInt24 operator operator(char value)
-		{
-			
-			return new UInt24(Convert.ToUInt32(value));
-			
+		public static implicit operator UInt24(char value)
+		{			
+			return new UInt24((uint)value);
 		}
 		
-		public static UInt24 operator operator(UInt16 value)
-		{
-			
-			return new UInt24(Convert.ToUInt32(value));
-			
+		public static implicit operator UInt24(ushort value)
+		{			
+			return new UInt24((uint)value);
 		}
 		
-		public static int operator operator(UInt24 value)
-		{
-			
-			return value.ToInt32(null);
-			
+		public static implicit operator int(UInt24 value)
+		{			
+			return ((IConvertible)value).ToInt32(null);
 		}
 		
-		public static UInt32 operator operator(UInt24 value)
-		{
-			
-			return value.ToUInt32(null);
-			
+		public static implicit operator uint(UInt24 value)
+		{			
+			return ((IConvertible)value).ToUInt32(null);
 		}
 		
-		public static long operator operator(UInt24 value)
-		{
-			
-			return value.ToInt64(null);
-			
+		public static implicit operator long(UInt24 value)
+		{			
+			return ((IConvertible)value).ToInt64(null);
 		}
 		
-		public static UInt64 operator operator(UInt24 value)
-		{
-			
-			return value.ToUInt64(null);
-			
+		public static implicit operator ulong(UInt24 value)
+		{			
+			return ((IConvertible)value).ToUInt64(null);
 		}
 		
-		public static double operator operator(UInt24 value)
-		{
-			
-			return value.ToDouble(null);
-			
+		public static implicit operator double(UInt24 value)
+		{			
+			return ((IConvertible)value).ToDouble(null);
 		}
 		
-		public static float operator operator(UInt24 value)
-		{
-			
-			return value.ToSingle(null);
-			
+		public static implicit operator float(UInt24 value)
+        {			
+			return ((IConvertible)value).ToSingle(null);
 		}
 		
-		public static decimal operator operator(UInt24 value)
-		{
-			
-			return value.ToDecimal(null);
-			
+		public static implicit operator decimal(UInt24 value)
+		{			
+			return ((IConvertible)value).ToDecimal(null);
 		}
 		
-		public static string operator operator(UInt24 value)
-		{
-			
+		public static implicit operator string(UInt24 value)
+		{			
 			return value.ToString();
-			
 		}
 		
 		#endregion
@@ -505,88 +405,64 @@ namespace TVA
 		
 		#region " Boolean and Bitwise Operators "
 		
-		public static bool operator IsTrue(UInt24 value)
-		{
-			
-			return (value > 0);
-			
+		public static bool operator true(UInt24 value)
+		{			
+			return (value > 0);			
 		}
 		
-		public static bool operator IsFalse(UInt24 value)
-		{
-			
-			return (value == 0);
-			
+		public static bool operator false(UInt24 value)
+		{			
+			return (value == 0);			
 		}
 		
-		public static UInt24 operator !(UInt24 value)
-		{
-			
-			return ((UInt24) (ApplyBitMask(! System.Convert.ToUInt32(value))));
-			
+		public static UInt24 operator ~(UInt24 value)
+		{			
+			return (UInt24)ApplyBitMask(~(uint)value);
 		}
 		
 		public static UInt24 operator &(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (ApplyBitMask(System.Convert.ToUInt32(value1) && System.Convert.ToUInt32(value2))));
-			
+		{			
+			return (UInt24)ApplyBitMask((uint)value1 & (uint)value2);	
 		}
 		
-		public static UInt32 operator &(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1 && System.Convert.ToUInt32(value2));
-			
+		public static uint operator &(uint value1, UInt24 value2)
+		{			
+			return (value1 & (uint)value2);
 		}
 		
-		public static UInt32 operator &(UInt24 value1, UInt32 value2)
-		{
-			
-			return (System.Convert.ToUInt32(value1) && value2);
-			
+		public static uint operator &(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1 & value2);
 		}
 		
 		public static UInt24 operator |(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (ApplyBitMask(System.Convert.ToUInt32(value1) || System.Convert.ToUInt32(value2))));
-			
+		{			
+			return (UInt24)ApplyBitMask((uint)value1 | (uint)value2);
 		}
 		
-		public static UInt32 operator |(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1 || System.Convert.ToUInt32(value2));
-			
+		public static uint operator |(uint value1, UInt24 value2)
+		{			
+			return (value1 | (uint)value2);
 		}
 		
-		public static UInt32 operator |(UInt24 value1, UInt32 value2)
-		{
-			
-			return (System.Convert.ToUInt32(value1) || value2);
-			
+		public static uint operator |(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1 | value2);
 		}
 		
 		public static UInt24 operator ^(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (ApplyBitMask(System.Convert.ToUInt32(value1) ^ System.Convert.ToUInt32(value2))));
-			
+		{			
+			return (UInt24)ApplyBitMask((uint)value1 ^ (uint)value2);
 		}
 		
-		public static UInt32 operator ^(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1 ^ System.Convert.ToUInt32(value2));
-			
+		public static uint operator ^(uint value1, UInt24 value2)
+		{			
+			return (value1 ^ (uint)value2);
 		}
 		
-		public static UInt32 operator ^(UInt24 value1, UInt32 value2)
-		{
-			
-			return (System.Convert.ToUInt32(value1) ^ value2);
-			
+		public static uint operator ^(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1 ^ value2);
 		}
 		
 		#endregion
@@ -594,165 +470,127 @@ namespace TVA
 		#region " Arithmetic Operators "
 		
 		public static UInt24 operator %(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (System.Convert.ToUInt32(value1) % System.Convert.ToUInt32(value2)));
-			
+		{			
+			return (UInt24)((uint)value1 % (uint)value2);
 		}
 		
-		public static UInt32 operator %(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1 % System.Convert.ToUInt32(value2));
-			
+		public static uint operator %(uint value1, UInt24 value2)
+		{			
+			return (value1 % (uint)value2);			
 		}
 		
-		public static UInt32 operator %(UInt24 value1, UInt32 value2)
-		{
-			
-			return (System.Convert.ToUInt32(value1) % value2);
-			
+		public static uint operator %(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1 % value2);			
 		}
 		
 		public static UInt24 operator +(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (System.Convert.ToUInt32(value1) + System.Convert.ToUInt32(value2)));
-			
+		{			
+			return (UInt24)((uint)value1 + (uint)value2);
 		}
 		
-		public static UInt32 operator +(UInt32 value1, UInt24 value2)
+		public static uint operator +(uint value1, UInt24 value2)
 		{
-			
-			return (value1 + System.Convert.ToUInt32(value2));
-			
+			return (value1 + (uint)value2);
 		}
 		
-		public static UInt32 operator +(UInt24 value1, UInt32 value2)
-		{
-			
-			return (System.Convert.ToUInt32(value1) + value2);
-			
+		public static uint operator +(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1 + value2);			
 		}
 		
 		public static UInt24 operator -(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (System.Convert.ToUInt32(value1) - System.Convert.ToUInt32(value2)));
-			
+		{			
+			return (UInt24)((uint)value1 - (uint)value2);
 		}
 		
-		public static UInt32 operator -(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1 - System.Convert.ToUInt32(value2));
-			
+		public static uint operator -(uint value1, UInt24 value2)
+		{			
+			return (value1 - (uint)value2);
 		}
 		
-		public static UInt32 operator -(UInt24 value1, UInt32 value2)
-		{
-			
-			return (System.Convert.ToUInt32(value1) - value2);
-			
+		public static uint operator -(UInt24 value1, uint value2)
+		{			
+			return ((uint)value1 - value2);
 		}
 		
 		public static UInt24 operator *(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (System.Convert.ToUInt32(value1) * System.Convert.ToUInt32(value2)));
-			
+		{			
+			return (UInt24)((uint)value1 * (uint)value2);
 		}
 		
-		public static UInt32 operator *(UInt32 value1, UInt24 value2)
-		{
-			
-			return (value1 * System.Convert.ToUInt32(value2));
-			
+		public static uint operator *(uint value1, UInt24 value2)
+		{			
+			return (value1 * (uint)value2);
 		}
 		
-		public static UInt32 operator *(UInt24 value1, UInt32 value2)
+		public static uint operator *(UInt24 value1, uint value2)
 		{
-			
-			return (System.Convert.ToUInt32(value1) * value2);
-			
+			return ((uint)value1 * value2);
 		}
 		
+        // Integer division operators
 		public static UInt24 operator /(UInt24 value1, UInt24 value2)
-		{
-			
-			return ((UInt24) (System.Convert.ToUInt32(value1) / System.Convert.ToUInt32(value2)));
-			
+		{		
+			return (UInt24)((uint)value1 / (uint)value2);
 		}
 		
-		public static UInt32 operator /(UInt32 value1, UInt24 value2)
+		public static uint operator /(uint value1, UInt24 value2)
 		{
-			
-			return (value1 / System.Convert.ToUInt32(value2));
-			
+			return (value1 / (uint)value2);
 		}
 		
-		public static UInt32 operator /(UInt24 value1, UInt32 value2)
+		public static uint operator /(UInt24 value1, uint value2)
 		{
-			
-			return (System.Convert.ToUInt32(value1) / value2);
-			
+			return ((uint)value1 / value2);
 		}
 		
+        // Standard division operators
 		public static double operator /(UInt24 value1, UInt24 value2)
 		{
-			
-			return (System.Convert.ToDouble(value1) / System.Convert.ToDouble(value2));
-			
+			return ((double)value1 / (double)value2);
 		}
 		
-		public static double operator /(UInt32 value1, UInt24 value2)
+		public static double operator /(uint value1, UInt24 value2)
 		{
-			
-			return (System.Convert.ToDouble(value1) / System.Convert.ToDouble(value2));
-			
+			return ((double)value1 / (double)value2);
 		}
 		
-		public static double operator /(UInt24 value1, UInt32 value2)
+		public static double operator /(UInt24 value1, uint value2)
 		{
-			
-			return (System.Convert.ToDouble(value1) / System.Convert.ToUInt32(value2));
-			
+			return ((double)value1 / (double)value2);
 		}
-		
-		public static double operator ^^(UInt24 value1, UInt24 value2)
-		{
-			
-			return Math.Pow(System.Convert.ToDouble(value1), System.Convert.ToDouble(value2));
-			
-		}}
-		
-		public static double operator ^^(UInt32 value1, UInt24 value2)
-		{
-			
-			return Math.Pow(System.Convert.ToDouble(value1), System.Convert.ToDouble(value2));
-			
-		}}
-		
-		public static double operator ^^(UInt24 value1, UInt32 value2)
-		{
-			
-			return Math.Pow(System.Convert.ToDouble(value1), System.Convert.ToDouble(value2));
-			
-		}}
 		
 		public static UInt24 operator >>(UInt24 value, int shifts)
 		{
-			
-			return ((UInt24) (ApplyBitMask(System.Convert.ToUInt32(value) >> shifts)));
-			
+			return (UInt24)ApplyBitMask((uint)value >> shifts);
 		}
 		
 		public static UInt24 operator <<(UInt24 value, int shifts)
 		{
-			
-			return ((UInt24) (ApplyBitMask(System.Convert.ToUInt32(value) << shifts)));
-			
+			return (UInt24)ApplyBitMask((uint)value << shifts);
 		}
+
+        // C# doesn't expose an exponent operator but some other .NET languages do,
+        // so we expose the operator via its native special IL function name
+
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(UInt24 value1, UInt24 value2)
+        {
+            return System.Math.Pow((double)value1, (double)value2);
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(int value1, UInt24 value2)
+        {
+            return System.Math.Pow((double)value1, (double)value2);
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(UInt24 value1, int value2)
+        {
+            return System.Math.Pow((double)value1, (double)value2);
+        }
 		
 		#endregion
 		
@@ -778,22 +616,18 @@ namespace TVA
 			}
 		}
 		
-		private static void ValidateNumericRange(UInt32 value)
-		{
-			
+		private static void ValidateNumericRange(uint value)
+		{			
 			if (value > MaxValue32)
 			{
-				throw (new OverflowException(string.Format("Value of {0} will not fit in a 24-bit unsigned integer", value)));
+				throw new OverflowException(string.Format("Value of {0} will not fit in a 24-bit unsigned integer", value));
 			}
-			
 		}
 		
-		private static UInt32 ApplyBitMask(UInt32 value)
-		{
-			
+		private static uint ApplyBitMask(uint value)
+		{			
 			// For unsigned values, all we do is clear all the high bits (keeps 32-bit unsigned number in 24-bit unsigned range)...
-			return (value && ! BitMask);
-			
+			return (value & ~BitMask);			
 		}
 		
 		#endregion
@@ -811,31 +645,13 @@ namespace TVA
 		/// </returns>
 		/// <exception cref="ArgumentException">value is not an UInt32 or UInt24.</exception>
 		public int CompareTo(object value)
-		{
+		{			
+			if (value == null) return 1;
+			if (!(value is uint) && !(value is UInt24)) throw new ArgumentException("Argument must be an UInt32 or an UInt24");
 			
-			if (value == null)
-			{
-				return 1;
-			}
-			if (! value is UInt32&& ! value is UInt24)
-			{
-				throw (new ArgumentException("Argument must be an UInt32 or an UInt24"));
-			}
-			
-			UInt32 num = System.Convert.ToUInt32(value);
-			
-			if (m_value < num)
-			{
-				return - 1;
-			}
-			if (m_value > num)
-			{
-				return 1;
-			}
-			
-			return 0;
-			
-		}
+			uint num = (uint)value;
+            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+        }
 		
 		/// <summary>
 		/// Compares this instance to a specified 32-bit unsigned integer and returns an indication of their
@@ -848,10 +664,8 @@ namespace TVA
 		/// if this instance is greater than value.
 		/// </returns>
 		public int CompareTo(UInt24 value)
-		{
-			
-			return CompareTo(System.Convert.ToUInt32(value));
-			
+		{			
+			return CompareTo((uint)value);			
 		}
 		
 		/// <summary>
@@ -864,21 +678,10 @@ namespace TVA
 		/// if this instance is less than value, zero if this instance is equal to value, or greater than zero
 		/// if this instance is greater than value.
 		/// </returns>
-		public int CompareTo(UInt32 value)
+		public int CompareTo(uint value)
 		{
-			
-			if (m_value < value)
-			{
-				return - 1;
-			}
-			if (m_value > value)
-			{
-				return 1;
-			}
-			
-			return 0;
-			
-		}
+            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+        }
 		
 		/// <summary>
 		/// Returns a value indicating whether this instance is equal to a specified object.
@@ -890,13 +693,8 @@ namespace TVA
 		/// </returns>
 		public override bool Equals(object obj)
 		{
-			
-			if (obj is UInt32|| obj is UInt24)
-			{
-				return Equals(System.Convert.ToUInt32(obj));
-			}
-			return false;
-			
+			if (obj is uint|| obj is UInt24) return Equals((uint)obj);
+			return false;			
 		}
 		
 		/// <summary>
@@ -907,24 +705,20 @@ namespace TVA
 		/// True if obj has the same value as this instance; otherwise, False.
 		/// </returns>
 		public bool Equals(UInt24 obj)
-		{
-			
-			return Equals(System.Convert.ToUInt32(obj));
-			
+		{			
+			return Equals((uint)obj);
 		}
 		
 		/// <summary>
-		/// Returns a value indicating whether this instance is equal to a specified UInt32 value.
+		/// Returns a value indicating whether this instance is equal to a specified uint value.
 		/// </summary>
 		/// <param name="obj">An UInt32 value to compare to this instance.</param>
 		/// <returns>
 		/// True if obj has the same value as this instance; otherwise, False.
 		/// </returns>
-		public bool Equals(UInt32 obj)
+		public bool Equals(uint obj)
 		{
-			
 			return (m_value == obj);
-			
 		}
 		
 		/// <summary>
@@ -935,9 +729,10 @@ namespace TVA
 		/// </returns>
 		public override int GetHashCode()
 		{
-			
-			return TVA.Interop.BitwiseCast.ToInt32(m_value);
-			
+            unchecked
+            {
+                return (int)m_value;
+            }
 		}
 		
 		/// <summary>
@@ -948,10 +743,8 @@ namespace TVA
 		/// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
 		/// </returns>
 		public override string ToString()
-		{
-			
-			return m_value.ToString();
-			
+		{			
+			return m_value.ToString();			
 		}
 		
 		/// <summary>
@@ -963,10 +756,8 @@ namespace TVA
 		/// The string representation of the value of this instance as specified by format.
 		/// </returns>
 		public string ToString(string format)
-		{
-			
-			return m_value.ToString(format);
-			
+		{			
+			return m_value.ToString(format);			
 		}
 		
 		/// <summary>
@@ -980,15 +771,8 @@ namespace TVA
 		/// The string representation of the value of this instance as specified by provider.
 		/// </returns>
 		public string ToString(IFormatProvider provider)
-		{
-			return this.ToString(provider);
-		}
-		
-		public string ToString(IFormatProvider provider)
-		{
-			
+		{			
 			return m_value.ToString(provider);
-			
 		}
 		
 		/// <summary>
@@ -1004,14 +788,7 @@ namespace TVA
 		/// </returns>
 		public string ToString(string format, IFormatProvider provider)
 		{
-			return this.ToString(format, provider);
-		}
-		
-		public string ToString(string format, IFormatProvider provider)
-		{
-			
 			return m_value.ToString(format, provider);
-			
 		}
 		
 		/// <summary>
@@ -1027,10 +804,8 @@ namespace TVA
 		/// </exception>
 		/// <exception cref="FormatException">s is not in the correct format.</exception>
 		public static UInt24 Parse(string s)
-		{
-			
-			return ((UInt24) (UInt32.Parse(s)));
-			
+		{			
+			return (UInt24)uint.Parse(s);
 		}
 		
 		/// <summary>
@@ -1054,10 +829,8 @@ namespace TVA
 		/// </exception>
 		/// <exception cref="FormatException">s is not in a format compliant with style.</exception>
 		public static UInt24 Parse(string s, NumberStyles style)
-		{
-			
-			return ((UInt24) (UInt32.Parse(s, style)));
-			
+		{			
+			return (UInt24)uint.Parse(s, style);
 		}
 		
 		/// <summary>
@@ -1077,10 +850,8 @@ namespace TVA
 		/// </exception>
 		/// <exception cref="FormatException">s is not in the correct format.</exception>
 		public static UInt24 Parse(string s, IFormatProvider provider)
-		{
-			
-			return ((UInt24) (UInt32.Parse(s, provider)));
-			
+		{			
+			return (UInt24)uint.Parse(s, provider);
 		}
 		
 		/// <summary>
@@ -1109,9 +880,7 @@ namespace TVA
 		/// <exception cref="FormatException">s is not in a format compliant with style.</exception>
 		public static UInt24 Parse(string s, NumberStyles style, IFormatProvider provider)
 		{
-			
-			return ((UInt24) (UInt32.Parse(s, style, provider)));
-			
+            return (UInt24)uint.Parse(s, style, provider);
 		}
 		
 		/// <summary>
@@ -1126,26 +895,24 @@ namespace TVA
 		/// This parameter is passed uninitialized.
 		/// </param>
 		/// <returns>true if s was converted successfully; otherwise, false.</returns>
-		public static bool TryParse(string s, ref UInt24 result)
-		{
-			
-			UInt32 parseResult;
+		public static bool TryParse(string s, out UInt24 result)
+		{			
+		    uint parseResult;
 			bool parseResponse;
 			
-			parseResponse = UInt32.TryParse(s, ref parseResult);
+			parseResponse = uint.TryParse(s, out parseResult);
 			
 			try
 			{
-				result = (UInt24) parseResult;
+				result = (UInt24)parseResult;
 			}
 			catch
 			{
-				result = (UInt24) (0);
+				result = (UInt24)0;
 				parseResponse = false;
 			}
 			
 			return parseResponse;
-			
 		}
 		
 		/// <summary>
@@ -1171,13 +938,12 @@ namespace TVA
 		/// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
 		/// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
 		/// </exception>
-		public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, ref UInt24 result)
-		{
-			
-			UInt32 parseResult;
+		public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out UInt24 result)
+		{			
+			uint parseResult;
 			bool parseResponse;
 			
-			parseResponse = UInt32.TryParse(s, style, provider, ref parseResult);
+			parseResponse = uint.TryParse(s, style, provider, out parseResult);
 			
 			try
 			{
@@ -1185,12 +951,11 @@ namespace TVA
 			}
 			catch
 			{
-				result = (UInt24) (0);
+				result = (UInt24)0;
 				parseResponse = false;
 			}
 			
-			return parseResponse;
-			
+			return parseResponse;			
 		}
 		
 		/// <summary>
@@ -1203,125 +968,91 @@ namespace TVA
 		/// </remarks>
 		public TypeCode GetTypeCode()
 		{
-			
 			// There is no UInt24 type code, and an UInt24 will fit inside an UInt32 - so we return an UInt32 type code
 			return TypeCode.UInt32;
-			
-		}
-		
-		#region " Private IConvertible Implementation "
-		
-		// These are are private on the native integer implementations, so we just make them private as well...
-		
-		public bool ToBoolean(IFormatProvider provider)
+        }
+
+        #region " Explicit IConvertible Implementation "
+
+        // These are explicitly implemented on the native integer implementations, so we do the same...
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
 		{
-			
 			return Convert.ToBoolean(m_value, provider);
-			
 		}
-		
-		public char ToChar(IFormatProvider provider)
+
+        char IConvertible.ToChar(IFormatProvider provider)
 		{
-			
 			return Convert.ToChar(m_value, provider);
-			
 		}
-		
-		public SByte ToSByte(IFormatProvider provider)
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
 		{
-			
 			return Convert.ToSByte(m_value, provider);
-			
 		}
-		
-		public byte ToByte(IFormatProvider provider)
+
+        byte IConvertible.ToByte(IFormatProvider provider)
 		{
-			
 			return Convert.ToByte(m_value, provider);
-			
 		}
-		
-		public short ToInt16(IFormatProvider provider)
+
+        short IConvertible.ToInt16(IFormatProvider provider)
 		{
-			
 			return Convert.ToInt16(m_value, provider);
-			
 		}
-		
-		public UInt16 ToUInt16(IFormatProvider provider)
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
 		{
-			
 			return Convert.ToUInt16(m_value, provider);
-			
 		}
-		
-		public int ToInt32(IFormatProvider provider)
+
+        int IConvertible.ToInt32(IFormatProvider provider)
 		{
-			
 			return Convert.ToInt32(m_value, provider);
-			
 		}
-		
-		public UInt32 ToUInt32(IFormatProvider provider)
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
 		{
-			
 			return m_value;
-			
 		}
-		
-		public long ToInt64(IFormatProvider provider)
+
+        long IConvertible.ToInt64(IFormatProvider provider)
 		{
-			
 			return Convert.ToInt64(m_value, provider);
-			
 		}
-		
-		public UInt64 ToUInt64(IFormatProvider provider)
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
 		{
-			
 			return Convert.ToUInt64(m_value, provider);
-			
 		}
-		
-		public float ToSingle(IFormatProvider provider)
+
+        float IConvertible.ToSingle(IFormatProvider provider)
 		{
-			
 			return Convert.ToSingle(m_value, provider);
-			
 		}
-		
-		public double ToDouble(IFormatProvider provider)
+
+        double IConvertible.ToDouble(IFormatProvider provider)
 		{
-			
 			return Convert.ToDouble(m_value, provider);
-			
 		}
-		
-		public decimal ToDecimal(IFormatProvider provider)
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
 		{
-			
 			return Convert.ToDecimal(m_value, provider);
-			
 		}
-		
-		public System.DateTime ToDateTime(IFormatProvider provider)
+
+        System.DateTime IConvertible.ToDateTime(IFormatProvider provider)
 		{
-			
 			return Convert.ToDateTime(m_value, provider);
-			
 		}
-		
-		public object ToType(Type type, IFormatProvider provider)
+
+        object IConvertible.ToType(Type type, IFormatProvider provider)
 		{
-			
 			return Convert.ChangeType(m_value, type, provider);
-			
 		}
 		
 		#endregion
 		
-		#endregion
-		
-	}
-	
+		#endregion	
+	}	
 }

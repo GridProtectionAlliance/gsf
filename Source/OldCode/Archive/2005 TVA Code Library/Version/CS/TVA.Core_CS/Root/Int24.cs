@@ -12,7 +12,7 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/04/2007 - J. Ritchie Carroll
 //       Original version of source code generated
-//  09/08/2008 - J. Ritchie Carroll
+//  09/09/2008 - J. Ritchie Carroll
 //      Converted to C#.
 //
 //*******************************************************************************************************
@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.ComponentModel;
-using TVA.Interop;
 
 /// <summary>Represents a 24-bit signed integer.</summary>
 /// <remarks>
@@ -54,7 +54,7 @@ namespace TVA
         #region " Public Constants "
 
         /// <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
-        public const int BitMask = (int)(Bit.Bit24 | Bit.Bit25 | Bit.Bit26 | Bit.Bit27 | Bit.Bit28 | Bit.Bit29 | Bit.Bit30 | Bit.Bit31);
+        public const int BitMask = -16777216;
 
         /// <summary>Represents the largest possible value of an Int24 as an Int32. This field is constant.</summary>
         public const int MaxValue32 = 8388607;
@@ -178,7 +178,7 @@ namespace TVA
             }
 
             // Deserialize value
-            return ((Int24)(ApplyBitMask(BitConverter.ToInt32(bytes, 0))));
+            return (Int24)ApplyBitMask(BitConverter.ToInt32(bytes, 0));
         }
 
         #endregion
@@ -317,12 +317,12 @@ namespace TVA
 
         public static explicit operator short(Int24 value)
         {
-            return ((short)((int)value));
+            return (short)((int)value);
         }
 
         public static explicit operator byte(Int24 value)
         {
-            return ((byte)((int)value));
+            return (byte)((int)value);
         }
 
         #endregion
@@ -331,54 +331,54 @@ namespace TVA
 
         public static implicit operator Int24(byte value)
         {
-            return new Int24(Convert.ToInt32(value));
+            return new Int24((int)value);
         }
 
         public static implicit operator Int24(char value)
         {
-            return new Int24(Convert.ToInt32(value));
+            return new Int24((int)value);
         }
 
         public static implicit operator Int24(short value)
         {
-            return new Int24(Convert.ToInt32(value));
+            return new Int24((int)value);
         }
 
         public static implicit operator int(Int24 value)
         {
-            return value.ToInt32(null);
+            return ((IConvertible)value).ToInt32(null);
         }
 
         [CLSCompliant(false)]
         public static implicit operator uint(Int24 value)
         {
-            return value.ToUInt32(null);
+            return ((IConvertible)value).ToUInt32(null);
         }
 
         public static implicit operator long(Int24 value)
         {
-            return value.ToInt64(null);
+            return ((IConvertible)value).ToInt64(null);
         }
 
         [CLSCompliant(false)]
         public static implicit operator ulong(Int24 value)
         {
-            return value.ToUInt64(null);
+            return ((IConvertible)value).ToUInt64(null);
         }
 
         public static implicit operator double(Int24 value)
         {
-            return value.ToDouble(null);
+            return ((IConvertible)value).ToDouble(null);
         }
 
         public static implicit operator float(Int24 value)
         {
-            return value.ToSingle(null);
+            return ((IConvertible)value).ToSingle(null);
         }
 
         public static implicit operator decimal(Int24 value)
         {
-            return value.ToDecimal(null);
+            return ((IConvertible)value).ToDecimal(null);
         }
 
         public static implicit operator string(Int24 value)
@@ -404,12 +404,12 @@ namespace TVA
 
         public static Int24 operator ~(Int24 value)
         {
-            return ((Int24)(ApplyBitMask(~(int)value)));
+            return (Int24)ApplyBitMask(~(int)value);
         }
 
         public static Int24 operator &(Int24 value1, Int24 value2)
         {
-            return ((Int24)(ApplyBitMask((int)value1 & (int)value2)));
+            return (Int24)ApplyBitMask((int)value1 & (int)value2);
         }
 
         public static int operator &(int value1, Int24 value2)
@@ -424,7 +424,7 @@ namespace TVA
 
         public static Int24 operator |(Int24 value1, Int24 value2)
         {
-            return ((Int24)(ApplyBitMask((int)value1 | (int)value2)));
+            return (Int24)ApplyBitMask((int)value1 | (int)value2);
         }
 
         public static int operator |(int value1, Int24 value2)
@@ -439,7 +439,7 @@ namespace TVA
 
         public static Int24 operator ^(Int24 value1, Int24 value2)
         {
-            return ((Int24)(ApplyBitMask((int)value1 ^ (int)value2)));
+            return (Int24)ApplyBitMask((int)value1 ^ (int)value2);
         }
 
         public static int operator ^(int value1, Int24 value2)
@@ -452,34 +452,13 @@ namespace TVA
             return ((int)value1 ^ value2);
         }
 
-        // C# doesn't expose an exponent operator but some other .NET languages do,
-        // so we expose the operator via its native special IL function name
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static double op_Exponent(Int24 value1, Int24 value2)
-        {
-            return System.Math.Pow((double)value1, (double)value2);
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static double op_Exponent(int value1, Int24 value2)
-        {
-            return System.Math.Pow((double)value1, (double)value2);
-        }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static double op_Exponent(Int24 value1, int value2)
-        {
-            return System.Math.Pow((double)value1, (double)value2);
-        }
-
         #endregion
 
         #region " Arithmetic Operators "
 
         public static Int24 operator %(Int24 value1, Int24 value2)
         {
-            return ((Int24)((int)value1 % (int)value2));
+            return (Int24)((int)value1 % (int)value2);
         }
 
         public static int operator %(int value1, Int24 value2)
@@ -494,7 +473,7 @@ namespace TVA
 
         public static Int24 operator +(Int24 value1, Int24 value2)
         {
-            return ((Int24)((int)value1 + (int)value2));
+            return (Int24)((int)value1 + (int)value2);
         }
 
         public static int operator +(int value1, Int24 value2)
@@ -509,7 +488,7 @@ namespace TVA
 
         public static Int24 operator -(Int24 value1, Int24 value2)
         {
-            return ((Int24)((int)value1 - (int)value2));
+            return (Int24)((int)value1 - (int)value2);
         }
 
         public static int operator -(int value1, Int24 value2)
@@ -524,7 +503,7 @@ namespace TVA
 
         public static Int24 operator *(Int24 value1, Int24 value2)
         {
-            return ((Int24)((int)value1 * (int)value2));
+            return (Int24)((int)value1 * (int)value2);
         }
 
         public static int operator *(int value1, Int24 value2)
@@ -540,7 +519,7 @@ namespace TVA
         // Integer division operators
         public static Int24 operator /(Int24 value1, Int24 value2)
         {
-            return ((Int24)((int)value1 / (int)value2));
+            return (Int24)((int)value1 / (int)value2);
         }
 
         public static int operator /(int value1, Int24 value2)
@@ -571,12 +550,33 @@ namespace TVA
 
         public static Int24 operator >>(Int24 value, int shifts)
         {
-            return ((Int24)(ApplyBitMask((int)value >> shifts)));
+            return (Int24)(ApplyBitMask((int)value >> shifts));
         }
 
         public static Int24 operator <<(Int24 value, int shifts)
         {
-            return ((Int24)(ApplyBitMask((int)value << shifts)));
+            return (Int24)(ApplyBitMask((int)value << shifts));
+        }
+
+        // C# doesn't expose an exponent operator but some other .NET languages do,
+        // so we expose the operator via its native special IL function name
+
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(Int24 value1, Int24 value2)
+        {
+            return System.Math.Pow((double)value1, (double)value2);
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(int value1, Int24 value2)
+        {
+            return System.Math.Pow((double)value1, (double)value2);
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(Int24 value1, int value2)
+        {
+            return System.Math.Pow((double)value1, (double)value2);
         }
 
         #endregion
@@ -613,7 +613,8 @@ namespace TVA
 
         private static int ApplyBitMask(int value)
         {
-            if ((value & Bit.Bit23) > 0)
+            // Check bit 23, the sign bit in a signed 24-bit integer
+            if ((value & 0x00800000) > 0)
             {
                 // If the sign-bit is set, this number will be negative - set all high-byte bits (keeps 32-bit number in 24-bit range)
                 value |= BitMask;
@@ -799,7 +800,7 @@ namespace TVA
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Int24 Parse(string s)
         {
-            return ((Int24)int.Parse(s));
+            return (Int24)int.Parse(s);
         }
 
         /// <summary>
@@ -824,7 +825,7 @@ namespace TVA
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Int24 Parse(string s, NumberStyles style)
         {
-            return ((Int24)int.Parse(s, style));
+            return (Int24)int.Parse(s, style);
         }
 
         /// <summary>
@@ -845,7 +846,7 @@ namespace TVA
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Int24 Parse(string s, IFormatProvider provider)
         {
-            return ((Int24)int.Parse(s, provider));
+            return (Int24)int.Parse(s, provider);
         }
 
         /// <summary>
@@ -874,7 +875,7 @@ namespace TVA
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Int24 Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return ((Int24)int.Parse(s, style, provider));
+            return (Int24)int.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -902,7 +903,7 @@ namespace TVA
             }
             catch
             {
-                result = (Int24)(0);
+                result = (Int24)0;
                 parseResponse = false;
             }
 
@@ -945,7 +946,7 @@ namespace TVA
             }
             catch
             {
-                result = (Int24)(0);
+                result = (Int24)0;
                 parseResponse = false;
             }
 
