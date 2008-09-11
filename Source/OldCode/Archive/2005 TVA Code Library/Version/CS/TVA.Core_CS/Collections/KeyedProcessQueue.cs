@@ -1,14 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.ComponentModel;
-//using TVA.Common;
-using System.Threading;
-
 //*******************************************************************************************************
 //  TVA.Collections.KeyedProcessQueue.vb - Multi-threaded Keyed Item Processing Queue
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -25,15 +14,20 @@ using System.Threading;
 //       Generated original version of source code.
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
+//  09/11/2008 - J. Ritchie Carroll
+//      Converted to C#
 //
 //*******************************************************************************************************
 
+using System;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace TVA
 {
 	namespace Collections
 	{
-		
 		/// <summary>
 		/// <para>This class processes a keyed collection of items on independent threads.</para>
 		/// <para>Consumer must implement a function to process items.</para>
@@ -63,10 +57,6 @@ namespace TVA
 		/// </remarks>
 		public class KeyedProcessQueue<TKey, TValue> : ProcessQueue<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
 		{
-			
-			
-			
-			
 			#region " Public Member Declarations "
 			
 			/// <summary>
@@ -80,18 +70,6 @@ namespace TVA
 			/// <para>Asynchronous queues will process individual items on multiple threads</para>
 			/// </remarks>
 			public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
-			
-			/// <summary>
-			/// Function signature that defines a method to process multiple keys and values simultaneously.
-			/// </summary>
-			/// <param name="keys">keys to be processed</param>
-			/// <param name="values">values to be processed</param>
-			/// <remarks>
-			/// <para>Required unless ProcessItemFunction is implemented.</para>
-			/// <para>Used when creating a queue to process multiple items simultaneously.</para>
-			/// <para>Asynchronous queues will process groups of items on multiple threads.</para>
-			/// </remarks>
-			public new delegate void ProcessItemsFunctionSignature(TKey[] keys, TValue[] values);
 			
 			/// <summary>
 			/// Function signature that determines if a key and value can be currently processed.
@@ -117,7 +95,6 @@ namespace TVA
 			#region " Private Member Declarations "
 			
 			private ProcessItemFunctionSignature m_processItemFunction;
-			private ProcessItemsFunctionSignature m_processItemsFunction;
 			private CanProcessItemFunctionSignature m_canProcessItemFunction;
 			private bool m_disposed;
 			
@@ -133,9 +110,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
 			{
-				
 				return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -144,9 +119,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
 			{
-				
 				return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -155,9 +128,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
 			{
-				
 				return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -166,9 +137,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
 			{
-				
 				return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -176,9 +145,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -186,9 +153,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -197,9 +162,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
 			{
-				
 				return CreateSynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -208,9 +171,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
 			{
-				
 				return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -218,9 +179,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return CreateSynchronousQueue(processItemFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -228,9 +187,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -239,9 +196,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
 			{
-				
 				return CreateRealTimeQueue(processItemFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -250,9 +205,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
 			{
-				
 				return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -260,9 +213,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return CreateRealTimeQueue(processItemFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -270,9 +221,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			#endregion
@@ -285,9 +234,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
 			{
-				
 				return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -296,9 +243,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
 			{
-				
 				return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -307,9 +252,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
 			{
-				
 				return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -318,9 +261,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
 			{
-				
 				return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -328,9 +269,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return CreateAsynchronousQueue(processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -338,9 +277,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return new KeyedProcessQueue<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -349,9 +286,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
 			{
-				
 				return CreateSynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -360,9 +295,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
 			{
-				
 				return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -370,9 +303,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return CreateSynchronousQueue(processItemsFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -380,9 +311,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return new KeyedProcessQueue<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -391,9 +320,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
 			{
-				
 				return CreateRealTimeQueue(processItemsFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -402,9 +329,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
 			{
-				
 				return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -412,9 +337,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return CreateRealTimeQueue(processItemsFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			/// <summary>
@@ -422,9 +345,7 @@ namespace TVA
 			/// </summary>
 			public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
 			{
-				
 				return new KeyedProcessQueue<TKey, TValue>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-				
 			}
 			
 			#endregion
@@ -434,39 +355,30 @@ namespace TVA
 			/// <summary>
 			/// Creates a ProcessList based on the generic DictionaryList class.
 			/// </summary>
-			protected KeyedProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException) : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+			protected KeyedProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+                : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 			{
-				
-				
 				m_processItemFunction = processItemFunction; // Defining this function creates a ProcessingStyle = OneAtATime keyed process queue
 				m_canProcessItemFunction = canProcessItemFunction;
 				
 				// Assigns translator functions for base class.
-				base.ProcessItemFunction = new System.EventHandler(ProcessKeyedItem);
+				base.ProcessItemFunction = ProcessKeyedItem;
+
 				if (m_canProcessItemFunction != null)
-				{
-					base.CanProcessItemFunction = new System.EventHandler(CanProcessKeyedItem);
-				}
-				
+					base.CanProcessItemFunction = CanProcessKeyedItem;				
 			}
 			
 			/// <summary>
 			/// Creates a bulk-item ProcessList based on the generic DictionaryList class.
 			/// </summary>
-			protected KeyedProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException) : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+			protected KeyedProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+                : base(null, processItemsFunction, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
 			{
-				
-				
-				m_processItemsFunction = processItemsFunction; // Defining this function creates a ProcessingStyle = ManyAtOnce keyed process queue
 				m_canProcessItemFunction = canProcessItemFunction;
-				
-				// Assigns translator functions for base class.
-				base.ProcessItemsFunction = new System.EventHandler(ProcessKeyedItems);
-				if (m_canProcessItemFunction != null)
-				{
-					base.CanProcessItemFunction = new System.EventHandler(CanProcessKeyedItem);
-				}
-				
+
+                // Assigns translator functions for base class.
+                if (m_canProcessItemFunction != null)
+					base.CanProcessItemFunction = CanProcessKeyedItem;
 			}
 			
 			#endregion
@@ -494,10 +406,9 @@ namespace TVA
 					if (value != null)
 					{
 						m_processItemFunction = value;
-						m_processItemsFunction = null;
 						
-						// Assigns translator functions for base class.
-						base.ProcessItemFunction = new System.EventHandler(ProcessKeyedItem);
+						// Assigns translator function for base class.
+						base.ProcessItemFunction = ProcessKeyedItem;
 					}
 				}
 			}
@@ -510,21 +421,18 @@ namespace TVA
 			/// <para>A queue must be defined to process either a single item at a time or many items at once.</para>
 			/// <para>Implementation of this function makes ProcessingStyle = ManyAtOnce.</para>
 			/// </remarks>
-			public virtual new ProcessItemsFunctionSignature ProcessItemsFunction
+			public override ProcessItemsFunctionSignature ProcessItemsFunction
 			{
 				get
 				{
-					return m_processItemsFunction;
+					return base.ProcessItemsFunction;
 				}
 				set
 				{
 					if (value != null)
 					{
-						m_processItemsFunction = value;
-						m_processItemFunction = null;
-						
-						// Assigns translator functions for base class.
-						base.ProcessItemsFunction = new System.EventHandler(ProcessKeyedItems);
+                        m_processItemFunction = null;						
+                        base.ProcessItemsFunction = value;
 					}
 				}
 			}
@@ -544,13 +452,9 @@ namespace TVA
 					
 					// Assigns translator function for base class.
 					if (m_canProcessItemFunction == null)
-					{
 						base.CanProcessItemFunction = null;
-					}
 					else
-					{
-						base.CanProcessItemFunction = new System.EventHandler(CanProcessKeyedItem);
-					}
+						base.CanProcessItemFunction = CanProcessKeyedItem;
 				}
 			}
 			
@@ -581,13 +485,12 @@ namespace TVA
 			{
 				get
 				{
-					return ((DictionaryList<TKey, TValue>) InternalList);
+					return (DictionaryList<TKey, TValue>)InternalList;
 				}
 			}
 			
 			protected override void Dispose(bool disposing)
 			{
-				
 				if (! m_disposed)
 				{
 					base.Dispose(disposing);
@@ -595,53 +498,48 @@ namespace TVA
 					if (disposing)
 					{
 						m_processItemFunction = null;
-						m_processItemsFunction = null;
 						m_canProcessItemFunction = null;
 					}
 				}
 				
 				m_disposed = true;
-				
 			}
 			
 			#endregion
 			
 			#region " Private Methods Implementation "
 			
-			// These functions act as intermediate "translators" between the delegate implementations of ProcessQueue and
-			// KeyedProcessQueue. Users implementing a KeyedProcessQueue will be thinking in terms of "keys" and "values", and
-			// not a KeyValuePair structure.
+			// These functions act as intermediate "translators" between the delegate implementations of
+            // ProcessQueue and KeyedProcessQueue. Users implementing a KeyedProcessQueue will likely be
+            // thinking in terms of "keys" and "values", and not a KeyValuePair structure. Note that the
+            // bulk item ProcessItems delegate is not translated since an array of KeyValuePair structures
+            // would make more since and be more efficient than two separate arrays of keys and values.
 			private void ProcessKeyedItem(KeyValuePair<TKey, TValue> item)
 			{
-				
 				m_processItemFunction(item.Key, item.Value);
-				
 			}
-			
-			private void ProcessKeyedItems(KeyValuePair[]<TKey, TValue> items)
-			{
-				
-				// Copies an array of KeyValuePairs into an array of keys and values.
-				TKey[] keys = TVA.Common.CreateArray<TKey>(items.Length);
-				TValue[] values = TVA.Common.CreateArray<TValue>(items.Length);
-				
-				for (int x = 0; x <= items.Length - 1; x++)
-				{
-					KeyValuePair with_1 = items[x];
-					keys[x] = with_1.Key;
-					values[x] = with_1.Value;
-				}
-				
-				m_processItemsFunction(keys, values);
-				
-			}
-			
+		
 			private bool CanProcessKeyedItem(KeyValuePair<TKey, TValue> item)
 			{
-				
 				return m_canProcessItemFunction(item.Key, item.Value);
-				
 			}
+
+            //private void ProcessKeyedItems(KeyValuePair<TKey, TValue>[] items)
+            //{
+            //    // Copies an array of KeyValuePairs into an array of keys and values.
+            //    TKey[] keys = new TKey[items.Length];
+            //    TValue[] values = new TValue[items.Length];
+            //    KeyValuePair<TKey, TValue> kvPair;
+
+            //    for (int x = 0; x <= items.Length - 1; x++)
+            //    {
+            //        kvPair = items[x];
+            //        keys[x] = kvPair.Key;
+            //        values[x] = kvPair.Value;
+            //    }
+
+            //    m_processItemsFunction(keys, values);
+            //}
 			
 			#endregion
 			
@@ -655,13 +553,11 @@ namespace TVA
 			/// <exception cref="ArgumentNullException">key is null.</exception>
 			public void Add(TKey key, TValue value)
 			{
-				
 				lock(SyncRoot)
 				{
 					InternalDictionary.Add(key, value);
 					DataAdded();
 				}
-				
 			}
 			
 			/// <summary>Determines whether the queue contains an element with the specified key.</summary>
@@ -670,12 +566,10 @@ namespace TVA
 			/// <exception cref="ArgumentNullException">key is null.</exception>
 			public bool ContainsKey(TKey key)
 			{
-				
 				lock(SyncRoot)
 				{
 					return InternalDictionary.ContainsKey(key);
 				}
-				
 			}
 			
 			/// <summary>Determines whether the queue contains an element with the specified value.</summary>
@@ -683,32 +577,26 @@ namespace TVA
 			/// <param name="value">The value to locate in the queue.</param>
 			public bool ContainsValue(TValue value)
 			{
-				
 				lock(SyncRoot)
 				{
 					return InternalDictionary.ContainsValue(value);
 				}
-				
 			}
 			
 			public int IndexOfKey(TKey key)
 			{
-				
 				lock(SyncRoot)
 				{
 					return InternalDictionary.IndexOfKey(key);
 				}
-				
 			}
 			
 			public int IndexOfValue(TValue value)
 			{
-				
 				lock(SyncRoot)
 				{
 					return InternalDictionary.IndexOfValue(value);
 				}
-				
 			}
 			
 			/// <summary>Gets or sets the value associated with the specified key.</summary>
@@ -741,12 +629,10 @@ namespace TVA
 			/// <exception cref="ArgumentNullException">key is null.</exception>
 			public bool Remove(TKey key)
 			{
-				
 				lock(SyncRoot)
 				{
-					InternalDictionary.Remove(key);
+					return InternalDictionary.Remove(key);
 				}
-				
 			}
 			
 			/// <summary>Gets the value associated with the specified key.</summary>
@@ -758,12 +644,10 @@ namespace TVA
 			/// <exception cref="ArgumentNullException">key is null.</exception>
 			public bool TryGetValue(TKey key, ref TValue value)
 			{
-				
 				lock(SyncRoot)
 				{
 					return InternalDictionary.TryGetValue(key, ref value);
 				}
-				
 			}
 			
 			/// <summary>Gets an ICollection containing the keys of the queue.</summary>
@@ -795,84 +679,60 @@ namespace TVA
 			// the editor to help avoid confusion.
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int BinarySearch(KeyValuePair<TKey, TValue> item)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int BinarySearch(KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int BinarySearch(int index, int count, KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int IndexOf(KeyValuePair<TKey, TValue> item)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int IndexOf(KeyValuePair<TKey, TValue> item, int index, int count)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int LastIndexOf(KeyValuePair<TKey, TValue> item)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override int LastIndexOf(KeyValuePair<TKey, TValue> item, int index, int count)
 			{
-				
 				return IndexOfKey(item.Key);
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override void Sort()
 			{
-				
 				// This list is already sorted.
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override void Sort(IComparer<KeyValuePair<TKey, TValue>> comparer)
 			{
-				
 				// This list is already sorted.
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override void Sort(System.Comparison<KeyValuePair<TKey, TValue>> comparison)
 			{
-				
 				// This list is already sorted.
-				
 			}
 			
 			[EditorBrowsable(EditorBrowsableState.Never)]public override void Sort(int index, int count, IComparer<KeyValuePair<TKey, TValue>> comparer)
 			{
-				
 				// This list is already sorted.
-				
 			}
 			
 			#endregion
-			
 		}
-		
 	}
 }

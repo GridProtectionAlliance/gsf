@@ -80,7 +80,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\IndexedLinkedList.cs" />
     <Compile Include="Diagnostics\PerformanceCounter.cs" />
     <Compile Include="Diagnostics\PerformanceMonitor.cs" />
     <Compile Include="Collections\DictionaryList.cs" />

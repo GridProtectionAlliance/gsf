@@ -3040,15 +3040,7 @@ namespace TVA
                 }
             }
 
-            /// <summary>Gets an object that can be used to synchronize access to the queue.</summary>
-            /// <returns>An object that can be used to synchronize access to the queue.</returns>
-            /// <remarks>
-            /// Note that all the methods of this class are already individually synchronized; however, to safely enumerate
-            /// through each queue element (i.e., to make sure list elements do not change during enumeration), derived
-            /// classes and end users should perform their own synchronization by implementing a SyncLock using this SyncRoot
-            /// property.
-            /// </remarks>
-            public object SyncRoot
+            object ICollection.SyncRoot
             {
                 get
                 {
