@@ -179,7 +179,7 @@ namespace TVA
         /// <summary>Returns the smallest item from a list of parameters.</summary>
         public static object Min(params object[] itemList)
         {
-            return itemList.Min<object>();
+            return itemList.Min<object>(Compare);
         }
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
@@ -191,7 +191,7 @@ namespace TVA
         /// <summary>Returns the largest item from a list of parameters.</summary>
         public static object Max(params object[] itemList)
         {
-            return itemList.Max<object>();
+            return itemList.Max<object>(Compare);
         }
 
         /// <summary>Returns the largest item from a list of parameters.</summary>
@@ -209,7 +209,7 @@ namespace TVA
         /// <summary>Compares two elements of any type.</summary>
         public static int Compare(object x, object y)
         {
-            if (TVA.Common.IsReference(x) && TVA.Common.IsReference(y))
+            if (IsReference(x) && IsReference(y))
             {
                 // If both items are reference objects, then test object equality by reference.
                 // If not equal by overridable Object.Equals function, use default Comparer.
