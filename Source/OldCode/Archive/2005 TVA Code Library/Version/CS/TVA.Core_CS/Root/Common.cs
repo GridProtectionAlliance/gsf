@@ -23,6 +23,11 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using TVA.Collections;
+using Microsoft.VisualBasic.CompilerServices;
 
 /// <summary>Defines common global functions.</summary>
 namespace TVA
@@ -67,7 +72,7 @@ namespace TVA
         public static T[] CreateArray<T>(int length)
         {
             // The following provides better performance than "Return New T(length) {}".
-            return ((T[])(Array.CreateInstance(typeof(T), length)));
+            return (T[])Array.CreateInstance(typeof(T), length);
         }
 
         /// <summary>Creates a strongly-typed Array with an initial value parameter.</summary>
@@ -153,10 +158,92 @@ namespace TVA
             }
         }
 
-        /// <summary>Determines if given item is an object (i.e., a reference type) but not a string.</summary>
+        /// <summary>Determines if given item is a reference type.</summary>
+        public static bool IsReference(object item)
+        {
+            return !(item is ValueType);
+        }
+
+        /// <summary>Determines if given item is a reference type but not a string.</summary>
         public static bool IsNonStringReference(object item)
         {
-            return (!(item is ValueType) && !(item is string));
+            return (IsReference(item) && !(item is string));
+        }
+
+/*-----------------------------------------------------------------------------------------------------*\
+ *
+ *                    These functions were migrated here from TVA.Collections.Common
+ *                  
+\*-----------------------------------------------------------------------------------------------------*/
+
+        /// <summary>Returns the smallest item from a list of parameters.</summary>
+        public static object Min(params object[] itemList)
+        {
+            return itemList.Min<object>();
+        }
+
+        /// <summary>Returns the smallest item from a list of parameters.</summary>
+        public static T Min<T>(params T[] itemList)
+        {
+            return itemList.Min<T>();
+        }
+
+        /// <summary>Returns the largest item from a list of parameters.</summary>
+        public static object Max(params object[] itemList)
+        {
+            return itemList.Max<object>();
+        }
+
+        /// <summary>Returns the largest item from a list of parameters.</summary>
+        public static T Max<T>(params T[] itemList)
+        {
+            return itemList.Max<T>();
+        }
+
+        /// <summary>Compares two elements of the specified type.</summary>
+        public static int Compare<T>(T x, T y)
+        {
+            return Comparer<T>.Default.Compare(x, y);
+        }
+
+        /// <summary>Compares two elements of any type.</summary>
+        public static int Compare(object x, object y)
+        {
+            if (TVA.Common.IsReference(x) && TVA.Common.IsReference(y))
+            {
+                // If both items are reference objects, then test object equality by reference.
+                // If not equal by overridable Object.Equals function, use default Comparer.
+                if (x == y)
+                {
+                    return 0;
+                }
+                else if (x.GetType().Equals(y.GetType()))
+                {
+                    // Compares two items that are the same type. Sees if the type supports IComparable interface.
+                    if (x is IComparable)
+                    {
+                        return ((IComparable)x).CompareTo(y);
+                    }
+                    else if (x.Equals(y))
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return Comparer.Default.Compare(x, y);
+                    }
+                }
+                else
+                {
+                    return Comparer.Default.Compare(x, y);
+                }
+            }
+            else
+            {
+                // Compares non-reference (i.e., value) types, using VB rules.
+                // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
+                return (Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : (Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
+            }
         }
     }
 }
