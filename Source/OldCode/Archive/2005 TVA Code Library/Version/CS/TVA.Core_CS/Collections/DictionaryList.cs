@@ -39,7 +39,7 @@ namespace TVA
         /// both IDictionary and IList (even specifying as Integer as the key) so long you as you are happy
         /// knowing that the compiler will choose if you access your items by index or key. Given that
         /// caveat, there are many times when you need a dictionary style collection but also desire an
-        /// IList implementation so the class can be used in other ways without conversion . As a result of
+        /// IList implementation so the class can be used in other ways without conversion. As a result of
         /// these needs, we’ve added a generic class to code library called a DictionaryList -- which is
         /// essentially just a sorted dictionary style list (i.e., SortedList) that implements the
         /// IList(Of T) interface (specifically as IList(Of KeyValuePair(Of TKey, TValue))). You will find
