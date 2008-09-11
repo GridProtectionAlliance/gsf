@@ -1,19 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.IO;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.ComponentModel;
-//using TVA.Common;
-using TVA.Collections;
-using TVA.IO.FilePath;
-using TVA.Configuration;
-
 //*******************************************************************************************************
 //  TVA.Parsing.BinaryDataParserBase.vb - Base class for parsing binary data
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -27,25 +11,41 @@ using TVA.Configuration;
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  03/28/2007 - Pinal C. Patel
-//       Original version of source code generated
+//      Original version of source code generated
 //  11/30/2007 - Pinal C. Patel
-//       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
-//       instead of DesignMode property as the former is more accurate than the latter
+//      Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
+//      instead of DesignMode property as the former is more accurate than the latter
+//  09/11/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
-
+using System;
+using System.IO;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.ComponentModel;
+using System.Collections.Generic;
+using TVA;
+using TVA.IO;
+using TVA.Collections;
+using TVA.Configuration;
 
 namespace TVA
 {
 	namespace Parsing
 	{
-		
-		[DefaultEvent("DataParsed")]public abstract partial class BinaryDataParserBase<TIdentifier, TOutput> : IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
+		[DefaultEvent("DataParsed")]
+        public abstract partial class BinaryDataParserBase<TIdentifier, TOutput> : IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
 		{
-			
-			
-			#region " Member Declaration "
+            #region " Members "
+            
+            private class TypeInfo
+            {
+                public TIdentifier ID;
+                public DefaultConstructor CreateNew;
+                public Type RuntimeType;
+            }
 			
 			private string m_idPropertyName;
 			private bool m_optimizeParsing;
@@ -53,96 +53,37 @@ namespace TVA
 			private bool m_persistSettings;
 			private string m_settingsCategoryName;
 			private Dictionary<TIdentifier, TypeInfo> m_outputTypes;
-			private Dictionary<Guid, int> m_unparsedDataReuseCount;
-			
-			private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
-			
+			private Dictionary<Guid, int> m_unparsedDataReuseCount;			
+			private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;			
 			private delegate TOutput DefaultConstructor();
 			
 			#endregion
 			
-			#region " Event Declaration "
+			#region " Events "
 			
 			/// <summary>
 			/// Occurs when a data image has been parsed.
 			/// </summary>
-			public delegate void DataParsedEventHandler(object Of);
-			private DataParsedEventHandler DataParsedEvent;
-			
-			public event DataParsedEventHandler DataParsed
-			{
-				add
-				{
-					DataParsedEvent = (DataParsedEventHandler) System.Delegate.Combine(DataParsedEvent, value);
-				}
-				remove
-				{
-					DataParsedEvent = (DataParsedEventHandler) System.Delegate.Remove(DataParsedEvent, value);
-				}
-			}
-			
+			public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, List<TOutput>>>> DataParsed;
 			
 			/// <summary>
 			/// Occurs when a matching output type is not found for parsing the data image.
 			/// </summary>
-			public delegate void OutputTypeNotFoundEventHandler(object Of);
-			private OutputTypeNotFoundEventHandler OutputTypeNotFoundEvent;
-			
-			public event OutputTypeNotFoundEventHandler OutputTypeNotFound
-			{
-				add
-				{
-					OutputTypeNotFoundEvent = (OutputTypeNotFoundEventHandler) System.Delegate.Combine(OutputTypeNotFoundEvent, value);
-				}
-				remove
-				{
-					OutputTypeNotFoundEvent = (OutputTypeNotFoundEventHandler) System.Delegate.Remove(OutputTypeNotFoundEvent, value);
-				}
-			}
-			
+			public event EventHandler<GenericEventArgs<TIdentifier>> OutputTypeNotFound;
 			
 			/// <summary>
 			/// Occurs when unparsed data is reused and not discarded.
 			/// </summary>
-			public delegate void UnparsedDataReusedEventHandler(object Of);
-			private UnparsedDataReusedEventHandler UnparsedDataReusedEvent;
-			
-			public event UnparsedDataReusedEventHandler UnparsedDataReused
-			{
-				add
-				{
-					UnparsedDataReusedEvent = (UnparsedDataReusedEventHandler) System.Delegate.Combine(UnparsedDataReusedEvent, value);
-				}
-				remove
-				{
-					UnparsedDataReusedEvent = (UnparsedDataReusedEventHandler) System.Delegate.Remove(UnparsedDataReusedEvent, value);
-				}
-			}
-			
+            public event EventHandler<GenericEventArgs<TIdentifier>> UnparsedDataReused;
 			
 			/// <summary>
 			/// Occurs when unparsed data is discarded and not re-used.
 			/// </summary>
-			public delegate void UnparsedDataDiscardedEventHandler(object Of);
-			private UnparsedDataDiscardedEventHandler UnparsedDataDiscardedEvent;
-			
-			public event UnparsedDataDiscardedEventHandler UnparsedDataDiscarded
-			{
-				add
-				{
-					UnparsedDataDiscardedEvent = (UnparsedDataDiscardedEventHandler) System.Delegate.Combine(UnparsedDataDiscardedEvent, value);
-				}
-				remove
-				{
-					UnparsedDataDiscardedEvent = (UnparsedDataDiscardedEventHandler) System.Delegate.Remove(UnparsedDataDiscardedEvent, value);
-				}
-			}
-			
-			
+            public event EventHandler<GenericEventArgs<TIdentifier>> UnparsedDataDiscarded;
 			
 			#endregion
 			
-			#region " Code Scope: Public "
+			#region " Methods "
 			
 			/// <summary>
 			/// Gets or sets the name of the property that identifies the output type.
@@ -163,7 +104,7 @@ namespace TVA
 					}
 					else
 					{
-						throw (new ArgumentNullException("IDPropertyName"));
+						throw new ArgumentNullException("IDPropertyName");
 					}
 				}
 			}
@@ -210,7 +151,8 @@ namespace TVA
 			/// The TVA.Collections.ProcessQueue(Of TVA.IdentifiableItem(Of Guid, Byte())) to which data to be parsed is
 			/// to be added.
 			/// </returns>
-			[Browsable(false)]public ProcessQueue<IdentifiableItem<Guid, byte>> DataQueue
+			[Browsable(false)]
+            public ProcessQueue<IdentifiableItem<Guid, byte[]>> DataQueue
 			{
 				get
 				{
@@ -222,20 +164,19 @@ namespace TVA
 			/// Starts the parser.
 			/// </summary>
 			public void Start()
-			{
-				
+			{				
 				System.Reflection.Assembly asm = null;
 				ConstructorInfo typeCtor = null;
-				string dllDirectory = AbsolutePath("");
+				string dllDirectory = FilePath.AbsolutePath("");
 				AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("InMemory"), AssemblyBuilderAccess.Run);
 				ModuleBuilder modBuilder = asmBuilder.DefineDynamicModule("Helper");
 				TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
 				List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
 				
-				if (TVA.Common.GetApplicationType() == ApplicationType.Web)
+				if (Common.GetApplicationType() == ApplicationType.Web)
 				{
 					// In case of a web application, we need to look in the bin directory for DLLs.
-					dllDirectory = AddPathSuffix(dllDirectory + "bin");
+                    dllDirectory = FilePath.AddPathSuffix(dllDirectory + "bin");
 				}
 				
 				// Process all assemblies in the application bin directory.
@@ -244,7 +185,7 @@ namespace TVA
 					try
 					{
 						// Load the assembly in the curent app domain.
-						asm = System.Reflection.Assembly.LoadFrom(dll);
+                        asm = System.Reflection.Assembly.LoadFrom(dll);
 						
 						// Process all of the public types in the assembly.
 						foreach (Type asmType in asm.GetExportedTypes())
@@ -266,21 +207,21 @@ namespace TVA
 								{
 									// Invokation approach: Reflection.Emit + Delegate
 									// This is hands-down that most fastest way of instantiating objects using reflection.
-									MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public || MethodAttributes.Static, asmType, Type.EmptyTypes);
-									System.Reflection.Emit.ILGenerator with_1 = dynamicTypeCtor.GetILGenerator();
-									with_1.Emit(System.Reflection.Emit.OpCodes.Nop);
-									with_1.Emit(System.Reflection.Emit.OpCodes.Newobj, typeCtor);
-									with_1.Emit(System.Reflection.Emit.OpCodes.Ret);
+									MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public | MethodAttributes.Static, asmType, Type.EmptyTypes);
+									System.Reflection.Emit.ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+									ilGen.Emit(System.Reflection.Emit.OpCodes.Nop);
+									ilGen.Emit(System.Reflection.Emit.OpCodes.Newobj, typeCtor);
+									ilGen.Emit(System.Reflection.Emit.OpCodes.Ret);
 								}
 								else
 								{
 									// Invokation approach: DynamicMethod + Delegate
 									// This method is very fast compared to rest of the approaches, but not as fast as the one above.
 									DynamicMethod dynamicTypeCtor = new DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, true);
-									System.Reflection.Emit.ILGenerator with_2 = dynamicTypeCtor.GetILGenerator();
-									with_2.Emit(System.Reflection.Emit.OpCodes.Nop);
-									with_2.Emit(System.Reflection.Emit.OpCodes.Newobj, typeCtor);
-									with_2.Emit(System.Reflection.Emit.OpCodes.Ret);
+									System.Reflection.Emit.ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+									ilGen.Emit(System.Reflection.Emit.OpCodes.Nop);
+									ilGen.Emit(System.Reflection.Emit.OpCodes.Newobj, typeCtor);
+									ilGen.Emit(System.Reflection.Emit.OpCodes.Ret);
 									
 									// Create a delegate to the constructor that'll be called to create a new instance of the type.
 									outputType.CreateNew = (DefaultConstructor) (dynamicTypeCtor.CreateDelegate(typeof(DefaultConstructor)));
@@ -291,7 +232,7 @@ namespace TVA
 							}
 						}
 					}
-					catch (Exception)
+					catch
 					{
 						// Absorb any exception we might encounter while loading an assembly or processing it.
 					}
@@ -315,7 +256,7 @@ namespace TVA
 					// Now, we'll go though all of the output types we've found and instantiate an instance of each in order
 					// to get the identifier for each of the type. This will help lookup of the type to be used when parsing
 					// the data.
-					TOutput instance = outputType.CreateNew;
+					TOutput instance = outputType.CreateNew();
 					idProperty = outputType.RuntimeType.GetProperty(m_idPropertyName, typeof(TIdentifier));
 					if (idProperty != null)
 					{
@@ -329,27 +270,18 @@ namespace TVA
 				}
 				
 				m_dataQueue.Start();
-				
 			}
 			
 			/// <summary>
 			/// Stops the parser.
 			/// </summary>
-			public void @Stop()
-			{
-				
-				m_dataQueue.Stop(); // Stop processing of queued data.
-				m_outputTypes.Clear(); // Clear the cached packet type available.
-				
+			public void Stop()
+			{				
+				m_dataQueue.Stop();     // Stop processing of queued data.
+				m_outputTypes.Clear();  // Clear the cached packet type available.
 			}
 			
-			#region " MustOverride "
-			
 			public abstract TIdentifier GetTypeID(byte[] binaryImage, int startIndex);
-			
-			#endregion
-			
-			#region " Interface Implementation "
 			
 			#region " IPersistSettings "
 			
@@ -373,63 +305,60 @@ namespace TVA
 				}
 				set
 				{
-					if (! string.IsNullOrEmpty(value))
-					{
+					if (!string.IsNullOrEmpty(value))
 						m_settingsCategoryName = value;
-					}
 					else
-					{
-						throw (new ArgumentNullException("SettingsCategoryName"));
-					}
+						throw new ArgumentNullException("SettingsCategoryName");
 				}
 			}
 			
 			public void LoadSettings()
-			{
-				
+			{				
 				try
 				{
-					CategorizedSettingsElementCollection with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-					if (with_1.Count > 0)
+					CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+					if (settings.Count > 0)
 					{
-						IDPropertyName = with_1.Item("IDPropertyName").GetTypedValue(m_idPropertyName);
-						OptimizeParsing = with_1.Item("OptimizeParsing").GetTypedValue(m_optimizeParsing);
-						UnparsedDataReuseLimit = with_1.Item("UnparsedDataReuseLimit").GetTypedValue(m_unparsedDataReuseLimit);
+						IDPropertyName = settings["IDPropertyName"].GetTypedValue(m_idPropertyName);
+						OptimizeParsing = settings["OptimizeParsing"].GetTypedValue(m_optimizeParsing);
+						UnparsedDataReuseLimit = settings["UnparsedDataReuseLimit"].GetTypedValue(m_unparsedDataReuseLimit);
 					}
 				}
-				catch (Exception)
+				catch
 				{
 					// We'll encounter exceptions if the settings are not present in the config file.
-				}
-				
+				}				
 			}
 			
 			public void SaveSettings()
-			{
-				
+			{				
 				if (m_persistSettings)
 				{
 					try
 					{
-						CategorizedSettingsElementCollection with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-						with_1.Clear();
-						object with_2 = with_1.Item("IDPropertyName", true);
-						with_2.Value = m_idPropertyName;
-						with_2.Description = "Name of the property that identifies the output type.";
-						object with_3 = with_1.Item("OptimizeParsing", true);
-						with_3.Value = m_optimizeParsing.ToString();
-						with_3.Description = "True if parsing is to be done in an optimal mode; otherwise False.";
-						object with_4 = with_1.Item("UnparsedDataReuseLimit", true);
-						with_4.Value = m_unparsedDataReuseLimit.ToString();
-						with_4.Description = "Number of times unparsed data can be reused before being discarded.";
+                        CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                        CategorizedSettingsElement element;
+						settings.Clear();
+						
+                        element = settings["IDPropertyName", true];
+						element.Value = m_idPropertyName;
+						element.Description = "Name of the property that identifies the output type.";
+                        
+                        element = settings["OptimizeParsing", true];
+						element.Value = m_optimizeParsing.ToString();
+						element.Description = "True if parsing is to be done in an optimal mode; otherwise False.";
+                        
+                        element = settings["UnparsedDataReuseLimit", true];
+						element.Value = m_unparsedDataReuseLimit.ToString();
+						element.Description = "Number of times unparsed data can be reused before being discarded.";
+
 						TVA.Configuration.Common.SaveSettings();
 					}
-					catch (Exception)
+					catch
 					{
 						// We might encounter an exception if for some reason the settings cannot be saved to the config file.
 					}
-				}
-				
+				}				
 			}
 			
 			#endregion
@@ -437,33 +366,20 @@ namespace TVA
 			#region " ISupportInitialize "
 			
 			public void BeginInit()
-			{
-				
-				// We don't need to do anything before the component is initialized.
-				
+			{				
+				// We don't need to do anything before the component is initialized.				
 			}
 			
 			public void EndInit()
 			{
-				
-				if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-				{
-					LoadSettings(); // Load settings from the config file.
-				}
-				
+                // Load settings from the config file.
+				if (LicenseManager.UsageMode == LicenseUsageMode.Runtime) LoadSettings(); 
 			}
 			
 			#endregion
 			
-			#endregion
-			
-			#endregion
-			
-			#region " Code Scope: Private "
-			
-			private void ParseData(IdentifiableItem[][]<Guid, byte[]> item)
+			private void ParseData(IdentifiableItem<Guid, byte[]>[] item)
 			{
-				
 				int cursor;
 				TOutput instance;
 				TIdentifier typeID;
@@ -473,7 +389,7 @@ namespace TVA
 				{
 					// We have defined the process queue that holds the data to be parsed of type "Many-at-Once", so we'll
 					// most likely get multiple data images that we must process and we'll do just that...!
-					if (item[i] (.Item != null)&& item[i].Item.Length > 0)
+					if (item[i].Item != null && item[i].Item.Length > 0)
 					{
 						// This data image is valid (i.e. has data in it), so we'll go on to process it. By "processing the
 						// data image" we mean that we'll take the data in the image and use it to initialize an appropriate
@@ -485,16 +401,16 @@ namespace TVA
 						while (cursor < item[i].Item.Length)
 						{
 							typeID = GetTypeID(item[i].Item, cursor); // <- Necessary overhead :(
-							if (m_outputTypes.TryGetValue(typeID, outputType))
+
+							if (m_outputTypes.TryGetValue(typeID, out outputType))
 							{
 								// We have type that can be instantiated and initialized with the data from this image.
 								try
 								{
-									instance = outputType.CreateNew;
+									instance = outputType.CreateNew();
 									cursor += instance.Initialize(item[i].Item, cursor); // Returns the number of bytes used.
-									output.Add(instance);
-									
-									m_unparsedDataReuseCount(item[i].Source) = 0; // <- Necessary overhead :(
+									output.Add(instance);									
+									m_unparsedDataReuseCount[item[i].Source] = 0; // <- Necessary overhead :(
 								}
 								catch (Exception)
 								{
@@ -510,8 +426,9 @@ namespace TVA
 									// unparsed data from a given source has been reused. If the data has not been reused
 									// up to the specified limit for reusing the data, we'll reuse the data, or else we'll
 									// discard it.
-									int reuseCount = 0;
-									m_unparsedDataReuseCount.TryGetValue(item[i].Source, reuseCount);
+									int reuseCount;
+
+									m_unparsedDataReuseCount.TryGetValue(item[i].Source, out reuseCount);
 									
 									if (reuseCount < m_unparsedDataReuseLimit)
 									{
@@ -519,7 +436,7 @@ namespace TVA
 										bool insertUnusedData = true;
 										
 										// First, we extract the unparsed data from the data image.
-										byte unusedData = TVA.Common.CreateArray<byte>(item[i].Item.Length - cursor);
+										byte[] unusedData = new byte[item[i].Item.Length - cursor];
 										Array.Copy(item[i].Item, cursor, unusedData, 0, unusedData.Length);
 										
 										if (i < (item.Length - 1))
@@ -533,7 +450,7 @@ namespace TVA
 													// We found a data image from the same source so we'll merge the unparsed
 													// data with the data in that data image and hopefully now we'll be able
 													// to parse the combined data.
-													byte mergedImage = TVA.Common.CreateArray<byte>(item[k].Item.Length + unusedData.Length);
+													byte[] mergedImage = new byte[item[k].Item.Length + unusedData.Length];
 													Array.Copy(unusedData, 0, mergedImage, 0, unusedData.Length);
 													Array.Copy(item[k].Item, 0, mergedImage, unusedData.Length, item[k].Item.Length);
 													
@@ -551,22 +468,22 @@ namespace TVA
 											// so we'll just insert this data in the queue, so by the time this data is
 											// processed in the next batch, we might have data from the same source that we
 											// might be able to combine and use.
-											m_dataQueue.Insert(0, new IdentifiableItem<Guid, byte>(item[i].Source, unusedData));
+											m_dataQueue.Insert(0, new IdentifiableItem<Guid, byte[]>(item[i].Source, unusedData));
 										}
 										
 										reuseCount++;
-										m_unparsedDataReuseCount(item[i].Source) = reuseCount;
+										m_unparsedDataReuseCount[item[i].Source] = reuseCount;
 										cursor = item[i].Item.Length; // Move on to the next data image.
-										if (UnparsedDataReusedEvent != null)
-											UnparsedDataReusedEvent(this, new GenericEventArgs<TIdentifier>(typeID));
+										if (UnparsedDataReused != null)
+                                            UnparsedDataReused(this, new GenericEventArgs<TIdentifier>(typeID));
 									}
 									else
 									{
 										cursor = item[i].Item.Length; // Move on to the next data image.
 										
-										m_unparsedDataReuseCount(item[i].Source) = 0;
-										if (UnparsedDataDiscardedEvent != null)
-											UnparsedDataDiscardedEvent(this, new GenericEventArgs<TIdentifier>(typeID));
+										m_unparsedDataReuseCount[item[i].Source] = 0;
+										if (UnparsedDataDiscarded != null)
+                                            UnparsedDataDiscarded(this, new GenericEventArgs<TIdentifier>(typeID));
 									}
 								}
 							}
@@ -577,37 +494,19 @@ namespace TVA
 								// the next valid block of data is within the image.
 								
 								cursor = item[i].Item.Length; // Move on to the next data image.
-								if (OutputTypeNotFoundEvent != null)
-									OutputTypeNotFoundEvent(this, new GenericEventArgs<TIdentifier>(typeID));
+								if (OutputTypeNotFound != null)
+                                    OutputTypeNotFound(this, new GenericEventArgs<TIdentifier>(typeID));
 							}
 						}
 						
-						if (DataParsedEvent != null)
-							DataParsedEvent(this, new GenericEventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].Source, output)));
+						if (DataParsed != null)
+                            DataParsed(this, new GenericEventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].Source, output)));
 					}
 				}
 				
 			}
-			
-			#region " ParserTypeInfo Class "
-			
-			private class TypeInfo
-			{
-				
-				
-				public TIdentifier ID;
-				
-				public DefaultConstructor CreateNew;
-				
-				public Type RuntimeType;
-				
-			}
-			
-			#endregion
-			
-			#endregion
-			
-		}
-		
-	}
+
+            #endregion
+        }
+    }
 }
