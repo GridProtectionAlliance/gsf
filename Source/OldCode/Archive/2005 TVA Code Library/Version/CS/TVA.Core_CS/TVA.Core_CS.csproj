@@ -184,7 +184,7 @@
     <Compile Include="Data\Common.cs" />
     <Compile Include="Root\Assembly.cs" />
     <Compile Include="Interop\Bit.cs" />
-    <Compile Include="Collections\Common.cs" />
+    <Compile Include="Collections\Extensions.cs" />
     <Compile Include="Collections\KeyedProcessQueue.cs">
     </Compile>
     <Compile Include="Collections\ProcessQueue.cs" />
@@ -218,9 +218,6 @@
     <Compile Include="Root\ObjectState.cs" />
     <Compile Include="Root\ProcessProgress.cs" />
     <Compile Include="Root\Serialization.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Collections\TVA.Collections.cd" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
