@@ -36,48 +36,51 @@ using System.Runtime.Serialization;
 
 namespace TVA
 {
-	namespace DateTime
-	{
-		
-		/// <summary>Standard Unix Timetag</summary>
-		public class UnixTimeTag : TimeTagBase
-		{
-			
-			
-			// Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
-			// date to get the offset in ticks for later conversion.
-			private static long m_unixDateOffsetTicks;
-			
-			protected UnixTimeTag(SerializationInfo info, StreamingContext context) : base(info, context)
-			{
-				m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
-				
-				
-				
-			}
-			
-			/// <summary>Creates new Unix timetag, given number of seconds since 1/1/1970.</summary>
-			/// <param name="seconds">Number of seconds since 1/1/1970.</param>
-			public UnixTimeTag(double seconds) : base(m_unixDateOffsetTicks, seconds)
-			{
-				m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
-				
-				
-				
-			}
-			
-			/// <summary>Creates new Unix timetag, given standard .NET DateTime.</summary>
-			/// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970).</param>
-			public UnixTimeTag(DateTime timestamp) : base(m_unixDateOffsetTicks, timestamp)
-			{
-				m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
-				
-				
-				
-			}
-			
-		}
-		
-	}
-	
+    namespace DateTime
+    {
+
+        /// <summary>Standard Unix Timetag</summary>
+        public class UnixTimeTag : TimeTagBase
+        {
+
+
+            // Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
+            // date to get the offset in ticks for later conversion.
+            private static long m_unixDateOffsetTicks;
+
+            protected UnixTimeTag(SerializationInfo info, StreamingContext context)
+                : base(info, context)
+            {
+                m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+
+
+
+            }
+
+            /// <summary>Creates new Unix timetag, given number of seconds since 1/1/1970.</summary>
+            /// <param name="seconds">Number of seconds since 1/1/1970.</param>
+            public UnixTimeTag(double seconds)
+                : base(m_unixDateOffsetTicks, seconds)
+            {
+                m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+
+
+
+            }
+
+            /// <summary>Creates new Unix timetag, given standard .NET DateTime.</summary>
+            /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970).</param>
+            public UnixTimeTag(DateTime timestamp)
+                : base(m_unixDateOffsetTicks, timestamp)
+            {
+                m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+
+
+
+            }
+
+        }
+
+    }
+
 }
