@@ -32,7 +32,7 @@ namespace TVA
     namespace Xml
     {
         /// <summary>Defines common global functions related to XML data.</summary>
-        public static class Common
+        public static class Extensions
         {
             /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
             /// <remarks>This overload just allows the start of the given XML document by using its root element.</remarks>
@@ -57,7 +57,7 @@ namespace TVA
             public static XmlNode GetXmlNode(this XmlNode parentNode, string xpath)
             {
                 bool isDirty;
-                return GetXmlNode(parentNode, xpath, out isDirty);
+                return parentNode.GetXmlNode(xpath, out isDirty);
             }
 
             /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
