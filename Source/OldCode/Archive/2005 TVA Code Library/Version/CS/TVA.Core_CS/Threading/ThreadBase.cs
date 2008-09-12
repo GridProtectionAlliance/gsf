@@ -1,53 +1,53 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
+//*******************************************************************************************************
+//  TVA.Threading.ThreadBase.vb - Convienent base class for new threads
+//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: VB.NET, Visual Studio 2005
+//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
+//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  04/13/2003 - J. Ritchie Carroll
+//       Generated original version of source code.
+//  09/11/2008 - J. Ritchie Carroll
+//      Converted to C#.
+//
+//*******************************************************************************************************
+
 using System;
 using System.Threading;
-using System.Reflection;
-
-// James Ritchie Carroll - 2003
-
 
 namespace TVA
 {
 	namespace Threading
-	{
-		
+	{		
 		// This is a convienent base class for new threads - deriving your own thread class from from this
-		// class ensures your thread will properly terminate when your object is ready to be garbage
-		// collected and allows you to define properties for the needed parameters of your thread proc
+		// class allows you to define properties for the needed parameters of your thread proc
 		public abstract class ThreadBase : IDisposable
 		{
-			
-			
-			
-			#if ThreadTracking
-			protected ManagedThread WorkerThread;
-			#else
-			protected Thread WorkerThread;
-			#endif
-			
-			~ThreadBase()
+		#if ThreadTracking
+			protected ManagedThread baseThread;
+		#else
+			protected Thread baseThread;
+        #endif
+
+            ~ThreadBase()
 			{
-				
 				Abort();
-				
 			}
 			
 			public virtual void Start()
-			{
-				
-				#if ThreadTracking
-				WorkerThread = new ManagedThread(ThreadExec);
-				WorkerThread.Name = "TVA.Threading.ThreadBase.ThreadExec() [" + this.GetType().Name + "]";
-				#else
-				WorkerThread = new Thread(new System.Threading.ThreadStart(ThreadExec));
-				#endif
-				WorkerThread.Start();
-				
+			{				
+			#if ThreadTracking
+				baseThread = new ManagedThread(ThreadExec);
+				baseThread.Name = "TVA.Threading.ThreadBase.ThreadExec() [" + this.GetType().Name + "]";
+			#else
+				baseThread = new Thread(ThreadExec);
+            #endif
+                baseThread.Start();				
 			}
 			
 			public void Dispose()
@@ -56,61 +56,50 @@ namespace TVA
 			}
 			
 			public void Abort()
-			{
-				
-				GC.SuppressFinalize(this);
-				
-				if (WorkerThread != null)
+			{		
+				if (baseThread != null)
 				{
 					try
 					{
-						if (WorkerThread.IsAlive)
+						if (baseThread.IsAlive)
 						{
-							WorkerThread.Abort();
+							baseThread.Abort();
 							ThreadStopped();
 						}
 					}
 					catch
 					{
 					}
-					WorkerThread = null;
+					baseThread = null;
 				}
-				
-			}
-			
-			#if ThreadTracking
+
+                GC.SuppressFinalize(this);
+            }
+
+        #if ThreadTracking
 			public ManagedThread Thread
+        #else
+			public Thread Thread
+        #endif
 			{
-				#else
-				public Thread Thread
-				{
-					#endif
-					
-}
-					return WorkerThread;
-				}
+                get
+                {
+                    return baseThread;
+                }
 			}
 			
 			private void ThreadExec()
 			{
-				
 				ThreadStarted();
 				ThreadProc();
 				ThreadStopped();
-				
 			}
 			
-			protected virtual void ThreadStarted()
-			{
-			}
+			protected virtual void ThreadStarted() {}
 			
 			protected abstract void ThreadProc();
 			
-			protected virtual void ThreadStopped()
-			{
-			}
-			
-		}
-		
+			protected virtual void ThreadStopped() {}
+        }		
 	}
 }
