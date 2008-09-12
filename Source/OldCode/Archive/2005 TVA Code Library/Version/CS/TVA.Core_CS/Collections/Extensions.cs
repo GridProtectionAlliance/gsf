@@ -17,7 +17,7 @@
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
 //  09/11/2008 - J. Ritchie Carroll
-//      Converted to C# extension functions
+//      Converted to C# extension functions.
 //
 //*******************************************************************************************************
 
