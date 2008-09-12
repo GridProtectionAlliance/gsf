@@ -19,22 +19,19 @@
 
 using System;
 
-namespace TVA
+namespace TVA.Parsing
 {
-    namespace Parsing
+    /// <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
+    public interface IBinaryDataProvider
     {
-        /// <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
-        public interface IBinaryDataProvider
+        byte[] BinaryImage
         {
-            byte[] BinaryImage
-            {
-                get;
-            }
+            get;
+        }
 
-            int BinaryLength
-            {
-                get;
-            }
+        int BinaryLength
+        {
+            get;
         }
     }
 }

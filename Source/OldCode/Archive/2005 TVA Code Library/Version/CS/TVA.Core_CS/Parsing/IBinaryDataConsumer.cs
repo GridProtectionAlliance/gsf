@@ -19,13 +19,10 @@
 
 using System;
 
-namespace TVA
+namespace TVA.Parsing
 {
-    namespace Parsing
+    public interface IBinaryDataConsumer
     {
-        public interface IBinaryDataConsumer
-        {
-            int Initialize(byte[] binaryImage, int startIndex);
-        }
+        int Initialize(byte[] binaryImage, int startIndex);
     }
 }
