@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.Collections.Extensions.vb - Defines extension functions related to manipulation of collections
+//  TVA.Collections.CollectionExtensions.vb - Defines extension functions related to collections
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -29,8 +29,8 @@ using TVA;
 
 namespace TVA.Collections
 {
-    /// <summary>Defines extension functions related to manipulation of collections.</summary>
-    public static class Extensions
+    /// <summary>Defines extension functions related to manipulation of arrays and collections.</summary>
+    public static class CollectionExtensions
     {
         /// <summary>Returns the smallest item from the enumeration.</summary>
         public static TSource Min<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, int> comparer)
