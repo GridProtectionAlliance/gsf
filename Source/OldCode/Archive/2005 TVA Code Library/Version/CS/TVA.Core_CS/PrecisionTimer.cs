@@ -1,8 +1,8 @@
 //*******************************************************************************************************
-//  TVA.DateTime.PrecisionTimer.vb - High-resolution Timer and Timestamp Class
+//  TVA.PrecisionTimer.cs - High-resolution Timer and Timestamp Class
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
+//  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
 //      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
 //       Phone: 423/751-2827
