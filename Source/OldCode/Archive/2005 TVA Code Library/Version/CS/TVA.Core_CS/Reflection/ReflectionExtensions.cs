@@ -22,7 +22,7 @@ using System.Collections.Specialized;
 
 namespace TVA.Reflection
 {
-    public static class Extensions
+    public static class ReflectionExtensions
     {
         /// <summary>Returns only assembly name and version from full assembly name.</summary>
         public static string ShortName(this Assembly assemblyInstance)
