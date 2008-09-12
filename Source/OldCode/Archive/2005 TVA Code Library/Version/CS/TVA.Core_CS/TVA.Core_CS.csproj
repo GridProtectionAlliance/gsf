@@ -136,6 +136,7 @@
     <Compile Include="Net\Ftp\SessionDisconnected.cs" />
     <Compile Include="Net\Smtp\Common.cs" />
     <Compile Include="Net\Smtp\SimpleMailMessage.cs" />
+    <Compile Include="Reflection\Extensions.cs" />
     <Compile Include="Root\UInt24.cs" />
     <Compile Include="Root\Int24.cs" />
     <Compile Include="Scheduling\Enumerations.cs" />
@@ -182,7 +183,7 @@
     <Compile Include="Threading\ThreadBase.cs" />
     <Compile Include="Root\Common.cs" />
     <Compile Include="Data\Common.cs" />
-    <Compile Include="Root\Assembly.cs" />
+    <Compile Include="Reflection\AssemblyInformation.cs" />
     <Compile Include="Interop\Bit.cs" />
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="Collections\KeyedProcessQueue.cs">
@@ -212,7 +213,7 @@
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
     <Compile Include="Text\Common.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
-    <Compile Include="Xml\Common.cs" />
+    <Compile Include="Xml\Extensions.cs" />
     <Compile Include="Root\ByteEncoding.cs" />
     <Compile Include="Configuration\IPersistSettings.cs" />
     <Compile Include="Root\ObjectState.cs" />
