@@ -80,6 +80,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonTimeZones.cs" />
     <Compile Include="Diagnostics\PerformanceCounter.cs" />
     <Compile Include="Diagnostics\PerformanceMonitor.cs" />
     <Compile Include="Collections\DictionaryList.cs" />
@@ -118,7 +119,7 @@
     <Compile Include="IO\MultipleDestinationExporter.cs" />
     <Compile Include="Measurements\FrameQueue.cs" />
     <Compile Include="Measurements\MeasurementKey.cs" />
-    <Compile Include="Measurements\PrecisionTimer.cs" />
+    <Compile Include="PrecisionTimer.cs" />
     <Compile Include="Net\Ftp\AsyncResult.cs" />
     <Compile Include="Net\Ftp\ControlChannel.cs" />
     <Compile Include="Net\Ftp\DataStream.cs" />
@@ -137,9 +138,9 @@
     <Compile Include="Net\Ftp\SessionDisconnected.cs" />
     <Compile Include="Net\Smtp\Common.cs" />
     <Compile Include="Net\Smtp\SimpleMailMessage.cs" />
-    <Compile Include="Reflection\Extensions.cs" />
-    <Compile Include="Root\UInt24.cs" />
-    <Compile Include="Root\Int24.cs" />
+    <Compile Include="Reflection\ReflectionExtensions.cs" />
+    <Compile Include="UInt24.cs" />
+    <Compile Include="Int24.cs" />
     <Compile Include="Scheduling\Enumerations.cs" />
     <Compile Include="Scheduling\Schedule.cs" />
     <Compile Include="Scheduling\ScheduleEventArgs.cs" />
@@ -156,16 +157,15 @@
     <Compile Include="Parsing\BinaryDataParserBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Root\Enumerations.cs" />
-    <Compile Include="Root\GenericEventArgs.cs" />
+    <Compile Include="Enumerations.cs" />
+    <Compile Include="GenericEventArgs.cs" />
     <Compile Include="Parsing\IBinaryDataConsumer.cs" />
     <Compile Include="Parsing\IBinaryDataProvider.cs" />
-    <Compile Include="Root\IdentifiableItem.cs" />
+    <Compile Include="IdentifiableItem.cs" />
     <Compile Include="Collections\Enumerations.cs" />
     <Compile Include="Configuration\Common.cs" />
     <Compile Include="Data\Enumerations.cs" />
-    <Compile Include="DateTime\TimeTagBase.cs" />
-    <Compile Include="DateTime\Enumerations.cs" />
+    <Compile Include="TimeTagBase.cs" />
     <Compile Include="Measurements\Frame.cs" />
     <Compile Include="Security\Cryptography\Common.cs" />
     <Compile Include="Configuration\ConfigurationFile.cs" />
@@ -182,7 +182,7 @@
     <Compile Include="Threading\QueueThread.cs" />
     <Compile Include="Threading\RunThread.cs" />
     <Compile Include="Threading\ThreadBase.cs" />
-    <Compile Include="Root\Common.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="Data\Common.cs" />
     <Compile Include="Reflection\AssemblyInformation.cs" />
     <Compile Include="Interop\Bit.cs" />
@@ -194,11 +194,10 @@
     <Compile Include="Interop\BitwiseCast.cs" />
     <Compile Include="Identity\Common.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DateTime\Common.cs" />
-    <Compile Include="DateTime\NtpTimeTag.cs" />
-    <Compile Include="DateTime\Win32TimeZone.cs" />
+    <Compile Include="DateTimeExtensions.cs" />
+    <Compile Include="NtpTimeTag.cs" />
     <Compile Include="Interop\EndianOrder.cs" />
-    <Compile Include="DateTime\UnixTimeTag.cs" />
+    <Compile Include="UnixTimeTag.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="Interop\IniFile.cs" />
     <Compile Include="IO\Common.cs" />
@@ -215,11 +214,11 @@
     <Compile Include="Text\Common.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
-    <Compile Include="Root\ByteEncoding.cs" />
+    <Compile Include="ByteEncoding.cs" />
     <Compile Include="Configuration\IPersistSettings.cs" />
-    <Compile Include="Root\ObjectState.cs" />
-    <Compile Include="Root\ProcessProgress.cs" />
-    <Compile Include="Root\Serialization.cs" />
+    <Compile Include="ObjectState.cs" />
+    <Compile Include="ProcessProgress.cs" />
+    <Compile Include="Serialization.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
