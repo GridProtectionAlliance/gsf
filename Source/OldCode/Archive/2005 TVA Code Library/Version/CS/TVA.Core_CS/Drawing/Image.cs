@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.Drawing.Image.vb - Common imaging functions and extension functions
+//  TVA.Drawing.Image.vb - Common imaging functions
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -11,9 +11,9 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  04/11/2007 - Pinal C. Patel
-//       Original version of source code generated
+//       Original version of source code generated.
 //  09/12/2008 - J. Ritchie Carroll
-//      Converted to C#
+//      Converted to C# (some available as extensions).
 //
 //*******************************************************************************************************
 
