@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.DateTime.TimeTagBase.vb - Base class for alternate time tag implementations
+//  TVA.TimeTagBase.vb - Base class for alternate time tag implementations
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -17,27 +17,27 @@
 //       have the same base time ticks.
 //  09/07/2007 - Darrell Zuercher
 //       Edited code comments.
+//  09/12/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Runtime.Serialization;
 
-namespace TVA.DateTime
+namespace TVA
 {
     /// <summary>Base class for alternate time tag implementations.</summary>
-    public abstract class TimeTagBase : IComparable, ISerializable, IEquatable<TimeTagBase>
+    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IEquatable<TimeTagBase>
     {
         private long m_baseDateOffsetTicks;
         private double m_seconds;
 
         protected TimeTagBase(SerializationInfo info, StreamingContext context)
         {
-
             // Deserializes time tag.
             m_baseDateOffsetTicks = info.GetInt64("baseDateOffsetTicks");
             m_seconds = info.GetDouble("seconds");
-
         }
 
         /// <summary>Creates new time tag, given number base time (in ticks) and seconds since base time.</summary>
@@ -45,10 +45,8 @@ namespace TVA.DateTime
         /// <param name="seconds">Number of seconds since base time.</param>
         protected TimeTagBase(long baseDateOffsetTicks, double seconds)
         {
-
             m_baseDateOffsetTicks = baseDateOffsetTicks;
             Value = seconds;
-
         }
 
         /// <summary>Creates new time tag, given standard .NET DateTime.</summary>
@@ -56,11 +54,9 @@ namespace TVA.DateTime
         /// <param name="timestamp">.NET DateTime used to create time tag from.</param>
         protected TimeTagBase(long baseDateOffsetTicks, DateTime timestamp)
         {
-
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = TVA.DateTime.Common.TicksToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
-
+            Value = Common.TicksToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
         }
 
         /// <summary>Gets or sets number of seconds since base time.</summary>
@@ -73,10 +69,7 @@ namespace TVA.DateTime
             set
             {
                 m_seconds = value;
-                if (m_seconds < 0)
-                {
-                    m_seconds = 0;
-                }
+                if (m_seconds < 0) m_seconds = 0;
             }
         }
 
@@ -84,7 +77,7 @@ namespace TVA.DateTime
         public virtual DateTime ToDateTime()
         {
             // Converts m_seconds to 100-nanosecond ticks and add the base time offset.
-            return new DateTime(TVA.DateTime.Common.SecondsToTicks(m_seconds) + m_baseDateOffsetTicks);
+            return new DateTime(Common.SecondsToTicks(m_seconds) + m_baseDateOffsetTicks);
         }
 
         /// <summary>Returns basic textual representation for time tag.</summary>
