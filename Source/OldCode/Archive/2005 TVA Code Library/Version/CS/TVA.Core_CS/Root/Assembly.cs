@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.Assembly.vb - Assembly Information Class
+//  TVA.AssemblyInformation.vb - Assembly Information Class
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -33,83 +33,65 @@ using System.Text.RegularExpressions;
 
 namespace TVA
 {
-    public class Assembly
+    public class AssemblyInformation
     {
-        private static Assembly m_callingAssembly;
-        private static Assembly m_entryAssembly;
-        private static Assembly m_executingAssembly;
-        private static Dictionary<string, System.Reflection.Assembly> m_assemblyCache;
+        private static AssemblyInformation m_callingAssembly;
+        private static AssemblyInformation m_entryAssembly;
+        private static AssemblyInformation m_executingAssembly;
+        private static Dictionary<string, Assembly> m_assemblyCache;
         private static bool m_addedResolver;
 
-        private System.Reflection.Assembly m_assemblyInstance;
+        private Assembly m_assemblyInstance;
 
-        static Assembly()
-        {
-            m_assemblyCache = new Dictionary<string, System.Reflection.Assembly>();
-        }
-
-        /// <summary>Initializes an instance of TVA.Assembly for the specified System.Reflection.Assembly.</summary>
-        /// <param name="assemblyInstance">An instance of System.Reflection.Assembly for which a TVA.Assembly instance is to
-        /// be created.</param>
-        public Assembly(System.Reflection.Assembly assemblyInstance)
+        /// <summary>Initializes an instance of TVA.AssemblyInformation for the specified Assembly.</summary>
+        /// <param name="assemblyInstance">An instance of Assembly for which a TVA.AssemblyInformation instance
+        /// is to be created.</param>
+        public AssemblyInformation(Assembly assemblyInstance)
         {
             m_assemblyInstance = assemblyInstance;
         }
 
         /// <summary>Returns only assembly name and version from full assembly name.</summary>
-        public static string GetShortAssemblyName(System.Reflection.Assembly assemblyInstance)
+        public static string GetShortAssemblyName(this Assembly assemblyInstance)
         {
             string fullName = assemblyInstance.FullName;
             int culturePosition = fullName.IndexOf(", Culture=", StringComparison.OrdinalIgnoreCase);
 
             if (culturePosition > 0)
-            {
                 return fullName.Substring(0, culturePosition);
-            }
             else
-            {
                 return fullName;
-            }
         }
 
         /// <summary>Gets the TVA.Assembly instance of the assembly that invoked the currently executing method.</summary>
         /// <returns>The TVA.Assembly instance of the assembly that invoked the currently executing method.</returns>
-        public static Assembly CallingAssembly
+        public static AssemblyInformation CallingAssembly
         {
             get
             {
-                if (m_callingAssembly == null)
-                {
-                    m_callingAssembly = new Assembly(System.Reflection.Assembly.GetCallingAssembly());
-                }
+                if (m_callingAssembly == null) m_callingAssembly = new AssemblyInformation(Assembly.GetCallingAssembly());
                 return m_callingAssembly;
             }
         }
 
         /// <summary>Gets the TVA.Assembly instance of the process executable in the default application domain.</summary>
         /// <returns>The TVA.Assembly instance of the process executable in the default application domain.</returns>
-        public static Assembly EntryAssembly
+        public static AssemblyInformation EntryAssembly
         {
             get
             {
-                if (m_entryAssembly == null)
-                {
-                    m_entryAssembly = new Assembly(System.Reflection.Assembly.GetEntryAssembly());
-                }
+                if (m_entryAssembly == null) m_entryAssembly = new AssemblyInformation(Assembly.GetEntryAssembly());
                 return m_entryAssembly;
             }
         }
 
         /// <summary>Gets the TVA.Assembly instance of the assembly that contains the code that is currently executing.</summary>
         /// <returns>The TVA.Assembly instance of the assembly that contains the code that is currently executing.</returns>
-        public static Assembly ExecutingAssembly
+        public static AssemblyInformation ExecutingAssembly
         {
             get
             {
-                if (m_executingAssembly == null)
-                {
-                    m_executingAssembly = new Assembly(System.Reflection.Assembly.GetExecutingAssembly());
-                }
+                if (m_executingAssembly == null) m_executingAssembly = new AssemblyInformation(Assembly.GetExecutingAssembly());
                 return m_executingAssembly;
             }
         }
@@ -311,7 +293,7 @@ namespace TVA
         }
 
         /// <summary>Gets the location of the assembly as specified originally; for example, in a
-        /// System.Reflection.AssemblyName object.</summary>
+        /// AssemblyName object.</summary>
         /// <returns>The location of the assembly as specified originally.</returns>
         public string CodeBase
         {
@@ -532,29 +514,30 @@ namespace TVA
             AppDomain.CurrentDomain.Load(assemblyName);
         }
 
-        private static System.Reflection.Assembly ResolveAssemblyFromResource(object sender, ResolveEventArgs e)
+        private static Assembly ResolveAssemblyFromResource(object sender, ResolveEventArgs e)
         {
-            System.Reflection.Assembly resourceAssembly;
+            Assembly resourceAssembly;
             string shortName = e.Name.Split(',')[0];
 
+            if (m_assemblyCache == null) m_assemblyCache = new Dictionary<string, Assembly>();
             resourceAssembly = m_assemblyCache[shortName];
 
             if (resourceAssembly == null)
             {
                 // Loops through all of the resources in the executing assembly.
-                foreach (string name in System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames())
+                foreach (string name in Assembly.GetEntryAssembly().GetManifestResourceNames())
                 {
                     // Sees if the embedded resource name matches the assembly it is trying to load.
                     if (string.Compare(Path.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, true) == 0)
                     {
                         // If so, loads embedded resource assembly into a binary buffer.
-                        System.IO.Stream resourceStream = System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceStream(name);
+                        System.IO.Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);
                         byte[] buffer = new byte[resourceStream.Length];
                         resourceStream.Read(buffer, 0, (int)resourceStream.Length);
                         resourceStream.Close();
 
                         // Loads assembly from binary buffer.
-                        resourceAssembly = System.Reflection.Assembly.Load(buffer);
+                        resourceAssembly = Assembly.Load(buffer);
                         m_assemblyCache.Add(shortName, resourceAssembly);
                         break;
                     }
