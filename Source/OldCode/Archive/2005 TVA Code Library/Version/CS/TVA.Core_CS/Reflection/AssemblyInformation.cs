@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.AssemblyInformation.vb - Assembly Information Class
+//  TVA.Reflection.AssemblyInformation.vb - Assembly Information Class
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -17,7 +17,7 @@
 //  12/12/2007 - Darrell Zuercher
 //      Edited Code Comments.
 //  09/08/2008 - J. Ritchie Carroll
-//      Converted to C#.
+//      Converted to C# as AssemblyInformation.
 //
 //*******************************************************************************************************
 
@@ -31,7 +31,7 @@ using System.Collections.Specialized;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-namespace TVA
+namespace TVA.Reflection
 {
     public class AssemblyInformation
     {
@@ -49,12 +49,6 @@ namespace TVA
         public AssemblyInformation(Assembly assemblyInstance)
         {
             m_assemblyInstance = assemblyInstance;
-        }
-
-        /// <summary>Returns only assembly name and version from full assembly name.</summary>
-        public static string ShortName(this Assembly assemblyInstance)
-        {
-            return assemblyInstance.FullName.Split(',')[0];
         }
 
         /// <summary>Gets the TVA.Assembly instance of the assembly that invoked the currently executing method.</summary>
@@ -484,7 +478,7 @@ namespace TVA
         public Stream GetEmbeddedResource(string resourceName)
         {
             //Extracts and returns the requested embedded resource.
-            return m_assemblyInstance.GetManifestResourceStream(resourceName);
+            return m_assemblyInstance.GetEmbeddedResource(resourceName);
         }
 
         /// <summary>Loads the specified assembly that is embedded as a resource in the assembly.</summary>
