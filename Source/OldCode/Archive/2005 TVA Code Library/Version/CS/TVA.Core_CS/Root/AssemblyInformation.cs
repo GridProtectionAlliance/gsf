@@ -52,15 +52,9 @@ namespace TVA
         }
 
         /// <summary>Returns only assembly name and version from full assembly name.</summary>
-        public static string GetShortAssemblyName(this Assembly assemblyInstance)
+        public static string ShortName(this Assembly assemblyInstance)
         {
-            string fullName = assemblyInstance.FullName;
-            int culturePosition = fullName.IndexOf(", Culture=", StringComparison.OrdinalIgnoreCase);
-
-            if (culturePosition > 0)
-                return fullName.Substring(0, culturePosition);
-            else
-                return fullName;
+            return assemblyInstance.FullName.Split(',')[0];
         }
 
         /// <summary>Gets the TVA.Assembly instance of the assembly that invoked the currently executing method.</summary>
@@ -475,18 +469,13 @@ namespace TVA
         /// <returns>The assembly attribute.</returns>
         public object GetCustomAttribute(Type attributeType)
         {
-
             //Returns the requested assembly attribute.
             object[] assemblyAttributes = m_assemblyInstance.GetCustomAttributes(attributeType, false);
-            if (assemblyAttributes.Length >= 1)
-            {
-                return assemblyAttributes[0];
-            }
-            else
-            {
-                throw (new ApplicationException("Assembly does not expose this attribute"));
-            }
 
+            if (assemblyAttributes.Length >= 1)
+                return assemblyAttributes[0];
+            else
+                throw new ApplicationException("Assembly does not expose this attribute");
         }
 
         /// <summary>Gets the specified embedded resource from the assembly.</summary>
