@@ -344,7 +344,7 @@ namespace TVA.Reflection
 
         /// <summary>Gets the date and time when the assembly was last built.</summary>
         /// <returns>The date and time when the assembly was last built.</returns>
-        public DateTime BuildDate
+        public System.DateTime BuildDate
         {
             get
             {
