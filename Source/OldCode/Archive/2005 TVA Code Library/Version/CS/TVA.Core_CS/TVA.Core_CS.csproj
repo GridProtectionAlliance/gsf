@@ -118,6 +118,7 @@
     <Compile Include="IO\MultipleDestinationExporter.cs" />
     <Compile Include="Measurements\FrameQueue.cs" />
     <Compile Include="Measurements\MeasurementKey.cs" />
+    <Compile Include="Measurements\PrecisionTimer.cs" />
     <Compile Include="Net\Ftp\AsyncResult.cs" />
     <Compile Include="Net\Ftp\ControlChannel.cs" />
     <Compile Include="Net\Ftp\DataStream.cs" />
