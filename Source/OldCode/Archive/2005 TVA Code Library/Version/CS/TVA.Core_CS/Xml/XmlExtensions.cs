@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.Xml.Extensions.vb - Defines extension functions related to Xml elements
+//  TVA.Xml.XmlExtensions.vb - Defines extension functions related to Xml elements
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -30,7 +30,7 @@ using System.Data;
 namespace TVA.Xml
 {
     /// <summary>Defines common global functions related to XML data.</summary>
-    public static class Extensions
+    public static class XmlExtensions
     {
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <remarks>This overload just allows the start of the given XML document by using its root element.</remarks>
