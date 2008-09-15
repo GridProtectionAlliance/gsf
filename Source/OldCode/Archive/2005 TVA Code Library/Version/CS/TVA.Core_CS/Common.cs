@@ -22,19 +22,28 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.OracleClient;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Collections;
-using System.Collections.Generic;
-using TVA.Collections;
+using System.Text.RegularExpressions;
 using Microsoft.VisualBasic.CompilerServices;
+using TVA.Collections;
+using TVA.Data;
+using TVA.Reflection;
 
 /// <summary>Defines common global functions.</summary>
 namespace TVA
 {
     public static class Common
     {
+        #region [ TVA.Common Functions ]
+
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
         /// <param name="expression">The expression you want to evaluate.</param>
@@ -132,7 +141,7 @@ namespace TVA
                     // - http://support.microsoft.com/kb/90493/en-us
                     // - http://www.codeguru.com/cpp/w-p/system/misc/article.php/c2897/
                     // We will always have an entry assembly for windows application.
-                    FileStream exe = new FileStream(TVA.AssemblyInformation.EntryAssembly.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    FileStream exe = new FileStream(AssemblyInformation.EntryAssembly.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     byte[] dosHeader = new byte[64];
                     byte[] exeHeader = new byte[248];
                     byte[] subSystem = new byte[2];
@@ -171,8 +180,11 @@ namespace TVA
             return (IsReference(item) && !(item is string));
         }
 
+        #endregion
 
-/*-----------------------------------------------------------------------------------------------------*\
+        #region [ TVA.Collections.Common Functions ]
+
+        /*-----------------------------------------------------------------------------------------------------*\
  *
  *                    These functions were migrated here from TVA.Collections.Common
  *                  
@@ -249,6 +261,9 @@ namespace TVA
             }
         }
 
+        #endregion
+
+        #region [ TVA.DateTime.Common Functions ]
 
 /*-----------------------------------------------------------------------------------------------------*\
  *
@@ -258,7 +273,7 @@ namespace TVA
 
 
         /// <summary>Time names enumeration used by SecondsToText function.</summary>
-        public static struct TimeName
+        public struct TimeName
         {
             static public int Year = 0;
             static public int Years = 1;
@@ -383,14 +398,11 @@ namespace TVA
                 // Appends textual representation of years.
                 timeImage.Append(years);
                 timeImage.Append(' ');
+
                 if (years == 1)
-                {
                     timeImage.Append(timeNames[TimeName.Year]);
-                }
                 else
-                {
                     timeImage.Append(timeNames[TimeName.Years]);
-                }
             }
 
             // Checks if remaining number of seconds ranges in days.
@@ -404,14 +416,11 @@ namespace TVA
                 timeImage.Append(' ');
                 timeImage.Append(days);
                 timeImage.Append(' ');
+
                 if (days == 1)
-                {
                     timeImage.Append(timeNames[TimeName.Day]);
-                }
                 else
-                {
                     timeImage.Append(timeNames[TimeName.Days]);
-                }
             }
 
             // Checks if remaining number of seconds ranges in hours.
@@ -425,14 +434,11 @@ namespace TVA
                 timeImage.Append(' ');
                 timeImage.Append(hours);
                 timeImage.Append(' ');
+
                 if (hours == 1)
-                {
                     timeImage.Append(timeNames[TimeName.Hour]);
-                }
                 else
-                {
                     timeImage.Append(timeNames[TimeName.Hours]);
-                }
             }
 
             // Checks if remaining number of seconds ranges in minutes.
@@ -446,21 +452,18 @@ namespace TVA
                 timeImage.Append(' ');
                 timeImage.Append(minutes);
                 timeImage.Append(' ');
+
                 if (minutes == 1)
-                {
                     timeImage.Append(timeNames[TimeName.Minute]);
-                }
                 else
-                {
                     timeImage.Append(timeNames[TimeName.Minutes]);
-                }
             }
 
             // Handles remaining seconds.
             if (secondPrecision == 0)
             {
                 // No fractional seconds requested. Rounds seconds to nearest integer.
-                int wholeSeconds = Convert.ToInt32(System.Math.Round(seconds));
+                int wholeSeconds = (int)System.Math.Round(seconds);
 
                 if (wholeSeconds > 0)
                 {
@@ -468,14 +471,11 @@ namespace TVA
                     timeImage.Append(' ');
                     timeImage.Append(wholeSeconds);
                     timeImage.Append(' ');
+
                     if (wholeSeconds == 1)
-                    {
                         timeImage.Append(timeNames[TimeName.Second]);
-                    }
                     else
-                    {
                         timeImage.Append(timeNames[TimeName.Seconds]);
-                    }
                 }
             }
             else
@@ -488,9 +488,7 @@ namespace TVA
                         // If second display has been disabled and less than 60 seconds remain, we still need
                         // to show something.
                         if (timeImage.Length == 0)
-                        {
                             timeImage.Append(timeNames[TimeName.LessThan60Seconds]);
-                        }
                     }
                     else
                     {
@@ -498,26 +496,20 @@ namespace TVA
                         timeImage.Append(' ');
                         timeImage.Append(seconds.ToString("0." + (new string('0', secondPrecision))));
                         timeImage.Append(' ');
+
                         if (seconds == 1)
-                        {
                             timeImage.Append(timeNames[TimeName.Second]);
-                        }
                         else
-                        {
                             timeImage.Append(timeNames[TimeName.Seconds]);
-                        }
                     }
                 }
             }
 
             // Handles zero seconds display.
             if (timeImage.Length == 0)
-            {
                 timeImage.Append(timeNames[TimeName.NoSeconds]);
-            }
 
             return timeImage.ToString().Trim();
-
         }
 
     	/// <summary>Returns the specified Win32 time zone, using specified name.</summary>
@@ -530,27 +522,186 @@ namespace TVA
 				if (lookupBy == TimeZoneName.DaylightName)
 				{
 					if (string.Compare(timeZone.DaylightName, name, true) == 0)
-					{
 						return timeZone;
-					}
 				}
 				else if (lookupBy == TimeZoneName.DisplayName)
 				{
 					if (string.Compare(timeZone.DisplayName, name, true) == 0)
-					{
 						return timeZone;
-					}
 				}
 				else if (lookupBy == TimeZoneName.StandardName)
 				{
 					if (string.Compare(timeZone.StandardName, name, true) == 0)
-					{
 						return timeZone;
-					}
 				}
 			}
 			
 			throw new ArgumentException("Windows time zone with " + lookupBy + " of \"" + name + "\" was not found!");
-		}
+        }
+
+        #endregion
+
+        #region [ TVA.Data.Common Functions ]
+
+/*-----------------------------------------------------------------------------------------------------*\
+ *
+ *                    These functions were migrated here from TVA.Data.Common
+ *                  
+\*-----------------------------------------------------------------------------------------------------*/
+
+
+        /// <summary>
+        /// Performs SQL encoding on given T-SQL string.
+        /// </summary>
+        /// <param name="sql">The string on which SQL encoding is to be performed.</param>
+        /// <returns>The SQL encoded string.</returns>
+        public static string SqlEncode(string sql)
+        {
+            return sql.Replace("\'", "\'\'").Replace("/*", "").Replace("--", "");
+        }
+
+        /// <summary>
+        /// Executes the SQL statement, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connectString">The connection string used for connecting to the data source.</param>
+        /// <param name="connectionType">The type of data provider to use for connecting to the data source and executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(string sql, string connectString, ConnectionType connectionType, int timeout)
+        {
+            int executionResult = -1;
+            IDbConnection connection = null;
+            IDbCommand command = null;
+
+            switch (connectionType)
+            {
+                case ConnectionType.SqlClient:
+                    connection = new SqlConnection(connectString);
+                    command = new SqlCommand(sql, (SqlConnection)connection);
+                    break;
+                case ConnectionType.OracleClient:
+                    connection = new OracleConnection(connectString);
+                    command = new OracleCommand(sql, (OracleConnection)connection);
+                    break;
+                case ConnectionType.OleDb:
+                    connection = new OleDbConnection(connectString);
+                    command = new OleDbCommand(sql, (OleDbConnection)connection);
+                    break;
+            }
+
+            connection.Open();
+            command.CommandTimeout = timeout;
+            executionResult = command.ExecuteNonQuery();
+            connection.Close();
+            return executionResult;
+        }
+
+        /// <summary>
+        /// Converts delimited text to DataTable.
+        /// </summary>
+        /// <param name="delimitedData">The delimited text to be converted to DataTable.</param>
+        /// <param name="delimiter">The character(s) used for delimiting the text.</param>
+        /// <param name="header">True, if the delimited text contains header information; otherwise, false.</param>
+        /// <returns>A DataTable object.</returns>
+        public static DataTable DelimitedDataToDataTable(string delimitedData, string delimiter, bool header)
+        {
+            DataTable table = new DataTable();
+            string pattern = Regex.Escape(delimiter) + "(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))"; //Regex pattern that will be used to split the delimited data.
+
+            delimitedData = delimitedData.Trim().Trim(new char[] { '\r', '\n' }).Replace("\n", ""); //Remove any leading and trailing whitespaces, carriage returns or line feeds.
+
+            string[] lines = delimitedData.Split('\r'); //Splits delimited data into lines.
+
+            int cursor = 0;
+
+            //Assumes that the first line has header information.
+            string[] headers = Regex.Split(lines[cursor], pattern);
+
+            //Creates columns.
+            if (header)
+            {
+                //Uses the first row as header row.
+                for (int i = 0; i <= headers.Length - 1; i++)
+                {
+                    table.Columns.Add(new DataColumn(headers[i].Trim(new char[] { '\"' }))); //Remove any leading and trailing quotes from the column name.
+                }
+                cursor++;
+            }
+            else
+            {
+                for (int i = 0; i <= headers.Length - 1; i++)
+                {
+                    table.Columns.Add(new DataColumn());
+                }
+            }
+
+            //Populates the data table with csv data.
+            for (; cursor <= lines.Length - 1; cursor++)
+            {
+                DataRow row = table.NewRow(); //Creates new row.
+
+                //Populates the new row.
+                string[] fields = Regex.Split(lines[cursor], pattern);
+                for (int i = 0; i <= fields.Length - 1; i++)
+                {
+                    row[i] = fields[i].Trim(new char[] { '\"' }); //Removes any leading and trailing quotes from the data.
+                }
+
+                table.Rows.Add(row); //Adds the new row.
+            }
+
+            //Returns the data table.
+            return table;
+        }
+
+        /// <summary>
+        /// Converts the DataTable to delimited text.
+        /// </summary>
+        /// <param name="table">The DataTable whose data is to be converted to delimited text.</param>
+        /// <param name="delimiter">The character(s) to be used for delimiting the text.</param>
+        /// <param name="quoted">True, if text is to be surrounded by quotes; otherwise, false.</param>
+        /// <param name="header">True, if the delimited text should have header information.</param>
+        /// <returns>A string of delimited text.</returns>
+        public static string DataTableToDelimitedData(DataTable table, string delimiter, bool quoted, bool header)
+        {
+            StringBuilder data = new StringBuilder();
+
+            //Uses the column names as the headers if headers are requested.
+            if (header)
+            {
+                for (int i = 0; i <= table.Columns.Count - 1; i++)
+                {
+                    data.Append((quoted ? "\"" : "") + table.Columns[i].ColumnName + (quoted ? "\"" : ""));
+
+                    if (i < table.Columns.Count - 1)
+                    {
+                        data.Append(delimiter);
+                    }
+                }
+                data.Append("\r\n");
+            }
+
+            for (int i = 0; i <= table.Rows.Count - 1; i++)
+            {
+                //Converts data table's data to delimited data.
+                for (int j = 0; j <= table.Columns.Count - 1; j++)
+                {
+                    data.Append((quoted ? "\"" : "") + table.Rows[i][j].ToString() + (quoted ? "\"" : ""));
+
+                    if (j < table.Columns.Count - 1)
+                    {
+                        data.Append(delimiter);
+                    }
+                }
+                data.Append("\r\n");
+            }
+
+            //Returns the delimited data.
+            return data.ToString();
+        }
+
+        #endregion
+
     }
 }
