@@ -76,7 +76,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>Returns measurement key list of specified tag, if it exists</summary>
-        public List TagMeasurementKeys(string tag)
+        public List<MeasurementKey> TagMeasurementKeys(string tag)
         {
             return m_taggedMeasurements(tag);
         }
@@ -86,7 +86,7 @@ namespace TVA.Measurements
         {
             get
             {
-                return value(new MeasurementKey(measurementID, source));
+                return Value(new MeasurementKey(measurementID, source));
             }
         }
 
