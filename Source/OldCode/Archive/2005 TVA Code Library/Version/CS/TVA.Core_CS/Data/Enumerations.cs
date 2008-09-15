@@ -1,11 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-
 //*******************************************************************************************************
 //  Enumerations.vb - Global enumerations for this namespace
 //  Copyright © 2005 - TVA, all rights reserved - Gbtc
@@ -22,23 +14,22 @@ using System;
 //       Moved all namespace level enumerations into "Enumerations.vb" file.
 //  08/21/2007 - Darrell Zuercher
 //       Edited code comments.
+//  09/15/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
-namespace TVA
+using System;
+
+namespace TVA.Data
 {
-	namespace Data
-	{
-		
-		/// <summary>
-		/// Types of data providers.
-		/// </summary>
-		public enum ConnectionType
-		{
-			@OleDb,
-			@SqlClient,
-			@OracleClient
-		}
-		
-	}
+    /// <summary>
+    /// Types of data providers.
+    /// </summary>
+    public enum ConnectionType
+    {
+        OleDb,
+        SqlClient,
+        OracleClient
+    }
 }
