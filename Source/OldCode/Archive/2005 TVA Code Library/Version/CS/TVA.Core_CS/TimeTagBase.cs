@@ -104,7 +104,7 @@ namespace TVA
             return CompareTo(other.ToDateTime());
         }
 
-        /// <summary>Compares this time tag to a System.DateTime.</summary>
+        /// <summary>Compares this time tag to a DateTime.</summary>
         public int CompareTo(DateTime other)
         {
             return ToDateTime().CompareTo(other);
