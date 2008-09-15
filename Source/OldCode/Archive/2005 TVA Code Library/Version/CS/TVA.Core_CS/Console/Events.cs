@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  TVA.Console.Common.vb - Common Configuration Functions
+//  TVA.Console.Events.vb - Console Window Event Handling Functions
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2005
@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 
 namespace TVA.Console
 {
-    public static class Common
+    public static class Events
     {
         private enum ConsoleEventType
         {
