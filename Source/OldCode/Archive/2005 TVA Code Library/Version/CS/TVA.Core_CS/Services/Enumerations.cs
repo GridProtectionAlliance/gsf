@@ -25,28 +25,28 @@ using System;
 
 namespace TVA
 {
-	namespace Services
-	{
-		
-		/// <summary>Windows service states</summary>
-		public enum ServiceState
-		{
-			Started,
-			Stopped,
-			Paused,
-			Resumed,
-			Shutdown
-		}
-		
-		/// <summary>Windows service process states</summary>
-		public enum ProcessState
-		{
-			Unprocessed,
-			Processing,
-			Processed,
-			Aborted,
-			Exception
-		}
-		
-	}
+    namespace Services
+    {
+
+        /// <summary>Windows service states</summary>
+        public enum ServiceState
+        {
+            Started,
+            Stopped,
+            Paused,
+            Resumed,
+            Shutdown
+        }
+
+        /// <summary>Windows service process states</summary>
+        public enum ProcessState
+        {
+            Unprocessed,
+            Processing,
+            Processed,
+            Aborted,
+            Exception
+        }
+
+    }
 }

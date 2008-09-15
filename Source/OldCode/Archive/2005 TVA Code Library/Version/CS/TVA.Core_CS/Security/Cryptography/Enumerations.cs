@@ -29,36 +29,36 @@ using System;
 
 namespace TVA
 {
-	namespace Security
-	{
-		namespace Cryptography
-		{
-			
-			
-			/// <summary>Enumerates cryptographic strength.</summary>
-			/// <remarks>
-			/// <para>
-			/// Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
-			/// will have the fastest encryption speed with the simplest encryption strength, and level 5 will have the
-			/// strongest cumulative encryption strength with the slowest encryption speed.
-			/// </para>
-			/// </remarks>
-			public enum EncryptLevel
-			{
-				/// <summary>Uses no encryption.</summary>
-				None,
-				/// <summary>Adds simple multi-alogorithm XOR based encryption.</summary>
-				Level1,
-				/// <summary>Adds TripleDES based encryption.</summary>
-				Level2,
-				/// <summary>Adds RC2 based encryption.</summary>
-				Level3,
-				/// <summary>Adds RijndaelManaged based enryption.</summary>
-				Level4,
-				/// <summary>Adds simple bit-rotation based enryption.</summary>
-				Level5
-			}
-			
-		}
-	}
+    namespace Security
+    {
+        namespace Cryptography
+        {
+
+
+            /// <summary>Enumerates cryptographic strength.</summary>
+            /// <remarks>
+            /// <para>
+            /// Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
+            /// will have the fastest encryption speed with the simplest encryption strength, and level 5 will have the
+            /// strongest cumulative encryption strength with the slowest encryption speed.
+            /// </para>
+            /// </remarks>
+            public enum EncryptLevel
+            {
+                /// <summary>Uses no encryption.</summary>
+                None,
+                /// <summary>Adds simple multi-alogorithm XOR based encryption.</summary>
+                Level1,
+                /// <summary>Adds TripleDES based encryption.</summary>
+                Level2,
+                /// <summary>Adds RC2 based encryption.</summary>
+                Level3,
+                /// <summary>Adds RijndaelManaged based enryption.</summary>
+                Level4,
+                /// <summary>Adds simple bit-rotation based enryption.</summary>
+                Level5
+            }
+
+        }
+    }
 }

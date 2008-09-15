@@ -171,7 +171,7 @@ namespace TVA.Reflection
 
         /// <summary>Gets the date and time when the assembly was last built.</summary>
         /// <returns>The date and time when the assembly was last built.</returns>
-        public static System.DateTime BuildDate(this Assembly assemblyInstance)
+        public static DateTime BuildDate(this Assembly assemblyInstance)
         {
             return (new AssemblyInformation(assemblyInstance)).BuildDate;
         }

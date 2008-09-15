@@ -154,7 +154,7 @@ namespace TVA
 
                     return ((ApplicationType)(BitConverter.ToInt16(subSystem, 0)));
                 }
-                catch (Exception)
+                catch
                 {
                     // We are unable to determine the application type. This is possible in case of a web app/web site
                     // when this method is being called from a thread other than the main thread, in which case the

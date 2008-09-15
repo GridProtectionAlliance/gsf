@@ -10,27 +10,29 @@ using System;
 
 namespace TVA
 {
-	namespace Configuration
-	{
-		
-		public interface IPersistSettings
-		{
-			
-			bool PersistSettings{
-				get;
-				set;
-			}
-			
-			string SettingsCategoryName{
-				get;
-				set;
-			}
-			
-			void SaveSettings();
-			
-			void LoadSettings();
-			
-		}
-		
-	}
+    namespace Configuration
+    {
+
+        public interface IPersistSettings
+        {
+
+            bool PersistSettings
+            {
+                get;
+                set;
+            }
+
+            string SettingsCategoryName
+            {
+                get;
+                set;
+            }
+
+            void SaveSettings();
+
+            void LoadSettings();
+
+        }
+
+    }
 }

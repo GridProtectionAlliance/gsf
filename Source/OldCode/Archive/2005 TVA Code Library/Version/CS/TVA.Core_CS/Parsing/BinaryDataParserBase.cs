@@ -410,7 +410,7 @@ namespace TVA.Parsing
                                 output.Add(instance);
                                 m_unparsedDataReuseCount[item[i].Source] = 0; // <- Necessary overhead :(
                             }
-                            catch (Exception)
+                            catch
                             {
                                 // We might encounter an exception when a given type is trying to initialize the
                                 // instance from the provided data, and that data is either partial or malformed.

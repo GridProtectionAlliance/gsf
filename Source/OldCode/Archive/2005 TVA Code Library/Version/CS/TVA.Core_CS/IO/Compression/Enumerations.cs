@@ -25,24 +25,24 @@ using System;
 
 namespace TVA
 {
-	namespace IO
-	{
-		namespace Compression
-		{
-			
-			
-			/// <summary>
-			/// Specifies the level of compression to be performed on data.
-			/// </summary>
-			public enum CompressLevel
-			{
-				DefaultCompression = - 1,
-				NoCompression = 0,
-				BestSpeed = 1,
-				BestCompression = 9,
-				MultiPass = 10
-			}
-			
-		}
-	}
+    namespace IO
+    {
+        namespace Compression
+        {
+
+
+            /// <summary>
+            /// Specifies the level of compression to be performed on data.
+            /// </summary>
+            public enum CompressLevel
+            {
+                DefaultCompression = -1,
+                NoCompression = 0,
+                BestSpeed = 1,
+                BestCompression = 9,
+                MultiPass = 10
+            }
+
+        }
+    }
 }
