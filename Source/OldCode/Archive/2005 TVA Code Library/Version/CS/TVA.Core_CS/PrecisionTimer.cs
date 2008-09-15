@@ -157,7 +157,7 @@ namespace TVA
                 {
                     long elapsedTicks = m_stopwatch.ElapsedTicks;
                     ImmutableTimeState timeState = m_timeState;
-                    DateTime precisionTime = timeState.BaseTime.AddTicks((System.Convert.ToInt32((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond)) / timeState.SystemFrequency);
+                    DateTime precisionTime = timeState.BaseTime.AddTicks(((int)((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond) / timeState.SystemFrequency));
 
                     if (elapsedTicks >= timeState.ElapsedTicks + m_synchronizePeriodStopwatchTicks)
                     {
@@ -165,7 +165,8 @@ namespace TVA
                         DateTime systemTime = DateTime.UtcNow;
 
                         // Last parameter is a calculation that asymptotically approachs the measured system frequency
-                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, (System.Convert.ToInt32((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond * 2)) / (systemTime.Ticks - timeState.ObservedTime.Ticks + systemTime.Ticks + systemTime.Ticks - precisionTime.Ticks - timeState.ObservedTime.Ticks));
+                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, (int)(((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond * 2) / 
+                            (systemTime.Ticks - timeState.ObservedTime.Ticks + systemTime.Ticks + systemTime.Ticks - precisionTime.Ticks - timeState.ObservedTime.Ticks)));
                     }
 
                     // Return high-resolution timestamp
@@ -481,7 +482,7 @@ namespace TVA
             set
             {
                 if (m_disposed)
-                    throw new ObjectDisposedException("PrecisionTimer";
+                    throw new ObjectDisposedException("PrecisionTimer");
 
                 if (value < 0)
                     throw new ArgumentOutOfRangeException("Resolution", value, "Multimedia timer resolution out of range.");
@@ -522,7 +523,7 @@ namespace TVA
                 if (m_disposed)
                     throw (new ObjectDisposedException("PrecisionTimer"));
 
-                m_mode = value ? TimerMode.Periodic : TimerMode.OneShot;
+                m_mode = (value ? TimerMode.Periodic : TimerMode.OneShot);
 
                 if (IsRunning && m_mode == TimerMode.Periodic)
                 {
