@@ -214,7 +214,7 @@ namespace TVA.Collections
 #if ThreadTracking
         private ManagedThread m_realTimeProcessThread;
 #else
-		        private Thread m_realTimeProcessThread;
+        private Thread m_realTimeProcessThread;
 #endif
 
         private ThreadPriority m_realTimeProcessThreadPriority;
@@ -834,7 +834,7 @@ namespace TVA.Collections
             m_threadCount = 0;
             m_itemsProcessed = 0;
             m_stopTime = 0;
-            m_startTime = System.DateTime.Now.Ticks;
+            m_startTime = DateTime.Now.Ticks;
 
             // Note that real-time queues have their main thread running continually, but for
             // intervaled queues, processing occurs only when data is available to be processed.
@@ -845,7 +845,7 @@ namespace TVA.Collections
                 m_realTimeProcessThread = new ManagedThread(RealTimeThreadProc);
                 m_realTimeProcessThread.Name = "TVA.Collections.ProcessQueue.RealTimeThreadProc() [" + Name + "]";
 #else
-					    m_realTimeProcessThread = new Thread(new System.Threading.ThreadStart(RealTimeThreadProc));
+                m_realTimeProcessThread = new Thread(new System.Threading.ThreadStart(RealTimeThreadProc));
 #endif
 
                 m_realTimeProcessThread.Priority = m_realTimeProcessThreadPriority;
@@ -880,7 +880,7 @@ namespace TVA.Collections
                 m_processTimer.Enabled = false;
             }
 
-            m_stopTime = System.DateTime.Now.Ticks;
+            m_stopTime = DateTime.Now.Ticks;
         }
 
         /// <summary>
