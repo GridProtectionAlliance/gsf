@@ -24,6 +24,7 @@ using System.Runtime.InteropServices;
 
 namespace TVA.Console
 {
+    /// <summary>Provides a console application events raised by the console window.</summary>
     public static class Events
     {
         private enum ConsoleEventType
@@ -63,7 +64,7 @@ namespace TVA.Console
         public static void DisableRaisingEvents()
         {
             m_handler = HandleConsoleWindowEvents;
-            SetConsoleWindowEventRaising(m_handler, false);
+            SetConsoleWindowEventRaising(HandleConsoleWindowEvents, false);
         }
 
         #endregion
