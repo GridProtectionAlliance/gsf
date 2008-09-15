@@ -18,6 +18,8 @@
 //       Added code to detect and avoid redundant calls to Dispose().
 //  08/20/2008 - J. Ritchie Carroll
 //       Removed process queue for thread reduction optimization
+//  09/15/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
