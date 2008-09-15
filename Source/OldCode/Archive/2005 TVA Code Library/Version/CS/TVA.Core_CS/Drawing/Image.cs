@@ -29,7 +29,7 @@ namespace TVA.Drawing
     {
         public static Bitmap Resize(this Bitmap originalImage, Size newSize)
         {
-            return Resize(originalImage, newSize, false);
+            return originalImage.Resize(newSize, false);
         }
 
         public static Bitmap Resize(this Bitmap originalImage, Size newSize, bool disposeOriginal)
@@ -87,17 +87,17 @@ namespace TVA.Drawing
 
         public static Bitmap Crop(this Bitmap originalImage, Size newSize)
         {
-            return Crop(originalImage, newSize, false);
+            return originalImage.Crop(newSize, false);
         }
 
         public static Bitmap Crop(this Bitmap originalImage, Size newSize, bool disposeOriginal)
         {
-            return Crop(originalImage, new Point(0, 0), newSize, disposeOriginal);
+            return originalImage.Crop(new Point(0, 0), newSize, disposeOriginal);
         }
 
         public static Bitmap Crop(this Bitmap originalImage, Point upperLeftCorner, Size newSize)
         {
-            return Crop(originalImage, upperLeftCorner, newSize, false);
+            return originalImage.Crop(upperLeftCorner, newSize, false);
         }
 
         public static Bitmap Crop(this Bitmap originalImage, Point upperLeftCorner, Size newSize, bool disposeOriginal)
@@ -116,7 +116,7 @@ namespace TVA.Drawing
 
         public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat)
         {
-            return ConvertTo(originalImage, newFormat, false);
+            return originalImage.ConvertTo(newFormat, false);
         }
 
         public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat, bool disposeOriginal)
