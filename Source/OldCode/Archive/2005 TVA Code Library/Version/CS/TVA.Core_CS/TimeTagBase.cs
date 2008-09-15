@@ -28,7 +28,7 @@ using System.Runtime.Serialization;
 namespace TVA
 {
     /// <summary>Base class for alternate time tag implementations.</summary>
-    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IEquatable<TimeTagBase>
+    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>
     {
         private long m_baseDateOffsetTicks;
         private double m_seconds;
@@ -98,10 +98,16 @@ namespace TVA
         }
 
         /// <summary>Compares this time tag to another one.</summary>
-        public int CompareTo(TimeTagBase timeTag)
+        public int CompareTo(TimeTagBase other)
         {
             // Since compared time tags may not have the same base time, we compare using .NET date time.
-            return ToDateTime().CompareTo(timeTag.ToDateTime());
+            return CompareTo(other.ToDateTime());
+        }
+
+        /// <summary>Compares this time tag to a System.DateTime.</summary>
+        public int CompareTo(DateTime other)
+        {
+            return ToDateTime().CompareTo(other);
         }
 
         public virtual int CompareTo(object obj)
@@ -109,8 +115,10 @@ namespace TVA
             TimeTagBase timetag = obj as TimeTagBase;
 
             if (timetag != null) return CompareTo(timetag);
+
+            if (obj is DateTime) return CompareTo((DateTime)obj);
             
-            throw new ArgumentException("Time-tag can only be compared with other time-tags...");
+            throw new ArgumentException("TimeTag can only be compared with other TimeTags or DateTimes...");
         }
 
         public override bool Equals(object obj)
