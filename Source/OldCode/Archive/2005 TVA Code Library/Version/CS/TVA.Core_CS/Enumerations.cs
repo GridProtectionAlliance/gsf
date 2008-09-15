@@ -79,41 +79,28 @@ namespace TVA
         Minute,
         /// <summary>Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds).</summary>
         Hour,
-        /// <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and
-        /// milliseconds).</summary>
+        /// <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and milliseconds).</summary>
         Day,
-        /// <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds
-        /// and milliseconds).</summary>
+        /// <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds and milliseconds).</summary>
         Month,
-        /// <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes,
-        /// seconds and milliseconds).</summary>
+        /// <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, seconds and milliseconds).</summary>
         Year
     }
 
     /// <summary>
-    /// The various parts of System.DateTime type.
+    /// The various parts of DateTime type.
     /// </summary>
     public enum DateTimePart
     {
-        /// <summary>
-        /// Minute part.
-        /// </summary>
+        /// <summary>Minute part.</summary>
         Minute,
-        /// <summary>
-        /// Hour part.
-        /// </summary>
+        /// <summary>Hour part.</summary>
         Hour,
-        /// <summary>
-        /// Day part.
-        /// </summary>
+        /// <summary>Day part.</summary>
         Day,
-        /// <summary>
-        /// Month part.
-        /// </summary>
+        /// <summary>Month part.</summary>
         Month,
-        /// <summary>
-        /// Day of week part.
-        /// </summary>
+        /// <summary>Day of week part.</summary>
         DayOfWeek
     }
 }

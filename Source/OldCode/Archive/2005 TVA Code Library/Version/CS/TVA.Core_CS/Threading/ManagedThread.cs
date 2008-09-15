@@ -233,7 +233,7 @@ namespace TVA.Threading
                     if (m_stopTime > 0)
                         processingTime = m_stopTime - m_startTime;
                     else
-                        processingTime = System.DateTime.UtcNow.Ticks - m_startTime;
+                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
                 }
 
                 if (processingTime < 0)
@@ -387,7 +387,7 @@ namespace TVA.Threading
         internal void HandleItem()
         {
             // Set start state
-            m_startTime = System.DateTime.UtcNow.Ticks;
+            m_startTime = DateTime.UtcNow.Ticks;
             m_status = ThreadStatus.Executing;
 
             try
@@ -422,7 +422,7 @@ namespace TVA.Threading
                 {
                     m_status = ThreadStatus.Completed;
                 }
-                m_stopTime = System.DateTime.UtcNow.Ticks;
+                m_stopTime = DateTime.UtcNow.Ticks;
 
                 ManagedThreads.Remove(this);
             }

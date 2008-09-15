@@ -317,7 +317,7 @@ namespace TVA
         /// <para>
         /// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
         /// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        /// Note that the normal System.DateTime.UtcNow property has a maximum resolution of ~16 milliseconds.
+        /// Note that the normal DateTime.UtcNow property has a maximum resolution of ~16 milliseconds.
         /// </para>
         /// </remarks>
         public static DateTime UtcNow
@@ -337,7 +337,7 @@ namespace TVA
         /// <para>
         /// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
         /// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        /// Note that the normal System.DateTime.Now property has a maximum resolution of ~16 milliseconds.
+        /// Note that the normal DateTime.Now property has a maximum resolution of ~16 milliseconds.
         /// </para>
         /// </remarks>
         public static DateTime Now
