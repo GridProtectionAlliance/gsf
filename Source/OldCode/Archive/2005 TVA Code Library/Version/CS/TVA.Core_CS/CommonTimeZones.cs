@@ -24,7 +24,6 @@ namespace TVA
     public static class CommonTimeZones
     {
         // We define a few common timezones for convenience.
-        private static TimeZoneInfo m_universalTimeZone;
         private static TimeZoneInfo m_easternTimeZone;
         private static TimeZoneInfo m_centralTimeZone;
         private static TimeZoneInfo m_mountainTimeZone;
