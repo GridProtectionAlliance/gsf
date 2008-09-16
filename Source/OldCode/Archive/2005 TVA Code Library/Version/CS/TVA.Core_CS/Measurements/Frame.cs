@@ -12,18 +12,21 @@
 //  -----------------------------------------------------------------------------------------------------
 //  6/22/2006 - J. Ritchie Carroll
 //       Initial version of source generated
+//  09/16/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace TVA.Measurements
 {
     /// <summary>Implementation of a basic frame</summary>
     public class Frame : IFrame
     {
+        #region [ Members ]
+
         private long m_ticks;
         private bool m_published;
         private int m_publishedMeasurements;
@@ -32,37 +35,29 @@ namespace TVA.Measurements
         private long m_lastSortTime;
         private IMeasurement m_lastSortedMeasurement;
 
+        #endregion
+
+        #region [ Constructors ]
+
         public Frame(long ticks)
         {
-
             m_ticks = ticks;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(100);
             m_publishedMeasurements = -1;
-
         }
 
         public Frame(long ticks, Dictionary<MeasurementKey, IMeasurement> measurements, long startSortTime, long lastSortTime)
         {
-
             m_ticks = ticks;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
             m_startSortTime = startSortTime;
             m_lastSortTime = lastSortTime;
             m_publishedMeasurements = -1;
-
         }
 
-        /// <summary>Create a copy of this frame and its measurements</summary>
-        /// <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
-        public IFrame Clone()
-        {
+        #endregion
 
-            lock (m_measurements)
-            {
-                return new Frame(m_ticks, m_measurements, m_startSortTime, m_lastSortTime);
-            }
-
-        }
+        #region [ Properties ]
 
         /// <summary>Keyed measurements in this frame</summary>
         public IDictionary<Measurements, IMeasurement> Measurements
@@ -93,9 +88,8 @@ namespace TVA.Measurements
             get
             {
                 if (m_publishedMeasurements == -1)
-                {
                     return m_measurements.Count;
-                }
+
                 return m_publishedMeasurements;
             }
             set
@@ -119,7 +113,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>Date representation of ticks of this frame</summary>
-        PublicDateTime Timestamp
+        public DateTime Timestamp
         {
             get
             {
@@ -140,95 +134,80 @@ namespace TVA.Measurements
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>Create a copy of this frame and its measurements</summary>
+        /// <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
+        public Frame Clone()
+        {
+            lock (m_measurements)
+            {
+                return new Frame(m_ticks, m_measurements, m_startSortTime, m_lastSortTime);
+            }
+        }
+
         /// <summary>Returns True if the timestamp of this frame equals the timestamp of the specified other frame</summary>
         public bool Equals(IFrame other)
         {
-
             return (CompareTo(other) == 0);
-
         }
 
         /// <summary>Returns True if the timestamp of this frame equals the timestamp of the specified other frame</summary>
         public override bool Equals(object obj)
         {
-
             IFrame other = obj as IFrame;
-            if (other != null)
-            {
-                return Equals(other);
-            }
-            throw (new ArgumentException("Object is not an IFrame"));
-
+            if (other != null) return Equals(other);
+            throw new ArgumentException("Object is not an IFrame");
         }
 
         /// <summary>This implementation of a basic measurement compares itself by timestamp</summary>
         public int CompareTo(IFrame other)
         {
-
             return m_ticks.CompareTo(other.Ticks);
-
         }
 
         /// <summary>This implementation of a basic frame compares itself by timestamp</summary>
         public int CompareTo(object obj)
         {
-
             IFrame other = obj as IFrame;
-            if (other != null)
-            {
-                return CompareTo(other);
-            }
-            throw (new ArgumentException("Frame can only be compared with other IFrames..."));
-
+            if (other != null) return CompareTo(other);
+            throw new ArgumentException("Frame can only be compared with other IFrames...");
         }
 
-        #region " Frame Operators "
+        #endregion
+
+        #region [ Operators ]
 
         public static bool operator ==(Frame frame1, Frame frame2)
         {
-
             return frame1.Equals(frame2);
-
         }
 
         public static bool operator !=(Frame frame1, Frame frame2)
         {
-
             return !frame1.Equals(frame2);
-
         }
 
         public static bool operator >(Frame frame1, Frame frame2)
         {
-
             return frame1.CompareTo(frame2) > 0;
-
         }
 
         public static bool operator >=(Frame frame1, Frame frame2)
         {
-
             return frame1.CompareTo(frame2) >= 0;
-
         }
 
         public static bool operator <(Frame frame1, Frame frame2)
         {
-
             return frame1.CompareTo(frame2) < 0;
-
         }
 
         public static bool operator <=(Frame frame1, Frame frame2)
         {
-
             return frame1.CompareTo(frame2) <= 0;
-
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
         }
 
         #endregion
