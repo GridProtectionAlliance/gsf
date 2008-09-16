@@ -139,7 +139,7 @@
     <Compile Include="Net\Smtp\Common.cs" />
     <Compile Include="Net\Smtp\SimpleMailMessage.cs" />
     <Compile Include="Reflection\ReflectionExtensions.cs" />
-    <Compile Include="Template.cs" />
+    <Content Include="Template.txt" />
     <Compile Include="UInt24.cs" />
     <Compile Include="Int24.cs" />
     <Compile Include="Scheduling\Enumerations.cs" />
