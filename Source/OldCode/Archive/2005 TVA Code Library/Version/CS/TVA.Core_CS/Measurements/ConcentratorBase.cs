@@ -1,22 +1,3 @@
-#define UsePrecisionTimer
-using System.Diagnostics;
-using System;
-using System.Xml.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Runtime.InteropServices;
-//using TVA.Common;
-//using TVA.Collections;
-//using TVA.Collections.Common;
-//using TVA.DateTime;
-//using TVA.DateTime.Common;
-//using TVA.Math.Common;
-
 //*******************************************************************************************************
 //  TVA.Measurements.ConcentratorBase.vb - Measurement concentrator base class
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -52,125 +33,78 @@ using System.Runtime.InteropServices;
 //       Added code to detect and avoid redundant calls to Dispose().
 //  08/22/2008 - J. Ritchie Carroll
 //       Replaced timing code using TVA.DateTime.PrecisionTimer
+//  09/16/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
+#define UsePrecisionTimer
 
+using System;
+using System.Text;
+using System.Threading;
+using System.Diagnostics;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace TVA.Measurements
 {
     public abstract class ConcentratorBase : IDisposable
     {
-
-
-
-        #region " Public Member Declarations "
+        #region [ Members ]
 
         /// <summary>This event is raised every second allowing consumer to track current number of unpublished
         /// seconds of data in the queue.</summary>
         public delegate void UnpublishedSamplesEventHandler(int total);
-        private UnpublishedSamplesEventHandler UnpublishedSamplesEvent;
-
-        public event UnpublishedSamplesEventHandler UnpublishedSamples
-        {
-            add
-            {
-                UnpublishedSamplesEvent = (UnpublishedSamplesEventHandler)System.Delegate.Combine(UnpublishedSamplesEvent, value);
-            }
-            remove
-            {
-                UnpublishedSamplesEvent = (UnpublishedSamplesEventHandler)System.Delegate.Remove(UnpublishedSamplesEvent, value);
-            }
-        }
-
+        public event UnpublishedSamplesEventHandler UnpublishedSamples;
 
         /// <summary>This event is raised if there is an exception encountered while attempting to process a
         /// frame in the sample queue.</summary>
         /// <remarks>Processing will not stop for any exceptions thrown by the user function, but any captured
         /// exceptions will be exposed through this event.</remarks>
         public delegate void ProcessExceptionEventHandler(Exception ex);
-        private ProcessExceptionEventHandler ProcessExceptionEvent;
+        public event ProcessExceptionEventHandler ProcessException;
 
-        public event ProcessExceptionEventHandler ProcessException
-        {
-            add
-            {
-                ProcessExceptionEvent = (ProcessExceptionEventHandler)System.Delegate.Combine(ProcessExceptionEvent, value);
-            }
-            remove
-            {
-                ProcessExceptionEvent = (ProcessExceptionEventHandler)System.Delegate.Remove(ProcessExceptionEvent, value);
-            }
-        }
+        // Raised, for the benefit of dependent classes, when lead time is updated
+        internal delegate void LeadTimeUpdatedEventHandler(double leadTime);
+        internal event LeadTimeUpdatedEventHandler LeadTimeUpdated;
 
+        // Raised, for the benefit of dependent classes, when lag time is updated
+        internal delegate void LagTimeUpdatedEventHandler(double lagTime);
+        internal event LagTimeUpdatedEventHandler LagTimeUpdated;
 
-        #endregion
-
-        #region " Private Member Declarations "
-
-        internal delegate void LeadTimeUpdatedEventHandler(double leadTime); // Raised, for the benefit of dependent classes, when lead time is updated
-        private LeadTimeUpdatedEventHandler LeadTimeUpdatedEvent;
-
-        internal event LeadTimeUpdatedEventHandler LeadTimeUpdated
-        {
-            add
-            {
-                LeadTimeUpdatedEvent = (LeadTimeUpdatedEventHandler)System.Delegate.Combine(LeadTimeUpdatedEvent, value);
-            }
-            remove
-            {
-                LeadTimeUpdatedEvent = (LeadTimeUpdatedEventHandler)System.Delegate.Remove(LeadTimeUpdatedEvent, value);
-            }
-        }
-
-        internal delegate void LagTimeUpdatedEventHandler(double lagTime); // Raised, for the benefit of dependent classes, when lag time is updated
-        private LagTimeUpdatedEventHandler LagTimeUpdatedEvent;
-
-        internal event LagTimeUpdatedEventHandler LagTimeUpdated
-        {
-            add
-            {
-                LagTimeUpdatedEvent = (LagTimeUpdatedEventHandler)System.Delegate.Combine(LagTimeUpdatedEvent, value);
-            }
-            remove
-            {
-                LagTimeUpdatedEvent = (LagTimeUpdatedEventHandler)System.Delegate.Remove(LagTimeUpdatedEvent, value);
-            }
-        }
-
-
-        private FrameQueue m_frameQueue; // Queue of frames to be published
-        private ClassLibrary1.DateTime.PrecisionTimer m_publicationTimer; // High precision timer used for frame processing
-        private System.Timers.Timer m_monitorTimer; // Sample monitor - tracks total number of unpublished frames
-        private int m_framesPerSecond; // Frames per second
-        private decimal m_ticksPerFrame; // Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
-        private int[] m_framePeriods; // Evenly distributed waiting times, in whole milliseconds, per frame
-        private int m_lastFramePeriod; // Tracks last frame period
-        private int m_frameIndex; // Determines current frame index
-        private double m_lagTime; // Allowed past time deviation tolerance, in seconds
-        private double m_leadTime; // Allowed future time deviation tolerance, in seconds
-        private long m_lagTicks; // Current lag time calculated in ticks
-        private bool m_enabled; // Enabled state of concentrator
-        private long m_startTime; // Start time of concentrator
-        private long m_stopTime; // Stop time of concentrator
-        private long m_realTimeTicks; // Ticks of the most recently received measurement
-        private bool m_allowSortsByArrival; // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
-        private bool m_useLocalClockAsRealTime; // Determines whether or not to use local system clock as "real-time"
-        private long m_totalMeasurements; // Total number of measurements ever requested for sorting
-        private long m_measurementsSortedByArrival; // Total number of measurements that were sorted by arrival
-        private long m_discardedMeasurements; // Total number of discarded measurements
-        private long m_publishedMeasurements; // Total number of published measurements
-        private long m_missedSortsByTimeout; // Total number of unsorted measurements due to timeout waiting for lock
-        private long m_publishedFrames; // Total number of published frames
-        private long m_totalPublishTime; // Total cumulative frame user function publication time (in ticks) - used to calculate average
-        private bool m_trackLatestMeasurements; // Determines whether or not to track latest measurements
-        private ClassLibrary1.Measurements.ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
-        private IMeasurement m_lastDiscardedMeasurement; // Last measurement that was discarded by the concentrator
-        private bool m_disposed; // Disposed flag detects redundant calls to dispose method
+        private FrameQueue m_frameQueue;                    // Queue of frames to be published
+        private PrecisionTimer m_publicationTimer;          // High precision timer used for frame processing
+        private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
+        private int m_framesPerSecond;                      // Frames per second
+        private decimal m_ticksPerFrame;                    // Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
+        private int[] m_framePeriods;                       // Evenly distributed waiting times, in whole milliseconds, per frame
+        private int m_lastFramePeriod;                      // Tracks last frame period
+        private int m_frameIndex;                           // Determines current frame index
+        private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
+        private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
+        private long m_lagTicks;                            // Current lag time calculated in ticks
+        private bool m_enabled;                             // Enabled state of concentrator
+        private long m_startTime;                           // Start time of concentrator
+        private long m_stopTime;                            // Stop time of concentrator
+        private long m_realTimeTicks;                       // Ticks of the most recently received measurement
+        private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
+        private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
+        private long m_totalMeasurements;                   // Total number of measurements ever requested for sorting
+        private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
+        private long m_discardedMeasurements;               // Total number of discarded measurements
+        private long m_publishedMeasurements;               // Total number of published measurements
+        private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
+        private long m_publishedFrames;                     // Total number of published frames
+        private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
+        private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
+        private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
+        private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
+        private bool m_disposed;                            // Disposed flag detects redundant calls to dispose method
 
         #endregion
 
-        #region " Construction Functions "
+        #region [ Constructors ]
 
         /// <summary>Creates a new measurement concentrator.</summary>
         /// <param name="framesPerSecond">Number of frames to publish per second.</param>
@@ -191,39 +125,34 @@ namespace TVA.Measurements
         /// (see remarks).</exception>
         protected ConcentratorBase(int framesPerSecond, double lagTime, double leadTime)
         {
-
             if (framesPerSecond < 1)
-            {
-                throw (new ArgumentOutOfRangeException("framesPerSecond", "framesPerSecond must be at least one"));
-            }
+                throw new ArgumentOutOfRangeException("framesPerSecond", "framesPerSecond must be at least one");
+
             if (lagTime <= 0)
-            {
-                throw (new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one"));
-            }
+                throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
+
             if (leadTime <= 0)
-            {
-                throw (new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one"));
-            }
+                throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
             this.FramesPerSecond = framesPerSecond;
 #if UsePrecisionTimer
             m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
-				m_realTimeTicks = DateTime.UtcNow.Ticks;
+            m_realTimeTicks = DateTime.UtcNow.Ticks;
 #endif
             m_allowSortsByArrival = true;
             m_lagTime = lagTime;
             m_leadTime = leadTime;
-            m_lagTicks = (int)(m_lagTime * TicksPerSecond);
+            m_lagTicks = (int)(m_lagTime * Common.TicksPerSecond);
             m_latestMeasurements = new ImmediateMeasurements(this);
 
             // Creates a new queue for managing real-time frames
-            m_frameQueue = new FrameQueue(m_ticksPerFrame, (1 + m_lagTime + m_leadTime) * framesPerSecond, new ClassLibrary1.Measurements.FrameQueue.CreateNewFrameFunctionSignature(CreateNewFrame));
+            m_frameQueue = new FrameQueue(m_ticksPerFrame, (int)((1.0D + m_lagTime + m_leadTime) * framesPerSecond), CreateNewFrame);
 
             // Create high precision timer used for frame processing
             m_publicationTimer = new PrecisionTimer();
             m_publicationTimer.AutoReset = true;
-            m_publicationTimer.Tick += new ClassLibrary1.DateTime.PrecisionTimer.EventHandler(PublishFrames);
+            m_publicationTimer.Tick += PublishFrames;
 
             // Monitors the total number of unpublished samples every second. This is a useful statistic to
             // monitor, if total number of unpublished samples exceed lag time, measurement concentration could
@@ -231,22 +160,18 @@ namespace TVA.Measurements
             m_monitorTimer = new System.Timers.Timer();
             m_monitorTimer.Interval = 1000;
             m_monitorTimer.AutoReset = true;
-            m_monitorTimer.Elapsed += new System.Timers.ElapsedEventHandler(MonitorUnpublishedSamples);
+            m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
+        }
 
+        /// <summary>We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion.</summary>
+        ~ConcentratorBase()
+        {
+            Dispose(true);
         }
 
         #endregion
 
-        #region " Public Methods Implementation "
-
-        /// <summary>Reference to this concentrator instance.</summary>
-        public ConcentratorBase This
-        {
-            get
-            {
-                return this;
-            }
-        }
+        #region [ Properties ]
 
         /// <summary>Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).</summary>
         /// <remarks>
@@ -266,13 +191,13 @@ namespace TVA.Measurements
             set
             {
                 if (value <= 0)
-                {
-                    throw (new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one"));
-                }
+                    throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
+
                 m_lagTime = value;
-                m_lagTicks = (int)(m_lagTime * TicksPerSecond);
-                if (LagTimeUpdatedEvent != null)
-                    LagTimeUpdatedEvent(m_lagTime);
+                m_lagTicks = (int)(m_lagTime * Common.TicksPerSecond);
+
+                if (LagTimeUpdated != null)
+                    LagTimeUpdated(m_lagTime);
             }
         }
 
@@ -302,12 +227,12 @@ namespace TVA.Measurements
             set
             {
                 if (value <= 0)
-                {
-                    throw (new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one"));
-                }
+                    throw new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one");
+
                 m_leadTime = value;
-                if (LeadTimeUpdatedEvent != null)
-                    LeadTimeUpdatedEvent(m_leadTime);
+
+                if (LeadTimeUpdated != null)
+                    LeadTimeUpdated(m_leadTime);
             }
         }
 
@@ -353,18 +278,16 @@ namespace TVA.Measurements
             set
             {
                 m_framesPerSecond = value;
+                m_ticksPerFrame = (((decimal)Common.TicksPerSecond) / (decimal)m_framesPerSecond);
 
-                m_ticksPerFrame = (System.Convert.ToDecimal(TicksPerSecond)) / m_framesPerSecond;
                 if (m_frameQueue != null)
-                {
                     m_frameQueue.TicksPerFrame = m_ticksPerFrame;
-                }
 
-                var framePeriods = CreateArray<int>(m_framesPerSecond);
+                var framePeriods = new int[m_framesPerSecond];
 
                 for (int frameIndex = 0; frameIndex <= m_framesPerSecond - 1; frameIndex++)
                 {
-                    framePeriods(frameIndex) = CalcWaitTimeForFrameIndex(m_framesPerSecond, frameIndex);
+                    framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(m_framesPerSecond, frameIndex);
                 }
 
                 Interlocked.Exchange(ref m_framePeriods, framePeriods);
@@ -393,70 +316,11 @@ namespace TVA.Measurements
             set
             {
                 if (value)
-                {
                     Start();
-                }
                 else
-                {
-                    @Stop();
-                }
+                    Stop();
             }
         }
-
-        /// <summary>Starts the concentrator, if it is not already running.</summary>
-        public virtual void Start()
-        {
-
-            if (!m_enabled)
-            {
-                // Reset statistics
-                m_totalMeasurements = 0;
-                m_measurementsSortedByArrival = 0;
-                m_discardedMeasurements = 0;
-                m_publishedMeasurements = 0;
-                m_missedSortsByTimeout = 0;
-                m_publishedFrames = 0;
-                m_totalPublishTime = 0;
-                m_stopTime = 0;
-#if UsePrecisionTimer
-                m_startTime = PrecisionTimer.UtcNow.Ticks;
-#else
-					m_startTime = DateTime.UtcNow.Ticks;
-#endif
-                m_frameQueue.Clear();
-
-                // Start real-time frame publication thread
-                m_frameIndex = 0;
-                m_lastFramePeriod = (int)(m_ticksPerFrame / System.Convert.ToDecimal(TicksPerMillisecond));
-                m_publicationTimer.Period = m_lastFramePeriod;
-                m_publicationTimer.Start();
-                m_monitorTimer.Start();
-            }
-
-            m_enabled = true;
-
-        }
-
-        /// <summary>Stops the concentrator.</summary>
-        public virtual void @Stop()
-        {
-
-            if (m_enabled)
-            {
-                m_publicationTimer.Stop();
-                m_monitorTimer.Stop();
-                m_frameQueue.Clear();
-            }
-
-            m_enabled = false;
-#if UsePrecisionTimer
-            m_stopTime = PrecisionTimer.UtcNow.Ticks;
-#else
-				m_stopTime = DateTime.UtcNow.Ticks;
-#endif
-
-        }
-
         /// <summary>
         /// Gets the total amount of time, in seconds, that the concentrator has been active.
         /// </summary>
@@ -464,7 +328,7 @@ namespace TVA.Measurements
         {
             get
             {
-                long processingTime;
+                long processingTime = 0;
 
                 if (m_startTime > 0)
                 {
@@ -477,17 +341,14 @@ namespace TVA.Measurements
 #if UsePrecisionTimer
                         processingTime = PrecisionTimer.UtcNow.Ticks - m_startTime;
 #else
-							processingTime = DateTime.UtcNow.Ticks - m_startTime;
+                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
 #endif
                     }
                 }
 
-                if (processingTime < 0)
-                {
-                    processingTime = 0;
-                }
+                if (processingTime < 0) processingTime = 0;
 
-                return TicksToSeconds(processingTime);
+                return Common.TicksToSeconds(processingTime);
             }
         }
 
@@ -556,7 +417,7 @@ namespace TVA.Measurements
 #if UsePrecisionTimer
                     return PrecisionTimer.UtcNow.Ticks;
 #else
-//						return DateTime.UtcNow.Ticks;
+                    return DateTime.UtcNow.Ticks;
 #endif
                 }
                 else
@@ -572,10 +433,10 @@ namespace TVA.Measurements
 #if UsePrecisionTimer
                     long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
-						long currentTimeTicks = DateTime.UtcNow.Ticks;
+                    long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
                     long currentRealTimeTicks = m_realTimeTicks;
-                    double distance = (currentTimeTicks - currentRealTimeTicks) / TicksPerSecond;
+                    double distance = (currentTimeTicks - currentRealTimeTicks) / Common.TicksPerSecond;
 
                     if (distance > m_leadTime || distance < -m_leadTime)
                     {
@@ -589,22 +450,6 @@ namespace TVA.Measurements
                     return m_realTimeTicks;
                 }
             }
-        }
-
-        /// <summary>Returns the deviation in seconds that the given number of ticks is from real time.</summary>
-        public double SecondsFromRealTime(long ticks)
-        {
-
-            return (RealTimeTicks - ticks) / TicksPerSecond;
-
-        }
-
-        /// <summary>Returns the deviation in milliseconds that the given number of ticks is from real time.</summary>
-        public double MillisecondsFromRealTime(long ticks)
-        {
-
-            return (RealTimeTicks - ticks) / TicksPerMillisecond;
-
         }
 
         /// <summary>Gets the total number of measurements that have ever been requested for sorting.</summary>
@@ -668,12 +513,12 @@ namespace TVA.Measurements
         {
             get
             {
-                return TicksToMilliseconds(m_totalPublishTime);
+                return Common.TicksToMilliseconds(m_totalPublishTime);
             }
         }
 
         /// <summary>Gets the average required frame publication time, in milliseconds.</summary>
-        /// <remarks>If user publication function exceeds available publishing time (1/framesPerSecond), concentration will fall behind.</remarks>
+        /// <remarks>If user publication function exceeds available publishing time (1 / framesPerSecond), concentration will fall behind.</remarks>
         public double AveratePublicationTimePerFrame
         {
             get
@@ -682,21 +527,222 @@ namespace TVA.Measurements
             }
         }
 
+        /// <summary>Gets detailed current state and status of concentrator.</summary>
+        public virtual string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+                IFrame lastFrame = m_frameQueue.Last;
+#if UsePrecisionTimer
+                DateTime currentTime = PrecisionTimer.UtcNow;
+#else
+                DateTime currentTime = DateTime.UtcNow;
+#endif
+
+                status.Append("     Data concentration is: ");
+                if (m_enabled)
+                    status.Append("Enabled");
+                else
+                    status.Append("Disabled");
+                status.AppendLine();
+                status.Append("    Total process run time: ");
+                status.Append(Common.SecondsToText(RunTime));
+                status.AppendLine();
+                status.Append("    Measurement wait delay: ");
+                status.Append(m_lagTime);
+                status.Append(" seconds (lag time)");
+                status.AppendLine();
+                status.Append("     Local clock tolerance: ");
+                status.Append(m_leadTime);
+                status.Append(" seconds (lead time)");
+                status.AppendLine();
+                status.Append("    Local clock time (UTC): ");
+                status.Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                status.AppendLine();
+                status.Append("  Using clock as real-time: ");
+                status.Append(m_useLocalClockAsRealTime);
+                status.AppendLine();
+                if (!m_useLocalClockAsRealTime)
+                {
+                    status.Append("      Local clock accuracy: ");
+#if UsePrecisionTimer
+                    status.Append(SecondsFromRealTime(PrecisionTimer.UtcNow.Ticks).ToString("0.0000"));
+#else
+                    status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
+#endif
+                    status.Append(" second deviation from latest time");
+                    status.AppendLine();
+                }
+                status.Append(" Allowing sorts by arrival: ");
+                status.Append(m_allowSortsByArrival);
+                status.AppendLine();
+                status.Append("        Total measurements: ");
+                status.Append(m_totalMeasurements);
+                status.AppendLine();
+                status.Append("    Published measurements: ");
+                status.Append(m_publishedMeasurements);
+                status.AppendLine();
+                status.Append("    Discarded measurements: ");
+                status.Append(m_discardedMeasurements);
+                status.AppendLine();
+                status.Append("Last discarded measurement: ");
+                if (m_lastDiscardedMeasurement == null)
+                {
+                    status.Append("<none>");
+                }
+                else
+                {
+                    status.Append(Measurement.ToString(m_lastDiscardedMeasurement));
+                    status.Append(" - ");
+                    status.Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                }
+                status.AppendLine();
+                status.Append("    Total sorts by arrival: ");
+                status.Append(m_measurementsSortedByArrival);
+                status.AppendLine();
+                status.Append("   Missed sorts by timeout: ");
+                status.Append(m_missedSortsByTimeout);
+                status.AppendLine();
+                status.Append("  Average publication time: ");
+                status.Append(AveratePublicationTimePerFrame.ToString("0.0000"));
+                status.Append(" milliseconds");
+                status.AppendLine();
+                status.Append(" User function utilization: ");
+                status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)Common.MillisecondsToTicks(AveratePublicationTimePerFrame)) / m_ticksPerFrame).ToString("##0.0000%"));
+                status.Append(" of available time used");
+                status.AppendLine();
+                status.Append("Published measurement loss: ");
+                status.Append((m_discardedMeasurements / m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendLine();
+                status.Append("      Loss due to timeouts: ");
+                status.Append((m_missedSortsByTimeout / m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendLine();
+                status.Append(" Measurement time accuracy: ");
+                status.Append((1.0 - m_measurementsSortedByArrival / m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendLine();
+                status.Append("    Total published frames: ");
+                status.Append(m_publishedFrames);
+                status.AppendLine();
+                status.Append("        Defined frame rate: ");
+                status.Append(m_framesPerSecond);
+                status.Append(" frames/sec, ");
+                status.Append(m_ticksPerFrame.ToString("0.00"));
+                status.Append(" ticks/frame");
+                status.AppendLine();
+                status.Append("    Actual mean frame rate: ");
+                status.Append((m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
+                status.Append(" frames/sec");
+                status.AppendLine();
+                status.Append("        Queued frame count: ");
+                status.Append(m_frameQueue.Count);
+                status.AppendLine();
+                status.Append("      Last published frame: ");
+
+                if (lastFrame == null)
+                {
+                    status.Append("<none>");
+                }
+                else
+                {
+                    status.Append(lastFrame.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                    status.AppendLine();
+                    status.Append("   Last sorted measurement: ");
+                    status.Append(Measurement.ToString(lastFrame.LastSortedMeasurement));
+                }
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+
+        // Public Methods
+
+
+        /// <summary>Starts the concentrator, if it is not already running.</summary>
+        public virtual void Start()
+        {
+            if (!m_enabled)
+            {
+                // Reset statistics
+                m_totalMeasurements = 0;
+                m_measurementsSortedByArrival = 0;
+                m_discardedMeasurements = 0;
+                m_publishedMeasurements = 0;
+                m_missedSortsByTimeout = 0;
+                m_publishedFrames = 0;
+                m_totalPublishTime = 0;
+                m_stopTime = 0;
+#if UsePrecisionTimer
+                m_startTime = PrecisionTimer.UtcNow.Ticks;
+#else
+                m_startTime = DateTime.UtcNow.Ticks;
+#endif
+                m_frameQueue.Clear();
+
+                // Start real-time frame publication thread
+                m_frameIndex = 0;
+                m_lastFramePeriod = (int)(m_ticksPerFrame / (decimal)Common.TicksPerMillisecond);
+                m_publicationTimer.Period = m_lastFramePeriod;
+                m_publicationTimer.Start();
+                m_monitorTimer.Start();
+            }
+
+            m_enabled = true;
+        }
+
+        /// <summary>Stops the concentrator.</summary>
+        public virtual void Stop()
+        {
+            if (m_enabled)
+            {
+                m_publicationTimer.Stop();
+                m_monitorTimer.Stop();
+                m_frameQueue.Clear();
+            }
+
+            m_enabled = false;
+#if UsePrecisionTimer
+            m_stopTime = PrecisionTimer.UtcNow.Ticks;
+#else
+            m_stopTime = DateTime.UtcNow.Ticks;
+#endif
+        }
+
+        /// <summary>Returns the deviation in seconds that the given number of ticks is from real time.</summary>
+        public double SecondsFromRealTime(long ticks)
+        {
+            return (RealTimeTicks - ticks) / Common.TicksPerSecond;
+        }
+
+        /// <summary>Returns the deviation in milliseconds that the given number of ticks is from real time.</summary>
+        public double MillisecondsFromRealTime(long ticks)
+        {
+            return (RealTimeTicks - ticks) / Common.TicksPerMillisecond;
+        }
+
         /// <summary>Places measurement data point in its proper row/cell position.</summary>
         public virtual void SortMeasurement(IMeasurement measurement)
         {
-
             SortMeasurements(new IMeasurement[] { measurement });
-
         }
 
         /// <summary>Places multiple measurement data points in their proper row/cell positions.</summary>
         public virtual void SortMeasurements(ICollection<IMeasurement> measurements)
         {
-
             // This function is called continually with new measurements and handles the "time-alignment"
             // (i.e., sorting) of these new values. Many threads will be waiting for frames of time aligned data
             // so make sure any work to be done here is executed as efficiently as possible.
+
+            // Note that breaking up this function into several parts might help with readability and make it
+            // easier to maintain but to reduce function calls (and hence save time), the decision was made to
+            // put the code into one larger more complex function...
+
             IFrame frame;
             long ticks;
             long lastTicks;
@@ -719,6 +765,8 @@ namespace TVA.Measurements
                 {
                     if (m_allowSortsByArrival)
                     {
+                        // TODO: Replacing the measurement's timestamp may not always be the desired option - create a property to make this optional
+
                         // Device reports measurement timestamp as bad. Since the measurement may have been
                         // delayed by prior concentration or long network distance, this function assumes
                         // that our local real time value is better than the device measurement, so we set
@@ -776,7 +824,6 @@ namespace TVA.Measurements
                     }
                     else
                     {
-
                         // Calls user customizable function to assign new measurement to its frame.
                         if (AssignMeasurementToFrame(frame, measurement))
                         {
@@ -831,9 +878,9 @@ namespace TVA.Measurements
 #if UsePrecisionTimer
                             long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
-								long currentTimeTicks = DateTime.UtcNow.Ticks;
+                            long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
-                            distance = (currentTimeTicks - ticks) / TicksPerSecond;
+                            distance = (currentTimeTicks - ticks) / Common.TicksPerSecond;
 
                             if (distance <= m_leadTime && distance >= -m_leadTime)
                             {
@@ -851,7 +898,7 @@ namespace TVA.Measurements
                             {
                                 // Measurement ticks were outside of time deviation tolerances so we'll also check to make
                                 // sure current real-time ticks are within these tolerances as well
-                                distance = (currentTimeTicks - m_realTimeTicks) / TicksPerSecond;
+                                distance = (currentTimeTicks - m_realTimeTicks) / Common.TicksPerSecond;
 
                                 if (distance > m_leadTime || distance < -m_leadTime)
                                 {
@@ -865,169 +912,30 @@ namespace TVA.Measurements
                     }
                 }
             }
-
-        }
-
-        /// <summary>Gets detailed current state and status of concentrator.</summary>
-        public virtual string Status
-        {
-            get
-				{
-				#if UsePrecisionTimer
-					DateTime currentTime = PrecisionTimer.UtcNow;
-				#else
-					DateTime currentTime = DateTime.UtcNow;
-				#endif
-					IFrame lastFrame = m_frameQueue.Last;
-					
-					StringBuilder status = new StringBuilder();
-
-					status.Append("     Data concentration is: ");
-					if (m_enabled)
-					{
-						status.Append("Enabled");
-					}
-					else
-					{
-						status.Append("Disabled");
-					}
-					status.AppendLine();
-					status.Append("    Total process run time: ");
-					status.Append(Common.SecondsToText(RunTime));
-					status.AppendLine();
-					status.Append("    Measurement wait delay: ");
-					status.Append(m_lagTime);
-					status.Append(" seconds (lag time)");
-					status.AppendLine();
-					status.Append("     Local clock tolerance: ");
-					status.Append(m_leadTime);
-					status.Append(" seconds (lead time)");
-					status.AppendLine();
-					status.Append("    Local clock time (UTC): ");
-					status.Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-					status.AppendLine();
-					status.Append("  Using clock as real-time: ");
-					status.Append(m_useLocalClockAsRealTime);
-					status.AppendLine();
-					if (!m_useLocalClockAsRealTime)
-					{
-						status.Append("      Local clock accuracy: ");
-					#if UsePrecisionTimer
-						status.Append(SecondsFromRealTime(PrecisionTimer.UtcNow.Ticks).ToString("0.0000"));
-					#else
-						status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
-                    #endif
-                        status.Append(" second deviation from latest time");
-						status.AppendLine();
-					}
-					status.Append(" Allowing sorts by arrival: ");
-					status.Append(m_allowSortsByArrival);
-					status.AppendLine();
-					status.Append("        Total measurements: ");
-					status.Append(m_totalMeasurements);
-					status.AppendLine();
-					status.Append("    Published measurements: ");
-					status.Append(m_publishedMeasurements);
-					status.AppendLine();
-					status.Append("    Discarded measurements: ");
-					status.Append(m_discardedMeasurements);
-					status.AppendLine();
-					status.Append("Last discarded measurement: ");
-					if (m_lastDiscardedMeasurement == null)
-					{
-						status.Append("<none>");
-					}
-					else
-					{
-						status.Append(Measurement.ToString(m_lastDiscardedMeasurement));
-						status.Append(" - ");
-						status.Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-					}
-					status.AppendLine();
-					status.Append("    Total sorts by arrival: ");
-					status.Append(m_measurementsSortedByArrival);
-					status.AppendLine();
-					status.Append("   Missed sorts by timeout: ");
-					status.Append(m_missedSortsByTimeout);
-					status.AppendLine();
-					status.Append("  Average publication time: ");
-					status.Append(AveratePublicationTimePerFrame.ToString("0.0000"));
-					status.Append(" milliseconds");
-					status.AppendLine();
-					status.Append(" User function utilization: ");
-					status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)Common.MillisecondsToTicks(AveratePublicationTimePerFrame)) / m_ticksPerFrame).ToString("##0.0000%"));
-					status.Append(" of available time used");
-					status.AppendLine();
-					status.Append("Published measurement loss: ");
-					status.Append((m_discardedMeasurements / m_totalMeasurements).ToString("##0.0000%"));
-					status.AppendLine();
-					status.Append("      Loss due to timeouts: ");
-					status.Append((m_missedSortsByTimeout / m_totalMeasurements).ToString("##0.0000%"));
-					status.AppendLine();
-					status.Append(" Measurement time accuracy: ");
-					status.Append((1.0 - m_measurementsSortedByArrival / m_totalMeasurements).ToString("##0.0000%"));
-					status.AppendLine();
-					status.Append("    Total published frames: ");
-					status.Append(m_publishedFrames);
-					status.AppendLine();
-					status.Append("        Defined frame rate: ");
-					status.Append(m_framesPerSecond);
-					status.Append(" frames/sec, ");
-					status.Append(m_ticksPerFrame.ToString("0.00"));
-					status.Append(" ticks/frame");
-					status.AppendLine();
-					status.Append("    Actual mean frame rate: ");
-					status.Append((m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
-					status.Append(" frames/sec");
-					status.AppendLine();
-					status.Append("        Queued frame count: ");
-					status.Append(m_frameQueue.Count);
-					status.AppendLine();
-					status.Append("      Last published frame: ");
-					
-					if (lastFrame == null)
-					{
-						status.Append("<none>");
-					}
-					else
-					{
-						status.Append(lastFrame.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-						status.AppendLine();
-						status.Append("   Last sorted measurement: ");
-						status.Append(Measurement.ToString(lastFrame.LastSortedMeasurement));
-					}
-					
-					status.AppendLine();
-					
-					return status.ToString();
-				}
         }
 
         /// <summary>Shuts down concentrator in an orderly fashion.</summary>
         public virtual void Dispose()
         {
-
             // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) below.
             Dispose(true);
             GC.SuppressFinalize(this);
-
         }
 
-        #endregion
 
-        #region " Protected Methods Implementation "
+        // Protected Methods
+
 
         /// <summary>Shuts down concentrator in an orderly fashion.</summary>
         protected virtual void Dispose(bool disposing)
         {
-
             if (!m_disposed)
             {
                 if (disposing)
                 {
                     if (m_publicationTimer != null)
                     {
-                        m_publicationTimer.Tick -= new ClassLibrary1.DateTime.PrecisionTimer.EventHandler(PublishFrames);
+                        m_publicationTimer.Tick -= PublishFrames;
                         m_publicationTimer.Dispose();
                     }
                     m_publicationTimer = null;
@@ -1040,7 +948,7 @@ namespace TVA.Measurements
 
                     if (m_monitorTimer != null)
                     {
-                        m_monitorTimer.Elapsed -= new System.Timers.ElapsedEventHandler(MonitorUnpublishedSamples);
+                        m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
                         m_monitorTimer.Dispose();
                     }
                     m_monitorTimer = null;
@@ -1048,7 +956,6 @@ namespace TVA.Measurements
             }
 
             m_disposed = true;
-
         }
 
         /// <summary>Consumers must override this method in order to publish a frame.</summary>
@@ -1059,67 +966,55 @@ namespace TVA.Measurements
         /// measurements.</remarks>
         protected internal virtual IFrame CreateNewFrame(long ticks)
         {
-
             return new Frame(ticks);
-
         }
 
-        /// <summary>Consumers can choose to override this method to handle custom assignment of a measurement
-        /// to its frame.</summary>
+        /// <summary>
+        /// Consumers can choose to override this method to handle custom assignment of a measurement
+        /// to its frame.
+        /// </summary>
         /// <returns>True if measurement was successfully assigned to frame</returns>
         /// <remarks>
-        /// <para>Override is optional. A measurement will simply be assigned to frame's keyed measurement
-        /// dictionary otherwise.</para>
         /// <para>
+        /// Override is optional. A measurement will simply be assigned to frame's keyed measurement
+        /// dictionary otherwise.
+        /// </para>
+        /// <example>
         /// If overridden user must perform their own synchronization as needed, for example:
         /// <code>
         /// SyncLock frame.Measurements
-        ///     If frame.Published Then
-        ///         Return False
-        ///     Else
+        ///     If Not frame.Published Then
         ///         frame.Measurements(measurement.Key) = measurement
         ///         Return True
+        ///     Else
+        ///         Return False
         ///     End If
         /// End Synclock
         /// </code>
-        /// </para>
-        /// <para>Note that the frame.Measurements dictionary is used internally to synchrnonize assignment
+        /// </example>
+        /// <para>
+        /// Note that the frame.Measurements dictionary is used internally to synchrnonize assignment
         /// of the frame.Published flag. If your custom frame makes use of the frame.Measurements
         /// dictionary you must implement a locking scheme similar to the sample code above to
-        /// prevent changes to the measurement dictionary during frame publication.</para>
+        /// prevent changes to the measurement dictionary during frame publication.
+        /// </para>
         /// </remarks>
         protected virtual bool AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
         {
+            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
 
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements_Renamed;
-
-            Monitor.Enter(measurements);
-            try
+            lock (measurements)
             {
-                if (frame.Published)
-                {
-                    return false;
-                }
-                else
+                if (!frame.Published)
                 {
                     measurements[measurement.Key] = measurement;
                     return true;
                 }
+                else
+                {
+                    return false;
+                }
             }
-            finally
-            {
-                Monitor.Exit(measurements);
-            }
-
-        }
-
-        /// <summary>We implement finalizer for this class to ensure sample queue shuts down in an orderly
-        /// fashion.</summary>
-        ~ConcentratorBase()
-        {
-
-            Dispose(true);
-
         }
 
         /// <summary>Allows derived class access to frame queue.</summary>
@@ -1134,20 +1029,18 @@ namespace TVA.Measurements
         /// <summary>Allows derived classes to raise a processing exception.</summary>
         protected void RaiseProcessException(Exception ex)
         {
-
-            if (ProcessExceptionEvent != null)
-                ProcessExceptionEvent(ex);
-
+            if (ProcessException != null)
+                ProcessException(ex);
         }
 
-        #endregion
 
-        #region " Private Methods Implementation "
+        // Private Methods
+
 
         // Member variables being updated are only updated here so we don't worry about atomic operations on these variables.
+        // Note that this is the PrecisionTimer "Tick" delgate handler.
         private void PublishFrames(object sender, EventArgs e)
         {
-
             IFrame frame;
             int frameIndex;
             int period;
@@ -1156,15 +1049,17 @@ namespace TVA.Measurements
 
             // First things first, prepare timer period for next call...
             m_frameIndex++;
+            
             if (m_frameIndex >= m_framesPerSecond)
-            {
                 m_frameIndex = 0;
-            }
+            
+            // Get the frame period for this frame index
             period = m_framePeriods[m_frameIndex];
+            
+            // We only update timer period if it has changed since last call
             if (m_lastFramePeriod != period)
-            {
                 m_publicationTimer.Period = period;
-            }
+
             m_lastFramePeriod = period;
 
             // Keep publishing frames so long as they are ready for publication, handles case where
@@ -1180,6 +1075,7 @@ namespace TVA.Measurements
 
                     if (frame == null)
                     {
+                        // No frame ready to publish, exit
                         break;
                     }
                     else
@@ -1192,29 +1088,25 @@ namespace TVA.Measurements
                         distance = m_lagTicks - (RealTimeTicks - ticks);
 
                         // Exit if it's not time to publish
-                        if (distance > 0)
-                        {
-                            break;
-                        }
+                        if (distance > 0) break;
 
                         // Mark start time for publication
 #if UsePrecisionTimer
                         distance = PrecisionTimer.UtcNow.Ticks;
 #else
-							distance = DateTime.UtcNow.Ticks;
+                        distance = DateTime.UtcNow.Ticks;
 #endif
 
                         // Mark the frame as published to prevent any further sorting into this frame.
-                        // Assignment of this flag is synchronized to ensure sorting into frame ceases.
-                        lock (frame.Measurements_Renamed)
+                        lock (frame.Measurements)
                         {
-                            // Setting this flag needs to be in a critcal section to ensure that
-                            // sorting into this frame has ceased prior to publication
+                            // Setting this flag needs is in a critcal section to ensure that
+                            // sorting into this frame has ceased prior to publication...
                             frame.Published = true;
                         }
 
                         // Calculate index of this frame within its second
-                        frameIndex = (int)((ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame);
+                        frameIndex = (int)((decimal)(ticks - ticks.BaselinedTimestamp(BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame);
 
                         try
                         {
@@ -1235,40 +1127,36 @@ namespace TVA.Measurements
 #if UsePrecisionTimer
                         m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
 #else
-							m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
+                        m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
 #endif
                     }
                 }
                 catch (Exception ex)
                 {
                     // Not stopping for exceptions - but we'll let user know there are issues...
-                    if (ProcessExceptionEvent != null)
-                        ProcessExceptionEvent(ex);
+                    if (ProcessException != null)
+                        ProcessException(ex);
+
                     break;
                 }
             }
-
         }
 
         // Exposes the number of unpublished seconds of data in the queue (note that first second of data will always be "publishing").
         private void MonitorUnpublishedSamples(object sender, System.Timers.ElapsedEventArgs e)
         {
-
             int secondsOfData = (m_frameQueue.Count / m_framesPerSecond) - 1;
-            if (secondsOfData < 0)
-            {
-                secondsOfData = 0;
-            }
-            if (UnpublishedSamplesEvent != null)
-                UnpublishedSamplesEvent(secondsOfData);
 
+            if (secondsOfData < 0) secondsOfData = 0;
+
+            if (UnpublishedSamples != null)
+                UnpublishedSamples(secondsOfData);
         }
 
-        // Wait times are necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.3333 milliseconds)
+        // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.3333 milliseconds)
         // so we use this function to evenly distribute wait times across a second...
         private int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
         {
-
             // Jian Zuo...
             int millisecondsWaitTime;
             int frameRate;
@@ -1303,21 +1191,17 @@ namespace TVA.Measurements
             }
 
             return millisecondsWaitTime;
-
         }
 
         private double mod_dis(int framesIndex, double interval)
         {
-
             double dis1 = interval - ((framesIndex + 1) % interval);
             double dis2 = (framesIndex + 1) % interval;
 
             return (dis1 < dis2 ? dis1 : dis2);
-
         }
 
-
-        #region " Old Code "
+        #region [ Old Code Reference ]
 
         //                        ' Makes sure the starting sort time for this frame is initialized.
         //                        If frame.StartSortTime = 0 Then
