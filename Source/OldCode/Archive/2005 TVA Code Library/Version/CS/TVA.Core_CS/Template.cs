@@ -49,6 +49,10 @@
 
 //        #endregion
 
+//        #region [ Operators ]
+
+//        #endregion
+
 //        #region [ Static ]
 
 //        #endregion
@@ -108,6 +112,10 @@
 
 //        #endregion
 
+//        #region [ Operators ]
+
+//        #endregion
+
 //        #region [ Static ]
 
 //        #endregion
@@ -164,6 +172,10 @@
 //        #endregion
 
 //        #region [ Methods ]
+
+//        #endregion
+
+//        #region [ Operators ]
 
 //        #endregion
 
