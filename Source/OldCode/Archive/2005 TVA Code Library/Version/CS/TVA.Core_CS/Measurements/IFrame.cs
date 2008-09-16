@@ -12,8 +12,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  12/8/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  12/08/2005 - J. Ritchie Carroll
+//      Initial version of source generated
+//  09/16/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
@@ -30,7 +32,7 @@ namespace TVA.Measurements
 
         /// <summary>Keyed measurements in this frame</summary>
         /// <remarks>Represents a dictionary of measurements, keyed by measurement key</remarks>
-        IDictionary<IFrame, IMeasurement> Measurements
+        IDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get;
         }
