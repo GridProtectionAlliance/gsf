@@ -94,7 +94,7 @@ namespace TVA.Interop
         public const short Bit14 = 0x00002000;
 
         /// <summary>Bit 15 (0x00008000)</summary>
-        public const short Bit15 = (short)0x00008000;
+        public const short Bit15 = -32768; //0x00008000;
 
         // Byte 2, Bits 16-23
 
@@ -146,7 +146,7 @@ namespace TVA.Interop
         public const int Bit30 = 0x40000000;
 
         /// <summary>Bit 31 (0x80000000)</summary>
-        public const int Bit31 = (int)0x80000000;
+        public const int Bit31 = -2147483648; // 0x80000000;
 
         /// <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
         /// <param name="value">Value used for bit-rotation</param>
