@@ -25,7 +25,7 @@
 //  10/10/2007 - J. Ritchie Carroll
 //       Added bit-rotation functions (BitRotL and BitRotR)
 //  09/08/2008 - J. Ritchie Carroll
-//      Converted to C#.
+//      Converted to C# (some available as extensions).
 //
 //*******************************************************************************************************
 
@@ -37,12 +37,6 @@ namespace TVA.Interop
     {
         /// <summary>No bits set (8-bit)</summary>
         public const byte Nill = 0x0;
-
-        /// <summary>No bits set (16-bit)</summary>
-        public const short Nill16 = 0x0;
-
-        /// <summary>No bits set (32-bit)</summary>
-        public const int Nill32 = 0x0;
 
         // Byte 0, Bits 0-7
 
@@ -148,6 +142,122 @@ namespace TVA.Interop
         /// <summary>Bit 31 (0x80000000)</summary>
         public const int Bit31 = -2147483648; // 0x80000000;
 
+        /// <summary>Gets the bit value for the specified bit index (0 - 31).</summary>
+        /// <typeparam name="T">Value type source</typeparam>
+        /// <param name="bit">Bit index (0 - 31)</param>
+        /// <returns>Value of the specified bit.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 31.</exception>
+        public static int BitVal(int bit)
+        {
+            switch (bit)
+            {
+            #region [ Bit Cases (0 - 31) ]
+
+                case 00: return Bit0;
+                case 01: return Bit1;
+                case 02: return Bit2;
+                case 03: return Bit3;
+                case 04: return Bit4;
+                case 05: return Bit5;
+                case 06: return Bit6;
+                case 07: return Bit7;
+                case 08: return Bit8;
+                case 09: return Bit9;
+                case 10: return Bit10;
+                case 11: return Bit11;
+                case 12: return Bit12;
+                case 13: return Bit13;
+                case 14: return Bit14;
+                case 15: return Bit15;
+                case 16: return Bit16;
+                case 17: return Bit17;
+                case 18: return Bit18;
+                case 19: return Bit19;
+                case 20: return Bit20;
+                case 21: return Bit21;
+                case 22: return Bit22;
+                case 23: return Bit23;
+                case 24: return Bit24;
+                case 25: return Bit25;
+                case 26: return Bit26;
+                case 27: return Bit27;
+                case 28: return Bit28;
+                case 29: return Bit29;
+                case 30: return Bit30;
+                case 31: return Bit31;
+
+            #endregion
+
+                default:
+                    throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 31.");
+            }
+        }
+
+        /// <summary>Determines if specified bit is set.</summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 7) to check.</param>
+        /// <returns>True if specified bit is set in source value.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 7 for a 8-bit source value.</exception>
+        public static bool BitIsSet(this byte source, int bit)
+        {
+            if (bit < 0 || bit > 7)
+                throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 7 for an 8-bit source value.");
+
+            return ((source & BitVal(bit)) > 0);
+        }
+
+        /// <summary>Determines if specified bit is set.</summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 15) to check.</param>
+        /// <returns>True if specified bit is set in source value.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 15 for a 16-bit source value.</exception>
+        public static bool BitIsSet(this short source, int bit)
+        {
+            if (bit < 0 || bit > 15)
+                throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 15 for a 16-bit source value.");
+
+            return ((source & BitVal(bit)) > 0);
+        }
+
+        /// <summary>Determines if specified bit is set.</summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 15) to check.</param>
+        /// <returns>True if specified bit is set in source value.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 15 for a 16-bit source value.</exception>
+        public static bool BitIsSet(this ushort source, int bit)
+        {
+            if (bit < 0 || bit > 15)
+                throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 15 for a 16-bit source value.");
+
+            return ((source & BitVal(bit)) > 0);
+        }
+
+        /// <summary>Determines if specified bit is set.</summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 31) to check.</param>
+        /// <returns>True if specified bit is set in source value.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 31 for a 32-bit source value.</exception>
+        public static bool BitIsSet(this int source, int bit)
+        {
+            if (bit < 0 || bit > 31)
+                throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 31 for a 32-bit source value.");
+
+            return ((source & BitVal(bit)) > 0);
+        }
+
+        /// <summary>Determines if specified bit is set.</summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 31) to check.</param>
+        /// <returns>True if specified bit is set in source value.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 31 for a 32-bit source value.</exception>
+        public static bool BitIsSet(this uint source, int bit)
+        {
+            if (bit < 0 || bit > 31)
+                throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 31 for a 32-bit source value.");
+
+            return ((source & BitVal(bit)) > 0);
+        }
+
         /// <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
         /// <param name="value">Value used for bit-rotation</param>
         /// <param name="rotations">Number of rotations to perform</param>
@@ -157,7 +267,7 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
-        public static byte BitRotL(byte value, int rotations)
+        public static byte BitRotL(this byte value, int rotations)
         {
             bool hiBitSet;
 
@@ -180,7 +290,30 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
-        public static short BitRotL(short value, int rotations)
+        public static sbyte BitRotL(this sbyte value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 8); x++)
+            {
+                hiBitSet = ((value & Bit7) == Bit7);
+                value <<= 1;
+                if (hiBitSet) value |= (sbyte)Bit0;
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static short BitRotL(this short value, int rotations)
         {
             bool hiBitSet;
 
@@ -203,11 +336,34 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
-        public static Int24 BitRotL(Int24 value, int rotations)
+        public static ushort BitRotL(this ushort value, int rotations)
         {
             bool hiBitSet;
-            Int24 int24Bit0 = 0x1;
-            Int24 int24Bit23 = (Int24)8388608;
+
+            for (int x = 1; x <= (rotations % 16); x++)
+            {
+                hiBitSet = ((value & Bit15) == Bit15);
+                value <<= 1;
+                if (hiBitSet) value |= Bit0;
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static Int24 BitRotL(this Int24 value, int rotations)
+        {
+            bool hiBitSet;
+            Int24 int24Bit0 = Bit0;
+            Int24 int24Bit23 = (Int24)Bit23;
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
@@ -228,7 +384,55 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
-        public static int BitRotL(int value, int rotations)
+        public static UInt24 BitRotL(this UInt24 value, int rotations)
+        {
+            bool hiBitSet;
+            UInt24 uint24Bit0 = Bit0;
+            UInt24 uint24Bit23 = (UInt24)Bit23;
+
+            for (int x = 1; x <= (rotations % 24); x++)
+            {
+                hiBitSet = ((value & uint24Bit23) == uint24Bit23);
+                value <<= 1;
+                if (hiBitSet) value |= uint24Bit0;
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static int BitRotL(this int value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 32); x++)
+            {
+                hiBitSet = ((value & Bit31) == Bit31);
+                value <<= 1;
+                if (hiBitSet) value |= Bit0;
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs leftwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the left the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static uint BitRotL(this uint value, int rotations)
         {
             bool hiBitSet;
 
@@ -251,7 +455,7 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
-        public static byte BitRotR(byte value, int rotations)
+        public static byte BitRotR(this byte value, int rotations)
         {
             bool loBitSet;
 
@@ -274,7 +478,30 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
-        public static short BitRotR(short value, int rotations)
+        public static sbyte BitRotR(this sbyte value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 8); x++)
+            {
+                loBitSet = ((value & Bit0) == Bit0);
+                value >>= 1;
+                if (loBitSet) value |= (sbyte)Bit7; else value = (sbyte)(value & ~Bit7);
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static short BitRotR(this short value, int rotations)
         {
             bool loBitSet;
 
@@ -297,11 +524,34 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
-        public static Int24 BitRotR(Int24 value, int rotations)
+        public static ushort BitRotR(this ushort value, int rotations)
         {
             bool loBitSet;
-            Int24 int24Bit0 = 0x1;
-            Int24 int24Bit23 = (Int24)8388608;
+
+            for (int x = 1; x <= (rotations % 16); x++)
+            {
+                loBitSet = ((value & Bit0) == Bit0);
+                value >>= 1;
+                if (loBitSet) value |= (ushort)Bit15; else value = (ushort)(value & ~Bit15);
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static Int24 BitRotR(this Int24 value, int rotations)
+        {
+            bool loBitSet;
+            Int24 int24Bit0 = Bit0;
+            Int24 int24Bit23 = (Int24)Bit23;
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
@@ -322,7 +572,32 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
-        public static int BitRotR(int value, int rotations)
+        public static UInt24 BitRotR(this UInt24 value, int rotations)
+        {
+            bool loBitSet;
+            UInt24 uint24Bit0 = Bit0;
+            UInt24 uint24Bit23 = (UInt24)Bit23;
+
+            for (int x = 1; x <= (rotations % 24); x++)
+            {
+                loBitSet = ((value & uint24Bit0) == uint24Bit0);
+                value >>= 1;
+                if (loBitSet) value |= uint24Bit23; else value &= ~uint24Bit23;
+            }
+
+            return value;
+        }
+
+        /// <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static int BitRotR(this int value, int rotations)
         {
             bool loBitSet;
 
@@ -336,6 +611,29 @@ namespace TVA.Interop
             return value;
         }
 
+        /// <summary>Performs rightwise bit-rotation for the specified number of rotations</summary>
+        /// <param name="value">Value used for bit-rotation</param>
+        /// <param name="rotations">Number of rotations to perform</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static uint BitRotR(this uint value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 32); x++)
+            {
+                loBitSet = ((value & Bit0) == Bit0);
+                value >>= 1;
+                if (loBitSet) value |= Bit31; else value = (uint)(value & ~Bit31);
+            }
+
+            return value;
+        }
+
         /// <summary>Returns the high-byte from a word (Int16).</summary>
         /// <param name="word">2-byte, 16-bit signed integer value.</param>
         /// <returns>The high-order byte of the specified 16-bit signed integer value.</returns>
@@ -343,16 +641,27 @@ namespace TVA.Interop
         /// On little-endian architectures (e.g., Intel platforms), this will be the byte value whose in-memory representation
         /// is the same as the right-most, most-significant-byte of the integer value.
         /// </remarks>
-        public static byte HiByte(short word)
+        public static byte HiByte(this short word)
         {
             if (BitConverter.IsLittleEndian)
-            {
                 return BitConverter.GetBytes(word)[1];
-            }
             else
-            {
                 return BitConverter.GetBytes(word)[0];
-            }
+        }
+
+        /// <summary>Returns the high-byte from an unsigned word (UInt16).</summary>
+        /// <param name="word">2-byte, 16-bit unsigned integer value.</param>
+        /// <returns>The high-order byte of the specified 16-bit unsigned integer value.</returns>
+        /// <remarks>
+        /// On little-endian architectures (e.g., Intel platforms), this will be the byte value whose in-memory representation
+        /// is the same as the right-most, most-significant-byte of the integer value.
+        /// </remarks>
+        public static byte HiByte(this ushort word)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.GetBytes(word)[1];
+            else
+                return BitConverter.GetBytes(word)[0];
         }
 
         /// <summary>Returns the high-word (Int16) from a double-word (Int32).</summary>
@@ -363,16 +672,28 @@ namespace TVA.Interop
         /// whose in-memory representation is the same as the right-most, most-significant-word
         /// of the integer value.
         /// </remarks>
-        public static short HiWord(int doubleWord)
+        public static short HiWord(this int doubleWord)
         {
             if (BitConverter.IsLittleEndian)
-            {
                 return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2);
-            }
             else
-            {
                 return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0);
-            }
+        }
+
+        /// <summary>Returns the unsigned high-word (UInt16) from an unsigned double-word (UInt32).</summary>
+        /// <param name="doubleWord">4-byte, 32-bit unsigned integer value.</param>
+        /// <returns>The unsigned high-order word of the specified 32-bit unsigned integer value.</returns>
+        /// <remarks>
+        /// On little-endian architectures (e.g., Intel platforms), this will be the word value
+        /// whose in-memory representation is the same as the right-most, most-significant-word
+        /// of the integer value.
+        /// </remarks>
+        public static ushort HiWord(this uint doubleWord)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 2);
+            else
+                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 0);
         }
 
         /// <summary>Returns the low-byte from a word (Int16).</summary>
@@ -383,16 +704,28 @@ namespace TVA.Interop
         /// whose in-memory representation is the same as the left-most, least-significant-byte
         /// of the integer value.
         /// </remarks>
-        public static byte LoByte(short word)
+        public static byte LoByte(this short word)
         {
             if (BitConverter.IsLittleEndian)
-            {
                 return BitConverter.GetBytes(word)[0];
-            }
             else
-            {
                 return BitConverter.GetBytes(word)[1];
-            }
+        }
+
+        /// <summary>Returns the low-byte from an unsigned word (UInt16).</summary>
+        /// <param name="word">2-byte, 16-bit unsigned integer value.</param>
+        /// <returns>The low-order byte of the specified 16-bit unsigned integer value.</returns>
+        /// <remarks>
+        /// On little-endian architectures (e.g., Intel platforms), this will be the byte value
+        /// whose in-memory representation is the same as the left-most, least-significant-byte
+        /// of the integer value.
+        /// </remarks>
+        public static byte LoByte(this ushort word)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.GetBytes(word)[0];
+            else
+                return BitConverter.GetBytes(word)[1];
         }
 
         /// <summary>Returns the low-word (Int16) from a double-word (Int32).</summary>
@@ -403,16 +736,28 @@ namespace TVA.Interop
         /// whose in-memory representation is the same as the left-most, least-significant-word
         /// of the integer value.
         /// </remarks>
-        public static short LoWord(int doubleWord)
+        public static short LoWord(this int doubleWord)
         {
             if (BitConverter.IsLittleEndian)
-            {
                 return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 0);
-            }
             else
-            {
                 return BitConverter.ToInt16(BitConverter.GetBytes(doubleWord), 2);
-            }
+        }
+
+        /// <summary>Returns the unsigned low-word (UInt16) from an unsigned double-word (UInt32).</summary>
+        /// <param name="doubleWord">4-byte, 32-bit unsigned integer value.</param>
+        /// <returns>The unsigned low-order word of the specified 32-bit unsigned integer value.</returns>
+        /// <remarks>
+        /// On little-endian architectures (e.g., Intel platforms), this will be the word value
+        /// whose in-memory representation is the same as the left-most, least-significant-word
+        /// of the integer value.
+        /// </remarks>
+        public static ushort LoWord(this uint doubleWord)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 0);
+            else
+                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 2);
         }
 
         /// <summary>Makes a word (Int16) from two bytes.</summary>
@@ -420,13 +765,19 @@ namespace TVA.Interop
         public static short MakeWord(byte high, byte low)
         {
             if (BitConverter.IsLittleEndian)
-            {
                 return BitConverter.ToInt16(new byte[] { low, high }, 0);
-            }
             else
-            {
                 return BitConverter.ToInt16(new byte[] { high, low }, 0);
-            }
+        }
+
+        /// <summary>Makes an unsigned word (UInt16) from two bytes.</summary>
+        /// <returns>An unsigned 16-bit word made from the two specified bytes.</returns>
+        public static ushort MakeUWord(byte high, byte low)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.ToUInt16(new byte[] { low, high }, 0);
+            else
+                return BitConverter.ToUInt16(new byte[] { high, low }, 0);
         }
 
         /// <summary>Makes a double-word (Int32) from two words (Int16).</summary>
@@ -447,6 +798,26 @@ namespace TVA.Interop
             }
 
             return BitConverter.ToInt32(bytes, 0);
+        }
+
+        /// <summary>Makes an unsigned double-word (UInt32) from two unsigned words (UInt16).</summary>
+        /// <returns>An unsigned 32-bit double-word made from the two specified unsigned 16-bit words.</returns>
+        public static uint MakeUDWord(ushort high, ushort low)
+        {
+            byte[] bytes = new byte[4];
+
+            if (BitConverter.IsLittleEndian)
+            {
+                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 2);
+                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 2, 2);
+            }
+            else
+            {
+                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 2);
+                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 2, 2);
+            }
+
+            return BitConverter.ToUInt32(bytes, 0);
         }
     }
 }
