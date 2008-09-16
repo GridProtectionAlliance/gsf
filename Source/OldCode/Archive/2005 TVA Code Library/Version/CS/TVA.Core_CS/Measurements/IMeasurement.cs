@@ -1,13 +1,3 @@
-using System.Diagnostics;
-using System;
-using System.Xml.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.ComponentModel;
-
 //*******************************************************************************************************
 //  TVA.Measurements.IMeasurement.vb - Abstract measurement interface
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -27,14 +17,14 @@ using System.ComponentModel;
 //
 //*******************************************************************************************************
 
+using System;
+using System.ComponentModel;
 
 namespace TVA.Measurements
 {
     /// <summary>Abstract measured value interface</summary>
     public interface IMeasurement : IEquatable<IMeasurement>, IComparable<IMeasurement>, IComparable
     {
-
-
         /// <summary>Gets or sets the numeric ID of this measurement</summary>
         /// <remarks>
         /// <para>In most implementations, this will be a required field</para>
@@ -59,7 +49,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>Returns the primary key of this measurement</summary>
-        ClassLibrary1.Measurements.IMeasurement.ID.Source.Key Key
+        MeasurementKey Key
         {
             get;
         }
