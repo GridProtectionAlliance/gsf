@@ -11,18 +11,18 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  08/01/2006 - Pinal C. Patel
-//       Original version of source code generated
+//       Original version of source code generated.
 //  04/23/2007 - Pinal C. Patel
-//       Made the schedules dictionary case-insensitive
+//       Made the schedules dictionary case-insensitive.
 //  04/24/2007 - Pinal C. Patel
-//       Implemented the IPersistSettings and ISupportInitialize interfaces
+//       Implemented the IPersistSettings and ISupportInitialize interfaces.
 //  05/02/2007 - Pinal C. Patel
-//       Converted schedules to a list instead of a dictionary
+//       Converted schedules to a list instead of a dictionary.
 //  11/30/2007 - Pinal C. Patel
 //       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
-//       instead of DesignMode property as the former is more accurate than the latter
+//       instead of DesignMode property as the former is more accurate than the latter.
 //       Modified the Stop() method to avoid a  null reference exception that was most likely causing
-//       the IDE of the component's consumer to crash in design-mode
+//       the IDE of the component's consumer to crash in design-mode.
 //
 //*******************************************************************************************************
 
@@ -39,6 +39,64 @@ using TVA.Threading;
 namespace TVA.Scheduling
 {
     /// <summary>Manages multiple schedules defined as scheduling objects.</summary>
+    /// <remarks>
+    /// <para>Note that schedules are based on UNIX crontab syntax.</para>
+    /// <para>
+    /// Operators:
+    /// </para>
+    /// <para>
+    /// There are several ways of specifying multiple date/time values in a field:
+    /// <list type="bullet">
+    /// <item>
+    ///     <description>
+    ///         The comma (',') operator specifies a list of values, for example: "1,3,4,7,8"
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <description>
+    ///         The dash ('-') operator specifies a range of values, for example: "1-6",
+    ///         which is equivalent to "1,2,3,4,5,6"
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <description>
+    ///         The asterisk ('*') operator specifies all possible values for a field.
+    ///         For example, an asterisk in the hour time field would be equivalent to
+    ///         'every hour' (subject to matching other specified fields).
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <description>
+    ///         The slash ('/') operator (called "step"), which can be used to skip a given
+    ///         number of values. For example, "*/3" in the hour time field is equivalent
+    ///         to "0,3,6,9,12,15,18,21". So "*" specifies 'every hour' but the "*/3" means
+    ///         only those hours divisible by 3.
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// Fields:
+    /// </para>
+    /// <para>
+    /// <code>
+    ///     +---------------- minute (0 - 59)
+    ///     |  +------------- hour (0 - 23)
+    ///     |  |  +---------- day of month (1 - 31)
+    ///     |  |  |  +------- month (1 - 12)
+    ///     |  |  |  |  +---- day of week (0 - 7) (Sunday=0 or 7)
+    ///     |  |  |  |  |
+    ///     *  *  *  *  *
+    /// </code>
+    /// </para>
+    /// <para>
+    /// Each of the patterns from the first five fields may be either * (an asterisk), which matches all legal values,
+    /// or a list of elements separated by commas. 
+    /// </para>
+    /// <para>
+    /// See http://en.wikipedia.org/wiki/Cron for more information.
+    /// </para>
+    /// </remarks>
     [ToolboxBitmap(typeof(ScheduleManager)), DefaultEvent("ScheduleDue")]
     public partial class ScheduleManager : TVA.Services.IServiceComponent, IPersistSettings, ISupportInitialize
     {
