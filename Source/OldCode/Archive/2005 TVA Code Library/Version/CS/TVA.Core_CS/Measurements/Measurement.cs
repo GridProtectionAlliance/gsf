@@ -1,13 +1,3 @@
-using System.Diagnostics;
-using System;
-using System.Xml.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.ComponentModel;
-
 //*******************************************************************************************************
 //  TVA.Measurements.Measurement.vb - Basic measurement implementation
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -24,22 +14,19 @@ using System.ComponentModel;
 //  -----------------------------------------------------------------------------------------------------
 //  12/8/2005 - J. Ritchie Carroll
 //       Initial version of source generated
+//  09/16/2008 - J. Ritchie Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
+using System;
+using System.ComponentModel;
 
 namespace TVA.Measurements
 {
     /// <summary>Implementation of a basic measured value</summary>
     public class Measurement : IMeasurement
     {
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-
-
         private int m_id;
         private string m_source;
         private MeasurementKey m_key;
@@ -54,43 +41,31 @@ namespace TVA.Measurements
         public Measurement()
             : this(-1, null, double.NaN, 0)
         {
-
-
         }
 
         public Measurement(int id, string source)
             : this(id, source, double.NaN, 0.0, 1.0, 0)
         {
-
-
         }
-
 
         public Measurement(int id, string source, double value, DateTime timestamp)
             : this(id, source, value, timestamp.Ticks)
         {
-
-
         }
 
         public Measurement(int id, string source, double value, long ticks)
             : this(id, source, value, 0.0, 1.0, ticks)
         {
-
-
         }
 
         public Measurement(int id, string source, string tagName, double adder, double multiplier)
             : this(id, source, double.NaN, adder, multiplier, 0)
         {
-
             m_tagName = tagName;
-
         }
 
         public Measurement(int id, string source, double value, double adder, double multiplier, long ticks)
         {
-
             m_id = id;
             m_source = source;
             m_key = new MeasurementKey(m_id, m_source);
@@ -100,34 +75,24 @@ namespace TVA.Measurements
             m_ticks = ticks;
             m_valueQualityIsGood = true;
             m_timestampQualityIsGood = true;
-
         }
 
         /// <summary>Creates a copy of the specified measurement</summary>
         public static Measurement Clone(IMeasurement measurementToClone)
         {
-
-            IMeasurement with_1 = measurementToClone;
-            return new Measurement(with_1.ID, with_1.Source, with_1.Value, with_1.Adder, with_1.Multiplier, with_1.Ticks);
-
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Ticks);
         }
 
         /// <summary>Creates a copy of the specified measurement using a new timestamp</summary>
         public static Measurement Clone(IMeasurement measurementToClone, long ticks)
         {
-
-            IMeasurement with_1 = measurementToClone;
-            return new Measurement(with_1.ID, with_1.Source, with_1.Value, with_1.Adder, with_1.Multiplier, ticks);
-
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
         }
 
         /// <summary>Creates a copy of the specified measurement using a new value and timestamp</summary>
         public static Measurement Clone(IMeasurement measurementToClone, double value, long ticks)
         {
-
-            IMeasurement with_1 = measurementToClone;
-            return new Measurement(with_1.ID, with_1.Source, value, with_1.Adder, with_1.Multiplier, ticks);
-
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
         }
 
         /// <summary>Gets or sets the numeric ID of this measurement</summary>
@@ -299,14 +264,11 @@ namespace TVA.Measurements
 
         public override string ToString()
         {
-
             return ToString(this);
-
         }
 
         public static string ToString(IMeasurement measurement)
         {
-
             if (measurement == null)
             {
                 return "Undefined";
@@ -314,104 +276,73 @@ namespace TVA.Measurements
             else
             {
                 string tagName = measurement.TagName;
-                string keyText = Measurement.Key.ToString();
+                string keyText = measurement.Key.ToString();
 
                 if (string.IsNullOrEmpty(tagName))
-                {
                     return keyText;
-                }
                 else
-                {
                     return string.Format("{0} [{1}]", tagName, keyText);
-                }
             }
-
         }
 
         /// <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
         public bool Equals(IMeasurement other)
         {
-
             return (CompareTo(other) == 0);
-
         }
 
         /// <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
         public override bool Equals(object obj)
         {
-
             IMeasurement other = obj as IMeasurement;
-            if (other != null)
-            {
-                return Equals(other);
-            }
-            throw (new ArgumentException("Object is not a Measurement"));
-
+            if (other != null) return Equals(other);
+            throw new ArgumentException("Object is not a Measurement");
         }
 
         /// <summary>This implementation of a basic measurement compares itself by value</summary>
         public int CompareTo(IMeasurement other)
         {
-
             return m_value.CompareTo(other.Value);
-
         }
 
         /// <summary>This implementation of a basic measurement compares itself by value</summary>
         public int CompareTo(object obj)
         {
-
             IMeasurement other = obj as IMeasurement;
-            if (other != null)
-            {
-                return CompareTo(other);
-            }
-            throw (new ArgumentException("Measurement can only be compared with other IMeasurements..."));
-
+            if (other != null) return CompareTo(other);
+            throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
         }
 
         #region " Measurement Operators "
 
         public static bool operator ==(Measurement measurement1, Measurement measurement2)
         {
-
             return measurement1.Equals(measurement2);
-
         }
 
         public static bool operator !=(Measurement measurement1, Measurement measurement2)
         {
-
             return !measurement1.Equals(measurement2);
-
         }
 
         public static bool operator >(Measurement measurement1, Measurement measurement2)
         {
-
             return measurement1.CompareTo(measurement2) > 0;
-
         }
 
         public static bool operator >=(Measurement measurement1, Measurement measurement2)
         {
-
             return measurement1.CompareTo(measurement2) >= 0;
-
         }
 
         public static bool operator <(Measurement measurement1, Measurement measurement2)
         {
-
             return measurement1.CompareTo(measurement2) < 0;
-
         }
 
         public static bool operator <=(Measurement measurement1, Measurement measurement2)
         {
-
             return measurement1.CompareTo(measurement2) <= 0;
-
         }
 
         #endregion
