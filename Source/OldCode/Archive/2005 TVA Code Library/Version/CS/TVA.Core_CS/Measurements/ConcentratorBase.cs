@@ -259,7 +259,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>Gets the absolute latest received measurement values.</summary>
-        public LatestMeasurements LatestMeasurements
+        public ImmediateMeasurements LatestMeasurements
         {
             get
             {
@@ -847,9 +847,7 @@ namespace TVA.Measurements
 
                         // Tracks the absolute latest measurement values.
                         if (m_trackLatestMeasurements)
-                        {
                             m_latestMeasurements.UpdateMeasurementValue(measurement);
-                        }
                     }
                 }
 
