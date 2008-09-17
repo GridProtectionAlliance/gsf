@@ -1,14 +1,12 @@
 //*******************************************************************************************************
-//  TVA.Measurements.IFrame.vb - Abstract frame interface
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  IFrame.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
-//
-//  This interface represents a keyed collection of measurements for a given timestamp
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -24,12 +22,9 @@ using System.Collections.Generic;
 
 namespace TVA.Measurements
 {
-    public interface IFrame : IEquatable<IFrame>, IComparable<IFrame>
+    /// <summary>Abstract frame interface</summary>
+    public interface IFrame : IEquatable<IFrame>, IComparable<IFrame>, IComparable
     {
-        /// <summary>Create a copy of this frame and its measurements</summary>
-        /// <remarks>Implementors should synclock frame's measurement dictionary during copy</remarks>
-        IFrame Clone();
-
         /// <summary>Keyed measurements in this frame</summary>
         /// <remarks>Represents a dictionary of measurements, keyed by measurement key</remarks>
         IDictionary<MeasurementKey, IMeasurement> Measurements
