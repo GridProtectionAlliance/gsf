@@ -668,9 +668,7 @@ namespace TVA.Measurements
 
         #region [ Methods ]
 
-
         // Public Methods
-
 
         /// <summary>Starts the concentrator, if it is not already running.</summary>
         public virtual void Start()
@@ -930,9 +928,7 @@ namespace TVA.Measurements
             GC.SuppressFinalize(this);
         }
 
-
         // Protected Methods
-
 
         /// <summary>Shuts down concentrator in an orderly fashion.</summary>
         protected virtual void Dispose(bool disposing)
@@ -960,6 +956,12 @@ namespace TVA.Measurements
                         m_monitorTimer.Dispose();
                     }
                     m_monitorTimer = null;
+
+                    if (m_latestMeasurements != null)
+                    {
+                        m_latestMeasurements.Dispose();
+                    }
+                    m_latestMeasurements = null;
                 }
             }
 
@@ -1041,9 +1043,7 @@ namespace TVA.Measurements
                 ProcessException(ex);
         }
 
-
         // Private Methods
-
 
         // Member variables being updated are only updated here so we don't worry about atomic operations on these variables.
         // Note that this is the PrecisionTimer "Tick" delgate handler.
