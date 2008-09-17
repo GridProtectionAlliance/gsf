@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 //using TVA.Common;
 //using TVA.Math.Common;
 using TVA.IO.Common;
-using TVA.Interop.Bit;
+using TVA.Interop;
 
 //*******************************************************************************************************
 //  TVA.Security.Cryptography.Common.vb - Handy Cryptography Functions
@@ -741,7 +741,6 @@ namespace TVA
                 /// <summary>Obfuscates data using bit-rotation algorithms.</summary>
                 public static byte[] Obfuscate(byte[] data, byte[] encryptionKey)
                 {
-
                     byte key;
                     long keyIndex = encryptionKey.Length - 1;
                     byte[] cryptData = TVA.Common.CreateArray<byte>(data.Length);
@@ -753,24 +752,18 @@ namespace TVA
                         key = encryptionKey[keyIndex];
 
                         if (key % 2 == 0)
-                        {
-                            cryptData[x] = BitRotL(data[x], key);
-                        }
+                            cryptData[x] = data[x].BitRotL(key);
                         else
-                        {
-                            cryptData[x] = BitRotR(data[x], key);
-                        }
+                            cryptData[x] = data[x].BitRotR(key);
 
                         // Selects next encryption key index.
                         keyIndex--;
+
                         if (keyIndex < 0)
-                        {
                             keyIndex = encryptionKey.Length - 1;
-                        }
                     }
 
                     return cryptData;
-
                 }
 
                 /// <summary>Deobfuscates input stream onto output stream using bit-rotation algorithms.</summary>
@@ -814,7 +807,6 @@ namespace TVA
                 /// <summary>Deobfuscates data using bit-rotation algorithms.</summary>
                 public static byte[] Deobfuscate(byte[] data, byte[] encryptionKey)
                 {
-
                     byte key;
                     long keyIndex = encryptionKey.Length - 1;
                     byte[] cryptData = TVA.Common.CreateArray<byte>(data.Length);
@@ -826,24 +818,18 @@ namespace TVA
                         key = encryptionKey[keyIndex];
 
                         if (key % 2 == 0)
-                        {
-                            cryptData[x] = BitRotR(data[x], key);
-                        }
+                            cryptData[x] = data[x].BitRotR(key);
                         else
-                        {
-                            cryptData[x] = BitRotL(data[x], key);
-                        }
+                            cryptData[x] = data[x].BitRotL(key);
 
                         // Selects next encryption key index.
                         keyIndex--;
+
                         if (keyIndex < 0)
-                        {
                             keyIndex = encryptionKey.Length - 1;
-                        }
                     }
 
                     return cryptData;
-
                 }
 
                 /// <summary>Generates a random key useful for cryptographic functions.</summary>

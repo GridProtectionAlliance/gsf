@@ -117,7 +117,7 @@ namespace TVA
             if (timetag != null) return CompareTo(timetag);
 
             if (obj is DateTime) return CompareTo((DateTime)obj);
-            
+
             throw new ArgumentException("TimeTag can only be compared with other TimeTags or DateTimes...");
         }
 

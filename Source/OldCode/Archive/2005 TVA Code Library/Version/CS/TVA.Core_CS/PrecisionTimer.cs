@@ -165,7 +165,7 @@ namespace TVA
                         DateTime systemTime = DateTime.UtcNow;
 
                         // Last parameter is a calculation that asymptotically approachs the measured system frequency
-                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, (int)(((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond * 2) / 
+                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, (int)(((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond * 2) /
                             (systemTime.Ticks - timeState.ObservedTime.Ticks + systemTime.Ticks + systemTime.Ticks - precisionTime.Ticks - timeState.ObservedTime.Ticks)));
                     }
 
@@ -445,7 +445,7 @@ namespace TVA
                 if (m_disposed)
                     throw new ObjectDisposedException("PrecisionTimer");
 
-                if (value < Capabilities.PeriodMinimum || value > Capabilities.PeriodMaximum) 
+                if (value < Capabilities.PeriodMinimum || value > Capabilities.PeriodMaximum)
                     throw new ArgumentOutOfRangeException("Period", value, "Multimedia Timer period out of range.");
 
                 m_period = value;

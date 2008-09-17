@@ -1039,9 +1039,9 @@ namespace TVA.Data
         {
             if (parameters != null)
             {
-                if (command.CommandText.StartsWith("SELECT ", StringComparison.CurrentCultureIgnoreCase) || 
-                    command.CommandText.StartsWith("INSERT ", StringComparison.CurrentCultureIgnoreCase) || 
-                    command.CommandText.StartsWith("UPDATE ", StringComparison.CurrentCultureIgnoreCase) || 
+                if (command.CommandText.StartsWith("SELECT ", StringComparison.CurrentCultureIgnoreCase) ||
+                    command.CommandText.StartsWith("INSERT ", StringComparison.CurrentCultureIgnoreCase) ||
+                    command.CommandText.StartsWith("UPDATE ", StringComparison.CurrentCultureIgnoreCase) ||
                     command.CommandText.StartsWith("DELETE ", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // We assume the command to be of type Text if it begins with one of the common SQL keywords.

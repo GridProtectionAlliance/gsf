@@ -151,7 +151,7 @@ namespace TVA.Interop
         {
             switch (bit)
             {
-            #region [ Bit Cases (0 - 31) ]
+                #region [ Bit Cases (0 - 31) ]
 
                 case 00: return Bit0;
                 case 01: return Bit1;
@@ -186,7 +186,7 @@ namespace TVA.Interop
                 case 30: return Bit30;
                 case 31: return Bit31;
 
-            #endregion
+                #endregion
 
                 default:
                     throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 31.");

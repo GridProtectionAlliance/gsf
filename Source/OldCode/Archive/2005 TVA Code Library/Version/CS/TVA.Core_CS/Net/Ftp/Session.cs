@@ -19,6 +19,10 @@ using System.Drawing;
 // added detailed file system information for FTP files and directories (size, timestamp, etc), coverted
 // FTP session into a component that could be dragged onto a design surface, created an FTP FileWatcher
 // component and an FTP file system crawler based on this library - JRC
+
+// JRC 2008: Now we're back to C# - lol - wonder if the code is any worse for the wear?  Oh well, too
+// many bug fixes made to the code revert back to original code...
+
 namespace TVA
 {
     namespace Net
@@ -26,7 +30,7 @@ namespace TVA
         namespace Ftp
         {
 
-
+            // TODO: move into ISessionState.cs
             internal interface ISessionState
             {
 

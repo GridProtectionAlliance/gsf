@@ -41,9 +41,9 @@ namespace TVA
 
         #region " Code Scope: Public "
 
-        public ObjectState(string objectName) : this(objectName, default(TState)) {}
+        public ObjectState(string objectName) : this(objectName, default(TState)) { }
 
-        public ObjectState(string objectName, TState currentState) : this(objectName, default(TState), currentState) {}
+        public ObjectState(string objectName, TState currentState) : this(objectName, default(TState), currentState) { }
 
         public ObjectState(string objectName, TState previousState, TState currentState)
         {

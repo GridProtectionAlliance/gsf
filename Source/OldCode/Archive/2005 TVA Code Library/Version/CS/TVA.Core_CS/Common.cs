@@ -120,7 +120,7 @@ namespace TVA
         /// <returns>The root type in the inheritance hierarchy from which the specified type inherits.</returns>
         /// <remarks>Unless input type is System.Object, the returned type will never be System.Object, even though all types ultimately inherit from it.</remarks>
         public static Type GetRootType(Type type)
-		{
+        {
             // Recurse through types until you reach a base type of "System.Object"
             if (type.BaseType != typeof(object)) return GetRootType(type.BaseType);
             return type;
@@ -185,10 +185,10 @@ namespace TVA
         #region [ TVA.Collections.Common Functions ]
 
         /*-----------------------------------------------------------------------------------------------------*\
- *
- *                    These functions were migrated here from TVA.Collections.Common
- *                  
-\*-----------------------------------------------------------------------------------------------------*/
+         *
+         *                    These functions were migrated here from TVA.Collections.Common
+         *                  
+        \*-----------------------------------------------------------------------------------------------------*/
 
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
@@ -265,11 +265,11 @@ namespace TVA
 
         #region [ TVA.DateTime.Common Functions ]
 
-/*-----------------------------------------------------------------------------------------------------*\
- *
- *                    These functions were migrated here from TVA.DateTime.Common
- *                  
-\*-----------------------------------------------------------------------------------------------------*/
+        /*-----------------------------------------------------------------------------------------------------*\
+         *
+         *                    These functions were migrated here from TVA.DateTime.Common
+         *                  
+        \*-----------------------------------------------------------------------------------------------------*/
 
 
         /// <summary>Time names enumeration used by SecondsToText function.</summary>
@@ -512,42 +512,42 @@ namespace TVA
             return timeImage.ToString().Trim();
         }
 
-    	/// <summary>Returns the specified Win32 time zone, using specified name.</summary>
-		/// <param name="name">Value of name used for time zone lookup.</param>
-		/// <param name="lookupBy">Type of name used for time zone lookup.</param>
+        /// <summary>Returns the specified Win32 time zone, using specified name.</summary>
+        /// <param name="name">Value of name used for time zone lookup.</param>
+        /// <param name="lookupBy">Type of name used for time zone lookup.</param>
         public static TimeZoneInfo GetTimeZone(string name, TimeZoneName lookupBy)
-		{
+        {
             foreach (TimeZoneInfo timeZone in TimeZoneInfo.GetSystemTimeZones())
-			{
-				if (lookupBy == TimeZoneName.DaylightName)
-				{
-					if (string.Compare(timeZone.DaylightName, name, true) == 0)
-						return timeZone;
-				}
-				else if (lookupBy == TimeZoneName.DisplayName)
-				{
-					if (string.Compare(timeZone.DisplayName, name, true) == 0)
-						return timeZone;
-				}
-				else if (lookupBy == TimeZoneName.StandardName)
-				{
-					if (string.Compare(timeZone.StandardName, name, true) == 0)
-						return timeZone;
-				}
-			}
-			
-			throw new ArgumentException("Windows time zone with " + lookupBy + " of \"" + name + "\" was not found!");
+            {
+                if (lookupBy == TimeZoneName.DaylightName)
+                {
+                    if (string.Compare(timeZone.DaylightName, name, true) == 0)
+                        return timeZone;
+                }
+                else if (lookupBy == TimeZoneName.DisplayName)
+                {
+                    if (string.Compare(timeZone.DisplayName, name, true) == 0)
+                        return timeZone;
+                }
+                else if (lookupBy == TimeZoneName.StandardName)
+                {
+                    if (string.Compare(timeZone.StandardName, name, true) == 0)
+                        return timeZone;
+                }
+            }
+
+            throw new ArgumentException("Windows time zone with " + lookupBy + " of \"" + name + "\" was not found!");
         }
 
         #endregion
 
         #region [ TVA.Data.Common Functions ]
 
-/*-----------------------------------------------------------------------------------------------------*\
- *
- *                    These functions were migrated here from TVA.Data.Common
- *                  
-\*-----------------------------------------------------------------------------------------------------*/
+        /*-----------------------------------------------------------------------------------------------------*\
+         *
+         *                    These functions were migrated here from TVA.Data.Common
+         *                  
+        \*-----------------------------------------------------------------------------------------------------*/
 
 
         /// <summary>
@@ -703,5 +703,214 @@ namespace TVA
 
         #endregion
 
+        #region [ TVA.Math.Common Functions ]
+
+        /*-----------------------------------------------------------------------------------------------------*\
+         *
+         *                    These functions were migrated here from TVA.Math.Common
+         *                  
+        \*-----------------------------------------------------------------------------------------------------*/
+
+        /// <summary>Ensures parameter passed to function is not zero. Returns -1
+        /// if <paramref name="testValue">testValue</paramref> is zero.</summary>
+        /// <param name="testValue">Value to test for zero.</param>
+        /// <returns>A non-zero value.</returns>
+        public static double NotZero(double testValue)
+        {
+            return NotZero(testValue, -1.0);
+        }
+
+        /// <summary>Ensures parameter passed to function is not zero.</summary>
+        /// <param name="testValue">Value to test for zero.</param>
+        /// <param name="nonZeroReturnValue">Value to return if <paramref name="testValue">testValue</paramref> is
+        /// zero.</param>
+        /// <returns>A non-zero value.</returns>
+        /// <remarks>To optimize performance, this function does not validate that the notZeroReturnValue is not
+        /// zero.</remarks>
+        public static double NotZero(double testValue, double nonZeroReturnValue)
+        {
+            return (testValue == 0.0 ? nonZeroReturnValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not equal to the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notEqualToValue">Value that represents the undesired value (e.g., zero).</param>
+        /// <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is equal
+        /// to the undesired value.</param>
+        /// <typeparam name="T">Structure or class that implements IEquatable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not equal to notEqualToValue.</returns>
+        /// <remarks>To optimize performance, this function does not validate that the notEqualToValue is not equal
+        /// to the alternateValue.</remarks>
+        public static T NotEqualTo<T>(T testValue, T notEqualToValue, T alternateValue) where T : IEquatable<T>
+        {
+            return (((IEquatable<T>)testValue).Equals(notEqualToValue) ? alternateValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not less than the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notLessThanValue">Value that represents the lower limit for the testValue. This value
+        /// is returned if testValue is less than notLessThanValue.</param>
+        /// <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not less than notLessThanValue.</returns>
+        /// <remarks>If testValue is less than notLessThanValue, then notLessThanValue is returned.</remarks>
+        public static T NotLessThan<T>(T testValue, T notLessThanValue) where T : IComparable<T>
+        {
+            return (((IComparable<T>)testValue).CompareTo(notLessThanValue) < 0 ? notLessThanValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not less than the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notLessThanValue">Value that represents the lower limit for the testValue.</param>
+        /// <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is
+        /// less than <paramref name="notLessThanValue">notLessThanValue</paramref>.</param>
+        /// <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not less than notLessThanValue.</returns>
+        /// <remarks>To optimize performance, this function does not validate that the notLessThanValue is not
+        /// less than the alternateValue.</remarks>
+        public static T NotLessThan<T>(T testValue, T notLessThanValue, T alternateValue) where T : IComparable<T>
+        {
+            return (((IComparable<T>)testValue).CompareTo(notLessThanValue) < 0 ? alternateValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not less than or equal to the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notLessThanOrEqualToValue">Value that represents the lower limit for the testValue.</param>
+        /// <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is
+        /// less than or equal to <paramref name="notLessThanOrEqualToValue">notLessThanOrEqualToValue</paramref>.</param>
+        /// <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not less than or equal to notLessThanOrEqualToValue.</returns>
+        /// <remarks>To optimize performance, this function does not validate that the notLessThanOrEqualToValue is
+        /// not less than or equal to the alternateValue.</remarks>
+        public static T NotLessThanOrEqualTo<T>(T testValue, T notLessThanOrEqualToValue, T alternateValue) where T : IComparable<T>
+        {
+            return (((IComparable<T>)testValue).CompareTo(notLessThanOrEqualToValue) <= 0 ? alternateValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not greater than the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notGreaterThanValue">Value that represents the upper limit for the testValue. This
+        /// value is returned if testValue is greater than notGreaterThanValue.</param>
+        /// <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not greater than notGreaterThanValue.</returns>
+        /// <remarks>If testValue is greater than notGreaterThanValue, then notGreaterThanValue is returned.</remarks>
+        public static T NotGreaterThan<T>(T testValue, T notGreaterThanValue) where T : IComparable<T>
+        {
+            return (((IComparable<T>)testValue).CompareTo(notGreaterThanValue) > 0 ? notGreaterThanValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not greater than the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notGreaterThanValue">Value that represents the upper limit for the testValue.</param>
+        /// <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is
+        /// greater than <paramref name="notGreaterThanValue">notGreaterThanValue</paramref>.</param>
+        /// <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not greater than notGreaterThanValue.</returns>
+        /// <remarks>To optimize performance, this function does not validate that the notGreaterThanValue is
+        /// not greater than the alternateValue</remarks>
+        public static T NotGreaterThan<T>(T testValue, T notGreaterThanValue, T alternateValue) where T : IComparable<T>
+        {
+            return (((IComparable<T>)testValue).CompareTo(notGreaterThanValue) > 0 ? alternateValue : testValue);
+        }
+
+        /// <summary>Ensures test parameter passed to function is not greater than or equal to the specified value.</summary>
+        /// <param name="testValue">Value to test.</param>
+        /// <param name="notGreaterThanOrEqualToValue">Value that represents the upper limit for the testValue.</param>
+        /// <param name="alternateValue">Value to return if <paramref name="testValue">testValue</paramref> is
+        /// greater than or equal to <paramref name="notGreaterThanOrEqualToValue">notGreaterThanOrEqualToValue</paramref>.</param>
+        /// <typeparam name="T">Structure or class that implements IComparable(Of T) (e.g., Double, Single,
+        /// Integer, etc.).</typeparam>
+        /// <returns>A value not greater than or equal to notGreaterThanOrEqualToValue.</returns>
+        /// <remarks>To optimize performance, this function does not validate that the notGreaterThanOrEqualToValue
+        /// is not greater than or equal to the alternateValue.</remarks>
+        public static T NotGreaterThanOrEqualTo<T>(T testValue, T notGreaterThanOrEqualToValue, T alternateValue) where T : IComparable<T>
+        {
+            return (((IComparable<T>)testValue).CompareTo(notGreaterThanOrEqualToValue) >= 0 ? alternateValue : testValue);
+        }
+
+        /// <summary>Computes the standard deviation over a sequence of double values.</summary>
+        /// <param name="source">Source data sample.</param>
+        /// <returns>The standard deviation of the sequence.</returns>
+        /// <exception cref="ArgumentNullException">source is null</exception>
+        public static double StandardDeviation(this IEnumerable<double> source)
+        {
+            if (source == null) throw new ArgumentNullException("source", "source is null");
+
+            double sampleAverage = source.Average();
+            double totalVariance = 0.0D;
+            double dataPointDeviation;
+            int sampleCount = 0;
+
+            foreach (double item in source)
+            {
+                dataPointDeviation = item - sampleAverage;
+                totalVariance += dataPointDeviation * dataPointDeviation;
+                sampleCount++;
+            }
+
+            if (sampleCount > 0)
+                return System.Math.Sqrt(totalVariance / sampleCount);
+            else
+                return 0.0D;
+        }
+
+        /// <summary>Computes the standard deviation over a sequence of decimal values.</summary>
+        /// <param name="source">Source data sample.</param>
+        /// <returns>The standard deviation of the sequence.</returns>
+        /// <exception cref="ArgumentNullException">source is null</exception>
+        public static decimal StandardDeviation(this IEnumerable<decimal> source)
+        {
+            if (source == null) throw new ArgumentNullException("source", "source is null");
+
+            decimal sampleAverage = source.Average();
+            decimal totalVariance = 0;
+            decimal dataPointDeviation;
+            int sampleCount = 0;
+
+            foreach (decimal item in source)
+            {
+                dataPointDeviation = item - sampleAverage;
+                totalVariance += dataPointDeviation * dataPointDeviation;
+                sampleCount++;
+            }
+
+            if (sampleCount > 0)
+                return (decimal)System.Math.Sqrt((double)(totalVariance / sampleCount));
+            else
+                return 0;
+        }
+
+        /// <summary>Computes the standard deviation over a sequence of float values.</summary>
+        /// <param name="source">Source data sample.</param>
+        /// <returns>The standard deviation of the sequence.</returns>
+        /// <exception cref="ArgumentNullException">source is null</exception>
+        public static float StandardDeviation(this IEnumerable<float> source)
+        {
+            if (source == null) throw new ArgumentNullException("source", "source is null");
+
+            float sampleAverage = source.Average();
+            float totalVariance = 0.0F;
+            float dataPointDeviation;
+            int sampleCount = 0;
+
+            foreach (float item in source)
+            {
+                dataPointDeviation = item - sampleAverage;
+                totalVariance += dataPointDeviation * dataPointDeviation;
+                sampleCount++;
+            }
+
+            if (sampleCount > 0)
+                return (float)System.Math.Sqrt((double)(totalVariance / sampleCount));
+            else
+                return 0.0F;
+        }
+
+        #endregion
     }
 }

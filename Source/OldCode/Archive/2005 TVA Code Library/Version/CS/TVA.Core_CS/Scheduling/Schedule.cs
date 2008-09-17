@@ -244,10 +244,10 @@ namespace TVA.Scheduling
         {
             DateTime currentDateTime = DateTime.Now;
 
-            if (m_minutePart.Matches(currentDateTime) && 
-                m_hourPart.Matches(currentDateTime) && 
-                m_dayPart.Matches(currentDateTime) && 
-                m_monthPart.Matches(currentDateTime) && 
+            if (m_minutePart.Matches(currentDateTime) &&
+                m_hourPart.Matches(currentDateTime) &&
+                m_dayPart.Matches(currentDateTime) &&
+                m_monthPart.Matches(currentDateTime) &&
                 m_dayOfWeekPart.Matches(currentDateTime))
             {
                 m_lastDueAt = currentDateTime;

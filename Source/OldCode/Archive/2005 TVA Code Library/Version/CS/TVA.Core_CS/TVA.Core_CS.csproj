@@ -80,7 +80,10 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommonTimeZones.cs" />
+    <Compile Include="CheckSum.cs" />
+    <Compile Include="CurveFit.cs" />
+    <Compile Include="Random.cs" />
+    <Compile Include="USTimeZones.cs" />
     <Compile Include="Diagnostics\PerformanceCounter.cs" />
     <Compile Include="Diagnostics\PerformanceMonitor.cs" />
     <Compile Include="Collections\DictionaryList.cs" />

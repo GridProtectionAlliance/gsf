@@ -234,7 +234,7 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeToEasternTime(this DateTime localTimeStamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, CommonTimeZones.EasternTimeZone);
+            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.EasternTimeZone);
         }
 
         /// <summary>Converts given local time to Central time.</summary>
@@ -244,7 +244,7 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeToCentralTime(this DateTime localTimeStamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, CommonTimeZones.CentralTimeZone);
+            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.CentralTimeZone);
         }
 
         /// <summary>Converts given local time to Mountain time.</summary>
@@ -254,7 +254,7 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeToMountainTime(this DateTime localTimeStamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, CommonTimeZones.MountainTimeZone);
+            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.MountainTimeZone);
         }
 
         /// <summary>Converts given local time to Pacific time.</summary>
@@ -264,7 +264,7 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeToPacificTime(this DateTime localTimeStamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, CommonTimeZones.PacificTimeZone);
+            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.PacificTimeZone);
         }
 
         /// <summary>Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time).</summary>
@@ -309,7 +309,7 @@ namespace TVA
         /// <returns>The timestamp in Eastern time.</returns>
         public static DateTime UniversalTimeToEasternTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, CommonTimeZones.EasternTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.EasternTimeZone);
         }
 
         /// <summary>
@@ -319,7 +319,7 @@ namespace TVA
         /// <returns>The timestamp in Central time.</returns>
         public static DateTime UniversalTimeToCentralTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, CommonTimeZones.CentralTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.CentralTimeZone);
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace TVA
         /// <returns>The timestamp in Mountain time.</returns>
         public static DateTime UniversalTimeToMountainTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, CommonTimeZones.MountainTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.MountainTimeZone);
         }
 
         /// <summary>
@@ -339,7 +339,7 @@ namespace TVA
         /// <returns>The timestamp in Pacific time.</returns>
         public static DateTime UniversalTimeToPacificTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, CommonTimeZones.PacificTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.PacificTimeZone);
         }
 
         /// <summary>

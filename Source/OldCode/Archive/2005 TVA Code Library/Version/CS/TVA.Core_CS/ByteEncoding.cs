@@ -283,57 +283,57 @@ namespace TVA
             /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
             /// <returns>String of encoded bytes.</returns>
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
-			{
+            {
                 if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
 
                 // Initializes byte image array on first call for speed in future calls.
-				if (m_byteImages == null)
-				{
+                if (m_byteImages == null)
+                {
                     StringBuilder byteImage;
-					
-                    m_byteImages = new string[256];
-					
-					for (int imageByte = byte.MinValue; imageByte <= byte.MaxValue; imageByte++)
-					{
-						byteImage = new StringBuilder();
 
-						if (m_reverse)
-						{
-							if ((imageByte & Bit.Bit7) > 0) byteImage.Append('1'); else byteImage.Append('0');					
+                    m_byteImages = new string[256];
+
+                    for (int imageByte = byte.MinValue; imageByte <= byte.MaxValue; imageByte++)
+                    {
+                        byteImage = new StringBuilder();
+
+                        if (m_reverse)
+                        {
+                            if ((imageByte & Bit.Bit7) > 0) byteImage.Append('1'); else byteImage.Append('0');
                             if ((imageByte & Bit.Bit6) > 0) byteImage.Append('1'); else byteImage.Append('0');
                             if ((imageByte & Bit.Bit5) > 0) byteImage.Append('1'); else byteImage.Append('0');
                             if ((imageByte & Bit.Bit4) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit3) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit2) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit1) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit0) > 0) byteImage.Append('1'); else byteImage.Append('0');
-						}
-						else
-						{
-							if ((imageByte & Bit.Bit0) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit1) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit2) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit3) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit4) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit5) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit6) > 0) byteImage.Append('1'); else byteImage.Append('0');
-							if ((imageByte & Bit.Bit7) > 0) byteImage.Append('1'); else byteImage.Append('0');
-						}
-						
-						m_byteImages[imageByte] = byteImage.ToString();
-					}
-				}
-				
-				StringBuilder binaryImage = new StringBuilder();
+                            if ((imageByte & Bit.Bit3) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit2) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit1) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit0) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                        }
+                        else
+                        {
+                            if ((imageByte & Bit.Bit0) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit1) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit2) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit3) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit4) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit5) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit6) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                            if ((imageByte & Bit.Bit7) > 0) byteImage.Append('1'); else byteImage.Append('0');
+                        }
 
-				for (int x = 0; x <= length - 1; x++)
-				{
-					if (spacingCharacter != NoSpacing && x > 0) binaryImage.Append(spacingCharacter);
-					binaryImage.Append(m_byteImages[bytes[offset + x]]);
-				}
-				
-				return binaryImage.ToString();				
-			}
+                        m_byteImages[imageByte] = byteImage.ToString();
+                    }
+                }
+
+                StringBuilder binaryImage = new StringBuilder();
+
+                for (int x = 0; x <= length - 1; x++)
+                {
+                    if (spacingCharacter != NoSpacing && x > 0) binaryImage.Append(spacingCharacter);
+                    binaryImage.Append(m_byteImages[bytes[offset + x]]);
+                }
+
+                return binaryImage.ToString();
+            }
         }
 
         #endregion
@@ -367,9 +367,9 @@ namespace TVA
             /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
             /// <returns>String of encoded bytes.</returns>
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
-			{
+            {
                 if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
-                
+
                 string base64String = Convert.ToBase64String(bytes, offset, length);
 
                 if (spacingCharacter == NoSpacing)
@@ -388,7 +388,7 @@ namespace TVA
 
                     return base64Image.ToString();
                 }
-			}
+            }
         }
 
         #endregion
@@ -422,28 +422,28 @@ namespace TVA
             /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
             /// <returns>String of encoded bytes.</returns>
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
-			{
+            {
                 if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
 
                 string asciiString = Encoding.ASCII.GetString(bytes, offset, length);
 
                 if (spacingCharacter == NoSpacing)
-				{
+                {
                     return asciiString;
-				}
-				else
-				{
-					StringBuilder asciiImage = new StringBuilder();
-					
-					for (int x = 0; x <= asciiString.Length - 1; x++)
-					{
-						if (x > 0) asciiImage.Append(spacingCharacter);
-						asciiImage.Append(asciiString[x]);
-					}
-					
-					return asciiImage.ToString();
-				}				
-			}
+                }
+                else
+                {
+                    StringBuilder asciiImage = new StringBuilder();
+
+                    for (int x = 0; x <= asciiString.Length - 1; x++)
+                    {
+                        if (x > 0) asciiImage.Append(spacingCharacter);
+                        asciiImage.Append(asciiString[x]);
+                    }
+
+                    return asciiImage.ToString();
+                }
+            }
         }
 
         #endregion
@@ -590,19 +590,19 @@ namespace TVA
 
         /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
         protected string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
-		{			
-			if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
-			
+        {
+            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+
             StringBuilder byteString = new StringBuilder();
 
             for (int x = 0; x <= length - 1; x++)
-			{
-				if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
-				byteString.Append(bytes[x + offset].ToString(format));
-			}
-			
-			return byteString.ToString();		
-		}
+            {
+                if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
+                byteString.Append(bytes[x + offset].ToString(format));
+            }
+
+            return byteString.ToString();
+        }
 
         #endregion
     }

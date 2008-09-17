@@ -140,13 +140,13 @@ namespace TVA.Identity
                         // 11/06/2007 - PCP: Some change in the AD now causes the searching the AD to fail also if
                         // this code is not being executed under a domain account which was not the case before;
                         // before only AD property lookup had this behavior.
-                        
+
                         // Impersonate to the privileged account if specified.
                         if (m_usePrivilegedAccount)
                         {
                             if (string.IsNullOrEmpty(m_previlegedUserName))
                                 throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
-                            
+
                             currentContext = ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain);
                         }
 
@@ -189,7 +189,7 @@ namespace TVA.Identity
                 {
                     if (string.IsNullOrEmpty(m_previlegedUserName))
                         throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
-                    
+
                     currentContext = ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain);
                 }
 
@@ -407,7 +407,7 @@ namespace TVA.Identity
                 // Frees the tokens.
                 if (!IntPtr.op_Equality(tokenHandle, IntPtr.Zero))
                     CloseHandle(tokenHandle);
-                
+
                 if (!IntPtr.op_Equality(dupeTokenHandle, IntPtr.Zero))
                     CloseHandle(dupeTokenHandle);
             }
