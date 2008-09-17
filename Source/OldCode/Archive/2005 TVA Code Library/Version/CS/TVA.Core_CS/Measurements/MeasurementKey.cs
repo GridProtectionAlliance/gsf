@@ -1,17 +1,17 @@
 //*******************************************************************************************************
-//  TVA.Measurements.MeasurementKey.vb - Defines primary key elements for a measurement
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  MeasurementKey.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  12/8/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//      Initial version of source generated.
 //  09/16/2008 - J. Ritchie Carroll
 //      Converted to C#.
 //
@@ -24,9 +24,16 @@ namespace TVA.Measurements
     /// <summary>Defines a primary key for a measurement</summary>
     public struct MeasurementKey : IEquatable<MeasurementKey>, IComparable<MeasurementKey>, IComparable
     {
+        #region [ Members ]
+
+        // Fields
         private int m_id;
         private string m_source;
         private int m_hashCode;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public MeasurementKey(int id, string source)
         {
@@ -37,6 +44,10 @@ namespace TVA.Measurements
             m_source = source.ToUpper();
             GenHashCode();
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         public int ID
         {
@@ -69,6 +80,10 @@ namespace TVA.Measurements
                 }
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
 
         public override string ToString()
         {
@@ -115,7 +130,9 @@ namespace TVA.Measurements
             m_hashCode = (m_source + m_id.ToString()).GetHashCode();
         }
 
-        #region " MeasurementKey Operators "
+        #endregion
+
+        #region [ Operators ]
 
         public static bool operator ==(MeasurementKey key1, MeasurementKey key2)
         {
