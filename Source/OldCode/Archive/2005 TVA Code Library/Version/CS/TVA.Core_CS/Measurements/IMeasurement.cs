@@ -1,19 +1,19 @@
 //*******************************************************************************************************
-//  TVA.Measurements.IMeasurement.vb - Abstract measurement interface
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  IMeasurement.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
-//
-//  This interface abstractly represents a value measured at an exact time interval
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  12/8/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//       Generated original version of source code.
+//  09/17/2008 - James R Carroll
+//      Converted to C#.
 //
 //*******************************************************************************************************
 
@@ -23,6 +23,7 @@ using System.ComponentModel;
 namespace TVA.Measurements
 {
     /// <summary>Abstract measured value interface</summary>
+    /// <remarks>This interface abstractly represents a value measured at an exact time interval.</remarks>
     public interface IMeasurement : IEquatable<IMeasurement>, IComparable<IMeasurement>, IComparable
     {
         /// <summary>Gets or sets the numeric ID of this measurement</summary>
