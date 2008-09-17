@@ -1,14 +1,12 @@
 //*******************************************************************************************************
-//  TVA.Measurements.Measurement.vb - Basic measurement implementation
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  Measurement.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
-//
-//  This class represents a basic measured value
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -27,6 +25,9 @@ namespace TVA.Measurements
     /// <summary>Implementation of a basic measured value</summary>
     public class Measurement : IMeasurement
     {
+        #region [ Members ]
+
+        // Fields
         private int m_id;
         private string m_source;
         private MeasurementKey m_key;
@@ -37,6 +38,10 @@ namespace TVA.Measurements
         private long m_ticks;
         private bool m_valueQualityIsGood;
         private bool m_timestampQualityIsGood;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public Measurement()
             : this(-1, null, double.NaN, 0)
@@ -77,23 +82,9 @@ namespace TVA.Measurements
             m_timestampQualityIsGood = true;
         }
 
-        /// <summary>Creates a copy of the specified measurement</summary>
-        public static Measurement Clone(IMeasurement measurementToClone)
-        {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Ticks);
-        }
+        #endregion
 
-        /// <summary>Creates a copy of the specified measurement using a new timestamp</summary>
-        public static Measurement Clone(IMeasurement measurementToClone, long ticks)
-        {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
-        }
-
-        /// <summary>Creates a copy of the specified measurement using a new value and timestamp</summary>
-        public static Measurement Clone(IMeasurement measurementToClone, double value, long ticks)
-        {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
-        }
+        #region [ Properties ]
 
         /// <summary>Gets or sets the numeric ID of this measurement</summary>
         /// <remarks>
@@ -262,27 +253,13 @@ namespace TVA.Measurements
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         public override string ToString()
         {
-            return ToString(this);
-        }
-
-        public static string ToString(IMeasurement measurement)
-        {
-            if (measurement == null)
-            {
-                return "Undefined";
-            }
-            else
-            {
-                string tagName = measurement.TagName;
-                string keyText = measurement.Key.ToString();
-
-                if (string.IsNullOrEmpty(tagName))
-                    return keyText;
-                else
-                    return string.Format("{0} [{1}]", tagName, keyText);
-            }
+            return Measurement.ToString(this);
         }
 
         /// <summary>Returns True if the value of this measurement equals the value of the specified other measurement</summary>
@@ -313,7 +290,9 @@ namespace TVA.Measurements
             throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
         }
 
-        #region " Measurement Operators "
+        #endregion
+
+        #region [ Operators ]
 
         public static bool operator ==(Measurement measurement1, Measurement measurement2)
         {
@@ -343,6 +322,46 @@ namespace TVA.Measurements
         public static bool operator <=(Measurement measurement1, Measurement measurement2)
         {
             return measurement1.CompareTo(measurement2) <= 0;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        /// <summary>Creates a copy of the specified measurement</summary>
+        public static Measurement Clone(IMeasurement measurementToClone)
+        {
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Ticks);
+        }
+
+        /// <summary>Creates a copy of the specified measurement using a new timestamp</summary>
+        public static Measurement Clone(IMeasurement measurementToClone, long ticks)
+        {
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
+        }
+
+        /// <summary>Creates a copy of the specified measurement using a new value and timestamp</summary>
+        public static Measurement Clone(IMeasurement measurementToClone, double value, long ticks)
+        {
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
+        }
+
+        public static string ToString(IMeasurement measurement)
+        {
+            if (measurement == null)
+            {
+                return "Undefined";
+            }
+            else
+            {
+                string tagName = measurement.TagName;
+                string keyText = measurement.Key.ToString();
+
+                if (string.IsNullOrEmpty(tagName))
+                    return keyText;
+                else
+                    return string.Format("{0} [{1}]", tagName, keyText);
+            }
         }
 
         #endregion
