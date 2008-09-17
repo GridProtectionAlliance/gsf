@@ -1,18 +1,12 @@
 //*******************************************************************************************************
-//  TVA.Measurements.ConcentratorBase.vb - Measurement concentrator base class
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ConcentratorBase.cs - Measurement concentrator base class
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
-//
-//  This class synchronizes (i.e., sorts by timestamp) real-time measurements
-//
-//  Note that your lag time should be defined as it relates to the rate at which data data is coming
-//  into the concentrator. Make sure you allow enough time for transmission of data over the network
-//  allowing any needed time for possible network congestion.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -47,30 +41,41 @@ using System.Collections.Generic;
 
 namespace TVA.Measurements
 {
+    /// <summary>
+    /// This class synchronizes (i.e., sorts by timestamp) real-time measurements
+    /// </summary>
+    /// <remarks>
+    /// Note that your lag time should be defined as it relates to the rate at which data data is coming
+    /// into the concentrator. Make sure you allow enough time for transmission of data over the network
+    /// allowing any needed time for possible network congestion.  Lead time should be defined as your
+    /// confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
+    /// trust that your local is within plus or minus 2 seconds of real-time.)
+    /// </remarks>
     public abstract class ConcentratorBase : IDisposable
-    {
+    {        
         #region [ Members ]
 
-        /// <summary>This event is raised every second allowing consumer to track current number of unpublished
-        /// seconds of data in the queue.</summary>
+        // Delegates
         public delegate void UnpublishedSamplesEventHandler(int total);
+        public delegate void ProcessExceptionEventHandler(Exception ex);
+        internal delegate void LeadTimeUpdatedEventHandler(double leadTime);
+        internal delegate void LagTimeUpdatedEventHandler(double lagTime);
+
+        // Events
+        /// <summary>This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.</summary>
         public event UnpublishedSamplesEventHandler UnpublishedSamples;
 
-        /// <summary>This event is raised if there is an exception encountered while attempting to process a
-        /// frame in the sample queue.</summary>
-        /// <remarks>Processing will not stop for any exceptions thrown by the user function, but any captured
-        /// exceptions will be exposed through this event.</remarks>
-        public delegate void ProcessExceptionEventHandler(Exception ex);
+        /// <summary>This event is raised if there is an exception encountered while attempting to process a frame in the sample queue.</summary>
+        /// <remarks>Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will be exposed through this event.</remarks>
         public event ProcessExceptionEventHandler ProcessException;
 
-        // Raised, for the benefit of dependent classes, when lead time is updated
-        internal delegate void LeadTimeUpdatedEventHandler(double leadTime);
+        /// <summary>Raised, for the benefit of dependent classes, when lead time is updated.</summary> 
         internal event LeadTimeUpdatedEventHandler LeadTimeUpdated;
 
-        // Raised, for the benefit of dependent classes, when lag time is updated
-        internal delegate void LagTimeUpdatedEventHandler(double lagTime);
+        /// <summary>Raised, for the benefit of dependent classes, when lag time is updated.</summary> 
         internal event LagTimeUpdatedEventHandler LagTimeUpdated;
 
+        // Fields
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
         private PrecisionTimer m_publicationTimer;          // High precision timer used for frame processing
         private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
@@ -276,7 +281,7 @@ namespace TVA.Measurements
             set
             {
                 m_framesPerSecond = value;
-                m_ticksPerFrame = (((decimal)Common.TicksPerSecond) / (decimal)m_framesPerSecond);
+                m_ticksPerFrame = (decimal)Common.TicksPerSecond / (decimal)m_framesPerSecond; ;
 
                 if (m_frameQueue != null)
                     m_frameQueue.TicksPerFrame = m_ticksPerFrame;
@@ -1047,13 +1052,13 @@ namespace TVA.Measurements
 
             // First things first, prepare timer period for next call...
             m_frameIndex++;
-            
+
             if (m_frameIndex >= m_framesPerSecond)
                 m_frameIndex = 0;
-            
+
             // Get the frame period for this frame index
             period = m_framePeriods[m_frameIndex];
-            
+
             // We only update timer period if it has changed since last call
             if (m_lastFramePeriod != period)
                 m_publicationTimer.Period = period;
