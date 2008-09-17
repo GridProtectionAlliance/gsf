@@ -104,41 +104,35 @@ namespace TVA.Measurements
             }
         }
 
-        /// <summary>Returns numeric adjusted value of this measurement, constrained within specified ticks</summary>
-        /// <remarks>
-        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
-        /// <para>Note that returned value will be offset by adder and multiplier</para>
-        /// </remarks>
-        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
-        public double this[long ticks]
-        {
-            get
-            {
-                // We only return a measurement value that is up-to-date...
-                if (ticks.TimeIsValid(this.Ticks, m_lagTime, m_leadTime))
-                    return base.AdjustedValue;
-                else
-                    return double.NaN;
-            }
-        }
-
-        /// <summary>Returns numeric adjusted value of this measurement, constrained within specified timestamp</summary>
-        /// <remarks>
-        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
-        /// <para>Note that returned value will be offset by adder and multiplier</para>
-        /// </remarks>
-        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
-        public double this[DateTime timestamp]
-        {
-            get
-            {
-                return this[timestamp.Ticks];
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>Gets numeric adjusted value of this measurement, constrained within specified ticks</summary>
+        /// <remarks>
+        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
+        /// <para>Note that returned value will be offset by adder and multiplier</para>
+        /// </remarks>
+        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
+        public double GetAdjustedValue(long ticks)
+        {
+            // We only return a measurement value that is up-to-date...
+            if (this.Ticks.TimeIsValid(ticks, m_lagTime, m_leadTime))
+                return base.AdjustedValue;
+            else
+                return double.NaN;
+        }
+
+        /// <summary>Gets numeric adjusted value of this measurement, constrained within specified timestamp</summary>
+        /// <remarks>
+        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
+        /// <para>Note that returned value will be offset by adder and multiplier</para>
+        /// </remarks>
+        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder)</returns>
+        public double GetAdjustedValue(DateTime timestamp)
+        {
+            return GetAdjustedValue(timestamp.Ticks);
+        }
 
         /// <summary>Gets numeric value of this measurement, constrained within specified ticks</summary>
         /// <remarks>
@@ -148,7 +142,7 @@ namespace TVA.Measurements
         public double GetValue(long ticks)
         {
             // We only return a measurement value that is up-to-date...
-            if (ticks.TimeIsValid(this.Ticks, m_lagTime, m_leadTime))
+            if (this.Ticks.TimeIsValid(ticks, m_lagTime, m_leadTime))
                 return base.Value;
             else
                 return double.NaN;
