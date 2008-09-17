@@ -1,74 +1,66 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-//using TVA.DateTime.Common;
-
 //*******************************************************************************************************
-//  TVA.Measurements.TemporalMeasurement.vb - Time sensitive measurement implementation
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  TemporalMeasurement.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
-//
-//  This class represents a time constrained measured value
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  12/8/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//       Initial version of source generated.
+//  09/17/2008 - James R Carroll
+//       Converted to C#.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 
 namespace TVA.Measurements
 {
+    /// <summary>This class represents a time constrained measured value.</summary>
     public class TemporalMeasurement : Measurement
     {
+        #region [ Members ]
 
+        // Fields
+        private double m_lagTime;   // Allowed past time deviation tolerance
+        private double m_leadTime;  // Allowed future time deviation tolerance
 
+        #endregion
 
-        private double m_lagTime; // Allowed past time deviation tolerance
-        private double m_leadTime; // Allowed future time deviation tolerance
+        #region [ Constructors ]
 
         public TemporalMeasurement(double lagTime, double leadTime)
             : this(-1, null, double.NaN, 0, lagTime, leadTime)
         {
-
-
         }
 
         public TemporalMeasurement(int id, string source, double value, DateTime timestamp, double lagTime, double leadTime)
             : this(id, source, value, timestamp.Ticks, lagTime, leadTime)
         {
-
-
         }
 
         public TemporalMeasurement(int id, string source, double value, long ticks, double lagTime, double leadTime)
             : base(id, source, value, ticks)
         {
-
-
             if (lagTime <= 0)
-            {
-                throw (new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one"));
-            }
+                throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
+
             if (leadTime <= 0)
-            {
-                throw (new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one"));
-            }
+                throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
             m_lagTime = lagTime;
             m_leadTime = leadTime;
-
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>Allowed past time deviation tolerance in seconds (can be subsecond)</summary>
         /// <remarks>
@@ -85,9 +77,8 @@ namespace TVA.Measurements
             set
             {
                 if (value <= 0)
-                {
-                    throw (new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one"));
-                }
+                    throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
+
                 m_lagTime = value;
             }
         }
@@ -107,9 +98,8 @@ namespace TVA.Measurements
             set
             {
                 if (value <= 0)
-                {
-                    throw (new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one"));
-                }
+                    throw new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one");
+
                 m_leadTime = value;
             }
         }
@@ -125,14 +115,10 @@ namespace TVA.Measurements
             get
             {
                 // We only return a measurement value that is up-to-date...
-                if (TVA.DateTime.Common.TimeIsValid(ticks, this.Ticks, m_lagTime, m_leadTime))
-                {
+                if (ticks.TimeIsValid(this.Ticks, m_lagTime, m_leadTime))
                     return base.AdjustedValue;
-                }
                 else
-                {
                     return double.NaN;
-                }
             }
         }
 
@@ -150,24 +136,28 @@ namespace TVA.Measurements
             }
         }
 
-        /// <summary>Gets or sets numeric value of this measurement, constrained within specified ticks</summary>
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>Gets numeric value of this measurement, constrained within specified ticks</summary>
         /// <remarks>
-        /// <para>Get operation will return NaN if ticks are outside of time deviation tolerances</para>
-        /// <para>Set operation will only store a value that is newer than the cached value</para>
+        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances</para>
         /// </remarks>
         /// <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
-        public double Value(long ticks)
+        public double GetValue(long ticks)
         {
             // We only return a measurement value that is up-to-date...
-            if (TVA.DateTime.Common.TimeIsValid(ticks, this.Ticks, m_lagTime, m_leadTime))
-            {
+            if (ticks.TimeIsValid(this.Ticks, m_lagTime, m_leadTime))
                 return base.Value;
-            }
             else
-            {
                 return double.NaN;
-            }
         }
+
+        /// <summary>Sets numeric value of this measurement, constrained within specified ticks</summary>
+        /// <remarks>
+        /// <para>Operation will only store a value that is newer than the cached value</para>
+        /// </remarks>
         public void SetValue(long ticks, double value)
         {
             // We only store a value that is is newer than the current value
@@ -178,19 +168,25 @@ namespace TVA.Measurements
             }
         }
 
-        /// <summary>Gets or sets numeric value of this measurement, constrained within specified timestamp</summary>
+        /// <summary>Gets numeric value of this measurement, constrained within specified timestamp</summary>
         /// <remarks>
-        /// <para>Get operation will return NaN if timestamp is outside of time deviation tolerances</para>
-        /// <para>Set operation will only store a value that is newer than the cached value</para>
+        /// <para>Operation will return NaN if timestamp is outside of time deviation tolerances</para>
         /// </remarks>
         /// <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier)</returns>
-        public double Value(DateTime timestamp)
+        public double GetValue(DateTime timestamp)
         {
-            return this.Value(timestamp.Ticks);
+            return GetValue(timestamp.Ticks);
         }
+
+        /// <summary>Sets numeric value of this measurement, constrained within specified timestamp</summary>
+        /// <remarks>
+        /// <para>Operation will only store a value that is newer than the cached value</para>
+        /// </remarks>
         public void SetValue(DateTime timestamp, double value)
         {
-            this.SetValue(timestamp.Ticks, value);
+            SetValue(timestamp.Ticks, value);
         }
+        
+        #endregion
     }
 }
