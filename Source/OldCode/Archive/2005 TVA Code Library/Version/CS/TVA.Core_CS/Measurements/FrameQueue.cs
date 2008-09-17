@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Measurements.FrameQueue.vb - Implementation of a queue of IFrame's
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  FrameQueue.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -31,7 +31,10 @@ namespace TVA.Measurements
     public delegate IFrame CreateNewFrameFunctionSignature(long ticks);
 
     public class FrameQueue : IDisposable
-    {
+    {            
+        #region [ Members ]
+
+        // Fields
         private LinkedList<IFrame> m_frameList;         // We keep this list sorted by timestamp so frames are processed in order
         private Dictionary<long, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
         private long m_publishedTicks;
@@ -41,61 +44,27 @@ namespace TVA.Measurements
         private CreateNewFrameFunctionSignature m_createNewFrameFunction;
         private bool m_disposed;
 
+        #endregion
+
+        #region [ Constructors ]
+
         internal FrameQueue(decimal ticksPerFrame, int initialCapacity, CreateNewFrameFunctionSignature createNewFrameFunction)
-		{
-			m_frameList = new LinkedList<IFrame>();
-			m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
-			
-			m_ticksPerFrame = ticksPerFrame;
-			m_createNewFrameFunction = createNewFrameFunction;
-		}
+        {
+            m_frameList = new LinkedList<IFrame>();
+            m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
+
+            m_ticksPerFrame = ticksPerFrame;
+            m_createNewFrameFunction = createNewFrameFunction;
+        }
 
         ~FrameQueue()
         {
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                if (disposing)
-                {
-                    if (m_frameList != null)
-                        m_frameList.Clear();
+        #endregion
 
-                    m_frameList = null;
-
-                    if (m_frameHash != null)
-                        m_frameHash.Clear();
-
-                    m_frameHash = null;
-
-                    m_createNewFrameFunction = null;
-                }
-            }
-
-            m_disposed = true;
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public void Clear()
-        {
-            lock (m_frameList)
-            {
-                if (m_frameList != null)
-                    m_frameList.Clear();
-
-                if (m_frameHash != null)
-                    m_frameHash.Clear();
-            }
-        }
+        #region [ Properties ]
 
         public decimal TicksPerFrame
         {
@@ -114,31 +83,6 @@ namespace TVA.Measurements
             get
             {
                 return m_createNewFrameFunction;
-            }
-        }
-
-        public void Pop()
-        {
-            // We track latest published ticks - don't want to allow slow moving measurements
-            // to inject themselves after a certain publication timeframe has passed - this
-            // avoids any possible out-of-sequence frame publication...
-            m_last = m_head;
-            m_head = null;
-            m_publishedTicks = m_last.Ticks;
-
-            // Assign next node, if any, as quickly as possible. We wait for queue lock because
-            // times-a-wastin and user function needs a frame to publish.
-            lock (m_frameList)
-            {
-                LinkedListNode<IFrame> nextNode = m_frameList.First.Next;
-
-                // Next frame available, go ahead and assign it...
-                if (nextNode != null)
-                    m_head = nextNode.Value;
-
-                // Clean up frame queues
-                m_frameList.RemoveFirst();
-                m_frameHash.Remove(m_publishedTicks);
             }
         }
 
@@ -170,10 +114,81 @@ namespace TVA.Measurements
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        public void Dispose()
+        {
+            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                if (disposing)
+                {
+                    if (m_frameList != null)
+                        m_frameList.Clear();
+
+                    m_frameList = null;
+
+                    if (m_frameHash != null)
+                        m_frameHash.Clear();
+
+                    m_frameHash = null;
+
+                    m_createNewFrameFunction = null;
+                }
+            }
+
+            m_disposed = true;
+        }
+
+        public void Clear()
+        {
+            lock (m_frameList)
+            {
+                if (m_frameList != null)
+                    m_frameList.Clear();
+
+                if (m_frameHash != null)
+                    m_frameHash.Clear();
+            }
+        }
+
+        public void Pop()
+        {
+            // We track latest published ticks - don't want to allow slow moving measurements
+            // to inject themselves after a certain publication timeframe has passed - this
+            // avoids any possible out-of-sequence frame publication...
+            m_last = m_head;
+            m_head = null;
+            m_publishedTicks = m_last.Ticks;
+
+            // Assign next node, if any, as quickly as possible. We wait for queue lock because
+            // times-a-wastin and user function needs a frame to publish.
+            lock (m_frameList)
+            {
+                LinkedListNode<IFrame> nextNode = m_frameList.First.Next;
+
+                // Next frame available, go ahead and assign it...
+                if (nextNode != null)
+                    m_head = nextNode.Value;
+
+                // Clean up frame queues
+                m_frameList.RemoveFirst();
+                m_frameHash.Remove(m_publishedTicks);
+            }
+        }
+
         public IFrame GetFrame(long ticks)
         {
             // Calculate destination ticks for this frame
-            long destinationTicks = (long)(((decimal)ticks / m_ticksPerFrame) * m_ticksPerFrame);
+            long destinationTicks = (long)((long)(ticks / m_ticksPerFrame) * m_ticksPerFrame);
             IFrame frame = null;
             bool nodeAdded = false;
 
@@ -271,6 +286,8 @@ namespace TVA.Measurements
         //    Loop
 
         //End Sub
+
+        #endregion
 
         #endregion
     }
