@@ -32,7 +32,8 @@
 //
 //*******************************************************************************************************
 
-#define UsePrecisionTimer
+// Define this constant to enable use of high-resolution time, undefine to use system time function
+#define UseHighResolutionTime
 
 using System;
 using System.Text;
@@ -143,7 +144,7 @@ namespace TVA.Measurements
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
             this.FramesPerSecond = framesPerSecond;
-#if UsePrecisionTimer
+#if UseHighResolutionTime
             m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
             m_realTimeTicks = DateTime.UtcNow.Ticks;
@@ -346,7 +347,7 @@ namespace TVA.Measurements
                     }
                     else
                     {
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                         processingTime = PrecisionTimer.UtcNow.Ticks - m_startTime;
 #else
                         processingTime = DateTime.UtcNow.Ticks - m_startTime;
@@ -422,7 +423,7 @@ namespace TVA.Measurements
                 if (m_useLocalClockAsRealTime)
                 {
                     // Assumes local system clock is the best value we have for real time.
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                     return PrecisionTimer.UtcNow.Ticks;
 #else
                     return DateTime.UtcNow.Ticks;
@@ -438,7 +439,7 @@ namespace TVA.Measurements
                     // the lead time typically defines the tolerated accuracy of the local clock to real-time
                     // we will use this value as the + and - timestamp tolerance to validate if the measurement
                     // time is reasonable.
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                     long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
                     long currentTimeTicks = DateTime.UtcNow.Ticks;
@@ -542,7 +543,7 @@ namespace TVA.Measurements
             {
                 StringBuilder status = new StringBuilder();
                 IFrame lastFrame = m_frameQueue.Last;
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                 DateTime currentTime = PrecisionTimer.UtcNow;
 #else
                 DateTime currentTime = DateTime.UtcNow;
@@ -574,7 +575,7 @@ namespace TVA.Measurements
                 if (!m_useLocalClockAsRealTime)
                 {
                     status.Append("      Local clock accuracy: ");
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                     status.Append(SecondsFromRealTime(PrecisionTimer.UtcNow.Ticks).ToString("0.0000"));
 #else
                     status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
@@ -684,7 +685,7 @@ namespace TVA.Measurements
                 m_publishedFrames = 0;
                 m_totalPublishTime = 0;
                 m_stopTime = 0;
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                 m_startTime = PrecisionTimer.UtcNow.Ticks;
 #else
                 m_startTime = DateTime.UtcNow.Ticks;
@@ -713,7 +714,7 @@ namespace TVA.Measurements
             }
 
             m_enabled = false;
-#if UsePrecisionTimer
+#if UseHighResolutionTime
             m_stopTime = PrecisionTimer.UtcNow.Ticks;
 #else
             m_stopTime = DateTime.UtcNow.Ticks;
@@ -879,7 +880,7 @@ namespace TVA.Measurements
                             // call overhead. Since the lead time typically defines the tolerated accuracy of the
                             // local clock to real time, it uses this value as the + and - timestamp tolerance to
                             // validate if the measurement time is reasonable.
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                             long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
                             long currentTimeTicks = DateTime.UtcNow.Ticks;
@@ -1097,7 +1098,7 @@ namespace TVA.Measurements
                         if (distance > 0) break;
 
                         // Mark start time for publication
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                         distance = PrecisionTimer.UtcNow.Ticks;
 #else
                         distance = DateTime.UtcNow.Ticks;
@@ -1130,7 +1131,7 @@ namespace TVA.Measurements
                         }
 
                         // Track total publication time
-#if UsePrecisionTimer
+#if UseHighResolutionTime
                         m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
 #else
                         m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
@@ -1211,7 +1212,7 @@ namespace TVA.Measurements
 
         //                        ' Makes sure the starting sort time for this frame is initialized.
         //                        If frame.StartSortTime = 0 Then
-        //#If UsePrecisionTimer Then
+        //#If UseHighResolutionTime Then
         //                            frame.StartSortTime = PrecisionTimer.UtcNow.Ticks
         //#Else
         //                            frame.StartSortTime = Date.UtcNow.Ticks
@@ -1219,7 +1220,7 @@ namespace TVA.Measurements
         //                        End If
 
         //                            ' Tracks the last sorted measurement in this frame.
-        //#If UsePrecisionTimer Then
+        //#If UseHighResolutionTime Then
         //                            frame.LastSortTime = PrecisionTimer.UtcNow.Ticks
         //#Else
         //                            frame.LastSortTime = Date.UtcNow.Ticks
