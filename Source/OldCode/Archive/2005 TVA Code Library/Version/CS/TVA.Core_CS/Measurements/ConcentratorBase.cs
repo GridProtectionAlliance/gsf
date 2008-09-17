@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  ConcentratorBase.cs - Measurement concentrator base class
+//  ConcentratorBase.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -42,14 +42,19 @@ using System.Collections.Generic;
 namespace TVA.Measurements
 {
     /// <summary>
-    /// This class synchronizes (i.e., sorts by timestamp) real-time measurements
+    /// Measurement concentrator base class
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// This class synchronizes (i.e., sorts by timestamp) real-time measurements.
+    /// </para>
+    /// <para>
     /// Note that your lag time should be defined as it relates to the rate at which data data is coming
     /// into the concentrator. Make sure you allow enough time for transmission of data over the network
     /// allowing any needed time for possible network congestion.  Lead time should be defined as your
     /// confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
     /// trust that your local is within plus or minus 2 seconds of real-time.)
+    /// </para>
     /// </remarks>
     public abstract class ConcentratorBase : IDisposable
     {        
