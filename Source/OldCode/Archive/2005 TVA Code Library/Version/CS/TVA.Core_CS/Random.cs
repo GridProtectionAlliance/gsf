@@ -24,7 +24,7 @@ using TVA.Interop;
 namespace TVA
 {
     /// <summary>Generates cryptographically strong random numbers.</summary>
-    class Random
+    public static class Random
     {
         private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
 
