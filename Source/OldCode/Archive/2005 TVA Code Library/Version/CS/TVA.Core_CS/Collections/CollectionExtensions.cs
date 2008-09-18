@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Collections.CollectionExtensions.vb - Defines extension functions related to collections
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  CollectionExtensions.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -25,7 +25,6 @@ using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using TVA;
 
 namespace TVA.Collections
 {
@@ -169,7 +168,7 @@ namespace TVA.Collections
             for (x = 0; x <= source.Count - 1; x++)
             {
                 // Calls random function in Math namespace.
-                y = TVA.Math.Common.RandomInt32Between(0, source.Count - 1);
+                y = Random.Int32Between(0, source.Count - 1);
 
                 if (x != y)
                 {

@@ -1,11 +1,11 @@
 //*******************************************************************************************************
-//  TVA.Collections.DictionaryList.vb - Sorted dictionary style list that supports IList
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  DictionaryList.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
@@ -22,7 +22,7 @@ using System.Collections.Generic;
 
 namespace TVA.Collections
 {
-    /// <summary>This is essentially a sorted dictionary style list that implements IList.</summary>
+    /// <summary>Sorted dictionary style list that supports IList.</summary>
     /// <remarks>
     /// <para>
     /// Have you ever needed the quick look-up feature on a Dictionary (e.g., Hashtable), but ended
@@ -66,14 +66,89 @@ namespace TVA.Collections
     /// </remarks>
     public class DictionaryList<TKey, TValue> : IList<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
     {
-        private System.Collections.SortedList<TKey, TValue> m_list;
+        #region [ Members ]
+
+        // Fields
+        private SortedList<TKey, TValue> m_list;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public DictionaryList()
         {
             m_list = new SortedList<TKey, TValue>();
         }
 
-        #region " Generic IList(Of KeyValuePair(Of TKey, TValue)) Implementation "
+        #endregion
+
+        #region [ Properties ]
+
+        // Generic IList(Of KeyValuePair(Of TKey, TValue)) Properties
+
+        public int Count
+        {
+            get
+            {
+                return m_list.Count;
+            }
+        }
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public KeyValuePair<TKey, TValue> this[int index]
+        {
+            get
+            {
+                return new KeyValuePair<TKey, TValue>(m_list.Keys[index], m_list.Values[index]);
+            }
+            set
+            {
+                m_list[value.Key] = value.Value;
+            }
+        }
+
+        // Generic IDictionary(Of TKey, TValue) Properties
+
+        public TValue this[TKey key]
+        {
+            get
+            {
+                return m_list[key];
+            }
+            set
+            {
+                m_list[key] = value;
+            }
+        }
+
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                return m_list.Keys;
+            }
+        }
+
+        public ICollection<TValue> Values
+        {
+            get
+            {
+                return m_list.Values;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        // Generic IList(Of KeyValuePair(Of TKey, TValue)) Methods
 
         public void Add(KeyValuePair<TKey, TValue> item)
         {
@@ -94,23 +169,7 @@ namespace TVA.Collections
         {
             for (int x = 0; x <= m_list.Count - 1; x++)
             {
-                array[arrayIndex + x] = new KeyValuePair<TKey, TValue>(m_list.Keys(x), m_list.Values(x));
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return m_list.Count;
-            }
-        }
-
-        public bool IsReadOnly
-        {
-            get
-            {
-                return false;
+                array[arrayIndex + x] = new KeyValuePair<TKey, TValue>(m_list.Keys[x], m_list.Values[x]);
             }
         }
 
@@ -122,18 +181,6 @@ namespace TVA.Collections
         public int IndexOf(KeyValuePair<TKey, TValue> item)
         {
             return m_list.IndexOfKey(item.Key);
-        }
-
-        public KeyValuePair<TKey, TValue> this[int index]
-        {
-            get
-            {
-                return new KeyValuePair<TKey, TValue>(m_list.Keys(index), m_list.Values(index));
-            }
-            set
-            {
-                m_list[value.Key] = value.Value;
-            }
         }
 
         public void RemoveAt(int index)
@@ -163,9 +210,7 @@ namespace TVA.Collections
             return ((System.Collections.IEnumerable)m_list).GetEnumerator();
         }
 
-        #endregion
-
-        #region " Generic IDictionary(Of TKey, TValue) Implemenentation "
+        // Generic IDictionary(Of TKey, TValue) Methods
 
         public void Add(TKey key, TValue value)
         {
@@ -192,42 +237,14 @@ namespace TVA.Collections
             return m_list.IndexOfValue(value);
         }
 
-        public TValue this[TKey key]
-        {
-            get
-            {
-                return m_list[key];
-            }
-            set
-            {
-                m_list[key] = value;
-            }
-        }
-
-        public ICollection<TKey> Keys
-        {
-            get
-            {
-                return m_list.Keys;
-            }
-        }
-
         public bool Remove(TKey key)
         {
             return m_list.Remove(key);
         }
 
-        public bool TryGetValue(TKey key, ref TValue value)
+        public bool TryGetValue(TKey key, out TValue value)
         {
-            return m_list.TryGetValue(key, value);
-        }
-
-        public ICollection<TValue> Values
-        {
-            get
-            {
-                return m_list.Values;
-            }
+            return m_list.TryGetValue(key, out value);
         }
 
         #endregion

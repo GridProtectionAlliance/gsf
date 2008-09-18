@@ -1,11 +1,11 @@
 //*******************************************************************************************************
-//  TVA.Collections.ProcessQueue.vb - Multi-threaded Item Processing Queue
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ProcessQueue.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
@@ -49,6 +49,41 @@ using TVA.Threading;
 
 namespace TVA.Collections
 {
+    #region [ Enumerations ]
+
+    /// <summary>Enumeration of possible queue threading modes.</summary>
+    public enum QueueThreadingMode
+    {
+        /// <summary>Processes several items in the queue at once on different threads, where processing order is not
+        /// important.</summary>
+        Asynchronous,
+        /// <summary>Processes items in the queue one at a time on a single thread, where processing order is important.</summary>
+        Synchronous
+    }
+
+    /// <summary>Enumeration of possible queue processing styles.</summary>
+    public enum QueueProcessingStyle
+    {
+        /// <summary>Defines queue processing delegate to process only one item at a time.</summary>
+        /// <remarks>This is the typical processing style when the threading mode is asynchronous.</remarks>
+        OneAtATime,
+        /// <summary>Defines queue processing delegate to process all currently available items in the queue. Items are
+        /// passed into delegate as an array.</summary>
+        /// <remarks>This is the optimal processing style when the threading mode is synchronous.</remarks>
+        ManyAtOnce
+    }
+
+    /// <summary>Enumeration of possible requeue modes.</summary>
+    public enum RequeueMode
+    {
+        /// <summary>Requeues item at the beginning of the list.</summary>
+        Prefix,
+        /// <summary>Requeues item at the end of the list.</summary>
+        Suffix
+    }
+
+    #endregion
+
     /// <summary>
     /// <para>This class processes a collection of items on independent threads.</para>
     /// <para>The consumer must implement a function to process items.</para>
@@ -62,7 +97,84 @@ namespace TVA.Collections
     /// </remarks>
     public class ProcessQueue<T> : IList<T>, ICollection, IDisposable
     {
-        #region " Public Member Declarations "
+        #region [ Members ]
+
+        // Nested Types
+
+        #region [ ProcessThread class ]
+
+        // Limits item processing time, if requested.
+        private class ProcessThread
+        {
+            private ProcessQueue<T> m_parent;
+            private Thread m_thread;
+            private T m_item;
+            private T[] m_items;
+
+            public ProcessThread(ProcessQueue<T> parent, T item)
+            {
+                m_parent = parent;
+                m_item = item;
+                m_thread = new Thread(ProcessItem);
+                m_thread.Start();
+            }
+
+            public ProcessThread(ProcessQueue<T> parent, T[] items)
+            {
+                m_parent = parent;
+                m_items = items;
+                m_thread = new Thread(ProcessItems);
+                m_thread.Start();
+            }
+
+            // Blocks calling thread until specified time has expired.
+            public bool WaitUntil(int timeout)
+            {
+                bool threadComplete = m_thread.Join(timeout);
+                if (!threadComplete) m_thread.Abort();
+                return threadComplete;
+            }
+
+            private void ProcessItem()
+            {
+                m_parent.ProcessItem(m_item);
+            }
+
+            private void ProcessItems()
+            {
+                m_parent.ProcessItems(m_items);
+            }
+        }
+
+        #endregion
+
+        // Constants
+
+        /// <summary>Default processing interval (in milliseconds).</summary>
+        public const int DefaultProcessInterval = 100;
+
+        /// <summary>Default maximum number of processing threads.</summary>
+        public const int DefaultMaximumThreads = 5;
+
+        /// <summary>Default processing timeout (in milliseconds).</summary>
+        public const int DefaultProcessTimeout = Timeout.Infinite;
+
+        /// <summary>Default setting for requeuing items on processing timeout.</summary>
+        public const bool DefaultRequeueOnTimeout = false;
+
+        /// <summary>Default setting for requeuing mode on processing timeout.</summary>
+        public const RequeueMode DefaultRequeueModeOnTimeout = RequeueMode.Prefix;
+
+        /// <summary>Default setting for requeuing items on processing exceptions.</summary>
+        public const bool DefaultRequeueOnException = false;
+
+        /// <summary>Default setting for requeuing mode on processing exceptions.</summary>
+        public const RequeueMode DefaultRequeueModeOnException = RequeueMode.Prefix;
+
+        /// <summary>Default real-time processing interval (in milliseconds).</summary>
+        public const double RealTimeProcessInterval = 0.0;
+
+        // Delegates
 
         /// <summary>
         /// Function signature that defines a method to process items one at a time.
@@ -102,6 +214,8 @@ namespace TVA.Collections
         /// </remarks>
         public delegate bool CanProcessItemFunctionSignature(T item);
 
+        // Events
+
         /// <summary>
         /// Event that is raised after an item has been successfully processed.
         /// </summary>
@@ -112,8 +226,7 @@ namespace TVA.Collections
         /// timeout is specified.</para>
         /// <para>Raised only when ProcessingStyle = OneAtATime (i.e., ProcessItemFunction is defined).</para>
         /// </remarks>
-        public delegate void ItemProcessedEventHandler(T item);
-        public event ItemProcessedEventHandler ItemProcessed;
+        public event Action<T> ItemProcessed;
 
         /// <summary>
         /// Event that is raised after an array of items have been successfully processed.
@@ -125,8 +238,7 @@ namespace TVA.Collections
         /// timeout is specified.</para>
         /// <para>Raised only when when ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is defined).</para>
         /// </remarks>
-        public delegate void ItemsProcessedEventHandler(T[] items);
-        public event ItemsProcessedEventHandler ItemsProcessed;
+        public event Action<T[]> ItemsProcessed;
 
         /// <summary>
         /// Event that is raised if an item's processing time exceeds the specified process timeout.
@@ -136,8 +248,7 @@ namespace TVA.Collections
         /// <para>Allows custom handling of items that took too long to process.</para>
         /// <para>Raised only when ProcessingStyle = OneAtATime (i.e., ProcessItemFunction is defined).</para>
         /// </remarks>
-        public delegate void ItemTimedOutEventHandler(T item);
-        public event ItemTimedOutEventHandler ItemTimedOut;
+        public event Action<T> ItemTimedOut;
 
         /// <summary>
         /// Event that is raised if the processing time for an array of items exceeds the specified process timeout.
@@ -147,8 +258,7 @@ namespace TVA.Collections
         /// <para>Allows custom handling of items that took too long to process.</para>
         /// <para>Raised only when ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is defined).</para>
         /// </remarks>
-        public delegate void ItemsTimedOutEventHandler(T[] items);
-        public event ItemsTimedOutEventHandler ItemsTimedOut;
+        public event Action<T[]> ItemsTimedOut;
 
         /// <summary>
         /// Event that is raised if an exception is encountered while attempting to processing an item in the list.
@@ -157,37 +267,9 @@ namespace TVA.Collections
         /// Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will
         /// be exposed through this event.
         /// </remarks>
-        public delegate void ProcessExceptionEventHandler(Exception ex);
-        public event ProcessExceptionEventHandler ProcessException;
+        public event Action<Exception> ProcessException;
 
-        /// <summary>Default processing interval (in milliseconds).</summary>
-        public const int DefaultProcessInterval = 100;
-
-        /// <summary>Default maximum number of processing threads.</summary>
-        public const int DefaultMaximumThreads = 5;
-
-        /// <summary>Default processing timeout (in milliseconds).</summary>
-        public const int DefaultProcessTimeout = Timeout.Infinite;
-
-        /// <summary>Default setting for requeuing items on processing timeout.</summary>
-        public const bool DefaultRequeueOnTimeout = false;
-
-        /// <summary>Default setting for requeuing mode on processing timeout.</summary>
-        public const RequeueMode DefaultRequeueModeOnTimeout = RequeueMode.Prefix;
-
-        /// <summary>Default setting for requeuing items on processing exceptions.</summary>
-        public const bool DefaultRequeueOnException = false;
-
-        /// <summary>Default setting for requeuing mode on processing exceptions.</summary>
-        public const RequeueMode DefaultRequeueModeOnException = RequeueMode.Prefix;
-
-        /// <summary>Default real-time processing interval (in milliseconds).</summary>
-        public const double RealTimeProcessInterval = 0.0;
-
-        #endregion
-
-        #region " Private Member Declarations "
-
+        // Fields
         private ProcessItemFunctionSignature m_processItemFunction;
         private ProcessItemsFunctionSignature m_processItemsFunction;
         private CanProcessItemFunctionSignature m_canProcessItemFunction;
@@ -208,7 +290,7 @@ namespace TVA.Collections
         private long m_itemsProcessed;
         private long m_startTime;
         private long m_stopTime;
-        private bool m_debugMode;
+        //private bool m_debugMode;
         private bool m_disposed;
 
 #if ThreadTracking
@@ -222,257 +304,7 @@ namespace TVA.Collections
 
         #endregion
 
-        #region " Construction Functions "
-
-        #region " Single-Item Processing Constructors "
-
-        /// <summary>
-        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
-        {
-            return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous process queue using  specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous process queue (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
-        {
-            return CreateSynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous process queue (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous process queue (i.e., single process thread) using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateSynchronousQueue(processItemFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous process queue (i.e., single process thread) using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time process queue with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
-        {
-            return CreateRealTimeQueue(processItemFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time process queue with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateRealTimeQueue(processItemFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        #endregion
-
-        #region " Multi-Item Processing Constructors "
-
-        /// <summary>
-        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
-        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
-        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous, bulk item process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous, bulk item process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
-        {
-            return CreateSynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateSynchronousQueue(processItemsFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time, bulk item process queue with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
-        {
-            return CreateRealTimeQueue(processItemsFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time, bulk item process queue with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time, bulk item process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateRealTimeQueue(processItemsFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time, bulk item process queue using specified settings.
-        /// </summary>
-        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        #endregion
-
-        #region " Protected Constructors "
+        #region [ Constructors ]
 
         /// <summary>
         /// Creates a process queue based on the generic List(Of T) class.
@@ -517,18 +349,21 @@ namespace TVA.Collections
             {
                 // Instantiates process queue for intervaled item processing
                 m_processTimer = new System.Timers.Timer();
-                m_processTimer.Elapsed += m_processTimer_Elapsed;
+                m_processTimer.Elapsed += ProcessTimerThreadProc;
                 m_processTimer.Interval = processInterval;
                 m_processTimer.AutoReset = true;
                 m_processTimer.Enabled = false;
             }
         }
 
-        #endregion
+        ~ProcessQueue()
+        {
+            Dispose(true);
+        }
 
         #endregion
 
-        #region " Public Methods Implementation "
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the user function for processing individual items in the list one at a time.
@@ -803,26 +638,381 @@ namespace TVA.Collections
             }
         }
 
+        // TODO: C# does not support filtered exceptions so the DebugMode won't be quite as useful here :-(
+        // Perhaps there is a way to "effectively" do this later (IL emittance, etc.), this article seemed
+        // promising and might work: http://blogs.msdn.com/greggm/archive/2006/03/23/559155.aspx, this might
+        // be best implemented as a shared code library class used for filtering exceptions.  It's critical that
+        // the code implemented actually creates an IL .try filter, you can always just check an expression and
+        // rethrow the Exception ex you just caught - but that's the issue - you don't want to "catch" it at all,
+        // rather when debugging you want the compiler to stop at the "source" location of the exception - not
+        // inside the compiled ProcessQueue... Perhaps there are ways around this anyway, a little testing may
+        // prove that this is "DebugMode" feature is not necessary anyway...  Ideally if an exception is thrown
+        // in the user function during testing, that's where you want the debugger to stop. Somebody add this as
+        // a task in TFS once the C# code is there... JRC.
+        ///// <summary>
+        ///// Gets or sets debug mode for the process queue when handling exceptions.
+        ///// </summary>
+        ///// <value>True to enable debug mode.</value>
+        ///// <returns>True if debug mode is enabled. Otherwise, False.</returns>
+        ///// <remarks>
+        ///// When debug mode is True, all internal "Catch (Exception ex)" statements will be ignored, allowing the
+        ///// development environment to stop directly on the line of code that threw the exception (e.g., in user's
+        ///// process item function).
+        ///// </remarks>
+        //public virtual bool DebugMode
+        //{
+        //    get
+        //    {
+        //        return m_debugMode;
+        //    }
+        //    set
+        //    {
+        //        m_debugMode = value;
+        //    }
+        //}
+
         /// <summary>
-        /// Gets or sets debug mode for the process queue when handling exceptions.
+        /// Gets or sets indicator that the list is currently enabled.
         /// </summary>
-        /// <value>True to enable debug mode.</value>
-        /// <returns>True if debug mode is enabled. Otherwise, False.</returns>
-        /// <remarks>
-        /// When debug mode is True, all internal "Catch ex As Exception" statements will be ignored, allowing the
-        /// development environment to stop directly on the line of code that threw the exception (e.g., in user's
-        /// process item function).
-        /// </remarks>
-        public virtual bool DebugMode
+        public virtual bool Enabled
         {
             get
             {
-                return m_debugMode;
+                return m_enabled;
+            }
+            protected set
+            {
+                m_enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets indicator that the list is actively processing items.
+        /// </summary>
+        public bool Processing
+        {
+            get
+            {
+                if (m_processingIsRealTime)
+                {
+                    return (m_realTimeProcessThread != null);
+                }
+                else
+                {
+                    return m_processTimer.Enabled;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of items currently being processed.
+        /// </summary>
+        /// <returns>Total number of items currently being processed.</returns>
+        public long ItemsBeingProcessed
+        {
+            get
+            {
+                return m_itemsProcessing;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of items processed so far.
+        /// </summary>
+        /// <returns>Total number of items processed so far.</returns>
+        public long TotalProcessedItems
+        {
+            get
+            {
+                return m_itemsProcessed;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current number of active threads.
+        /// </summary>
+        /// <returns>Current number of active threads.</returns>
+        public int ThreadCount
+        {
+            get
+            {
+                return m_threadCount;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total amount of time, in seconds, that the process list has been active.
+        /// </summary>
+        public virtual double RunTime
+        {
+            get
+            {
+                long processingTime = 0;
+
+                if (m_startTime > 0)
+                {
+                    if (m_stopTime > 0)
+                    {
+                        processingTime = m_stopTime - m_startTime;
+                    }
+                    else
+                    {
+                        processingTime = DateTime.Now.Ticks - m_startTime;
+                    }
+                }
+
+                if (processingTime < 0)
+                {
+                    processingTime = 0;
+                }
+
+                return Common.TicksToSeconds(processingTime);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets adjustment of real-time process thread priority.
+        /// </summary>
+        /// <remarks>
+        /// <para>Only affects real-time queues.</para>
+        /// <para>Only takes effect when set before calling the "Start" method.</para>
+        /// </remarks>
+        public ThreadPriority RealTimeProcessThreadPriority
+        {
+            get
+            {
+                return m_realTimeProcessThreadPriority;
             }
             set
             {
-                m_debugMode = value;
+                m_realTimeProcessThreadPriority = value;
             }
+        }
+
+        /// <summary>
+        /// Gets class name.
+        /// </summary>
+        /// <remarks>
+        /// <para>This name is used for class identification in strings (e.g., used in error message).</para>
+        /// <para>Derived classes can override this method, if needed, with a proper class name - defaults to
+        /// Me.GetType().Name.</para>
+        /// </remarks>
+        public virtual string Name
+        {
+            get
+            {
+                return this.GetType().Name;
+            }
+        }
+
+        /// <summary>Gets or sets the element at the specified index.</summary>
+        /// <returns>The element at the specified index.</returns>
+        /// <param name="index">The zero-based index of the element to get or set.</param>
+        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is equal to or greater than
+        /// queue length. </exception>
+        public virtual T this[int index]
+        {
+            get
+            {
+                lock (m_processQueue)
+                {
+                    return m_processQueue[index];
+                }
+            }
+            set
+            {
+                lock (m_processQueue)
+                {
+                    m_processQueue[index] = value;
+                    DataAdded();
+                }
+            }
+        }
+
+        /// <summary>Gets the number of elements actually contained in the queue.</summary>
+        /// <returns>The number of elements actually contained in the queue.</returns>
+        public virtual int Count
+        {
+            get
+            {
+                lock (m_processQueue)
+                {
+                    return m_processQueue.Count;
+                }
+            }
+        }
+
+        /// <summary>Gets a value indicating whether the queue is read-only.</summary>
+        /// <returns>True, if the queue is read-only; otherwise, false. In the default implementation, this property
+        /// always returns false.</returns>
+        public virtual bool IsReadOnly
+        {
+            get
+            {
+                return m_processQueue.IsReadOnly;
+            }
+        }
+
+        /// <summary>Returns reference to internal IList that should be used to synchronize access to the queue.</summary>
+        /// <returns>Reference to internal IList that should be used to synchronize access to the queue.</returns>
+        /// <remarks>
+        /// <para>
+        /// Note that all the methods of this class are already individually synchronized; however, to safely enumerate
+        /// through each queue element (i.e., to make sure list elements do not change during enumeration), derived
+        /// classes and end users should perform their own synchronization by implementing a SyncLock using this SyncRoot
+        /// property.
+        /// </para>
+        /// <para>
+        /// We return a typed object for synchronization as an optimization. Returning a generic object requires that
+        /// SyncLock implementations validate that the referenced object is not a value type at run time.
+        /// </para>
+        /// </remarks>
+        public IList<T> SyncRoot
+        {
+            get
+            {
+                return m_processQueue;
+            }
+        }
+
+        object ICollection.SyncRoot
+        {
+            get
+            {
+                return m_processQueue;
+            }
+        }
+
+        /// <summary>Gets a value indicating whether access to the queue is synchronized (thread safe).</summary>
+        /// <returns>True, if access to the queue is synchronized (thread safe); otherwise, false. In the default
+        /// implementation, this property always returns true.</returns>
+        /// <remarks>This queue is effectively "synchronized," since all functions SyncLock operations internally.</remarks>
+        public bool IsSynchronized
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets current status of processing queue.
+        /// </summary>
+        public virtual string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append("       Queue processing is: ");
+                status.Append(m_enabled ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("  Current processing state: ");
+                status.Append(Processing ? "Executing" : "Idle");
+                status.AppendLine();
+                status.Append("       Processing interval: ");
+                if (m_processingIsRealTime)
+                {
+                    status.Append("Real-time");
+                }
+                else
+                {
+                    status.Append(ProcessInterval);
+                    status.Append(" milliseconds");
+                }
+                status.AppendLine();
+                status.Append("        Processing timeout: ");
+                if (m_processTimeout == Timeout.Infinite)
+                {
+                    status.Append("Infinite");
+                }
+                else
+                {
+                    status.Append(m_processTimeout);
+                    status.Append(" milliseconds");
+                }
+                status.AppendLine();
+                status.Append("      Queue threading mode: ");
+                if (ThreadingMode == QueueThreadingMode.Asynchronous)
+                {
+                    status.Append("Asynchronous - ");
+                    status.Append(m_maximumThreads);
+                    status.Append(" maximum threads");
+                }
+                else
+                {
+                    status.Append("Synchronous");
+                }
+                status.AppendLine();
+                status.Append("    Queue processing style: ");
+                status.Append(ProcessingStyle == QueueProcessingStyle.OneAtATime ? "One at a time" : "Many at once");
+                status.AppendLine();
+                status.Append("    Total process run time: ");
+                status.Append(Common.SecondsToText(RunTime));
+                status.AppendLine();
+                status.Append("      Total active threads: ");
+                status.Append(m_threadCount);
+                status.AppendLine();
+                status.Append("   Queued items to process: ");
+                status.Append(Count);
+                status.AppendLine();
+                status.Append("     Items being processed: ");
+                status.Append(m_itemsProcessing);
+                status.AppendLine();
+                status.Append("     Total items processed: ");
+                status.Append(m_itemsProcessed);
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Allows derived classes to access the interfaced internal process queue directly.
+        /// </summary>
+        protected IList<T> InternalList
+        {
+            get
+            {
+                return m_processQueue;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                if (disposing)
+                {
+                    Stop();
+                    if (m_processTimer != null)
+                    {
+                        m_processTimer.Elapsed -= ProcessTimerThreadProc;
+                        m_processTimer.Dispose();
+                    }
+                    m_processTimer = null;
+                    if (m_processQueue != null)
+                    {
+                        m_processQueue.Clear();
+                    }
+                    m_processQueue = null;
+                    m_processItemFunction = null;
+                    m_processItemsFunction = null;
+                    m_canProcessItemFunction = null;
+                }
+            }
+
+            m_disposed = true;
         }
 
         /// <summary>
@@ -869,9 +1059,8 @@ namespace TVA.Collections
             {
                 // Stops real-time processing thread.
                 if (m_realTimeProcessThread != null)
-                {
                     m_realTimeProcessThread.Abort();
-                }
+
                 m_realTimeProcessThread = null;
             }
             else
@@ -881,21 +1070,6 @@ namespace TVA.Collections
             }
 
             m_stopTime = DateTime.Now.Ticks;
-        }
-
-        /// <summary>
-        /// Gets or sets indicator that the list is currently enabled.
-        /// </summary>
-        public virtual bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            protected set
-            {
-                m_enabled = value;
-            }
         }
 
         /// <summary>
@@ -963,270 +1137,71 @@ namespace TVA.Collections
             }
         }
 
-        /// <summary>
-        /// Gets indicator that the list is actively processing items.
-        /// </summary>
-        public bool Processing
-        {
-            get
-            {
-                if (m_processingIsRealTime)
-                {
-                    return (m_realTimeProcessThread != null);
-                }
-                else
-                {
-                    return m_processTimer.Enabled;
-                }
-            }
-        }
+        #region [ Item Processing Functions ]
 
         /// <summary>
-        /// Gets the total number of items currently being processed.
-        /// </summary>
-        /// <returns>Total number of items currently being processed.</returns>
-        public long ItemsBeingProcessed
-        {
-            get
-            {
-                return m_itemsProcessing;
-            }
-        }
-
-        /// <summary>
-        /// Gets the total number of items processed so far.
-        /// </summary>
-        /// <returns>Total number of items processed so far.</returns>
-        public long TotalProcessedItems
-        {
-            get
-            {
-                return m_itemsProcessed;
-            }
-        }
-
-        /// <summary>
-        /// Gets the current number of active threads.
-        /// </summary>
-        /// <returns>Current number of active threads.</returns>
-        public int ThreadCount
-        {
-            get
-            {
-                return m_threadCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the total amount of time, in seconds, that the process list has been active.
-        /// </summary>
-        public virtual double RunTime
-        {
-            get
-            {
-                long processingTime;
-
-                if (m_startTime > 0)
-                {
-                    if (m_stopTime > 0)
-                    {
-                        processingTime = m_stopTime - m_startTime;
-                    }
-                    else
-                    {
-                        processingTime = DateTime.Now.Ticks - m_startTime;
-                    }
-                }
-
-                if (processingTime < 0)
-                {
-                    processingTime = 0;
-                }
-
-                return TVA.DateTime.Common.TicksToSeconds(processingTime);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets adjustment of real-time process thread priority.
+        /// Raises the base class ItemProcessed event.
         /// </summary>
         /// <remarks>
-        /// <para>Only affects real-time queues.</para>
-        /// <para>Only takes effect when set before calling the "Start" method.</para>
+        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
+        /// as needed.
         /// </remarks>
-        public ThreadPriority RealTimeProcessThreadPriority
+        protected void RaiseItemProcessed(T item)
         {
-            get
-            {
-                return m_realTimeProcessThreadPriority;
-            }
-            set
-            {
-                m_realTimeProcessThreadPriority = value;
-            }
+            if (ItemProcessed != null)
+                ItemProcessed(item);
         }
 
         /// <summary>
-        /// Gets class name.
+        /// Raises the base class ItemsProcessed event.
         /// </summary>
         /// <remarks>
-        /// <para>This name is used for class identification in strings (e.g., used in error message).</para>
-        /// <para>Derived classes can override this method, if needed, with a proper class name - defaults to
-        /// Me.GetType().Name.</para>
+        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
+        /// as needed.
         /// </remarks>
-        public virtual string Name
+        protected void RaiseItemsProcessed(T[] items)
         {
-            get
-            {
-                return this.GetType().Name;
-            }
+            if (ItemsProcessed != null)
+                ItemsProcessed(items);
         }
 
         /// <summary>
-        /// Gets current status of processing queue.
+        /// Raises the base class ItemTimedOut event.
         /// </summary>
-        public virtual string Status
+        /// <remarks>
+        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
+        /// as needed.
+        /// </remarks>
+        protected void RaiseItemTimedOut(T item)
         {
-            get
-            {
-                StringBuilder status = new StringBuilder();
-
-                status.Append("       Queue processing is: ");
-                if (m_enabled)
-                {
-                    status.Append("Enabled");
-                }
-                else
-                {
-                    status.Append("Disabled");
-                }
-                status.AppendLine();
-                status.Append("  Current processing state: ");
-                if (Processing)
-                {
-                    status.Append("Executing");
-                }
-                else
-                {
-                    status.Append("Idle");
-                }
-                status.AppendLine();
-                status.Append("       Processing interval: ");
-                if (m_processingIsRealTime)
-                {
-                    status.Append("Real-time");
-                }
-                else
-                {
-                    status.Append(ProcessInterval);
-                    status.Append(" milliseconds");
-                }
-                status.AppendLine();
-                status.Append("        Processing timeout: ");
-                if (m_processTimeout == Timeout.Infinite)
-                {
-                    status.Append("Infinite");
-                }
-                else
-                {
-                    status.Append(m_processTimeout);
-                    status.Append(" milliseconds");
-                }
-                status.AppendLine();
-                status.Append("      Queue threading mode: ");
-                if (ThreadingMode == QueueThreadingMode.Asynchronous)
-                {
-                    status.Append("Asynchronous - ");
-                    status.Append(m_maximumThreads);
-                    status.Append(" maximum threads");
-                }
-                else
-                {
-                    status.Append("Synchronous");
-                }
-                status.AppendLine();
-                status.Append("    Queue processing style: ");
-                if (ProcessingStyle == QueueProcessingStyle.OneAtATime)
-                {
-                    status.Append("One at a time");
-                }
-                else
-                {
-                    status.Append("Many at once");
-                }
-                status.AppendLine();
-                status.Append("    Total process run time: ");
-                status.Append(TVA.DateTime.Common.SecondsToText(RunTime));
-                status.AppendLine();
-                status.Append("      Total active threads: ");
-                status.Append(m_threadCount);
-                status.AppendLine();
-                status.Append("   Queued items to process: ");
-                status.Append(Count);
-                status.AppendLine();
-                status.Append("     Items being processed: ");
-                status.Append(m_itemsProcessing);
-                status.AppendLine();
-                status.Append("     Total items processed: ");
-                status.Append(m_itemsProcessed);
-                status.AppendLine();
-
-                return status.ToString();
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
-
-        #region " Protected Methods Implementation "
-
-        /// <summary>We implement finalizer for this class to ensure queue shuts down in an orderly fashion.</summary>
-        ~ProcessQueue()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                if (disposing)
-                {
-                    Stop();
-                    if (m_processTimer != null)
-                    {
-                        m_processTimer.Elapsed -= m_processTimer_Elapsed;
-                        m_processTimer.Dispose();
-                    }
-                    m_processTimer = null;
-                    if (m_processQueue != null)
-                    {
-                        m_processQueue.Clear();
-                    }
-                    m_processQueue = null;
-                    m_processItemFunction = null;
-                    m_processItemsFunction = null;
-                    m_canProcessItemFunction = null;
-                }
-            }
-
-            m_disposed = true;
+            if (ItemTimedOut != null)
+                ItemTimedOut(item);
         }
 
         /// <summary>
-        /// Allows derived classes to access the interfaced internal process queue directly.
+        /// Raises the base class ItemsTimedOut event.
         /// </summary>
-        protected IList<T> InternalList
+        /// <remarks>
+        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
+        /// as needed.
+        /// </remarks>
+        protected void RaiseItemsTimedOut(T[] items)
         {
-            get
-            {
-                return m_processQueue;
-            }
+            if (ItemsTimedOut != null)
+                ItemsTimedOut(items);
+        }
+
+        /// <summary>
+        /// Raises the base class ProcessException event.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
+        /// as needed.
+        /// </remarks>
+        protected void RaiseProcessException(Exception ex)
+        {
+            if (ProcessException != null)
+                ProcessException(ex);
         }
 
         /// <summary>
@@ -1281,7 +1256,7 @@ namespace TVA.Collections
                     // Rethrow thread abort so calling method can respond appropriately
                     throw ex;
                 }
-                catch (Exception ex)
+                catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
                 {
                     // Processing will not stop for any errors thrown by the user function, but errors will be reported.
                     if (ProcessException != null)
@@ -1358,126 +1333,6 @@ namespace TVA.Collections
             }
         }
 
-        /// <summary>
-        /// Raises the base class ItemProcessed event.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
-        /// as needed.
-        /// </remarks>
-        protected void RaiseItemProcessed(T item)
-        {
-            if (ItemProcessed != null)
-                ItemProcessed(item);
-        }
-
-        /// <summary>
-        /// Raises the base class ItemsProcessed event.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
-        /// as needed.
-        /// </remarks>
-        protected void RaiseItemsProcessed(T[] items)
-        {
-            if (ItemsProcessed != null)
-                ItemsProcessed(items);
-        }
-
-        /// <summary>
-        /// Raises the base class ItemTimedOut event.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
-        /// as needed.
-        /// </remarks>
-        protected void RaiseItemTimedOut(T item)
-        {
-            if (ItemTimedOut != null)
-                ItemTimedOut(item);
-        }
-
-        /// <summary>
-        /// Raises the base class ItemsTimedOut event.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
-        /// as needed.
-        /// </remarks>
-        protected void RaiseItemsTimedOut(T[] items)
-        {
-            if (ItemsTimedOut != null)
-                ItemsTimedOut(items);
-        }
-
-        /// <summary>
-        /// Raises the base class ProcessException event.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
-        /// as needed.
-        /// </remarks>
-        protected void RaiseProcessException(Exception ex)
-        {
-            if (ProcessException != null)
-                ProcessException(ex);
-        }
-
-        #endregion
-
-        #region " Private Methods Implementation "
-
-        #region " Internal Thread Processing Class "
-
-        // Limits item processing time, if requested.
-        private class ProcessThread
-        {
-            private ProcessQueue<T> m_parent;
-            private Thread m_thread;
-            private T m_item;
-            private T[] m_items;
-
-            public ProcessThread(ProcessQueue<T> parent, T item)
-            {
-                m_parent = parent;
-                m_item = item;
-                m_thread = new Thread(ProcessItem);
-                m_thread.Start();
-            }
-
-            public ProcessThread(ProcessQueue<T> parent, T[] items)
-            {
-                m_parent = parent;
-                m_items = items;
-                m_thread = new Thread(ProcessItems);
-                m_thread.Start();
-            }
-
-            // Blocks calling thread until specified time has expired.
-            public bool WaitUntil(int timeout)
-            {
-                bool threadComplete = m_thread.Join(timeout);
-
-                if (!threadComplete) m_thread.Abort();
-
-                return threadComplete;
-            }
-
-            private void ProcessItem()
-            {
-                m_parent.ProcessItem(m_item);
-            }
-
-            private void ProcessItems()
-            {
-                m_parent.ProcessItems(m_items);
-            }
-        }
-
-        #endregion
-
-        #region " Item Processing Thread Procs "
-
         // Handles standard processing of a single item.
         private void ProcessItem(T item)
         {
@@ -1494,9 +1349,9 @@ namespace TVA.Collections
             catch (ThreadAbortException ex)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw (ex);
+                throw ex;
             }
-            catch (Exception ex)
+            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
             {
                 // Requeues item on processing exception, if requested.
                 if (m_requeueOnException)
@@ -1524,9 +1379,9 @@ namespace TVA.Collections
             catch (ThreadAbortException ex)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw (ex);
+                throw ex;
             }
-            catch (Exception ex)
+            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
             {
                 // Requeues items on processing exception, if requested.
                 if (m_requeueOnException)
@@ -1561,7 +1416,7 @@ namespace TVA.Collections
         }
 
         // Processes queued items on an interval.
-        private void m_processTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void ProcessTimerThreadProc(object sender, System.Timers.ElapsedEventArgs e)
         {
             // The system timer creates an intervaled processing loop that distributes item processing across multiple threads if needed
             if (m_processItemsFunction == null)
@@ -1655,9 +1510,9 @@ namespace TVA.Collections
             catch (ThreadAbortException ex)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw (ex);
+                throw ex;
             }
-            catch (Exception ex)
+            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
             {
                 // Processing will not stop for any errors encountered here, but errors will be reported.
                 if (ProcessException != null)
@@ -1746,9 +1601,9 @@ namespace TVA.Collections
             catch (ThreadAbortException ex)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw (ex);
+                throw ex;
             }
-            catch (Exception ex)
+            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
             {
                 // Processing will not stop for any errors encountered here, but errors will be reported.
                 if (ProcessException != null)
@@ -1767,9 +1622,7 @@ namespace TVA.Collections
 
         #endregion
 
-        #endregion
-
-        #region " Handy List(Of T) Functions Implementation "
+        #region [ Handy List(Of T) Functions Implementation ]
 
         // The internal list is declared as an IList(Of T). Derived classes (e.g., KeyedProcessQueue) can use their own
         // list implementation for process functionality. However, the regular List(Of T) provides many handy functions
@@ -2787,7 +2640,7 @@ namespace TVA.Collections
 
         #endregion
 
-        #region " Handy Queue Functions Implementation "
+        #region [ Handy Queue Functions Implementation ]
 
         // Note: All queue function implementations should be synchronized, as necessary.
 
@@ -2843,7 +2696,7 @@ namespace TVA.Collections
 
         #endregion
 
-        #region " Generic IList(Of T) Implementation "
+        #region [ Generic IList(Of T) Implementation ]
 
         // Note: All IList(Of T) implementations should be synchronized, as necessary.
 
@@ -2896,30 +2749,6 @@ namespace TVA.Collections
             return m_processQueue.GetEnumerator();
         }
 
-        /// <summary>Gets or sets the element at the specified index.</summary>
-        /// <returns>The element at the specified index.</returns>
-        /// <param name="index">The zero-based index of the element to get or set.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is equal to or greater than
-        /// queue length. </exception>
-        public virtual T this[int index]
-        {
-            get
-            {
-                lock (m_processQueue)
-                {
-                    return m_processQueue[index];
-                }
-            }
-            set
-            {
-                lock (m_processQueue)
-                {
-                    m_processQueue[index] = value;
-                    DataAdded();
-                }
-            }
-        }
-
         /// <summary>Searches for the specified object and returns the zero-based index of the first occurrence within
         /// the entire queue.</summary>
         /// <returns>The zero-based index of the first occurrence of item within the entire queue, if found; otherwise, –1.</returns>
@@ -2932,18 +2761,6 @@ namespace TVA.Collections
             }
         }
 
-        /// <summary>Gets the number of elements actually contained in the queue.</summary>
-        /// <returns>The number of elements actually contained in the queue.</returns>
-        public virtual int Count
-        {
-            get
-            {
-                lock (m_processQueue)
-                {
-                    return m_processQueue.Count;
-                }
-            }
-        }
 
         /// <summary>Removes all elements from the queue.</summary>
         public virtual void Clear()
@@ -2989,21 +2806,6 @@ namespace TVA.Collections
             }
         }
 
-        /// <summary>Gets a value indicating whether the queue is read-only.</summary>
-        /// <returns>True, if the queue is read-only; otherwise, false. In the default implementation, this property
-        /// always returns false.</returns>
-        public virtual bool IsReadOnly
-        {
-            get
-            {
-                return m_processQueue.IsReadOnly;
-            }
-        }
-
-        #endregion
-
-        #region " IEnumerable Implementation "
-
         /// <summary>
         /// Gets an enumerator of all items within the queue.
         /// </summary>
@@ -3012,56 +2814,264 @@ namespace TVA.Collections
             return ((IEnumerable)m_processQueue).GetEnumerator();
         }
 
-        #endregion
-
-        #region " ICollection Implementation "
-
-        /// <summary>Returns reference to internal IList that should be used to synchronize access to the queue.</summary>
-        /// <returns>Reference to internal IList that should be used to synchronize access to the queue.</returns>
-        /// <remarks>
-        /// <para>
-        /// Note that all the methods of this class are already individually synchronized; however, to safely enumerate
-        /// through each queue element (i.e., to make sure list elements do not change during enumeration), derived
-        /// classes and end users should perform their own synchronization by implementing a SyncLock using this SyncRoot
-        /// property.
-        /// </para>
-        /// <para>
-        /// We return a typed object for synchronization as an optimization. Returning a generic object requires that
-        /// SyncLock implementations validate that the referenced object is not a value type at run time.
-        /// </para>
-        /// </remarks>
-        public IList<T> SyncRoot
-        {
-            get
-            {
-                return m_processQueue;
-            }
-        }
-
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                return m_processQueue;
-            }
-        }
-
-        /// <summary>Gets a value indicating whether access to the queue is synchronized (thread safe).</summary>
-        /// <returns>True, if access to the queue is synchronized (thread safe); otherwise, false. In the default
-        /// implementation, this property always returns true.</returns>
-        /// <remarks>This queue is effectively "synchronized," since all functions SyncLock operations internally.</remarks>
-        public bool IsSynchronized
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public void CopyTo(Array array, int index)
         {
             CopyTo(array, index);
         }
+
+        #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        #region [ Single-Item Processing Constructors ]
+
+        /// <summary>
+        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5,
+        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
+        {
+            return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100, MaximumThreads = 5,
+        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        {
+            return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100,
+        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
+        {
+            return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous process queue with the default settings: ProcessInterval = 100,
+        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
+        {
+            return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous process queue using  specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous process queue (i.e., single process thread) with the default settings:
+        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
+        {
+            return CreateSynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous process queue (i.e., single process thread) with the default settings:
+        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        {
+            return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous process queue (i.e., single process thread) using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return CreateSynchronousQueue(processItemFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous process queue (i.e., single process thread) using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time process queue with the default settings: ProcessTimeout = Infinite,
+        /// RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
+        {
+            return CreateRealTimeQueue(processItemFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time process queue with the default settings: ProcessTimeout = Infinite,
+        /// RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        {
+            return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return CreateRealTimeQueue(processItemFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        #endregion
+
+        #region [ Multi-Item Processing Constructors ]
+
+        /// <summary>
+        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
+        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
+        {
+            return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
+        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        {
+            return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
+        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
+        {
+            return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous, bulk item process queue with the default settings: ProcessInterval = 100,
+        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
+        {
+            return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous, bulk item process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return CreateAsynchronousQueue(processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new asynchronous, bulk item process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) with the default settings:
+        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
+        {
+            return CreateSynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) with the default settings:
+        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        {
+            return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return CreateSynchronousQueue(processItemsFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new synchronous, bulk item process queue (i.e., single process thread) using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time, bulk item process queue with the default settings: ProcessTimeout = Infinite,
+        /// RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
+        {
+            return CreateRealTimeQueue(processItemsFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time, bulk item process queue with the default settings: ProcessTimeout = Infinite,
+        /// RequeueOnTimeout = False, RequeueOnException = False.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        {
+            return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time, bulk item process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return CreateRealTimeQueue(processItemsFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        /// <summary>
+        /// Creates a new real-time, bulk item process queue using specified settings.
+        /// </summary>
+        public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        {
+            return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+        }
+
+        #endregion
 
         #endregion
     }
