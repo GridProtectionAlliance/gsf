@@ -1,12 +1,12 @@
 //*******************************************************************************************************
-//  Enumerations.vb - Global enumerations for this namespace
-//  Copyright © 2005 - TVA, all rights reserved - Gbtc
+//  Enumerations.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
-//       Email: pcpatel@tva.gov
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -17,11 +17,9 @@
 //
 //*******************************************************************************************************
 
-/// <summary>
-/// Specifies the type of the application.
-/// </summary>
 namespace TVA
 {
+    /// <summary>Specifies the type of the application.</summary>
     public enum ApplicationType
     {
         /// <summary>
