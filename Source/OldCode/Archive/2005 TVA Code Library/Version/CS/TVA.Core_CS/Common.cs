@@ -20,19 +20,9 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.OleDb;
-using System.Data.OracleClient;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.VisualBasic.CompilerServices;
 using TVA.Collections;
-using TVA.Data;
 using TVA.Reflection;
 
 namespace TVA
@@ -87,8 +77,6 @@ namespace TVA
     /// <summary>Defines common global functions.</summary>
     public static class Common
     {
-        #region [ Common Functions ]
-
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
         /// <param name="expression">The expression you want to evaluate.</param>
@@ -201,21 +189,16 @@ namespace TVA
             }
         }
 
-        #endregion
-
-        #region [ Collection Functions ]
-
         /*-----------------------------------------------------------------------------------------------------*\
          *
          *                    These functions were migrated here from TVA.Collections.Common
          *                  
         \*-----------------------------------------------------------------------------------------------------*/
 
-
         /// <summary>Returns the smallest item from a list of parameters.</summary>
         public static object Min(params object[] itemList)
         {
-            return itemList.Min<object>(Compare);
+            return itemList.Min<object>(CompareObjects);
         }
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
@@ -227,7 +210,7 @@ namespace TVA
         /// <summary>Returns the largest item from a list of parameters.</summary>
         public static object Max(params object[] itemList)
         {
-            return itemList.Max<object>(Compare);
+            return itemList.Max<object>(CompareObjects);
         }
 
         /// <summary>Returns the largest item from a list of parameters.</summary>
@@ -236,55 +219,17 @@ namespace TVA
             return itemList.Max<T>();
         }
 
-        /// <summary>Compares two elements of the specified type.</summary>
-        public static int Compare<T>(T x, T y)
-        {
-            return Comparer<T>.Default.Compare(x, y);
-        }
-
         /// <summary>Compares two elements of any type.</summary>
-        public static int Compare(object x, object y)
+        public static int CompareObjects(object x, object y)
         {
-            if (IsReference(x) && IsReference(y))
-            {
-                // If both items are reference objects, then test object equality by reference.
-                // If not equal by overridable Object.Equals function, use default Comparer.
-                if (x == y)
-                {
-                    return 0;
-                }
-                else if (x.GetType().Equals(y.GetType()))
-                {
-                    // Compares two items that are the same type. Sees if the type supports IComparable interface.
-                    if (x is IComparable)
-                    {
-                        return ((IComparable)x).CompareTo(y);
-                    }
-                    else if (x.Equals(y))
-                    {
-                        return 0;
-                    }
-                    else
-                    {
-                        return Comparer.Default.Compare(x, y);
-                    }
-                }
-                else
-                {
-                    return Comparer.Default.Compare(x, y);
-                }
-            }
-            else
-            {
-                // Compares non-reference (i.e., value) types, using VB rules.
-                // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
-                return (Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : (Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
-            }
+            // Just using Visual Basic runtime to compare two objects of unknown types - this can be a very
+            // complex process and the VB runtime library is distributed with .NET anyway, so why not use it:
+
+            // Note that comparison is based on VB object comparison rules:
+            // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
+            return (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : 
+                (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
         }
-
-        #endregion
-
-        #region [ DateTime Functions ]
 
         /*-----------------------------------------------------------------------------------------------------*\
          *
@@ -348,7 +293,5 @@ namespace TVA
 
         //    throw new ArgumentException("Windows time zone with " + lookupBy + " of \"" + name + "\" was not found!");
         //}
-
-        #endregion
     }
 }
