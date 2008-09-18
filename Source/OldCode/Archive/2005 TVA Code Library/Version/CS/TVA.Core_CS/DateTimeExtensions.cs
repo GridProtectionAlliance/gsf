@@ -38,6 +38,27 @@
 using System;
 using System.Text;
 
+#region [ Enumerations ]
+
+/// <summary>Time intervals enumeration used by BaselinedTimestamp function.</summary>
+public enum BaselineTimeInterval
+{
+    /// <summary>Baseline timestamp to the second (i.e., starting at zero milliseconds).</summary>
+    Second,
+    /// <summary>Baseline timestamp to the minute (i.e., starting at zero seconds and milliseconds).</summary>
+    Minute,
+    /// <summary>Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds).</summary>
+    Hour,
+    /// <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and milliseconds).</summary>
+    Day,
+    /// <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds and milliseconds).</summary>
+    Month,
+    /// <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, seconds and milliseconds).</summary>
+    Year
+}
+
+#endregion
+
 /// <summary>Defines common global functions related to Date/Time manipulation.</summary>
 public static class DateTimeExtensions
 {

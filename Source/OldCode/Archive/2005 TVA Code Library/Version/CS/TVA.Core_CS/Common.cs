@@ -37,6 +37,59 @@ using TVA.Collections;
 using TVA.Data;
 using TVA.Reflection;
 
+#region [ Enumerations ]
+
+/// <summary>Specifies the type of the application.</summary>
+public enum ApplicationType
+{
+    /// <summary>
+    /// Application is of unknown type.
+    /// </summary>
+    Unknown = 0,
+    /// <summary>
+    /// Application doesn't require a subsystem.
+    /// </summary>
+    Native = 1,
+    /// <summary>
+    /// Application runs in the Windows GUI subsystem.
+    /// </summary>
+    WindowsGui = 2,
+    /// <summary>
+    /// Application runs in the Windows character subsystem.
+    /// </summary>
+    WindowsCui = 3,
+    /// <summary>
+    /// Application runs in the OS/2 character subsystem.
+    /// </summary>
+    OS2Cui = 5,
+    /// <summary>
+    /// Application runs in the Posix character subsystem.
+    /// </summary>
+    PosixCui = 7,
+    /// <summary>
+    /// Application is a native Win9x driver.
+    /// </summary>
+    NativeWindows = 8,
+    /// <summary>
+    /// Application runs in the Windows CE subsystem.
+    /// </summary>
+    WindowsCEGui = 9,
+    /// <summary>
+    /// The application is a web site or web application.
+    /// </summary>
+    Web = 15
+}
+
+/// <summary>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function.</summary>
+public enum TimeZoneName
+{
+    DaylightName,
+    DisplayName,
+    StandardName
+}
+
+#endregion
+
 /// <summary>Defines common global functions.</summary>
 public static class Common
 {
