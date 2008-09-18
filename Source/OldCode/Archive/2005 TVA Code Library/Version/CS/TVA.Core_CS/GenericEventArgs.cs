@@ -19,29 +19,26 @@
 
 using System;
 
-namespace TVA
+/// <summary>Generic event arguments class.</summary>
+/// <typeparam name="T">Type of argument for this event arguments instance.</typeparam>
+public class GenericEventArgs<T> : EventArgs
 {
-    /// <summary>Generic event arguments class.</summary>
-    /// <typeparam name="T">Type of argument for this event arguments instance.</typeparam>
-    public class GenericEventArgs<T> : EventArgs
+    private T m_argument;
+
+    public GenericEventArgs(T argument)
     {
-        private T m_argument;
+        m_argument = argument;
+    }
 
-        public GenericEventArgs(T argument)
+    public T Argument
+    {
+        get
         {
-            m_argument = argument;
+            return m_argument;
         }
-
-        public T Argument
+        set
         {
-            get
-            {
-                return m_argument;
-            }
-            set
-            {
-                m_argument = value;
-            }
+            m_argument = value;
         }
     }
 }

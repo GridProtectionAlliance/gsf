@@ -19,45 +19,42 @@
 
 using System;
 
-namespace TVA
+/// <summary>Generic identifiable item class.</summary>
+/// <remarks>This class is used to abstractly track items along with their source.</remarks>
+/// <typeparam name="TIdentifier">Type of data item source.</typeparam>
+/// <typeparam name="TItem">Type of data item.</typeparam>
+public class IdentifiableItem<TIdentifier, TItem>
 {
-    /// <summary>Generic identifiable item class.</summary>
-    /// <remarks>This class is used to abstractly track items along with their source.</remarks>
-    /// <typeparam name="TIdentifier">Type of data item source.</typeparam>
-    /// <typeparam name="TItem">Type of data item.</typeparam>
-    public class IdentifiableItem<TIdentifier, TItem>
+    private TIdentifier m_source;
+    private TItem m_item;
+
+    public IdentifiableItem(TIdentifier source, TItem item)
     {
-        private TIdentifier m_source;
-        private TItem m_item;
+        m_source = source;
+        m_item = item;
+    }
 
-        public IdentifiableItem(TIdentifier source, TItem item)
+    public TIdentifier Source
+    {
+        get
         {
-            m_source = source;
-            m_item = item;
+            return m_source;
         }
-
-        public TIdentifier Source
+        set
         {
-            get
-            {
-                return m_source;
-            }
-            set
-            {
-                m_source = value;
-            }
+            m_source = value;
         }
+    }
 
-        public TItem Item
+    public TItem Item
+    {
+        get
         {
-            get
-            {
-                return m_item;
-            }
-            set
-            {
-                m_item = value;
-            }
+            return m_item;
+        }
+        set
+        {
+            m_item = value;
         }
     }
 }
