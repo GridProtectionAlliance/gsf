@@ -458,7 +458,7 @@ public static class DateTimeExtensions
 			case 12:
 				return "December";
 			default:
-				throw new ArgumentOutOfRangeException("monthNumber", "Invalid month number \"" + timestamp.Month + "\" specified - expected a value between 1 and 12")
+                throw new ArgumentOutOfRangeException("monthNumber", "Invalid month number \"" + timestamp.Month + "\" specified - expected a value between 1 and 12");
 		}
 	}
 }
