@@ -1,27 +1,27 @@
 //*******************************************************************************************************
-//  TVA.ByteEncoding.vb - Byte encoding functions
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ByteEncoding.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  04/29/2005 - Pinal C. Patel
-//      Generated original version of source code.
+//       Generated original version of source code.
 //  04/05/2006 - J. Ritchie Carroll
-//      Transformed code into System.Text.Encoding styled hierarchy.
+//       Transformed code into System.Text.Encoding styled hierarchy.
 //  02/13/2007 - J. Ritchie Carroll
-//      Added ASCII character extraction as an encoding option.
+//       Added ASCII character extraction as an encoding option.
 //  04/30/2007 - J. Ritchie Carroll
-//      Cached binary bit images when first called to optimize generation.
+//       Cached binary bit images when first called to optimize generation.
 //  12/13/2007 - Darrell Zuercher
-//      Edited code comments.
+//       Edited code comments.
 //  09/08/2008 - J. Ritchie Carroll
-//      Converted to C#.
+//       Converted to C#.
 //
 //*******************************************************************************************************
 
@@ -37,7 +37,10 @@ namespace TVA
 {
     public abstract class ByteEncoding
     {
-        #region " Hexadecimal Encoding Class "
+        #region [ Members ]
+
+        // Nested Types
+        #region [ Hexadecimal Encoding Class ]
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class HexadecimalEncoding : ByteEncoding
@@ -80,14 +83,13 @@ namespace TVA
                     }
                     else
                     {
-                        throw (new ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", "hexData"));
+                        throw new ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", "hexData");
                     }
                 }
                 else
                 {
-                    throw (new ArgumentNullException("hexData", "Input string cannot be null or empty"));
+                    throw new ArgumentNullException("hexData", "Input string cannot be null or empty");
                 }
-
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -104,7 +106,7 @@ namespace TVA
 
         #endregion
 
-        #region " Decimal Encoding Class "
+        #region [ Decimal Encoding Class ]
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class DecimalEncoding : ByteEncoding
@@ -147,14 +149,13 @@ namespace TVA
                     }
                     else
                     {
-                        throw (new ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", "decData"));
+                        throw new ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", "decData");
                     }
                 }
                 else
                 {
-                    throw (new ArgumentNullException("decData", "Input string cannot be null or empty"));
+                    throw new ArgumentNullException("decData", "Input string cannot be null or empty");
                 }
-
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -171,7 +172,7 @@ namespace TVA
 
         #endregion
 
-        #region " Binary Encoding Class "
+        #region [ Binary Encoding Class ]
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class BinaryEncoding : ByteEncoding
@@ -267,12 +268,12 @@ namespace TVA
                     }
                     else
                     {
-                        throw (new ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", "binaryData"));
+                        throw new ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", "binaryData");
                     }
                 }
                 else
                 {
-                    throw (new ArgumentNullException("binaryData", "Input string cannot be null or empty"));
+                    throw new ArgumentNullException("binaryData", "Input string cannot be null or empty");
                 }
             }
 
@@ -338,7 +339,7 @@ namespace TVA
 
         #endregion
 
-        #region " Base64 Encoding Class "
+        #region [ Base64 Encoding Class ]
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class Base64Encoding : ByteEncoding
@@ -393,7 +394,7 @@ namespace TVA
 
         #endregion
 
-        #region " ASCII Encoding Class "
+        #region [ ASCII Encoding Class ]
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class ASCIIEncoding : ByteEncoding
@@ -448,8 +449,10 @@ namespace TVA
 
         #endregion
 
+        // Constants
         public const char NoSpacing = char.MinValue;
 
+        // Static Fields
         private static ByteEncoding m_hexadecimalEncoding;
         private static ByteEncoding m_decimalEncoding;
         private static ByteEncoding m_bigEndianBinaryEncoding;
@@ -457,10 +460,80 @@ namespace TVA
         private static ByteEncoding m_base64Encoding;
         private static ByteEncoding m_asciiEncoding;
 
-        private ByteEncoding()
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>Encodes given buffer into a user presentable representation.</summary>
+        /// <param name="bytes">Bytes to encode.</param>
+        public virtual string GetString(byte[] bytes)
         {
-            // This class contains only global functions and is not meant to be instantiated.
+            return GetString(bytes, NoSpacing);
         }
+
+        /// <summary>Encodes given buffer into a user presentable representation.</summary>
+        /// <param name="bytes">Bytes to encode.</param>
+        /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        /// <returns>String of encoded bytes.</returns>
+        public virtual string GetString(byte[] bytes, char spacingCharacter)
+        {
+            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+            return GetString(bytes, 0, bytes.Length, spacingCharacter);
+        }
+
+        /// <summary>Encodes given buffer into a user presentable representation.</summary>
+        /// <param name="bytes">Bytes to encode.</param>
+        /// <param name="offset">Offset into buffer to begin encoding.</param>
+        /// <param name="length">Length of buffer to encode.</param>
+        /// <returns>String of encoded bytes.</returns>
+        public virtual string GetString(byte[] bytes, int offset, int length)
+        {
+            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+            return GetString(bytes, offset, length, NoSpacing);
+        }
+
+        /// <summary>Encodes given buffer into a user presentable representation.</summary>
+        /// <param name="bytes">Bytes to encode.</param>
+        /// <param name="offset">Offset into buffer to begin encoding.</param>
+        /// <param name="length">Length of buffer to encode.</param>
+        /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
+        /// <returns>String of encoded bytes.</returns>
+        public abstract string GetString(byte[] bytes, int offset, int length, char spacingCharacter);
+
+        /// <summary>Decodes given string back into a byte buffer.</summary>
+        /// <param name="value">Encoded string to decode.</param>
+        /// <returns>Decoded bytes.</returns>
+        public virtual byte[] GetBytes(string value)
+        {
+            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value", "Input string cannot be null");
+            return GetBytes(value, NoSpacing);
+        }
+
+        /// <summary>Decodes given string back into a byte buffer.</summary>
+        /// <param name="value">Encoded string to decode.</param>
+        /// <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
+        /// <returns>Decoded bytes</returns>
+        public abstract byte[] GetBytes(string value, char spacingCharacter);
+
+        /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
+        protected string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
+        {
+            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+
+            StringBuilder byteString = new StringBuilder();
+
+            for (int x = 0; x <= length - 1; x++)
+            {
+                if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
+                byteString.Append(bytes[x + offset].ToString(format));
+            }
+
+            return byteString.ToString();
+        }
+
+        #endregion
+
+        #region [ Static ]
 
         /// <summary>Handles encoding and decoding of a byte buffer into a hexadecimal-based presentation format.</summary>
         public static ByteEncoding Hexadecimal
@@ -534,76 +607,6 @@ namespace TVA
             }
         }
 
-        #region " Inheritable Functionality "
-
-        /// <summary>Encodes given buffer into a user presentable representation.</summary>
-        /// <param name="bytes">Bytes to encode.</param>
-
-        public virtual string GetString(byte[] bytes)
-        {
-            return GetString(bytes, NoSpacing);
-        }
-
-        /// <summary>Encodes given buffer into a user presentable representation.</summary>
-        /// <param name="bytes">Bytes to encode.</param>
-        /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
-        /// <returns>String of encoded bytes.</returns>
-        public virtual string GetString(byte[] bytes, char spacingCharacter)
-        {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
-            return GetString(bytes, 0, bytes.Length, spacingCharacter);
-        }
-
-        /// <summary>Encodes given buffer into a user presentable representation.</summary>
-        /// <param name="bytes">Bytes to encode.</param>
-        /// <param name="offset">Offset into buffer to begin encoding.</param>
-        /// <param name="length">Length of buffer to encode.</param>
-        /// <returns>String of encoded bytes.</returns>
-        public virtual string GetString(byte[] bytes, int offset, int length)
-        {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
-            return GetString(bytes, offset, length, NoSpacing);
-        }
-
-        /// <summary>Encodes given buffer into a user presentable representation.</summary>
-        /// <param name="bytes">Bytes to encode.</param>
-        /// <param name="offset">Offset into buffer to begin encoding.</param>
-        /// <param name="length">Length of buffer to encode.</param>
-        /// <param name="spacingCharacter">Spacing character to place between encoded bytes.</param>
-        /// <returns>String of encoded bytes.</returns>
-        public abstract string GetString(byte[] bytes, int offset, int length, char spacingCharacter);
-
-        /// <summary>Decodes given string back into a byte buffer.</summary>
-        /// <param name="value">Encoded string to decode.</param>
-        /// <returns>Decoded bytes.</returns>
-        public virtual byte[] GetBytes(string value)
-        {
-            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value", "Input string cannot be null");
-            return GetBytes(value, NoSpacing);
-        }
-
-        /// <summary>Decodes given string back into a byte buffer.</summary>
-        /// <param name="value">Encoded string to decode.</param>
-        /// <param name="spacingCharacter">Original spacing character that was inserted between encoded bytes.</param>
-        /// <returns>Decoded bytes</returns>
-        public abstract byte[] GetBytes(string value, char spacingCharacter);
-
-        /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
-        protected string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
-        {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
-
-            StringBuilder byteString = new StringBuilder();
-
-            for (int x = 0; x <= length - 1; x++)
-            {
-                if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
-                byteString.Append(bytes[x + offset].ToString(format));
-            }
-
-            return byteString.ToString();
-        }
-
-        #endregion
+        #endregion        
     }
 }
