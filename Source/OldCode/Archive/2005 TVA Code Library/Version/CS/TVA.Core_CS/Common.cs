@@ -67,7 +67,7 @@ namespace TVA
         /// <summary>
         /// The application is a web site or web application.
         /// </summary>
-        Web = 15
+        Web = 100
     }
 
     #endregion
