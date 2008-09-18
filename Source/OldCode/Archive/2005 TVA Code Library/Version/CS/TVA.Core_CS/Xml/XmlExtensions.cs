@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Xml.XmlExtensions.vb - Defines extension functions related to Xml elements
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  XmlExtensions.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -29,7 +29,7 @@ using System.Data;
 
 namespace TVA.Xml
 {
-    /// <summary>Defines common global functions related to XML data.</summary>
+    /// <summary>Defines extension functions related to Xml elements.</summary>
     public static class XmlExtensions
     {
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
