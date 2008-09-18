@@ -1,14 +1,12 @@
 //*******************************************************************************************************
-//  TVA.Common.vb - Globally available common functions
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  Common.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
-//
-//  This is the location for handy miscellaneous functions that are difficult to categorize elsewhere
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -88,12 +86,31 @@ public enum TimeZoneName
     StandardName
 }
 
+/// <summary>Time names enumeration used by SecondsToText function.</summary>
+public struct TimeName
+{
+    static public int Year = 0;
+    static public int Years = 1;
+    static public int Day = 2;
+    static public int Days = 3;
+    static public int Hour = 4;
+    static public int Hours = 5;
+    static public int Minute = 6;
+    static public int Minutes = 7;
+    static public int Second = 8;
+    static public int Seconds = 9;
+    static public int LessThan60Seconds = 10;
+    static public int NoSeconds = 11;
+}
+
 #endregion
+
+//  This is the location for handy miscellaneous functions that are difficult to categorize elsewhere
 
 /// <summary>Defines common global functions.</summary>
 public static class Common
 {
-    #region [ TVA.Common Functions ]
+    #region [ Common Functions ]
 
     /// <summary>Returns one of two strongly-typed objects.</summary>
     /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
@@ -220,20 +237,20 @@ public static class Common
     }
 
     /// <summary>Determines if given item is a reference type.</summary>
-    public static bool IsReference(object item)
+    public static bool IsReference(this object item)
     {
         return !(item is ValueType);
     }
 
     /// <summary>Determines if given item is a reference type but not a string.</summary>
-    public static bool IsNonStringReference(object item)
+    public static bool IsNonStringReference(this object item)
     {
-        return (IsReference(item) && !(item is string));
+        return (item.IsReference() && !(item is string));
     }
 
     #endregion
 
-    #region [ TVA.Collections.Common Functions ]
+    #region [ Collection Functions ]
 
     /*-----------------------------------------------------------------------------------------------------*\
      *
@@ -314,31 +331,13 @@ public static class Common
 
     #endregion
 
-    #region [ TVA.DateTime.Common Functions ]
+    #region [ DateTime Functions ]
 
     /*-----------------------------------------------------------------------------------------------------*\
      *
      *                    These functions were migrated here from TVA.DateTime.Common
      *                  
     \*-----------------------------------------------------------------------------------------------------*/
-
-
-    /// <summary>Time names enumeration used by SecondsToText function.</summary>
-    public struct TimeName
-    {
-        static public int Year = 0;
-        static public int Years = 1;
-        static public int Day = 2;
-        static public int Days = 3;
-        static public int Hour = 4;
-        static public int Hours = 5;
-        static public int Minute = 6;
-        static public int Minutes = 7;
-        static public int Second = 8;
-        static public int Seconds = 9;
-        static public int LessThan60Seconds = 10;
-        static public int NoSeconds = 11;
-    }
 
     /// <summary>Number of 100-nanosecond ticks in one second.</summary>
     public const long TicksPerSecond = 10000000;
@@ -355,13 +354,13 @@ public static class Common
     /// <summary>Converts 100-nanosecond tick intervals to seconds.</summary>
     public static double TicksToSeconds(long ticks)
     {
-        return ticks / TicksPerSecond;
+        return ticks / (double)TicksPerSecond;
     }
 
     /// <summary>Converts 100-nanosecond tick intervals to milliseconds.</summary>
     public static double TicksToMilliseconds(long ticks)
     {
-        return ticks / TicksPerMillisecond;
+        return ticks / (double)TicksPerMillisecond;
     }
 
     /// <summary>Converts seconds to 100-nanosecond tick intervals.</summary>
@@ -592,7 +591,7 @@ public static class Common
 
     #endregion
 
-    #region [ TVA.Data.Common Functions ]
+    #region [Data Functions ]
 
     /*-----------------------------------------------------------------------------------------------------*\
      *
@@ -754,7 +753,7 @@ public static class Common
 
     #endregion
 
-    #region [ TVA.Math.Common Functions ]
+    #region [ Math Functions ]
 
     /*-----------------------------------------------------------------------------------------------------*\
      *
