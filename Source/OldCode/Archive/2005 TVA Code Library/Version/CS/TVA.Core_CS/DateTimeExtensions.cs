@@ -181,7 +181,7 @@ namespace TVA
             if (lagTime <= 0) throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
             if (leadTime <= 0) throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            double distance = Common.TicksToSeconds(currentTicks - testTicks);
+            double distance = Ticks.ToSeconds(currentTicks - testTicks);
 
             return (distance >= -leadTime && distance <= lagTime);
         }

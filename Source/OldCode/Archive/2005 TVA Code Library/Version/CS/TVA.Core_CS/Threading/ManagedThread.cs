@@ -21,6 +21,7 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
+using TVA;
 
 namespace TVA.Threading
 {
@@ -239,7 +240,7 @@ namespace TVA.Threading
                 if (processingTime < 0)
                     processingTime = 0;
 
-                return TVA.DateTime.Common.TicksToSeconds(processingTime);
+                return TVA.DateTime.Time.TicksToSeconds(processingTime);
             }
         }
 

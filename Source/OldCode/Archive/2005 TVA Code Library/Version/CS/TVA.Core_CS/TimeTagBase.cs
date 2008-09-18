@@ -63,7 +63,7 @@ namespace TVA
         {
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = Common.TicksToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
+            Value = Seconds.TicksToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
         }
 
         #endregion

@@ -82,7 +82,13 @@
   <ItemGroup>
     <Compile Include="CheckSum.cs" />
     <Compile Include="CurveFit.cs" />
+    <Compile Include="Milliseconds.cs" />
+    <Compile Include="NumericExtensions.cs" />
+    <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Random.cs" />
+    <Compile Include="Seconds.cs" />
+    <Compile Include="Ticks.cs" />
+    <Compile Include="TypeExtensions.cs" />
     <Compile Include="USTimeZones.cs" />
     <Compile Include="Diagnostics\PerformanceCounter.cs" />
     <Compile Include="Diagnostics\PerformanceMonitor.cs" />

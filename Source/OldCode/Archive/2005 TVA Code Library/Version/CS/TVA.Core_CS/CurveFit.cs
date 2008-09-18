@@ -88,7 +88,7 @@ namespace TVA
             {
                 get
                 {
-                    return (m_regressionInterval + Common.TicksToSeconds(DateTime.Now.Ticks - m_slopeRun.Ticks));
+                    return (m_regressionInterval + Seconds.TicksToSeconds(DateTime.Now.Ticks - m_slopeRun.Ticks));
                 }
             }
 
@@ -126,7 +126,7 @@ namespace TVA
                     ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(PerformCalculation);
                     thread.Name = "TVA.Math.RealTimeSlope.PerformCalculation()";
 #else
-                ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(PerformCalculation));
+                    ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(PerformCalculation));
 #endif
                 }
             }

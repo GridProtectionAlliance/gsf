@@ -357,7 +357,7 @@ namespace TVA.Measurements
 
                 if (processingTime < 0) processingTime = 0;
 
-                return Common.TicksToSeconds(processingTime);
+                return Seconds.TicksToSeconds(processingTime);
             }
         }
 
