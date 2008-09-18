@@ -1,17 +1,17 @@
 ﻿//*******************************************************************************************************
-//  TVA.Reflection.Extensions.vb - Defines extension functions related to Assemblies
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ReflectionExtensions.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
-//       Email: pcpatel@tva.gov
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/12/2008 - J. Ritchie Carroll
-//      Generated original version of source code.
+//  09/12/2008 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -22,6 +22,7 @@ using System.Collections.Specialized;
 
 namespace TVA.Reflection
 {
+    /// <summary>Defines extension functions related to Assemblies.</summary>
     public static class ReflectionExtensions
     {
         /// <summary>Returns only assembly name and version from full assembly name.</summary>
