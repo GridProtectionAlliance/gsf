@@ -1,12 +1,12 @@
 //*******************************************************************************************************
-//  ObjectState.vb - Generic object state class
-//  Copyright © 2005 - TVA, all rights reserved - Gbtc
+//  ObjectState.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
-//       Email: pcpatel@tva.gov
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -19,75 +19,66 @@
 
 using System;
 
-namespace TVA
+/// <summary>Generic object state class.</summary>
+/// <remarks>Tracks current and previous states of a labeled object.</remarks>
+/// <typeparam name="TState">Object state to track.</typeparam>
+[Serializable()]
+public class ObjectState<TState>
 {
-    /// <summary>
-    /// Generic object state class.
-    /// </summary>
-    /// <remarks>
-    /// Tracks current and previous states of a labeled object.
-    /// </remarks>
-    /// <typeparam name="TState">Object state to track.</typeparam>
-    [Serializable()]
-    public class ObjectState<TState>
+    private string m_objectName;
+    private TState m_currentState;
+    private TState m_previousState;
+
+    public ObjectState(string objectName)
+        :this(objectName, default(TState))
     {
-        #region " Member Declaration "
+    }
 
-        private string m_objectName;
-        private TState m_currentState;
-        private TState m_previousState;
+    public ObjectState(string objectName, TState currentState)
+        :this(objectName, default(TState), currentState)
+    {
+    }
 
-        #endregion
+    public ObjectState(string objectName, TState previousState, TState currentState)
+    {
+        m_objectName = objectName;
+        m_currentState = currentState;
+        m_previousState = previousState;
+    }
 
-        #region " Code Scope: Public "
-
-        public ObjectState(string objectName) : this(objectName, default(TState)) { }
-
-        public ObjectState(string objectName, TState currentState) : this(objectName, default(TState), currentState) { }
-
-        public ObjectState(string objectName, TState previousState, TState currentState)
+    public string ObjectName
+    {
+        get
         {
-            m_objectName = objectName;
-            m_currentState = currentState;
-            m_previousState = previousState;
+            return m_objectName;
         }
-
-        public string ObjectName
+        set
         {
-            get
-            {
-                return m_objectName;
-            }
-            set
-            {
-                m_objectName = value;
-            }
+            m_objectName = value;
         }
+    }
 
-        public TState CurrentState
+    public TState CurrentState
+    {
+        get
         {
-            get
-            {
-                return m_currentState;
-            }
-            set
-            {
-                m_currentState = value;
-            }
+            return m_currentState;
         }
-
-        public TState PreviousState
+        set
         {
-            get
-            {
-                return m_previousState;
-            }
-            set
-            {
-                m_previousState = value;
-            }
+            m_currentState = value;
         }
+    }
 
-        #endregion
+    public TState PreviousState
+    {
+        get
+        {
+            return m_previousState;
+        }
+        set
+        {
+            m_previousState = value;
+        }
     }
 }
