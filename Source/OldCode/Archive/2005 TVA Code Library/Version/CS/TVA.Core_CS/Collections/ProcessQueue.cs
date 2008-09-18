@@ -2809,7 +2809,7 @@ namespace TVA.Collections
         /// <summary>
         /// Gets an enumerator of all items within the queue.
         /// </summary>
-        public IEnumerator GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable)m_processQueue).GetEnumerator();
         }

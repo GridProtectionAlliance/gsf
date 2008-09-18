@@ -18,6 +18,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace TVA.Collections
@@ -200,14 +201,9 @@ namespace TVA.Collections
             return m_list.GetEnumerator();
         }
 
-        public IEnumerator GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.IEnumerableGetEnumerator();
-        }
-
-        public IEnumerator IEnumerableGetEnumerator()
-        {
-            return ((System.Collections.IEnumerable)m_list).GetEnumerator();
+            return ((IEnumerable)m_list).GetEnumerator();
         }
 
         // Generic IDictionary(Of TKey, TValue) Methods
