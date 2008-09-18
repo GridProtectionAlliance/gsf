@@ -41,25 +41,18 @@ using System.ComponentModel;
 
 namespace TVA.Data
 {
-    #region [ Enumerations ]
-
-    /// <summary>
-    /// Types of data providers.
-    /// </summary>
-    private enum ConnectionType
-    {
-        OleDb,
-        SqlClient,
-        OracleClient
-    }
-
-    #endregion
-
     /// <summary>
     /// Defines handy database connection extension functions.
     /// </summary>
     public static class DataExtensions
     {
+        private enum ConnectionType
+        {
+            OleDb,
+            SqlClient,
+            OracleClient
+        }
+
         /// <summary>
         /// The default timeout duration used for executing SQL statements when timeout duration is not specified.
         /// </summary>
