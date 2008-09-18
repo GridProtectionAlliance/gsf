@@ -60,9 +60,9 @@ namespace TVA
         }
 
         /// <summary>Converts seconds to milliseconds.</summary>
-        public static double ToTicks(double seconds)
+        public static double ToMilliseconds(double seconds)
         {
-            return seconds * 1000.0D;
+            return seconds * Milliseconds.PerSecond;
         }
 
         /// <summary>Turns the given number of seconds into textual representation of years, days, hours, minutes and whole integer seconds.</summary>
