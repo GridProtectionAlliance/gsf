@@ -26,7 +26,7 @@ namespace TVA
         /// <summary>Number of milliseconds in one second.</summary>
         public const int PerSecond = 1000;
 
-        /// <summary>Fractional mumber of milliseconds in one tick.</summary>
+        /// <summary>Fractional number of milliseconds in one tick.</summary>
         public const double PerTick = 1.0D / Ticks.PerMillisecond;
 
         /// <summary>Converts milliseconds to 100-nanosecond tick intervals.</summary>
