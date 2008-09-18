@@ -20,142 +20,145 @@
 using System;
 using System.Security.Cryptography;
 
-/// <summary>Generates cryptographically strong random numbers.</summary>
-public static class Random
+namespace TVA
 {
-    private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
-
-    /// <summary>Generates a cryptographically strong double-precision floating-point random number between zero and one.</summary>
-    public static double Number
+    /// <summary>Generates cryptographically strong random numbers.</summary>
+    public static class Random
     {
-        get
+        private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
+
+        /// <summary>Generates a cryptographically strong double-precision floating-point random number between zero and one.</summary>
+        public static double Number
         {
-            unchecked
+            get
             {
-                return (double)((uint)Int32) / (double)uint.MaxValue;
+                unchecked
+                {
+                    return (double)((uint)Int32) / (double)uint.MaxValue;
+                }
             }
         }
-    }
 
-    /// <summary>Generates a cryptographically strong random decimal between zero and one.</summary>
-    public static decimal Decimal
-    {
-        get
+        /// <summary>Generates a cryptographically strong random decimal between zero and one.</summary>
+        public static decimal Decimal
         {
-            unchecked
+            get
             {
-                return (decimal)((ulong)Int64) / (decimal)ulong.MaxValue;
+                unchecked
+                {
+                    return (decimal)((ulong)Int64) / (decimal)ulong.MaxValue;
+                }
             }
         }
-    }
 
-    /// <summary>Generates a cryptographically strong random integer between specified values.</summary>
-    public static double Between(double startNumber, double stopNumber)
-    {
-        if (stopNumber < startNumber)
-            throw new ArgumentException("stopNumber must be greater than startNumber");
-
-        return Number * (stopNumber - startNumber) + startNumber;
-    }
-
-    /// <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
-    public static bool Boolean
-    {
-        get
+        /// <summary>Generates a cryptographically strong random integer between specified values.</summary>
+        public static double Between(double startNumber, double stopNumber)
         {
-            byte[] value = new byte[1];
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
 
-            m_randomNumberGenerator.GetBytes(value);
-
-            return (value[0] % 2 == 0 ? true : false);
+            return Number * (stopNumber - startNumber) + startNumber;
         }
-    }
 
-    /// <summary>Generates a cryptographically strong 8-bit random integer.</summary>
-    public static byte Byte
-    {
-        get
+        /// <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
+        public static bool Boolean
         {
-            byte[] value = new byte[1];
+            get
+            {
+                byte[] value = new byte[1];
 
-            m_randomNumberGenerator.GetBytes(value);
+                m_randomNumberGenerator.GetBytes(value);
 
-            return value[0];
+                return (value[0] % 2 == 0 ? true : false);
+            }
         }
-    }
 
-    /// <summary>Generates a cryptographically strong 8-bit random integer between specified values.</summary>
-    public static byte ByteBetween(byte startNumber, byte stopNumber)
-    {
-        if (stopNumber < startNumber)
-            throw new ArgumentException("stopNumber must be greater than startNumber");
-
-        return (byte)(Number * (stopNumber - startNumber) + startNumber);
-    }
-
-    /// <summary>Generates a cryptographically strong 16-bit random integer.</summary>
-    public static short Int16
-    {
-        get
+        /// <summary>Generates a cryptographically strong 8-bit random integer.</summary>
+        public static byte Byte
         {
-            byte[] value = new byte[2];
+            get
+            {
+                byte[] value = new byte[1];
 
-            m_randomNumberGenerator.GetBytes(value);
+                m_randomNumberGenerator.GetBytes(value);
 
-            return BitConverter.ToInt16(value, 0);
+                return value[0];
+            }
         }
-    }
 
-    /// <summary>Generates a cryptographically strong 16-bit random integer between specified values.</summary>
-    public static short Int16Between(short startNumber, short stopNumber)
-    {
-        if (stopNumber < startNumber)
-            throw new ArgumentException("stopNumber must be greater than startNumber");
-
-        return (short)(Number * (stopNumber - startNumber) + startNumber);
-    }
-
-    /// <summary>Generates a cryptographically strong 32-bit random integer.</summary>
-    public static int Int32
-    {
-        get
+        /// <summary>Generates a cryptographically strong 8-bit random integer between specified values.</summary>
+        public static byte ByteBetween(byte startNumber, byte stopNumber)
         {
-            byte[] value = new byte[4];
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
 
-            m_randomNumberGenerator.GetBytes(value);
-
-            return BitConverter.ToInt32(value, 0);
+            return (byte)(Number * (stopNumber - startNumber) + startNumber);
         }
-    }
 
-    /// <summary>Generates a cryptographically strong 32-bit random integer between specified values.</summary>
-    public static int Int32Between(int startNumber, int stopNumber)
-    {
-        if (stopNumber < startNumber)
-            throw new ArgumentException("stopNumber must be greater than startNumber");
-
-        return (int)(Number * (stopNumber - startNumber) + startNumber);
-    }
-
-    /// <summary>Generates a cryptographically strong 64-bit random integer.</summary>
-    public static long Int64
-    {
-        get
+        /// <summary>Generates a cryptographically strong 16-bit random integer.</summary>
+        public static short Int16
         {
-            byte[] value = new byte[8];
+            get
+            {
+                byte[] value = new byte[2];
 
-            m_randomNumberGenerator.GetBytes(value);
+                m_randomNumberGenerator.GetBytes(value);
 
-            return BitConverter.ToInt64(value, 0);
+                return BitConverter.ToInt16(value, 0);
+            }
         }
-    }
 
-    /// <summary>Generates a cryptographically strong 64-bit random integer between specified values.</summary>
-    public static long Int64Between(long startNumber, long stopNumber)
-    {
-        if (stopNumber < startNumber)                
-            throw new ArgumentException("stopNumber must be greater than startNumber");
+        /// <summary>Generates a cryptographically strong 16-bit random integer between specified values.</summary>
+        public static short Int16Between(short startNumber, short stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
 
-        return (long)(Number * (stopNumber - startNumber) + startNumber);
+            return (short)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
+        /// <summary>Generates a cryptographically strong 32-bit random integer.</summary>
+        public static int Int32
+        {
+            get
+            {
+                byte[] value = new byte[4];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return BitConverter.ToInt32(value, 0);
+            }
+        }
+
+        /// <summary>Generates a cryptographically strong 32-bit random integer between specified values.</summary>
+        public static int Int32Between(int startNumber, int stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (int)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
+        /// <summary>Generates a cryptographically strong 64-bit random integer.</summary>
+        public static long Int64
+        {
+            get
+            {
+                byte[] value = new byte[8];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return BitConverter.ToInt64(value, 0);
+            }
+        }
+
+        /// <summary>Generates a cryptographically strong 64-bit random integer between specified values.</summary>
+        public static long Int64Between(long startNumber, long stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (long)(Number * (stopNumber - startNumber) + startNumber);
+        }
     }
 }

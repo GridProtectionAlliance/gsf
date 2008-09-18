@@ -17,52 +17,55 @@
 
 using System;
 
-/// <summary>Defines a few common US timezones.</summary>
-public static class USTimeZones
+namespace TVA
 {
-    // We define a few common timezones for convenience.
-    private static TimeZoneInfo m_easternTimeZone;
-    private static TimeZoneInfo m_centralTimeZone;
-    private static TimeZoneInfo m_mountainTimeZone;
-    private static TimeZoneInfo m_pacificTimeZone;
-
-    /// <summary>Gets Eastern Time Zone.</summary>
-    public static TimeZoneInfo EasternTimeZone
+    /// <summary>Defines a few common US timezones.</summary>
+    public static class USTimeZones
     {
-        get
+        // We define a few common timezones for convenience.
+        private static TimeZoneInfo m_easternTimeZone;
+        private static TimeZoneInfo m_centralTimeZone;
+        private static TimeZoneInfo m_mountainTimeZone;
+        private static TimeZoneInfo m_pacificTimeZone;
+
+        /// <summary>Gets Eastern Time Zone.</summary>
+        public static TimeZoneInfo EasternTimeZone
         {
-            if (m_easternTimeZone == null) m_easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-            return m_easternTimeZone;
+            get
+            {
+                if (m_easternTimeZone == null) m_easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                return m_easternTimeZone;
+            }
         }
-    }
 
-    /// <summary>Gets Central Time Zone.</summary>
-    public static TimeZoneInfo CentralTimeZone
-    {
-        get
+        /// <summary>Gets Central Time Zone.</summary>
+        public static TimeZoneInfo CentralTimeZone
         {
-            if (m_centralTimeZone == null) m_centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
-            return m_centralTimeZone;
+            get
+            {
+                if (m_centralTimeZone == null) m_centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                return m_centralTimeZone;
+            }
         }
-    }
 
-    /// <summary>Gets Mountain Time Zone.</summary>
-    public static TimeZoneInfo MountainTimeZone
-    {
-        get
+        /// <summary>Gets Mountain Time Zone.</summary>
+        public static TimeZoneInfo MountainTimeZone
         {
-            if (m_mountainTimeZone == null) m_mountainTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Mountain Standard Time");
-            return m_mountainTimeZone;
+            get
+            {
+                if (m_mountainTimeZone == null) m_mountainTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Mountain Standard Time");
+                return m_mountainTimeZone;
+            }
         }
-    }
 
-    /// <summary>Gets Pacific Standard Time Zone.</summary>
-    public static TimeZoneInfo PacificTimeZone
-    {
-        get
+        /// <summary>Gets Pacific Standard Time Zone.</summary>
+        public static TimeZoneInfo PacificTimeZone
         {
-            if (m_pacificTimeZone == null) m_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
-            return m_pacificTimeZone;
+            get
+            {
+                if (m_pacificTimeZone == null) m_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+                return m_pacificTimeZone;
+            }
         }
     }
 }

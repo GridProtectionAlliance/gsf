@@ -23,106 +23,109 @@
 
 using System;
 
-/// <summary>Temporarily caches composite values until all values been received, so that a compound value can be created.</summary>
-public class CompositeValues
+namespace TVA
 {
-    #region [ Members ]
-
-    // Nested Types
-    private struct CompositeValue
+    /// <summary>Temporarily caches composite values until all values been received, so that a compound value can be created.</summary>
+    public class CompositeValues
     {
-        public double Value;
-        public bool Received;
-    }
+        #region [ Members ]
 
-    // Fields
-    private CompositeValue[] m_compositeValues;
-    private bool m_allReceived;
-
-    #endregion
-
-    #region [ Constructors ]
-
-    /// <summary>Creates a new instance of the CompositeValues class, specifing the total number of composite values to track.</summary>
-    /// <param name="count">Total number of composite values to track.</param>
-    public CompositeValues(int count)
-    {
-        m_compositeValues = new CompositeValue[count];
-    }
-
-    #endregion
-
-    #region [ Properties ]
-
-    /// <summary>Gets or sets the composite value at the specified index in composite value collection.</summary>
-    /// <param name="index">The zero-based index of the composite value to get or set.</param>
-    /// <returns>The composite value at the specified index in composite value collection.</returns>
-    public double this[int index]
-    {
-        get
+        // Nested Types
+        private struct CompositeValue
         {
-            return m_compositeValues[index].Value;
+            public double Value;
+            public bool Received;
         }
-        set
-        {
-            CompositeValue compositeValue = m_compositeValues[index];
-            compositeValue.Value = value;
-            compositeValue.Received = true;
-        }
-    }
 
-    /// <summary>Gets the number of composite values in the composite value collection.</summary>
-    /// <returns>To be provided.</returns>
-    public int Count
-    {
-        get
-        {
-            return m_compositeValues.Length;
-        }
-    }
+        // Fields
+        private CompositeValue[] m_compositeValues;
+        private bool m_allReceived;
 
-    /// <summary>Gets a boolean value indicating if all composite values are received.</summary>
-    /// <returns>True, if all composite values are received; otherwise, false.</returns>
-    public bool AllReceived
-    {
-        get
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>Creates a new instance of the CompositeValues class, specifing the total number of composite values to track.</summary>
+        /// <param name="count">Total number of composite values to track.</param>
+        public CompositeValues(int count)
         {
-            if (m_allReceived)
+            m_compositeValues = new CompositeValue[count];
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>Gets or sets the composite value at the specified index in composite value collection.</summary>
+        /// <param name="index">The zero-based index of the composite value to get or set.</param>
+        /// <returns>The composite value at the specified index in composite value collection.</returns>
+        public double this[int index]
+        {
+            get
             {
-                return true;
+                return m_compositeValues[index].Value;
             }
-            else
+            set
             {
-                bool allValuesReceived = true;
+                CompositeValue compositeValue = m_compositeValues[index];
+                compositeValue.Value = value;
+                compositeValue.Received = true;
+            }
+        }
 
-                for (int x = 0; x <= m_compositeValues.Length - 1; x++)
+        /// <summary>Gets the number of composite values in the composite value collection.</summary>
+        /// <returns>To be provided.</returns>
+        public int Count
+        {
+            get
+            {
+                return m_compositeValues.Length;
+            }
+        }
+
+        /// <summary>Gets a boolean value indicating if all composite values are received.</summary>
+        /// <returns>True, if all composite values are received; otherwise, false.</returns>
+        public bool AllReceived
+        {
+            get
+            {
+                if (m_allReceived)
                 {
-                    if (!m_compositeValues[x].Received)
-                    {
-                        allValuesReceived = false;
-                        break;
-                    }
+                    return true;
                 }
+                else
+                {
+                    bool allValuesReceived = true;
 
-                if (allValuesReceived)
-                    m_allReceived = true;
+                    for (int x = 0; x <= m_compositeValues.Length - 1; x++)
+                    {
+                        if (!m_compositeValues[x].Received)
+                        {
+                            allValuesReceived = false;
+                            break;
+                        }
+                    }
 
-                return allValuesReceived;
+                    if (allValuesReceived)
+                        m_allReceived = true;
+
+                    return allValuesReceived;
+                }
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>Gets a boolean value indicating if composite value at the specified index is received.</summary>
+        /// <param name="index">The zero-based index of the composite value.</param>
+        /// <returns>True, if composite value at the specified index is received; otherwise, false.</returns>
+        public bool Received(int index)
+        {
+            return m_compositeValues[index].Received;
+        }
+
+        #endregion
     }
-
-    #endregion
-
-    #region [ Methods ]
-
-    /// <summary>Gets a boolean value indicating if composite value at the specified index is received.</summary>
-    /// <param name="index">The zero-based index of the composite value.</param>
-    /// <returns>True, if composite value at the specified index is received; otherwise, false.</returns>
-    public bool Received(int index)
-    {
-        return m_compositeValues[index].Received;
-    }
-
-    #endregion
 }
