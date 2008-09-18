@@ -26,32 +26,29 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace TVA
+/// <summary>Standard Network Time Protocol Timetag.</summary>
+public class NtpTimeTag : TimeTagBase
 {
-    /// <summary>Standard Network Time Protocol Timetag.</summary>
-    public class NtpTimeTag : TimeTagBase
+    // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this
+    // date to get offset in ticks for later conversion.
+    private static long m_ntpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+
+    protected NtpTimeTag(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
-        // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this
-        // date to get offset in ticks for later conversion.
-        private static long m_ntpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+    }
 
-        protected NtpTimeTag(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+    /// <summary>Creates new NTP timetag, given number of seconds since 1/1/1900.</summary>
+    /// <param name="seconds">Number of seconds since 1/1/1900.</param>
+    public NtpTimeTag(double seconds)
+        : base(m_ntpDateOffsetTicks, seconds)
+    {
+    }
 
-        /// <summary>Creates new NTP timetag, given number of seconds since 1/1/1900.</summary>
-        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
-        public NtpTimeTag(double seconds)
-            : base(m_ntpDateOffsetTicks, seconds)
-        {
-        }
-
-        /// <summary>Creates new NTP timetag, given standard .NET DateTime.</summary>
-        /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1900).</param>
-        public NtpTimeTag(DateTime timestamp)
-            : base(m_ntpDateOffsetTicks, timestamp)
-        {
-        }
+    /// <summary>Creates new NTP timetag, given standard .NET DateTime.</summary>
+    /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1900).</param>
+    public NtpTimeTag(DateTime timestamp)
+        : base(m_ntpDateOffsetTicks, timestamp)
+    {
     }
 }
