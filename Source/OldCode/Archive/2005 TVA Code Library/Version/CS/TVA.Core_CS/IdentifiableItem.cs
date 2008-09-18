@@ -3,10 +3,10 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: Pinal C. Patel
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
-//       Phone: 423/751-2827
-//       Email: jrcarrol@tva.gov
+//       Phone: 423/751-2250
+//       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
