@@ -41,6 +41,20 @@ using System.ComponentModel;
 
 namespace TVA.Data
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Types of data providers.
+    /// </summary>
+    private enum ConnectionType
+    {
+        OleDb,
+        SqlClient,
+        OracleClient
+    }
+
+    #endregion
+
     /// <summary>
     /// Defines handy database connection extension functions.
     /// </summary>
@@ -51,7 +65,21 @@ namespace TVA.Data
         /// </summary>
         public const int DefaultTimeoutDuration = 30;
 
-        #region " ExecuteNonQuery Overloaded Functions "
+        #region [ SQL Encoding String Extension ]
+
+        /// <summary>
+        /// Performs SQL encoding on given T-SQL string.
+        /// </summary>
+        /// <param name="sql">The string on which SQL encoding is to be performed.</param>
+        /// <returns>The SQL encoded string.</returns>
+        public static string SqlEncode(this string sql)
+        {
+            return sql.Replace("\'", "\'\'").Replace("/*", "").Replace("--", "");
+        }
+
+        #endregion
+
+        #region [ ExecuteNonQuery Overloaded Functions ]
 
         /// <summary>
         /// Executes the SQL statement using .Net OleDb data provider, and returns the number of rows affected.
@@ -100,7 +128,7 @@ namespace TVA.Data
         {
             OleDbCommand command = new OleDbCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.OleDb, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteNonQuery();
         }
 
@@ -151,7 +179,7 @@ namespace TVA.Data
         {
             SqlCommand command = new SqlCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.SqlClient, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteNonQuery();
         }
 
@@ -176,13 +204,13 @@ namespace TVA.Data
         public static int ExecuteNonQuery(this OracleConnection connection, string sql, params object[] parameters)
         {
             OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(ConnectionType.OracleClient, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteNonQuery();
         }
 
         #endregion
 
-        #region " ExecuteReader Overloaded Functions "
+        #region [ ExecuteReader Overloaded Functions ]
 
         /// <summary>
         /// Executes the SQL statement using .Net OleDb data provider, and builds a data reader.
@@ -233,7 +261,7 @@ namespace TVA.Data
         {
             OleDbCommand command = new OleDbCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.OleDb, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteReader(behavior);
         }
 
@@ -286,7 +314,7 @@ namespace TVA.Data
         {
             SqlCommand command = new SqlCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.SqlClient, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteReader(behavior);
         }
 
@@ -336,13 +364,13 @@ namespace TVA.Data
         public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, CommandBehavior behavior, params object[] parameters)
         {
             OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(ConnectionType.OracleClient, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteReader(behavior);
         }
 
         #endregion
 
-        #region " ExecuteScalar Overloaded Functions "
+        #region [ ExecuteScalar Overloaded Functions ]
 
         /// <summary>
         /// Executes the SQL statement using .Net OleDb data provider, and returns the first column of the
@@ -395,7 +423,7 @@ namespace TVA.Data
         {
             OleDbCommand command = new OleDbCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.OleDb, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteScalar();
         }
 
@@ -450,7 +478,7 @@ namespace TVA.Data
         {
             SqlCommand command = new SqlCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.SqlClient, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteScalar();
         }
 
@@ -477,13 +505,13 @@ namespace TVA.Data
         public static object ExecuteScalar(this OracleConnection connection, string sql, params object[] parameters)
         {
             OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(ConnectionType.OracleClient, parameters);
+            command.PopulateParameters(parameters);
             return command.ExecuteScalar();
         }
 
         #endregion
 
-        #region " RetrieveRow Overloaded Functions "
+        #region [ RetrieveRow Overloaded Functions ]
 
         /// <summary>
         /// Executes the SQL statement using .Net OleDb data provider, and returns the first row in the resultset.
@@ -621,7 +649,7 @@ namespace TVA.Data
 
         #endregion
 
-        #region " RetrieveData Overloaded Functions "
+        #region [ RetrieveData Overloaded Functions ]
 
         /// <summary>
         /// Executes the SQL statement using .Net OleDb data provider, and returns the first table of resultset,
@@ -791,7 +819,7 @@ namespace TVA.Data
 
         #endregion
 
-        #region " RetrieveDataSet Overloaded Functions "
+        #region [ RetrieveDataSet Overloaded Functions ]
 
         /// <summary>
         /// Executes the SQL statement using .Net OleDb data provider, and returns the resultset that may contain
@@ -848,7 +876,7 @@ namespace TVA.Data
         {
             OleDbCommand command = new OleDbCommand(sql, connection);
 
-            command.PopulateParameters(ConnectionType.OleDb, parameters);
+            command.PopulateParameters(parameters);
             OleDbDataAdapter dataAdapter = new OleDbDataAdapter(command);
             DataSet data = new DataSet("Temp");
             dataAdapter.Fill(data, startRow, maxRows, "Table1");
@@ -911,7 +939,7 @@ namespace TVA.Data
         {
             SqlCommand command = new SqlCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(ConnectionType.SqlClient, parameters);
+            command.PopulateParameters(parameters);
             SqlDataAdapter dataAdapter = new SqlDataAdapter(command);
             DataSet data = new DataSet("Temp");
             dataAdapter.Fill(data, startRow, maxRows, "Table1");
@@ -971,7 +999,7 @@ namespace TVA.Data
         public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
         {
             OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(ConnectionType.OracleClient, parameters);
+            command.PopulateParameters(parameters);
             OracleDataAdapter dataAdapter = new OracleDataAdapter(command);
             DataSet data = new DataSet("Temp");
             dataAdapter.Fill(data, startRow, maxRows, "Table1");
@@ -981,7 +1009,7 @@ namespace TVA.Data
 
         #endregion
 
-        #region " UpdateData Overloaded Functions "
+        #region [ UpdateData Overloaded Functions ]
 
         /// <summary>
         /// Updates the underlying data of the System.Data.DataTable using .Net OleDb data provider, and
@@ -1030,19 +1058,46 @@ namespace TVA.Data
 
         #endregion
 
-        #region " Helpers "
+        #region [ Command Parameter Population Functions ]
 
-        // tmshults 12/10/2004 - Takes the passed Command Object queries, plus the parameters for the given StoredProcedure, and then populates
-        //                       the values of the command used to populate DataSets, Datatables, DataReaders; or, executes the required code
-        //                       with no need to return any data.
+        /// <summary>
+        ///  Takes the Command object and populates it with the given parameters.
+        /// </summary>
+        public static void PopulateParameters(this OleDbCommand command, object[] parameters)
+        {
+            command.PopulateParameters(ConnectionType.OleDb, parameters);
+        }
+
+        /// <summary>
+        ///  Takes the Command object and populates it with the given parameters.
+        /// </summary>
+        public static void PopulateParameters(this SqlCommand command, object[] parameters)
+        {
+            command.PopulateParameters(ConnectionType.SqlClient, parameters);
+        }
+
+        /// <summary>
+        ///  Takes the Command object and populates it with the given parameters.
+        /// </summary>
+        public static void PopulateParameters(this OracleCommand command, object[] parameters)
+        {
+            command.PopulateParameters(ConnectionType.OracleClient, parameters);
+        }
+
         private static void PopulateParameters(this IDbCommand command, ConnectionType connectionType, object[] parameters)
         {
+            // tmshults 12/10/2004
             if (parameters != null)
             {
-                if (command.CommandText.StartsWith("SELECT ", StringComparison.CurrentCultureIgnoreCase) ||
-                    command.CommandText.StartsWith("INSERT ", StringComparison.CurrentCultureIgnoreCase) ||
-                    command.CommandText.StartsWith("UPDATE ", StringComparison.CurrentCultureIgnoreCase) ||
-                    command.CommandText.StartsWith("DELETE ", StringComparison.CurrentCultureIgnoreCase))
+                string commandText = command.CommandText;
+
+                if (string.IsNullOrEmpty(commandText))
+                    throw new ArgumentNullException("CommandText", "CommandText is null");
+
+                if (commandText.StartsWith("SELECT ", StringComparison.CurrentCultureIgnoreCase) ||
+                    commandText.StartsWith("INSERT ", StringComparison.CurrentCultureIgnoreCase) ||
+                    commandText.StartsWith("UPDATE ", StringComparison.CurrentCultureIgnoreCase) ||
+                    commandText.StartsWith("DELETE ", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // We assume the command to be of type Text if it begins with one of the common SQL keywords.
                     command.CommandType = CommandType.Text;
@@ -1095,6 +1150,162 @@ namespace TVA.Data
                 }
             }
         }
+
+        #endregion
+
+        #region [ CSV / DataTable Conversion Functions ]
+
+        /// <summary>
+        /// Converts a delimited string (created with to DataTable.ToDelimitedString) into a DataTable.
+        /// </summary>
+        /// <param name="delimitedData">The delimited text to be converted to DataTable.</param>
+        /// <param name="delimiter">The character(s) used for delimiting the text.</param>
+        /// <param name="header">True, if the delimited text contains header information; otherwise, false.</param>
+        /// <returns>A DataTable object.</returns>
+        public static DataTable ToDataTable(this string delimitedData, string delimiter, bool header)
+        {
+            DataTable table = new DataTable();
+            string pattern;
+
+            // Regex pattern that will be used to split the delimited data.
+            pattern = Regex.Escape(delimiter) + "(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))";
+
+            // Remove any leading and trailing whitespaces, carriage returns or line feeds.
+            delimitedData = delimitedData.Trim().Trim(new char[] { '\r', '\n' }).Replace("\n", "");
+
+            string[] lines = delimitedData.Split('\r'); //Splits delimited data into lines.
+
+            int cursor = 0;
+
+            // Assumes that the first line has header information.
+            string[] headers = Regex.Split(lines[cursor], pattern);
+
+            // Creates columns.
+            if (header)
+            {
+                // Uses the first row as header row.
+                for (int i = 0; i <= headers.Length - 1; i++)
+                {
+                    table.Columns.Add(new DataColumn(headers[i].Trim(new char[] { '\"' }))); //Remove any leading and trailing quotes from the column name.
+                }
+                cursor++;
+            }
+            else
+            {
+                for (int i = 0; i <= headers.Length - 1; i++)
+                {
+                    table.Columns.Add(new DataColumn());
+                }
+            }
+
+            // Populates the data table with csv data.
+            for (; cursor <= lines.Length - 1; cursor++)
+            {
+                // Creates new row.
+                DataRow row = table.NewRow();
+
+                // Populates the new row.
+                string[] fields = Regex.Split(lines[cursor], pattern);
+                for (int i = 0; i <= fields.Length - 1; i++)
+                {
+                    // Removes any leading and trailing quotes from the data.
+                    row[i] = fields[i].Trim(new char[] { '\"' });
+                }
+
+                // Adds the new row.
+                table.Rows.Add(row);
+            }
+
+            return table;
+        }
+
+        /// <summary>
+        /// Converts the DataTable to a multi-line delimited string (e.g., CSV export).
+        /// </summary>
+        /// <param name="table">The DataTable whose data is to be converted to delimited text.</param>
+        /// <param name="delimiter">The character(s) to be used for delimiting the text.</param>
+        /// <param name="quoted">True, if text is to be surrounded by quotes; otherwise, false.</param>
+        /// <param name="header">True, if the delimited text should have header information.</param>
+        /// <returns>A string of delimited text.</returns>
+        public static string ToDelimitedString(this DataTable table, string delimiter, bool quoted, bool header)
+        {
+            StringBuilder data = new StringBuilder();
+
+            //Uses the column names as the headers if headers are requested.
+            if (header)
+            {
+                for (int i = 0; i <= table.Columns.Count - 1; i++)
+                {
+                    data.Append((quoted ? "\"" : "") + table.Columns[i].ColumnName + (quoted ? "\"" : ""));
+
+                    if (i < table.Columns.Count - 1)
+                    {
+                        data.Append(delimiter);
+                    }
+                }
+                data.Append("\r\n");
+            }
+
+            for (int i = 0; i <= table.Rows.Count - 1; i++)
+            {
+                //Converts data table's data to delimited data.
+                for (int j = 0; j <= table.Columns.Count - 1; j++)
+                {
+                    data.Append((quoted ? "\"" : "") + table.Rows[i][j].ToString() + (quoted ? "\"" : ""));
+
+                    if (j < table.Columns.Count - 1)
+                    {
+                        data.Append(delimiter);
+                    }
+                }
+                data.Append("\r\n");
+            }
+
+            //Returns the delimited data.
+            return data.ToString();
+        }
+
+        #region [ Old Code ]
+
+        // This was never used
+        ///// <summary>
+        ///// Executes the SQL statement, and returns the number of rows affected.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connectString">The connection string used for connecting to the data source.</param>
+        ///// <param name="connectionType">The type of data provider to use for connecting to the data source and executing the SQL statement.</param>
+        ///// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        ///// <returns>The number of rows affected.</returns>
+        //public static int ExecuteNonQuery(string sql, string connectString, ConnectionType connectionType, int timeout)
+        //{
+        //    int executionResult = -1;
+        //    IDbConnection connection = null;
+        //    IDbCommand command = null;
+
+        //    switch (connectionType)
+        //    {
+        //        case ConnectionType.SqlClient:
+        //            connection = new SqlConnection(connectString);
+        //            command = new SqlCommand(sql, (SqlConnection)connection);
+        //            break;
+        //        case ConnectionType.OracleClient:
+        //            connection = new OracleConnection(connectString);
+        //            command = new OracleCommand(sql, (OracleConnection)connection);
+        //            break;
+        //        case ConnectionType.OleDb:
+        //            connection = new OleDbConnection(connectString);
+        //            command = new OleDbCommand(sql, (OleDbConnection)connection);
+        //            break;
+        //    }
+
+        //    connection.Open();
+        //    command.CommandTimeout = timeout;
+        //    executionResult = command.ExecuteNonQuery();
+        //    connection.Close();
+        //    return executionResult;
+        //}
+
+        #endregion
 
         #endregion
     }

@@ -164,9 +164,7 @@
     <Compile Include="Parsing\IBinaryDataConsumer.cs" />
     <Compile Include="Parsing\IBinaryDataProvider.cs" />
     <Compile Include="IdentifiableItem.cs" />
-    <Compile Include="Collections\Enumerations.cs" />
     <Compile Include="Configuration\Common.cs" />
-    <Compile Include="Data\Enumerations.cs" />
     <Compile Include="TimeTagBase.cs" />
     <Compile Include="Measurements\Frame.cs" />
     <Compile Include="Security\Cryptography\Common.cs" />
