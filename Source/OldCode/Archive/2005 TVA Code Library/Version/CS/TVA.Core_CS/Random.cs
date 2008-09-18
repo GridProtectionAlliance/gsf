@@ -23,17 +23,20 @@ using TVA.Interop;
 
 namespace TVA
 {
-    /// <summary>Generates a cryptographically strong random numbers.</summary>
+    /// <summary>Generates cryptographically strong random numbers.</summary>
     class Random
     {
         private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
 
-        /// <summary>Generates a cryptographically strong floating-point random number between zero and one.</summary>
+        /// <summary>Generates a cryptographically strong double-precision floating-point random number between zero and one.</summary>
         public static double Number
         {
             get
             {
-                return BitwiseCast.ToUInt32(Int32) / UInt32.MaxValue;
+                unchecked
+                {
+                    return (double)((uint)Int32) / (double)uint.MaxValue;
+                }
             }
         }
 
@@ -42,7 +45,10 @@ namespace TVA
         {
             get
             {
-                return (decimal)BitwiseCast.ToUInt64(Int64) / (decimal)UInt64.MaxValue;
+                unchecked
+                {
+                    return (decimal)((ulong)Int64) / (decimal)ulong.MaxValue;
+                }
             }
         }
 
