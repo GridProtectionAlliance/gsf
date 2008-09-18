@@ -160,7 +160,6 @@
     <Compile Include="Parsing\BinaryDataParserBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Enumerations.cs" />
     <Compile Include="GenericEventArgs.cs" />
     <Compile Include="Parsing\IBinaryDataConsumer.cs" />
     <Compile Include="Parsing\IBinaryDataProvider.cs" />

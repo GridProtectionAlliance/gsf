@@ -89,6 +89,8 @@ public enum TimeZoneName
 /// <summary>Time names enumeration used by SecondsToText function.</summary>
 public struct TimeName
 {
+    // Note that this is a structure so elements may be used as an index in
+    // a string array with having to cast as (int)
     static public int Year = 0;
     static public int Years = 1;
     static public int Day = 2;
