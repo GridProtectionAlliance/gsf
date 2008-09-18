@@ -204,9 +204,7 @@
     <Compile Include="Interop\IniFile.cs" />
     <Compile Include="IO\Common.cs" />
     <Compile Include="IO\FilePath.cs" />
-    <Compile Include="Math\Common.cs" />
-    <Compile Include="Math\CompositeValues.cs" />
-    <Compile Include="Math\RealTimeSlope.cs" />
+    <Compile Include="CompositeValues.cs" />
     <Compile Include="Measurements\IFrame.cs" />
     <Compile Include="Measurements\IMeasurement.cs" />
     <Compile Include="Measurements\Measurement.cs" />

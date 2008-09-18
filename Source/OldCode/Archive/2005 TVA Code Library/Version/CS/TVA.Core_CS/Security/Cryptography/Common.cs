@@ -62,9 +62,7 @@ namespace TVA
 
                 private Common()
                 {
-
                     // This class contains only global functions and is not meant to be instantiated.
-
                 }
 
                 /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
