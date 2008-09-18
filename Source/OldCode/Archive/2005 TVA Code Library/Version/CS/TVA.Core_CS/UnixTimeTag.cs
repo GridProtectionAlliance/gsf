@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.UnixTimeTag.vb - Standard Unix Timetag Class
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  UnixTimeTag.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -28,32 +28,29 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace TVA
+/// <summary>Standard Unix Timetag</summary>
+public class UnixTimeTag : TimeTagBase
 {
-    /// <summary>Standard Unix Timetag</summary>
-    public class UnixTimeTag : TimeTagBase
+    // Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
+    // date to get the offset in ticks for later conversion.
+    private static long m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+
+    protected UnixTimeTag(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
-        // Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
-        // date to get the offset in ticks for later conversion.
-        private static long m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+    }
 
-        protected UnixTimeTag(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+    /// <summary>Creates new Unix timetag, given number of seconds since 1/1/1970.</summary>
+    /// <param name="seconds">Number of seconds since 1/1/1970.</param>
+    public UnixTimeTag(double seconds)
+        : base(m_unixDateOffsetTicks, seconds)
+    {
+    }
 
-        /// <summary>Creates new Unix timetag, given number of seconds since 1/1/1970.</summary>
-        /// <param name="seconds">Number of seconds since 1/1/1970.</param>
-        public UnixTimeTag(double seconds)
-            : base(m_unixDateOffsetTicks, seconds)
-        {
-        }
-
-        /// <summary>Creates new Unix timetag, given standard .NET DateTime.</summary>
-        /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970).</param>
-        public UnixTimeTag(DateTime timestamp)
-            : base(m_unixDateOffsetTicks, timestamp)
-        {
-        }
+    /// <summary>Creates new Unix timetag, given standard .NET DateTime.</summary>
+    /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970).</param>
+    public UnixTimeTag(DateTime timestamp)
+        : base(m_unixDateOffsetTicks, timestamp)
+    {
     }
 }
