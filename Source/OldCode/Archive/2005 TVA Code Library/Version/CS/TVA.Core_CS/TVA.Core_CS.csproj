@@ -87,7 +87,7 @@
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
-    <Compile Include="StreamExtensions.cs" />
+    <Compile Include="IO\StreamExtensions.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="USTimeZones.cs" />
