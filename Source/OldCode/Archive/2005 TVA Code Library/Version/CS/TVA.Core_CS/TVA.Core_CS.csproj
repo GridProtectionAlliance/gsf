@@ -80,13 +80,14 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CheckSum.cs" />
+    <Compile Include="BufferExtensions.cs" />
     <Compile Include="CurveFit.cs" />
     <Compile Include="Milliseconds.cs" />
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
+    <Compile Include="StreamExtensions.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="USTimeZones.cs" />
@@ -173,13 +174,12 @@
     <Compile Include="Configuration\Common.cs" />
     <Compile Include="TimeTagBase.cs" />
     <Compile Include="Measurements\Frame.cs" />
-    <Compile Include="Security\Cryptography\Common.cs" />
+    <Compile Include="Security\Cryptography\Cipher.cs" />
     <Compile Include="Configuration\ConfigurationFile.cs" />
     <Compile Include="Configuration\CategorizedSettingsElementCollection.cs" />
     <Compile Include="Configuration\CategorizedSettingsElement.cs" />
     <Compile Include="Configuration\CategorizedSettingsSection.cs" />
     <Compile Include="Measurements\ImmediateMeasurements.cs" />
-    <Compile Include="Security\Cryptography\Enumerations.cs" />
     <Compile Include="Services\Enumerations.cs" />
     <Compile Include="Services\IServiceComponent.cs" />
     <Compile Include="Threading\Enumerations.cs" />
@@ -205,7 +205,6 @@
     <Compile Include="UnixTimeTag.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="Interop\IniFile.cs" />
-    <Compile Include="IO\Common.cs" />
     <Compile Include="IO\FilePath.cs" />
     <Compile Include="CompositeValues.cs" />
     <Compile Include="Measurements\IFrame.cs" />

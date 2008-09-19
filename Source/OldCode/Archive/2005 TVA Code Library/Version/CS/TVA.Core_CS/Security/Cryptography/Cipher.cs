@@ -37,8 +37,36 @@ using TVA.Interop;
 
 namespace TVA.Security.Cryptography
 {
+    #region [ Enumerations ]
+    
+    /// <summary>Enumerates cryptographic strength.</summary>
+    /// <remarks>
+    /// <para>
+    /// Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
+    /// will have the fastest encryption speed with the simplest encryption strength, and level 5 will have the
+    /// strongest cumulative encryption strength with the slowest encryption speed.
+    /// </para>
+    /// </remarks>
+    public enum CipherStrength
+    {
+        /// <summary>Uses no encryption.</summary>
+        None,
+        /// <summary>Adds simple multi-alogorithm XOR based encryption.</summary>
+        Level1,
+        /// <summary>Adds TripleDES based encryption.</summary>
+        Level2,
+        /// <summary>Adds RC2 based encryption.</summary>
+        Level3,
+        /// <summary>Adds RijndaelManaged based enryption.</summary>
+        Level4,
+        /// <summary>Adds simple bit-rotation based enryption.</summary>
+        Level5
+    }
+
+    #endregion
+
     /// <summary>Performs common cryptographic functions.</summary>
-    public static class Common
+    public static class Cipher
     {
         public delegate void ProgressEventHandler(long bytesCompleted, long bytesTotal);
 
@@ -50,62 +78,50 @@ namespace TVA.Security.Cryptography
         /// the given parameter, using the standard encryption key and encryption level 1,</summary>
         public static string Encrypt(string str)
         {
-
-            return Encrypt(str, null, EncryptLevel.Level1);
-
+            return Encrypt(str, null, CipherStrength.Level1);
         }
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters using standard encryption.</summary>
-        public static string Encrypt(string str, EncryptLevel strength)
+        public static string Encrypt(string str, CipherStrength strength)
         {
-
             return Encrypt(str, null, strength);
-
         }
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters.</summary>
-        public static string Encrypt(string str, string encryptionKey, EncryptLevel strength)
+        public static string Encrypt(string str, string encryptionKey, CipherStrength strength)
         {
-
             if (string.IsNullOrEmpty(str))
-            {
                 return null;
-            }
+
             if (string.IsNullOrEmpty(encryptionKey))
-            {
                 encryptionKey = StandardKey;
-            }
 
             byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
             byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
 
             return Convert.ToBase64String(Encrypt(Encoding.Unicode.GetBytes(str), rgbKey, rgbIV, strength));
-
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
-        public static byte[] Encrypt(byte[] data, byte[] key, byte[] IV, EncryptLevel strength)
+        public static byte[] Encrypt(byte[] data, byte[] key, byte[] IV, CipherStrength strength)
         {
-
-            if (strength == EncryptLevel.None)
-            {
+            if (strength == CipherStrength.None)
                 return data;
-            }
 
             // Performs requested levels of encryption.
             data = Crypt(data, key);
-            if (strength >= EncryptLevel.Level2)
+            if (strength >= CipherStrength.Level2)
             {
                 data = Encrypt(new TripleDESCryptoServiceProvider(), data, key, IV);
-                if (strength >= EncryptLevel.Level3)
+                if (strength >= CipherStrength.Level3)
                 {
                     data = Encrypt(new RC2CryptoServiceProvider(), data, key, IV);
-                    if (strength >= EncryptLevel.Level4)
+                    if (strength >= CipherStrength.Level4)
                     {
                         data = Encrypt(new RijndaelManaged(), data, key, IV);
-                        if (strength >= EncryptLevel.Level5)
+                        if (strength >= CipherStrength.Level5)
                         {
                             data = Obfuscate(data, key);
                         }
@@ -114,38 +130,32 @@ namespace TVA.Security.Cryptography
             }
 
             return data;
-
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
         public static byte[] Encrypt(SymmetricAlgorithm algorithm, byte[] data, byte[] key, byte[] IV)
         {
-
             return ((MemoryStream)(Encrypt(algorithm, new MemoryStream(data), key, IV))).ToArray();
-
         }
 
         /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
-        public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, EncryptLevel strength)
+        public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
-
-            if (strength == EncryptLevel.None)
-            {
+            if (strength == CipherStrength.None)
                 return inStream;
-            }
 
             // Performs requested levels of encryption.
             inStream = Crypt(inStream, key);
-            if (strength >= EncryptLevel.Level2)
+            if (strength >= CipherStrength.Level2)
             {
                 inStream = Encrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
-                if (strength >= EncryptLevel.Level3)
+                if (strength >= CipherStrength.Level3)
                 {
                     inStream = Encrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
-                    if (strength >= EncryptLevel.Level4)
+                    if (strength >= CipherStrength.Level4)
                     {
                         inStream = Encrypt(new RijndaelManaged(), inStream, key, IV);
-                        if (strength >= EncryptLevel.Level5)
+                        if (strength >= CipherStrength.Level5)
                         {
                             inStream = Obfuscate(inStream, key);
                         }
@@ -154,26 +164,22 @@ namespace TVA.Security.Cryptography
             }
 
             return inStream;
-
         }
 
         /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
         public static Stream Encrypt(SymmetricAlgorithm algorithm, Stream inStream, byte[] key, byte[] IV)
         {
-
             MemoryStream outStream = new MemoryStream();
 
             Encrypt(algorithm, inStream, outStream, key, IV);
             outStream.Position = 0;
 
             return outStream;
-
         }
 
         /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
-        public static void Encrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, EncryptLevel strength, ProgressEventHandler progressHandler)
+        public static void Encrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
         {
-
             byte[] inBuffer = new byte[BufferSize];
             byte[] outBuffer;
             byte[] lengthBuffer;
@@ -187,9 +193,7 @@ namespace TVA.Security.Cryptography
                 try
                 {
                     if (inStream.CanSeek)
-                    {
                         length = inStream.Length;
-                    }
                 }
                 catch
                 {
@@ -253,7 +257,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Creates an encrypted file from source file data.</summary>
-        public static void EncryptFile(string sourceFileName, string destFileName, EncryptLevel strength)
+        public static void EncryptFile(string sourceFileName, string destFileName, CipherStrength strength)
         {
 
             EncryptFile(sourceFileName, destFileName, null, strength, null);
@@ -261,7 +265,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Creates an encrypted file from source file data.</summary>
-        public static void EncryptFile(string sourceFileName, string destFileName, string encryptionKey, EncryptLevel strength, ProgressEventHandler progressHandler)
+        public static void EncryptFile(string sourceFileName, string destFileName, string encryptionKey, CipherStrength strength, ProgressEventHandler progressHandler)
         {
 
             if (string.IsNullOrEmpty(encryptionKey))
@@ -287,13 +291,13 @@ namespace TVA.Security.Cryptography
         public static string Decrypt(string str)
         {
 
-            return Decrypt(str, null, EncryptLevel.Level1);
+            return Decrypt(str, null, CipherStrength.Level1);
 
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters using the standard encryption key.</summary>
-        public static string Decrypt(string str, EncryptLevel strength)
+        public static string Decrypt(string str, CipherStrength strength)
         {
 
             return Decrypt(str, null, strength);
@@ -302,7 +306,7 @@ namespace TVA.Security.Cryptography
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters.</summary>
-        public static string Decrypt(string str, string encryptionKey, EncryptLevel strength)
+        public static string Decrypt(string str, string encryptionKey, CipherStrength strength)
         {
 
             if (string.IsNullOrEmpty(str))
@@ -322,28 +326,28 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
-        public static byte[] Decrypt(byte[] data, byte[] key, byte[] IV, EncryptLevel strength)
+        public static byte[] Decrypt(byte[] data, byte[] key, byte[] IV, CipherStrength strength)
         {
 
-            if (strength == EncryptLevel.None)
+            if (strength == CipherStrength.None)
             {
                 return data;
             }
 
             // Performs requested levels of decryption.
-            if (strength >= EncryptLevel.Level5)
+            if (strength >= CipherStrength.Level5)
             {
                 data = Deobfuscate(data, key);
             }
-            if (strength >= EncryptLevel.Level4)
+            if (strength >= CipherStrength.Level4)
             {
                 data = Decrypt(new RijndaelManaged(), data, key, IV);
             }
-            if (strength >= EncryptLevel.Level3)
+            if (strength >= CipherStrength.Level3)
             {
                 data = Decrypt(new RC2CryptoServiceProvider(), data, key, IV);
             }
-            if (strength >= EncryptLevel.Level2)
+            if (strength >= CipherStrength.Level2)
             {
                 data = Decrypt(new TripleDESCryptoServiceProvider(), data, key, IV);
             }
@@ -361,28 +365,28 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
-        public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, EncryptLevel strength)
+        public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
 
-            if (strength == EncryptLevel.None)
+            if (strength == CipherStrength.None)
             {
                 return inStream;
             }
 
             // Performs requested levels of decryption.
-            if (strength >= EncryptLevel.Level5)
+            if (strength >= CipherStrength.Level5)
             {
                 inStream = Deobfuscate(inStream, key);
             }
-            if (strength >= EncryptLevel.Level4)
+            if (strength >= CipherStrength.Level4)
             {
                 inStream = Decrypt(new RijndaelManaged(), inStream, key, IV);
             }
-            if (strength >= EncryptLevel.Level3)
+            if (strength >= CipherStrength.Level3)
             {
                 inStream = Decrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
             }
-            if (strength >= EncryptLevel.Level2)
+            if (strength >= CipherStrength.Level2)
             {
                 inStream = Decrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
             }
@@ -405,7 +409,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
-        public static void Decrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, EncryptLevel strength, ProgressEventHandler progressHandler)
+        public static void Decrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
         {
 
             byte[] inBuffer;
@@ -500,7 +504,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Creates a decrypted file from source file data.</summary>
-        public static void DecryptFile(string sourceFileName, string destFileName, EncryptLevel strength)
+        public static void DecryptFile(string sourceFileName, string destFileName, CipherStrength strength)
         {
 
             DecryptFile(sourceFileName, destFileName, null, strength, null);
@@ -508,7 +512,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Creates a decrypted file from source file data.</summary>
-        public static void DecryptFile(string sourceFileName, string destFileName, string encryptionKey, EncryptLevel strength, ProgressEventHandler progressHandler)
+        public static void DecryptFile(string sourceFileName, string destFileName, string encryptionKey, CipherStrength strength, ProgressEventHandler progressHandler)
         {
 
             if (string.IsNullOrEmpty(encryptionKey))
