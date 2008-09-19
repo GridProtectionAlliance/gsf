@@ -212,7 +212,7 @@ namespace TVA.Collections
                         for (int x = 0; x <= array1.Length - 1; x++)
                         {
                             if (comparer == null)
-                                comparison = Common.Compare(array1.GetValue(x), array2.GetValue(x));
+                                comparison = Common.CompareObjects(array1.GetValue(x), array2.GetValue(x));
                             else
                                 comparison = comparer.Compare(array1.GetValue(x), array2.GetValue(x));
 
@@ -226,7 +226,7 @@ namespace TVA.Collections
                     {
                         // For arrays that do not have the same number of elements, the array with most elements
                         // is assumed to be larger.
-                        return Common.Compare(array1.GetUpperBound(0), array2.GetUpperBound(0));
+                        return Common.CompareObjects(array1.GetUpperBound(0), array2.GetUpperBound(0));
                     }
                 }
                 else

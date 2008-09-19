@@ -18,6 +18,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using TVA.Threading;
 
@@ -88,7 +89,7 @@ namespace TVA
             {
                 get
                 {
-                    return (m_regressionInterval + Seconds.TicksToSeconds(DateTime.Now.Ticks - m_slopeRun.Ticks));
+                    return (m_regressionInterval + Ticks.ToSeconds(DateTime.Now.Ticks - m_slopeRun.Ticks));
                 }
             }
 
@@ -205,7 +206,7 @@ namespace TVA
             #endregion
         }
 
-        /// <summary> Computes linear regression over given values.</summary>
+        /// <summary>Computes linear regression over given values.</summary>
         public static double[] Calculate(int polynomialOrder, int pointCount, IList<double> xValues, IList<double> yValues)
         {
             // Curve fit function (courtesy of Brian Fox from DatAWare client code)

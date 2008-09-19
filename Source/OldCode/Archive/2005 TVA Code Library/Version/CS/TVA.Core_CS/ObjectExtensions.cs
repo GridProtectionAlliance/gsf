@@ -26,16 +26,5 @@ namespace TVA
         // you do not want to pollute object namespace with extensions that are
         // not applicable to all objects.
 
-        /// <summary>Determines if given item is a reference type.</summary>
-        public static bool IsReference(this object item)
-        {
-            return !(item is ValueType);
-        }
-
-        /// <summary>Determines if given item is a reference type but not a string.</summary>
-        public static bool IsNonStringReference(this object item)
-        {
-            return (item.IsReference() && !(item is string));
-        }
     }
 }

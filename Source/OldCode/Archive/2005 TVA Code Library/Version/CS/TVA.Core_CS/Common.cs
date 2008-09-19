@@ -189,6 +189,18 @@ namespace TVA
             }
         }
 
+        /// <summary>Determines if given item is a reference type.</summary>
+        public static bool IsReference(object item)
+        {
+            return !(item is ValueType);
+        }
+
+        /// <summary>Determines if given item is a reference type but not a string.</summary>
+        public static bool IsNonStringReference(object item)
+        {
+            return (IsReference(item) && !(item is string));
+        }
+
         /*-----------------------------------------------------------------------------------------------------*\
          *
          *                    These functions were migrated here from TVA.Collections.Common

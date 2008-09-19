@@ -545,7 +545,7 @@ namespace TVA
         }
 
         /// <summary>Handles encoding and decoding of a byte buffer into an integer-based presentation format.</summary>
-        public static ByteEncoding @decimal
+        public static ByteEncoding Decimal
         {
             get
             {
