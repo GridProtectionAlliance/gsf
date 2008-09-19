@@ -744,9 +744,9 @@ namespace TVA.Measurements
             // easier to maintain but to reduce function calls (and hence save time), the decision was made to
             // put the code into one larger more complex function...
 
-            IFrame frame;
-            long ticks;
-            long lastTicks;
+            IFrame frame = null;
+            long ticks = 0;
+            long lastTicks = 0;
             double distance;
             bool discardMeasurement;
 

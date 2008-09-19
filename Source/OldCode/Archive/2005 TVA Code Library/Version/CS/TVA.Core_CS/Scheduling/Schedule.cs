@@ -147,7 +147,7 @@ namespace TVA.Scheduling
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    string[] scheduleParts = TVA.Text.Common.RemoveDuplicateWhiteSpace(value).Split(' ');
+                    string[] scheduleParts = value.RemoveDuplicateWhiteSpace().Split(' ');
 
                     if (scheduleParts.Length == 5)
                     {

@@ -131,10 +131,7 @@ namespace TVA
                 {
 
                     if (m_connection != null)
-                    {
                         m_connection.Close();
-                    }
-                    base.Finalize();
 
                 }
 

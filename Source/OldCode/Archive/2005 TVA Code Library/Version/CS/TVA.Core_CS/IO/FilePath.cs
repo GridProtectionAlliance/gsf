@@ -67,7 +67,7 @@ namespace TVA.IO
         /// <param name="domain">Domain name to use for connetion. Specify the computer name for local system accounts.</param>
         public static void ConnectToNetworkShare(string sharename, string username, string password, string domain)
         {
-            NETRESOURCE resource;
+            NETRESOURCE resource = new NETRESOURCE();
             int result;
 
             resource.dwType = RESOURCETYPE_DISK;
@@ -132,14 +132,14 @@ namespace TVA.IO
 				// allowing any characters except those that would not be valid as part of a filename.
 				// This essentially builds the "?" wildcard pattern match.
 				pattern.Append("[^");
-				pattern.Append(TVA.Text.Common.EncodeRegexChar(Path.DirectorySeparatorChar));
-				pattern.Append(TVA.Text.Common.EncodeRegexChar(Path.AltDirectorySeparatorChar));
-				pattern.Append(TVA.Text.Common.EncodeRegexChar(Path.PathSeparator));
-				pattern.Append(TVA.Text.Common.EncodeRegexChar(Path.VolumeSeparatorChar));
+                pattern.Append(Path.DirectorySeparatorChar.EncodeRegexChar());
+                pattern.Append(Path.AltDirectorySeparatorChar.EncodeRegexChar());
+                pattern.Append(Path.PathSeparator.EncodeRegexChar());
+                pattern.Append(Path.VolumeSeparatorChar.EncodeRegexChar());
 				
 				foreach (char c in Path.GetInvalidPathChars())
 				{
-					pattern.Append(TVA.Text.Common.EncodeRegexChar(c));
+                    pattern.Append(c.EncodeRegexChar());
 				}
 				
 				pattern.Append("]");

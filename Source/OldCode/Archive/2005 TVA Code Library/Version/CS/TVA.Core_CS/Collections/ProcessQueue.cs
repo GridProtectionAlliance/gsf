@@ -766,7 +766,7 @@ namespace TVA.Collections
                     processingTime = 0;
                 }
 
-                return Seconds.TicksToSeconds(processingTime);
+                return Ticks.ToSeconds(processingTime);
             }
         }
 

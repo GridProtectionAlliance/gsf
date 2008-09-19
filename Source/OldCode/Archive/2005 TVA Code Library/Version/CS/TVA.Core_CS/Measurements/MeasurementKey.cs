@@ -42,6 +42,8 @@ namespace TVA.Measurements
 
             m_id = id;
             m_source = source.ToUpper();
+            m_hashCode = 0;
+            
             GenHashCode();
         }
 

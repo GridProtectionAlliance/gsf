@@ -63,7 +63,7 @@ namespace TVA
         {
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = Seconds.TicksToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
+            Value = Ticks.ToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
         }
 
         #endregion
@@ -101,7 +101,7 @@ namespace TVA
         public virtual DateTime ToDateTime()
         {
             // Converts m_seconds to 100-nanosecond ticks and add the base time offset.
-            return new DateTime(Common.SecondsToTicks(m_seconds) + m_baseDateOffsetTicks);
+            return new DateTime(Seconds.ToTicks(m_seconds) + m_baseDateOffsetTicks);
         }
 
         /// <summary>Returns basic textual representation for time tag.</summary>

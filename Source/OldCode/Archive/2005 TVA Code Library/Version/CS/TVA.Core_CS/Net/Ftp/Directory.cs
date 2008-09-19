@@ -150,7 +150,7 @@ namespace TVA
                 private string m_name;
                 private string m_fullPath;
                 private Dictionary<string, Directory> m_subDirectories;
-                private Dictionary<string, System.IO.File> m_files;
+                private Dictionary<string, File> m_files;
                 private bool m_caseInsensitive;
                 private long m_size;
                 private string m_permission;
@@ -207,7 +207,7 @@ namespace TVA
 
                     if (fullPath.Length == 0)
                     {
-                        m_name = m_fullPath == "/";
+                        m_name = "/";
                     }
                     else
                     {
@@ -239,7 +239,7 @@ namespace TVA
                     }
                     else
                     {
-                        m_name = m_fullPath == "/";
+                        m_name = "/";
                     }
 
                     m_size = info.Size;
@@ -351,7 +351,7 @@ namespace TVA
                                 fullPath += "/";
                             }
 
-                            string[] paths = fullPath.Split("/");
+                            string[] paths = fullPath.Split('/');
                             int i;
 
                             for (i = 0; i <= paths.Length - 2; i++)
@@ -383,7 +383,7 @@ namespace TVA
                     }
                 }
 
-                public Dictionary<string, Directory> SubDirectories
+                public Dictionary<string, Directory>.ValueCollection SubDirectories
                 {
                     get
                     {
@@ -392,7 +392,7 @@ namespace TVA
                     }
                 }
 
-                public Dictionary<string, System.IO.File> Files
+                public Dictionary<string, File>.ValueCollection Files
                 {
                     get
                     {
@@ -406,7 +406,7 @@ namespace TVA
 
                     InitHashtable();
 
-                    return m_files(fileName);
+                    return m_files[fileName];
 
                 }
 
@@ -415,7 +415,7 @@ namespace TVA
 
                     InitHashtable();
 
-                    return m_subDirectories(dirName);
+                    return m_subDirectories[dirName];
 
                 }
 
@@ -456,14 +456,14 @@ namespace TVA
 
                     InitHashtable();
 
-                    System.IO.File file = m_files(remoteFile);
+                    File file = m_files[remoteFile];
 
                     if (file == null)
                     {
                         throw (new FileNotFoundException(remoteFile));
                     }
 
-                    FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, File.Size, TransferDirection.Download);
+                    FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
 
                     transfer.StartTransfer();
 
@@ -506,14 +506,14 @@ namespace TVA
 
                     InitHashtable();
 
-                    File file = m_files(remoteFile);
+                    File file = m_files[remoteFile];
 
                     if (file == null)
                     {
                         throw (new FileNotFoundException(remoteFile));
                     }
 
-                    FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, File.Size, TransferDirection.Download);
+                    FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
 
                     transfer.StartAsyncTransfer();
 
@@ -548,7 +548,7 @@ namespace TVA
 
                     stream.Close();
 
-                    return m_files(newFileName);
+                    return m_files[newFileName];
 
                 }
 
@@ -565,7 +565,7 @@ namespace TVA
 
                         File newFile = new File(this, newFileName);
 
-                        m_files(newFileName) = newFile;
+                        m_files[newFileName] = newFile;
 
                         return ((OutputDataStream)stream);
                     }
@@ -679,11 +679,11 @@ namespace TVA
                     {
                         if (m_caseInsensitive)
                         {
-                            m_files = new Dictionary<string, System.IO.File>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
+                            m_files = new Dictionary<string, File>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
                         }
                         else
                         {
-                            m_files = new Dictionary<string, System.IO.File>(StringComparer.CurrentCulture); // New Hashtable
+                            m_files = new Dictionary<string, File>(StringComparer.CurrentCulture); // New Hashtable
                         }
                     }
 

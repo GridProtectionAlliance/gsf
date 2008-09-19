@@ -143,7 +143,7 @@ namespace TVA.Threading
 
         private static string ThreadStatusText(ManagedThread item)
         {
-            string runtime = TVA.DateTime.Common.SecondsToText(item.RunTime);
+            string runtime = Seconds.ToText(item.RunTime);
 
             switch (item.Status)
             {

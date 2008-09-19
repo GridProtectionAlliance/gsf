@@ -478,15 +478,19 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static sbyte BitRotR(this sbyte value, int rotations)
         {
             bool loBitSet;
 
-            for (int x = 1; x <= (rotations % 8); x++)
+            unchecked
             {
-                loBitSet = ((value & Bit0) == Bit0);
-                value >>= 1;
-                if (loBitSet) value |= (sbyte)Bit7; else value = (sbyte)(value & ~Bit7);
+                for (int x = 1; x <= (rotations % 8); x++)
+                {
+                    loBitSet = ((value & Bit0) == Bit0);
+                    value >>= 1;
+                    if (loBitSet) value |= (sbyte)Bit7; else value = (sbyte)(value & ~Bit7);
+                }
             }
 
             return value;
@@ -528,11 +532,14 @@ namespace TVA.Interop
         {
             bool loBitSet;
 
-            for (int x = 1; x <= (rotations % 16); x++)
+            unchecked
             {
-                loBitSet = ((value & Bit0) == Bit0);
-                value >>= 1;
-                if (loBitSet) value |= (ushort)Bit15; else value = (ushort)(value & ~Bit15);
+                for (int x = 1; x <= (rotations % 16); x++)
+                {
+                    loBitSet = ((value & Bit0) == Bit0);
+                    value >>= 1;
+                    if (loBitSet) value |= (ushort)Bit15; else value = (ushort)(value & ~Bit15);
+                }
             }
 
             return value;
@@ -620,15 +627,19 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static uint BitRotR(this uint value, int rotations)
         {
             bool loBitSet;
 
-            for (int x = 1; x <= (rotations % 32); x++)
+            unchecked
             {
-                loBitSet = ((value & Bit0) == Bit0);
-                value >>= 1;
-                if (loBitSet) value |= Bit31; else value = (uint)(value & ~Bit31);
+                for (int x = 1; x <= (rotations % 32); x++)
+                {
+                    loBitSet = ((value & Bit0) == Bit0);
+                    value >>= 1;
+                    if (loBitSet) value |= Bit31; else value = (uint)(value & ~Bit31);
+                }
             }
 
             return value;

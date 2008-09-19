@@ -189,7 +189,7 @@ namespace TVA.Parsing
                     foreach (Type asmType in asm.GetExportedTypes())
                     {
                         typeCtor = asmType.GetConstructor(Type.EmptyTypes);
-                        if ((typeCtor != null) && !asmType.IsAbstract && TVA.Common.GetRootType(asmType) == typeof(TOutput))
+                        if ((typeCtor != null) && !asmType.IsAbstract && asmType.GetRootType() == typeof(TOutput))
                         {
                             // The type meets the following criteria:
                             // - has a default public constructor

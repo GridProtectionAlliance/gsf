@@ -240,7 +240,7 @@ namespace TVA.Threading
                 if (processingTime < 0)
                     processingTime = 0;
 
-                return TVA.DateTime.Time.TicksToSeconds(processingTime);
+                return Ticks.ToSeconds(processingTime);
             }
         }
 

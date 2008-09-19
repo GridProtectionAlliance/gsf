@@ -61,7 +61,7 @@ namespace TVA
 			{
 				
 				m_processName = processName;
-				m_counters = new List<PerformanceCounter>;
+				m_counters = new List<PerformanceCounter>();
 				
 				if (System.Diagnostics.PerformanceCounterCategory.Exists("Process"))
 				{
@@ -268,44 +268,46 @@ namespace TVA
                     int processorCount = System.Environment.ProcessorCount;
                     PerformanceCounter counter;
 
-                    System.Text.StringBuilder with_1 = new StringBuilder();
-                    with_1.Append("Counter".PadRight(20));
-                    with_1.Append(' ');
-                    with_1.Append(TVA.Text.Common.CenterText("Last", 13));
-                    with_1.Append(' ');
-                    with_1.Append(TVA.Text.Common.CenterText("Average", 13));
-                    with_1.Append(' ');
-                    with_1.Append(TVA.Text.Common.CenterText("Maximum", 13));
-                    with_1.Append(' ');
-                    with_1.Append(TVA.Text.Common.CenterText("Units", 16));
-                    with_1.AppendLine();
-                    with_1.Append(new string('-', 20));
-                    with_1.Append(' ');
-                    with_1.Append(new string('-', 13));
-                    with_1.Append(' ');
-                    with_1.Append(new string('-', 13));
-                    with_1.Append(' ');
-                    with_1.Append(new string('-', 13));
-                    with_1.Append(' ');
-                    with_1.Append(new string('-', 16));
-                    with_1.AppendLine();
+                    StringBuilder status = new StringBuilder();
+
+                    status.Append("Counter".PadRight(20));
+                    status.Append(' ');
+                    status.Append("Last".CenterText(13));
+                    status.Append(' ');
+                    status.Append("Average".CenterText(13));
+                    status.Append(' ');
+                    status.Append("Maximum".CenterText(13));
+                    status.Append(' ');
+                    status.Append("Units".CenterText(16));
+                    status.AppendLine();
+                    status.Append(new string('-', 20));
+                    status.Append(' ');
+                    status.Append(new string('-', 13));
+                    status.Append(' ');
+                    status.Append(new string('-', 13));
+                    status.Append(' ');
+                    status.Append(new string('-', 13));
+                    status.Append(' ');
+                    status.Append(new string('-', 16));
+                    status.AppendLine();
 
                     counter = CPUUsage;
 
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("CPU Utilization".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.LastValue / processorCount).ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.AverageValue / processorCount).ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.MaximumValue / processorCount).ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("CPU Utilization".PadLeft(20));
+                        status.Append(' ');
+                        status.Append((counter.LastValue / processorCount).ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append((counter.AverageValue / processorCount).ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append((counter.MaximumValue / processorCount).ToString("0.00").CenterText(13));
+                        status.Append(' ');
+
                         //        1234567890123456
-                        with_1.Append("Percent / CPU");
-                        with_1.AppendLine();
+                        status.Append("Percent / CPU");
+                        status.AppendLine();
                     }
 
                     counter = MemoryUsage;
@@ -313,17 +315,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("Process Memory Usage".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.LastValue / 1048576).ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.AverageValue / 1048576).ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.MaximumValue / 1048576).ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("Process Memory Usage".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText((counter.LastValue / 1048576).ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText((counter.AverageValue / 1048576).ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText((counter.MaximumValue / 1048576).ToString("0.00"), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Megabytes");
-                        with_1.AppendLine();
+                        status.Append("Megabytes");
+                        status.AppendLine();
                     }
 
                     counter = HandleCount;
@@ -331,17 +333,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("Process Handle Count".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString(), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString(), 13));
-                        with_1.Append(' ');
+                        status.Append("Process Handle Count".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString(), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString(), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Total Handles");
-                        with_1.AppendLine();
+                        status.Append("Total Handles");
+                        status.AppendLine();
                     }
 
                     counter = ThreadCount;
@@ -349,17 +351,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("Process Thread Count".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString(), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString(), 13));
-                        with_1.Append(' ');
+                        status.Append("Process Thread Count".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString(), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString(), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Total Threads");
-                        with_1.AppendLine();
+                        status.Append("Total Threads");
+                        status.AppendLine();
                     }
 
                     counter = IOUsage;
@@ -367,17 +369,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("I/O Data Rate".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.LastValue / 1024).ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.AverageValue / 1024).ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("I/O Data Rate".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText((counter.LastValue / 1024).ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText((counter.AverageValue / 1024).ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Kilobytes / sec");
-                        with_1.AppendLine();
+                        status.Append("Kilobytes / sec");
+                        status.AppendLine();
                     }
 
                     counter = IOActivity;
@@ -385,17 +387,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("I/O Activity Rate".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("I/O Activity Rate".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Operations / sec");
-                        with_1.AppendLine();
+                        status.Append("Operations / sec");
+                        status.AppendLine();
                     }
 
                     counter = DatagramReceiveRate;
@@ -403,17 +405,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("Incoming Packet Rate".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("Incoming Packet Rate".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Datagrams / sec");
-                        with_1.AppendLine();
+                        status.Append("Datagrams / sec");
+                        status.AppendLine();
                     }
 
                     counter = DatagramSendRate;
@@ -421,17 +423,17 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("Outgoing Packet Rate".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("Outgoing Packet Rate".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Datagrams / sec");
-                        with_1.AppendLine();
+                        status.Append("Datagrams / sec");
+                        status.AppendLine();
                     }
 
                     counter = ThreadingContentionRate;
@@ -439,20 +441,20 @@ namespace TVA
                     if (counter != null)
                     {
                         //        12345678901234567890
-                        with_1.Append("Lock Contention Rate".PadLeft(20));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
-                        with_1.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
-                        with_1.Append(' ');
+                        status.Append("Lock Contention Rate".PadLeft(20));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(' ');
+                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(' ');
                         //        1234567890123456
-                        with_1.Append("Attempts / sec");
-                        with_1.AppendLine();
+                        status.Append("Attempts / sec");
+                        status.AppendLine();
                     }
 
-                    return with_1.ToString();
+                    return status.ToString();
                 }
             }
 
