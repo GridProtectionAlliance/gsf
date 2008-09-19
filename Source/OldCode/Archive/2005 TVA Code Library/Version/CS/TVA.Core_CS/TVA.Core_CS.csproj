@@ -112,7 +112,6 @@
     </Compile>
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="IO\Compression\Enumerations.cs" />
-    <Compile Include="IO\Enumerations.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\IsamDataFileBase.Designer.cs">
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>

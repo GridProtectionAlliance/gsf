@@ -249,23 +249,13 @@ namespace TVA
          *                  
         \*-----------------------------------------------------------------------------------------------------*/
 
-        /// <summary>Gets a high-resolution number of seconds in the local timezone, including fractional seconds, that have
+        /// <summary>Gets a high-resolution number of seconds, including fractional seconds, that have
         /// elapsed since 12:00:00 midnight, January 1, 0001.</summary>
         public static double SystemTimer
         {
             get
             {
                 return Ticks.ToSeconds(PrecisionTimer.Now.Ticks);
-            }
-        }
-
-        /// <summary>Gets a high-resolution number of seconds in the universally coordinated timezone, including fractional
-        /// seconds, that have elapsed since 12:00:00 midnight, January 1, 0001.</summary>
-        public static double UtcSystemTimer
-        {
-            get
-            {
-                return Ticks.ToSeconds(PrecisionTimer.UtcNow.Ticks);
             }
         }
 
