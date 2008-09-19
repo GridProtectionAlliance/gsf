@@ -171,10 +171,10 @@ namespace TVA.IO
 				status.Append(m_configSection);
 				status.AppendLine();
 				status.Append("       Export destinations: ");
-				status.Append(TVA.Collections.Common.ListToString(m_exportDestinations, ','));
+				status.Append(m_exportDestinations.ToDelimitedString(','));
 				status.AppendLine();
 				status.Append(" Cumulative export timeout: ");
-				status.Append(TVA.Common.IIf(m_exportTimeout == Timeout.Infinite, "Infinite", m_exportTimeout + " milliseconds"));
+				status.Append(m_exportTimeout == Timeout.Infinite ? "Infinite" : m_exportTimeout + " milliseconds");
 				status.AppendLine();
 				status.Append("      Total exports so far: ");
 				status.Append(m_totalExports);
