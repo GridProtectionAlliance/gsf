@@ -1,15 +1,17 @@
 //*******************************************************************************************************
-//  TVA.Console.Arguments.vb - Command Line Parameter Parsing Class
-//  Copyright © 2007 - TVA, all rights reserved - Gbtc
+//  Arguments.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
-//       Email: pcpatel@tva.gov
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
+//  09/12/2004 - J. Ritchie Carroll
+//       Generated original version of source code.
 //  03/28/2006 - Pinal C. Patel
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Console)
 //  10/09/2007 - J. Ritchie Carroll / Pinal C. Patel
@@ -30,10 +32,17 @@ namespace TVA.Console
     [Serializable()]
     public class Arguments : IEnumerable, IEnumerable<KeyValuePair<string, string>>
     {
+        #region [ Members ]
+
+        // Fields
         private string m_commandLine;
         private string m_orderedArgID;
         private int m_orderedArgCount;
         private Dictionary<string, string> m_parameters;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public Arguments(string commandLine)
             : this(commandLine, "OrderedArg")
@@ -133,13 +142,13 @@ namespace TVA.Console
             }
 
             // In case a parameter is still waiting
-            if (parameter != null)
-            {
-                if (!m_parameters.ContainsKey(parameter))
-                    m_parameters.Add(parameter, null);
-            }
-
+            if (parameter != null && !m_parameters.ContainsKey(parameter))
+                m_parameters.Add(parameter, null);
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         // Retrieve a parameter value if it exists
         public virtual string this[string param]
@@ -148,11 +157,6 @@ namespace TVA.Console
             {
                 return m_parameters[param];
             }
-        }
-
-        public virtual bool Exists(string param)
-        {
-            return m_parameters.ContainsKey(param);
         }
 
         public virtual int Count
@@ -187,11 +191,6 @@ namespace TVA.Console
             }
         }
 
-        public override string ToString()
-        {
-            return m_commandLine;
-        }
-
         protected Dictionary<string, string> InternalDictionary
         {
             get
@@ -200,6 +199,35 @@ namespace TVA.Console
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        public virtual bool Exists(string param)
+        {
+            return m_parameters.ContainsKey(param);
+        }
+
+        public override string ToString()
+        {
+            return m_commandLine;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)m_parameters).GetEnumerator();
+        }
+
+        IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
+        {
+            return m_parameters.GetEnumerator();
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
         /// <summary>This function can be used to parse a single parameterized string and turn it into an array of parameters.</summary>
         /// <remarks>This function will always return at least one argument, even if it is an empty string.</remarks>
         /// <param name="command">String of parameters.</param>
@@ -261,14 +289,6 @@ namespace TVA.Console
             return parsedCommand.ToArray();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable)m_parameters).GetEnumerator();
-        }
-
-        IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
-        {
-            return m_parameters.GetEnumerator();
-        }
+        #endregion
     }
 }

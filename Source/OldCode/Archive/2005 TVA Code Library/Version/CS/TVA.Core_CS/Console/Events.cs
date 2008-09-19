@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Console.Events.vb - Console Window Event Handling Functions
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  Events.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
@@ -38,9 +38,7 @@ namespace TVA.Console
             SystemShutdown = 6
         }
 
-        private delegate bool ConsoleWindowEventHandler(ConsoleEventType controlType);
-
-        private static ConsoleWindowEventHandler m_handler;
+        private static Func<ConsoleEventType, bool> m_handler;
 
         public static event EventHandler<CancelEventArgs> CancelKeyPress;
 
@@ -52,7 +50,9 @@ namespace TVA.Console
 
         public static event EventHandler SystemShutdown;
 
-        #region " Public Code "
+        // Static Methods
+        [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
+        private static extern bool SetConsoleWindowEventRaising(Func<ConsoleEventType, bool> handler, bool enable);
 
         public static void EnableRaisingEvents()
         {
@@ -66,15 +66,8 @@ namespace TVA.Console
         public static void DisableRaisingEvents()
         {
             m_handler = HandleConsoleWindowEvents;
-            SetConsoleWindowEventRaising(HandleConsoleWindowEvents, false);
+            SetConsoleWindowEventRaising(m_handler, false);
         }
-
-        #endregion
-
-        #region " Private Code "
-
-        [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
-        private static extern bool SetConsoleWindowEventRaising(ConsoleWindowEventHandler handler, bool enable);
 
         private static bool HandleConsoleWindowEvents(ConsoleEventType controlType)
         {
@@ -128,7 +121,5 @@ namespace TVA.Console
 
             return false;
         }
-
-        #endregion
     }
 }
