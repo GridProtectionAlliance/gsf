@@ -61,7 +61,7 @@ namespace TVA.Measurements
         #region [ Properties ]
 
         /// <summary>Keyed measurements in this frame</summary>
-        public IDictionary<Measurements, IMeasurement> Measurements
+        public IDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get
             {
@@ -175,6 +175,11 @@ namespace TVA.Measurements
             IFrame other = obj as IFrame;
             if (other != null) return CompareTo(other);
             throw new ArgumentException("Frame can only be compared with other IFrames...");
+        }
+
+        public override int GetHashCode()
+        {
+            return m_ticks.GetHashCode();
         }
 
         #endregion

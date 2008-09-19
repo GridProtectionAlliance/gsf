@@ -28,8 +28,6 @@ using System.Collections.Generic;
 
 namespace TVA.Measurements
 {
-    public delegate IFrame CreateNewFrameFunctionSignature(long ticks);
-
     public class FrameQueue : IDisposable
     {            
         #region [ Members ]
@@ -41,14 +39,14 @@ namespace TVA.Measurements
         private IFrame m_head;
         private IFrame m_last;
         private decimal m_ticksPerFrame;
-        private CreateNewFrameFunctionSignature m_createNewFrameFunction;
+        private Func<long, IFrame> m_createNewFrameFunction;
         private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
-        internal FrameQueue(decimal ticksPerFrame, int initialCapacity, CreateNewFrameFunctionSignature createNewFrameFunction)
+        internal FrameQueue(decimal ticksPerFrame, int initialCapacity, Func<long, IFrame> createNewFrameFunction)
         {
             m_frameList = new LinkedList<IFrame>();
             m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
@@ -78,7 +76,13 @@ namespace TVA.Measurements
             }
         }
 
-        public CreateNewFrameFunctionSignature CreateNewFrameFunction
+        /// <summary>
+        /// Returns new create frame function delegate
+        /// </summary>
+        /// <remarks>
+        /// Function signature: IFrame CreateFrame(long ticks)
+        /// </remarks>
+        public Func<long, IFrame> CreateNewFrameFunction
         {
             get
             {

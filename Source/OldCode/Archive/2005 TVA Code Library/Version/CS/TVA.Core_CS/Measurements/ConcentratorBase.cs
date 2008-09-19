@@ -61,25 +61,19 @@ namespace TVA.Measurements
     {        
         #region [ Members ]
 
-        // Delegates
-        public delegate void UnpublishedSamplesEventHandler(int total);
-        public delegate void ProcessExceptionEventHandler(Exception ex);
-        internal delegate void LeadTimeUpdatedEventHandler(double leadTime);
-        internal delegate void LagTimeUpdatedEventHandler(double lagTime);
-
         // Events
         /// <summary>This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.</summary>
-        public event UnpublishedSamplesEventHandler UnpublishedSamples;
+        public event Action<int> UnpublishedSamples;
 
         /// <summary>This event is raised if there is an exception encountered while attempting to process a frame in the sample queue.</summary>
         /// <remarks>Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will be exposed through this event.</remarks>
-        public event ProcessExceptionEventHandler ProcessException;
+        public event Action<Exception> ProcessException;
 
         /// <summary>Raised, for the benefit of dependent classes, when lead time is updated.</summary> 
-        internal event LeadTimeUpdatedEventHandler LeadTimeUpdated;
+        internal event Action<double> LeadTimeUpdated;
 
         /// <summary>Raised, for the benefit of dependent classes, when lag time is updated.</summary> 
-        internal event LagTimeUpdatedEventHandler LagTimeUpdated;
+        internal event Action<double> LagTimeUpdated;
 
         // Fields
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
@@ -152,7 +146,7 @@ namespace TVA.Measurements
             m_allowSortsByArrival = true;
             m_lagTime = lagTime;
             m_leadTime = leadTime;
-            m_lagTicks = (int)(m_lagTime * Common.TicksPerSecond);
+            m_lagTicks = (int)(m_lagTime * Ticks.PerSecond);
             m_latestMeasurements = new ImmediateMeasurements(this);
 
             // Creates a new queue for managing real-time frames
@@ -203,7 +197,7 @@ namespace TVA.Measurements
                     throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
-                m_lagTicks = (int)(m_lagTime * Common.TicksPerSecond);
+                m_lagTicks = (int)(m_lagTime * Ticks.PerSecond);
 
                 if (LagTimeUpdated != null)
                     LagTimeUpdated(m_lagTime);
@@ -287,7 +281,7 @@ namespace TVA.Measurements
             set
             {
                 m_framesPerSecond = value;
-                m_ticksPerFrame = (decimal)Common.TicksPerSecond / (decimal)m_framesPerSecond; ;
+                m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond; ;
 
                 if (m_frameQueue != null)
                     m_frameQueue.TicksPerFrame = m_ticksPerFrame;
@@ -357,7 +351,7 @@ namespace TVA.Measurements
 
                 if (processingTime < 0) processingTime = 0;
 
-                return Seconds.TicksToSeconds(processingTime);
+                return Ticks.ToSeconds(processingTime);
             }
         }
 
@@ -445,7 +439,7 @@ namespace TVA.Measurements
                     long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
                     long currentRealTimeTicks = m_realTimeTicks;
-                    double distance = (currentTimeTicks - currentRealTimeTicks) / Common.TicksPerSecond;
+                    double distance = (currentTimeTicks - currentRealTimeTicks) / Ticks.PerSecond;
 
                     if (distance > m_leadTime || distance < -m_leadTime)
                     {
@@ -522,7 +516,7 @@ namespace TVA.Measurements
         {
             get
             {
-                return Common.TicksToMilliseconds(m_totalPublishTime);
+                return Ticks.ToMilliseconds(m_totalPublishTime);
             }
         }
 
@@ -556,7 +550,7 @@ namespace TVA.Measurements
                     status.Append("Disabled");
                 status.AppendLine();
                 status.Append("    Total process run time: ");
-                status.Append(Common.SecondsToText(RunTime));
+                status.Append(Seconds.ToText(RunTime));
                 status.AppendLine();
                 status.Append("    Measurement wait delay: ");
                 status.Append(m_lagTime);
@@ -618,7 +612,7 @@ namespace TVA.Measurements
                 status.Append(" milliseconds");
                 status.AppendLine();
                 status.Append(" User function utilization: ");
-                status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)Common.MillisecondsToTicks(AveratePublicationTimePerFrame)) / m_ticksPerFrame).ToString("##0.0000%"));
+                status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)Milliseconds.ToTicks(AveratePublicationTimePerFrame)) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.Append(" of available time used");
                 status.AppendLine();
                 status.Append("Published measurement loss: ");
@@ -694,7 +688,7 @@ namespace TVA.Measurements
 
                 // Start real-time frame publication thread
                 m_frameIndex = 0;
-                m_lastFramePeriod = (int)(m_ticksPerFrame / (decimal)Common.TicksPerMillisecond);
+                m_lastFramePeriod = (int)(m_ticksPerFrame / (decimal)Ticks.PerMillisecond);
                 m_publicationTimer.Period = m_lastFramePeriod;
                 m_publicationTimer.Start();
                 m_monitorTimer.Start();
@@ -724,13 +718,13 @@ namespace TVA.Measurements
         /// <summary>Returns the deviation in seconds that the given number of ticks is from real time.</summary>
         public double SecondsFromRealTime(long ticks)
         {
-            return (RealTimeTicks - ticks) / Common.TicksPerSecond;
+            return (RealTimeTicks - ticks) / Ticks.PerSecond;
         }
 
         /// <summary>Returns the deviation in milliseconds that the given number of ticks is from real time.</summary>
         public double MillisecondsFromRealTime(long ticks)
         {
-            return (RealTimeTicks - ticks) / Common.TicksPerMillisecond;
+            return (RealTimeTicks - ticks) / Ticks.PerMillisecond;
         }
 
         /// <summary>Places measurement data point in its proper row/cell position.</summary>
@@ -885,7 +879,7 @@ namespace TVA.Measurements
 #else
                             long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
-                            distance = (currentTimeTicks - ticks) / Common.TicksPerSecond;
+                            distance = (currentTimeTicks - ticks) / Ticks.PerSecond;
 
                             if (distance <= m_leadTime && distance >= -m_leadTime)
                             {
@@ -903,7 +897,7 @@ namespace TVA.Measurements
                             {
                                 // Measurement ticks were outside of time deviation tolerances so we'll also check to make
                                 // sure current real-time ticks are within these tolerances as well
-                                distance = (currentTimeTicks - m_realTimeTicks) / Common.TicksPerSecond;
+                                distance = (currentTimeTicks - m_realTimeTicks) / Ticks.PerSecond;
 
                                 if (distance > m_leadTime || distance < -m_leadTime)
                                 {
@@ -1169,7 +1163,7 @@ namespace TVA.Measurements
             int frameRate;
             int deficit;
 
-            frameRate = (int)(System.Math.Round(1000.0 / framesPerSecond));
+            frameRate = (int)(Math.Round(1000.0 / framesPerSecond));
             deficit = 1000 - frameRate * framesPerSecond;
 
             if (deficit == 0)
@@ -1188,7 +1182,7 @@ namespace TVA.Measurements
                 }
                 else
                 {
-                    double interval = framesPerSecond / System.Math.Abs(deficit);
+                    double interval = framesPerSecond / Math.Abs(deficit);
                     double pre_dis = mod_dis(frameIndex - 1, interval);
                     double cur_dis = mod_dis(frameIndex, interval);
                     double next_dis = mod_dis(frameIndex + 1, interval);

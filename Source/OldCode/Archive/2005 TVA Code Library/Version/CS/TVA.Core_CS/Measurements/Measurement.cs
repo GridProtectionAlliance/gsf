@@ -130,7 +130,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>Returns the primary key of this measurement</summary>
-        public IMeasurement.Key Key
+        public MeasurementKey Key
         {
             get
             {
@@ -288,6 +288,11 @@ namespace TVA.Measurements
             IMeasurement other = obj as IMeasurement;
             if (other != null) return CompareTo(other);
             throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
+        }
+
+        public override int GetHashCode()
+        {
+            return m_value.GetHashCode();
         }
 
         #endregion
