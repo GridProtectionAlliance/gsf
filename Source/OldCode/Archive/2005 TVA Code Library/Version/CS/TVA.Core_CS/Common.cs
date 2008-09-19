@@ -201,6 +201,38 @@ namespace TVA
             return (IsReference(item) && !(item is string));
         }
 
+        /// <summary>Determines if given item is numeric.</summary>
+        public static bool IsNumeric(object item)
+        {
+            IConvertible convertible = item as IConvertible;
+
+            if (convertible != null)
+            {
+                switch (convertible.GetTypeCode())
+                {
+                    case TypeCode.Boolean:
+                    case TypeCode.SByte:
+                    case TypeCode.Byte:
+                    case TypeCode.Int16:
+                    case TypeCode.UInt16:
+                    case TypeCode.Int32:
+                    case TypeCode.UInt32:
+                    case TypeCode.Int64:
+                    case TypeCode.UInt64:
+                    case TypeCode.Single:
+                    case TypeCode.Double:
+                    case TypeCode.Decimal:
+                        return true;
+                    case TypeCode.Char:
+                    case TypeCode.String:
+                        double result;
+                        return double.TryParse(convertible.ToString(null), out result);
+                }
+            }
+
+            return false;
+        }
+
         /*-----------------------------------------------------------------------------------------------------*\
          *
          *                    These functions were migrated here from TVA.Collections.Common
