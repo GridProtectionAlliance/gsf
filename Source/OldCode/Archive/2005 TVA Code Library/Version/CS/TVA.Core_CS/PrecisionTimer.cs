@@ -137,7 +137,7 @@ namespace TVA
                 m_timeState = new ImmutableTimeState(t, t, m_stopwatch.ElapsedTicks, Stopwatch.Frequency);
 
                 m_synchronizePeriodStopwatchTicks = synchronizePeriodSeconds * Stopwatch.Frequency;
-                m_synchronizePeriodClockTicks = synchronizePeriodSeconds * Common.TicksPerSecond;
+                m_synchronizePeriodClockTicks = synchronizePeriodSeconds * Ticks.PerSecond;
             }
 
             public DateTime UtcNow
@@ -146,7 +146,7 @@ namespace TVA
                 {
                     long elapsedTicks = m_stopwatch.ElapsedTicks;
                     ImmutableTimeState timeState = m_timeState;
-                    DateTime precisionTime = timeState.BaseTime.AddTicks(((int)((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond) / timeState.SystemFrequency));
+                    DateTime precisionTime = timeState.BaseTime.AddTicks(((int)((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond) / timeState.SystemFrequency));
 
                     if (elapsedTicks >= timeState.ElapsedTicks + m_synchronizePeriodStopwatchTicks)
                     {
@@ -154,7 +154,7 @@ namespace TVA
                         DateTime systemTime = DateTime.UtcNow;
 
                         // Last parameter is a calculation that asymptotically approachs the measured system frequency
-                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, (int)(((elapsedTicks - timeState.ElapsedTicks) * Common.TicksPerSecond * 2) /
+                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, (int)(((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) /
                             (systemTime.Ticks - timeState.ObservedTime.Ticks + systemTime.Ticks + systemTime.Ticks - precisionTime.Ticks - timeState.ObservedTime.Ticks)));
                     }
 

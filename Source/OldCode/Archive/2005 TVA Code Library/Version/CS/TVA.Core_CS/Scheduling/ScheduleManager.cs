@@ -247,42 +247,6 @@ namespace TVA.Scheduling
             }
         }
 
-        /// <summary>
-        /// Gets a list of all the schedules.
-        /// </summary>
-        /// <value></value>
-        /// <returns>A list of the schedules.</returns>
-        [Browsable(false)]
-        public List<Schedule> Schedules
-        {
-            get
-            {
-                return m_schedules;
-            }
-        }
-
-        /// <summary>
-        /// Gets the schedule with the specified schedule name.
-        /// </summary>
-        /// <param name="scheduleName">Name of the schedule that is to be found.</param>
-        /// <value></value>
-        /// <returns>The TVA.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
-        public Schedule Schedules(string scheduleName)
-        {
-            Schedule match = null;
-
-            foreach (Schedule schedule in m_schedules)
-            {
-                if (string.Compare(schedule.Name, scheduleName, true) == 0)
-                {
-                    match = schedule;
-                    break;
-                }
-            }
-
-            return match;
-        }
-
         [Browsable(false)]
         public string Name
         {
@@ -317,6 +281,38 @@ namespace TVA.Scheduling
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets a list of all the schedules.
+        /// </summary>
+        /// <value></value>
+        /// <returns>A list of the schedules.</returns>
+        public List<Schedule> Schedules()
+        {
+            return m_schedules;
+        }
+
+        /// <summary>
+        /// Gets the schedule with the specified schedule name.
+        /// </summary>
+        /// <param name="scheduleName">Name of the schedule that is to be found.</param>
+        /// <value></value>
+        /// <returns>The TVA.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
+        public Schedule Schedules(string scheduleName)
+        {
+            Schedule match = null;
+
+            foreach (Schedule schedule in m_schedules)
+            {
+                if (string.Compare(schedule.Name, scheduleName, true) == 0)
+                {
+                    match = schedule;
+                    break;
+                }
+            }
+
+            return match;
+        }
 
         /// <summary>
         /// Starts the schedule manager asynchronously.

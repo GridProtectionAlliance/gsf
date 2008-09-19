@@ -111,7 +111,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Interop\VBArrayDescriptor.cs" />
-    <Compile Include="IO\Compression\Enumerations.cs" />
+    <Compile Include="IO\Compression\CompressLevel.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\IsamDataFileBase.Designer.cs">
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>
@@ -150,7 +150,6 @@
     <Compile Include="Reflection\ReflectionExtensions.cs" />
     <Compile Include="UInt24.cs" />
     <Compile Include="Int24.cs" />
-    <Compile Include="Scheduling\Enumerations.cs" />
     <Compile Include="Scheduling\Schedule.cs" />
     <Compile Include="Scheduling\ScheduleEventArgs.cs" />
     <Compile Include="Scheduling\ScheduleManager.Designer.cs">
