@@ -1,40 +1,34 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.IO;
-using System.Text;
-using System.Drawing;
-using System.ComponentModel;
-using System.Threading;
-using TVA.Collections;
-using TVA.IO.FilePath;
-using TVA.Configuration;
-
 //*******************************************************************************************************
-//  TVA.IO.LogFile.vb - Log file that can be used for logging purpose
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  LogFile.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04-09-2007 - Pinal C. Patel
+//  04/09/2007 - Pinal C. Patel
 //       Original version of source code generated
 //  11/30/2007 - Pinal C. Patel
 //       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
 //       instead of DesignMode property as the former is more accurate than the latter
+//  09/19/2008 - James R Carroll
+//       Converted to C#.
 //
 //*******************************************************************************************************
 
-
+using System;
+using System.IO;
+using System.Text;
+using System.Drawing;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Threading;
+using TVA.Collections;
+using TVA.Configuration;
 
 namespace TVA.IO
 {
@@ -59,26 +53,10 @@ namespace TVA.IO
 
     [ToolboxBitmap(typeof(LogFile))]
     public partial class LogFile : IPersistSettings, ISupportInitialize
-    {
+    {       
+        #region [ Members ]
 
-
-        #region " Variables "
-
-        private string m_name;
-        private int m_size;
-        private bool m_autoOpen;
-        private LogFileFullOperation m_fileFullOperation;
-        private bool m_persistSettings;
-        private string m_settingsCategoryName;
-        private FileStream m_fileStream;
-        private ManualResetEvent m_operationWaitHandle;
-        private bool m_disposed;
-
-        private ProcessQueue<string> m_logEntryQueue;
-
-        #endregion
-
-        #region " Constants "
+        // Constants
 
         /// <summary>
         /// The minimum size for a log file.
@@ -120,123 +98,60 @@ namespace TVA.IO
         /// </summary>
         public const string DefaultSettingsCategoryName = "LogFile";
 
-        #endregion
-
-        #region " Events "
+        // Events
 
         /// <summary>
         /// Occurs when the log file is being opened.
         /// </summary>
         [Description("Occurs when the log file is being opened.")]
-        private EventHandler FileOpeningEvent;
-        public event EventHandler FileOpening
-        {
-            add
-            {
-                FileOpeningEvent = (EventHandler)System.Delegate.Combine(FileOpeningEvent, value);
-            }
-            remove
-            {
-                FileOpeningEvent = (EventHandler)System.Delegate.Remove(FileOpeningEvent, value);
-            }
-        }
-
+        public event EventHandler FileOpening;
 
         /// <summary>
         /// Occurs when the log file has been opened.
         /// </summary>
         [Description("Occurs when the log file has been opened.")]
-        private EventHandler FileOpenedEvent;
-        public event EventHandler FileOpened
-        {
-            add
-            {
-                FileOpenedEvent = (EventHandler)System.Delegate.Combine(FileOpenedEvent, value);
-            }
-            remove
-            {
-                FileOpenedEvent = (EventHandler)System.Delegate.Remove(FileOpenedEvent, value);
-            }
-        }
-
+        public event EventHandler FileOpened;
 
         /// <summary>
         /// Occurs when the log file is being closed.
         /// </summary>
         [Description("Occurs when the log file is being closed.")]
-        private EventHandler FileClosingEvent;
-        public event EventHandler FileClosing
-        {
-            add
-            {
-                FileClosingEvent = (EventHandler)System.Delegate.Combine(FileClosingEvent, value);
-            }
-            remove
-            {
-                FileClosingEvent = (EventHandler)System.Delegate.Remove(FileClosingEvent, value);
-            }
-        }
-
+        public event EventHandler FileClosing;
 
         /// <summary>
         /// Occurs when the log file has been closed.
         /// </summary>
         [Description("Occurs when the log file has been closed.")]
-        private EventHandler FileClosedEvent;
-        public event EventHandler FileClosed
-        {
-            add
-            {
-                FileClosedEvent = (EventHandler)System.Delegate.Combine(FileClosedEvent, value);
-            }
-            remove
-            {
-                FileClosedEvent = (EventHandler)System.Delegate.Remove(FileClosedEvent, value);
-            }
-        }
-
+        public event EventHandler FileClosed;
 
         /// <summary>
         /// Occurs when the log file is full.
         /// </summary>
         [Description("Occurs when the log file is full.")]
-        private EventHandler FileFullEvent;
-        public event EventHandler FileFull
-        {
-            add
-            {
-                FileFullEvent = (EventHandler)System.Delegate.Combine(FileFullEvent, value);
-            }
-            remove
-            {
-                FileFullEvent = (EventHandler)System.Delegate.Remove(FileFullEvent, value);
-            }
-        }
-
+        public event EventHandler FileFull;
 
         /// <summary>
         /// Occurs when an exception is encountered while writing entries to the log file.
         /// </summary>
         [Description("Occurs when an exception is encountered while writing entries to the log file.")]
-        public delegate void LogExceptionEventHandler(object Of);
-        private LogExceptionEventHandler LogExceptionEvent;
+        public event EventHandler<GenericEventArgs<Exception>> LogException;
 
-        public event LogExceptionEventHandler LogException
-        {
-            add
-            {
-                LogExceptionEvent = (LogExceptionEventHandler)System.Delegate.Combine(LogExceptionEvent, value);
-            }
-            remove
-            {
-                LogExceptionEvent = (LogExceptionEventHandler)System.Delegate.Remove(LogExceptionEvent, value);
-            }
-        }
-
+        // Fields
+        private string m_name;
+        private int m_size;
+        private bool m_autoOpen;
+        private LogFileFullOperation m_fileFullOperation;
+        private bool m_persistSettings;
+        private string m_settingsCategoryName;
+        private FileStream m_fileStream;
+        private ManualResetEvent m_operationWaitHandle;
+        private ProcessQueue<string> m_logEntryQueue;
+        private Encoding m_textEncoding;
+        private bool m_disposed;
 
         #endregion
 
-        #region " Properties "
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the name of the log file, including the file extension.
@@ -262,7 +177,7 @@ namespace TVA.IO
                 }
                 else
                 {
-                    throw (new ArgumentNullException("Name"));
+                    throw new ArgumentNullException("Name");
                 }
             }
         }
@@ -281,13 +196,9 @@ namespace TVA.IO
             set
             {
                 if (value >= MinimumFileSize && value <= MaximumFileSize)
-                {
                     m_size = value;
-                }
                 else
-                {
-                    throw (new ArgumentOutOfRangeException("Size", string.Format("Value must be between {0} and {1}", MinimumFileSize, MaximumFileSize)));
-                }
+                    throw new ArgumentOutOfRangeException("Size", string.Format("Value must be between {0} and {1}", MinimumFileSize, MaximumFileSize));
             }
         }
 
@@ -359,13 +270,9 @@ namespace TVA.IO
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                {
                     m_settingsCategoryName = value;
-                }
                 else
-                {
-                    throw (new ArgumentNullException("SettingsCategoryName"));
-                }
+                    throw new ArgumentNullException("SettingsCategoryName");
             }
         }
 
@@ -382,47 +289,66 @@ namespace TVA.IO
             }
         }
 
+        /// <summary>
+        /// Gets or sets the encoding to be used to encode text data being exported.
+        /// </summary>
+        /// <value>The encoding to be used to encode text data being exported.</value>
+        /// <returns>The encoding to be used to encode text data being exported.</returns>
+        [Browsable(false)]
+        public virtual Encoding TextEncoding
+        {
+            get
+            {
+                return m_textEncoding;
+            }
+            set
+            {
+                if (value == null)
+                    m_textEncoding = Encoding.Default;
+                else
+                    m_textEncoding = value;
+            }
+        }
+
         #endregion
 
-        #region " Methods "
+        #region [ Methods ]
 
         /// <summary>
         /// Opens the log file if it is closed.
         /// </summary>
         public void Open()
         {
-
             if (!IsOpen)
             {
-                if (FileOpeningEvent != null)
-                    FileOpeningEvent(this, EventArgs.Empty);
+                if (FileOpening != null)
+                    FileOpening(this, EventArgs.Empty);
 
                 // Gets the absolute file path if a relative path is specified.
-                m_name = AbsolutePath(m_name);
+                m_name = FilePath.AbsolutePath(m_name);
+                
                 // Creates the folder in which the log file will reside it, if it does not exist.
-                if (!Directory.Exists(JustPath(m_name)))
+                if (!Directory.Exists(FilePath.JustPath(m_name)))
                 {
-                    Directory.CreateDirectory(JustPath(m_name));
+                    Directory.CreateDirectory(FilePath.JustPath(m_name));
                 }
                 // Opens the log file (if it exists) or creates it (if it does not exist).
                 m_fileStream = new FileStream(m_name, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+
                 // Scrolls to the end of the file so that existing data is not overwritten.
                 m_fileStream.Seek(0, SeekOrigin.End);
+
                 // If this is a new log file, set its creation date to current date. This is done to prevent historic
                 // log files (when FileFullOperation = Rollover) from having the same start time in their filename.
                 if (m_fileStream.Length == 0)
-                {
-                    System.IO.FileInfo with_1 = new FileInfo(m_name);
-                    with_1.CreationTime = DateTime.Now;
-                }
+                    (new FileInfo(m_name)).CreationTime = DateTime.Now;
 
                 // Starts the queue to which log entries are going to be added.
                 m_logEntryQueue.Start();
 
-                if (FileOpenedEvent != null)
-                    FileOpenedEvent(this, EventArgs.Empty);
+                if (FileOpened != null)
+                    FileOpened(this, EventArgs.Empty);
             }
-
         }
 
         /// <summary>
@@ -430,9 +356,7 @@ namespace TVA.IO
         /// </summary>
         public void Close()
         {
-
             Close(true);
-
         }
 
         /// <summary>
@@ -442,11 +366,10 @@ namespace TVA.IO
         /// false.</param>
         public void Close(bool flushQueuedEntries)
         {
-
             if (IsOpen)
             {
-                if (FileClosingEvent != null)
-                    FileClosingEvent(this, EventArgs.Empty);
+                if (FileClosing != null)
+                    FileClosing(this, EventArgs.Empty);
 
                 if (flushQueuedEntries)
                 {
@@ -466,10 +389,9 @@ namespace TVA.IO
                     m_fileStream = null;
                 }
 
-                if (FileClosedEvent != null)
-                    FileClosedEvent(this, EventArgs.Empty);
+                if (FileClosed != null)
+                    FileClosed(this, EventArgs.Empty);
             }
-
         }
 
         /// <summary>
@@ -478,7 +400,6 @@ namespace TVA.IO
         /// <param name="text">The text to be written to the log file.</param>
         public void Write(string text)
         {
-
             // Yields to the "file full operation" to complete, if in progress.
             m_operationWaitHandle.WaitOne();
 
@@ -489,9 +410,8 @@ namespace TVA.IO
             }
             else
             {
-                throw (new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_name)));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_name));
             }
-
         }
 
         /// <summary>
@@ -501,9 +421,7 @@ namespace TVA.IO
         /// <remarks>A "newline" character will automatically be appended to the text.</remarks>
         public void WriteLine(string text)
         {
-
             Write(text + Environment.NewLine);
-
         }
 
         /// <summary>
@@ -516,9 +434,7 @@ namespace TVA.IO
         /// </remarks>
         public void WriteTimestampedLine(string text)
         {
-
             Write("[" + DateTime.Now.ToString() + "] " + text + Environment.NewLine);
-
         }
 
         /// <summary>
@@ -526,23 +442,22 @@ namespace TVA.IO
         /// </summary>
         public void LoadSettings()
         {
-
             try
             {
-                CategorizedSettingsElementCollection with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-                if (with_1.Count > 0)
+                CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+
+                if (settings.Count > 0)
                 {
-                    Name = with_1.Item("Name").GetTypedValue(m_name);
-                    Size = with_1.Item("Size").GetTypedValue(m_size);
-                    AutoOpen = with_1.Item("AutoOpen").GetTypedValue(m_autoOpen);
-                    FileFullOperation = with_1.Item("FileFullOperation").GetTypedValue(m_fileFullOperation);
+                    Name = settings["Name"].GetTypedValue(m_name);
+                    Size = settings["Size"].GetTypedValue(m_size);
+                    AutoOpen = settings["AutoOpen"].GetTypedValue(m_autoOpen);
+                    FileFullOperation = settings["FileFullOperation"].GetTypedValue(m_fileFullOperation);
                 }
             }
             catch
             {
                 // Exceptions will occur if the settings are not present in the config file.
             }
-
         }
 
         /// <summary>
@@ -550,25 +465,31 @@ namespace TVA.IO
         /// </summary>
         public void SaveSettings()
         {
-
             if (m_persistSettings)
             {
                 try
                 {
-                    CategorizedSettingsElementCollection with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-                    with_1.Clear();
-                    object with_2 = with_1.Item("Name", true);
-                    with_2.Value = m_name;
-                    with_2.Description = "Name of the log file including its path.";
-                    object with_3 = with_1.Item("Size", true);
-                    with_3.Value = m_size.ToString();
-                    with_3.Description = "Maximum size of the log file in MB.";
-                    object with_4 = with_1.Item("AutoOpen", true);
-                    with_4.Value = m_autoOpen.ToString();
-                    with_4.Description = "True if the log file is to be open automatically after initialization is complete; otherwise False.";
-                    object with_5 = with_1.Item("FileFullOperation", true);
-                    with_5.Value = m_fileFullOperation.ToString();
-                    with_5.Description = "Operation (Truncate; Rollover) that is to be performed on the file when it is full.";
+                    CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                    CategorizedSettingsElement setting;
+
+                    settings.Clear();
+                    
+                    setting = settings["Name", true];
+                    setting.Value = m_name;
+                    setting.Description = "Name of the log file including its path.";
+
+                    setting = settings["Size", true];
+                    setting.Value = m_size.ToString();
+                    setting.Description = "Maximum size of the log file in MB.";
+
+                    setting = settings["AutoOpen", true];
+                    setting.Value = m_autoOpen.ToString();
+                    setting.Description = "True if the log file is to be open automatically after initialization is complete; otherwise False.";
+
+                    setting = settings["FileFullOperation", true];
+                    setting.Value = m_fileFullOperation.ToString();
+                    setting.Description = "Operation (Truncate; Rollover) that is to be performed on the file when it is full.";
+                    
                     TVA.Configuration.Common.SaveSettings();
                 }
                 catch
@@ -576,28 +497,20 @@ namespace TVA.IO
                     // Exceptions may occur if the settings cannot be saved to the config file.
                 }
             }
-
         }
 
         public void BeginInit()
         {
-
             // No prerequisites before the component is initialized.
-
         }
 
         public void EndInit()
         {
-
             if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
             {
-                LoadSettings(); // Loads settings from the config file.
-                if (m_autoOpen)
-                {
-                    Open(); // Opens the file automatically, if specified.
-                }
+                LoadSettings();         // Loads settings from the config file.
+                if (m_autoOpen) Open(); // Opens the file automatically, if specified.
             }
-
         }
 
         /// <summary>
@@ -606,27 +519,26 @@ namespace TVA.IO
         /// <returns>The text read from the log file.</returns>
         public string ReadText()
         {
-
             // Yields to the "file full operation" to complete, if in progress.
             m_operationWaitHandle.WaitOne();
 
             if (IsOpen)
             {
                 byte[] buffer = null;
+
                 lock (m_fileStream)
                 {
-                    buffer = TVA.Common.CreateArray<byte>(Convert.ToInt32(m_fileStream.Length));
+                    buffer = new byte[m_fileStream.Length];
                     m_fileStream.Seek(0, SeekOrigin.Begin);
                     m_fileStream.Read(buffer, 0, buffer.Length);
                 }
 
-                return Encoding.Default.GetString(buffer);
+                return m_textEncoding.GetString(buffer);
             }
             else
             {
-                throw (new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_name)));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_name));
             }
-
         }
 
         /// <summary>
@@ -636,20 +548,14 @@ namespace TVA.IO
         /// <returns>A list of lines from the text read from the log file.</returns>
         public List<string> ReadLines()
         {
-
             return new List<string>(ReadText().Split(new string[] { Environment.NewLine }, StringSplitOptions.None));
-
         }
-
-        #endregion
-
-        #region " Handlers "
 
         private void WriteLogEntries(string[] items)
         {
-
             long currentFileSize = 0;
-            long maximumFileSize = Convert.ToInt64(m_size * (Math.Pow(1024, 2)));
+            long maximumFileSize = (long)(m_size * 1048576);
+
             lock (m_fileStream)
             {
                 currentFileSize = m_fileStream.Length;
@@ -660,7 +566,7 @@ namespace TVA.IO
                 if (!string.IsNullOrEmpty(items[i]))
                 {
                     // Write entries with text.
-                    byte[] buffer = Encoding.Default.GetBytes(items[i]);
+                    byte[] buffer = m_textEncoding.GetBytes(items[i]);
 
                     if (currentFileSize + buffer.Length <= maximumFileSize)
                     {
@@ -670,6 +576,7 @@ namespace TVA.IO
                             m_fileStream.Write(buffer, 0, buffer.Length);
                             m_fileStream.Flush();
                         }
+
                         currentFileSize += buffer.Length;
                     }
                     else
@@ -682,19 +589,17 @@ namespace TVA.IO
                         }
 
                         // Truncates file or roll over to new file.
-                        if (FileFullEvent != null)
-                            FileFullEvent(this, EventArgs.Empty);
+                        if (FileFull != null)
+                            FileFull(this, EventArgs.Empty);
 
                         return;
                     }
                 }
             }
-
         }
 
         private void LogFile_FileFull(object sender, System.EventArgs e)
         {
-
             // Signals that the "file full operation" is in progress.
             m_operationWaitHandle.Reset();
 
@@ -707,17 +612,15 @@ namespace TVA.IO
                         Close(false);
                         File.Delete(m_name);
                     }
-                    catch
-                    {
-                        throw;
-                    }
                     finally
                     {
                         Open();
                     }
                     break;
                 case LogFileFullOperation.Rollover:
-                    string historyFileName = JustPath(m_name) + NoFileExtension(m_name) + "_" + File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" + File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") + JustFileExtension(m_name);
+                    string historyFileName = FilePath.JustPath(m_name) + FilePath.NoFileExtension(m_name) + "_" + 
+                        File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
+                        File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.JustFileExtension(m_name);
 
                     // Rolls over to a new log file, and keeps the current file for history.
                     try
@@ -738,15 +641,12 @@ namespace TVA.IO
 
             // Signals that the "file full operation" is complete.
             m_operationWaitHandle.Set();
-
         }
 
-        private void m_logEntryQueue_ProcessException(System.Exception ex)
+        private void m_logEntryQueue_ProcessException(Exception ex)
         {
-
-            if (LogExceptionEvent != null)
-                LogExceptionEvent(this, new GenericEventArgs<Exception>(ex));
-
+            if (LogException != null)
+                LogException(this, new GenericEventArgs<Exception>(ex));
         }
 
         #endregion
