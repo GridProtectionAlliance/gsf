@@ -211,7 +211,7 @@
     <Compile Include="Measurements\ConcentratorBase.cs" />
     <Compile Include="Measurements\TemporalMeasurement.cs" />
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
-    <Compile Include="Text\Common.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
     <Compile Include="ByteEncoding.cs" />
@@ -257,13 +257,6 @@
       <ProductName>.NET Framework 3.5</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Exception\" />
-    <Folder Include="Net\Http\" />
-    <Folder Include="Remoting\" />
-    <Folder Include="Web\" />
-    <Folder Include="Windows\" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

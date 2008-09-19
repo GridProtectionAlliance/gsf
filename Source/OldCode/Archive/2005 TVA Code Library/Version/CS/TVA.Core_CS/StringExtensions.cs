@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  Common.cs
+//  StringExtensions.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -41,22 +41,13 @@ using System.Collections.Generic;
 
 namespace TVA
 {
-    /// <summary>Defines common global functions related to string manipulation.</summary>
-    public sealed class Common
+    /// <summary>Defines extension functions related to string manipulation.</summary>
+    public static class StringExtensions
     {
-
-
         /// <summary>Function signature for testing a character against certain criteria.</summary>
         /// <param name="c">Character to test.</param>
         /// <returns>True, if specified character passed test; otherwise, false.</returns>
         public delegate bool CharacterTestFunctionSignature(char c);
-
-        private Common()
-        {
-
-            // This class contains only global functions and is not meant to be instantiated.
-
-        }
 
         /// <summary>Performs a fast concatenation of a given string array.</summary>
         /// <param name="values">String array to concatenate.</param>
