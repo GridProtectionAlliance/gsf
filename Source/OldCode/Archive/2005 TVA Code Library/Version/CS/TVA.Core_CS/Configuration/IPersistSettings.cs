@@ -1,38 +1,47 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
+//*******************************************************************************************************
+//  IPersistSettings.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C Patel
+//      Office: INFO SVCS APP DEV, CHATTANOOGA - MR 2W-C
+//       Phone: 423-751-2250
+//       Email: pcpatel@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  03/21/2007 - Pinal C Patel
+//       Generated original version of source code.
+//  09/16/2008 - Pinal C Patel
+//       Converted code to C#.
+//
+//*******************************************************************************************************
 
-// 03/21/2007
-
-namespace TVA
+namespace TVA.Configuration
 {
-    namespace Configuration
+    /// <summary>
+    /// Specifies that this object can persists settings to a config file.
+    /// </summary>
+    public interface IPersistSettings
     {
+        /// <summary>
+        /// Determines whether the object settings are to be persisted to the config file.
+        /// </summary>
+        bool PersistSettings { get; set; }
 
-        public interface IPersistSettings
-        {
+        /// <summary>
+        /// Gets or sets the category name under which the object settings are persisted in the config file.
+        /// </summary>
+        string SettingsCategoryName { get; set; }
 
-            bool PersistSettings
-            {
-                get;
-                set;
-            }
+        /// <summary>
+        /// Saves settings to the config file.
+        /// </summary>
+        void SaveSettings();
 
-            string SettingsCategoryName
-            {
-                get;
-                set;
-            }
-
-            void SaveSettings();
-
-            void LoadSettings();
-
-        }
-
+        /// <summary>
+        /// Loads saved settings from the config file.
+        /// </summary>
+        void LoadSettings();
     }
 }

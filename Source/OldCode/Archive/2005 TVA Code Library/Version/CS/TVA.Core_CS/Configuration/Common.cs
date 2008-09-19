@@ -186,7 +186,7 @@ namespace TVA
             {
                 get
                 {
-                    return DefaultConfigFile.CategorizedSettings.General;
+                    return DefaultConfigFile.Settings.General;
                 }
             }
 
@@ -218,7 +218,7 @@ namespace TVA
             /// </remarks>
             public static CategorizedSettingsElementCollection CategorizedSettings(string category)
             {
-                return DefaultConfigFile.CategorizedSettings[category];
+                return DefaultConfigFile.Settings[category];
             }
 
             /// <summary>
