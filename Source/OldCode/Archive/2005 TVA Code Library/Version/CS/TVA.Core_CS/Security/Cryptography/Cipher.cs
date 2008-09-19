@@ -146,6 +146,7 @@ namespace TVA.Security.Cryptography
 
             // Performs requested levels of encryption.
             inStream = Crypt(inStream, key);
+
             if (strength >= CipherStrength.Level2)
             {
                 inStream = Encrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
@@ -181,11 +182,10 @@ namespace TVA.Security.Cryptography
         public static void Encrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
         {
             byte[] inBuffer = new byte[BufferSize];
-            byte[] outBuffer;
-            byte[] lengthBuffer;
-            int read;
-            long total;
+            byte[] outBuffer, lengthBuffer;
+            long total = 0;
             long length = -1;
+            int read;
 
             // Sends initial progress event.
             if (progressHandler != null)
@@ -209,7 +209,7 @@ namespace TVA.Security.Cryptography
             while (read > 0)
             {
                 // Encrypts buffer.
-                outBuffer = Encrypt(CopyBuffer(inBuffer, 0, read), key, IV, strength);
+                outBuffer = Encrypt(inBuffer.CopyBuffer(0, read), key, IV, strength);
 
                 // The destination encryption stream length does not have to be same as the input stream length, so we
                 // prepend the final size of each encrypted buffer onto the destination ouput stream so that we can
@@ -228,15 +228,12 @@ namespace TVA.Security.Cryptography
                 // Reads next buffer.
                 read = inStream.Read(inBuffer, 0, BufferSize);
             }
-
         }
 
         /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
         public static void Encrypt(SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
         {
-
-            // This is the root encryption function. Eventually, all the encryption functions perform their actual
-            // encryption here.
+            // This is the root encryption function. Eventually, all the encryption functions perform their actual encryption here.
             byte[] rgbKey = GetLegalKey(algorithm, key);
             byte[] rgbIV = GetLegalIV(algorithm, IV);
             CryptoStream encodeStream = new CryptoStream(outStream, algorithm.CreateEncryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
@@ -253,25 +250,18 @@ namespace TVA.Security.Cryptography
             }
 
             encodeStream.FlushFinalBlock();
-
         }
 
         /// <summary>Creates an encrypted file from source file data.</summary>
         public static void EncryptFile(string sourceFileName, string destFileName, CipherStrength strength)
         {
-
             EncryptFile(sourceFileName, destFileName, null, strength, null);
-
         }
 
         /// <summary>Creates an encrypted file from source file data.</summary>
         public static void EncryptFile(string sourceFileName, string destFileName, string encryptionKey, CipherStrength strength, ProgressEventHandler progressHandler)
         {
-
-            if (string.IsNullOrEmpty(encryptionKey))
-            {
-                encryptionKey = StandardKey;
-            }
+            if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
 
             FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destFileName);
@@ -283,142 +273,104 @@ namespace TVA.Security.Cryptography
             destFileStream.Flush();
             destFileStream.Close();
             sourceFileStream.Close();
-
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameter using the standard encryption key and encryption level 1.</summary>
         public static string Decrypt(string str)
         {
-
             return Decrypt(str, null, CipherStrength.Level1);
-
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters using the standard encryption key.</summary>
         public static string Decrypt(string str, CipherStrength strength)
         {
-
             return Decrypt(str, null, strength);
-
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters.</summary>
         public static string Decrypt(string str, string encryptionKey, CipherStrength strength)
         {
-
-            if (string.IsNullOrEmpty(str))
-            {
-                return null;
-            }
-            if (string.IsNullOrEmpty(encryptionKey))
-            {
-                encryptionKey = StandardKey;
-            }
+            if (string.IsNullOrEmpty(str)) return null;
+            if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
 
             byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
             byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
 
             return Encoding.Unicode.GetString(Decrypt(Convert.FromBase64String(str), rgbKey, rgbIV, strength));
-
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
         public static byte[] Decrypt(byte[] data, byte[] key, byte[] IV, CipherStrength strength)
         {
-
             if (strength == CipherStrength.None)
-            {
                 return data;
-            }
 
             // Performs requested levels of decryption.
             if (strength >= CipherStrength.Level5)
-            {
                 data = Deobfuscate(data, key);
-            }
+
             if (strength >= CipherStrength.Level4)
-            {
                 data = Decrypt(new RijndaelManaged(), data, key, IV);
-            }
+
             if (strength >= CipherStrength.Level3)
-            {
                 data = Decrypt(new RC2CryptoServiceProvider(), data, key, IV);
-            }
+
             if (strength >= CipherStrength.Level2)
-            {
                 data = Decrypt(new TripleDESCryptoServiceProvider(), data, key, IV);
-            }
 
             return Crypt(data, key);
-
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
         public static byte[] Decrypt(SymmetricAlgorithm algorithm, byte[] data, byte[] key, byte[] IV)
         {
-
             return ((MemoryStream)(Decrypt(algorithm, new MemoryStream(data), key, IV))).ToArray();
-
         }
 
         /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
         public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
-
             if (strength == CipherStrength.None)
-            {
                 return inStream;
-            }
 
             // Performs requested levels of decryption.
             if (strength >= CipherStrength.Level5)
-            {
                 inStream = Deobfuscate(inStream, key);
-            }
+
             if (strength >= CipherStrength.Level4)
-            {
                 inStream = Decrypt(new RijndaelManaged(), inStream, key, IV);
-            }
+
             if (strength >= CipherStrength.Level3)
-            {
                 inStream = Decrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
-            }
+
             if (strength >= CipherStrength.Level2)
-            {
                 inStream = Decrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
-            }
 
             return Crypt(inStream, key);
-
         }
 
         /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
         public static Stream Decrypt(SymmetricAlgorithm algorithm, Stream inStream, byte[] key, byte[] IV)
         {
-
             MemoryStream outStream = new MemoryStream();
 
             Decrypt(algorithm, inStream, outStream, key, IV);
             outStream.Position = 0;
 
             return outStream;
-
         }
 
         /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
         public static void Decrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
         {
-
-            byte[] inBuffer;
-            byte[] outBuffer;
+            byte[] inBuffer, outBuffer;
             byte[] lengthBuffer = BitConverter.GetBytes(0);
-            int size;
-            int read;
-            long total;
+            long total = 0;
             long length = -1;
+            int size, read;
 
             // Sends initial progress event.
             if (progressHandler != null)
@@ -475,17 +427,14 @@ namespace TVA.Security.Cryptography
                 // Reads the size of the next buffer from the stream.
                 read = inStream.Read(lengthBuffer, 0, lengthBuffer.Length);
             }
-
         }
 
         /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
         public static void Decrypt(SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
         {
-
-            // This is the root decryption function. Eventually, all the decryption functions perform their actual
-            // decryption here.
+            // This is the root decryption function. Eventually, all the decryption functions perform their actual decryption here.
             byte[] rgbKey = GetLegalKey(algorithm, key);
-            byte[] rgbIV = GetLegalIV(algorithm, IV);
+            byte[] rgbIV = GetLegalIV(algorithm, IV);            
             CryptoStream decodeStream = new CryptoStream(outStream, algorithm.CreateDecryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
             byte[] buffer = new byte[BufferSize];
             int read;
@@ -500,25 +449,18 @@ namespace TVA.Security.Cryptography
             }
 
             decodeStream.FlushFinalBlock();
-
         }
 
         /// <summary>Creates a decrypted file from source file data.</summary>
         public static void DecryptFile(string sourceFileName, string destFileName, CipherStrength strength)
         {
-
             DecryptFile(sourceFileName, destFileName, null, strength, null);
-
         }
 
         /// <summary>Creates a decrypted file from source file data.</summary>
         public static void DecryptFile(string sourceFileName, string destFileName, string encryptionKey, CipherStrength strength, ProgressEventHandler progressHandler)
         {
-
-            if (string.IsNullOrEmpty(encryptionKey))
-            {
-                encryptionKey = StandardKey;
-            }
+            if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
 
             FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destFileName);
@@ -530,62 +472,48 @@ namespace TVA.Security.Cryptography
             destFileStream.Flush();
             destFileStream.Close();
             sourceFileStream.Close();
-
         }
 
         /// <summary>Coerces key to maximum legal bit length for given encryption algorithm.</summary>
         public static byte[] GetLegalKey(SymmetricAlgorithm algorithm, byte[] key)
         {
-
-            byte[] rgbKey = TVA.Common.CreateArray<byte>(algorithm.LegalKeySizes(0).MaxSize / 8);
+            byte[] rgbKey = TVA.Common.CreateArray<byte>(algorithm.LegalKeySizes[0].MaxSize / 8);
 
             for (int x = 0; x <= rgbKey.Length - 1; x++)
             {
                 if (x < key.Length)
-                {
                     rgbKey[x] = key[x];
-                }
                 else
-                {
                     rgbKey[x] = Encoding.ASCII.GetBytes(StandardKey.Substring(x % StandardKey.Length, 1))[0];
-                }
             }
 
             return rgbKey;
-
         }
 
         /// <summary>Coerces initialization vector to legal block size for given encryption algorithm.</summary>
         public static byte[] GetLegalIV(SymmetricAlgorithm algorithm, byte[] IV)
         {
-
-            byte[] rgbIV = TVA.Common.CreateArray<byte>(algorithm.LegalBlockSizes(0).MinSize / 8);
+            byte[] rgbIV = TVA.Common.CreateArray<byte>(algorithm.LegalBlockSizes[0].MinSize / 8);
 
             for (int x = 0; x <= rgbIV.Length - 1; x++)
             {
                 if (x < IV.Length)
-                {
                     rgbIV[x] = IV[IV.Length - 1 - x];
-                }
                 else
-                {
                     rgbIV[x] = Encoding.ASCII.GetBytes(StandardKey.Substring(x % StandardKey.Length, 1))[0];
-                }
             }
 
             return rgbIV;
-
         }
 
         /// <summary>Encrypts or decrypts input stream onto output stream using XOR based algorithms. Call once to
         /// encrypt, call again with same key to decrypt.</summary>
         public static Stream Crypt(Stream inStream, byte[] encryptionKey)
         {
-
             if (inStream.CanSeek)
             {
                 MemoryStream outStream = new MemoryStream();
-                byte[] buffer = TVA.Common.CreateArray<byte>(inStream.Length);
+                byte[] buffer = new byte[inStream.Length];
 
                 inStream.Read(buffer, 0, buffer.Length);
                 buffer = Crypt(buffer, encryptionKey);
@@ -613,85 +541,74 @@ namespace TVA.Security.Cryptography
                 outStream.Position = 0;
                 return Crypt(outStream, encryptionKey);
             }
-
         }
 
         /// <summary>Encrypts or decrypts data using XOR based algorithms. Call once to encrypt; call again with same
         /// key to decrypt.</summary>
         public static byte[] Crypt(byte[] data, byte[] encryptionKey)
         {
+            // For backwards compatibility with older Visual Basic versions of the code library this
+            // function replicates the original code along with proper calls to VB intrinsic functions...
 
             // The longer the encryption key, the better the encryption.
             // Repeated encryption sequences do not occur for (3 * encryptionKey.Length) unique bytes.
-
-            byte[] cryptData = TVA.Common.CreateArray<byte>(data.Length);
-            long keyIndex;
-            int algorithm;
+            byte[] cryptData = new byte[data.Length];
+            int algorithm = 0;
+            int keyIndex = 0;
             int cryptChar;
 
-            // Re-seeds random number generator.
-            
+            // Re-seeds Visual Basic random number generator.            
             VBMath.Rnd(-1);
             VBMath.Randomize(encryptionKey[0]);
 
             for (int x = 0; x <= data.Length - 1; x++)
             {
                 cryptData[x] = data[x];
+
                 if (cryptData[x] > 0)
                 {
                     switch (algorithm)
                     {
                         case 0:
                             cryptChar = encryptionKey[keyIndex];
-                            if (cryptData[x] != cryptChar)
-                            {
-                                cryptData[x] = cryptData[x] ^ cryptChar;
-                            }
+                            if (cryptData[x] != cryptChar) cryptData[x] = (byte)(cryptData[x] ^ cryptChar);
                             break;
                         case 1:
-                            cryptChar = Conversion.Int(VBMath.Rnd() * (encryptionKey[keyIndex] + 1));
-                            if (cryptData[x] != cryptChar)
-                            {
-                                cryptData[x] = cryptData[x] ^ cryptChar;
-                            }
+                            cryptChar = (int)Math.Round(Conversion.Int(VBMath.Rnd() * (encryptionKey[keyIndex] + 1)));
+                            if (cryptData[x] != cryptChar) cryptData[x] = (byte)(cryptData[x] ^ cryptChar);
                             break;
                         case 2:
-                            cryptChar = Conversion.Int(VBMath.Rnd() * 256);
-                            if (cryptData[x] != cryptChar)
-                            {
-                                cryptData[x] = cryptData[x] ^ cryptChar;
-                            }
+                            cryptChar = (int)Math.Round(Conversion.Int(VBMath.Rnd() * 256.0F));
+                            if (cryptData[x] != cryptChar) cryptData[x] = (byte)(cryptData[x] ^ cryptChar);
                             break;
                     }
                 }
 
                 // Selects next encryption algorithm.
                 algorithm++;
+
                 if (algorithm == 3)
                 {
                     algorithm = 0;
 
                     // Selects next encryption key.
                     keyIndex++;
+
                     if (keyIndex > encryptionKey.Length - 1)
-                    {
                         keyIndex = 0;
-                    }
                 }
             }
 
             return cryptData;
-
         }
 
         /// <summary>Obfuscates input stream onto output stream using bit-rotation algorithms.</summary>
         public static Stream Obfuscate(Stream inStream, byte[] encryptionKey)
         {
-
             if (inStream.CanSeek)
             {
                 MemoryStream outStream = new MemoryStream();
-                byte[] buffer = TVA.Common.CreateArray<byte>(inStream.Length);
+                byte[] buffer = new byte[inStream.Length];
 
                 inStream.Read(buffer, 0, buffer.Length);
                 buffer = Obfuscate(buffer, encryptionKey);
@@ -719,7 +636,6 @@ namespace TVA.Security.Cryptography
                 outStream.Position = 0;
                 return Obfuscate(outStream, encryptionKey);
             }
-
         }
 
         /// <summary>Obfuscates data using bit-rotation algorithms.</summary>
@@ -727,7 +643,7 @@ namespace TVA.Security.Cryptography
         {
             byte key;
             long keyIndex = encryptionKey.Length - 1;
-            byte[] cryptData = TVA.Common.CreateArray<byte>(data.Length);
+            byte[] cryptData = new byte[data.Length];
 
             // Starts bit rotation cycle.
             for (int x = 0; x <= cryptData.Length - 1; x++)
@@ -753,11 +669,10 @@ namespace TVA.Security.Cryptography
         /// <summary>Deobfuscates input stream onto output stream using bit-rotation algorithms.</summary>
         public static Stream Deobfuscate(Stream inStream, byte[] encryptionKey)
         {
-
             if (inStream.CanSeek)
             {
                 MemoryStream outStream = new MemoryStream();
-                byte[] buffer = TVA.Common.CreateArray<byte>(inStream.Length);
+                byte[] buffer = new byte[inStream.Length];
 
                 inStream.Read(buffer, 0, buffer.Length);
                 buffer = Deobfuscate(buffer, encryptionKey);
@@ -785,7 +700,6 @@ namespace TVA.Security.Cryptography
                 outStream.Position = 0;
                 return Deobfuscate(outStream, encryptionKey);
             }
-
         }
 
         /// <summary>Deobfuscates data using bit-rotation algorithms.</summary>
@@ -793,7 +707,7 @@ namespace TVA.Security.Cryptography
         {
             byte key;
             long keyIndex = encryptionKey.Length - 1;
-            byte[] cryptData = TVA.Common.CreateArray<byte>(data.Length);
+            byte[] cryptData = new byte[data.Length];
 
             // Starts bit rotation cycle.
             for (int x = 0; x <= cryptData.Length - 1; x++)
@@ -818,94 +732,89 @@ namespace TVA.Security.Cryptography
 
         /// <summary>Generates a random key useful for cryptographic functions.</summary>
         public static string GenerateKey()
+		{
+			char[] keyChars;
+			char keyChar;
+			int x, y;
+			
+			// Generates a character array of unique values.
+			StringBuilder result = new StringBuilder();
+
+			result.Append(StandardKey);
+			result.Append(Guid.NewGuid().ToString().ToLower().Replace("-", "©ª¦"));
+			result.Append(DateTime.UtcNow.Ticks);
+
+			for (x = 1; x <= 50; x++)
+			{
+				result.Append(Convert.ToChar(Random.Int32Between(33, 255)));
+			}
+
+			result.Append(Environment.MachineName);
+			result.Append(GetKeyFromSeed((Int24)DateAndTime.Timer));
+			result.Append(Environment.UserDomainName);
+			result.Append(Environment.UserName);
+			result.Append(Common.SystemTimer);
+			result.Append(DateTime.Now.ToString().Replace("/", "¡¤¥").Replace(" ", "°"));
+			result.Append(Guid.NewGuid().ToString().ToUpper().Replace("-", "£§"));
+
+			keyChars = result.ToString().ToCharArray();
+			
+			// Swaps values around in array at random.
+			for (x = 0; x <= keyChars.Length - 1; x++)
+			{
+				y = Random.Int32Between(1, keyChars.Length) - 1;
+				if (x != y)
 				{
-					
-					char[] keyChars;
-					char keyChar;
-					int x;
-					int y;
-					
-					// Generates a character array of unique values.
-					System.Text.StringBuilder with_1 = new StringBuilder;
-					with_1.Append(StandardKey);
-					with_1.Append(Guid.NewGuid().ToString().ToLower().Replace("-", "©ª¦"));
-					with_1.Append(DateTime.UtcNow.Ticks);
-					for (x = 1; x <= 50; x++)
-					{
-						with_1.Append(Convert.ToChar(TVA.Math.Common.RandomInt32Between(33, 255)));
-					}
-					with_1.Append(Environment.MachineName);
-					with_1.Append(GetKeyFromSeed(Microsoft.VisualBasic.DateAndTime.Timer));
-					with_1.Append(Environment.UserDomainName);
-					with_1.Append(Environment.UserName);
-					with_1.Append(Microsoft.VisualBasic.DateAndTime.Timer);
-					with_1.Append(DateTime.Now.ToString().Replace("/", "¡¤¥").Replace(" ", "°"));
-					with_1.Append(Guid.NewGuid().ToString().ToUpper().Replace("-", "£§"));
-					keyChars = with_1.ToString().ToCharArray();
-					
-					// Swaps values around in array at random.
-					for (x = 0; x <= keyChars.Length - 1; x++)
-					{
-						y = TVA.Math.Common.RandomInt32Between(1, keyChars.Length) - 1;
-						if (x != y)
-						{
-							keyChar = keyChars[x];
-							keyChars[x] = keyChars[y];
-							keyChars[y] = keyChar;
-						}
-					}
-					
-					return new string(keyChars);
-					
+					keyChar = keyChars[x];
+					keyChars[x] = keyChars[y];
+					keyChars[y] = keyChar;
 				}
+			}
+			
+			return new string(keyChars);
+		}
 
         /// <summary>Returns a simple encoded string representing a number which can later be decoded
         /// with <see cref="GetSeedFromKey" />.</summary>
         /// <remarks>This function was designed for 24-bit values.</remarks>
         public static string GetKeyFromSeed(Int24 seed)
+		{
+            if (seed < 0)
+                throw new ArgumentException("Cannot calculate key from negative seed");
+
+            // This is a handy algorithm for encoding an integer value, use GetSeedFromKey to decode.
+			int seedValue = (int)seed;
+			byte[] seedBytes = new byte[4];
+			int alphaIndex;
+			int asciiA = Strings.Asc('A');
+			
+			// Breaks seed into its component bytes.
+			seedBytes[0] = Bit.LoByte(Bit.LoWord(seedValue));
+			seedBytes[1] = Bit.HiByte(Bit.LoWord(seedValue));
+			seedBytes[2] = Bit.LoByte(Bit.HiWord(seedValue));
+			
+			// Creates alpha-numeric key string.
+			StringBuilder result = new StringBuilder();
+
+			for (int x = 0; x <= 2; x++)
+			{
+				alphaIndex = Random.Int32Between(0, 25);
+				if (x > 0)
 				{
-					
-					// This is a handy algorithm for encoding an integer value, use GetSeedFromKey to decode.
-					int seedValue = System.Convert.ToInt32(seed);
-					byte[] seedBytes = new byte[4];
-					int alphaIndex;
-					int asciiA = Strings.Asc('A');
-					
-					if (seedValue < 0)
-					{
-						throw (new ArgumentException("Cannot calculate key from negative seed"));
-					}
-					
-					// Breaks seed into its component bytes.
-					seedBytes[0] = LoByte(LoWord(seedValue));
-					seedBytes[1] = HiByte(LoWord(seedValue));
-					seedBytes[2] = LoByte(HiWord(seedValue));
-					
-					// Creates alpha-numeric key string.
-					System.Text.StringBuilder with_1 = new StringBuilder;
-					for (int x = 0; x <= 2; x++)
-					{
-						alphaIndex = TVA.Math.Common.RandomInt32Between(0, 25);
-						if (x > 0)
-						{
-							with_1.Append('-');
-						}
-						with_1.Append(Convert.ToChar(asciiA + (25 - alphaIndex)));
-						with_1.Append(seedBytes[x] + alphaIndex);
-					}
-					
-					return with_1.ToString();
-					
+					result.Append('-');
 				}
+				result.Append(Convert.ToChar(asciiA + (25 - alphaIndex)));
+				result.Append(seedBytes[x] + alphaIndex);
+			}
+			
+			return result.ToString();
+		}
 
         /// <summary>Returns the number from a string encoded with <see cref="GetKeyFromSeed" />.</summary>
         public static Int24 GetSeedFromKey(string key)
         {
-
             if (string.IsNullOrEmpty(key))
-            {
                 throw (new ArgumentNullException("key", "key cannot be null"));
-            }
 
             byte[] seedBytes = new byte[3];
             int delimeter1;
@@ -941,12 +850,13 @@ namespace TVA.Security.Cryptography
                         }
 
                         // Calculates byte.
-                        value = Conversion.Val(code.Substring(code.Length - code.Length - 1, code.Length - 1)) - (25 - (Strings.Asc(code.Substring(0, 1)) - Strings.Asc("A")));
+                        value = (int)Conversion.Val(code.Substring(code.Length - code.Length - 1, code.Length - 1)) - 
+                            (25 - (Strings.Asc(code.Substring(0, 1)) - Strings.Asc("A")));
 
                         // Validates calculation.
                         if (value >= 0 && value <= 255)
                         {
-                            seedBytes[x] = System.Convert.ToByte(value);
+                            seedBytes[x] = (byte)value;
                         }
                         else
                         {
@@ -956,7 +866,7 @@ namespace TVA.Security.Cryptography
                     }
 
                     // Creates seed from its component bytes.
-                    return MakeDWord(MakeWord(0, seedBytes[2]), MakeWord(seedBytes[1], seedBytes[0]));
+                    return (Int24)Bit.MakeDWord(Bit.MakeWord(0, seedBytes[2]), Bit.MakeWord(seedBytes[1], seedBytes[0]));
                 }
             }
 
