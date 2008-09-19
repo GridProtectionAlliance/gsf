@@ -151,6 +151,12 @@ namespace TVA.IO
 
         #endregion
 
+        #region [ Constructors ]
+
+        // TODO: Make a single file and move constructor initialization here...
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>

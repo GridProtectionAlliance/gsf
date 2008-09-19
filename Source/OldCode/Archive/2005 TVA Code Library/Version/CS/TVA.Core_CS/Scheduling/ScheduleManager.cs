@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Scheduling.ScheduleManager.vb - Monitors multiples schedules defined as TVA.Scheduling.Schedule
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ScheduleManager.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
@@ -23,6 +23,8 @@
 //       instead of DesignMode property as the former is more accurate than the latter.
 //       Modified the Stop() method to avoid a  null reference exception that was most likely causing
 //       the IDE of the component's consumer to crash in design-mode.
+//  09/19/2008 - James R Carroll
+//       Convert to C#.
 //
 //*******************************************************************************************************
 
@@ -98,25 +100,11 @@ namespace TVA.Scheduling
     /// </para>
     /// </remarks>
     [ToolboxBitmap(typeof(ScheduleManager)), DefaultEvent("ScheduleDue")]
-    public partial class ScheduleManager : TVA.Services.IServiceComponent, IPersistSettings, ISupportInitialize
+    public partial class ScheduleManager : IServiceComponent, IPersistSettings, ISupportInitialize
     {
-        #region " Variables "
+        #region [ Members ]
 
-        private bool m_enabled;
-        private List<Schedule> m_schedules;
-        private bool m_persistSettings;
-        private string m_settingsCategoryName;
-        private bool m_previouslyEnabled;
-        private System.Timers.Timer m_timer;
-#if ThreadTracking
-        private ManagedThread m_startTimerThread;
-#else
-        private Thread m_startTimerThread;
-#endif
-
-        #endregion
-
-        #region " Constants "
+        // Constants
 
         /// <summary>
         /// Default value for Enabled property.
@@ -133,9 +121,7 @@ namespace TVA.Scheduling
         /// </summary>
         public const string DefaultSettingsCategoryName = "ScheduleManager";
 
-        #endregion
-
-        #region " Events "
+        // Events
 
         /// <summary>
         /// Occurs while the schedule manager is waiting to start at top of the minute.
@@ -167,9 +153,28 @@ namespace TVA.Scheduling
         [Category("Schedules")]
         public event EventHandler<ScheduleEventArgs> ScheduleDue;
 
+        // Fields
+        private bool m_enabled;
+        private List<Schedule> m_schedules;
+        private bool m_persistSettings;
+        private string m_settingsCategoryName;
+        private bool m_previouslyEnabled;
+        private System.Timers.Timer m_timer;
+#if ThreadTracking
+        private ManagedThread m_startTimerThread;
+#else
+        private Thread m_startTimerThread;
+#endif
+
         #endregion
 
-        #region " Properties "
+        #region [ Constructors ]
+
+        // TODO: Make a single file and move constructor initialization here...
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets a boolean value indicating whether the schedule manager is enabled.
@@ -311,7 +316,7 @@ namespace TVA.Scheduling
 
         #endregion
 
-        #region " Methods "
+        #region [ Methods ]
 
         /// <summary>
         /// Starts the schedule manager asynchronously.
@@ -507,15 +512,11 @@ namespace TVA.Scheduling
             }
         }
 
-        #endregion
-
-        #region " Handlers "
-
         private void m_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             CheckAllSchedules();
         }
 
         #endregion
-    }
+   }
 }

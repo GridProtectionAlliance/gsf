@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Scheduling.Schedule.vb - Defines a schedule object
-//  Copyright © 2005 - TVA, all rights reserved - Gbtc
+//  Schedule.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
@@ -22,11 +22,41 @@ using System.Text;
 
 namespace TVA.Scheduling
 {
+    #region [ Enumerations ]
+
+    /// <summary>Schedule part text syntax.</summary>
+    public enum SchedulePartTextSyntax
+    {
+        Any,
+        EveryN,
+        Range,
+        Specific
+    }
+
+    /// <summary>Date/time elements related to scheduling.</summary>
+    /// <remarks>This enumeration specifically corresponds to the UNIX crontab date/time elements.</remarks>
+    public enum DateTimePart
+    {
+        /// <summary>Minute part.</summary>
+        Minute,
+        /// <summary>Hour part.</summary>
+        Hour,
+        /// <summary>Day part.</summary>
+        Day,
+        /// <summary>Month part.</summary>
+        Month,
+        /// <summary>Day of week part.</summary>
+        DayOfWeek
+    }
+
+    #endregion
+
     /// <summary>Defines a schedule using rules defined using UNIX crontab syntax.</summary>
     public class Schedule
     {
-        #region " Member declaration "
+        #region [ Members ]
 
+        // Fields
         private string m_name;
         private string m_description;
         private SchedulePart m_minutePart;
@@ -38,7 +68,7 @@ namespace TVA.Scheduling
 
         #endregion
 
-        #region " Code Scope: Public "
+        #region [ Constructors ]
 
         /// <summary>
         /// Creates a new schedule with the default rule of "* * * * *".
@@ -77,6 +107,10 @@ namespace TVA.Scheduling
             this.Rule = rule;
             this.Description = description;
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the schedule name.
@@ -236,6 +270,10 @@ namespace TVA.Scheduling
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
         /// Checks whether the schedule is due at the present system time.
         /// </summary>
@@ -263,12 +301,17 @@ namespace TVA.Scheduling
         {
             Schedule other = obj as Schedule;
 
-            if ((other != null) && other.Name == this.Name && other.Rule == this.Rule)
+            if ((other != null) && other.Rule == this.Rule)
                 return true;
             else
                 return false;
         }
 
+        public override int GetHashCode()
+        {
+            return Rule.GetHashCode();
+        }
+
         #endregion
-    }
+   }
 }

@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Scheduling.SchedulePart.vb - Defines a schedule part object
-//  Copyright © 2005 - TVA, all rights reserved - Gbtc
+//  SchedulePart.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
@@ -27,8 +27,9 @@ namespace TVA.Scheduling
     /// <summary>Defines a schedule part.</summary>
     public class SchedulePart
     {
-        #region " Member Declaration "
+        #region [ Members ]
 
+        // Fields
         private string m_text;
         private DateTimePart m_dateTimePart;
         private SchedulePartTextSyntax m_textSyntax;
@@ -36,7 +37,7 @@ namespace TVA.Scheduling
 
         #endregion
 
-        #region " Public Code "
+        #region [ Constructors ]
 
         public SchedulePart(string text, DateTimePart dateTimePart)
         {
@@ -51,6 +52,10 @@ namespace TVA.Scheduling
                 throw new ArgumentException("Text is not valid for " + dateTimePart + " schedule part.");
             }
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets the text used for populating the values of the schedule part.
@@ -133,62 +138,53 @@ namespace TVA.Scheduling
             }
         }
 
-        public bool Matches(DateTime dateAndTime)
-        {
-            if (m_dateTimePart == DateTimePart.Minute)
-            {
-                return m_values.Contains(dateAndTime.Minute);
-            }
-            else if (m_dateTimePart == DateTimePart.Hour)
-            {
-                return m_values.Contains(dateAndTime.Hour);
-            }
-            else if (m_dateTimePart == DateTimePart.Day)
-            {
-                return m_values.Contains(dateAndTime.Day);
-            }
-            else if (m_dateTimePart == DateTimePart.Month)
-            {
-                return m_values.Contains(dateAndTime.Month);
-            }
-            else if (m_dateTimePart == DateTimePart.DayOfWeek)
-            {
-                return m_values.Contains(Convert.ToInt32(dateAndTime.DayOfWeek));
-            }
-
-            return false;
-        }
-
         #endregion
 
-        #region " Private Code"
+        #region [ Methods ]
+
+        public bool Matches(DateTime dateTime)
+        {
+            switch (m_dateTimePart)
+            {
+                case DateTimePart.Minute:
+                    return m_values.Contains(dateTime.Minute);
+                case DateTimePart.Hour:
+                    return m_values.Contains(dateTime.Hour);
+                case DateTimePart.Day:
+                    return m_values.Contains(dateTime.Day);
+                case DateTimePart.Month:
+                    return m_values.Contains(dateTime.Month);
+                case DateTimePart.DayOfWeek:
+                    return m_values.Contains((int)dateTime.DayOfWeek);
+                default:
+                    return false;
+            }
+        }
 
         private bool ValidateAndPopulate(string schedulePart, DateTimePart dateTimePart)
         {
             int minValue = 0;
             int maxValue = 0;
 
-            if (dateTimePart == DateTimePart.Minute)
+            switch (dateTimePart)
             {
-                maxValue = 59;
-            }
-            else if (dateTimePart == DateTimePart.Hour)
-            {
-                maxValue = 23;
-            }
-            else if (dateTimePart == DateTimePart.Day)
-            {
-                minValue = 1;
-                maxValue = 31;
-            }
-            else if (dateTimePart == DateTimePart.Month)
-            {
-                minValue = 1;
-                maxValue = 12;
-            }
-            else if (dateTimePart == DateTimePart.DayOfWeek)
-            {
-                maxValue = 6;
+                case DateTimePart.Minute:
+                    maxValue = 59;
+                    break;
+                case DateTimePart.Hour:
+                    maxValue = 23;
+                    break;
+                case DateTimePart.Day:
+                    minValue = 1;
+                    maxValue = 31;
+                    break;
+                case DateTimePart.Month:
+                    minValue = 1;
+                    maxValue = 12;
+                    break;
+                case DateTimePart.DayOfWeek:
+                    maxValue = 6;
+                    break;
             }
 
             m_values = new List<int>();
