@@ -129,12 +129,9 @@ namespace TVA
                 }
             }
 
-            public List<PerformanceCounter> Counters
+            public List<PerformanceCounter> Counters()
             {
-                get
-                {
-                    return m_counters;
-                }
+                return m_counters;
             }
 
             public PerformanceCounter Counters(string counterName)

@@ -14,7 +14,6 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using TVA.Net.Smtp;
 using TVA.IO;
-using TVA.IO.FilePath;
 using TVA.Identity;
 using TVA.Configuration;
 

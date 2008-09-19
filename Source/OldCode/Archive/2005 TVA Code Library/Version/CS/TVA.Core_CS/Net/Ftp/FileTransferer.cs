@@ -8,7 +8,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Net.Sockets;
-using TVA.IO.FilePath;
+using TVA.IO;
 using TVA.Threading;
 
 // James Ritchie Carroll - 2003
@@ -117,14 +117,14 @@ namespace TVA
 
                     if (dir == TransferDirection.Upload)
                     {
-                        m_streamCopyRoutine = new System.EventHandler(LocalToRemote);
-                        m_ftpFileCommandRoutine = new System.EventHandler(m_session.ControlChannel.STOR);
+                        m_streamCopyRoutine = LocalToRemote;
+                        m_ftpFileCommandRoutine = m_session.ControlChannel.STOR;
                         m_localFileOpenMode = FileMode.Open;
                     }
                     else
                     {
-                        m_streamCopyRoutine = new System.EventHandler(RemoteToLocal);
-                        m_ftpFileCommandRoutine = new System.EventHandler(m_session.ControlChannel.RETR);
+                        m_streamCopyRoutine = RemoteToLocal;
+                        m_ftpFileCommandRoutine = m_session.ControlChannel.RETR;
                         m_localFileOpenMode = FileMode.Create;
                     }
 
@@ -155,9 +155,7 @@ namespace TVA
                     {
                         // Files just created may still have a file lock, we'll wait a few seconds for read access if needed...
                         if (m_transferDirection == TransferDirection.Upload)
-                        {
-                            WaitForReadLock(m_localFile, m_session.Host.WaitLockTimeout);
-                        }
+                            FilePath.WaitForReadLock(m_localFile, m_session.Host.WaitLockTimeout);
 
                         m_session.Host.RaiseBeginFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
 
@@ -202,15 +200,14 @@ namespace TVA
                 internal void StartAsyncTransfer()
 				{
 					
-					#if ThreadTracking
-					object with_1 = new ManagedThread(TransferThreadProc);
-					with_1.Name = "TVA.Net.Ftp.FileTransferer.TransferThreadProc() [" + m_remoteFile + "]";
-					#else
-					System.Threading.Thread with_2 = new Thread(new System.Threading.ThreadStart(TransferThreadProc));
-					with_2.Name = "Transfer file thread: " + m_remoteFile;
-					#endif
-					.Start();
-					
+#if ThreadTracking
+					ManagedThread thread = new ManagedThread(TransferThreadProc);
+					thread.Name = "TVA.Net.Ftp.FileTransferer.TransferThreadProc() [" + m_remoteFile + "]";
+#else
+					System.Threading.Thread thread = new Thread(new System.Threading.ThreadStart(TransferThreadProc));
+					thread.Name = "Transfer file thread: " + m_remoteFile;
+#endif
+                    thread.Start();					
 				}
 
                 private void TestTransferResult()
