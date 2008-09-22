@@ -78,14 +78,14 @@ namespace TVA.Security.Cryptography
         /// the given parameter, using the standard encryption key and encryption level 1,</summary>
         public static string Encrypt(this string str)
         {
-            return Encrypt(str, null, CipherStrength.Level1);
+            return str.Encrypt(null, CipherStrength.Level1);
         }
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters using standard encryption.</summary>
         public static string Encrypt(this string str, CipherStrength strength)
         {
-            return Encrypt(str, null, strength);
+            return str.Encrypt(null, strength);
         }
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
@@ -101,7 +101,7 @@ namespace TVA.Security.Cryptography
             byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
             byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
 
-            return Convert.ToBase64String(Encrypt(Encoding.Unicode.GetBytes(str), rgbKey, rgbIV, strength));
+            return Convert.ToBase64String(Encoding.Unicode.GetBytes(str).Encrypt(rgbKey, rgbIV, strength));
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
@@ -139,7 +139,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
-        public static Stream Encrypt(this Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
+        public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return inStream;
@@ -209,7 +209,7 @@ namespace TVA.Security.Cryptography
             while (read > 0)
             {
                 // Encrypts buffer.
-                outBuffer = Encrypt(inBuffer.CopyBuffer(0, read), key, IV, strength);
+                outBuffer = inBuffer.CopyBuffer(0, read).Encrypt(key, IV, strength);
 
                 // The destination encryption stream length does not have to be same as the input stream length, so we
                 // prepend the final size of each encrypted buffer onto the destination ouput stream so that we can
@@ -268,7 +268,7 @@ namespace TVA.Security.Cryptography
             byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
             byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
 
-            Encrypt(sourceFileStream, destFileStream, rgbKey, rgbIV, strength, progressHandler);
+            sourceFileStream.Encrypt(destFileStream, rgbKey, rgbIV, strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
@@ -279,14 +279,14 @@ namespace TVA.Security.Cryptography
         /// parameter using the standard encryption key and encryption level 1.</summary>
         public static string Decrypt(this string str)
         {
-            return Decrypt(str, null, CipherStrength.Level1);
+            return str.Decrypt(null, CipherStrength.Level1);
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters using the standard encryption key.</summary>
         public static string Decrypt(this string str, CipherStrength strength)
         {
-            return Decrypt(str, null, strength);
+            return str.Decrypt(null, strength);
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
@@ -299,7 +299,7 @@ namespace TVA.Security.Cryptography
             byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
             byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
 
-            return Encoding.Unicode.GetString(Decrypt(Convert.FromBase64String(str), rgbKey, rgbIV, strength));
+            return Encoding.Unicode.GetString(Convert.FromBase64String(str).Decrypt(rgbKey, rgbIV, strength));
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
@@ -331,7 +331,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
-        public static Stream Decrypt(this Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
+        public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return inStream;
@@ -412,7 +412,7 @@ namespace TVA.Security.Cryptography
                     if (read > 0)
                     {
                         // Decrypts buffer.
-                        outBuffer = Decrypt(inBuffer, key, IV, strength);
+                        outBuffer = inBuffer.Decrypt(key, IV, strength);
                         outStream.Write(outBuffer, 0, outBuffer.Length);
 
                         // Updates decryption progress.
@@ -467,7 +467,7 @@ namespace TVA.Security.Cryptography
             byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
             byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
 
-            Decrypt(sourceFileStream, destFileStream, rgbKey, rgbIV, strength, progressHandler);
+            sourceFileStream.Decrypt(destFileStream, rgbKey, rgbIV, strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
@@ -477,7 +477,7 @@ namespace TVA.Security.Cryptography
         /// <summary>Coerces key to maximum legal bit length for given encryption algorithm.</summary>
         public static byte[] GetLegalKey(SymmetricAlgorithm algorithm, byte[] key)
         {
-            byte[] rgbKey = TVA.Common.CreateArray<byte>(algorithm.LegalKeySizes[0].MaxSize / 8);
+            byte[] rgbKey = new byte[algorithm.LegalKeySizes[0].MaxSize / 8];
 
             for (int x = 0; x <= rgbKey.Length - 1; x++)
             {
@@ -493,7 +493,7 @@ namespace TVA.Security.Cryptography
         /// <summary>Coerces initialization vector to legal block size for given encryption algorithm.</summary>
         public static byte[] GetLegalIV(SymmetricAlgorithm algorithm, byte[] IV)
         {
-            byte[] rgbIV = TVA.Common.CreateArray<byte>(algorithm.LegalBlockSizes[0].MinSize / 8);
+            byte[] rgbIV = new byte[algorithm.LegalBlockSizes[0].MinSize / 8];
 
             for (int x = 0; x <= rgbIV.Length - 1; x++)
             {
