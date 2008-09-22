@@ -90,9 +90,7 @@ namespace TVA.Configuration
         public CategorizedSettingsElement(string name, string value, string description, bool encrypted)
         {
             this.Name = name;
-            this.Value = value;
-            this.Description = description;
-            this.Encrypted = encrypted;
+            Update(value, description, encrypted);
         }
 
         #endregion
@@ -172,6 +170,50 @@ namespace TVA.Configuration
         #endregion
         
         #region [ Methods ]
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        /// <param name="description">New setting description.</param>
+        public void Update(object value, string description)
+        {
+            Update(value.ToString(), description);
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        /// <param name="description">New setting description.</param>
+        public void Update(string value, string description)
+        {
+            Update(value, description, Encrypted);
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        /// <param name="description">New setting description.</param>
+        /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
+        public void Update(object value, string description, bool encrypted)
+        {
+            Update(value.ToString(), description, encrypted);
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        /// <param name="description">New setting description.</param>
+        /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
+        public void Update(string value, string description, bool encrypted)
+        {
+            this.Value = value;
+            this.Description = description;
+            this.Encrypted = encrypted;
+        }
 
         /// <summary>
         /// Gets the setting value as the specified type.
