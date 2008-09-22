@@ -114,13 +114,13 @@ namespace TVA.Security.Cryptography
             data = Crypt(data, key);
             if (strength >= CipherStrength.Level2)
             {
-                data = Encrypt(new TripleDESCryptoServiceProvider(), data, key, IV);
+                data = new TripleDESCryptoServiceProvider().Encrypt(data, key, IV);
                 if (strength >= CipherStrength.Level3)
                 {
-                    data = Encrypt(new RC2CryptoServiceProvider(), data, key, IV);
+                    data = new RC2CryptoServiceProvider().Encrypt(data, key, IV);
                     if (strength >= CipherStrength.Level4)
                     {
-                        data = Encrypt(new RijndaelManaged(), data, key, IV);
+                        data = new RijndaelManaged().Encrypt(data, key, IV);
                         if (strength >= CipherStrength.Level5)
                         {
                             data = Obfuscate(data, key);
@@ -132,47 +132,54 @@ namespace TVA.Security.Cryptography
             return data;
         }
 
-        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
-        public static byte[] Encrypt(SymmetricAlgorithm algorithm, byte[] data, byte[] key, byte[] IV)
-        {
-            return ((MemoryStream)(Encrypt(algorithm, new MemoryStream(data), key, IV))).ToArray();
-        }
+        #region [ Old Code ]
+
+        // The following pure stream encryption implementation is incompatible with the one that implements a progress handler
+        // since it embeds original stream lengths into the encrypted stream - so this method was removed to prevent possible
+        // confusion/errors during decryption cycle. 
+
+        ///// <summary>Returns a stream of encrypted data for the given parameters.</summary>
+        //public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
+        //{
+        //    if (strength == CipherStrength.None)
+        //        return inStream;
+
+        //    // Performs requested levels of encryption.
+        //    inStream = Crypt(inStream, key);
+
+        //    if (strength >= CipherStrength.Level2)
+        //    {
+        //        inStream = Encrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
+        //        if (strength >= CipherStrength.Level3)
+        //        {
+        //            inStream = Encrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
+        //            if (strength >= CipherStrength.Level4)
+        //            {
+        //                inStream = Encrypt(new RijndaelManaged(), inStream, key, IV);
+        //                if (strength >= CipherStrength.Level5)
+        //                {
+        //                    inStream = Obfuscate(inStream, key);
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    return inStream;
+        //}
+
+        #endregion
 
         /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
-        public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
-        {
-            if (strength == CipherStrength.None)
-                return inStream;
-
-            // Performs requested levels of encryption.
-            inStream = Crypt(inStream, key);
-
-            if (strength >= CipherStrength.Level2)
-            {
-                inStream = Encrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
-                if (strength >= CipherStrength.Level3)
-                {
-                    inStream = Encrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
-                    if (strength >= CipherStrength.Level4)
-                    {
-                        inStream = Encrypt(new RijndaelManaged(), inStream, key, IV);
-                        if (strength >= CipherStrength.Level5)
-                        {
-                            inStream = Obfuscate(inStream, key);
-                        }
-                    }
-                }
-            }
-
-            return inStream;
-        }
-
-        /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
-        public static Stream Encrypt(SymmetricAlgorithm algorithm, Stream inStream, byte[] key, byte[] IV)
+        /// <remarks>
+        /// This returns a memory stream of the encrypted results, if the incoming stream is
+        /// very large this will consume a large amount memory.  In this case use the overload
+        /// that takes an output stream as a parameter instead.
+        /// </remarks>
+        public static MemoryStream Encrypt(this Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
             MemoryStream outStream = new MemoryStream();
 
-            Encrypt(algorithm, inStream, outStream, key, IV);
+            inStream.Encrypt(outStream, key, IV, strength, null);
             outStream.Position = 0;
 
             return outStream;
@@ -230,14 +237,27 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
-        public static void Encrypt(SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
+        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        public static byte[] Encrypt(this SymmetricAlgorithm algorithm, byte[] data, byte[] key, byte[] IV)
         {
-            // This is the root encryption function. Eventually, all the encryption functions perform their actual encryption here.
-            byte[] rgbKey = GetLegalKey(algorithm, key);
-            byte[] rgbIV = GetLegalIV(algorithm, IV);
-            CryptoStream encodeStream = new CryptoStream(outStream, algorithm.CreateEncryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
+            MemoryStream inStream = new MemoryStream(data);
+            MemoryStream outStream = new MemoryStream();
+
+            algorithm.Encrypt(inStream, outStream, key, IV);
+            outStream.Position = 0;
+
+            return outStream.ToArray();
+        }
+
+        /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
+        public static void Encrypt(this SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
+        {
+            // This is the root encryption function. Eventually, all the symmetric algorithm based encryption
+            // functions perform their actual encryption here.
+            byte[] rgbKey = algorithm.GetLegalKey(key);
+            byte[] rgbIV = algorithm.GetLegalIV(IV);
             byte[] buffer = new byte[BufferSize];
+            CryptoStream encodeStream = new CryptoStream(outStream, algorithm.CreateEncryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
             int read;
 
             // Encrypts data onto output stream.
@@ -313,51 +333,58 @@ namespace TVA.Security.Cryptography
                 data = Deobfuscate(data, key);
 
             if (strength >= CipherStrength.Level4)
-                data = Decrypt(new RijndaelManaged(), data, key, IV);
+                data = new RijndaelManaged().Decrypt(data, key, IV);
 
             if (strength >= CipherStrength.Level3)
-                data = Decrypt(new RC2CryptoServiceProvider(), data, key, IV);
+                data = new RC2CryptoServiceProvider().Decrypt(data, key, IV);
 
             if (strength >= CipherStrength.Level2)
-                data = Decrypt(new TripleDESCryptoServiceProvider(), data, key, IV);
+                data = new TripleDESCryptoServiceProvider().Decrypt(data, key, IV);
 
             return Crypt(data, key);
         }
 
-        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
-        public static byte[] Decrypt(SymmetricAlgorithm algorithm, byte[] data, byte[] key, byte[] IV)
-        {
-            return ((MemoryStream)(Decrypt(algorithm, new MemoryStream(data), key, IV))).ToArray();
-        }
+        #region [ Old Code ]
+
+        // The following pure stream decryption implementation is incompatible with the one that implements a progress handler
+        // since it uses embedded stream lengths from the original encrypted stream - so this method was removed to prevent possible
+        // confusion/errors during decryption cycle. 
+
+        ///// <summary>Returns a stream of decrypted data for the given parameters.</summary>
+        //public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
+        //{
+        //    if (strength == CipherStrength.None)
+        //        return inStream;
+
+        //    // Performs requested levels of decryption.
+        //    if (strength >= CipherStrength.Level5)
+        //        inStream = Deobfuscate(inStream, key);
+
+        //    if (strength >= CipherStrength.Level4)
+        //        inStream = Decrypt(new RijndaelManaged(), inStream, key, IV);
+
+        //    if (strength >= CipherStrength.Level3)
+        //        inStream = Decrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
+
+        //    if (strength >= CipherStrength.Level2)
+        //        inStream = Decrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
+
+        //    return Crypt(inStream, key);
+        //}
+
+        #endregion
 
         /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
-        public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
-        {
-            if (strength == CipherStrength.None)
-                return inStream;
-
-            // Performs requested levels of decryption.
-            if (strength >= CipherStrength.Level5)
-                inStream = Deobfuscate(inStream, key);
-
-            if (strength >= CipherStrength.Level4)
-                inStream = Decrypt(new RijndaelManaged(), inStream, key, IV);
-
-            if (strength >= CipherStrength.Level3)
-                inStream = Decrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
-
-            if (strength >= CipherStrength.Level2)
-                inStream = Decrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
-
-            return Crypt(inStream, key);
-        }
-
-        /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
-        public static Stream Decrypt(SymmetricAlgorithm algorithm, Stream inStream, byte[] key, byte[] IV)
+        /// <remarks>
+        /// This returns a memory stream of the decrypted results, if the incoming stream is
+        /// very large this will consume a large amount memory.  In this case use the overload
+        /// that takes an output stream as a parameter instead.
+        /// </remarks>
+        public static MemoryStream Decrypt(this Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
             MemoryStream outStream = new MemoryStream();
 
-            Decrypt(algorithm, inStream, outStream, key, IV);
+            inStream.Decrypt(outStream, key, IV, strength, null);
             outStream.Position = 0;
 
             return outStream;
@@ -378,9 +405,7 @@ namespace TVA.Security.Cryptography
                 try
                 {
                     if (inStream.CanSeek)
-                    {
                         length = inStream.Length;
-                    }
                 }
                 catch
                 {
@@ -429,14 +454,27 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
-        public static void Decrypt(SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
+        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        public static byte[] Decrypt(this SymmetricAlgorithm algorithm, byte[] data, byte[] key, byte[] IV)
         {
-            // This is the root decryption function. Eventually, all the decryption functions perform their actual decryption here.
-            byte[] rgbKey = GetLegalKey(algorithm, key);
-            byte[] rgbIV = GetLegalIV(algorithm, IV);            
-            CryptoStream decodeStream = new CryptoStream(outStream, algorithm.CreateDecryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
+            MemoryStream inStream = new MemoryStream(data);
+            MemoryStream outStream = new MemoryStream();
+
+            algorithm.Decrypt(inStream, outStream, key, IV);
+            outStream.Position = 0;
+
+            return outStream.ToArray();
+        }
+
+        /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
+        public static void Decrypt(this SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
+        {
+            // This is the root decryption function. Eventually, all the symmetric algorithm based decryption
+            // functions perform their actual decryption here.
+            byte[] rgbKey = algorithm.GetLegalKey(key);
+            byte[] rgbIV = algorithm.GetLegalIV(IV);
             byte[] buffer = new byte[BufferSize];
+            CryptoStream decodeStream = new CryptoStream(outStream, algorithm.CreateDecryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
             int read;
 
             // Decrypts data onto output stream.
@@ -475,7 +513,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Coerces key to maximum legal bit length for given encryption algorithm.</summary>
-        public static byte[] GetLegalKey(SymmetricAlgorithm algorithm, byte[] key)
+        public static byte[] GetLegalKey(this SymmetricAlgorithm algorithm, byte[] key)
         {
             byte[] rgbKey = new byte[algorithm.LegalKeySizes[0].MaxSize / 8];
 
@@ -491,7 +529,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Coerces initialization vector to legal block size for given encryption algorithm.</summary>
-        public static byte[] GetLegalIV(SymmetricAlgorithm algorithm, byte[] IV)
+        public static byte[] GetLegalIV(this SymmetricAlgorithm algorithm, byte[] IV)
         {
             byte[] rgbIV = new byte[algorithm.LegalBlockSizes[0].MinSize / 8];
 
