@@ -317,9 +317,9 @@ namespace TVA.Parsing
                 CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
                 if (settings.Count > 0)
                 {
-                    IDPropertyName = settings["IDPropertyName"].GetTypedValue(m_idPropertyName);
-                    OptimizeParsing = settings["OptimizeParsing"].GetTypedValue(m_optimizeParsing);
-                    UnparsedDataReuseLimit = settings["UnparsedDataReuseLimit"].GetTypedValue(m_unparsedDataReuseLimit);
+                    IDPropertyName = settings["IDPropertyName"].ValueAs(m_idPropertyName);
+                    OptimizeParsing = settings["OptimizeParsing"].ValueAs(m_optimizeParsing);
+                    UnparsedDataReuseLimit = settings["UnparsedDataReuseLimit"].ValueAs(m_unparsedDataReuseLimit);
                 }
             }
             catch

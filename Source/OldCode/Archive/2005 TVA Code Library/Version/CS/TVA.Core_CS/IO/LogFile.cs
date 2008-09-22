@@ -454,10 +454,10 @@ namespace TVA.IO
 
                 if (settings.Count > 0)
                 {
-                    Name = settings["Name"].GetTypedValue(m_name);
-                    Size = settings["Size"].GetTypedValue(m_size);
-                    AutoOpen = settings["AutoOpen"].GetTypedValue(m_autoOpen);
-                    FileFullOperation = settings["FileFullOperation"].GetTypedValue(m_fileFullOperation);
+                    Name = settings["Name"].ValueAs(m_name);
+                    Size = settings["Size"].ValueAs(m_size);
+                    AutoOpen = settings["AutoOpen"].ValueAs(m_autoOpen);
+                    FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
                 }
             }
             catch

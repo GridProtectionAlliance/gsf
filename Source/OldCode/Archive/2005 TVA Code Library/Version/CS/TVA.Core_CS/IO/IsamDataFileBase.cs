@@ -636,12 +636,12 @@ namespace TVA.IO
 
                 if (settings.Count > 0)
                 {
-                    Name = settings["Name"].GetTypedValue(m_name);
-                    LoadOnOpen = settings["LoadOnOpen"].GetTypedValue(m_loadOnOpen);
-                    ReloadOnModify = settings["ReloadOnModify"].GetTypedValue(m_reloadOnModify);
-                    SaveOnClose = settings["SaveOnClose"].GetTypedValue(m_saveOnClose);
-                    AutoSaveInterval = settings["AutoSaveInterval"].GetTypedValue(m_autoSaveInterval);
-                    MinimumRecordCount = settings["MinimumRecordCount"].GetTypedValue(m_minimumRecordCount);
+                    Name = settings["Name"].ValueAs(m_name);
+                    LoadOnOpen = settings["LoadOnOpen"].ValueAs(m_loadOnOpen);
+                    ReloadOnModify = settings["ReloadOnModify"].ValueAs(m_reloadOnModify);
+                    SaveOnClose = settings["SaveOnClose"].ValueAs(m_saveOnClose);
+                    AutoSaveInterval = settings["AutoSaveInterval"].ValueAs(m_autoSaveInterval);
+                    MinimumRecordCount = settings["MinimumRecordCount"].ValueAs(m_minimumRecordCount);
                 }
             }
             catch
