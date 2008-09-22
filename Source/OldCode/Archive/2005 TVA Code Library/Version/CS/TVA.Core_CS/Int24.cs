@@ -52,14 +52,11 @@ namespace System
         #region [ Members ]
 
         // Constants
+        private const int MaxValue32 = 8388607;     // Represents the largest possible value of an Int24 as an Int32.
+        private const int MinValue32 = -8388608;    // Represents the smallest possible value of an Int24 as an Int32.
+
         /// <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
         public const int BitMask = -16777216;
-
-        /// <summary>Represents the largest possible value of an Int24 as an Int32. This field is constant.</summary>
-        public const int MaxValue32 = 8388607;
-
-        /// <summary>Represents the smallest possible value of an Int24 as an Int32. This field is constant.</summary>
-        public const int MinValue32 = -8388608;
 
         // Fields
         private int m_value; // We internally store the Int24 value in a 4-byte integer for convenience
@@ -930,32 +927,16 @@ namespace System
 
         #region [ Static ]
 
-        // Static Fields
-        private static Int24 m_maxValue;
-        private static Int24 m_minValue;
+        /// <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
+        public static readonly Int24 MaxValue;
+
+        /// <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
+        public static readonly Int24 MinValue;
 
         static Int24()
         {
-            m_maxValue = new Int24(MaxValue32);
-            m_minValue = new Int24(MinValue32);
-        }
-
-        /// <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
-        public static Int24 MaxValue
-        {
-            get
-            {
-                return m_maxValue;
-            }
-        }
-
-        /// <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
-        public static Int24 MinValue
-        {
-            get
-            {
-                return m_minValue;
-            }
+            MaxValue = (Int24)MaxValue32;
+            MinValue = (Int24)MinValue32;
         }
 
         /// <summary>Returns the specified Int24 value as an array of three bytes.</summary>

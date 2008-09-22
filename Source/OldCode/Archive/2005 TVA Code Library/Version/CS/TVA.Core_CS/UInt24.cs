@@ -52,15 +52,12 @@ namespace System
         #region [ Members ]
 
         // Constants
+        private const uint MaxValue32 = 0x00ffffff; // Represents the largest possible value of an UInt24 as an UInt32.
+        private const uint MinValue32 = 0x00000000; // Represents the smallest possible value of an UInt24 as an UInt32.
+
         /// <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
         public const uint BitMask = 0xff000000;
-
-        /// <summary>Represents the largest possible value of an UInt24 as an UInt32. This field is constant.</summary>
-        public const uint MaxValue32 = 0x00ffffff;
-
-        /// <summary>Represents the smallest possible value of an UInt24 as an UInt32. This field is constant.</summary>
-        public const uint MinValue32 = 0x00000000;
-
+        
         // Fields
         private uint m_value; // We internally store the UInt24 value in a 4-byte unsigned integer for convenience
 
@@ -945,33 +942,17 @@ namespace System
         #endregion
 
         #region [ Static ]
+        
+        /// <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
+        public static readonly UInt24 MaxValue;
 
-        // Static Fields
-        private static UInt24 m_maxValue;
-        private static UInt24 m_minValue;
+        /// <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
+        public static readonly UInt24 MinValue;
 
         static UInt24()
         {
-            m_maxValue = new UInt24(MaxValue32);
-            m_minValue = new UInt24(MinValue32);
-        }
-
-        /// <summary>Represents the largest possible value of an UInt24. This field is constant.</summary>
-        public static UInt24 MaxValue
-        {
-            get
-            {
-                return m_maxValue;
-            }
-        }
-
-        /// <summary>Represents the smallest possible value of an UInt24. This field is constant.</summary>
-        public static UInt24 MinValue
-        {
-            get
-            {
-                return m_minValue;
-            }
+            MaxValue = (UInt24)MaxValue32;
+            MinValue = (UInt24)MinValue32;
         }
 
         /// <summary>Returns the specified UInt24 value as an array of three bytes.</summary>
