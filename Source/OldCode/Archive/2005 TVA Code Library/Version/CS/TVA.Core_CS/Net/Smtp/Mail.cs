@@ -15,7 +15,7 @@
 //  12/12/2007 - Darrell Zuercher
 //       Edited Code Comments.
 //  09/22/2008 - James R Carroll
-//       Converted to C#.
+//       Converted to C# - restructured.
 //
 //*******************************************************************************************************
 
