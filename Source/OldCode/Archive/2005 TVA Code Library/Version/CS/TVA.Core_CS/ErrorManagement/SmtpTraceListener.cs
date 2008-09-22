@@ -85,7 +85,7 @@ namespace TVA
                 messageBuilder.Append(DateTime.Now);
 
                 SimpleMailMessage mailMessage = new SimpleMailMessage();
-                mailMessage.Sender = m_sender;
+                mailMessage.From = m_sender;
                 mailMessage.Recipients = m_recipient;
                 mailMessage.Subject = "Trace message for " + System.AppDomain.CurrentDomain.FriendlyName;
                 mailMessage.Body = messageBuilder.ToString();

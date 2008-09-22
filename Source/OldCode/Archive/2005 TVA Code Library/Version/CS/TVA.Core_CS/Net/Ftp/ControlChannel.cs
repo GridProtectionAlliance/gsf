@@ -372,7 +372,7 @@ namespace TVA
                 {
 
                     System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient();
-                    int port;
+                    int port = 0;
 
                     try
                     {

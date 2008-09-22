@@ -145,8 +145,7 @@
     </Compile>
     <Compile Include="Net\Ftp\SessionConnected.cs" />
     <Compile Include="Net\Ftp\SessionDisconnected.cs" />
-    <Compile Include="Net\Smtp\Common.cs" />
-    <Compile Include="Net\Smtp\SimpleMailMessage.cs" />
+    <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Reflection\ReflectionExtensions.cs" />
     <Compile Include="UInt24.cs" />
     <Compile Include="Int24.cs" />
