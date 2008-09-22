@@ -567,7 +567,7 @@ namespace TVA.Configuration
             if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
             {
                 // Encrypts the element's value.
-                encryptedValue = Cipher.Encrypt(value, CryptoKey, CipherStrength.Level4);
+                encryptedValue = value.Encrypt(CryptoKey, CipherStrength.Level4);
             }
             return encryptedValue;
         }
@@ -578,7 +578,7 @@ namespace TVA.Configuration
             if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
             {
                 // Decrypts the element's value.
-                decryptedValue = Cipher.Decrypt(value, CryptoKey, CipherStrength.Level4);
+                decryptedValue = value.Decrypt(CryptoKey, CipherStrength.Level4);
             }
             return decryptedValue;
         }
