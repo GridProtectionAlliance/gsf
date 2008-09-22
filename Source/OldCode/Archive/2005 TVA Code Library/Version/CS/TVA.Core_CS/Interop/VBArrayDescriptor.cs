@@ -68,7 +68,7 @@ namespace TVA.Interop
         {
             get
             {
-                byte[] image = TVA.Common.CreateArray<byte>(this.BinaryLength);
+                byte[] image = new byte[this.BinaryLength];
 
                 Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2);
 
