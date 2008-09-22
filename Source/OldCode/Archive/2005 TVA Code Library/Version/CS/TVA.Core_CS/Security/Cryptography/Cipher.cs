@@ -443,7 +443,7 @@ namespace TVA.Security.Cryptography
                         // Updates decryption progress.
                         if (progressHandler != null)
                         {
-                            total += read + lengthBuffer.Length;
+                            total += (read + lengthBuffer.Length);
                             progressHandler(total, length);
                         }
                     }
