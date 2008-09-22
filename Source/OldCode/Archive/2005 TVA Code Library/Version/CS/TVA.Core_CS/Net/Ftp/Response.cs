@@ -61,7 +61,8 @@ namespace TVA
                         }
 
                         m_responses.Enqueue(response);
-                    } while (response.Length >= 4 && response[3] == "-");
+                    }
+                    while (response.Length >= 4 && response[3] == '-');
 
                     if (m_code == ServiceUnavailable)
                     {

@@ -317,11 +317,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("Process Memory Usage".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText((counter.LastValue / 1048576).ToString("0.00"), 13));
+                        status.Append((counter.LastValue / 1048576).ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText((counter.AverageValue / 1048576).ToString("0.00"), 13));
+                        status.Append((counter.AverageValue / 1048576).ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText((counter.MaximumValue / 1048576).ToString("0.00"), 13));
+                        status.Append((counter.MaximumValue / 1048576).ToString("0.00").CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Megabytes");
@@ -335,11 +335,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("Process Handle Count".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString(), 13));
+                        status.Append(counter.LastValue.ToString().CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString(), 13));
+                        status.Append(counter.MaximumValue.ToString().CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Total Handles");
@@ -353,11 +353,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("Process Thread Count".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString(), 13));
+                        status.Append(counter.LastValue.ToString().CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString(), 13));
+                        status.Append(counter.MaximumValue.ToString().CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Total Threads");
@@ -371,11 +371,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("I/O Data Rate".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText((counter.LastValue / 1024).ToString("0.00"), 13));
+                        status.Append((counter.LastValue / 1024).ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText((counter.AverageValue / 1024).ToString("0.00"), 13));
+                        status.Append((counter.AverageValue / 1024).ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText((counter.MaximumValue / 1024).ToString("0.00"), 13));
+                        status.Append((counter.MaximumValue / 1024).ToString("0.00").CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Kilobytes / sec");
@@ -389,11 +389,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("I/O Activity Rate".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(counter.LastValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Operations / sec");
@@ -407,11 +407,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("Incoming Packet Rate".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(counter.LastValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Datagrams / sec");
@@ -425,11 +425,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("Outgoing Packet Rate".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(counter.LastValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Datagrams / sec");
@@ -443,11 +443,11 @@ namespace TVA
                         //        12345678901234567890
                         status.Append("Lock Contention Rate".PadLeft(20));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.LastValue.ToString("0.00"), 13));
+                        status.Append(counter.LastValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.AverageValue.ToString("0.00"), 13));
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(TVA.Text.Common.CenterText(counter.MaximumValue.ToString("0.00"), 13));
+                        status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
                         //        1234567890123456
                         status.Append("Attempts / sec");

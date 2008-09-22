@@ -219,7 +219,6 @@ namespace TVA.Collections
         /// <summary>
         /// Event that is raised after an item has been successfully processed.
         /// </summary>
-        /// <param name="item">Item that has been successfully processed.</param>
         /// <remarks>
         /// <para>Allows custom handling of successfully processed items.</para>
         /// <para>Allows notification when an item has completed processing in the allowed amount of time, if a process
@@ -231,7 +230,6 @@ namespace TVA.Collections
         /// <summary>
         /// Event that is raised after an array of items have been successfully processed.
         /// </summary>
-        /// <param name="items">Items that have been successfully processed.</param>
         /// <remarks>
         /// <para>Allows custom handling of successfully processed items.</para>
         /// <para>Allows notification when an item has completed processing in the allowed amount of time, if a process
@@ -243,7 +241,6 @@ namespace TVA.Collections
         /// <summary>
         /// Event that is raised if an item's processing time exceeds the specified process timeout.
         /// </summary>
-        /// <param name="item">Item that took too long to process.</param>
         /// <remarks>
         /// <para>Allows custom handling of items that took too long to process.</para>
         /// <para>Raised only when ProcessingStyle = OneAtATime (i.e., ProcessItemFunction is defined).</para>
@@ -253,7 +250,6 @@ namespace TVA.Collections
         /// <summary>
         /// Event that is raised if the processing time for an array of items exceeds the specified process timeout.
         /// </summary>
-        /// <param name="items">Items that took too long to process</param>
         /// <remarks>
         /// <para>Allows custom handling of items that took too long to process.</para>
         /// <para>Raised only when ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is defined).</para>
@@ -948,7 +944,7 @@ namespace TVA.Collections
                 status.Append(ProcessingStyle == QueueProcessingStyle.OneAtATime ? "One at a time" : "Many at once");
                 status.AppendLine();
                 status.Append("    Total process run time: ");
-                status.Append(Common.SecondsToText(RunTime));
+                status.Append(Seconds.ToText(RunTime));
                 status.AppendLine();
                 status.Append("      Total active threads: ");
                 status.Append(m_threadCount);

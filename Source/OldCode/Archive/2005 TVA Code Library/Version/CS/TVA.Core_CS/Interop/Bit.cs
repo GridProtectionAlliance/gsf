@@ -224,6 +224,7 @@ namespace TVA.Interop
         /// <param name="bit">Bit index (0 - 15) to check.</param>
         /// <returns>True if specified bit is set in source value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 15 for a 16-bit source value.</exception>
+        [CLSCompliant(false)]
         public static bool BitIsSet(this ushort source, int bit)
         {
             if (bit < 0 || bit > 15)
@@ -250,6 +251,7 @@ namespace TVA.Interop
         /// <param name="bit">Bit index (0 - 31) to check.</param>
         /// <returns>True if specified bit is set in source value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 31 for a 32-bit source value.</exception>
+        [CLSCompliant(false)]
         public static bool BitIsSet(this uint source, int bit)
         {
             if (bit < 0 || bit > 31)
@@ -290,15 +292,17 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static sbyte BitRotL(this sbyte value, int rotations)
         {
             bool hiBitSet;
+            sbyte bit0 = (sbyte)Bit0;
 
             for (int x = 1; x <= (rotations % 8); x++)
             {
                 hiBitSet = ((value & Bit7) == Bit7);
                 value <<= 1;
-                if (hiBitSet) value |= (sbyte)Bit0;
+                if (hiBitSet) value |= bit0;
             }
 
             return value;
@@ -336,6 +340,7 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static ushort BitRotL(this ushort value, int rotations)
         {
             bool hiBitSet;
@@ -362,14 +367,13 @@ namespace TVA.Interop
         public static Int24 BitRotL(this Int24 value, int rotations)
         {
             bool hiBitSet;
-            Int24 int24Bit0 = Bit0;
-            Int24 int24Bit23 = (Int24)Bit23;
+            Int24 bit0 = Bit0;
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
-                hiBitSet = ((value & int24Bit23) == int24Bit23);
+                hiBitSet = ((value & Bit23) == Bit23);
                 value <<= 1;
-                if (hiBitSet) value |= int24Bit0;
+                if (hiBitSet) value |= bit0;
             }
 
             return value;
@@ -384,17 +388,17 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static UInt24 BitRotL(this UInt24 value, int rotations)
         {
             bool hiBitSet;
-            UInt24 uint24Bit0 = Bit0;
-            UInt24 uint24Bit23 = (UInt24)Bit23;
+            UInt24 bit0 = Bit0;
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
-                hiBitSet = ((value & uint24Bit23) == uint24Bit23);
+                hiBitSet = ((value & Bit23) == Bit23);
                 value <<= 1;
-                if (hiBitSet) value |= uint24Bit0;
+                if (hiBitSet) value |= bit0;
             }
 
             return value;
@@ -432,6 +436,7 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static uint BitRotL(this uint value, int rotations)
         {
             bool hiBitSet;
@@ -481,15 +486,16 @@ namespace TVA.Interop
         [CLSCompliant(false)]
         public static sbyte BitRotR(this sbyte value, int rotations)
         {
-            bool loBitSet;
-
             unchecked
             {
+                bool loBitSet;
+                sbyte bit7 = (sbyte)Bit7;
+
                 for (int x = 1; x <= (rotations % 8); x++)
                 {
                     loBitSet = ((value & Bit0) == Bit0);
                     value >>= 1;
-                    if (loBitSet) value |= (sbyte)Bit7; else value = (sbyte)(value & ~Bit7);
+                    if (loBitSet) value |= bit7; else value &= (sbyte)(value & ~bit7);
                 }
             }
 
@@ -528,17 +534,19 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static ushort BitRotR(this ushort value, int rotations)
         {
-            bool loBitSet;
-
             unchecked
             {
+                bool loBitSet;
+                ushort bit15 = (ushort)Bit15;
+
                 for (int x = 1; x <= (rotations % 16); x++)
                 {
                     loBitSet = ((value & Bit0) == Bit0);
                     value >>= 1;
-                    if (loBitSet) value |= (ushort)Bit15; else value = (ushort)(value & ~Bit15);
+                    if (loBitSet) value |= bit15; else value = (ushort)(value & ~bit15);
                 }
             }
 
@@ -557,14 +565,13 @@ namespace TVA.Interop
         public static Int24 BitRotR(this Int24 value, int rotations)
         {
             bool loBitSet;
-            Int24 int24Bit0 = Bit0;
-            Int24 int24Bit23 = (Int24)Bit23;
+            Int24 bit23 = (Int24)Bit23;
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
-                loBitSet = ((value & int24Bit0) == int24Bit0);
+                loBitSet = ((value & Bit0) == Bit0);
                 value >>= 1;
-                if (loBitSet) value |= int24Bit23; else value &= ~int24Bit23;
+                if (loBitSet) value |= bit23; else value &= ~bit23;
             }
 
             return value;
@@ -579,17 +586,17 @@ namespace TVA.Interop
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
+        [CLSCompliant(false)]
         public static UInt24 BitRotR(this UInt24 value, int rotations)
         {
             bool loBitSet;
-            UInt24 uint24Bit0 = Bit0;
-            UInt24 uint24Bit23 = (UInt24)Bit23;
+            UInt24 bit23 = (UInt24)Bit23;
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
-                loBitSet = ((value & uint24Bit0) == uint24Bit0);
+                loBitSet = ((value & Bit0) == Bit0);
                 value >>= 1;
-                if (loBitSet) value |= uint24Bit23; else value &= ~uint24Bit23;
+                if (loBitSet) value |= bit23; else value &= ~bit23;
             }
 
             return value;
@@ -630,15 +637,16 @@ namespace TVA.Interop
         [CLSCompliant(false)]
         public static uint BitRotR(this uint value, int rotations)
         {
-            bool loBitSet;
-
             unchecked
             {
+                bool loBitSet;
+                uint bit31 = (uint)Bit31;
+
                 for (int x = 1; x <= (rotations % 32); x++)
                 {
                     loBitSet = ((value & Bit0) == Bit0);
                     value >>= 1;
-                    if (loBitSet) value |= Bit31; else value = (uint)(value & ~Bit31);
+                    if (loBitSet) value |= bit31; else value &= ~bit31;
                 }
             }
 
@@ -667,6 +675,7 @@ namespace TVA.Interop
         /// On little-endian architectures (e.g., Intel platforms), this will be the byte value whose in-memory representation
         /// is the same as the right-most, most-significant-byte of the integer value.
         /// </remarks>
+        [CLSCompliant(false)]
         public static byte HiByte(this ushort word)
         {
             if (BitConverter.IsLittleEndian)
@@ -699,6 +708,7 @@ namespace TVA.Interop
         /// whose in-memory representation is the same as the right-most, most-significant-word
         /// of the integer value.
         /// </remarks>
+        [CLSCompliant(false)]
         public static ushort HiWord(this uint doubleWord)
         {
             if (BitConverter.IsLittleEndian)
@@ -731,6 +741,7 @@ namespace TVA.Interop
         /// whose in-memory representation is the same as the left-most, least-significant-byte
         /// of the integer value.
         /// </remarks>
+        [CLSCompliant(false)]
         public static byte LoByte(this ushort word)
         {
             if (BitConverter.IsLittleEndian)
@@ -763,6 +774,7 @@ namespace TVA.Interop
         /// whose in-memory representation is the same as the left-most, least-significant-word
         /// of the integer value.
         /// </remarks>
+        [CLSCompliant(false)]
         public static ushort LoWord(this uint doubleWord)
         {
             if (BitConverter.IsLittleEndian)
@@ -783,6 +795,7 @@ namespace TVA.Interop
 
         /// <summary>Makes an unsigned word (UInt16) from two bytes.</summary>
         /// <returns>An unsigned 16-bit word made from the two specified bytes.</returns>
+        [CLSCompliant(false)]
         public static ushort MakeUWord(byte high, byte low)
         {
             if (BitConverter.IsLittleEndian)
@@ -813,6 +826,7 @@ namespace TVA.Interop
 
         /// <summary>Makes an unsigned double-word (UInt32) from two unsigned words (UInt16).</summary>
         /// <returns>An unsigned 32-bit double-word made from the two specified unsigned 16-bit words.</returns>
+        [CLSCompliant(false)]
         public static uint MakeUDWord(ushort high, ushort low)
         {
             byte[] bytes = new byte[4];

@@ -367,7 +367,7 @@ namespace TVA.Identity
             finally
             {
                 // Free the token
-                if (!IntPtr.op_Equality(tokenHandle, IntPtr.Zero))
+                if (tokenHandle != IntPtr.Zero)
                     CloseHandle(tokenHandle);
             }
 
@@ -405,10 +405,10 @@ namespace TVA.Identity
             finally
             {
                 // Frees the tokens.
-                if (!IntPtr.op_Equality(tokenHandle, IntPtr.Zero))
+                if (tokenHandle != IntPtr.Zero)
                     CloseHandle(tokenHandle);
 
-                if (!IntPtr.op_Equality(dupeTokenHandle, IntPtr.Zero))
+                if (dupeTokenHandle != IntPtr.Zero)
                     CloseHandle(dupeTokenHandle);
             }
 

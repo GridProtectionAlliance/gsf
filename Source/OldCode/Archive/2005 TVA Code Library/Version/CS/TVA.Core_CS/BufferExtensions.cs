@@ -133,6 +133,7 @@ namespace TVA
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum over.</param>
         /// <returns>Byte length XOR check-sum.</returns>
+        [CLSCompliant(false)]
         public static byte Xor8BitCheckSum(this byte[] data, int startIndex, int length)
         {
             byte sum = 0;
@@ -151,9 +152,10 @@ namespace TVA
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum overs</param>
         /// <returns>Word length XOR check-sum.</returns>
-        public static UInt16 Xor16BitCheckSum(this byte[] data, int startIndex, int length)
+        [CLSCompliant(false)]
+        public static ushort Xor16BitCheckSum(this byte[] data, int startIndex, int length)
         {
-            UInt16 sum = 0;
+            ushort sum = 0;
 
             for (int x = 0; x <= length - 1; x += 2)
             {
@@ -169,9 +171,10 @@ namespace TVA
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum over.</param>
         /// <returns>Double-word length XOR check-sum.</returns>
-        public static UInt32 Xor32BitCheckSum(this byte[] data, int startIndex, int length)
+        [CLSCompliant(false)]
+        public static uint Xor32BitCheckSum(this byte[] data, int startIndex, int length)
         {
-            UInt32 sum = 0;
+            uint sum = 0;
 
             for (int x = 0; x <= length - 1; x += 4)
             {
@@ -187,9 +190,10 @@ namespace TVA
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum over.</param>
         /// <returns>Quad-word length XOR check-sum.</returns>
-        public static UInt64 Xor64BitCheckSum(this byte[] data, int startIndex, int length)
+        [CLSCompliant(false)]
+        public static ulong Xor64BitCheckSum(this byte[] data, int startIndex, int length)
         {
-            UInt64 sum = 0;
+            ulong sum = 0;
 
             for (int x = 0; x <= length - 1; x += 8)
             {

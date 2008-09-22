@@ -321,7 +321,7 @@ namespace TVA.IO
 
                 // Load export destination from configuration entries
                 destination.DestinationFile = settings[entryRoot].Value + settings[string.Format("{0}.FileName", entryRoot)].Value;
-                destination.ConnectToShare = TVA.Text.Common.ParseBoolean(settings[string.Format("{0}.ConnectToShare", entryRoot)].Value);
+                destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot)].Value.ParseBoolean();
                 destination.Domain = settings[string.Format("{0}.Domain", entryRoot)].Value;
                 destination.UserName = settings[string.Format("{0}.UserName", entryRoot)].Value;
                 destination.Password = settings[string.Format("{0}.Password", entryRoot)].Value;

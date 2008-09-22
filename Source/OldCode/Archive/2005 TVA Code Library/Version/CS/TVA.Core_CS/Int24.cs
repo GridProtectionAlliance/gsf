@@ -274,7 +274,7 @@ namespace TVA
         /// A 24-bit signed integer equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowAction">
+        /// <exception cref="OverflowException">
         /// s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
@@ -299,7 +299,7 @@ namespace TVA
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowAction">
+        /// <exception cref="OverflowException">
         /// s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
@@ -320,7 +320,7 @@ namespace TVA
         /// A 24-bit signed integer equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowAction">
+        /// <exception cref="OverflowException">
         /// s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
@@ -349,7 +349,7 @@ namespace TVA
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowAction">
+        /// <exception cref="OverflowException">
         /// s represents a number less than Int24.MinValue or greater than Int24.MaxValue.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
