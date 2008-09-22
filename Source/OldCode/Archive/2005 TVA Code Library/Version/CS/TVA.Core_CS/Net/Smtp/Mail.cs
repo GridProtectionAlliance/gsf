@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Net.Smtp.Common.vb - Common e-mail related functions
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  Mail.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  12/12/2007 - Darrell Zuercher
 //       Edited Code Comments.
+//  09/22/2008 - James R Carroll
+//       Converted to C#.
 //
 //*******************************************************************************************************
 
@@ -27,15 +29,8 @@ using System.Collections.Generic;
 namespace TVA.Net.Smtp
 {
     /// <summary>Defines common e-mail related functions.</summary>
-    public static class Common
+    public static class Mail
     {
-        public const string DefaultSmtpServer = "mailhost.cha.tva.gov";
-
-        public static void SendMail(string from, string toRecipients, string subject, string body, bool isBodyHtml)
-        {
-            SendMail(from, toRecipients, subject, body, isBodyHtml, DefaultSmtpServer);
-        }
-
         /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
         /// <param name="from">The address of the mail message sender.</param>
         /// <param name="toRecipients">A comma-separated address list of the mail message recipients.</param>
@@ -43,14 +38,9 @@ namespace TVA.Net.Smtp
         /// <param name="body">The body of the mail message.</param>
         /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
         /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
-        public static void SendMail(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer)
+        public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer)
         {
-            SendMail(from, toRecipients, null, null, subject, body, isBodyHtml, smtpServer);
-        }
-
-        public static void SendMail(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml)
-        {
-            SendMail(from, toRecipients, ccRecipients, bccRecipients, subject, body, isBodyHtml, DefaultSmtpServer);
+            Send(from, toRecipients, null, null, subject, body, isBodyHtml, smtpServer);
         }
 
         /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
@@ -62,9 +52,9 @@ namespace TVA.Net.Smtp
         /// <param name="body">The body of the mail message.</param>
         /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
         /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
-        public static void SendMail(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string smtpServer)
+        public static void Send(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string smtpServer)
         {
-            SendMail(from, toRecipients, ccRecipients, bccRecipients, subject, body, isBodyHtml, null, smtpServer);
+            Send(from, toRecipients, ccRecipients, bccRecipients, subject, body, isBodyHtml, null, smtpServer);
         }
 
         /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
@@ -75,9 +65,9 @@ namespace TVA.Net.Smtp
         /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
         /// <param name="attachments">A comma-separated list of file names to be attached to the mail message.</param>
         /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
-        public static void SendMail(string from, string toRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
+        public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
         {
-            SendMail(from, toRecipients, null, null, subject, body, isBodyHtml, attachments, smtpServer);
+            Send(from, toRecipients, null, null, subject, body, isBodyHtml, attachments, smtpServer);
         }
 
         /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
@@ -90,8 +80,11 @@ namespace TVA.Net.Smtp
         /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
         /// <param name="attachments">A comma-separated list of file names to be attached to the mail message.</param>
         /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
-        public static void SendMail(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
+        public static void Send(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
         {
+            if (smtpServer == null)
+                throw new ArgumentNullException("smtpServer", "No SMTP server was specified");
+
             MailMessage emailMessage = new MailMessage(from, toRecipients, subject, body);
 
             if (!string.IsNullOrEmpty(ccRecipients))
@@ -132,13 +125,8 @@ namespace TVA.Net.Smtp
 
             emailMessage.IsBodyHtml = isBodyHtml;
 
-            SmtpClient smtpClient = new SmtpClient();
-            
-            if (smtpServer != null)
-                smtpClient.Host = smtpServer;           // Uses the specified SMTP server for sending the e-mail.
-            else
-                smtpClient.Host = DefaultSmtpServer;    // Uses the default SMTP server for sending the e-mail.
-            
+            SmtpClient smtpClient = new SmtpClient(smtpServer);
+
             smtpClient.Send(emailMessage);
         }
     }
