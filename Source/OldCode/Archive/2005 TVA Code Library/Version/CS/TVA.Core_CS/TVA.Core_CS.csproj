@@ -82,9 +82,11 @@
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="CurveFit.cs" />
+    <Compile Include="ErrorManagement\ErrorLogger.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Milliseconds.cs" />
     <Compile Include="NumericExtensions.cs" />
-    <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
     <Compile Include="IO\StreamExtensions.cs" />

@@ -81,6 +81,11 @@ namespace TVA.Identity
 
         /// <summary>Initializes a new instance of the user information class.</summary>
         public UserInfo(string loginID)
+            : this(loginID, false)
+        {
+        }
+
+        public UserInfo(string loginID, bool usePrivilegedAccount)
         {
             string[] parts = loginID.Split('\\');
 
@@ -88,6 +93,7 @@ namespace TVA.Identity
             {
                 m_domain = parts[0];
                 m_username = parts[1];
+                m_usePrivilegedAccount = usePrivilegedAccount;
             }
             else
             {
@@ -204,6 +210,14 @@ namespace TVA.Identity
                 // Undo impersonation if it was performed.
                 if (currentContext != null)
                     EndImpersonation(currentContext);
+            }
+        }
+
+        public string LoginID
+        {
+            get
+            {
+                return m_domain + "\\" + m_username;
             }
         }
 
