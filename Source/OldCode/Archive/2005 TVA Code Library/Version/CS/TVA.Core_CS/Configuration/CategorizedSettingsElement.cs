@@ -20,11 +20,14 @@
 //       Edited code comments.
 //  09/17/2008 - Pinal C Patel
 //       Converted code to C#.
+//  09/22/2008 - J. Ritchie Carroll
+//       Made boolean types a special case (i.e., using ParseBoolean extension).
 //
 //*******************************************************************************************************
 
 using System;
 using System.Configuration;
+using TVA;
 using TVA.Security.Cryptography;
 
 namespace TVA.Configuration
@@ -242,6 +245,7 @@ namespace TVA.Configuration
             try
             {
                 string stringValue = Value;
+
                 if (!string.IsNullOrEmpty(stringValue))
                 {
                     // Converts the element's value string, if present, to the proper type.
@@ -250,10 +254,15 @@ namespace TVA.Configuration
                         // Parses the string to the equivalent enumeration.
                         return (T)Enum.Parse(typeof(T), stringValue);
                     }
+                    else if (typeof(T) == typeof(bool))
+                    {
+                        // Handles bool as a special case allowing numeric entries as well as true/false
+                        return (T)Convert.ChangeType(stringValue.ParseBoolean(), typeof(T));
+                    }
                     else
                     {
                         // Casts the string to the specified type.
-                        return (T)((object)stringValue);
+                        return (T)Convert.ChangeType(stringValue, typeof(T));
                     }
                 }
                 else
@@ -563,24 +572,24 @@ namespace TVA.Configuration
 
         private string EncryptValue(string value)
         {
-            string encryptedValue = value;
-            if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
+            if ((base["encrypted"] != null) && ((string)base["encrypted"]).ParseBoolean())
             {
                 // Encrypts the element's value.
-                encryptedValue = value.Encrypt(CryptoKey, CipherStrength.Level4);
+                value = value.Encrypt(CryptoKey, CipherStrength.Level4);
+            
             }
-            return encryptedValue;
+            return value;
         }
 
         private string DecryptValue(string value)
         {
-            string decryptedValue = value;
-            if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
+            if ((base["encrypted"] != null) && ((string)base["encrypted"]).ParseBoolean())
             {
                 // Decrypts the element's value.
-                decryptedValue = value.Decrypt(CryptoKey, CipherStrength.Level4);
+                return value.Decrypt(CryptoKey, CipherStrength.Level4);
             }
-            return decryptedValue;
+
+            return value;
         }
 
         #endregion
