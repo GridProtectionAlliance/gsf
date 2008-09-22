@@ -17,12 +17,11 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.ComponentModel;
 
-namespace TVA
+namespace System
 {
     /// <summary>Represents a 3-byte, 24-bit signed integer.</summary>
     /// <remarks>
