@@ -1,196 +1,203 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
+//*******************************************************************************************************
+//  PerformanceCounter.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2250
+//       Email: pcpatel@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  06/04/2007 - Pinal C. Patel
+//       Generated original version of source code.
+//  09/22/2008 - James R Carroll
+//       Converted to C#.
+//
+//*******************************************************************************************************
+
 using System;
 using System.Threading;
+using System.Diagnostics;
+using System.Linq;
+using System.Collections.Generic;
 
-// 06/04/2007
-
-
-namespace TVA
+namespace TVA.Diagnostics
 {
-    namespace Diagnostics
+    public class PerformanceCounter : IDisposable
     {
+        #region [ Members ]
 
-        public class PerformanceCounter : IDisposable
+        // Constants
+        public const int DefaultAveragingWindow = 120;
+
+        // Fields
+        private float m_lastValue;
+        private float m_minimumValue;
+        private float m_maximumValue;
+        private int m_averagingWindow;
+        private System.Diagnostics.PerformanceCounter m_counter;
+        private List<double> m_counterValues;
+        private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public PerformanceCounter(string categoryName, string counterName, string instanceName)
         {
+            m_minimumValue = float.MaxValue;
+            m_maximumValue = float.MinValue;
+            m_averagingWindow = DefaultAveragingWindow;
+            m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
+            m_counterValues = new List<double>();
+        }
 
+        #endregion
 
-            #region " Member Declaration "
+        #region [ Properties ]
 
-            private float m_lastValue;
-            private float m_minimumValue;
-            private float m_maximumValue;
-            private int m_averagingWindow;
-
-            private System.Diagnostics.PerformanceCounter m_counter;
-            private List<double> m_counterValues;
-
-            #endregion
-
-            #region " Code Scope: Public "
-
-            public const int DefaultAveragingWindow = 120;
-
-            public PerformanceCounter(string categoryName, string counterName, string instanceName)
+        public int AveragingWindow
+        {
+            get
             {
-
-                m_minimumValue = float.MaxValue;
-                m_maximumValue = float.MinValue;
-                m_averagingWindow = DefaultAveragingWindow;
-                m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
-                m_counterValues = new List<double>();
-
+                return m_averagingWindow;
             }
-
-            public int AveragingWindow
+            set
             {
-                get
+                if (value > 0)
                 {
-                    return m_averagingWindow;
+                    Interlocked.Exchange(ref m_averagingWindow, value);
                 }
-                set
+                else
                 {
-                    if (value > 0)
-                    {
-                        Interlocked.Exchange(ref m_averagingWindow, value);
-                    }
-                    else
-                    {
-                        throw (new ArgumentOutOfRangeException("AveragingWindow", "Value must be greater than 0."));
-                    }
+                    throw new ArgumentOutOfRangeException("AveragingWindow", "Value must be greater than 0.");
                 }
             }
+        }
 
-            public float LastValue
+        public float LastValue
+        {
+            get
             {
-                get
+                return m_lastValue;
+            }
+        }
+
+        public float MinimumValue
+        {
+            get
+            {
+                return m_minimumValue;
+            }
+        }
+
+        public float MaximumValue
+        {
+            get
+            {
+                return m_maximumValue;
+            }
+        }
+
+        public float AverageValue
+        {
+            get
+            {
+                lock (m_counterValues)
                 {
-                    return m_lastValue;
+                    return (float)m_counterValues.Average();
                 }
             }
+        }
 
-            public float MinimumValue
+        public System.Diagnostics.PerformanceCounter BaseCounter
+        {
+            get
             {
-                get
-                {
-                    return m_minimumValue;
-                }
+                return m_counter;
             }
+        }
 
-            public float MaximumValue
+        #endregion
+
+        #region [ Methods ]
+
+        public void Sample()
+        {
+            try
             {
-                get
+                lock (m_counter)
                 {
-                    return m_maximumValue;
-                }
-            }
-
-            public float AverageValue
-            {
-                get
-                {
-                    lock (m_counterValues)
-                    {
-                        return Convert.ToSingle(Math.Common.Average(m_counterValues));
-                    }
-                }
-            }
-
-            public System.Diagnostics.PerformanceCounter BaseCounter
-            {
-                get
-                {
-                    return m_counter;
-                }
-            }
-
-            public void Sample()
-            {
-
-                try
-                {
-                    lock (m_counter)
-                    {
-                        Interlocked.Exchange(ref m_lastValue, m_counter.NextValue());
-                    }
-
-                    if (m_lastValue < m_minimumValue)
-                    {
-                        Interlocked.Exchange(ref m_minimumValue, m_lastValue);
-                    }
-                    if (m_lastValue > m_maximumValue)
-                    {
-                        Interlocked.Exchange(ref m_maximumValue, m_lastValue);
-                    }
-
-                    lock (m_counterValues)
-                    {
-                        m_counterValues.Add(m_lastValue);
-                        while (m_counterValues.Count > m_averagingWindow)
-                        {
-                            m_counterValues.RemoveAt(0);
-                        }
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    // If we're monitoring performance of an application that's not running (it was not running to begin with,
-                    // or it was running but it no longer running), we'll encounter an InvalidOperationException exception.
-                    // In this case we'll reset the values and absorb the exception.
-                    Reset();
+                    Interlocked.Exchange(ref m_lastValue, m_counter.NextValue());
                 }
 
-            }
+                if (m_lastValue < m_minimumValue)
+                {
+                    Interlocked.Exchange(ref m_minimumValue, m_lastValue);
+                }
 
-            public void Reset()
-            {
-
-                Interlocked.Exchange(ref m_lastValue, 0);
-                Interlocked.Exchange(ref m_minimumValue, 0);
-                Interlocked.Exchange(ref m_maximumValue, 0);
+                if (m_lastValue > m_maximumValue)
+                {
+                    Interlocked.Exchange(ref m_maximumValue, m_lastValue);
+                }
 
                 lock (m_counterValues)
                 {
-                    m_counterValues.Clear();
-                }
-
-            }
-
-            #endregion
-
-            private bool disposedValue = false; // To detect redundant calls
-
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!this.disposedValue)
-                {
-                    if (disposing)
+                    m_counterValues.Add(m_lastValue);
+                    while (m_counterValues.Count > m_averagingWindow)
                     {
-                        Reset();
-                        lock (m_counter)
-                        {
-                            m_counter.Dispose();
-                        }
+                        m_counterValues.RemoveAt(0);
                     }
                 }
-                this.disposedValue = true;
             }
-
-            #region " IDisposable Support "
-            // This code added by Visual Basic to correctly implement the disposable pattern.
-            public void Dispose()
+            catch (InvalidOperationException)
             {
-                // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
-                Dispose(true);
-                GC.SuppressFinalize(this);
+                // If we're monitoring performance of an application that's not running (it was not running to begin with,
+                // or it was running but it no longer running), we'll encounter an InvalidOperationException exception.
+                // In this case we'll reset the values and absorb the exception.
+                Reset();
             }
-            #endregion
-
         }
 
+        public void Reset()
+        {
+            Interlocked.Exchange(ref m_lastValue, 0);
+            Interlocked.Exchange(ref m_minimumValue, 0);
+            Interlocked.Exchange(ref m_maximumValue, 0);
+
+            lock (m_counterValues)
+            {
+                m_counterValues.Clear();
+            }
+        }
+
+
+        public void Dispose()
+        {
+            // Do not change this code.  Put cleanup code in Dispose method.
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                if (disposing)
+                {
+                    Reset();
+                    lock (m_counter)
+                    {
+                        m_counter.Dispose();
+                    }
+                }
+            }
+
+            m_disposed = true;
+        }
+
+        #endregion
     }
 }
