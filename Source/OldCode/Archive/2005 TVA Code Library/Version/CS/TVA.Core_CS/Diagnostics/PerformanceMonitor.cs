@@ -95,7 +95,7 @@ namespace TVA.Diagnostics
             }
 
             m_samplingTimer = new System.Timers.Timer(samplingInterval);
-            m_samplingTimer.Elapsed += new System.Timers.ElapsedEventHandler(m_samplingTimer_Elapsed);
+            m_samplingTimer.Elapsed += m_samplingTimer_Elapsed;
             m_samplingTimer.Start();
         }
 
@@ -462,22 +462,33 @@ namespace TVA.Diagnostics
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!this.m_disposed)
+            if (!m_disposed)
             {
                 if (disposing)
                 {
-                    m_samplingTimer.Dispose();
-                    lock (m_counters)
+                    if (m_samplingTimer != null)
                     {
-                        foreach (PerformanceCounter counter in m_counters)
+                        m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
+                        m_samplingTimer.Dispose();
+                    }
+                    m_samplingTimer = null;
+
+                    if (m_counters != null)
+                    {
+                        lock (m_counters)
                         {
-                            counter.Dispose();
+                            foreach (PerformanceCounter counter in m_counters)
+                            {
+                                counter.Dispose();
+                            }
+
+                            m_counters.Clear();
                         }
-                        m_counters.Clear();
                     }
                 }
             }
-            this.m_disposed = true;
+
+            m_disposed = true;
         }
 
         public PerformanceCounter Counters(string counterName)
