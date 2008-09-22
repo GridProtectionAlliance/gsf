@@ -23,7 +23,7 @@
 //  12/13/2007 - Darrell Zuercher
 //       Edited code comments.
 //  09/19/2008 - James R Carroll
-//       Converted to C#.
+//       Converted to C# - basic encryption/decryption extend string, byte[], and Stream.
 //
 //*******************************************************************************************************
 
@@ -76,21 +76,21 @@ namespace TVA.Security.Cryptography
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameter, using the standard encryption key and encryption level 1,</summary>
-        public static string Encrypt(string str)
+        public static string Encrypt(this string str)
         {
             return Encrypt(str, null, CipherStrength.Level1);
         }
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters using standard encryption.</summary>
-        public static string Encrypt(string str, CipherStrength strength)
+        public static string Encrypt(this string str, CipherStrength strength)
         {
             return Encrypt(str, null, strength);
         }
 
         /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters.</summary>
-        public static string Encrypt(string str, string encryptionKey, CipherStrength strength)
+        public static string Encrypt(this string str, string encryptionKey, CipherStrength strength)
         {
             if (string.IsNullOrEmpty(str))
                 return null;
@@ -105,7 +105,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
-        public static byte[] Encrypt(byte[] data, byte[] key, byte[] IV, CipherStrength strength)
+        public static byte[] Encrypt(this byte[] data, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return data;
@@ -139,7 +139,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
-        public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
+        public static Stream Encrypt(this Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return inStream;
@@ -179,7 +179,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
-        public static void Encrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
+        public static void Encrypt(this Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
         {
             byte[] inBuffer = new byte[BufferSize];
             byte[] outBuffer, lengthBuffer;
@@ -277,21 +277,21 @@ namespace TVA.Security.Cryptography
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameter using the standard encryption key and encryption level 1.</summary>
-        public static string Decrypt(string str)
+        public static string Decrypt(this string str)
         {
             return Decrypt(str, null, CipherStrength.Level1);
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters using the standard encryption key.</summary>
-        public static string Decrypt(string str, CipherStrength strength)
+        public static string Decrypt(this string str, CipherStrength strength)
         {
             return Decrypt(str, null, strength);
         }
 
         /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters.</summary>
-        public static string Decrypt(string str, string encryptionKey, CipherStrength strength)
+        public static string Decrypt(this string str, string encryptionKey, CipherStrength strength)
         {
             if (string.IsNullOrEmpty(str)) return null;
             if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
@@ -303,7 +303,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
-        public static byte[] Decrypt(byte[] data, byte[] key, byte[] IV, CipherStrength strength)
+        public static byte[] Decrypt(this byte[] data, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return data;
@@ -331,7 +331,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
-        public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
+        public static Stream Decrypt(this Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return inStream;
@@ -364,7 +364,7 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
-        public static void Decrypt(Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
+        public static void Decrypt(this Stream inStream, Stream outStream, byte[] key, byte[] IV, CipherStrength strength, ProgressEventHandler progressHandler)
         {
             byte[] inBuffer, outBuffer;
             byte[] lengthBuffer = BitConverter.GetBytes(0);
