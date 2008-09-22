@@ -177,12 +177,25 @@ namespace TVA.Configuration
         /// Gets the setting value as the specified type.
         /// </summary>
         /// <typeparam name="T">Type to which the setting value is to be converted.</typeparam>
+        /// <returns>The type-coerced value of the setting.</returns>
+        /// <remarks>
+        /// If this function fails to properly coerce value to specified type, the default value is returned.
+        /// </remarks>
+        public T ValueAs<T>()
+        { 
+            return this.ValueAs<T>(default(T));
+        }
+
+        /// <summary>
+        /// Gets the setting value as the specified type.
+        /// </summary>
+        /// <typeparam name="T">Type to which the setting value is to be converted.</typeparam>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>The type-coerced value of the setting.</returns>
         /// <remarks>
         /// If this function fails to properly coerce value to specified type, the default value is returned.
         /// </remarks>
-        public T GetTypedValue<T>(T defaultValue)
+        public T ValueAs<T>(T defaultValue)
         {
             try
             {
@@ -211,6 +224,299 @@ namespace TVA.Configuration
             {
                 return defaultValue;
             }
+        }
+
+        /// <summary>
+        /// Gets the setting value as a string.
+        /// </summary>
+        /// <returns>Value as string.</returns>
+        public string ValueAsString()
+        {
+            return ValueAsString(default(string));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a string.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as string.</returns>
+        public string ValueAsString(string defaultValue)
+        {
+            string setting = Value;
+            if (string.IsNullOrEmpty(setting))
+            {
+                return defaultValue;
+            }
+            else
+            {
+                return setting;
+            }
+        }
+
+        /// <summary>
+        /// Gets the setting value as a boolean.
+        /// </summary>
+        /// <returns>Value as boolean.</returns>
+        public bool ValueAsBoolean()
+        {
+            return ValueAsBoolean(default(bool));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a boolean.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as boolean.</returns>
+        public bool ValueAsBoolean(bool defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a byte.
+        /// </summary>
+        /// <returns>Value as byte.</returns>
+        public byte ValueAsByte()
+        {
+            return ValueAsByte(default(byte));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a byte.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as byte.</returns>
+        public byte ValueAsByte(byte defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a signed byte.
+        /// </summary>
+        /// <returns>Value as signed byte.</returns>
+        public sbyte ValueAsSByte()
+        {
+            return ValueAsSByte(default(sbyte));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a signed byte.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as signed byte.</returns>
+        public sbyte ValueAsSByte(sbyte defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a char.
+        /// </summary>
+        /// <returns>Value as char.</returns>
+        public char ValueAsChar()
+        {
+            return ValueAsChar(default(char));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a char.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as char.</returns>
+        public char ValueAsChar(char defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a short.
+        /// </summary>
+        /// <returns>Value as short.</returns>
+        public short ValueAsInt16()
+        {
+            return ValueAsInt16(default(short));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a short.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as short.</returns>
+        public short ValueAsInt16(short defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as an int.
+        /// </summary>
+        /// <returns>Value as int.</returns>
+        public int ValueAsInt32()
+        {
+            return ValueAsInt32(default(int));
+        }
+
+        /// <summary>
+        /// Gets the setting value as an int.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as int.</returns>
+        public int ValueAsInt32(int defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a long.
+        /// </summary>
+        /// <returns>Value as long.</returns>
+        public long ValueAsInt64()
+        {
+            return ValueAsInt64(default(long));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a long.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as long.</returns>
+        public long ValueAsInt64(long defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as an unsigned short.
+        /// </summary>
+        /// <returns>Value as unsigned short.</returns>
+        public ushort ValueAsUInt16()
+        {
+            return ValueAsUInt16(default(ushort));
+        }
+
+        /// <summary>
+        /// Gets the setting value as an unsigned short.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as unsigned short.</returns>
+        public ushort ValueAsUInt16(ushort defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as an unsigned int.
+        /// </summary>
+        /// <returns>Value as unsigned int.</returns>
+        public uint ValueAsUInt32()
+        {
+            return ValueAsUInt32(default(uint));
+        }
+
+        /// <summary>
+        /// Gets the setting value as an unsigned int.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as unsigned int.</returns>
+        public uint ValueAsUInt32(uint defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as an unsigned long.
+        /// </summary>
+        /// <returns>Value as unsigned long.</returns>
+        public ulong ValueAsUInt64()
+        {
+            return ValueAsUInt64(default(ulong));
+        }
+
+        /// <summary>
+        /// Gets the setting value as an unsigned long.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as unsigned long.</returns>
+        public ulong ValueAsUInt64(ulong defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a float.
+        /// </summary>
+        /// <returns>Value as float.</returns>
+        public float ValueAsSingle()
+        {
+            return ValueAsSingle(default(float));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a float.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as float.</returns>
+        public float ValueAsSingle(float defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a double.
+        /// </summary>
+        /// <returns>Value as double.</returns>
+        public double ValueAsDouble()
+        {
+            return ValueAsDouble(default(double));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a double.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as double.</returns>
+        public double ValueAsDouble(double defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as a decimal.
+        /// </summary>
+        /// <returns>Value as decimal.</returns>
+        public decimal ValueAsDecimal()
+        {
+            return ValueAsDecimal(default(decimal));
+        }
+
+        /// <summary>
+        /// Gets the setting value as a decimal.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as decimal.</returns>
+        public decimal ValueAsDecimal(decimal defaultValue)
+        {
+            return ValueAs(defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the setting value as DateTime.
+        /// </summary>
+        /// <returns>Value as DateTime.</returns>
+        public DateTime ValueAsDateTime()
+        {
+            return ValueAsDateTime(default(DateTime));
+        }
+
+        /// <summary>
+        /// Gets the setting value as DateTime.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
+        /// <returns>Value as DateTime.</returns>
+        public DateTime ValueAsDateTime(DateTime defaultValue)
+        {
+            return ValueAs(defaultValue);
         }
 
         private string EncryptValue(string value)

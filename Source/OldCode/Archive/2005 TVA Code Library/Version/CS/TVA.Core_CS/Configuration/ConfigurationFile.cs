@@ -18,6 +18,8 @@
 //       Wrote the TrimEnd function that is being used for initialized the Configuration object.
 //  08/20/2007 - Darrell Zuercher
 //       Edited code comments.
+//  09/22/2008 - Pinal C Patel
+//       Converted code to C#.
 //
 //*******************************************************************************************************
 
@@ -33,6 +35,9 @@ namespace TVA.Configuration
     /// <summary>
     /// Represents a configuration file of a Windows or Web application.
     /// </summary>
+    /// <seealso cref="CategorizedSettingsSection"/>
+    /// <seealso cref="CategorizedSettingsElement"/>
+    /// <seealso cref="CategorizedSettingsElementCollection"/>
     public class ConfigurationFile
     {
         #region [ Members ]
@@ -49,7 +54,8 @@ namespace TVA.Configuration
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a default instance of TVA.Configuration.ConfigurationFile.
+        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class representing the config file of 
+        /// current Windows or Web application.
         /// </summary>
         public ConfigurationFile()
             : this("")
@@ -57,10 +63,10 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Initializes an instance of TVA.Configuration.ConfigurationFile for the specified configuration file
-        /// that belongs to a Windows or Web application.
+        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class representing the config file of 
+        /// another Windows or Web application.
         /// </summary>
-        /// <param name="configFilePath">Path of the configuration file that belongs to a Windows or Web application.</param>
+        /// <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
         public ConfigurationFile(string configFilePath)
         {
             m_configuration = GetConfiguration(configFilePath);
@@ -80,9 +86,10 @@ namespace TVA.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.
+        /// Gets the <see cref="CategorizedSettingsSection"/> object representing settings under the 
+        /// "categorizedSettings" section of the config file.
         /// </summary>
-        /// <returns>The TVA.Configuration.CategorizedSettingsSection representing the "categorizedSettings" section of the configuration file.</returns>
+        /// <returns>A <see cref="CategorizedSettingsSection"/> object.</returns>
         public CategorizedSettingsSection Settings
         {
             get
@@ -92,9 +99,10 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Gets the System.Configuration.AppSettingsSection representing the "appSettings" section of the configuration file.
+        /// Gets the <see cref="System.Configuration.AppSettingsSection"/> object representing settings under the 
+        /// "appSettings" section of the config file.
         /// </summary>
-        /// <returns>The System.Configuration.AppSettingsSection representing the "appSettings" section of the configuration file.</returns>
+        /// <returns>A <see cref="System.Configuration.AppSettingsSection"/> object.</returns>
         public AppSettingsSection AppSettings
         {
             get
@@ -104,9 +112,10 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Gets the System.Configuration.ConnectionStringsSection representing the "connectionStrings" section of the configuration file.
+        /// Gets the <see cref="System.Configuration.ConnectionStringsSection"/> representing settings under the 
+        /// "connectionStrings" section of the config file.
         /// </summary>
-        /// <returns>The System.Configuration.ConnectionStringsSection representing the "connectionStrings" section of the configuration file.</returns>
+        /// <returns>A <see cref="System.Configuration.ConnectionStringsSection"/> object.</returns>
         public ConnectionStringsSection ConnectionStrings
         {
             get
@@ -116,9 +125,9 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Gets the physical path to the configuration file represented by this TVA.Configuration.Configuration object.
+        /// Gets the physical path of the config file represented by this <see cref="ConfigurationFile"/> object.
         /// </summary>
-        /// <returns>The physical path to the configuration file represented by this TVA.Configuration.ConfigurationFile object.</returns>
+        /// <returns>Physical path of the config file.</returns>
         public string FilePath
         {
             get
@@ -283,6 +292,10 @@ namespace TVA.Configuration
 
         private static ConfigurationFile m_current;
 
+        /// <summary>
+        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently 
+        /// executing Windows or Web application.
+        /// </summary>
         public static ConfigurationFile Current
         {
             get 

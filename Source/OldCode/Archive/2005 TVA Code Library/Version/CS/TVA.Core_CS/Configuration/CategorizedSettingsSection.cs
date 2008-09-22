@@ -19,11 +19,9 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.Configuration;
-using System.Xml;
 using System.IO;
-//using TVA.Text;
+using System.Xml;
 
 namespace TVA.Configuration
 {
@@ -39,10 +37,10 @@ namespace TVA.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets <see cref="CategorizedSettingsElementCollection"/> representing settings under the specified category name.
+        /// Gets the <see cref="CategorizedSettingsElementCollection"/> object representing settings under the specified category name.
         /// </summary>
         /// <param name="name">Name of the category whose settings are to be retrieved.</param>
-        /// <returns>The TVA.Configuration.CategorizedSettingsCollection with the specified name; otherwise null.</returns>
+        /// <returns><see cref="CategorizedSettingsElementCollection"/> object with settings under the specified category name.</returns>
         public CategorizedSettingsElementCollection this[string name]
         {
             get
@@ -70,9 +68,9 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Gets the "general" category under the "categorizedSettings" of the configuration file.
+        /// Gets the <see cref="CategorizedSettingsElementCollection"/> object representing settings under "general" category.
         /// </summary>
-        /// <returns>The TVA.Configuration.CategorizedSettingsCollection of the "general" category.</returns>
+        /// <returns><see cref="CategorizedSettingsElementCollection"/> object with settings under the "general" category.</returns>
         public CategorizedSettingsElementCollection General
         {
             get
@@ -81,6 +79,10 @@ namespace TVA.Configuration
             }
         }
 
+        /// <summary>
+        /// Reads XML from the configuration file.
+        /// </summary>
+        /// <param name="reader">The <see cref="System.Xml.XmlReader"/> object, which reads from the configuration file.</param>
         protected override void DeserializeSection(XmlReader reader)
         {
             MemoryStream configSectionStream = new MemoryStream();
