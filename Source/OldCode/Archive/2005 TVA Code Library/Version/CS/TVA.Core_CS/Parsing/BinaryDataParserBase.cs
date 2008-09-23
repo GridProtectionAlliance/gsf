@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Parsing.BinaryDataParserBase.vb - Base class for parsing binary data
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  BinaryDataParserBase.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2250
 //       Email: pcpatel@tva.gov
 //
@@ -26,7 +26,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.ComponentModel;
 using System.Collections.Generic;
-using TVA;
 using TVA.IO;
 using TVA.Collections;
 using TVA.Configuration;
@@ -36,8 +35,9 @@ namespace TVA.Parsing
     [DefaultEvent("DataParsed")]
     public abstract partial class BinaryDataParserBase<TIdentifier, TOutput> : IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
     {
-        #region " Members "
+        #region [ Members ]
 
+        // Nested Types
         private class TypeInfo
         {
             public TIdentifier ID;
@@ -45,19 +45,10 @@ namespace TVA.Parsing
             public Type RuntimeType;
         }
 
-        private string m_idPropertyName;
-        private bool m_optimizeParsing;
-        private int m_unparsedDataReuseLimit;
-        private bool m_persistSettings;
-        private string m_settingsCategoryName;
-        private Dictionary<TIdentifier, TypeInfo> m_outputTypes;
-        private Dictionary<Guid, int> m_unparsedDataReuseCount;
-        private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
+        // Delegates
         private delegate TOutput DefaultConstructor();
 
-        #endregion
-
-        #region " Events "
+        // Events
 
         /// <summary>
         /// Occurs when a data image has been parsed.
@@ -79,9 +70,25 @@ namespace TVA.Parsing
         /// </summary>
         public event EventHandler<GenericEventArgs<TIdentifier>> UnparsedDataDiscarded;
 
+        // Fields
+        private string m_idPropertyName;
+        private bool m_optimizeParsing;
+        private int m_unparsedDataReuseLimit;
+        private bool m_persistSettings;
+        private string m_settingsCategoryName;
+        private Dictionary<TIdentifier, TypeInfo> m_outputTypes;
+        private Dictionary<Guid, int> m_unparsedDataReuseCount;
+        private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
+
         #endregion
 
-        #region " Methods "
+        #region [ Constructors ]
+
+        // TODO: Merge into single Component class moving constructor(s) here...
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the name of the property that identifies the output type.
@@ -157,6 +164,10 @@ namespace TVA.Parsing
                 return m_dataQueue;
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Starts the parser.
@@ -280,101 +291,6 @@ namespace TVA.Parsing
         }
 
         public abstract TIdentifier GetTypeID(byte[] binaryImage, int startIndex);
-
-        #region " IPersistSettings "
-
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        public string SettingsCategoryName
-        {
-            get
-            {
-                return m_settingsCategoryName;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategoryName = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
-            }
-        }
-
-        public void LoadSettings()
-        {
-            try
-            {
-                CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-                if (settings.Count > 0)
-                {
-                    IDPropertyName = settings["IDPropertyName"].ValueAs(m_idPropertyName);
-                    OptimizeParsing = settings["OptimizeParsing"].ValueAs(m_optimizeParsing);
-                    UnparsedDataReuseLimit = settings["UnparsedDataReuseLimit"].ValueAs(m_unparsedDataReuseLimit);
-                }
-            }
-            catch
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-                    CategorizedSettingsElement element;
-                    settings.Clear();
-
-                    element = settings["IDPropertyName", true];
-                    element.Value = m_idPropertyName;
-                    element.Description = "Name of the property that identifies the output type.";
-
-                    element = settings["OptimizeParsing", true];
-                    element.Value = m_optimizeParsing.ToString();
-                    element.Description = "True if parsing is to be done in an optimal mode; otherwise False.";
-
-                    element = settings["UnparsedDataReuseLimit", true];
-                    element.Value = m_unparsedDataReuseLimit.ToString();
-                    element.Description = "Number of times unparsed data can be reused before being discarded.";
-
-                    TVA.Configuration.Common.SaveSettings();
-                }
-                catch
-                {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
-                }
-            }
-        }
-
-        #endregion
-
-        #region " ISupportInitialize "
-
-        public void BeginInit()
-        {
-            // We don't need to do anything before the component is initialized.				
-        }
-
-        public void EndInit()
-        {
-            // Load settings from the config file.
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime) LoadSettings();
-        }
-
-        #endregion
 
         private void ParseData(IdentifiableItem<Guid, byte[]>[] item)
         {
@@ -501,9 +417,95 @@ namespace TVA.Parsing
                         DataParsed(this, new GenericEventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].Source, output)));
                 }
             }
+        }
 
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        public string SettingsCategoryName
+        {
+            get
+            {
+                return m_settingsCategoryName;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                    m_settingsCategoryName = value;
+                else
+                    throw new ArgumentNullException("SettingsCategoryName");
+            }
+        }
+
+        public void LoadSettings()
+        {
+            try
+            {
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                if (settings.Count > 0)
+                {
+                    IDPropertyName = settings["IDPropertyName"].ValueAs(m_idPropertyName);
+                    OptimizeParsing = settings["OptimizeParsing"].ValueAs(m_optimizeParsing);
+                    UnparsedDataReuseLimit = settings["UnparsedDataReuseLimit"].ValueAs(m_unparsedDataReuseLimit);
+                }
+            }
+            catch
+            {
+                // We'll encounter exceptions if the settings are not present in the config file.
+            }
+        }
+
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                try
+                {
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElement element;
+                    settings.Clear();
+
+                    element = settings["IDPropertyName", true];
+                    element.Value = m_idPropertyName;
+                    element.Description = "Name of the property that identifies the output type.";
+
+                    element = settings["OptimizeParsing", true];
+                    element.Value = m_optimizeParsing.ToString();
+                    element.Description = "True if parsing is to be done in an optimal mode; otherwise False.";
+
+                    element = settings["UnparsedDataReuseLimit", true];
+                    element.Value = m_unparsedDataReuseLimit.ToString();
+                    element.Description = "Number of times unparsed data can be reused before being discarded.";
+
+                    ConfigurationFile.Current.Save();
+                }
+                catch
+                {
+                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                }
+            }
+        }
+
+        public void BeginInit()
+        {
+            // We don't need to do anything before the component is initialized.				
+        }
+
+        public void EndInit()
+        {
+            // Load settings from the config file.
+            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime) LoadSettings();
         }
 
         #endregion
-    }
+   }
 }
