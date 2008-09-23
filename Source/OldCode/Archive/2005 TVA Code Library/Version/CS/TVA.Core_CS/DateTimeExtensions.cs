@@ -202,8 +202,7 @@ namespace TVA
             return timestamp.Ticks - BaselinedTimestamp(timestamp, BaselineTimeInterval.Second).Ticks;
         }
 
-        /// <summary>Removes any milliseconds from a timestamp value, to baseline the time at the bottom of the
-        /// second.</summary>
+        /// <summary>Creates a baselined timestamp which begins at the specified time interval.</summary>
         /// <param name="ticks">Ticks of timestamp to baseline.</param>
         /// <param name="baselineTo">Time interval to which timestamp should be baselined.</param>
         /// <returns>Baselined timestamp, in ticks, which begins at the specified time interval.</returns>
@@ -232,11 +231,11 @@ namespace TVA
                 case BaselineTimeInterval.Day:
                     return ticks - ticks % Ticks.PerDay;
                 case BaselineTimeInterval.Month:
-                    DateTime month = new DateTime(ticks);
-                    return new DateTime(month.Year, month.Month, 1, 0, 0, 0, 0).Ticks;
+                    DateTime toMonth = new DateTime(ticks);
+                    return new DateTime(toMonth.Year, toMonth.Month, 1, 0, 0, 0, 0).Ticks;
                 case BaselineTimeInterval.Year:
-                    DateTime year = new DateTime(ticks);
-                    return new DateTime(year.Year, 1, 1, 0, 0, 0, 0).Ticks;
+                    DateTime toYear = new DateTime(ticks);
+                    return new DateTime(toYear.Year, 1, 1, 0, 0, 0, 0).Ticks;
                 default:
                     return ticks;
             }
