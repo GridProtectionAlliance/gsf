@@ -158,11 +158,18 @@ namespace TVA.ErrorManagement
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategoryName = DefaultSettingsCategoryName;
             m_exitOnUnhandledException = DefaultExitOnUnhandledException;
+            // Initialize delegate methods.
             m_errorTextMethod = GetErrorText;
             m_scopeTextMethod = GetScopeText;
             m_actionTextMethod = GetActionText;
             m_moreInfoTextMethod = GetMoreInfoText;
+            // Initialize all logger methods.
             m_loggers = new List<Action<Exception>>();
+            m_loggers.Add(ExceptionToUI);
+            m_loggers.Add(ExceptionToFile);
+            m_loggers.Add(ExceptionToEmail);
+            m_loggers.Add(ExceptionToEventLog);
+            m_loggers.Add(ExceptionToScreenshot);
         }
 
         #endregion
@@ -180,7 +187,7 @@ namespace TVA.ErrorManagement
         Description("Indicates whether exception information is to be displayed on screen.")]
         public bool LogToUI
         {
-            get
+            get 
             {
                 return m_logToUI;
             }
@@ -589,11 +596,8 @@ namespace TVA.ErrorManagement
         {
             if (!Debugger.IsAttached)
             {
-                // For winform applications.
-                Application.ThreadException += UnhandledThreadException;
-
-                // For console applications.
-                AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+                Application.ThreadException += ThreadException;                     // For winform applications.
+                AppDomain.CurrentDomain.UnhandledException += UnhandledException;   // For console applications.
             }
         }
 
@@ -601,7 +605,7 @@ namespace TVA.ErrorManagement
         {
             if (!Debugger.IsAttached)
             {
-                Application.ThreadException -= UnhandledThreadException;
+                Application.ThreadException -= ThreadException;
                 AppDomain.CurrentDomain.UnhandledException -= UnhandledException;
             }
         }
@@ -615,39 +619,11 @@ namespace TVA.ErrorManagement
         {
             m_lastException = ex;
 
-            try
-            {
-                if (!m_loggers.Contains(ExceptionToScreenshot))
-                {
-                    m_loggers.Add(ExceptionToScreenshot);
-                }
-                if (!m_loggers.Contains(ExceptionToEventLog))
-                {
-                    m_loggers.Add(ExceptionToEventLog);
-                }
-                if (!m_loggers.Contains(ExceptionToEmail))
-                {
-                    m_loggers.Add(ExceptionToEmail);
-                }
-                if (!m_loggers.Contains(ExceptionToFile))
-                {
-                    m_loggers.Add(ExceptionToFile);
-                }
-                if (!m_loggers.Contains(ExceptionToUI))
-                {
-                    m_loggers.Add(ExceptionToUI);
-                }
-            }
-            catch
-            {
-
-            }
-
             foreach (Action<Exception> logger in m_loggers)
             {
                 try
                 {
-                    logger.Invoke(ex);
+                    logger(ex);
                 }
                 catch
                 {
@@ -1170,7 +1146,7 @@ namespace TVA.ErrorManagement
             return FilePath.AbsolutePath(ApplicationName + ".ExceptionScreenshot.png");
         }
 
-        private void UnhandledThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        private void ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
             Log(e.Exception, m_exitOnUnhandledException);
         }
