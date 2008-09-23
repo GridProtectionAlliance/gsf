@@ -145,18 +145,21 @@ namespace TVA
         {
             StringBuilder timeImage = new StringBuilder();
 
-            int years; // 1 year   = 365.2425 days or 31556952 seconds
-            int days; // 1 day    = 86400 seconds
-            int hours; // 1 hour   = 3600 seconds
-            int minutes; // 1 minute = 60 seconds
+            // One year of seconds estimated for display use as 365.2425 days, i.e., 31556952 seconds
+            const int SecondsPerYear = 31556952;
+
+            int years;  
+            int days;
+            int hours;
+            int minutes;
 
             // checks if number of seconds ranges in years.
-            years = (int)(seconds / 31556952);
+            years = (int)(seconds / SecondsPerYear);
 
             if (years >= 1)
             {
                 // Removes whole years from remaining seconds.
-                seconds = seconds - years * 31556952;
+                seconds = seconds - years * SecondsPerYear;
 
                 // Appends textual representation of years.
                 timeImage.Append(years);
@@ -169,11 +172,11 @@ namespace TVA
             }
 
             // Checks if remaining number of seconds ranges in days.
-            days = (int)(seconds / 86400);
+            days = (int)(seconds / Seconds.PerDay);
             if (days >= 1)
             {
                 // Removes whole days from remaining seconds.
-                seconds = seconds - days * 86400;
+                seconds = seconds - days * Seconds.PerDay;
 
                 // Appends textual representation of days.
                 timeImage.Append(' ');
@@ -187,11 +190,11 @@ namespace TVA
             }
 
             // Checks if remaining number of seconds ranges in hours.
-            hours = (int)(seconds / 3600);
+            hours = (int)(seconds / Seconds.PerHour);
             if (hours >= 1)
             {
                 // Removes whole hours from remaining seconds.
-                seconds = seconds - hours * 3600;
+                seconds = seconds - hours * Seconds.PerHour;
 
                 // Appends textual representation of hours.
                 timeImage.Append(' ');
@@ -205,11 +208,11 @@ namespace TVA
             }
 
             // Checks if remaining number of seconds ranges in minutes.
-            minutes = (int)(seconds / 60);
+            minutes = (int)(seconds / Seconds.PerMinute);
             if (minutes >= 1)
             {
                 // Removes whole minutes from remaining seconds.
-                seconds = seconds - minutes * 60;
+                seconds = seconds - minutes * Seconds.PerMinute;
 
                 // Appends textual representation of minutes.
                 timeImage.Append(' ');
