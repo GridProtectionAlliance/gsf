@@ -187,7 +187,6 @@
     <Compile Include="Measurements\ImmediateMeasurements.cs" />
     <Compile Include="Services\Enumerations.cs" />
     <Compile Include="Services\IServiceComponent.cs" />
-    <Compile Include="Threading\Enumerations.cs" />
     <Compile Include="Threading\ManagedThreadPool.cs" />
     <Compile Include="Threading\ManagedThreads.cs" />
     <Compile Include="Threading\QueueThread.cs" />

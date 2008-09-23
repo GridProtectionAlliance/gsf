@@ -25,6 +25,40 @@ using TVA;
 
 namespace TVA.Threading
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Managed Thread Types
+    /// </summary>
+    public enum ThreadType
+    {
+        /// <summary>Standard thread created with public constructor</summary>
+        StandardThread,
+        /// <summary>Queued thread added into managed thread pool</summary>
+        QueuedThread
+    }
+
+    /// <summary>
+    /// Managed Thread States
+    /// </summary>
+    public enum ThreadStatus
+    {
+        /// <summary>Thread created, not started</summary>
+        Unstarted,
+        /// <summary>Thread queued for execution</summary>
+        Queued,
+        /// <summary>Thread start requested, execution pending</summary>
+        Started,
+        /// <summary>Thread executing</summary>
+        Executing,
+        /// <summary>Thread completed</summary>
+        Completed,
+        /// <summary>Thread aborted</summary>
+        Aborted
+    }
+
+    #endregion
+
     /// <summary>
     /// Defines a managed thread
     /// </summary>
