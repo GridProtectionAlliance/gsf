@@ -143,7 +143,6 @@ namespace TVA.Interop
         public const int Bit31 = -2147483648; // 0x80000000;
 
         /// <summary>Gets the bit value for the specified bit index (0 - 31).</summary>
-        /// <typeparam name="T">Value type source</typeparam>
         /// <param name="bit">Bit index (0 - 31)</param>
         /// <returns>Value of the specified bit.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 31.</exception>

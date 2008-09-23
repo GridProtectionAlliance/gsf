@@ -41,7 +41,7 @@ namespace TVA.Configuration
         /// </summary>
         /// <param name="name">Name of the category whose settings are to be retrieved.</param>
         /// <returns><see cref="CategorizedSettingsElementCollection"/> object with settings under the specified category name.</returns>
-        public CategorizedSettingsElementCollection this[string name]
+        public new CategorizedSettingsElementCollection this[string name]
         {
             get
             {

@@ -29,7 +29,6 @@ namespace TVA.Configuration
     /// <summary>
     /// Represents a collection of <see cref="CategorizedSettingsElement"/> objects.
     /// </summary>
-    /// <seealso cref="<see cref="CategorizedSettingsElement"/>"/>
     public class CategorizedSettingsElementCollection : ConfigurationElementCollection
     {
         #region [ Properties ]
@@ -39,7 +38,7 @@ namespace TVA.Configuration
         /// </summary>
         /// <param name="index">Zero-based index for the <see cref="CategorizedSettingsElement"/> object to retrieve.</param>
         /// <returns>The <see cref="CategorizedSettingsElement"/> object at the specified index if it exists; otherwise null.</returns>
-        public new CategorizedSettingsElement this[int index]
+        public CategorizedSettingsElement this[int index]
         {
             get
             {
@@ -78,7 +77,7 @@ namespace TVA.Configuration
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object to retrieve.</param>
         /// <param name="ensureExistance">A boolean value that indicates whether the <see cref="CategorizedSettingsElement"/> object is to be created if it does not exist.</param>
         /// <returns>The <see cref="CategorizedSettingsElement"/> object with the specified name if it exists; otherwise null.</returns>
-        public new CategorizedSettingsElement this[string name, bool ensureExistance]
+        public CategorizedSettingsElement this[string name, bool ensureExistance]
         {
             get
             {

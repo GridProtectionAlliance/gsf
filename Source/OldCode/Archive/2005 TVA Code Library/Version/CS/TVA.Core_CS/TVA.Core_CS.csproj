@@ -82,11 +82,6 @@
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="CurveFit.cs" />
-    <Compile Include="ErrorManagement\ErrorDialog.cs" />
-    <Compile Include="ErrorManagement\ErrorLogger.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ErrorManagement\ErrorModule.cs" />
     <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFile.cs" />
     <Compile Include="Net\Ftp\InputDataStream.cs" />
@@ -106,19 +101,6 @@
     <Compile Include="Console\Arguments.cs" />
     <Compile Include="Console\Events.cs" />
     <Compile Include="Drawing\Image.cs" />
-    <Compile Include="ErrorManagement\GELDialog.Designer.cs">
-      <DependentUpon>GELDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ErrorManagement\GELDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ErrorManagement\GELHttpModule.cs" />
-    <Compile Include="ErrorManagement\GlobalExceptionLogger.Designer.cs">
-      <DependentUpon>GlobalExceptionLogger.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ErrorManagement\GlobalExceptionLogger.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="IO\Compression\CompressLevel.cs" />
     <Compile Include="IO\ExportDestination.cs" />
@@ -215,7 +197,6 @@
     <Compile Include="Measurements\Measurement.cs" />
     <Compile Include="Measurements\ConcentratorBase.cs" />
     <Compile Include="Measurements\TemporalMeasurement.cs" />
-    <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
@@ -230,14 +211,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
-    <EmbeddedResource Include="ErrorManagement\GELDialog.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>GELDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ErrorManagement\GlobalExceptionLogger.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>GlobalExceptionLogger.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="IO\IsamDataFileBase.resx">
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>
       <SubType>Designer</SubType>
