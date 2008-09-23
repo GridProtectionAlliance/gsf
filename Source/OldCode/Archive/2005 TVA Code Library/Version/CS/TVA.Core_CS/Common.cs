@@ -163,7 +163,7 @@ namespace TVA
                     // - http://support.microsoft.com/kb/90493/en-us
                     // - http://www.codeguru.com/cpp/w-p/system/misc/article.php/c2897/
                     // We will always have an entry assembly for windows application.
-                    FileStream exe = new FileStream(AssemblyInformation.EntryAssembly.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    FileStream exe = new FileStream(AssemblyInfo.EntryAssembly.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     byte[] dosHeader = new byte[64];
                     byte[] exeHeader = new byte[248];
                     byte[] subSystem = new byte[2];

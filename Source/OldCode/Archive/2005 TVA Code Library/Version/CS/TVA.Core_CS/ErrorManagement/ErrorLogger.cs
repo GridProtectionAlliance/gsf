@@ -1213,7 +1213,7 @@ namespace TVA.ErrorManagement
             {
                 case ApplicationType.WindowsCui:
                 case ApplicationType.WindowsGui:
-                    UserInformation currentUserInfo = new UserInformation(Thread.CurrentPrincipal.Identity.Name);
+                    UserInfo currentUserInfo = new UserInfo(Thread.CurrentPrincipal.Identity.Name);
                     info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
@@ -1228,7 +1228,7 @@ namespace TVA.ErrorManagement
                     info.AppendLine();
                     break;
                 case ApplicationType.Web:
-                    UserInformation remoteUserInfo = new UserInformation(Thread.CurrentPrincipal.Identity.Name, true);
+                    UserInfo remoteUserInfo = new UserInfo(Thread.CurrentPrincipal.Identity.Name, true);
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
@@ -1407,7 +1407,7 @@ namespace TVA.ErrorManagement
         {
 
             System.Text.StringBuilder with_1 = new StringBuilder();
-            AssemblyInformation parentAssemblyInfo = new AssemblyInformation(parentAssembly);
+            AssemblyInfo parentAssemblyInfo = new AssemblyInfo(parentAssembly);
             with_1.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
             with_1.AppendLine();
             with_1.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);

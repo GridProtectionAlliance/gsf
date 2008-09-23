@@ -1180,7 +1180,7 @@ namespace TVA
                 {
                     case TVA.ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
-                        TVA.Identity.UserInformation currentUserInfo = new TVA.Identity.UserInformation(System.Threading.Thread.CurrentPrincipal.Identity.Name);
+                        TVA.Identity.UserInfo currentUserInfo = new TVA.Identity.UserInfo(System.Threading.Thread.CurrentPrincipal.Identity.Name);
                         with_1.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                         with_1.AppendLine();
                         with_1.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList(0).ToString());
@@ -1195,7 +1195,7 @@ namespace TVA
                         with_1.AppendLine();
                         break;
                     case ApplicationType.Web:
-                        TVA.Identity.UserInformation remoteUserInfo = new TVA.Identity.UserInformation(System.Threading.Thread.CurrentPrincipal.Identity.Name, true);
+                        TVA.Identity.UserInfo remoteUserInfo = new TVA.Identity.UserInfo(System.Threading.Thread.CurrentPrincipal.Identity.Name, true);
                         with_1.AppendFormat("Server Name:           {0}", Environment.MachineName);
                         with_1.AppendLine();
                         with_1.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList(0).ToString());
