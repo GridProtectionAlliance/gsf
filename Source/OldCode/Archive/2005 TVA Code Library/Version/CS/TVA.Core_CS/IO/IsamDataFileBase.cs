@@ -632,7 +632,7 @@ namespace TVA.IO
         {
             try
             {
-                CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
 
                 if (settings.Count > 0)
                 {
@@ -655,8 +655,8 @@ namespace TVA.IO
             if (m_persistSettings)
             {
                 try
-                {                    
-                    CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                {
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
                     CategorizedSettingsElement setting;
 
                     settings.Clear();
@@ -685,7 +685,7 @@ namespace TVA.IO
                     setting.Value = m_minimumRecordCount.ToString();
                     setting.Description = "Minimum number of records that the file must have.";
 
-                    TVA.Configuration.Common.SaveSettings();
+                    ConfigurationFile.Current.Save();
                 }
                 catch
                 {
