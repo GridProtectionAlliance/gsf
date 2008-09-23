@@ -236,7 +236,7 @@ namespace TVA.IO
         /// <returns>The path of the executing assembly.</returns>
         public static string GetApplicationPath()
         {
-            return JustPath(AssemblyInformation.EntryAssembly.Location.Trim());
+            return JustPath(AssemblyInfo.EntryAssembly.Location.Trim());
         }
 
         /// <summary>Returns just the drive letter (or UNC (\\server\share\) from a path), suffixed with standard directory separator.</summary>
@@ -297,7 +297,7 @@ namespace TVA.IO
                         filePath = System.Web.HttpContext.Current.Request.MapPath("~/") + filePath;
                         break;
                     default:
-                        filePath = JustPath(AssemblyInformation.EntryAssembly.Location) + filePath;
+                        filePath = JustPath(AssemblyInfo.EntryAssembly.Location) + filePath;
                         break;
                 }
             }
