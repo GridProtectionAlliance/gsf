@@ -260,7 +260,7 @@ namespace TVA
         /// </remarks>
         public static DateTime BaselinedTimestamp(this DateTime timestamp, BaselineTimeInterval baselineTo)
         {
-            return new DateTime(BaselinedTimestamp(timestamp.Ticks, baselineTo));
+            return new DateTime(timestamp.Ticks.BaselinedTimestamp(baselineTo));
         }
 
         /// <summary>Converts given local time to Eastern time.</summary>
