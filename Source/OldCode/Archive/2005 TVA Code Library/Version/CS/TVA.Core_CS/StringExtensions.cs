@@ -432,7 +432,7 @@ namespace TVA
         /// <summary>Tests to see if a string contains only numbers based on Char.IsNumber function.</summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are numbers; otherwise, false.</returns>
-        /// <seealso cref="Char.IsNumber"/>
+        /// <seealso cref="System.Char.IsNumber"/>
         public static bool IsAllNumbers(this string value)
         {
             if (string.IsNullOrEmpty(value)) return false;

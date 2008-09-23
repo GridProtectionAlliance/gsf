@@ -431,7 +431,6 @@ namespace TVA
         }
 
         /// <summary>Gets the 3-letter month abbreviation for given month number (1-12).</summary>
-        /// <param name="monthNumber">Numeric month number (1-12).</param>
         /// <remarks>Month abbreviations are English only.</remarks>
         public static string ShortMonthName(this DateTime timestamp)
         {
@@ -467,7 +466,6 @@ namespace TVA
         }
 
         /// <summary>Gets the full month name for given month number (1-12).</summary>
-        /// <param name="monthNumber">Numeric month number (1-12).</param>
         /// <remarks>Month names are English only.</remarks>
         public static string LongMonthName(this DateTime timestamp)
         {

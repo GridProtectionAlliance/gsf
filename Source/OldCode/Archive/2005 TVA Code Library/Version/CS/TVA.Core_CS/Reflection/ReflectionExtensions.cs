@@ -32,6 +32,7 @@ namespace TVA.Reflection
         }
 
         /// <summary>Gets the specified embedded resource from the assembly.</summary>
+        /// <param name="assemblyInstance">Source assembly.</param>
         /// <param name="resourceName">The full name (including the namespace) of the embedded resource to get.</param>
         /// <returns>The embedded resource.</returns>
         public static Stream GetEmbeddedResource(this Assembly assemblyInstance, string resourceName)

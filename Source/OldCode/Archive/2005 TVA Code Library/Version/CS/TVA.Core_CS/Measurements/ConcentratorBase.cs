@@ -1245,15 +1245,15 @@ namespace TVA.Measurements
 
         //Private m_useHighResolutionTimer As Boolean                             ' Determines whether or not to use high-resolution timer
 
-        ///' <summary>
-        ///' Determines whether or not to use the high-resolution multi-media timer for frame publication.
-        ///' </summary>
-        ///' <remarks>
-        ///' Using the high-resolution timer will provide the highest accuracy on frame publication intervals and
-        ///' will allow the maximum amount of time for the user publication function.  However, this timer will
-        ///' cause an increase in the required system CPU resources.  This property allows multiple instances
-        ///' of the concentration class to be "tuned" for their function and criticality.
-        ///' </remarks>
+        //' <summary>
+        //' Determines whether or not to use the high-resolution multi-media timer for frame publication.
+        //' </summary>
+        //' <remarks>
+        //' Using the high-resolution timer will provide the highest accuracy on frame publication intervals and
+        //' will allow the maximum amount of time for the user publication function.  However, this timer will
+        //' cause an increase in the required system CPU resources.  This property allows multiple instances
+        //' of the concentration class to be "tuned" for their function and criticality.
+        //' </remarks>
         //Public Property UseHighResolutionTimer() As Boolean
         //    Get
         //        Return m_useHighResolutionTimer
@@ -1292,10 +1292,10 @@ namespace TVA.Measurements
         // being called to optimize by preventing function call overhead
 
 
-        ///' <summary>This critical function automatically manages the sample queue based on timestamps of incoming measurements</summary>
-        ///' <returns>The sample associated with the specified timestamp. If the sample is not found at timestamp, it will be created.</returns>
-        ///' <param name="ticks">Ticks of the timestamp of the sample to get</param>
-        ///' <remarks>Function will return null if timestamp is outside of the specified time deviation tolerance</remarks>
+        //' <summary>This critical function automatically manages the sample queue based on timestamps of incoming measurements</summary>
+        //' <returns>The sample associated with the specified timestamp. If the sample is not found at timestamp, it will be created.</returns>
+        //' <param name="ticks">Ticks of the timestamp of the sample to get</param>
+        //' <remarks>Function will return null if timestamp is outside of the specified time deviation tolerance</remarks>
         //Protected Function GetSample(ByVal ticks As Long) As Sample
 
         //    ' Baseline measurement timestamp at bottom of the second
@@ -1352,9 +1352,9 @@ namespace TVA.Measurements
 
         //End Function
 
-        ///' <summary>Gets the sample associated with the specified timestamp.</summary>
-        ///' <returns>The sample associated with the specified timestamp. If the specified timestamp is not found, property returns null.</returns>
-        ///' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
+        //' <summary>Gets the sample associated with the specified timestamp.</summary>
+        //' <returns>The sample associated with the specified timestamp. If the specified timestamp is not found, property returns null.</returns>
+        //' <param name="ticks">The ticks of the baselined timestamp of the sample to get.</param>
         //Protected Function LookupSample(ByVal ticks As Long) As Sample
 
         //    Dim foundSample As Sample
@@ -1404,7 +1404,7 @@ namespace TVA.Measurements
         //Private WithEvents m_sampleQueue As KeyedProcessQueue(Of Long, Sample)  ' Sample processing queue (a sample represents one second of frames)
         //Private m_frameIndex As Integer                                         ' Current publishing frame index
 
-        ///' <summary>Gets the current publishing sample.</summary>
+        //' <summary>Gets the current publishing sample.</summary>
         //Public ReadOnly Property CurrentSample() As Sample
         //    Get
         //        If m_sampleQueue.Count > 0 Then
@@ -1415,15 +1415,15 @@ namespace TVA.Measurements
         //    End Get
         //End Property
 
-        ///' <summary>Gets the index of the frame that is currently, or about to be, publishing.</summary>
+        //' <summary>Gets the index of the frame that is currently, or about to be, publishing.</summary>
         //Public ReadOnly Property CurrentFrameIndex() As Integer
         //    Get
         //        Return m_frameIndex
         //    End Get
         //End Property
 
-        ///' <summary>This event is raised after a sample is published, so that consumers may handle any last
-        ///' minute operations on a sample before it gets released.</summary>
+        //' <summary>This event is raised after a sample is published, so that consumers may handle any last
+        //' minute operations on a sample before it gets released.</summary>
         //Public Event SamplePublished(ByVal sample As Sample)
 
         //' When all the frames have been published, this exposes the sample to consumer as the last step in sample

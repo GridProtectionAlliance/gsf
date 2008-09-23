@@ -27,18 +27,18 @@ namespace TVA
         {
             // Note that this is a structure so elements may be used as an index in
             // a string array with having to cast as (int)
-            static public int Year = 0;
-            static public int Years = 1;
-            static public int Day = 2;
-            static public int Days = 3;
-            static public int Hour = 4;
-            static public int Hours = 5;
-            static public int Minute = 6;
-            static public int Minutes = 7;
-            static public int Second = 8;
-            static public int Seconds = 9;
-            static public int LessThan60Seconds = 10;
-            static public int NoSeconds = 11;
+            static readonly public int Year = 0;
+            static readonly public int Years = 1;
+            static readonly public int Day = 2;
+            static readonly public int Days = 3;
+            static readonly public int Hour = 4;
+            static readonly public int Hours = 5;
+            static readonly public int Minute = 6;
+            static readonly public int Minutes = 7;
+            static readonly public int Second = 8;
+            static readonly public int Seconds = 9;
+            static readonly public int LessThan60Seconds = 10;
+            static readonly public int NoSeconds = 11;
         }
 
         /// <summary>Standard time names used by SecondsToText function.</summary>
