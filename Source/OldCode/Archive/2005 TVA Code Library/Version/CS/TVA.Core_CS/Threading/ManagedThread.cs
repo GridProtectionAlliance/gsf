@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Threading.ManagedThread.vb - Defines a managed thread
+//  ManagedThread.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -21,7 +21,6 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
-using TVA;
 
 namespace TVA.Threading
 {
@@ -69,8 +68,9 @@ namespace TVA.Threading
     /// </remarks>
     public sealed class ManagedThread
     {
-        #region " Member Declaration "
+        #region [ Members ]
 
+        // Fields
         private Thread m_thread;
         private ThreadType m_type;
         private ThreadStatus m_status;
@@ -86,7 +86,7 @@ namespace TVA.Threading
 
         #endregion
 
-        #region " Constructors "
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the ManagedThread class.
@@ -145,7 +145,7 @@ namespace TVA.Threading
 
         #endregion
 
-        #region " Code Scope: Public "
+        #region [ Properties ]
 
         /// <summary>
         /// An object containing data to be used by the thread's execution method.
@@ -279,6 +279,52 @@ namespace TVA.Threading
         }
 
         /// <summary>
+        /// Gets or sets a value indicating the scheduling priority of a thread.
+        /// </summary>
+        /// <returns>One of the ThreadPriority values. The default value is Normal.</returns>
+        /// <remarks>
+        /// Changing of this value is only available to standard threads - you can't change the priorty of queued threads since they are already
+        /// allocated and owned by the .NET thread pool.
+        /// </remarks>
+        public ThreadPriority Priority
+        {
+            get
+            {
+                if (m_type == ThreadType.QueuedThread)
+                {
+                    return ThreadPriority.Normal;
+                }
+                else
+                {
+                    return m_thread.Priority;
+                }
+            }
+            set
+            {
+                if (m_type == ThreadType.QueuedThread)
+                    throw new InvalidOperationException("Cannot change priority of a thread that was queued into thread pool.");
+
+                m_thread.Priority = value;
+            }
+        }
+
+        internal Thread Thread
+        {
+            get
+            {
+                return m_thread;
+            }
+            set
+            {
+                m_thread = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
         /// Raises a ThreadAbortException in the thread on which it is invoked, to begin the process of terminating the thread. Calling this method usually terminates the thread.
         /// </summary>
         public void Abort()
@@ -373,52 +419,6 @@ namespace TVA.Threading
             return Join((int)timeout.TotalMilliseconds);
         }
 
-        /// <summary>
-        /// Gets or sets a value indicating the scheduling priority of a thread.
-        /// </summary>
-        /// <returns>One of the ThreadPriority values. The default value is Normal.</returns>
-        /// <remarks>
-        /// Changing of this value is only available to standard threads - you can't change the priorty of queued threads since they are already
-        /// allocated and owned by the .NET thread pool.
-        /// </remarks>
-        public ThreadPriority Priority
-        {
-            get
-            {
-                if (m_type == ThreadType.QueuedThread)
-                {
-                    return ThreadPriority.Normal;
-                }
-                else
-                {
-                    return m_thread.Priority;
-                }
-            }
-            set
-            {
-                if (m_type == ThreadType.QueuedThread)
-                    throw new InvalidOperationException("Cannot change priority of a thread that was queued into thread pool.");
-
-                m_thread.Priority = value;
-            }
-        }
-
-        #endregion
-
-        #region " Code Scope: Internal "
-
-        internal Thread Thread
-        {
-            get
-            {
-                return m_thread;
-            }
-            set
-            {
-                m_thread = value;
-            }
-        }
-
         internal void HandleItem()
         {
             // Set start state
@@ -464,5 +464,5 @@ namespace TVA.Threading
         }
 
         #endregion
-    }
+   }
 }

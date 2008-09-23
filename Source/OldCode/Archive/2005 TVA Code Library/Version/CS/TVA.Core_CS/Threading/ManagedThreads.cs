@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Threading.ManagedThreads.vb - Maintains a reference to all managed threads
+//  ManagedThreads.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -27,7 +27,7 @@ namespace TVA.Threading
     /// <summary>
     /// Maintains a reference to all managed threads
     /// </summary>
-    public class ManagedThreads
+    public static class ManagedThreads
     {
         private static LinkedList<ManagedThread> m_queuedThreads;
         private static LinkedList<ManagedThread> m_activeThreads;
@@ -208,16 +208,10 @@ namespace TVA.Threading
                     if (allowAbort)
                     {
                         // Started items may be aborted, even if running in thread pool
-                        try
-                        {
-                            if (stateInfo == null)
-                                item.Thread.Abort();
-                            else
-                                item.Thread.Abort(stateInfo);
-                        }
-                        finally
-                        {
-                        }
+                        if (stateInfo == null)
+                            item.Thread.Abort();
+                        else
+                            item.Thread.Abort(stateInfo);
                     }
                 }
                 else

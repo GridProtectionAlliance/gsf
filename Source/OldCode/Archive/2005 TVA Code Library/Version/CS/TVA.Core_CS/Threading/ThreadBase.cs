@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Threading.ThreadBase.vb - Convienent base class for new threads
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ThreadBase.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -22,8 +22,10 @@ using System.Threading;
 
 namespace TVA.Threading
 {
-    // This is a convienent base class for new threads - deriving your own thread class from from this
-    // class allows you to define properties for the needed parameters of your thread proc
+    /// <summary>
+    /// This is a convienent base class for new threads - deriving your own thread class from from this
+    /// class allows you to define properties for the needed parameters of your thread proc.
+    /// </summary>
     public abstract class ThreadBase : IDisposable
     {
 #if ThreadTracking

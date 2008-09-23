@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Threading.ManagedThreadPool.vb - Defines a managed thread pool
+//  ManagedThreadPool.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -31,7 +31,7 @@ namespace TVA.Threading
     /// queued thread with the ability to dequeue and/or abort, total thread runtime and the
     /// ability to run the queued thread in an alternate execution context
     /// </remarks>
-    public class ManagedThreadPool
+    public static class ManagedThreadPool
     {
         /// <summary>
         /// Queues a work item for processing on the managed thread pool

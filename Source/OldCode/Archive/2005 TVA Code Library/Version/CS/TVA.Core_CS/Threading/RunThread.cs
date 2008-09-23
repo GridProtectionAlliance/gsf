@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Threading.RunThread.vb - Uses reflection to invoke an existing sub or function on a new thread
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  RunThread.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -20,12 +20,20 @@
 using System;
 using System.Threading;
 using System.Reflection;
-using System.Collections.Generic;
 
 namespace TVA.Threading
 {
-    // This class uses reflection to invoke an existing sub or function on a new thread, its usage
-    // can be as simple as RunThread.ExecuteMethod(Me, "MyMethod", "param1", "param2", True)
+    /// <summary>
+    /// Executes any existing sub or function (regardless of parameters or signature) on a new thread.
+    /// </summary>
+    /// <remarks>
+    /// This class uses reflection to invoke an existing sub or function on a new thread. An instance of
+    /// the RunThread class is returned so user can retrieve any return value and/or abort thread later.
+    /// Method name invocation is case-insensitive.
+    /// </remarks>
+    /// <example>
+    /// <code>RunThread.ExecuteMethod(Me, "MyMethod", "param1", "param2", True)</code>
+    /// </example>
     public class RunThread : ThreadBase
     {
         public Type ObjectType;
@@ -35,7 +43,7 @@ namespace TVA.Threading
         public BindingFlags InvokeAttributes;
         public object ReturnValue;
 
-        private RunThread() { }
+        private RunThread() {}
 
         public static RunThread ExecuteMethod(object instance, string methodName, params object[] parameters)
         {
