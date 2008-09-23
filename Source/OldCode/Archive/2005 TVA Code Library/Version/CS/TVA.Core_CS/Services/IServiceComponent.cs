@@ -1,18 +1,10 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-
 //*******************************************************************************************************
-//  TVA.Xml.Common.vb - Common XML Functions
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  IServiceComponent.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -22,34 +14,56 @@ using System;
 //       Original version of source code generated
 //  01/23/2006 - J. Ritchie Carroll
 //       2.0 version of source code migrated from 1.1 source (TVA.Shared.Common)
+//  09/23/2008 - James R Carroll
+//       Converted to C#.
 //
 //*******************************************************************************************************
+using System;
 
-namespace TVA
+namespace TVA.Services
 {
-    namespace Services
+    #region [ Enumerations ]
+
+    /// <summary>Windows service states</summary>
+    public enum ServiceState
     {
+        Started,
+        Stopped,
+        Paused,
+        Resumed,
+        Shutdown
+    }
 
-        /// <summary>
-        /// Defines an interface for user created components used by the service so that components can inform service
-        /// of current status and automatically react to service events.
-        /// </summary>
-        public interface IServiceComponent : IDisposable
+    /// <summary>Windows service process states</summary>
+    public enum ProcessState
+    {
+        Unprocessed,
+        Processing,
+        Processed,
+        Aborted,
+        Exception
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Defines an interface for user created components used by the service so that components can inform service
+    /// of current status and automatically react to service events.
+    /// </summary>
+    public interface IServiceComponent : IDisposable
+    {
+        string Name
         {
-
-
-            string Name
-            {
-                get;
-            }
-            string Status
-            {
-                get;
-            }
-            void ServiceStateChanged(ServiceState newState);
-            void ProcessStateChanged(string processName, ProcessState newState);
-
+            get;
         }
 
+        string Status
+        {
+            get;
+        }
+
+        void ServiceStateChanged(ServiceState newState);
+
+        void ProcessStateChanged(string processName, ProcessState newState);
     }
 }
