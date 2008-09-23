@@ -50,7 +50,6 @@ namespace TVA.Console
 
         public static event EventHandler SystemShutdown;
 
-        // Static Methods
         [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
         private static extern bool SetConsoleWindowEventRaising(Func<ConsoleEventType, bool> handler, bool enable);
 
