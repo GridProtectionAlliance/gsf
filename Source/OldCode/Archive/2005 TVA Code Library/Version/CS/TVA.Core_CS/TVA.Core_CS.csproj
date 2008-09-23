@@ -82,9 +82,11 @@
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="CurveFit.cs" />
+    <Compile Include="ErrorManagement\ErrorDialog.cs" />
     <Compile Include="ErrorManagement\ErrorLogger.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ErrorManagement\ErrorModule.cs" />
     <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFile.cs" />
     <Compile Include="Net\Ftp\InputDataStream.cs" />

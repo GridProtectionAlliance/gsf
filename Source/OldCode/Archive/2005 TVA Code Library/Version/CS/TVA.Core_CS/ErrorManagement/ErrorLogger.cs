@@ -155,6 +155,29 @@ namespace TVA.ErrorManagement
 
         #region [ Constructors ]
 
+        public ErrorLogger()
+        {
+            m_autoRegister = DefaultAutoRegister;
+            m_exitOnUnhandledException = DefaultExitOnUnhandledException;
+            m_logToUI = DefaultLogToUI;
+            m_logToFile = DefaultLogToFile;
+            m_logToEmail = DefaultLogToEmail;
+            m_logToEventLog = DefaultLogToEventLog;
+            m_logToScreenshot = DefaultLogToScreenshot;
+            m_smtpServer = DefaultSmtpServer;
+            m_contactName = DefaultContactName;
+            m_contactEmail = DefaultContactEmail;
+            m_contactPhone = DefaultContactPhone;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategoryName = DefaultSettingsCategoryName;
+
+            m_errorTextMethod = GetErrorText;
+            m_scopeTextMethod = GetScopeText;
+            m_actionTextMethod = GetActionText;
+            m_moreInfoTextMethod = GetMoreInfoText;
+            m_loggers = new List<Action<Exception>>();
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -407,13 +430,13 @@ namespace TVA.ErrorManagement
             {
                 switch (ApplicationType)
                 {
-                    case TVA.ApplicationType.WindowsCui:
-                    case TVA.ApplicationType.WindowsGui:
+                    case ApplicationType.WindowsCui:
+                    case ApplicationType.WindowsGui:
                         return FilePath.NoFileExtension(AppDomain.CurrentDomain.FriendlyName);
-                    case TVA.ApplicationType.Web:
+                    case ApplicationType.Web:
                         return HttpContext.Current.Request.ApplicationPath.Replace("/", "");
                     default:
-                        return "";
+                        return string.Empty;
                 }
             }
         }
@@ -423,9 +446,9 @@ namespace TVA.ErrorManagement
         {
             get
             {
-                if (m_applicationType == TVA.ApplicationType.Unknown)
+                if (m_applicationType == ApplicationType.Unknown)
                 {
-                    m_applicationType = TVA.Common.GetApplicationType();
+                    m_applicationType = Common.GetApplicationType();
                 }
                 return m_applicationType;
             }
@@ -484,10 +507,10 @@ namespace TVA.ErrorManagement
             if (!Debugger.IsAttached)
             {
                 // For winform applications.
-                System.Windows.Forms.Application.ThreadException += UnhandledThreadException;
+                Application.ThreadException += UnhandledThreadException;
 
                 // For console applications.
-                System.AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+                AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             }
 
         }
@@ -497,8 +520,8 @@ namespace TVA.ErrorManagement
 
             if (!Debugger.IsAttached)
             {
-                System.Windows.Forms.Application.ThreadException -= UnhandledThreadException;
-                System.AppDomain.CurrentDomain.UnhandledException -= UnhandledException;
+                Application.ThreadException -= UnhandledThreadException;
+                AppDomain.CurrentDomain.UnhandledException -= UnhandledException;
             }
 
         }
