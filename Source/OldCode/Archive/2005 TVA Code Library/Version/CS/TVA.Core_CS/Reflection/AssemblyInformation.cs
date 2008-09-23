@@ -36,13 +36,14 @@ namespace TVA.Reflection
     /// <summary>Assembly Information Class.</summary>
     public class AssemblyInformation
     {
-        private static AssemblyInformation m_callingAssembly;
-        private static AssemblyInformation m_entryAssembly;
-        private static AssemblyInformation m_executingAssembly;
-        private static Dictionary<string, Assembly> m_assemblyCache;
-        private static bool m_addedResolver;
+        #region [ Members ]
 
+        // Fields
         private Assembly m_assemblyInstance;
+
+        #endregion
+
+        #region [ Constructors ]
 
         /// <summary>Initializes an instance of TVA.AssemblyInformation for the specified Assembly.</summary>
         /// <param name="assemblyInstance">An instance of Assembly for which a TVA.AssemblyInformation instance is to be created.</param>
@@ -51,38 +52,9 @@ namespace TVA.Reflection
             m_assemblyInstance = assemblyInstance;
         }
 
-        /// <summary>Gets the TVA.Assembly instance of the assembly that invoked the currently executing method.</summary>
-        /// <returns>The TVA.Assembly instance of the assembly that invoked the currently executing method.</returns>
-        public static AssemblyInformation CallingAssembly
-        {
-            get
-            {
-                if (m_callingAssembly == null) m_callingAssembly = new AssemblyInformation(Assembly.GetCallingAssembly());
-                return m_callingAssembly;
-            }
-        }
+        #endregion
 
-        /// <summary>Gets the TVA.Assembly instance of the process executable in the default application domain.</summary>
-        /// <returns>The TVA.Assembly instance of the process executable in the default application domain.</returns>
-        public static AssemblyInformation EntryAssembly
-        {
-            get
-            {
-                if (m_entryAssembly == null) m_entryAssembly = new AssemblyInformation(Assembly.GetEntryAssembly());
-                return m_entryAssembly;
-            }
-        }
-
-        /// <summary>Gets the TVA.Assembly instance of the assembly that contains the code that is currently executing.</summary>
-        /// <returns>The TVA.Assembly instance of the assembly that contains the code that is currently executing.</returns>
-        public static AssemblyInformation ExecutingAssembly
-        {
-            get
-            {
-                if (m_executingAssembly == null) m_executingAssembly = new AssemblyInformation(Assembly.GetExecutingAssembly());
-                return m_executingAssembly;
-            }
-        }
+        #region [ Properties ]
 
         /// <summary>Gets the title information of the assembly.</summary>
         /// <returns>The title information of the assembly.</returns>
@@ -362,6 +334,10 @@ namespace TVA.Reflection
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>Gets a collection of assembly attributes exposed by the assembly.</summary>
         /// <returns>A System.Specialized.KeyValueCollection of assembly attributes.</returns>
         public NameValueCollection GetAttributes()
@@ -481,6 +457,54 @@ namespace TVA.Reflection
             return m_assemblyInstance.GetEmbeddedResource(resourceName);
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static AssemblyInformation m_callingAssembly;
+        private static AssemblyInformation m_entryAssembly;
+        private static AssemblyInformation m_executingAssembly;
+        private static Dictionary<string, Assembly> m_assemblyCache;
+        private static bool m_addedResolver;
+
+        // Static Properties
+
+        /// <summary>Gets the TVA.Assembly instance of the assembly that invoked the currently executing method.</summary>
+        /// <returns>The TVA.Assembly instance of the assembly that invoked the currently executing method.</returns>
+        public static AssemblyInformation CallingAssembly
+        {
+            get
+            {
+                if (m_callingAssembly == null) m_callingAssembly = new AssemblyInformation(Assembly.GetCallingAssembly());
+                return m_callingAssembly;
+            }
+        }
+
+        /// <summary>Gets the TVA.Assembly instance of the process executable in the default application domain.</summary>
+        /// <returns>The TVA.Assembly instance of the process executable in the default application domain.</returns>
+        public static AssemblyInformation EntryAssembly
+        {
+            get
+            {
+                if (m_entryAssembly == null) m_entryAssembly = new AssemblyInformation(Assembly.GetEntryAssembly());
+                return m_entryAssembly;
+            }
+        }
+
+        /// <summary>Gets the TVA.Assembly instance of the assembly that contains the code that is currently executing.</summary>
+        /// <returns>The TVA.Assembly instance of the assembly that contains the code that is currently executing.</returns>
+        public static AssemblyInformation ExecutingAssembly
+        {
+            get
+            {
+                if (m_executingAssembly == null) m_executingAssembly = new AssemblyInformation(Assembly.GetExecutingAssembly());
+                return m_executingAssembly;
+            }
+        }
+
+        // Static Methods
+
         /// <summary>Loads the specified assembly that is embedded as a resource in the assembly.</summary>
         /// <param name="assemblyName">Name of the assembly to load.</param>
         /// <remarks>This cannot be used to load TVA.Core itself.</remarks>
@@ -529,5 +553,7 @@ namespace TVA.Reflection
 
             return resourceAssembly;
         }
+
+        #endregion
     }
 }
