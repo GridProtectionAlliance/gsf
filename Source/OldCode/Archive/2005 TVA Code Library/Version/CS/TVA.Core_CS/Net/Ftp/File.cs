@@ -1,211 +1,210 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
+//*******************************************************************************************************
+//  File.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  05/22/2003 - James R Carroll
+//       Generated original version of source code.
+//
+//*******************************************************************************************************
+
 using System;
 using System.IO;
 using System.Net.Sockets;
 
-// James Ritchie Carroll - 2003
-
-
-namespace TVA
+namespace TVA.Net.Ftp
 {
-    namespace Net
+    public class File : IFile, IComparable<File>
     {
-        namespace Ftp
+        #region [ Members ]
+
+        // Fields
+        private Directory m_parent;
+        private string m_name;
+        private long m_size;
+        private string m_permission;
+        private DateTime m_timestamp;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        internal File(Directory parent, Directory.ItemInfo info)
         {
+            m_parent = parent;
+            m_name = info.Name;
+            m_size = info.Size;
+            m_permission = info.Permission;
+            m_timestamp = info.TimeStamp.Value;
+        }
 
+        internal File(Directory parent, string name)
+        {
+            m_parent = parent;
+            m_name = name;
+        }
 
-            public class File : IFile, IComparable
+        #endregion
+
+        #region [ Properties ]
+
+        public string Name
+        {
+            get
             {
+                return m_name;
+            }
+        }
 
+        public string FullPath
+        {
+            get
+            {
+                return m_parent.FullPath + m_name;
+            }
+        }
 
+        public bool IsFile
+        {
+            get
+            {
+                return true;
+            }
+        }
 
-                private Directory m_parent;
-                private string m_name;
-                private long m_size;
-                private string m_permission;
-                private DateTime m_timestamp;
+        public bool IsDirectory
+        {
+            get
+            {
+                return false;
+            }
+        }
 
-                internal File(Directory parent, ItemInfo info)
-                {
+        public long Size
+        {
+            get
+            {
+                return m_size;
+            }
+            set
+            {
+                m_size = value;
+            }
+        }
 
-                    m_parent = parent;
-                    m_name = info.Name;
-                    m_size = info.Size;
-                    m_permission = info.Permission;
-                    m_timestamp = info.TimeStamp.Value;
+        public string Permission
+        {
+            get
+            {
+                return m_permission;
+            }
+            set
+            {
+                m_permission = value;
+            }
+        }
 
-                }
+        public DateTime TimeStamp
+        {
+            get
+            {
+                return m_timestamp;
+            }
+            set
+            {
+                m_timestamp = value;
+            }
+        }
 
-                internal File(Directory parent, string name)
-                {
+        public Directory Parent
+        {
+            get
+            {
+                m_parent.CheckSessionCurrentDirectory();
+                return m_parent;
+            }
+        }
 
-                    m_parent = parent;
-                    m_name = name;
+        #endregion
 
-                }
+        #region [ Methods ]
 
-                public string Name
-                {
-                    get
-                    {
-                        return m_name;
-                    }
-                }
+        public InputDataStream GetInputStream()
+        {
+            return ((InputDataStream)(GetStream(0, TransferDirection.Download)));
+        }
 
-                public string FullPath
-                {
-                    get
-                    {
-                        return m_parent.FullPath + m_name;
-                    }
-                }
+        public OutputDataStream GetOutputStream()
+        {
+            return ((OutputDataStream)(GetStream(0, TransferDirection.Upload)));
+        }
 
-                public bool IsFile
-                {
-                    get
-                    {
-                        return true;
-                    }
-                }
+        public InputDataStream GetInputStream(long offset)
+        {
+            return ((InputDataStream)(GetStream(offset, TransferDirection.Download)));
+        }
 
-                public bool IsDirectory
-                {
-                    get
-                    {
-                        return false;
-                    }
-                }
+        public OutputDataStream GetOutputStream(long offset)
+        {
+            return ((OutputDataStream)(GetStream(offset, TransferDirection.Upload)));
+        }
 
-                public long Size
-                {
-                    get
-                    {
-                        return m_size;
-                    }
-                    set
-                    {
-                        m_size = value;
-                    }
-                }
+        private DataStream GetStream(long offset, TransferDirection dir)
+        {
+            m_parent.CheckSessionCurrentDirectory();
 
-                public string Permission
-                {
-                    get
-                    {
-                        return m_permission;
-                    }
-                    set
-                    {
-                        m_permission = value;
-                    }
-                }
+            SessionConnected Session = m_parent.Session;
 
-                public DateTime TimeStamp
-                {
-                    get
-                    {
-                        return m_timestamp;
-                    }
-                    set
-                    {
-                        m_timestamp = value;
-                    }
-                }
+            if (offset != 0)
+                Session.ControlChannel.REST(offset);
 
-                public Directory Parent
-                {
-                    get
-                    {
-                        m_parent.CheckSessionCurrentDirectory();
-                        return m_parent;
-                    }
-                }
+            DataStream stream = Session.ControlChannel.GetPassiveDataStream(dir);
 
-                public InputDataStream GetInputStream()
-                {
-
-                    return ((InputDataStream)(GetStream(0, TransferDirection.Download)));
-
-                }
-
-                public OutputDataStream GetOutputStream()
-                {
-
-                    return ((OutputDataStream)(GetStream(0, TransferDirection.Upload)));
-
-                }
-
-                public InputDataStream GetInputStream(long offset)
-                {
-
-                    return ((InputDataStream)(GetStream(offset, TransferDirection.Download)));
-
-                }
-
-                public OutputDataStream GetOutputStream(long offset)
-                {
-
-                    return ((OutputDataStream)(GetStream(offset, TransferDirection.Upload)));
-
-                }
-
-                private DataStream GetStream(long offset, TransferDirection dir)
-                {
-
-                    m_parent.CheckSessionCurrentDirectory();
-
-                    SessionConnected Session = m_parent.Session;
-
-                    if (offset != 0)
-                    {
-                        Session.ControlChannel.REST(offset);
-                    }
-
-                    DataStream stream = Session.ControlChannel.GetPassiveDataStream(dir);
-
-                    try
-                    {
-                        if (dir == TransferDirection.Download)
-                        {
-                            Session.ControlChannel.RETR(m_name);
-                        }
-                        else
-                        {
-                            Session.ControlChannel.STOR(m_name);
-                        }
-                    }
-                    catch
-                    {
-                        stream.Close();
-                        throw;
-                    }
-
-                    return stream;
-
-                }
-
-                public int CompareTo(object obj)
-                {
-
-                    // Files are sorted by name
-                    if (obj is IFile)
-                    {
-                        return Strings.StrComp(m_name, ((IFile)obj).Name, (m_parent.CaseInsensitive ? CompareMethod.Text : CompareMethod.Binary));
-                    }
-                    else
-                    {
-                        throw (new ArgumentException("File can only be compared to other Files or Directories"));
-                    }
-
-                }
-
+            try
+            {
+                if (dir == TransferDirection.Download)
+                    Session.ControlChannel.RETR(m_name);
+                else
+                    Session.ControlChannel.STOR(m_name);
+            }
+            catch
+            {
+                stream.Close();
+                throw;
             }
 
+            return stream;
         }
+        
+        int IComparable<File>.CompareTo(File other)
+        {
+            // Files are sorted by name
+            return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
+        }
+
+        int IComparable<IFile>.CompareTo(IFile other)
+        {
+            // Files are sorted by name
+            return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
+        }
+
+        public int CompareTo(object obj)
+        {
+            IFile file = obj as IFile;
+
+            if (file != null)
+                return CompareTo(file);
+            else
+                throw new ArgumentException("File can only be compared to other Files or Directories");
+        }
+
+        #endregion
     }
 }

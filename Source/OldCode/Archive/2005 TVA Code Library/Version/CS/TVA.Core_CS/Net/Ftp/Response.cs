@@ -1,145 +1,150 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
+//*******************************************************************************************************
+//  Response.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  05/22/2003 - James R Carroll
+//       Generated original version of source code.
+//
+//*******************************************************************************************************
+
 using System;
 using System.IO;
+using System.Text;
+using System.Collections;
 using System.Net.Sockets;
 
-// James Ritchie Carroll - 2003
-
-
-namespace TVA
+namespace TVA.Net.Ftp
 {
-    namespace Net
+    public class Response
     {
-        namespace Ftp
+        #region [ Members ]
+
+        // Constants
+        public const int InvalidCode = -1;
+        public const int DataChannelOpenedTransferStart = 125;
+        public const int FileOkBeginOpenDataChannel = 150;
+        public const int ServiceReady = 220;
+        public const int ClosingDataChannel = 226;
+        public const int EnterPassiveMode = 227;
+        public const int RequestFileActionComplete = 250;
+        public const int UserLoggedIn = 230;
+        public const int UserAcceptedWaitingPass = 331;
+        public const int RequestFileActionPending = 350;
+        public const int ServiceUnavailable = 421;
+        public const int TransferAborted = 426;
+
+        // Fields
+        private Queue m_responses;
+        private int m_code;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        internal Response(NetworkStream stream)
         {
+            string response;
 
+            m_responses = new Queue();
 
-            public class Response
+            do
             {
+                response = GetLine(stream);
 
-
-                private Queue m_responses;
-                private int m_code;
-
-                public const int InvalidCode = -1;
-                public const int DataChannelOpenedTransferStart = 125;
-                public const int FileOkBeginOpenDataChannel = 150;
-                public const int ServiceReady = 220;
-                public const int ClosingDataChannel = 226;
-                public const int EnterPassiveMode = 227;
-                public const int RequestFileActionComplete = 250;
-                public const int UserLoggedIn = 230;
-                public const int UserAcceptedWaitingPass = 331;
-                public const int RequestFileActionPending = 350;
-                public const int ServiceUnavailable = 421;
-                public const int TransferAborted = 426;
-
-                internal Response(NetworkStream stream)
+                try
                 {
-
-                    string response;
-
-                    m_responses = new Queue();
-
-                    do
-                    {
-                        response = GetLine(stream);
-
-                        try
-                        {
-                            m_code = InvalidCode;
-                            m_code = int.Parse(response.Substring(0, 3));
-                        }
-                        catch
-                        {
-                            throw (new InvalidResponseException("Invalid response", this));
-                        }
-
-                        m_responses.Enqueue(response);
-                    }
-                    while (response.Length >= 4 && response[3] == '-');
-
-                    if (m_code == ServiceUnavailable)
-                    {
-                        throw (new ServerDownException(this));
-                    }
-
+                    m_code = InvalidCode;
+                    m_code = int.Parse(response.Substring(0, 3));
+                }
+                catch
+                {
+                    throw new InvalidResponseException("Invalid response", this);
                 }
 
-                public string Message
-                {
-                    get
-                    {
-                        return m_responses.Peek().ToString();
-                    }
-                }
+                m_responses.Enqueue(response);
+            }
+            while (response.Length >= 4 && response[3] == '-');
 
-                public Queue Respones
-                {
-                    get
-                    {
-                        return m_responses;
-                    }
-                }
+            if (m_code == ServiceUnavailable)
+                throw new ServerDownException(this);
+        }
 
-                public int Code
-                {
-                    get
-                    {
-                        return m_code;
-                    }
-                }
+        #endregion
 
-                private char ReadAppendChar(NetworkStream stream, System.Text.StringBuilder toAppend)
-                {
+        #region [ Properties ]
 
-                    int i = stream.ReadByte();
+        public string Message
+        {
+            get
+            {
+                return m_responses.Peek().ToString();
+            }
+        }
 
-                    if (i > -1)
-                    {
-                        char c = Strings.Chr(i);
-                        toAppend.Append(c);
-                        return c;
-                    }
-                    else
-                    {
-                        throw (new EndOfStreamException("Attempt to read past end of stream"));
-                    }
+        public Queue Respones
+        {
+            get
+            {
+                return m_responses;
+            }
+        }
 
-                }
+        public int Code
+        {
+            get
+            {
+                return m_code;
+            }
+        }
 
-                private string GetLine(NetworkStream stream)
-                {
+        #endregion
 
-                    System.Text.StringBuilder buff = new System.Text.StringBuilder(256);
+        #region [ Methods ]
 
-                    while (true)
-                    {
-                        while (ReadAppendChar(stream, buff) != ControlChars.Cr)
-                        {
-                        }
+        private char ReadAppendChar(NetworkStream stream, StringBuilder toAppend)
+        {
+            int i = stream.ReadByte();
 
-                        while (ReadAppendChar(stream, buff) == ControlChars.Cr)
-                        {
-                        }
+            if (i > -1)
+            {
+                char c = Encoding.ASCII.GetChars(new byte[] { (byte)i })[0];
+                toAppend.Append(c);
+                return c;
+            }
+            else
+            {
+                throw new EndOfStreamException("Attempt to read past end of stream");
+            }
+        }
 
-                        if (buff[buff.Length - 1] == ControlChars.Lf)
-                        {
-                            break;
-                        }
-                    }
+        private string GetLine(NetworkStream stream)
+        {
+            StringBuilder response = new StringBuilder(256);
 
-                    return buff.ToString();
+            while (true)
+            {
+                // Read until carriage return received
+                while (ReadAppendChar(stream, response) != '\r') {}
 
-                }
+                // Skip thru any extra carriage returns
+                while (ReadAppendChar(stream, response) == '\r') { }
 
+                // Break on new line character received
+                if (response[response.Length - 1] == '\n')
+                    break;
             }
 
+            return response.ToString();
         }
+
+        #endregion
     }
 }

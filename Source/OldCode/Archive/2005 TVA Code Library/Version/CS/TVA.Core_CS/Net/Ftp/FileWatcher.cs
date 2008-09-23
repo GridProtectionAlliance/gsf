@@ -1,521 +1,484 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Data;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
+//*******************************************************************************************************
+//  FileWatcher.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  05/22/2003 - James R Carroll
+//       Generated original version of source code.
+//
+//*******************************************************************************************************
+
 using System;
-using System.ComponentModel;
 using System.Drawing;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-// James Ritchie Carroll - 2003
-
-
-namespace TVA
+namespace TVA.Net.Ftp
 {
-    namespace Net
+    /// <summary>
+    /// FTP File Watcher
+    /// </summary>
+    /// <remarks>
+    /// Monitors for file changes over an FTP session.
+    /// </remarks>
+    [ToolboxBitmap(typeof(FileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded"), Description("Monitors for file changes over an FTP session")]
+    public class FileWatcher : Component
     {
-        namespace Ftp
+        #region [ Members ]
+
+        // Events
+        public event Action<File> FileAdded;
+        public event Action<File> FileDeleted;
+        public event Action<string> Status;
+        public event Action<string> InternalSessionCommand;
+        public event Action<string> InternalSessionResponse;
+
+        // Fields
+        protected Session m_session;
+        protected string m_username;
+        protected string m_password;
+        protected string m_watchDirectory;
+        protected System.Timers.Timer m_watchTimer;
+        protected System.Timers.Timer m_restartTimer;
+        protected List<File> m_currentFiles;
+        protected List<File> m_newFiles;
+        private bool m_enabled;
+        private bool m_notifyOnComplete;
+        private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public FileWatcher()
         {
+            m_enabled = true;
+            m_notifyOnComplete = true;
+            m_currentFiles = new List<File>();
+            m_newFiles = new List<File>();
 
+            m_session = new Session(false);
+            m_session.CommandSent += Session_CommandSent;
+            m_session.ResponseReceived += Session_ResponseReceived;
 
-            [ToolboxBitmap(typeof(FileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded"), Description("Monitors for file changes over an FTP session")]
-            public class FileWatcher : Component
+            // Define a timer to watch for new files
+            m_watchTimer = new System.Timers.Timer();
+            m_watchTimer.Elapsed += WatchTimer_Elapsed;
+            m_watchTimer.AutoReset = false;
+            m_watchTimer.Interval = 5000;
+            m_watchTimer.Enabled = false;
+
+            // Define a timer for FTP connection in case of availability failures
+            m_restartTimer = new System.Timers.Timer();
+            m_restartTimer.Elapsed += RestartTimer_Elapsed;
+            m_restartTimer.AutoReset = false;
+            m_restartTimer.Interval = 10000;
+            m_restartTimer.Enabled = false;
+        }
+
+        public FileWatcher(bool caseInsensitive, bool notifyOnComplete)
+            : this()
+        {
+            m_session.CaseInsensitive = caseInsensitive;
+            m_notifyOnComplete = notifyOnComplete;
+        }
+
+        ~FileWatcher()
+        {
+            Dispose(true);
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        [Browsable(true), Category("Configuration"), Description("Specify FTP server name (do not prefix with ftp://).")]
+        public virtual string Server
+        {
+            get
             {
+                return m_session.Server;
+            }
+            set
+            {
+                m_session.Server = value;
+            }
+        }
 
+        [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file names."), DefaultValue(false)]
+        public bool CaseInsensitive
+        {
+            get
+            {
+                return m_session.CaseInsensitive;
+            }
+            set
+            {
+                m_session.CaseInsensitive = value;
+            }
+        }
 
+        [Browsable(true), Category("Configuration"), Description("Specify interval in seconds to poll FTP directory for file changes."), DefaultValue(5)]
+        public virtual int WatchInterval
+        {
+            get
+            {
+                return (int)(m_watchTimer.Interval / 1000);
+            }
+            set
+            {
+                m_watchTimer.Enabled = false;
+                m_watchTimer.Interval = value * 1000;
+                m_watchTimer.Enabled = m_enabled;
+            }
+        }
 
-                protected Session FtpSession;
-                protected string FtpUserName;
-                protected string FtpPassword;
-                protected string WatchDirectory;
-                protected System.Timers.Timer WatchTimer = new System.Timers.Timer();
-                protected System.Timers.Timer RestartTimer = new System.Timers.Timer();
-                protected ArrayList DirFiles = new ArrayList();
-                protected ArrayList NewFiles = new ArrayList();
-                private bool flgEnabled; // Determines if file watching is enabled
-                private bool flgNotifyOnComplete; // Sets flag for notification time: set to True to only notify when a file is finished uploading, set to False to get an immediate notification when a new file is detected
+        [Browsable(true), Category("Configuration"), Description("Specify FTP directory to monitor.  Leave blank to monitor initial FTP session directory."), DefaultValue("")]
+        public virtual string Directory
+        {
+            get
+            {
+                return m_watchDirectory;
+            }
+            set
+            {
+                m_watchDirectory = value;
+                ConnectToWatchDirectory();
+                Reset();
+            }
+        }
 
-                public delegate void FileAddedEventHandler(File FileReference);
-                private FileAddedEventHandler FileAddedEvent;
+        /// <summary>
+        /// Sets flag for notification time: set to True to only notify when a file is finished uploading, set to False to get an immediate notification when a new file is detected.
+        /// </summary>
+        [Browsable(true), Category("Configuration"), Description("Set to True to only be notified of new FTP files when upload is complete.  This monitors file size changes at each WatchInterval."), DefaultValue(true)]
+        public virtual bool NotifyOnComplete
+        {
+            get
+            {
+                return m_notifyOnComplete;
+            }
+            set
+            {
+                m_notifyOnComplete = value;
+                Reset();
+            }
+        }
 
-                public event FileAddedEventHandler FileAdded
+        [Browsable(true), Category("Configuration"), Description("Determines if FTP file watcher is enabled."), DefaultValue(true)]
+        public virtual bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+                Reset();
+            }
+        }
+
+        [Browsable(false)]
+        public virtual bool IsConnected
+        {
+            get
+            {
+                return m_session.IsConnected;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                if (disposing)
                 {
-                    add
-                    {
-                        FileAddedEvent = (FileAddedEventHandler)System.Delegate.Combine(FileAddedEvent, value);
-                    }
-                    remove
-                    {
-                        FileAddedEvent = (FileAddedEventHandler)System.Delegate.Remove(FileAddedEvent, value);
-                    }
-                }
-
-                public delegate void FileDeletedEventHandler(File FileReference);
-                private FileDeletedEventHandler FileDeletedEvent;
-
-                public event FileDeletedEventHandler FileDeleted
-                {
-                    add
-                    {
-                        FileDeletedEvent = (FileDeletedEventHandler)System.Delegate.Combine(FileDeletedEvent, value);
-                    }
-                    remove
-                    {
-                        FileDeletedEvent = (FileDeletedEventHandler)System.Delegate.Remove(FileDeletedEvent, value);
-                    }
-                }
-
-                public delegate void StatusEventHandler(string StatusText);
-                private StatusEventHandler StatusEvent;
-
-                public event StatusEventHandler Status
-                {
-                    add
-                    {
-                        StatusEvent = (StatusEventHandler)System.Delegate.Combine(StatusEvent, value);
-                    }
-                    remove
-                    {
-                        StatusEvent = (StatusEventHandler)System.Delegate.Remove(StatusEvent, value);
-                    }
-                }
-
-
-                public delegate void InternalSessionCommandEventHandler(string Command);
-                private InternalSessionCommandEventHandler InternalSessionCommandEvent;
-
-                public event InternalSessionCommandEventHandler InternalSessionCommand
-                {
-                    add
-                    {
-                        InternalSessionCommandEvent = (InternalSessionCommandEventHandler)System.Delegate.Combine(InternalSessionCommandEvent, value);
-                    }
-                    remove
-                    {
-                        InternalSessionCommandEvent = (InternalSessionCommandEventHandler)System.Delegate.Remove(InternalSessionCommandEvent, value);
-                    }
-                }
-
-                public delegate void InternalSessionResponseEventHandler(string Response);
-                private InternalSessionResponseEventHandler InternalSessionResponseEvent;
-
-                public event InternalSessionResponseEventHandler InternalSessionResponse
-                {
-                    add
-                    {
-                        InternalSessionResponseEvent = (InternalSessionResponseEventHandler)System.Delegate.Combine(InternalSessionResponseEvent, value);
-                    }
-                    remove
-                    {
-                        InternalSessionResponseEvent = (InternalSessionResponseEventHandler)System.Delegate.Remove(InternalSessionResponseEvent, value);
-                    }
-                }
-
-
-                public FileWatcher()
-                {
-
-                    flgEnabled = true;
-                    flgNotifyOnComplete = true;
-                    FtpSession = new Session(false);
-                    FtpSession.CommandSent += new TVA.Session.CommandSentEventHandler(Session_CommandSent);
-                    FtpSession.ResponseReceived += new TVA.Session.ResponseReceivedEventHandler(Session_ResponseReceived);
-
-                    // Define a timer to watch for new files
-                    WatchTimer.AutoReset = false;
-                    WatchTimer.Interval = 5000;
-                    WatchTimer.Enabled = false;
-
-                    // Define a timer for FTP connection in case of availability failures
-                    RestartTimer.AutoReset = false;
-                    RestartTimer.Interval = 10000;
-                    RestartTimer.Enabled = false;
-
-                }
-
-                public FileWatcher(bool CaseInsensitive, bool NotifyOnComplete)
-                    : this()
-                {
-
-                    FtpSession.CaseInsensitive = CaseInsensitive;
-                    flgNotifyOnComplete = NotifyOnComplete;
-
-                }
-
-                ~FileWatcher()
-                {
-
-                    Dispose(true);
-
-                }
-
-                protected virtual void Dispose(bool disposing)
-                {
-
                     Close();
 
+                    if (m_session != null)
+                    {
+                        m_session.CommandSent -= Session_CommandSent;
+                        m_session.ResponseReceived -= Session_ResponseReceived;
+                        m_session.Dispose();
+                    }
+                    m_session = null;
+
+                    if (m_watchTimer != null)
+                    {
+                        m_watchTimer.Elapsed -= WatchTimer_Elapsed;
+                        m_watchTimer.Dispose();
+                    }
+                    m_watchTimer = null;
+
+                    if (m_restartTimer != null)
+                    {
+                        m_restartTimer.Elapsed -= RestartTimer_Elapsed;
+                        m_restartTimer.Dispose();
+                    }
+                    m_restartTimer = null;
                 }
 
-                public virtual void Close()
-                {
-
-                    DirFiles.Clear();
-                    NewFiles.Clear();
-                    WatchTimer.Enabled = false;
-                    RestartTimer.Enabled = false;
-                    CloseSession();
-                    GC.SuppressFinalize(this);
-
-                }
-
-                [Browsable(true), Category("Configuration"), Description("Specify FTP server name (do not prefix with ftp://).")]
-                public virtual string Server
-                {
-                    get
-                    {
-                        return FtpSession.Server;
-                    }
-                    set
-                    {
-                        FtpSession.Server = value;
-                    }
-                }
-
-                [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file names."), DefaultValue(false)]
-                public bool CaseInsensitive
-                {
-                    get
-                    {
-                        return FtpSession.CaseInsensitive;
-                    }
-                    set
-                    {
-                        FtpSession.CaseInsensitive = value;
-                    }
-                }
-
-                [Browsable(true), Category("Configuration"), Description("Specify interval in seconds to poll FTP directory for file changes."), DefaultValue(5)]
-                public virtual int WatchInterval
-                {
-                    get
-                    {
-                        return WatchTimer.Interval / 1000;
-                    }
-                    set
-                    {
-                        WatchTimer.Enabled = false;
-                        WatchTimer.Interval = value * 1000;
-                        WatchTimer.Enabled = flgEnabled;
-                    }
-                }
-
-                [Browsable(true), Category("Configuration"), Description("Specify FTP directory to monitor.  Leave blank to monitor initial FTP session directory."), DefaultValue("")]
-                public virtual string Directory
-                {
-                    get
-                    {
-                        return WatchDirectory;
-                    }
-                    set
-                    {
-                        WatchDirectory = value;
-                        ConnectToWatchDirectory();
-                        Reset();
-                    }
-                }
-
-                [Browsable(true), Category("Configuration"), Description("Set to True to only be notified of new FTP files when upload is complete.  This monitors file size changes at each WatchInterval."), DefaultValue(true)]
-                public virtual bool NotifyOnComplete
-                {
-                    get
-                    {
-                        return flgNotifyOnComplete;
-                    }
-                    set
-                    {
-                        flgNotifyOnComplete = value;
-                        Reset();
-                    }
-                }
-
-                [Browsable(true), Category("Configuration"), Description("Determines if FTP file watcher is enabled."), DefaultValue(true)]
-                public virtual bool Enabled
-                {
-                    get
-                    {
-                        return flgEnabled;
-                    }
-                    set
-                    {
-                        flgEnabled = value;
-                        Reset();
-                    }
-                }
-
-                [Browsable(false)]
-                public virtual bool IsConnected
-                {
-                    get
-                    {
-                        return FtpSession.IsConnected;
-                    }
-                }
-
-                public virtual void Connect(string UserName, string Password)
-                {
-
-                    if (UserName.Length > 0)
-                    {
-                        FtpUserName = UserName;
-                    }
-                    if (Password.Length > 0)
-                    {
-                        FtpPassword = Password;
-                    }
-
-                    try
-                    {
-                        // Attempt to connect to FTP server
-                        FtpSession.Connect(FtpUserName, FtpPassword);
-                        if (StatusEvent != null)
-                            StatusEvent("[" + DateTime.Now + "] FTP file watcher connected to \"ftp://" + FtpUserName + "@" + FtpSession.Server + "\"");
-                        ConnectToWatchDirectory();
-                        WatchTimer.Enabled = flgEnabled;
-
-                        // FTP servers can be fickle creatues, so after a successful connection we setup the
-                        // restart timer to reconnect every thirty minutes whether we need to or not :)
-                        RestartTimer.Interval = 1800000;
-                        RestartTimer.Enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        // If this fails, we'll try again in a moment.  The FTP server may be down...
-                        if (StatusEvent != null)
-                            StatusEvent("[" + DateTime.Now + "] FTP file watcher failed to connect to \"ftp://" + FtpUserName + "@" + FtpSession.Server + "\" - trying again in 10 seconds..." + "\r\n" + "\t" + "Exception: " + ex.Message);
-                        RestartConnectCycle();
-                    }
-
-                }
-
-                public virtual Session NewDirectorySession()
-                {
-
-                    // This method is just for convenience.  We can't allow the end user to use the
-                    // actual internal directory for sending files or other work because it is
-                    // constantly being refreshed/used etc., so we instead create a new FTP Session
-                    // based on the current internal session and watch directory information
-                    Session DirectorySession = new Session(FtpSession.CaseInsensitive);
-
-                    DirectorySession.Server = FtpSession.Server;
-                    DirectorySession.Connect(FtpUserName, FtpPassword);
-                    DirectorySession.SetCurrentDirectory(WatchDirectory);
-
-                    return DirectorySession;
-
-                }
-
-                public virtual void Reset()
-                {
-
-                    RestartTimer.Enabled = false;
-                    WatchTimer.Enabled = false;
-                    DirFiles.Clear();
-                    NewFiles.Clear();
-                    WatchTimer.Enabled = flgEnabled;
-                    if (!FtpSession.IsConnected)
-                    {
-                        RestartConnectCycle();
-                    }
-
-                }
-
-                private void ConnectToWatchDirectory()
-                {
-
-                    if (FtpSession.IsConnected)
-                    {
-                        FtpSession.SetCurrentDirectory(WatchDirectory);
-
-                        if (WatchDirectory.Length > 0)
-                        {
-                            if (StatusEvent != null)
-                                StatusEvent("[" + DateTime.Now + "] FTP file watcher monitoring directory \"" + WatchDirectory + "\"");
-                        }
-                        else
-                        {
-                            if (StatusEvent != null)
-                                StatusEvent("[" + DateTime.Now + "] No FTP file watcher directory specified - monitoring initial folder");
-                        }
-                    }
-
-                }
-
-                // This method is synchronized in case user sets watch interval too tight...
-                [MethodImpl(MethodImplOptions.Synchronized)]
-                private void WatchTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-                {
-
-                    // We attempt to access the FTP Session and refresh the current directory, if this fails
-                    // we are going to restart the connect cycle
-                    try
-                    {
-                        // Refresh the file listing for the current directory
-                        FtpSession.CurrentDirectory.Refresh();
-                    }
-                    catch (Exception ex)
-                    {
-                        RestartConnectCycle();
-                        if (StatusEvent != null)
-                            StatusEvent("[" + DateTime.Now + "] FTP file watcher is no longer connected to server \"" + FtpSession.Server + "\" - restarting connect cycle." + "\r\n" + "\t" + "Exception: " + ex.Message);
-                    }
-
-                    if (FtpSession != null)
-                    {
-                        if (FtpSession.IsConnected)
-                        {
-                            File File;
-                            File NewFile;
-                            Dictionary<string, File> Files = FtpSession.CurrentDirectory.Files.GetEnumerator();
-                            ArrayList RemovedFiles = new ArrayList();
-                            int intIndex;
-                            int x;
-
-                            // Check for new files
-                            while (Files.MoveNext())
-                            {
-                                File = Files.Current;
-
-                                if (flgNotifyOnComplete)
-                                {
-                                    // See if any new files are finished downloading
-                                    intIndex = NewFiles.BinarySearch(File);
-
-                                    if (intIndex >= 0)
-                                    {
-                                        NewFile = (File)(NewFiles[intIndex]);
-                                        if (NewFile.Size == File.Size)
-                                        {
-                                            // File size has not changed since last directory refresh, so we will
-                                            // notify user of new file...
-                                            DirFiles.Add(File);
-                                            DirFiles.Sort();
-                                            NewFiles.RemoveAt(intIndex);
-                                            if (FileAddedEvent != null)
-                                                FileAddedEvent(File);
-                                        }
-                                        else
-                                        {
-                                            NewFile.Size = File.Size;
-                                        }
-                                    }
-                                    else if (DirFiles.BinarySearch(File) < 0)
-                                    {
-                                        NewFiles.Add(File);
-                                        NewFiles.Sort();
-                                    }
-                                }
-                                else if (DirFiles.BinarySearch(File) < 0)
-                                {
-                                    // If user wants an immediate notification of new files, we'll give it to them...
-                                    DirFiles.Add(File);
-                                    DirFiles.Sort();
-                                    if (FileAddedEvent != null)
-                                        FileAddedEvent(File);
-                                }
-                            }
-
-                            // Check for removed files
-                            for (x = 0; x <= DirFiles.Count - 1; x++)
-                            {
-                                File = (File)(DirFiles[x]);
-                                if (FtpSession.CurrentDirectory.FindFile(File.Name) == null)
-                                {
-                                    RemovedFiles.Add(x);
-                                    if (FileDeletedEvent != null)
-                                        FileDeletedEvent(File);
-                                }
-                            }
-
-                            // Remove files that have been deleted
-                            if (RemovedFiles.Count > 0)
-                            {
-                                RemovedFiles.Sort();
-
-                                // We remove items in desc order to maintain index integrity
-                                for (x = RemovedFiles.Count - 1; x >= 0; x--)
-                                {
-                                    DirFiles.RemoveAt(RemovedFiles[x]);
-                                }
-
-                                RemovedFiles.Clear();
-                            }
-
-                            WatchTimer.Enabled = flgEnabled;
-                        }
-                        else
-                        {
-                            RestartConnectCycle();
-                            if (StatusEvent != null)
-                                StatusEvent("[" + DateTime.Now + "] FTP file watcher is no longer connected to server \"" + FtpSession.Server + "\" - restarting connect cycle.");
-                        }
-                    }
-
-                }
-
-                private void CloseSession()
-                {
-
-                    try
-                    {
-                        FtpSession.Close();
-                    }
-                    catch
-                    {
-                    }
-
-                }
-
-                private void RestartConnectCycle()
-                {
-
-                    RestartTimer.Enabled = false;
-                    RestartTimer.Interval = 10000;
-                    RestartTimer.Enabled = true;
-
-                }
-
-                private void RestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-                {
-
-                    // Attempt to close the FTP Session if it is open...
-                    CloseSession();
-
-                    // Try to reestablish connection
-                    WatchTimer.Enabled = false;
-                    Connect("", "");
-
-                }
-
-                private void Session_CommandSent(string Command)
-                {
-
-                    if (InternalSessionCommandEvent != null)
-                        InternalSessionCommandEvent(Command);
-
-                }
-
-                private void Session_ResponseReceived(string Response)
-                {
-
-                    if (InternalSessionResponseEvent != null)
-                        InternalSessionResponseEvent(Response);
-
-                }
-
+                base.Dispose(disposing);
             }
 
+            m_disposed = true;
         }
+
+        public virtual void Close()
+        {
+            m_currentFiles.Clear();
+            m_newFiles.Clear();
+            m_watchTimer.Enabled = false;
+            m_restartTimer.Enabled = false;
+            CloseSession();
+        }
+
+        public virtual void Connect(string userName, string password)
+        {
+            if (!string.IsNullOrEmpty(userName))
+                m_username = userName;
+
+            if (!string.IsNullOrEmpty(password))
+                m_password = password;
+
+            try
+            {
+                // Attempt to connect to FTP server
+                m_session.Connect(m_username, m_password);
+
+                if (Status != null)
+                    Status("[" + DateTime.Now + "] FTP file watcher connected to \"ftp://" + m_username + "@" + m_session.Server + "\"");
+
+                ConnectToWatchDirectory();
+                m_watchTimer.Enabled = m_enabled;
+
+                // FTP servers can be fickle creatues, so after a successful connection we setup the
+                // restart timer to reconnect every thirty minutes whether we need to or not :)
+                m_restartTimer.Interval = 1800000;
+                m_restartTimer.Enabled = true;
+            }
+            catch (ExceptionBase ex)
+            {
+                // If this fails, we'll try again in a moment.  The FTP server may be down...
+                if (Status != null)
+                    Status("[" + DateTime.Now + "] FTP file watcher failed to connect to \"ftp://" + m_username + "@" + m_session.Server + "\" - trying again in 10 seconds..." + "\r\n" + "\t" + "Exception: " + ex.Message);
+
+                RestartConnectCycle();
+            }
+        }
+
+        public virtual Session NewDirectorySession()
+        {
+            // This method is just for convenience.  We can't allow the end user to use the
+            // actual internal directory for sending files or other work because it is
+            // constantly being refreshed/used etc., so we instead create a new FTP Session
+            // based on the current internal session and watch directory information
+            Session newSession = new Session(m_session.CaseInsensitive);
+
+            newSession.Server = m_session.Server;
+            newSession.Connect(m_username, m_password);
+            newSession.SetCurrentDirectory(m_watchDirectory);
+
+            return newSession;
+        }
+
+        public virtual void Reset()
+        {
+            m_restartTimer.Enabled = false;
+            m_watchTimer.Enabled = false;
+
+            m_currentFiles.Clear();
+            m_newFiles.Clear();
+
+            m_watchTimer.Enabled = m_enabled;
+
+            if (!m_session.IsConnected)
+                RestartConnectCycle();
+        }
+
+        private void ConnectToWatchDirectory()
+        {
+            if (m_session.IsConnected)
+            {
+                m_session.SetCurrentDirectory(m_watchDirectory);
+
+                if (m_watchDirectory.Length > 0)
+                {
+                    if (Status != null)
+                        Status("[" + DateTime.Now + "] FTP file watcher monitoring directory \"" + m_watchDirectory + "\"");
+                }
+                else
+                {
+                    if (Status != null)
+                        Status("[" + DateTime.Now + "] No FTP file watcher directory specified - monitoring initial folder");
+                }
+            }
+        }
+
+        // This method is synchronized in case user sets watch interval too tight...
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        private void WatchTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            // We attempt to access the FTP Session and refresh the current directory, if this fails
+            // we are going to restart the connect cycle
+            try
+            {
+                // Refresh the file listing for the current directory
+                m_session.CurrentDirectory.Refresh();
+            }
+            catch (ExceptionBase ex)
+            {
+                RestartConnectCycle();
+
+                if (Status != null)
+                    Status("[" + DateTime.Now + "] FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle." + "\r\n" + "\t" + "Exception: " + ex.Message);
+            }
+
+            if (m_session != null)
+            {
+                if (m_session.IsConnected)
+                {
+                    File newFile;
+                    Dictionary<string, File>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
+                    List<int> removedFiles = new List<int>();
+                    int x, index;
+
+                    // Check for new files
+                    foreach (File currentFile in m_session.CurrentDirectory.Files)
+                    {
+                        if (m_notifyOnComplete)
+                        {
+                            // See if any new files are finished downloading
+                            index = m_newFiles.BinarySearch(currentFile);
+
+                            if (index >= 0)
+                            {
+                                newFile = m_newFiles[index];
+
+                                if (newFile.Size == currentFile.Size)
+                                {
+                                    // File size has not changed since last directory refresh, so we will
+                                    // notify user of new file...
+                                    m_currentFiles.Add(currentFile);
+                                    m_currentFiles.Sort();
+                                    m_newFiles.RemoveAt(index);
+
+                                    if (FileAdded != null)
+                                        FileAdded(currentFile);
+                                }
+                                else
+                                {
+                                    newFile.Size = currentFile.Size;
+                                }
+                            }
+                            else if (m_currentFiles.BinarySearch(currentFile) < 0)
+                            {
+                                m_newFiles.Add(currentFile);
+                                m_newFiles.Sort();
+                            }
+                        }
+                        else if (m_currentFiles.BinarySearch(currentFile) < 0)
+                        {
+                            // If user wants an immediate notification of new files, we'll give it to them...
+                            m_currentFiles.Add(currentFile);
+                            m_currentFiles.Sort();
+
+                            if (FileAdded != null)
+                                FileAdded(currentFile);
+                        }
+                    }
+
+                    // Check for removed files
+                    for (x = 0; x <= m_currentFiles.Count - 1; x++)
+                    {
+                        if (m_session.CurrentDirectory.FindFile(m_currentFiles[x].Name) == null)
+                        {
+                            removedFiles.Add(x);
+                            if (FileDeleted != null)
+                                FileDeleted(m_currentFiles[x]);
+                        }
+                    }
+
+                    // Remove files that have been deleted
+                    if (removedFiles.Count > 0)
+                    {
+                        removedFiles.Sort();
+
+                        // We remove items in desc order to maintain index integrity
+                        for (x = removedFiles.Count - 1; x >= 0; x--)
+                        {
+                            m_currentFiles.RemoveAt(removedFiles[x]);
+                        }
+
+                        removedFiles.Clear();
+                    }
+
+                    m_watchTimer.Enabled = m_enabled;
+                }
+                else
+                {
+                    RestartConnectCycle();
+
+                    if (Status != null)
+                        Status("[" + DateTime.Now + "] FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle.");
+                }
+            }
+        }
+
+        private void CloseSession()
+        {
+            try
+            {
+                m_session.Close();
+            }
+            catch
+            {
+            }
+        }
+
+        private void RestartConnectCycle()
+        {
+            m_restartTimer.Enabled = false;
+            m_restartTimer.Interval = 10000;
+            m_restartTimer.Enabled = true;
+        }
+
+        private void RestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            // Attempt to close the FTP Session if it is open...
+            CloseSession();
+
+            // Try to reestablish connection
+            m_watchTimer.Enabled = false;
+            Connect(null, null);
+        }
+
+        private void Session_CommandSent(string Command)
+        {
+            if (InternalSessionCommand != null)
+                InternalSessionCommand(Command);
+        }
+
+        private void Session_ResponseReceived(string Response)
+        {
+            if (InternalSessionResponse != null)
+                InternalSessionResponse(Response);
+        }
+
+        #endregion
     }
 }

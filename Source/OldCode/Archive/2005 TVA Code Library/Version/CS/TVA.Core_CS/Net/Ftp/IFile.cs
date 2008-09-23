@@ -19,7 +19,7 @@ using System;
 
 namespace TVA.Net.Ftp
 {
-    public interface IFile
+    public interface IFile : IComparable, IComparable<IFile>
     {
         Directory Parent
         {
