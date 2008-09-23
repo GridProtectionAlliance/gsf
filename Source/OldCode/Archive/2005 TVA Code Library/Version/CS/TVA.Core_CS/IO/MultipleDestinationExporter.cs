@@ -287,7 +287,7 @@ namespace TVA.IO
             m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
             m_exportQueue.ProcessException += m_exportQueue_ProcessException;
 
-            CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_configSection);
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_configSection];
 
             if ((defaultDestinations != null) && defaultDestinations.Length > 0)
             {
@@ -305,7 +305,7 @@ namespace TVA.IO
                 }
 
                 // Save updates to config file, if any
-                TVA.Configuration.Common.SaveSettings();
+                ConfigurationFile.Current.Save();
             }
 
             // Load needed settings

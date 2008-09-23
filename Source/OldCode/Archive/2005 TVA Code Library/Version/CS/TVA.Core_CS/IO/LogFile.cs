@@ -450,7 +450,7 @@ namespace TVA.IO
         {
             try
             {
-                CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
 
                 if (settings.Count > 0)
                 {
@@ -475,7 +475,7 @@ namespace TVA.IO
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
                     CategorizedSettingsElement setting;
 
                     settings.Clear();
@@ -495,8 +495,8 @@ namespace TVA.IO
                     setting = settings["FileFullOperation", true];
                     setting.Value = m_fileFullOperation.ToString();
                     setting.Description = "Operation (Truncate; Rollover) that is to be performed on the file when it is full.";
-                    
-                    TVA.Configuration.Common.SaveSettings();
+
+                    ConfigurationFile.Current.Save();
                 }
                 catch
                 {

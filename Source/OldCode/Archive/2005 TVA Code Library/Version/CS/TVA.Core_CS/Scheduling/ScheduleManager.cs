@@ -408,7 +408,7 @@ namespace TVA.Scheduling
         {
             try
             {
-                foreach (CategorizedSettingsElement setting in TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName))
+                foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[m_settingsCategoryName])
                 {
                     // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
                     Schedule existingSchedule = Schedules(setting.Name);
@@ -442,7 +442,7 @@ namespace TVA.Scheduling
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
 
                     settings.Clear();
                     foreach (Schedule schedule in m_schedules)
@@ -450,7 +450,7 @@ namespace TVA.Scheduling
                         settings.Add(schedule.Name, schedule.Rule, schedule.Description);
                     }
 
-                    TVA.Configuration.Common.SaveSettings();
+                    ConfigurationFile.Current.Save();
                 }
                 catch
                 {
