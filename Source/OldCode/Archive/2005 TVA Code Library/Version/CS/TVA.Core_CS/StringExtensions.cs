@@ -31,7 +31,7 @@
 //       Made the keys of the string dictionary returned by ParseKeyValuePairs function case-insensitive.
 //       Added JoinKeyValuePairs overloads that does the exact opposite of ParseKeyValuePairs.
 //  09/19/2008 - James R Carroll
-//       Converted to C#.
+//       Converted to C# extensions.
 //
 //*******************************************************************************************************
 
