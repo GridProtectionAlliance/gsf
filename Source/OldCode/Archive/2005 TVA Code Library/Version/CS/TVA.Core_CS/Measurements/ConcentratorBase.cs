@@ -1107,7 +1107,7 @@ namespace TVA.Measurements
                         }
 
                         // Calculate index of this frame within its second
-                        frameIndex = (int)((decimal)(ticks - ticks.BaselinedTimestamp(BaselineTimeInterval.Second).Ticks) / m_ticksPerFrame);
+                        frameIndex = (int)((decimal)ticks.TicksBeyondSecond() / m_ticksPerFrame);
 
                         try
                         {
