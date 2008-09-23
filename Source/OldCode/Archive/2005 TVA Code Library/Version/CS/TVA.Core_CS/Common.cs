@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using TVA.Collections;
 using TVA.Reflection;
+using Microsoft.VisualBasic.CompilerServices;
 
 namespace TVA
 {
@@ -189,6 +190,16 @@ namespace TVA
             }
         }
 
+        /// <summary>Gets a high-resolution number of seconds, including fractional seconds, that have
+        /// elapsed since 12:00:00 midnight, January 1, 0001.</summary>
+        public static double SystemTimer
+        {
+            get
+            {
+                return Ticks.ToSeconds(PrecisionTimer.Now.Ticks);
+            }
+        }
+
         /// <summary>Determines if given item is a reference type.</summary>
         public static bool IsReference(object item)
         {
@@ -233,12 +244,6 @@ namespace TVA
             return false;
         }
 
-        /*-----------------------------------------------------------------------------------------------------*\
-         *
-         *                    These functions were migrated here from TVA.Collections.Common
-         *                  
-        \*-----------------------------------------------------------------------------------------------------*/
-
         /// <summary>Returns the smallest item from a list of parameters.</summary>
         public static object Min(params object[] itemList)
         {
@@ -271,25 +276,10 @@ namespace TVA
 
             // Note that comparison is based on VB object comparison rules:
             // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
-            return (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : 
-                (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
+            return (Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : (Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
         }
 
-        /*-----------------------------------------------------------------------------------------------------*\
-         *
-         *                    These functions were migrated here from TVA.DateTime.Common
-         *                  
-        \*-----------------------------------------------------------------------------------------------------*/
-
-        /// <summary>Gets a high-resolution number of seconds, including fractional seconds, that have
-        /// elapsed since 12:00:00 midnight, January 1, 0001.</summary>
-        public static double SystemTimer
-        {
-            get
-            {
-                return Ticks.ToSeconds(PrecisionTimer.Now.Ticks);
-            }
-        }
+        #region [ Old Code ]
 
         // This function is probably not that useful
 
@@ -327,5 +317,7 @@ namespace TVA
 
         //    throw new ArgumentException("Windows time zone with " + lookupBy + " of \"" + name + "\" was not found!");
         //}
+
+        #endregion
     }
 }
