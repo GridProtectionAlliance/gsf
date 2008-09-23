@@ -24,6 +24,7 @@
 using System;
 using System.Text;
 using System.Net;
+using System.Diagnostics;
 using TVA.Net.Smtp;
 
 namespace TVA.ErrorManagement
