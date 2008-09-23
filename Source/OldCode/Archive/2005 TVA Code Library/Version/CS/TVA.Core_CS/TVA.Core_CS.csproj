@@ -86,7 +86,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Milliseconds.cs" />
+    <Compile Include="Net\Ftp\InputDataStream.cs" />
     <Compile Include="Net\Ftp\ISessionState.cs" />
+    <Compile Include="Net\Ftp\OutputDataStream.cs" />
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
