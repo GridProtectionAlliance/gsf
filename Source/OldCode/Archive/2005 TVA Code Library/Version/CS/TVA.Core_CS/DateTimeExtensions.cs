@@ -191,7 +191,9 @@ namespace TVA
         /// <returns>Timestamp's tick distance from the top of the second.</returns>
         public static long TicksBeyondSecond(this long ticks)
         {
-            return ticks - BaselinedTimestamp(new DateTime(ticks), BaselineTimeInterval.Second).Ticks;
+            // Removed function call to BaselinedTimestamp just as an optimization...
+            return ticks - (ticks - ticks % Ticks.PerSecond);
+            //return ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second);
         }
 
         /// <summary>Gets the distance, in ticks, beyond the top of the timestamp second.</summary>
@@ -199,7 +201,8 @@ namespace TVA
         /// <returns>Timestamp's tick distance from the top of the second.</returns>
         public static long TicksBeyondSecond(this DateTime timestamp)
         {
-            return timestamp.Ticks - BaselinedTimestamp(timestamp, BaselineTimeInterval.Second).Ticks;
+            return TicksBeyondSecond(timestamp.Ticks);
+            //return timestamp.Ticks - BaselinedTimestamp(timestamp.Ticks, BaselineTimeInterval.Second);
         }
 
         /// <summary>Creates a baselined timestamp which begins at the specified time interval.</summary>
