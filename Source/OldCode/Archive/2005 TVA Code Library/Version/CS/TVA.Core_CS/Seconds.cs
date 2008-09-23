@@ -53,6 +53,53 @@ namespace TVA
         /// <summary>Fractional number of seconds in one millisecond.</summary>
         public const double PerMillisecond = 1.0D / Milliseconds.PerSecond;
 
+        /// <summary>Number of seconds in one minute.</summary>
+        public const int PerMinute = 60;
+
+        /// <summary>Number of seconds in one hour.</summary>
+        public const int PerHour = 60 * Seconds.PerMinute;
+
+        /// <summary>Number of seconds in one day.</summary>
+        public const int PerDay = 24 * Seconds.PerHour;
+
+        /// <summary>
+        /// Returns the number of seconds in the specified month and year.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <param name="month">The month (a number ranging from 1 to 12).</param>
+        /// <returns>
+        /// The number of seconds in month for the specified year.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Month is less than 1 or greater than 12. -or- year is less than 1 or greater than 9999.
+        /// </exception>
+        public static int PerMonth(int year, int month)
+        {
+            return DateTime.DaysInMonth(year, month) * Seconds.PerDay;
+        }
+
+        /// <summary>
+        /// Returns the number of seconds in the specified year.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <returns>
+        /// The number of seconds in the specified year.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Year is less than 1 or greater than 9999.
+        /// </exception>
+        public static long PerYear(int year)
+        {
+            long total = 0;
+
+            for (int month = 1; month <= 12; month++)
+            {
+                total += Seconds.PerMonth(year, month);
+            }
+            
+            return total;
+        }
+
         /// <summary>Converts seconds to 100-nanosecond tick intervals.</summary>
         public static long ToTicks(double seconds)
         {

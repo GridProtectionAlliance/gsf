@@ -24,10 +24,50 @@ namespace TVA
     public static class Ticks
     {
         /// <summary>Number of 100-nanosecond ticks in one second.</summary>
-        public const long PerSecond = 10000000;
+        public const long PerSecond = 10000000L;
 
         /// <summary>Number of 100-nanosecond ticks in one millisecond.</summary>
         public const long PerMillisecond = Ticks.PerSecond / Milliseconds.PerSecond;
+
+        /// <summary>Number of 100-nanosecond ticks in one minute.</summary>
+        public const long PerMinute = Seconds.PerMinute * Ticks.PerSecond;
+
+        /// <summary>Number of 100-nanosecond ticks in one hour.</summary>
+        public const long PerHour = 60L * Ticks.PerMinute;
+
+        /// <summary>Number of 100-nanosecond ticks in one day.</summary>
+        public const long PerDay = 24L * Ticks.PerHour;
+
+        /// <summary>
+        /// Returns the number of 100-nanosecond ticks in the specified month and year.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <param name="month">The month (a number ranging from 1 to 12).</param>
+        /// <returns>
+        /// The number of 100-nanosecond ticks in month for the specified year.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Month is less than 1 or greater than 12. -or- year is less than 1 or greater than 9999.
+        /// </exception>
+        public static long PerMonth(int year, int month)
+        {
+            return Seconds.PerMonth(year, month) * Ticks.PerSecond;
+        }
+
+        /// <summary>
+        /// Returns the number of 100-nanosecond ticks in the specified year.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <returns>
+        /// The number of 100-nanosecond ticks in the specified year.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Year is less than 1 or greater than 9999.
+        /// </exception>
+        public static long PerYear(int year)
+        {
+            return Seconds.PerYear(year) * Ticks.PerSecond;
+        }
 
         /// <summary>Converts 100-nanosecond tick intervals to seconds.</summary>
         public static double ToSeconds(long ticks)

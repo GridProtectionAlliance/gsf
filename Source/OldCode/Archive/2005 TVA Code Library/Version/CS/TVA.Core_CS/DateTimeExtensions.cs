@@ -206,9 +206,40 @@ namespace TVA
         /// second.</summary>
         /// <param name="ticks">Ticks of timestamp to baseline.</param>
         /// <param name="baselineTo">Time interval to which timestamp should be baselined.</param>
-        public static DateTime BaselinedTimestamp(this long ticks, BaselineTimeInterval baselineTo)
+        /// <returns>Baselined timestamp, in ticks, which begins at the specified time interval.</returns>
+        /// <remarks>
+        /// <para>Baselining to the second would return the timestamp starting at zero milliseconds.</para>
+        /// <para>Baselining to the minute would return the timestamp starting at zero seconds and milliseconds.</para>
+        /// <para>Baselining to the hour would return the timestamp starting at zero minutes, seconds and
+        /// milliseconds.</para>
+        /// <para>Baselining to the day would return the timestamp starting at zero hours, minutes, seconds and
+        /// milliseconds.</para>
+        /// <para>Baselining to the month would return the timestamp starting at day one, zero hours, minutes,
+        /// seconds and milliseconds.</para>
+        /// <para>Baselining to the year would return the timestamp starting at month one, day one, zero hours,
+        /// minutes, seconds and milliseconds.</para>
+        /// </remarks>
+        public static long BaselinedTimestamp(this long ticks, BaselineTimeInterval baselineTo)
         {
-            return BaselinedTimestamp(new DateTime(ticks), baselineTo);
+            switch (baselineTo)
+            {
+                case BaselineTimeInterval.Second:
+                    return ticks - ticks % Ticks.PerSecond;
+                case BaselineTimeInterval.Minute:
+                    return ticks - ticks % Ticks.PerMinute;
+                case BaselineTimeInterval.Hour:
+                    return ticks - ticks % Ticks.PerHour;
+                case BaselineTimeInterval.Day:
+                    return ticks - ticks % Ticks.PerDay;
+                case BaselineTimeInterval.Month:
+                    DateTime month = new DateTime(ticks);
+                    return new DateTime(month.Year, month.Month, 1, 0, 0, 0, 0).Ticks;
+                case BaselineTimeInterval.Year:
+                    DateTime year = new DateTime(ticks);
+                    return new DateTime(year.Year, 1, 1, 0, 0, 0, 0).Ticks;
+                default:
+                    return ticks;
+            }
         }
 
         /// <summary>Creates a baselined timestamp which begins at the specified time interval.</summary>
@@ -229,23 +260,7 @@ namespace TVA
         /// </remarks>
         public static DateTime BaselinedTimestamp(this DateTime timestamp, BaselineTimeInterval baselineTo)
         {
-            switch (baselineTo)
-            {
-                case BaselineTimeInterval.Second:
-                    return new DateTime(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, 0);
-                case BaselineTimeInterval.Minute:
-                    return new DateTime(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, 0, 0);
-                case BaselineTimeInterval.Hour:
-                    return new DateTime(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, 0, 0, 0);
-                case BaselineTimeInterval.Day:
-                    return new DateTime(timestamp.Year, timestamp.Month, timestamp.Day, 0, 0, 0, 0);
-                case BaselineTimeInterval.Month:
-                    return new DateTime(timestamp.Year, timestamp.Month, 1, 0, 0, 0, 0);
-                case BaselineTimeInterval.Year:
-                    return new DateTime(timestamp.Year, 1, 1, 0, 0, 0, 0);
-                default:
-                    return timestamp;
-            }
+            return new DateTime(BaselinedTimestamp(timestamp.Ticks, baselineTo));
         }
 
         /// <summary>Converts given local time to Eastern time.</summary>

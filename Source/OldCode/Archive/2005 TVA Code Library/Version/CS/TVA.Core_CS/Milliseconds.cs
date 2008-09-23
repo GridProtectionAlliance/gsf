@@ -29,6 +29,46 @@ namespace TVA
         /// <summary>Fractional number of milliseconds in one tick.</summary>
         public const double PerTick = 1.0D / Ticks.PerMillisecond;
 
+        /// <summary>Number of milliseconds in one minute.</summary>
+        public const int PerMinute = Seconds.PerMinute * Milliseconds.PerSecond;
+
+        /// <summary>Number of milliseconds in one hour.</summary>
+        public const int PerHour = 60 * Milliseconds.PerMinute;
+
+        /// <summary>Number of milliseconds in one day.</summary>
+        public const int PerDay = 24 * Milliseconds.PerHour;
+
+        /// <summary>
+        /// Returns the number of milliseconds in the specified month and year.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <param name="month">The month (a number ranging from 1 to 12).</param>
+        /// <returns>
+        /// The number of milliseconds in month for the specified year.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Month is less than 1 or greater than 12. -or- year is less than 1 or greater than 9999.
+        /// </exception>
+        public static long PerMonth(int year, int month)
+        {
+            return (long)Seconds.PerMonth(year, month) * (long)Milliseconds.PerSecond;
+        }
+
+        /// <summary>
+        /// Returns the number of milliseconds in the specified year.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <returns>
+        /// The number of milliseconds in the specified year.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Year is less than 1 or greater than 9999.
+        /// </exception>
+        public static long PerYear(int year)
+        {
+            return Seconds.PerYear(year) * (long)Milliseconds.PerSecond;
+        }
+
         /// <summary>Converts milliseconds to 100-nanosecond tick intervals.</summary>
         public static long ToTicks(double milliseconds)
         {
