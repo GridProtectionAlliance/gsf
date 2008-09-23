@@ -199,7 +199,7 @@
     <Compile Include="Collections\KeyedProcessQueue.cs">
     </Compile>
     <Compile Include="Collections\ProcessQueue.cs" />
-    <Compile Include="Identity\UserInfo.cs" />
+    <Compile Include="Identity\UserInformation.cs" />
     <Compile Include="Interop\BitwiseCast.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DateTimeExtensions.cs" />

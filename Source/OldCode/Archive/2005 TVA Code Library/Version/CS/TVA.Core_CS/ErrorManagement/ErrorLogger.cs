@@ -1213,7 +1213,7 @@ namespace TVA.ErrorManagement
             {
                 case ApplicationType.WindowsCui:
                 case ApplicationType.WindowsGui:
-                    UserInfo currentUserInfo = new UserInfo(Thread.CurrentPrincipal.Identity.Name);
+                    UserInformation currentUserInfo = new UserInformation(Thread.CurrentPrincipal.Identity.Name);
                     info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
@@ -1228,7 +1228,7 @@ namespace TVA.ErrorManagement
                     info.AppendLine();
                     break;
                 case ApplicationType.Web:
-                    UserInfo remoteUserInfo = new UserInfo(Thread.CurrentPrincipal.Identity.Name, true);
+                    UserInformation remoteUserInfo = new UserInformation(Thread.CurrentPrincipal.Identity.Name, true);
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());

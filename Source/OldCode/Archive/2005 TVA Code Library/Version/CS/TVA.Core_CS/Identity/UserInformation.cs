@@ -40,7 +40,7 @@ namespace TVA.Identity
     /// <summary>
     /// User Information Class.
     /// </summary>
-    public class UserInfo
+    public class UserInformation
     {
         #region [ Members ]
 
@@ -64,14 +64,14 @@ namespace TVA.Identity
         #region [ Constructors ]
 
         /// <summary>Initializes a new instance of the user information class.</summary>
-        public UserInfo(string username, string domain)
+        public UserInformation(string username, string domain)
             : this(username, domain, false)
         {
         }
 
         /// <summary>Initializes a new instance of the user information class.</summary>
         /// <remarks>Specify login information as domain\username.</remarks>
-        public UserInfo(string username, string domain, bool usePrivilegedAccount)
+        public UserInformation(string username, string domain, bool usePrivilegedAccount)
         {
             m_username = username;
             m_domain = domain;
@@ -79,12 +79,12 @@ namespace TVA.Identity
         }
 
         /// <summary>Initializes a new instance of the user information class.</summary>
-        public UserInfo(string loginID)
+        public UserInformation(string loginID)
             : this(loginID, false)
         {
         }
 
-        public UserInfo(string loginID, bool usePrivilegedAccount)
+        public UserInformation(string loginID, bool usePrivilegedAccount)
         {
             string[] parts = loginID.Split('\\');
 
@@ -308,7 +308,7 @@ namespace TVA.Identity
         /// <returns>True is the user can be authenticated; otherwise False.</returns>
         public bool Authenticate(string password)
         {
-            return UserInfo.AuthenticateUser(m_username, password, m_domain);
+            return UserInformation.AuthenticateUser(m_username, password, m_domain);
         }
 
         /// <summary>
@@ -359,17 +359,17 @@ namespace TVA.Identity
         #region [ Static ]
 
         // Static Fields
-        private static UserInfo m_currentUserInfo;
+        private static UserInformation m_currentUserInfo;
 
         // Static Properties
 
         /// <summary>Gets the current user's information.</summary>
-        public static UserInfo CurrentUser
+        public static UserInformation CurrentUser
         {
             get
             {
                 if (m_currentUserInfo == null)
-                    m_currentUserInfo = new UserInfo(CurrentUserID);
+                    m_currentUserInfo = new UserInformation(CurrentUserID);
 
                 return m_currentUserInfo;
             }
