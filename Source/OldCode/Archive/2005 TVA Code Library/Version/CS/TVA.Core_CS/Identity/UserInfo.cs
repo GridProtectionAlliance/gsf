@@ -1,10 +1,10 @@
 //*******************************************************************************************************
-//  TVA.Identity.UserInfo.vb - ActiveDirectory User Information Class
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  UserInfo.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
@@ -37,32 +37,31 @@ using TVA.Interop;
 
 namespace TVA.Identity
 {
+    /// <summary>
+    /// User Information Class.
+    /// </summary>
     public class UserInfo
     {
-        [DllImport("advapi32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, ref IntPtr phToken);
+        #region [ Members ]
 
-        [DllImport("kernel32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr handle);
-
-        [DllImport("advapi32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
-
+        // Constants
         private const int LOGON32_PROVIDER_DEFAULT = 0;
         private const int LOGON32_LOGON_INTERACTIVE = 2;
         private const int LOGON32_LOGON_NETWORK = 3;
         private const int SECURITY_IMPERSONATION = 2;
 
-        private static UserInfo m_currentUserInfo;
+        // Fields
         private string m_username;
         private string m_domain;
-        private bool m_usePrivilegedAccount;
         private DirectoryEntry m_userEntry;
-
-        // Defines account with needed ActiveDirectory privileges
+        private bool m_usePrivilegedAccount;
         private string m_previlegedUserName;
         private string m_previlegedPassword;
         private string m_previlegedDomain;
+
+        #endregion
+
+        #region [ Constructors ]
 
         /// <summary>Initializes a new instance of the user information class.</summary>
         public UserInfo(string username, string domain)
@@ -101,6 +100,10 @@ namespace TVA.Identity
             }
         }
 
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Gets or sets a boolean value indicating whether a privileged account will be used for retrieving
         /// information about the user from the Active Directory.
@@ -117,19 +120,6 @@ namespace TVA.Identity
             {
                 m_usePrivilegedAccount = value;
             }
-        }
-
-        /// <summary>
-        /// Defines privileged account information
-        /// </summary>
-        /// <param name="username">Username of privileged account</param>
-        /// <param name="password">Password of privileged account</param>
-        /// <param name="domain">Domain of privileged account</param>
-        public void DefinePrivilegedAccount(string username, string password, string domain)
-        {
-            m_previlegedUserName = username;
-            m_previlegedPassword = password;
-            m_previlegedDomain = domain;
         }
 
         /// <summary>Gets the System.DirectoryServices.DirectoryEntry of the user</summary>
@@ -180,36 +170,6 @@ namespace TVA.Identity
                 }
 
                 return m_userEntry;
-            }
-        }
-
-        /// <summary>Returns adctive directory value for specified property</summary>
-        public string UserProperty(string propertyName)
-        {
-            WindowsImpersonationContext currentContext = null;
-
-            try
-            {
-                // Impersonate to the privileged account if specified.
-                if (m_usePrivilegedAccount)
-                {
-                    if (string.IsNullOrEmpty(m_previlegedUserName))
-                        throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
-
-                    currentContext = ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain);
-                }
-
-                return UserEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
-            }
-            catch
-            {
-                return "";
-            }
-            finally
-            {
-                // Undo impersonation if it was performed.
-                if (currentContext != null)
-                    EndImpersonation(currentContext);
             }
         }
 
@@ -336,6 +296,11 @@ namespace TVA.Identity
             }
         }
 
+
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
         /// Authenticates the current user using the specified password.
         /// </summary>
@@ -343,8 +308,60 @@ namespace TVA.Identity
         /// <returns>True is the user can be authenticated; otherwise False.</returns>
         public bool Authenticate(string password)
         {
-            return AuthenticateUser(m_username, password, m_domain);
+            return UserInfo.AuthenticateUser(m_username, password, m_domain);
         }
+
+        /// <summary>
+        /// Defines privileged account information
+        /// </summary>
+        /// <param name="username">Username of privileged account</param>
+        /// <param name="password">Password of privileged account</param>
+        /// <param name="domain">Domain of privileged account</param>
+        public void DefinePrivilegedAccount(string username, string password, string domain)
+        {
+            m_previlegedUserName = username;
+            m_previlegedPassword = password;
+            m_previlegedDomain = domain;
+        }
+
+        /// <summary>Returns adctive directory value for specified property</summary>
+        public string UserProperty(string propertyName)
+        {
+            WindowsImpersonationContext currentContext = null;
+
+            try
+            {
+                // Impersonate to the privileged account if specified.
+                if (m_usePrivilegedAccount)
+                {
+                    if (string.IsNullOrEmpty(m_previlegedUserName))
+                        throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
+
+                    currentContext = ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain);
+                }
+
+                return UserEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
+            }
+            catch
+            {
+                return "";
+            }
+            finally
+            {
+                // Undo impersonation if it was performed.
+                if (currentContext != null)
+                    EndImpersonation(currentContext);
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static UserInfo m_currentUserInfo;
+
+        // Static Properties
 
         /// <summary>Gets the current user's information.</summary>
         public static UserInfo CurrentUser
@@ -366,6 +383,8 @@ namespace TVA.Identity
                 return WindowsIdentity.GetCurrent().Name;
             }
         }
+
+        // Static Methods
 
         /// <summary>Validates NT authentication, given the specified credentials.</summary>
         public static bool AuthenticateUser(string username, string password, string domain)
@@ -437,5 +456,16 @@ namespace TVA.Identity
 
             impersonatedUser = null;
         }
+
+        [DllImport("advapi32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, ref IntPtr phToken);
+
+        [DllImport("kernel32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr handle);
+
+        [DllImport("advapi32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
+
+        #endregion
     }
 }
