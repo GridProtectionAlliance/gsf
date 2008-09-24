@@ -354,7 +354,7 @@ namespace TVA.Collections
 
         ~ProcessQueue()
         {
-            Dispose(true);
+            Dispose(false);
         }
 
         #endregion
@@ -988,9 +988,11 @@ namespace TVA.Collections
         {
             if (!m_disposed)
             {
+                // Must stop thread, otherwise your app will keep running :)
+                Stop();
+
                 if (disposing)
                 {
-                    Stop();
                     if (m_processTimer != null)
                     {
                         m_processTimer.Elapsed -= ProcessTimerThreadProc;
@@ -1062,7 +1064,8 @@ namespace TVA.Collections
             else
             {
                 // Stops intervaled processing, if active.
-                m_processTimer.Enabled = false;
+                if (m_processTimer != null)
+                    m_processTimer.Enabled = false;
             }
 
             m_stopTime = DateTime.Now.Ticks;
