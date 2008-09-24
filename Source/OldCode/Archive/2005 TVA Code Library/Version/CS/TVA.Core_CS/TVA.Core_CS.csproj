@@ -103,6 +103,7 @@
       <DependentUpon>GlobalExceptionLogger.cs</DependentUpon>
     </Compile>
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
+    <Compile Include="IStatusProvider.cs" />
     <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFile.cs" />
     <Compile Include="Net\Ftp\InputDataStream.cs" />

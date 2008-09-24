@@ -50,18 +50,8 @@ namespace TVA.Services
     /// Defines an interface for user created components used by the service so that components can inform service
     /// of current status and automatically react to service events.
     /// </summary>
-    public interface IServiceComponent : IDisposable
+    public interface IServiceComponent : IStatusProvider
     {
-        string Name
-        {
-            get;
-        }
-
-        string Status
-        {
-            get;
-        }
-
         void ServiceStateChanged(ServiceState newState);
 
         void ProcessStateChanged(string processName, ProcessState newState);
