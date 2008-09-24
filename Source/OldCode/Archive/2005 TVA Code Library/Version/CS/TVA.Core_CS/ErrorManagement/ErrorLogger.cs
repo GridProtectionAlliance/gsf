@@ -133,7 +133,6 @@ namespace TVA.ErrorManagement
         private string m_settingsCategoryName;
         private bool m_handleUnhandledException;
         private bool m_exitOnUnhandledException;
-        private Assembly m_applicationRoot;
         private Exception m_lastException;
         private Func<string> m_errorTextMethod;
         private Func<string> m_scopeTextMethod;
@@ -437,26 +436,6 @@ namespace TVA.ErrorManagement
         }
 
         /// <summary>
-        /// Gets or sets the entry point of the application.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">value being set is null.</exception>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Assembly ApplicationRoot
-        {
-            get
-            {
-                return m_applicationRoot;
-            }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException();
-                m_applicationRoot = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the method that provides common text stating what could have possibly caused the exception.
         /// </summary>
         /// <exception cref="ArgumentNullException">value being set is null.</exception>
@@ -700,10 +679,10 @@ namespace TVA.ErrorManagement
         /// </remarks>
         public void Initialize()
         {
-            LoadSettings();     // Load settings from the config file.
-            Register();         // Register the logger for unhandled exceptions.
-            m_logFile.Open();   // Open the log file.
-            if (m_applicationRoot == null) m_applicationRoot = Assembly.GetCallingAssembly();
+            LoadSettings();         // Load settings from the config file.
+            Register();             // Register the logger for unhandled exceptions.
+            m_logFile.EndInit();    // Initialize the log file.
+            m_logFile.Open();       // Open the log file.
         }
 
         /// <summary>
@@ -899,7 +878,7 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Shows exception information in a Web Site.
         /// </summary>
-        private void ExceptionToWebPage()
+        protected virtual void ExceptionToWebPage()
         {
             StringBuilder html = new StringBuilder();
             html.Append("<HTML>");
@@ -1000,7 +979,7 @@ namespace TVA.ErrorManagement
             if (!m_logToFile) return;
 
             m_logToFileOK = false;
-            m_logFile.WriteTimestampedLine(ExceptionToString(exception, m_applicationRoot));
+            m_logFile.WriteTimestampedLine(GetExceptionInfo(exception));
             m_logToFileOK = true;
         }
 
@@ -1017,7 +996,7 @@ namespace TVA.ErrorManagement
             email.From = string.Format("{0}@tva.gov", Environment.MachineName);
             email.Recipients = m_contactEmail;
             email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
-            email.Body = ExceptionToString(exception, m_applicationRoot);
+            email.Body = GetExceptionInfo(exception);
             email.Attachments = GetScreenshotFileName();
             email.SmtpServer = m_smtpServer;
             email.Send();
@@ -1034,9 +1013,7 @@ namespace TVA.ErrorManagement
 
             m_logToEventLogOK = false;
             // Write the formatted exception message to the event log.
-            EventLog.WriteEntry(ApplicationName, 
-                                ExceptionToString(exception, m_applicationRoot), 
-                                EventLogEntryType.Error);
+            EventLog.WriteEntry(ApplicationName, GetExceptionInfo(exception), EventLogEntryType.Error);
             m_logToEventLogOK = true;
         }
 
@@ -1046,8 +1023,8 @@ namespace TVA.ErrorManagement
         /// <param name="exception">Exception that was encountered.</param>
         protected virtual void ExceptionToScreenshot(Exception exception)
         {
-            if (!m_logToScreenshot || 
-                ApplicationType != ApplicationType.WindowsCui || 
+            if (!m_logToScreenshot ||
+                ApplicationType != ApplicationType.WindowsCui ||
                 ApplicationType != ApplicationType.WindowsGui) return;
 
             m_logToScreenshotOK = false;
@@ -1249,7 +1226,7 @@ namespace TVA.ErrorManagement
             moreInfoText.Append("Detailed error information follows:");
             moreInfoText.AppendLine();
             moreInfoText.AppendLine();
-            moreInfoText.Append(ExceptionToString(m_lastException, m_applicationRoot));
+            moreInfoText.Append(GetExceptionInfo(m_lastException));
 
             return moreInfoText.ToString();
         }
@@ -1278,7 +1255,11 @@ namespace TVA.ErrorManagement
 
         #region [ Static ]
 
-        public static string SystemInfo()
+        /// <summary>
+        /// Gets information about the system where current application is executing.
+        /// </summary>
+        /// <returns>System information in text.</returns>
+        public static string GetSystemInfo()
         {
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Date and Time:         {0}", DateTime.Now);
@@ -1333,7 +1314,11 @@ namespace TVA.ErrorManagement
             return info.ToString();
         }
 
-        public static string ApplicationInfo()
+        /// <summary>
+        /// Gets information about the current application.
+        /// </summary>
+        /// <returns>Application information in text.</returns>
+        public static string GetApplicationInfo()
         {
             Assembly parentAssembly;
             switch (Common.GetApplicationType())
@@ -1351,27 +1336,69 @@ namespace TVA.ErrorManagement
                     break;
             }
 
-            return ApplicationInfo(parentAssembly);
+            StringBuilder text = new StringBuilder();
+            AssemblyInfo parentAssemblyInfo = new AssemblyInfo(parentAssembly);
+            text.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
+            text.AppendLine();
+            text.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
+            text.AppendLine();
+            text.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
+            text.AppendLine();
+            text.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
+            text.AppendLine();
+            text.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
+            text.AppendLine();
+            text.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
+            text.AppendLine();
+
+            return text.ToString();
         }
 
-        public static string ExceptionToString(Exception ex)
+        /// <summary>
+        /// Gets information about an <see cref="Exception"/>.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> whose information is to be retrieved.</param>
+        /// <returns>Exception information in text.</returns>
+        public static string GetExceptionInfo(Exception ex)
         {
-            Assembly parentAssembly;
-            switch (Common.GetApplicationType())
+            StringBuilder text = new StringBuilder();
+            if (ex.InnerException != null)
             {
-                case ApplicationType.WindowsCui:
-                case ApplicationType.WindowsGui:
-                    parentAssembly = Assembly.GetEntryAssembly();
-                    break;
-                case ApplicationType.Web:
-                    parentAssembly = Assembly.GetCallingAssembly();
-                    break;
+                // sometimes the original exception is wrapped in a more relevant outer exception
+                // the detail exception is the "inner" exception
+                // see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
+                text.Append("(Inner Exception)");
+                text.AppendLine();
+                text.Append(GetExceptionInfo(ex.InnerException));
+                text.AppendLine();
+                text.Append("(Outer Exception)");
+                text.AppendLine();
             }
 
-            return ExceptionToString(ex, parentAssembly);
+            // Get general system information.
+            text.Append(GetSystemInfo());
+            text.AppendLine();
+            // Get general application information.
+            text.Append(GetApplicationInfo());
+            text.AppendLine();
+            // Get general exception information.
+            text.Append(GetExceptionGeneralInfo(ex));
+            text.AppendLine();
+            // Get the stack trace for the exception.
+            text.Append("---- Stack Trace ----");
+            text.AppendLine();
+            text.Append(GetExceptionStackTrace(ex));
+            text.AppendLine();
+
+            return text.ToString();
         }
 
-        public static string ExceptionGeneralInfo(Exception ex)
+        /// <summary>
+        /// Gets common information about an <see cref="Exception"/>.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> whose common information is to be retrieved.</param>
+        /// <returns>Common exception information in text.</returns>
+        public static string GetExceptionGeneralInfo(Exception ex)
         {
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Exception Source:      {0}", ex.Source);
@@ -1389,7 +1416,12 @@ namespace TVA.ErrorManagement
             return info.ToString();
         }
 
-        public static string ExceptionStackTrace(Exception ex)
+        /// <summary>
+        /// Gets stack trace information about an <see cref="Exception"/>.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> whose stack trace information is to be retrieved.</param>
+        /// <returns>Exception stack trace in text.</returns>
+        public static string GetExceptionStackTrace(Exception ex)
         {
             StringBuilder trace = new StringBuilder();
             StackTrace stack = new StackTrace(ex, true);
@@ -1449,61 +1481,6 @@ namespace TVA.ErrorManagement
             }
 
             return trace.ToString();
-        }
-
-        private static string ExceptionToString(Exception ex, Assembly parentAssembly)
-        {
-
-            StringBuilder text = new StringBuilder();
-            if (ex.InnerException != null)
-            {
-                // sometimes the original exception is wrapped in a more relevant outer exception
-                // the detail exception is the "inner" exception
-                // see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
-                text.Append("(Inner Exception)");
-                text.AppendLine();
-                text.Append(ExceptionToString(ex.InnerException));
-                text.AppendLine();
-                text.Append("(Outer Exception)");
-                text.AppendLine();
-            }
-
-            // Get general system information.
-            text.Append(SystemInfo());
-            text.AppendLine();
-            // Get general application information.
-            text.Append(ApplicationInfo(parentAssembly));
-            text.AppendLine();
-            // Get general exception information.
-            text.Append(ExceptionGeneralInfo(ex));
-            text.AppendLine();
-            // Get the stack trace for the exception.
-            text.Append("---- Stack Trace ----");
-            text.AppendLine();
-            text.Append(ExceptionStackTrace(ex));
-            text.AppendLine();
-
-            return text.ToString();
-        }
-
-        private static string ApplicationInfo(Assembly parentAssembly)
-        {
-            StringBuilder text = new StringBuilder();
-            AssemblyInfo parentAssemblyInfo = new AssemblyInfo(parentAssembly);
-            text.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
-            text.AppendLine();
-            text.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
-            text.AppendLine();
-            text.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
-            text.AppendLine();
-            text.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
-            text.AppendLine();
-            text.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
-            text.AppendLine();
-            text.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
-            text.AppendLine();
-
-            return text.ToString();
         }
 
         #endregion
