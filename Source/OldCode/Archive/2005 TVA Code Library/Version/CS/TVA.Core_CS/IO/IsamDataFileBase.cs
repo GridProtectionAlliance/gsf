@@ -49,12 +49,14 @@ namespace TVA.IO
         public event EventHandler DataLoaded;
         public event EventHandler DataSaving;
         public event EventHandler DataSaved;
-        public event EventHandler DataReadStart;
-        public event EventHandler DataReadComplete;
-        public event EventHandler<GenericEventArgs<ProcessProgress<int>>> DataReadProgress;
-        public event EventHandler DataWriteStart;
-        public event EventHandler DataWriteComplete;
-        public event EventHandler<GenericEventArgs<ProcessProgress<int>>> DataWriteProgress;
+
+        // TODO: These events were established but never called, either need to delete or implemement
+        //public event EventHandler DataReadStart;
+        //public event EventHandler DataReadComplete;
+        //public event EventHandler<GenericEventArgs<ProcessProgress<int>>> DataReadProgress;
+        //public event EventHandler DataWriteStart;
+        //public event EventHandler DataWriteComplete;
+        //public event EventHandler<GenericEventArgs<ProcessProgress<int>>> DataWriteProgress;
 
         // Fields
         private string m_name;

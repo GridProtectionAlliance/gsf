@@ -21,12 +21,12 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 
-// This FTP library is based on a similar C# library found on "The Code Project" web site written by
-// Uwe Keim of Germany.  It was translated into VB with most of classes being renamed (removed Ftp prefix)
-// and the namespace was changed to TVA.Ftp. Many bug fixes, additions and modifications have been made to
-// this code as well as extensive testing.  Note worthy changes:  converted the C# delegates to standard
-// .NET events for ease of use, made the library work with IIS based FTP servers that were in Unix mode,
-// added detailed file system information for FTP files and directories (size, timestamp, etc), coverted
+// This FTP library is based on a similar C# library found on "The Code Project" web site originally written by
+// Alex Kwok, the enhanced by Uwe Keim.  It was translated into VB with most of classes being renamed
+// (removed Ftp prefix) and the namespace was changed to TVA.Ftp. Many bug fixes, additions and modifications
+// have been made to this code as well as extensive testing.  Note worthy changes:  converted the C# delegates
+// to standard .NET events for ease of use, made the library work with IIS based FTP servers that were in Unix
+// mode, added detailed file system information for FTP files and directories (size, timestamp, etc), coverted
 // FTP session into a component that could be dragged onto a design surface, created an FTP FileWatcher
 // component and an FTP file system crawler based on this library - JRC
 
@@ -45,7 +45,7 @@ namespace TVA.Net.Ftp
 
         // Delegates
         public delegate void BeginFileTransferEventHandler(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection);
-        public delegate void EndFileTransferEventHandler(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection, AsyncResult TransferResult);
+        public delegate void EndFileTransferEventHandler(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection);
         public delegate void FileTransferProgressEventHandler(long TotalBytes, long TotalBytesTransfered, TransferDirection TransferDirection);
 
         // Events
@@ -63,7 +63,7 @@ namespace TVA.Net.Ftp
 
         #endregion
 
-        #region [ Constructors ]
+d        #region [ Constructors ]
 
         public Session()
             : this(false)
@@ -243,10 +243,10 @@ namespace TVA.Net.Ftp
                 BeginFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
         }
 
-        internal void OnEndFileTransfer(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection, AsyncResult TransferResult)
+        internal void OnEndFileTransfer(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection)
         {
             if (EndFileTransfer != null)
-                EndFileTransfer(LocalFileName, RemoteFileName, TransferDirection, TransferResult);
+                EndFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
         }
 
         internal void OnFileTransferProgress(long TotalBytes, long TotalBytesTransfered, TransferDirection TransferDirection)

@@ -278,6 +278,77 @@ namespace TVA
             // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
             return (Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : (Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
         }
+        /// <summary>Gets the 3-letter month abbreviation for given month number (1 - 12).</summary>
+        /// <param name="month">Index of month to display (1 - 12).</param>
+        /// <remarks>Month abbreviations are English only.</remarks>
+        public static string ShortMonthName(int month)
+        {
+            switch (month)
+            {
+                case 1:
+                    return "Jan";
+                case 2:
+                    return "Feb";
+                case 3:
+                    return "Mar";
+                case 4:
+                    return "Apr";
+                case 5:
+                    return "May";
+                case 6:
+                    return "Jun";
+                case 7:
+                    return "Jul";
+                case 8:
+                    return "Aug";
+                case 9:
+                    return "Sep";
+                case 10:
+                    return "Oct";
+                case 11:
+                    return "Nov";
+                case 12:
+                    return "Dec";
+                default:
+                    throw new ArgumentOutOfRangeException("month", "Invalid month number \"" + month + "\" specified - expected a value between 1 and 12");
+            }
+        }
+
+        /// <summary>Gets the full month name for given month number (1 - 12).</summary>
+        /// <param name="month">Index of month to display (1 - 12).</param>
+        /// <remarks>Month names are English only.</remarks>
+        public static string LongMonthName(int month)
+        {
+            switch (month)
+            {
+                case 1:
+                    return "January";
+                case 2:
+                    return "February";
+                case 3:
+                    return "March";
+                case 4:
+                    return "April";
+                case 5:
+                    return "May";
+                case 6:
+                    return "June";
+                case 7:
+                    return "July";
+                case 8:
+                    return "August";
+                case 9:
+                    return "September";
+                case 10:
+                    return "October";
+                case 11:
+                    return "November";
+                case 12:
+                    return "December";
+                default:
+                    throw new ArgumentOutOfRangeException("month", "Invalid month number \"" + month + "\" specified - expected a value between 1 and 12");
+            }
+        }
 
         #region [ Old Code ]
 

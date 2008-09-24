@@ -300,9 +300,9 @@ namespace TVA
         /// <returns>
         /// <para>Timestamp in Pacific time.</para>
         /// </returns>
-        public static DateTime LocalTimeToPacificTime(this DateTime localTimeStamp)
+        public static DateTime LocalTimeToPacificTime(this DateTime localTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.PacificTimeZone);
+            return TimeZoneInfo.ConvertTime(localTimestamp, TimeZoneInfo.Local, USTimeZones.PacificTimeZone);
         }
 
         /// <summary>Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time).</summary>
@@ -430,74 +430,20 @@ namespace TVA
             return TimeZoneInfo.ConvertTime(timestamp, sourceTimeZone, destinationTimeZone);
         }
 
-        /// <summary>Gets the 3-letter month abbreviation for given month number (1-12).</summary>
+        /// <summary>Gets the 3-letter month abbreviation for month of the timestamp.</summary>
+        /// <param name="timestamp">Timestamp from which month name is extracted.</param>
         /// <remarks>Month abbreviations are English only.</remarks>
         public static string ShortMonthName(this DateTime timestamp)
         {
-            switch (timestamp.Month)
-            {
-                case 1:
-                    return "Jan";
-                case 2:
-                    return "Feb";
-                case 3:
-                    return "Mar";
-                case 4:
-                    return "Apr";
-                case 5:
-                    return "May";
-                case 6:
-                    return "Jun";
-                case 7:
-                    return "Jul";
-                case 8:
-                    return "Aug";
-                case 9:
-                    return "Sep";
-                case 10:
-                    return "Oct";
-                case 11:
-                    return "Nov";
-                case 12:
-                    return "Dec";
-                default:
-                    throw new ArgumentOutOfRangeException("monthNumber", "Invalid month number \"" + timestamp.Month + "\" specified - expected a value between 1 and 12");
-            }
+            return Common.ShortMonthName(timestamp.Month);
         }
 
-        /// <summary>Gets the full month name for given month number (1-12).</summary>
+        /// <summary>Gets the full month name for month of the timestamp.</summary>
+        /// <param name="timestamp">Timestamp from which month name is extracted.</param>
         /// <remarks>Month names are English only.</remarks>
         public static string LongMonthName(this DateTime timestamp)
         {
-            switch (timestamp.Month)
-            {
-                case 1:
-                    return "January";
-                case 2:
-                    return "February";
-                case 3:
-                    return "March";
-                case 4:
-                    return "April";
-                case 5:
-                    return "May";
-                case 6:
-                    return "June";
-                case 7:
-                    return "July";
-                case 8:
-                    return "August";
-                case 9:
-                    return "September";
-                case 10:
-                    return "October";
-                case 11:
-                    return "November";
-                case 12:
-                    return "December";
-                default:
-                    throw new ArgumentOutOfRangeException("monthNumber", "Invalid month number \"" + timestamp.Month + "\" specified - expected a value between 1 and 12");
-            }
+            return Common.LongMonthName(timestamp.Month);
         }
     }
 }

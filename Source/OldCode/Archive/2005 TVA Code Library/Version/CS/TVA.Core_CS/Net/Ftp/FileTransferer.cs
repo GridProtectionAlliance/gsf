@@ -152,11 +152,13 @@ namespace TVA.Net.Ftp
             try
             {
                 StartTransfer();
-                m_session.Host.OnFileTransferNotification(new AsyncResult("Success.", AsyncResult.Complete));
+                m_transferResult = new AsyncResult("Success.", AsyncResult.Complete);
+                m_session.Host.OnFileTransferNotification(m_transferResult);
             }
             catch (ExceptionBase e)
             {
-                m_session.Host.OnFileTransferNotification(new AsyncResult("Transfer fail: " + e.Message, AsyncResult.Fail));
+                m_transferResult = new AsyncResult("Transfer fail: " + e.Message, AsyncResult.Fail);
+                m_session.Host.OnFileTransferNotification(m_transferResult);
             }
         }
 
@@ -182,12 +184,11 @@ namespace TVA.Net.Ftp
                 remoteStream.Close();
                 TestTransferResult();
 
-                m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection, m_transferResult);
+                m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
             }
             catch
             {
-                m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection, m_transferResult);
-
+                m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
                 throw;
             }
             finally

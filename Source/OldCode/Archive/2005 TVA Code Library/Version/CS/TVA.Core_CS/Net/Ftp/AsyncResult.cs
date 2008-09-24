@@ -39,12 +39,12 @@ namespace TVA.Net.Ftp
         #region [ Constructors ]
 
         internal AsyncResult()
-            : this("Success.", System.Convert.ToInt32(Response.InvalidCode), Complete)
+            : this("Success.", Response.InvalidCode, Complete)
         {
         }
 
         internal AsyncResult(string message, int result)
-            : this(message, System.Convert.ToInt32(Response.InvalidCode), result)
+            : this(message, Response.InvalidCode, result)
         {
         }
 
