@@ -21,7 +21,7 @@ namespace TVA
     /// Defines an interface for any object to allow it to provide a name and status
     /// that can be displayed for informational purposes.
     /// </summary>
-    interface IStatusProvider
+    public interface IStatusProvider
     {
         string Name
         {
