@@ -266,78 +266,78 @@ namespace TVA
         }
 
         /// <summary>Converts given local time to Eastern time.</summary>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to Eastern time.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to Eastern time.</param>
         /// <returns>
         /// <para>Timestamp in Eastern time.</para>
         /// </returns>
-        public static DateTime LocalTimeToEasternTime(this DateTime localTimeStamp)
+        public static DateTime LocalTimeToEasternTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.EasternTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.EasternTimeZone);
         }
 
         /// <summary>Converts given local time to Central time.</summary>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to Central time.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to Central time.</param>
         /// <returns>
         /// <para>Timestamp in Central time.</para>
         /// </returns>
-        public static DateTime LocalTimeToCentralTime(this DateTime localTimeStamp)
+        public static DateTime LocalTimeToCentralTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.CentralTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.CentralTimeZone);
         }
 
         /// <summary>Converts given local time to Mountain time.</summary>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to Mountain time.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to Mountain time.</param>
         /// <returns>
         /// <para>Timestamp in Mountain time.</para>
         /// </returns>
-        public static DateTime LocalTimeToMountainTime(this DateTime localTimeStamp)
+        public static DateTime LocalTimeToMountainTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimeStamp, TimeZoneInfo.Local, USTimeZones.MountainTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.MountainTimeZone);
         }
 
         /// <summary>Converts given local time to Pacific time.</summary>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to Pacific time.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to Pacific time.</param>
         /// <returns>
         /// <para>Timestamp in Pacific time.</para>
         /// </returns>
-        public static DateTime LocalTimeToPacificTime(this DateTime localTimestamp)
+        public static DateTime LocalTimeToPacificTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(localTimestamp, TimeZoneInfo.Local, USTimeZones.PacificTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.PacificTimeZone);
         }
 
         /// <summary>Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time).</summary>
         /// <remarks>This function is only provided for the sake of completeness. All it does is call the
         /// "ToUniversalTime" property on the given timestamp.</remarks>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to Universal time.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to Universal time.</param>
         /// <returns>
         /// <para>Timestamp in UniversalTime (a.k.a., GMT).</para>
         /// </returns>
-        public static DateTime LocalTimeToUniversalTime(this DateTime localTimestamp)
+        public static DateTime LocalTimeToUniversalTime(this DateTime timestamp)
         {
-            return localTimestamp.ToUniversalTime();
+            return timestamp.ToUniversalTime();
         }
 
         /// <summary>Converts given local time to time in specified time zone.</summary>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to time in specified time zone.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to time in specified time zone.</param>
         /// <param name="destinationTimeZoneStandardName">Standard name of desired end time zone for given
         /// timestamp.</param>
         /// <returns>
         /// <para>Timestamp in specified time zone.</para>
         /// </returns>
-        public static DateTime LocalTimeTo(this DateTime localTimestamp, string destinationTimeZoneStandardName)
+        public static DateTime LocalTimeTo(this DateTime timestamp, string destinationTimeZoneStandardName)
         {
-            return TimeZoneInfo.ConvertTime(localTimestamp, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
 
         /// <summary>Converts given local time to time in specified time zone.</summary>
-        /// <param name="localTimestamp">Timestamp in local time to be converted to time in specified time zone.</param>
+        /// <param name="timestamp">Timestamp in local time to be converted to time in specified time zone.</param>
         /// <param name="destinationTimeZone">Desired end time zone for given timestamp.</param>
         /// <returns>
         /// <para>Timestamp in specified time zone.</para>
         /// </returns>
-        public static DateTime LocalTimeTo(this DateTime localTimestamp, TimeZoneInfo destinationTimeZone)
+        public static DateTime LocalTimeTo(this DateTime timestamp, TimeZoneInfo destinationTimeZone)
         {
-            return TimeZoneInfo.ConvertTime(localTimestamp, TimeZoneInfo.Local, destinationTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, destinationTimeZone);
         }
 
         /// <summary>

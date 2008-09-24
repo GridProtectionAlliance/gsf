@@ -412,7 +412,7 @@ namespace TVA
         /// <summary>Tests to see if a string is contains only digits based on Char.IsDigit function.</summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are digits; otherwise, false.</returns>
-        /// <seealso cref="char.IsDigit"/>
+        /// <seealso cref="char.IsDigit(char)"/>
         public static bool IsAllDigits(this string value)
         {
             if (string.IsNullOrEmpty(value)) return false;
@@ -432,7 +432,7 @@ namespace TVA
         /// <summary>Tests to see if a string contains only numbers based on Char.IsNumber function.</summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are numbers; otherwise, false.</returns>
-        /// <seealso cref="char.IsNumber"/>
+        /// <seealso cref="char.IsNumber(char)"/>
         public static bool IsAllNumbers(this string value)
         {
             if (string.IsNullOrEmpty(value)) return false;

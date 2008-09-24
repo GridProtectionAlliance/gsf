@@ -201,7 +201,7 @@ namespace TVA.Net.Ftp
 
         #region [ Methods ]
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {

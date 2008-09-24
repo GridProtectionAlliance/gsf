@@ -46,7 +46,7 @@ namespace TVA
         /// This function will throw an error during deserialization if the input data is invalid,
         /// consider using TryGetObject to prevent needing to implement exception handling.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="System.InvalidOperationException">
         /// An error occurred during deserialization. The original exception is available using 
         /// the InnerException property.
         /// </exception>
@@ -80,8 +80,8 @@ namespace TVA
         /// This function will throw an error during deserialization if the input data is invalid,
         /// consider using TryGetObject to prevent needing to implement exception handling.
         /// </remarks>
-        /// <exception cref="SerializationException">Serialized object data is invalid or length is 0.</exception>
-        /// <exception cref="SecurityException">The caller does not have the required permission. </exception>
+        /// <exception cref="System.Runtime.Serialization.SerializationException">Serialized object data is invalid or length is 0.</exception>
+        /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
         public static T GetObject<T>(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
@@ -112,8 +112,8 @@ namespace TVA
         /// This function will throw an error during deserialization if the input data is invalid,
         /// consider using TryGetObject to prevent needing to implement exception handling.
         /// </remarks>
-        /// <exception cref="SerializationException">Serialized object data is invalid or length is 0.</exception>
-        /// <exception cref="SecurityException">The caller does not have the required permission. </exception>
+        /// <exception cref="System.Runtime.Serialization.SerializationException">Serialized object data is invalid or length is 0.</exception>
+        /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
         public static object GetObject(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
