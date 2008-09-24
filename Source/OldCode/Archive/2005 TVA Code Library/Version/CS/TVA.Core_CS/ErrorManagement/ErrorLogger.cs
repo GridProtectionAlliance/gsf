@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -34,7 +35,6 @@ using TVA.Identity;
 using TVA.IO;
 using TVA.Net.Smtp;
 using TVA.Reflection;
-using System.Drawing.Imaging;
 
 namespace TVA.ErrorManagement
 {
@@ -152,6 +152,9 @@ namespace TVA.ErrorManagement
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorLogger"/> class.
+        /// </summary>
         public ErrorLogger()
         {
             m_logToUI = DefaultLogToUI;
@@ -377,6 +380,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the category under which the settings of <see cref="ErrorLogger"/> object are to be saved
         /// in the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
+        /// <exception cref="ArgumentNullException">value being set is null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategoryName),
         Description("Category under which the settings of ErrorLogger object are to be saved in the config file if the PersistSettings property is set to true.")]
@@ -388,14 +392,9 @@ namespace TVA.ErrorManagement
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    m_settingsCategoryName = value;
-                }
-                else
-                {
-                    throw (new ArgumentNullException("SettingsCategoryName"));
-                }
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+                m_settingsCategoryName = value;
             }
         }
 
@@ -439,6 +438,7 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Gets or sets the entry point of the application.
         /// </summary>
+        /// <exception cref="ArgumentNullException">value being set is null.</exception>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Assembly ApplicationRoot
@@ -449,6 +449,8 @@ namespace TVA.ErrorManagement
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException();
                 m_applicationRoot = value;
             }
         }
@@ -456,6 +458,7 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Gets or sets the method that provides common text stating what could have possibly caused the exception.
         /// </summary>
+        /// <exception cref="ArgumentNullException">value being set is null.</exception>
         /// <example>
         /// Sample text:
         /// <para>
@@ -473,6 +476,8 @@ namespace TVA.ErrorManagement
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException();
                 m_errorTextMethod = value;
             }
         }
@@ -480,6 +485,7 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Gets or sets the method that provides text stating what is going to happen as a result of the exception.
         /// </summary>
+        /// <exception cref="ArgumentNullException">value being set is null.</exception>
         /// <example>
         /// Sample text:
         /// <para>The action you requested was not performed.</para>
@@ -494,6 +500,8 @@ namespace TVA.ErrorManagement
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException();
                 m_scopeTextMethod = value;
             }
         }
@@ -502,6 +510,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the method that provides text stating the action(s) that can be taken by the end-user after
         /// an exception is encountered.
         /// </summary>
+        /// <exception cref="ArgumentNullException">value being set is null.</exception>
         /// <example>
         /// Sample text:
         /// <para>Close your browser, navigate back to the website, and try repeating you last action.</para>
@@ -516,6 +525,8 @@ namespace TVA.ErrorManagement
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException();
                 m_actionTextMethod = value;
             }
         }
@@ -523,6 +534,7 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Gets or sets the method that provides text contaning detailed information about the encountered exception.
         /// </summary>
+        /// <exception cref="ArgumentNullException">value being set is null.</exception>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<string> MoreInfoTextMethod
@@ -533,6 +545,8 @@ namespace TVA.ErrorManagement
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException();
                 m_moreInfoTextMethod = value;
             }
         }
@@ -833,7 +847,10 @@ namespace TVA.ErrorManagement
             }
         }
 
-        private void ExceptionToWindowsGui()
+        /// <summary>
+        /// Shows exception information in a Windows Application.
+        /// </summary>
+        protected virtual void ExceptionToWindowsGui()
         {
             GelDialog dialog = new GelDialog();
             dialog.Text = string.Format(dialog.Text, ApplicationName, null);
@@ -846,7 +863,10 @@ namespace TVA.ErrorManagement
             dialog.ShowDialog();
         }
 
-        private void ExceptionToWindowsCui()
+        /// <summary>
+        /// Shows exception information in a Console Application.
+        /// </summary>
+        protected virtual void ExceptionToWindowsCui()
         {
             StringBuilder message = new StringBuilder();
             message.AppendFormat("{0} has encountered a problem", ApplicationName);
@@ -875,6 +895,9 @@ namespace TVA.ErrorManagement
             System.Console.Write(message.ToString());
         }
 
+        /// <summary>
+        /// Shows exception information in a Web Site.
+        /// </summary>
         private void ExceptionToWebPage()
         {
             StringBuilder html = new StringBuilder();
@@ -1094,11 +1117,11 @@ namespace TVA.ErrorManagement
             StringBuilder scopeText = new StringBuilder();
             switch (ApplicationType)
             {
-                case TVA.ApplicationType.WindowsCui:
-                case TVA.ApplicationType.WindowsGui:
+                case ApplicationType.WindowsCui:
+                case ApplicationType.WindowsGui:
                     scopeText.Append("The action you requested was not performed.");
                     break;
-                case TVA.ApplicationType.Web:
+                case ApplicationType.Web:
                     scopeText.Append("The current page will not load.");
                     break;
             }
@@ -1111,11 +1134,11 @@ namespace TVA.ErrorManagement
             StringBuilder actionText = new StringBuilder();
             switch (ApplicationType)
             {
-                case TVA.ApplicationType.WindowsCui:
-                case TVA.ApplicationType.WindowsGui:
+                case ApplicationType.WindowsCui:
+                case ApplicationType.WindowsGui:
                     actionText.AppendFormat("Restart {0}, and try repeating your last action. ", ApplicationName);
                     break;
-                case TVA.ApplicationType.Web:
+                case ApplicationType.Web:
                     actionText.AppendFormat("Close your browser, navigate back to the {0} website, and try repeating you last action. ", ApplicationName);
                     break;
             }
@@ -1146,11 +1169,11 @@ namespace TVA.ErrorManagement
             string bullet;
             switch (ApplicationType)
             {
-                case TVA.ApplicationType.WindowsCui:
+                case ApplicationType.WindowsCui:
                     bullet = "-";
                     break;
-                case TVA.ApplicationType.Web:
-                case TVA.ApplicationType.WindowsGui:
+                case ApplicationType.Web:
+                case ApplicationType.WindowsGui:
                     bullet = "•";
                     break;
             }
