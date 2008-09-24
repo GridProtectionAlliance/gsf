@@ -63,7 +63,7 @@ namespace TVA.Net.Ftp
 
         #endregion
 
-d        #region [ Constructors ]
+        #region [ Constructors ]
 
         public Session()
             : this(false)
