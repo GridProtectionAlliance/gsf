@@ -35,6 +35,7 @@ using TVA.Identity;
 using TVA.IO;
 using TVA.Net.Smtp;
 using TVA.Reflection;
+using System.IO;
 
 namespace TVA.ErrorManagement
 {
@@ -1277,32 +1278,12 @@ namespace TVA.ErrorManagement
 
         #region [ Static ]
 
-        public static string ExceptionToString(Exception ex)
-        {
-
-            Assembly parentAssembly;
-            switch (TVA.Common.GetApplicationType())
-            {
-                case TVA.ApplicationType.WindowsCui:
-                case ApplicationType.WindowsGui:
-                    parentAssembly = System.Reflection.Assembly.GetEntryAssembly();
-                    break;
-                case ApplicationType.Web:
-                    parentAssembly = System.Reflection.Assembly.GetCallingAssembly();
-                    break;
-            }
-
-            return ExceptionToString(ex, parentAssembly);
-
-        }
-
         public static string SystemInfo()
         {
-
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Date and Time:         {0}", DateTime.Now);
             info.AppendLine();
-            switch (TVA.Common.GetApplicationType())
+            switch (Common.GetApplicationType())
             {
                 case ApplicationType.WindowsCui:
                 case ApplicationType.WindowsGui:
@@ -1350,35 +1331,48 @@ namespace TVA.ErrorManagement
             }
 
             return info.ToString();
-
         }
 
         public static string ApplicationInfo()
         {
-
-            System.Reflection.Assembly parentAssembly;
-            switch (TVA.Common.GetApplicationType())
+            Assembly parentAssembly;
+            switch (Common.GetApplicationType())
             {
-                case TVA.ApplicationType.WindowsCui:
+                case ApplicationType.WindowsCui:
                 case ApplicationType.WindowsGui:
                     // For a windows application the entry assembly will be the executable.
-                    parentAssembly = System.Reflection.Assembly.GetEntryAssembly();
+                    parentAssembly = Assembly.GetEntryAssembly();
                     break;
                 case ApplicationType.Web:
                     // For a web site in .Net 2.0 we don't have an entry assembly. However, at this point the
                     // calling assembly will be consumer of this function (i.e. one of the web site DLLs).
                     // See: http://msdn.microsoft.com/msdnmag/issues/06/01/ExtremeASPNET/
-                    parentAssembly = System.Reflection.Assembly.GetCallingAssembly();
+                    parentAssembly = Assembly.GetCallingAssembly();
                     break;
             }
 
             return ApplicationInfo(parentAssembly);
+        }
 
+        public static string ExceptionToString(Exception ex)
+        {
+            Assembly parentAssembly;
+            switch (Common.GetApplicationType())
+            {
+                case ApplicationType.WindowsCui:
+                case ApplicationType.WindowsGui:
+                    parentAssembly = Assembly.GetEntryAssembly();
+                    break;
+                case ApplicationType.Web:
+                    parentAssembly = Assembly.GetCallingAssembly();
+                    break;
+            }
+
+            return ExceptionToString(ex, parentAssembly);
         }
 
         public static string ExceptionGeneralInfo(Exception ex)
         {
-
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Exception Source:      {0}", ex.Source);
             info.AppendLine();
@@ -1393,12 +1387,10 @@ namespace TVA.ErrorManagement
             }
 
             return info.ToString();
-
         }
 
         public static string ExceptionStackTrace(Exception ex)
         {
-
             StringBuilder trace = new StringBuilder();
             StackTrace stack = new StackTrace(ex, true);
             for (int i = 0; i <= stack.FrameCount - 1; i++)
@@ -1430,7 +1422,7 @@ namespace TVA.ErrorManagement
 
                 if (!string.IsNullOrEmpty(codeFileName))
                 {
-                    trace.Append(System.IO.Path.GetFileName(codeFileName));
+                    trace.Append(Path.GetFileName(codeFileName));
                     trace.AppendFormat(": Ln {0:#0000}", stackFrame.GetFileLineNumber());
                     trace.AppendFormat(", Col {0:#00}", stackFrame.GetFileColumnNumber());
                     // if IL is available, append IL location info
@@ -1441,10 +1433,10 @@ namespace TVA.ErrorManagement
                 }
                 else
                 {
-                    ApplicationType appType = TVA.Common.GetApplicationType();
-                    if (appType == ApplicationType.WindowsCui || appType == TVA.ApplicationType.WindowsGui)
+                    ApplicationType appType = Common.GetApplicationType();
+                    if (appType == ApplicationType.WindowsCui || appType == ApplicationType.WindowsGui)
                     {
-                        trace.Append(System.IO.Path.GetFileName(Assembly.GetEntryAssembly().CodeBase));
+                        trace.Append(Path.GetFileName(Assembly.GetEntryAssembly().CodeBase));
                     }
                     else
                     {
@@ -1457,65 +1449,61 @@ namespace TVA.ErrorManagement
             }
 
             return trace.ToString();
-
         }
 
-        private static string ExceptionToString(Exception ex, System.Reflection.Assembly parentAssembly)
+        private static string ExceptionToString(Exception ex, Assembly parentAssembly)
         {
 
-            System.Text.StringBuilder with_1 = new StringBuilder();
+            StringBuilder text = new StringBuilder();
             if (ex.InnerException != null)
             {
                 // sometimes the original exception is wrapped in a more relevant outer exception
                 // the detail exception is the "inner" exception
                 // see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
-                with_1.Append("(Inner Exception)");
-                with_1.AppendLine();
-                with_1.Append(ExceptionToString(ex.InnerException));
-                with_1.AppendLine();
-                with_1.Append("(Outer Exception)");
-                with_1.AppendLine();
+                text.Append("(Inner Exception)");
+                text.AppendLine();
+                text.Append(ExceptionToString(ex.InnerException));
+                text.AppendLine();
+                text.Append("(Outer Exception)");
+                text.AppendLine();
             }
 
             // Get general system information.
-            with_1.Append(SystemInfo());
-            with_1.AppendLine();
+            text.Append(SystemInfo());
+            text.AppendLine();
             // Get general application information.
-            with_1.Append(ApplicationInfo(parentAssembly));
-            with_1.AppendLine();
+            text.Append(ApplicationInfo(parentAssembly));
+            text.AppendLine();
             // Get general exception information.
-            with_1.Append(ExceptionGeneralInfo(ex));
-            with_1.AppendLine();
+            text.Append(ExceptionGeneralInfo(ex));
+            text.AppendLine();
             // Get the stack trace for the exception.
-            with_1.Append("---- Stack Trace ----");
-            with_1.AppendLine();
-            with_1.Append(ExceptionStackTrace(ex));
-            with_1.AppendLine();
+            text.Append("---- Stack Trace ----");
+            text.AppendLine();
+            text.Append(ExceptionStackTrace(ex));
+            text.AppendLine();
 
-            return with_1.ToString();
-
+            return text.ToString();
         }
 
-        private static string ApplicationInfo(System.Reflection.Assembly parentAssembly)
+        private static string ApplicationInfo(Assembly parentAssembly)
         {
-
-            System.Text.StringBuilder with_1 = new StringBuilder();
+            StringBuilder text = new StringBuilder();
             AssemblyInfo parentAssemblyInfo = new AssemblyInfo(parentAssembly);
-            with_1.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
-            with_1.AppendLine();
-            with_1.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
-            with_1.AppendLine();
-            with_1.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
-            with_1.AppendLine();
-            with_1.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
-            with_1.AppendLine();
-            with_1.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
-            with_1.AppendLine();
-            with_1.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
-            with_1.AppendLine();
+            text.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
+            text.AppendLine();
+            text.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
+            text.AppendLine();
+            text.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
+            text.AppendLine();
+            text.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
+            text.AppendLine();
+            text.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
+            text.AppendLine();
+            text.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
+            text.AppendLine();
 
-            return with_1.ToString();
-
+            return text.ToString();
         }
 
         #endregion
