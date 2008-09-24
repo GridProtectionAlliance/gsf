@@ -37,6 +37,7 @@
 
 using System;
 using System.Text;
+using System.Globalization;
 
 namespace TVA
 {
@@ -430,20 +431,39 @@ namespace TVA
             return TimeZoneInfo.ConvertTime(timestamp, sourceTimeZone, destinationTimeZone);
         }
 
-        /// <summary>Gets the 3-letter month abbreviation for month of the timestamp.</summary>
+        /// <summary>Gets the abbreviated month name for month of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which month name is extracted.</param>
-        /// <remarks>Month abbreviations are English only.</remarks>
-        public static string ShortMonthName(this DateTime timestamp)
+        public static string AbbreviatedMonthName(this DateTime timestamp)
         {
-            return Common.ShortMonthName(timestamp.Month);
+            return DateTimeFormatInfo.CurrentInfo.GetAbbreviatedMonthName(timestamp.Month);
         }
 
         /// <summary>Gets the full month name for month of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which month name is extracted.</param>
-        /// <remarks>Month names are English only.</remarks>
-        public static string LongMonthName(this DateTime timestamp)
+        public static string MonthName(this DateTime timestamp)
         {
-            return Common.LongMonthName(timestamp.Month);
+            return DateTimeFormatInfo.CurrentInfo.GetMonthName(timestamp.Month);
+        }
+
+        /// <summary>Gets the abbreviated weekday name for weekday of the timestamp.</summary>
+        /// <param name="timestamp">Timestamp from which weekday name is extracted.</param>
+        public static string AbbreviatedWeekdayName(this DateTime timestamp)
+        {
+            return DateTimeFormatInfo.CurrentInfo.GetAbbreviatedDayName(timestamp.DayOfWeek);
+        }
+
+        /// <summary>Gets the shortest weekday name for weekday of the timestamp.</summary>
+        /// <param name="timestamp">Timestamp from which weekday name is extracted.</param>
+        public static string ShortWeekdayName(this DateTime timestamp)
+        {
+            return DateTimeFormatInfo.CurrentInfo.GetShortestDayName(timestamp.DayOfWeek);
+        }
+
+        /// <summary>Gets the full weekday name for weekday of the timestamp.</summary>
+        /// <param name="timestamp">Timestamp from which weekday name is extracted.</param>
+        public static string WeekdayName(this DateTime timestamp)
+        {
+            return DateTimeFormatInfo.CurrentInfo.GetDayName(timestamp.DayOfWeek);
         }
     }
 }
