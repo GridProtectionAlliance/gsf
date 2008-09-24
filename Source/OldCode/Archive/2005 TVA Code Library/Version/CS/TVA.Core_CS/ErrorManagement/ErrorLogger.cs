@@ -34,6 +34,7 @@ using TVA.Identity;
 using TVA.IO;
 using TVA.Net.Smtp;
 using TVA.Reflection;
+using System.Drawing.Imaging;
 
 namespace TVA.ErrorManagement
 {
@@ -108,6 +109,11 @@ namespace TVA.ErrorManagement
         public const string DefaultSettingsCategoryName = "ErrorLogger";
 
         /// <summary>
+        /// Default value for HandleUnhandledException property.
+        /// </summary>
+        public const bool DefaultHandleUnhandledException = true;
+
+        /// <summary>
         /// Default value for ExitOnUnhandledException property.
         /// </summary>
         public const bool DefaultExitOnUnhandledException = false;
@@ -124,6 +130,7 @@ namespace TVA.ErrorManagement
         private string m_contactPhone;
         private bool m_persistSettings;
         private string m_settingsCategoryName;
+        private bool m_handleUnhandledException;
         private bool m_exitOnUnhandledException;
         private Assembly m_applicationRoot;
         private Exception m_lastException;
@@ -139,6 +146,7 @@ namespace TVA.ErrorManagement
         private bool m_logToEventLogOK;
         private bool m_logToScreenshotOK;
         private ApplicationType m_appType;
+        private bool m_disposed;
 
         #endregion
 
@@ -187,7 +195,7 @@ namespace TVA.ErrorManagement
         Description("Indicates whether exception information is to be displayed on screen.")]
         public bool LogToUI
         {
-            get 
+            get
             {
                 return m_logToUI;
             }
@@ -311,11 +319,11 @@ namespace TVA.ErrorManagement
 
         /// <summary>
         /// Gets or sets the email address where email messages contaning exception information are to be sent 
-        /// when the <see cref="LogToEmail"/> property is set to True.
+        /// when the <see cref="LogToEmail"/> property is set to true.
         /// </summary>
         [Category("Settings"),
         DefaultValue(DefaultContactEmail),
-        Description("Email address where email messages contaning exception information are to be sent when the LogToEmail property is set to True.")]
+        Description("Email address where email messages contaning exception information are to be sent when the LogToEmail property is set to true.")]
         public string ContactEmail
         {
             get
@@ -367,11 +375,11 @@ namespace TVA.ErrorManagement
 
         /// <summary>
         /// Gets or sets the category under which the settings of <see cref="ErrorLogger"/> object are to be saved
-        /// in the config file if the <see cref="PersistSettings"/> property is set to True.
+        /// in the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategoryName),
-        Description("Category under which the settings of ErrorLogger object are to be saved in the config file if the PersistSettings property is set to True.")]
+        Description("Category under which the settings of ErrorLogger object are to be saved in the config file if the PersistSettings property is set to true.")]
         public string SettingsCategoryName
         {
             get
@@ -388,6 +396,25 @@ namespace TVA.ErrorManagement
                 {
                     throw (new ArgumentNullException("SettingsCategoryName"));
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="ErrorLogger"/> object must register 
+        /// itself to handle exceptions that are not trapped inside of a try-catch block.
+        /// </summary>
+        [Category("Behavior"),
+        DefaultValue(DefaultHandleUnhandledException),
+        Description("Indicates whether the ErrorLogger object must register itself to handle exceptions that are not trapped inside of a try-catch block.")]
+        public bool HandleUnhandledException
+        {
+            get
+            {
+                return m_handleUnhandledException;
+            }
+            set
+            {
+                m_handleUnhandledException = value;
             }
         }
 
@@ -592,33 +619,26 @@ namespace TVA.ErrorManagement
 
         #region [ Methods ]
 
-        public void Register()
-        {
-            if (!Debugger.IsAttached)
-            {
-                Application.ThreadException += ThreadException;                     // For winform applications.
-                AppDomain.CurrentDomain.UnhandledException += UnhandledException;   // For console applications.
-            }
-        }
-
-        public void Unregister()
-        {
-            if (!Debugger.IsAttached)
-            {
-                Application.ThreadException -= ThreadException;
-                AppDomain.CurrentDomain.UnhandledException -= UnhandledException;
-            }
-        }
-
+        /// <summary>
+        /// Logs information about the encountered exception.
+        /// </summary>
+        /// <param name="ex">Encountered exception whose information is to be logged.</param>
         public void Log(Exception ex)
         {
             Log(ex, false);
         }
 
+        /// <summary>
+        /// Logs information about the encountered exception.
+        /// </summary>
+        /// <param name="ex">Encountered exception whose information is to be logged.</param>
+        /// <param name="exitApplication">A boolean value that indicates whether the current application must exist.</param>
         public void Log(Exception ex, bool exitApplication)
         {
+            // Save the encountered exception.
             m_lastException = ex;
 
+            // Iterate through all of the registered logger methods and invoke them for processing the exception.
             foreach (Action<Exception> logger in m_loggers)
             {
                 try
@@ -627,17 +647,54 @@ namespace TVA.ErrorManagement
                 }
                 catch
                 {
-
+                    // Absorb any exception.
                 }
             }
 
-            if (exitApplication && (ApplicationType == TVA.ApplicationType.WindowsCui || ApplicationType == TVA.ApplicationType.WindowsGui))
+            // Exit the current application if it is specified to do so.
+            if (exitApplication)
             {
-                Application.Exit();
-                Process.GetCurrentProcess().Kill();
+                switch (ApplicationType)
+                {
+                    // In windows environment we can simply call Application.Exit() to exit the application, but we 
+                    // also kill the current process to ensure that the current application terminates immediately 
+                    // since Application.Exit() doesn't always work as there may be foreground and background threads 
+                    // preventing the application from terminating.
+                    case ApplicationType.WindowsGui:
+                        break;
+                    case ApplicationType.WindowsCui:
+                        Application.Exit();
+                        Process.GetCurrentProcess().Kill();
+                        break;
+                    // In web environment we unload the app domain of the current application instead of terminating
+                    // the entire process, because in ASP.NET a single process (App Pool) can host one or more 
+                    // app domains (web sites or web services).
+                    case ApplicationType.Web:
+                        HttpRuntime.UnloadAppDomain();
+                        break;
+                }
             }
         }
 
+        /// <summary>
+        /// Initializes the <see cref="ErrorLogger"/> object.
+        /// </summary>
+        /// <remarks>
+        /// This method is to be called by user code directly only if the <see cref="ErrorLogger"/> object is not 
+        /// defined through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            LoadSettings();     // Load settings from the config file.
+            Register();         // Register the logger for unhandled exceptions.
+            m_logFile.Open();   // Open the log file.
+            if (m_applicationRoot == null) m_applicationRoot = Assembly.GetCallingAssembly();
+        }
+
+        /// <summary>
+        /// Loads saved settings for the <see cref="ErrorLogger"/> object from the config file if the
+        /// <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
         public void LoadSettings()
         {
             try
@@ -647,24 +704,29 @@ namespace TVA.ErrorManagement
                     ConfigurationFile config = ConfigurationFile.Current;
                     CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategoryName];
 
-                    LogToUI = settings["LogToUI"].ValueAs(m_logToUI);
-                    LogToFile = settings["LogToFile"].ValueAs(m_logToFile);
-                    LogToEmail = settings["LogToEmail"].ValueAs(m_logToEmail);
-                    LogToEventLog = settings["LogToEventLog"].ValueAs(m_logToEventLog);
-                    LogToScreenshot = settings["LogToScreenshot"].ValueAs(m_logToScreenshot);
-                    SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
-                    ContactEmail = settings["ContactEmail"].ValueAs(m_contactEmail);
-                    ContactName = settings["ContactName"].ValueAs(m_contactName);
-                    ContactPhone = settings["ContactPhone"].ValueAs(m_contactPhone);
-                    ExitOnUnhandledException = settings["ExitOnUnhandledException"].ValueAs(m_exitOnUnhandledException);
+                    LogToUI = settings["LogToUI", true].ValueAs(m_logToUI);
+                    LogToFile = settings["LogToFile", true].ValueAs(m_logToFile);
+                    LogToEmail = settings["LogToEmail", true].ValueAs(m_logToEmail);
+                    LogToEventLog = settings["LogToEventLog", true].ValueAs(m_logToEventLog);
+                    LogToScreenshot = settings["LogToScreenshot", true].ValueAs(m_logToScreenshot);
+                    SmtpServer = settings["SmtpServer", true].ValueAs(m_smtpServer);
+                    ContactEmail = settings["ContactEmail", true].ValueAs(m_contactEmail);
+                    ContactName = settings["ContactName", true].ValueAs(m_contactName);
+                    ContactPhone = settings["ContactPhone", true].ValueAs(m_contactPhone);
+                    HandleUnhandledException = settings["HandleUnhandledException", true].ValueAs(m_handleUnhandledException);
+                    ExitOnUnhandledException = settings["ExitOnUnhandledException", true].ValueAs(m_exitOnUnhandledException);
                 }
             }
             catch
             {
-                // We'll encounter exceptions if the settings are not present in the config file.
+                // Absorb any encountered exception.
             }
         }
 
+        /// <summary>
+        /// Saves settings for the <see cref="ErrorLogger"/> object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>
         public void SaveSettings()
         {
             if (m_persistSettings)
@@ -680,58 +742,94 @@ namespace TVA.ErrorManagement
                     settings["LogToEmail", true].Update(m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
                     settings["LogToEventLog", true].Update(m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
                     settings["LogToScreenshot", true].Update(m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
-                    settings["SmtpServer", true].Update(m_smtpServer, "Name of the SMTP server to be used for sending the email message.");
+                    settings["SmtpServer", true].Update(m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
                     settings["ContactName", true].Update(m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
                     settings["ContactEmail", true].Update(m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
                     settings["ContactPhone", true].Update(m_contactPhone, "Phone number of the person that the end-user can contact when an exception is encountered.");
+                    settings["HandleUnhandledException", true].Update(m_handleUnhandledException, "True if unhandled exceptions are to be handled automatically; otherwise False.");
                     settings["ExitOnUnhandledException", true].Update(m_exitOnUnhandledException, "True if the application must exit when an unhandled exception is encountered; otherwise False.");
                     config.Save();
                 }
                 catch
                 {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                    // Absorb any encountered exception.
                 }
             }
         }
 
+        /// <summary>
+        /// Performs necessary operations before the <see cref="ErrorLogger"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// This method should never be called by user code directly. This method exists solely for use by the 
+        /// designer if the <see cref="ErrorLogger"/> object is defined through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-
+            // Nothing needs to be done before component is initialized.
         }
 
+        /// <summary>
+        /// Performs necessary operations after the <see cref="ErrorLogger"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// This method should never be called by user code directly. This method exists solely for use by the 
+        /// designer if the <see cref="ErrorLogger"/> object is defined through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
             if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
             {
-                LoadSettings(); // Load settings from the config file.
-                Register(); // Start the logger automatically if specified.
-                m_applicationRoot = System.Reflection.Assembly.GetCallingAssembly();
+                Initialize();
             }
         }
 
-        private void ExceptionToUI(Exception exception)
+        /// <summary>
+        /// Registers the <see cref="ErrorLogger"/> object to handle unhandled exceptions if the 
+        /// <see cref="HandleUnhandledException"/> property is set to true.
+        /// </summary>
+        protected virtual void Register()
         {
-            if (m_logToUI)
+            if (m_handleUnhandledException && !Debugger.IsAttached)
             {
-                try
-                {
-                    switch (ApplicationType)
-                    {
-                        case TVA.ApplicationType.WindowsCui:
-                            ExceptionToWindowsCui();
-                            break;
-                        case TVA.ApplicationType.WindowsGui:
-                            ExceptionToWindowsGui();
-                            break;
-                        case TVA.ApplicationType.Web:
-                            ExceptionToWebPage();
-                            break;
-                    }
-                }
-                catch
-                {
+                Application.ThreadException += ThreadException;                     // For winform applications.
+                AppDomain.CurrentDomain.UnhandledException += UnhandledException;   // For console applications.
+            }
+        }
 
-                }
+        /// <summary>
+        /// Unregister the <see cref="ErrorLogger"/> object from handling unhandled exceptions.
+        /// </summary>
+        protected virtual void Unregister()
+        {
+            if (!Debugger.IsAttached)
+            {
+                Application.ThreadException -= ThreadException;
+                AppDomain.CurrentDomain.UnhandledException -= UnhandledException;
+            }
+        }
+
+        /// <summary>
+        /// Logs encountered exception to the screen.
+        /// </summary>
+        /// <param name="exception">Exception that was encountered.</param>
+        protected virtual void ExceptionToUI(Exception exception)
+        {
+            if (!m_logToUI) return;
+
+            switch (ApplicationType)
+            {
+                case ApplicationType.Web:
+                    ExceptionToWebPage();
+                    break;
+                case ApplicationType.WindowsCui:
+                    ExceptionToWindowsCui();
+                    break;
+                case ApplicationType.WindowsGui:
+                    ExceptionToWindowsGui();
+                    break;
             }
         }
 
@@ -869,119 +967,115 @@ namespace TVA.ErrorManagement
             HttpContext.Current.Server.ClearError();
         }
 
-        private void ExceptionToFile(Exception exception)
+        /// <summary>
+        /// Logs encountered exception to a log file.
+        /// </summary>
+        /// <param name="exception">Exception that was encountered.</param>
+        protected virtual void ExceptionToFile(Exception exception)
         {
-            if (m_logToFile)
+            if (!m_logToFile) return;
+
+            m_logToFileOK = false;
+            m_logFile.WriteTimestampedLine(ExceptionToString(exception, m_applicationRoot));
+            m_logToFileOK = true;
+        }
+
+        /// <summary>
+        /// Logs encountered exception to an email message.
+        /// </summary>
+        /// <param name="exception">Exception that was encountered.</param>
+        protected virtual void ExceptionToEmail(Exception exception)
+        {
+            if (!m_logToEmail || string.IsNullOrEmpty(m_contactEmail)) return;
+
+            m_logToEmailOK = false;
+            Mail email = new Mail();
+            email.From = string.Format("{0}@tva.gov", Environment.MachineName);
+            email.Recipients = m_contactEmail;
+            email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
+            email.Body = ExceptionToString(exception, m_applicationRoot);
+            email.Attachments = GetScreenshotFileName();
+            email.SmtpServer = m_smtpServer;
+            email.Send();
+            m_logToEmailOK = true;
+        }
+
+        /// <summary>
+        /// Logs encountered exception to the event log.
+        /// </summary>
+        /// <param name="exception">Exception that was encountered.</param>
+        protected virtual void ExceptionToEventLog(Exception exception)
+        {
+            if (!m_logToEventLog) return;
+
+            m_logToEventLogOK = false;
+            // Write the formatted exception message to the event log.
+            EventLog.WriteEntry(ApplicationName, 
+                                ExceptionToString(exception, m_applicationRoot), 
+                                EventLogEntryType.Error);
+            m_logToEventLogOK = true;
+        }
+
+        /// <summary>
+        /// Takes a screenshot of the user's desktop when the exception is encountered.
+        /// </summary>
+        /// <param name="exception">Exception that was encountered.</param>
+        protected virtual void ExceptionToScreenshot(Exception exception)
+        {
+            if (!m_logToScreenshot || 
+                ApplicationType != ApplicationType.WindowsCui || 
+                ApplicationType != ApplicationType.WindowsGui) return;
+
+            m_logToScreenshotOK = false;
+
+            Size fullScreen = new Size(0, 0);
+            foreach (Screen myScreen in Screen.AllScreens)
+            {
+                if (fullScreen.IsEmpty)
+                {
+                    fullScreen = myScreen.Bounds.Size;
+                }
+                else
+                {
+                    if (myScreen.Bounds.Location.X > 0)
+                        fullScreen.Width += myScreen.Bounds.Width;
+                    if (myScreen.Bounds.Location.Y > 0)
+                        fullScreen.Height += myScreen.Bounds.Height;
+                }
+            }
+
+            using (Bitmap screenshot = TVA.Drawing.Image.CaptureScreenshot(fullScreen, ImageFormat.Png))
+            {
+                screenshot.Save(GetScreenshotFileName());
+            }
+
+            m_logToScreenshotOK = true;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ErrorLogger"/> object and optionally releases the 
+        /// managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
             {
                 try
                 {
-                    m_logToFileOK = false;
-
-                    m_logFile.Name = LogFileName();
-                    if (!m_logFile.IsOpen)
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings();
+                    if (disposing)
                     {
-                        m_logFile.Open();
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Unregister();
+                        m_logFile.Dispose();
                     }
-                    m_logFile.WriteTimestampedLine(ExceptionToString(exception, m_applicationRoot));
-
-                    m_logToFileOK = true;
-                }
-                catch
-                {
-
                 }
                 finally
                 {
-                    m_logFile.Close();
-                }
-            }
-        }
-
-        private void ExceptionToEmail(Exception exception)
-        {
-            if (m_logToEmail && !string.IsNullOrEmpty(m_contactEmail))
-            {
-                try
-                {
-                    m_logToEmailOK = false;
-
-                    Mail email = new Mail();
-                    email.From = string.Format("{0}@tva.gov", Environment.MachineName);
-                    email.Recipients = m_contactEmail;
-                    email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
-                    email.Body = ExceptionToString(exception, m_applicationRoot);
-                    email.Attachments = ScreenshotFileName();
-                    email.SmtpServer = m_smtpServer;
-                    email.Send();
-
-                    m_logToEmailOK = true;
-                }
-                catch
-                {
-
-                }
-            }
-        }
-
-        private void ExceptionToEventLog(Exception exception)
-        {
-            if (m_logToEventLog)
-            {
-                try
-                {
-                    m_logToEventLogOK = false;
-
-                    // Write the formatted exception message to the event log.
-                    EventLog.WriteEntry(ApplicationName, ExceptionToString(exception, m_applicationRoot), EventLogEntryType.Error);
-
-                    m_logToEventLogOK = true;
-                }
-                catch
-                {
-
-                }
-            }
-        }
-
-        private void ExceptionToScreenshot(Exception exception)
-        {
-            if (m_logToScreenshot && (ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
-            {
-                try
-                {
-                    m_logToScreenshotOK = false;
-
-                    Size fullScreen = new Size(0, 0);
-                    foreach (Screen myScreen in Screen.AllScreens)
-                    {
-                        if (fullScreen.IsEmpty)
-                        {
-                            fullScreen = myScreen.Bounds.Size;
-                        }
-                        else
-                        {
-                            if (myScreen.Bounds.Location.X > 0)
-                            {
-                                fullScreen.Width += myScreen.Bounds.Width;
-                            }
-                            if (myScreen.Bounds.Location.Y > 0)
-                            {
-                                fullScreen.Height += myScreen.Bounds.Height;
-                            }
-                        }
-                    }
-
-                    using (Bitmap screenshot = TVA.Drawing.Image.CaptureScreenshot(fullScreen, System.Drawing.Imaging.ImageFormat.Png))
-                    {
-                        screenshot.Save(ScreenshotFileName());
-                    }
-
-
-                    m_logToScreenshotOK = true;
-                }
-                catch
-                {
-
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
         }
@@ -1073,7 +1167,7 @@ namespace TVA.ErrorManagement
                     moreInfoText.Append("a screenshot was taken of the desktop at:");
                     moreInfoText.AppendLine();
                     moreInfoText.Append("   ");
-                    moreInfoText.Append(ScreenshotFileName());
+                    moreInfoText.Append(GetScreenshotFileName());
                 }
                 else
                 {
@@ -1107,7 +1201,7 @@ namespace TVA.ErrorManagement
                 }
                 moreInfoText.AppendLine();
                 moreInfoText.Append("   ");
-                moreInfoText.Append(LogFileName());
+                moreInfoText.Append(GetLogFileName());
                 moreInfoText.AppendLine();
             }
             if (m_logToEmail)
@@ -1136,12 +1230,12 @@ namespace TVA.ErrorManagement
             return moreInfoText.ToString();
         }
 
-        private string LogFileName()
+        private string GetLogFileName()
         {
             return FilePath.AbsolutePath(ApplicationName + ".ExceptionLog.txt");
         }
 
-        private string ScreenshotFileName()
+        private string GetScreenshotFileName()
         {
             return FilePath.AbsolutePath(ApplicationName + ".ExceptionScreenshot.png");
         }
