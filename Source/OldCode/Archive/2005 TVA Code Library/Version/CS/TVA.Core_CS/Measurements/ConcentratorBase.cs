@@ -169,7 +169,7 @@ namespace TVA.Measurements
         /// <summary>We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion.</summary>
         ~ConcentratorBase()
         {
-            Dispose(true);
+            Dispose(false);
         }
 
         #endregion

@@ -54,6 +54,11 @@ namespace TVA.Diagnostics
             m_counterValues = new List<double>();
         }
 
+        ~PerformanceCounter()
+        {
+            Dispose(false);
+        }
+
         #endregion
 
         #region [ Properties ]

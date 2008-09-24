@@ -51,7 +51,7 @@ namespace TVA.Measurements
 
         ~ImmediateMeasurements()
         {
-            Dispose(true);
+            Dispose(false);
         }
 
         #endregion

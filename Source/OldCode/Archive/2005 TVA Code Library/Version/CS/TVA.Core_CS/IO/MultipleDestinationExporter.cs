@@ -92,7 +92,7 @@ namespace TVA.IO
 
         ~MultipleDestinationExporter()
         {
-            Dispose(true);
+            Dispose(false);
         }
 
         #endregion
@@ -235,10 +235,7 @@ namespace TVA.IO
         protected void Dispose(bool disposing)
         {
             if (!m_disposed)
-            {
-                if (disposing)
-                    Shutdown();
-            }
+                Shutdown();
 
             m_disposed = true;
         }

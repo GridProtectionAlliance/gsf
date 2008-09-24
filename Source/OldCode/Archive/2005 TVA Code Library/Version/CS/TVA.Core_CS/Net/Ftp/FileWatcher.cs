@@ -94,7 +94,7 @@ namespace TVA.Net.Ftp
 
         ~FileWatcher()
         {
-            Dispose(true);
+            Dispose(false);
         }
 
         #endregion
@@ -203,39 +203,44 @@ namespace TVA.Net.Ftp
 
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            try
             {
-                if (disposing)
+                if (!m_disposed)
                 {
-                    Close();
-
-                    if (m_session != null)
+                    if (disposing)
                     {
-                        m_session.CommandSent -= Session_CommandSent;
-                        m_session.ResponseReceived -= Session_ResponseReceived;
-                        m_session.Dispose();
-                    }
-                    m_session = null;
+                        Close();
 
-                    if (m_watchTimer != null)
-                    {
-                        m_watchTimer.Elapsed -= WatchTimer_Elapsed;
-                        m_watchTimer.Dispose();
-                    }
-                    m_watchTimer = null;
+                        if (m_session != null)
+                        {
+                            m_session.CommandSent -= Session_CommandSent;
+                            m_session.ResponseReceived -= Session_ResponseReceived;
+                            m_session.Dispose();
+                        }
+                        m_session = null;
 
-                    if (m_restartTimer != null)
-                    {
-                        m_restartTimer.Elapsed -= RestartTimer_Elapsed;
-                        m_restartTimer.Dispose();
+                        if (m_watchTimer != null)
+                        {
+                            m_watchTimer.Elapsed -= WatchTimer_Elapsed;
+                            m_watchTimer.Dispose();
+                        }
+                        m_watchTimer = null;
+
+                        if (m_restartTimer != null)
+                        {
+                            m_restartTimer.Elapsed -= RestartTimer_Elapsed;
+                            m_restartTimer.Dispose();
+                        }
+                        m_restartTimer = null;
                     }
-                    m_restartTimer = null;
                 }
 
+                m_disposed = true;
+            }
+            finally
+            {
                 base.Dispose(disposing);
             }
-
-            m_disposed = true;
         }
 
         public virtual void Close()

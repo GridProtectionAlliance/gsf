@@ -57,7 +57,7 @@ namespace TVA.Measurements
 
         ~FrameQueue()
         {
-            Dispose(true);
+            Dispose(false);
         }
 
         #endregion
