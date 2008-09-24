@@ -46,12 +46,16 @@ namespace TVA.Data
     /// </summary>
     public static class DataExtensions
     {
+        #region [ Enumerations ]
+
         private enum ConnectionType
         {
             OleDb,
             SqlClient,
             OracleClient
         }
+
+        #endregion
 
         /// <summary>
         /// The default timeout duration used for executing SQL statements when timeout duration is not specified.
@@ -1054,7 +1058,7 @@ namespace TVA.Data
         #region [ Command Parameter Population Functions ]
 
         /// <summary>
-        ///  Takes the Command object and populates it with the given parameters.
+        ///  Takes the OleDbCommand object and populates it with the given parameters.
         /// </summary>
         public static void PopulateParameters(this OleDbCommand command, object[] parameters)
         {
@@ -1062,7 +1066,7 @@ namespace TVA.Data
         }
 
         /// <summary>
-        ///  Takes the Command object and populates it with the given parameters.
+        ///  Takes the SqlCommand object and populates it with the given parameters.
         /// </summary>
         public static void PopulateParameters(this SqlCommand command, object[] parameters)
         {
@@ -1070,7 +1074,7 @@ namespace TVA.Data
         }
 
         /// <summary>
-        ///  Takes the Command object and populates it with the given parameters.
+        ///  Takes the OracleCommand object and populates it with the given parameters.
         /// </summary>
         public static void PopulateParameters(this OracleCommand command, object[] parameters)
         {
