@@ -92,12 +92,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ErrorManagement\ErrorModule.cs" />
-    <Compile Include="ErrorManagement\GELDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ErrorManagement\GELDialog.Designer.cs">
-      <DependentUpon>GELDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
     <Compile Include="IO\Checksums\Adler32.cs" />
     <Compile Include="IO\Checksums\ChecksumExtensions.cs" />
@@ -299,9 +293,6 @@
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
     <EmbeddedResource Include="ErrorManagement\ErrorDialog.resx">
       <DependentUpon>ErrorDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ErrorManagement\GELDialog.resx">
-      <DependentUpon>GELDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="IO\IsamDataFileBase.resx">
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>

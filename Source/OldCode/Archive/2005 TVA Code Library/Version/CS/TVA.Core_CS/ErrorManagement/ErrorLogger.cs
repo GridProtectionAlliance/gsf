@@ -51,7 +51,7 @@ namespace TVA.ErrorManagement
     /// See: http://www.codeproject.com/script/articles/list_articles.asp?userid=450027
     /// </remarks>
     /// <seealso cref="ErrorModule"/>
-    [ToolboxBitmap(typeof(GlobalExceptionLogger))]
+    [ToolboxBitmap(typeof(ErrorLogger))]
     public class ErrorLogger : Component, IPersistSettings, ISupportInitialize
     {
         #region [ Members ]
@@ -846,9 +846,9 @@ namespace TVA.ErrorManagement
         /// </summary>
         protected virtual void ExceptionToWindowsGui()
         {
-            GelDialog dialog = new GelDialog();
+            ErrorDialog dialog = new ErrorDialog();
             dialog.Text = string.Format(dialog.Text, ApplicationName, null);
-            dialog.PictureBoxIcon.Image = System.Drawing.SystemIcons.Error.ToBitmap();
+            dialog.PictureBoxIcon.Image = SystemIcons.Error.ToBitmap();
             dialog.RichTextBoxError.Text = m_errorTextMethod();
             dialog.RichTextBoxScope.Text = m_scopeTextMethod();
             dialog.RichTextBoxAction.Text = m_actionTextMethod();
@@ -1158,7 +1158,7 @@ namespace TVA.ErrorManagement
 
         private string GetMoreInfoText()
         {
-            string bullet;
+            string bullet = string.Empty;
             switch (ApplicationType)
             {
                 case ApplicationType.WindowsCui:
@@ -1334,7 +1334,7 @@ namespace TVA.ErrorManagement
         /// <returns>Application information in text.</returns>
         public static string GetApplicationInfo()
         {
-            Assembly parentAssembly;
+            Assembly parentAssembly = null;
             switch (Common.GetApplicationType())
             {
                 case ApplicationType.WindowsCui:
