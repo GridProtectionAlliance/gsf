@@ -248,6 +248,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
+    <EmbeddedResource Include="ErrorManagement\ErrorDialog.resx">
+      <DependentUpon>ErrorDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ErrorManagement\GELDialog.resx">
       <DependentUpon>GELDialog.cs</DependentUpon>
     </EmbeddedResource>

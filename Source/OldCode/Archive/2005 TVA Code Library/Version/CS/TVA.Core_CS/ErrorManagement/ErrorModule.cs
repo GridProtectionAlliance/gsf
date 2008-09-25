@@ -25,8 +25,9 @@ using TVA.Configuration;
 namespace TVA.ErrorManagement
 {
     /// <summary>
-    /// 
+    /// Represents an HTTP module that can be used to handle exceptions globally in Web Sites and Web Services.
     /// </summary>
+    /// <seealso cref="ErrorLogger"/>
     /// <example>
     /// Usage in web.config:
     /// <code>
@@ -41,20 +42,36 @@ namespace TVA.ErrorManagement
     /// </example>
     public class ErrorModule : IHttpModule
     {
-        #region [ Methods ]
+        #region [ Members ]
 
+        // Fields
+        private HttpApplication m_context;
+
+        #endregion
+
+        #region [ Methods ]
+        
+        /// <summary>
+        /// Initializes the <see cref="ErrorModule"/> and prepares it to handle requests.
+        /// </summary>
+        /// <param name="context"></param>
         public void Init(HttpApplication context)
         {
-            context.Error += OnError;   // Register to be notified on unhandled exceptions.
+            m_context = context;        // Save reference to the application.   
+            m_context.Error += OnError; // Register to be notified for unhandled exceptions.
         }
 
+        /// <summary>
+        /// Disposes the resources (other than memory) used by the <see cref="ErrorModule"/>.
+        /// </summary>
         public void Dispose()
         {
-            Logger.Dispose();
+            m_context.Error -= OnError; // Unregister from being notified for unhandled exceptions.
         }
 
         private void OnError(object sender, System.EventArgs e)
         {
+            // Log the last encountered exception.
             Logger.Log(HttpContext.Current.Server.GetLastError());
         }
 
@@ -71,6 +88,9 @@ namespace TVA.ErrorManagement
             m_logger.Initialize();  // This will cause settings, if persisted previously, to be loaded.
         }
 
+        /// <summary>
+        /// Gets the <see cref="ErrorLogger"/> object used by the <see cref="ErrorModule"/> object for logging exceptions.
+        /// </summary>
         public static ErrorLogger Logger
         {
             get 
@@ -80,40 +100,5 @@ namespace TVA.ErrorManagement
         }
 
         #endregion
-        
-
-
-
-        //public void Init(System.Web.HttpApplication context)
-        //{
-        //    try
-        //    {
-        //        if (ConfigurationFile.Current.Settings[typeof(ErrorLogger).Name].Count == 0)
-        //        {
-        //            ErrorLogger logger = new ErrorLogger();
-        //            logger.PersistSettings = true;
-        //            logger.SaveSettings();
-        //        }
-        //    }
-        //    catch
-        //    {
-
-        //    }
-        //    context.Error += new System.EventHandler(OnError);
-        //}
-
-        //public void Dispose()
-        //{
-        //    // We do not have to dispose of anything.
-        //}
-
-        //private void OnError(object sender, System.EventArgs e)
-        //{
-        //    ErrorLogger logger = new ErrorLogger();
-        //    // Logs the encountered exception.
-        //    logger.BeginInit();
-        //    logger.EndInit();
-        //    logger.Log(HttpContext.Current.Server.GetLastError());
-        //}
     }
 }
