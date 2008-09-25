@@ -57,7 +57,6 @@
 using System;
 using System.Text;
 using System.Threading;
-using System.Globalization;
 
 namespace TVA.IO.Compression.Zip 
 {

@@ -23,9 +23,8 @@
 //
 //*******************************************************************************************************
 
-using System;
-using System.Xml;
 using System.Data;
+using System.Xml;
 
 namespace TVA.Xml
 {

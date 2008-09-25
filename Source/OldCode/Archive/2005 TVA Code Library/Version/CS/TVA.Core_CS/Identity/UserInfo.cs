@@ -31,8 +31,8 @@
 
 using System;
 using System.DirectoryServices;
-using System.Security.Principal;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using TVA.Interop;
 
 namespace TVA.Identity

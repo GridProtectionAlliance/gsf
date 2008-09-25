@@ -55,7 +55,6 @@
 // exception statement from your version.
 
 using System;
-using System.Text;
 using System.IO;
 
 using TVA.IO.Checksums;

@@ -21,14 +21,14 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.ComponentModel;
-using System.Collections.Generic;
-using TVA.IO;
 using TVA.Collections;
 using TVA.Configuration;
+using TVA.IO;
 
 namespace TVA.Parsing
 {

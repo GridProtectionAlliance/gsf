@@ -19,10 +19,9 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.IO;
-using System.Xml.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 
 namespace TVA
 {

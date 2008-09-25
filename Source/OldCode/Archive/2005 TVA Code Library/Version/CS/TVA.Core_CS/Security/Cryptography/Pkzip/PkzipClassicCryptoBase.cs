@@ -51,7 +51,6 @@
 // exception statement from your version.
 
 using System;
-using System.Security.Cryptography;
 using TVA.IO.Checksums;
 
 namespace TVA.Security.Cryptography.Pkzip

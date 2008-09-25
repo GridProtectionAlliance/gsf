@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
-using System.Text;
-using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace TVA.Net.Ftp

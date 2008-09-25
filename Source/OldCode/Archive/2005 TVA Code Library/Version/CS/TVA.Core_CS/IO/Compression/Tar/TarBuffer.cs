@@ -51,7 +51,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 
 namespace TVA.IO.Compression.Tar 
 {

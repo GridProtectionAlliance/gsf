@@ -22,14 +22,13 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
-using System.Resources;
-using System.Reflection;
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace TVA.Reflection
 {

@@ -16,10 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using System.Drawing;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace TVA.Net.Ftp

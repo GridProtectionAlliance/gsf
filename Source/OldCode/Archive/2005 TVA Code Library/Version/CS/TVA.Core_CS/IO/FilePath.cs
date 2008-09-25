@@ -23,12 +23,12 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Runtime.InteropServices;
 using System.Threading;
-using TVA.Reflection;
 using TVA.Interop;
+using TVA.Reflection;
 
 namespace TVA.IO
 {

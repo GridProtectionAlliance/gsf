@@ -56,7 +56,6 @@ using System;
 using System.Runtime.Serialization;
 #endif
 
-using TVA.IO.Compression;
 
 namespace TVA.IO.Compression.GZip
 {

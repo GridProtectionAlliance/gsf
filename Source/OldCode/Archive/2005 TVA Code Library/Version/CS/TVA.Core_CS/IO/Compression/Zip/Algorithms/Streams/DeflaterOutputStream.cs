@@ -57,8 +57,6 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 
-using TVA.IO.Checksums;
-using TVA.IO.Compression.Zip.Algorithms;
 using TVA.Security.Cryptography.Pkzip;
 
 namespace TVA.IO.Compression.Zip.Algorithms.Streams 

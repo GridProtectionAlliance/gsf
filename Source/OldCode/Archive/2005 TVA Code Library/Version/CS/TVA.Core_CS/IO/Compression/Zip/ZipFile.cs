@@ -56,15 +56,14 @@
 
 using System;
 using System.Collections;
-using System.IO;
-using System.Text;
 using System.Globalization;
+using System.IO;
 using System.Security.Cryptography;
-
+using System.Text;
 using TVA.IO.Checksums;
 using TVA.IO.Compression.Core;
-using TVA.IO.Compression.Zip.Algorithms.Streams;
 using TVA.IO.Compression.Zip.Algorithms;
+using TVA.IO.Compression.Zip.Algorithms.Streams;
 using TVA.Security.Cryptography.Pkzip;
 
 namespace TVA.IO.Compression.Zip 

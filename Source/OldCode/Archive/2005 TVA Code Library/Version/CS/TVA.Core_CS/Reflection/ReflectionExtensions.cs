@@ -16,9 +16,9 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Reflection;
-using System.Collections.Specialized;
 
 namespace TVA.Reflection
 {

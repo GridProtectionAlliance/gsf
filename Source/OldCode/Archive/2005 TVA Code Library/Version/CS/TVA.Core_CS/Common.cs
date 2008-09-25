@@ -22,9 +22,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualBasic.CompilerServices;
 using TVA.Collections;
 using TVA.Reflection;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace TVA
 {

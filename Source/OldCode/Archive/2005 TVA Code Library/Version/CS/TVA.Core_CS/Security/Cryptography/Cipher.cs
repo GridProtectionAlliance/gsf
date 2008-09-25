@@ -29,9 +29,8 @@
 
 using System;
 using System.IO;
-using System.Text;
 using System.Security.Cryptography;
-using System.Collections.Generic;
+using System.Text;
 using Microsoft.VisualBasic;
 using TVA.Interop;
 

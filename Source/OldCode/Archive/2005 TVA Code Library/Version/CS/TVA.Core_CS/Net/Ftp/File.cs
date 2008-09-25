@@ -16,8 +16,6 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
-using System.Net.Sockets;
 
 namespace TVA.Net.Ftp
 {

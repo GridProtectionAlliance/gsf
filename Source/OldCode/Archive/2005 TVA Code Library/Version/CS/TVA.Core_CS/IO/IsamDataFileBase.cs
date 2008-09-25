@@ -21,13 +21,12 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Threading;
-using System.ComponentModel;
-using System.Collections.Generic;
-using TVA.IO;
-using TVA.Parsing;
 using TVA.Configuration;
+using TVA.Parsing;
 
 namespace TVA.IO
 {

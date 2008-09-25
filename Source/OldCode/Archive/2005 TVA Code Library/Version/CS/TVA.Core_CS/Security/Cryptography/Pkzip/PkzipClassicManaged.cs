@@ -52,7 +52,6 @@
 
 using System;
 using System.Security.Cryptography;
-using TVA;
 
 namespace TVA.Security.Cryptography.Pkzip
 {

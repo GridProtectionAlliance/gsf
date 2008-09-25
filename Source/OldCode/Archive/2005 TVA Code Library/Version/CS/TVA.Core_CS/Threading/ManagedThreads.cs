@@ -18,9 +18,9 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Collections.Generic;
 
 namespace TVA.Threading
 {

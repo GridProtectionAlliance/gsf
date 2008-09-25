@@ -27,7 +27,6 @@
 
 using System;
 using System.Configuration;
-using TVA;
 using TVA.Security.Cryptography;
 
 namespace TVA.Configuration

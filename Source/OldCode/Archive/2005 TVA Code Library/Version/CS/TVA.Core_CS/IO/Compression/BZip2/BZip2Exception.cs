@@ -53,7 +53,6 @@
 using System;
 using System.Runtime.Serialization;
 
-using TVA.IO.Compression;
 
 namespace TVA.IO.Compression.BZip2
 {

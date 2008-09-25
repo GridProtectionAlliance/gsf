@@ -58,8 +58,6 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 
-using TVA.IO.Compression.Zip.Algorithms;
-using TVA.IO.Checksums;
 
 namespace TVA.IO.Compression.Zip.Algorithms.Streams 
 {

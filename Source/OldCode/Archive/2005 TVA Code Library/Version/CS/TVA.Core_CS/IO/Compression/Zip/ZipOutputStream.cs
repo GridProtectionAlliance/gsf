@@ -55,10 +55,8 @@
 // exception statement from your version.
 
 using System;
-using System.IO;
 using System.Collections;
-using System.Text;
-
+using System.IO;
 using TVA.IO.Checksums;
 using TVA.IO.Compression.Zip.Algorithms;
 using TVA.IO.Compression.Zip.Algorithms.Streams;
