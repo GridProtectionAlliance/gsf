@@ -373,6 +373,56 @@ namespace TVA.IO
             return filePath;
         }
 
+        /// <summary>Remove any path root present in the path.</summary>
+        /// <returns>The path with the root removed if it was present; path otherwise.</returns>
+        /// <remarks>Unlike the <see cref="System.IO.Path"/> class the path isnt otherwise checked for validity.</remarks>
+        public static string DropPathRoot(string filePath)
+        {
+            string result = filePath;
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                if ((filePath[0] == '\\') || (filePath[0] == '/'))
+                {
+                    // UNC name ?
+                    if ((filePath.Length > 1) && ((filePath[1] == '\\') || (filePath[1] == '/')))
+                    {
+                        int index = 2;
+                        int elements = 2;
+
+                        // Scan for two separate elements \\machine\share\restofpath
+                        while ((index <= filePath.Length) &&
+                            (((filePath[index] != '\\') && (filePath[index] != '/')) || (--elements > 0)))
+                        {
+                            index++;
+                        }
+
+                        index++;
+
+                        if (index < filePath.Length)
+                        {
+                            result = filePath.Substring(index);
+                        }
+                        else
+                        {
+                            result = "";
+                        }
+                    }
+                }
+                else if ((filePath.Length > 1) && (filePath[1] == ':'))
+                {
+                    int dropCount = 2;
+                    if ((filePath.Length > 2) && ((filePath[2] == '\\') || (filePath[2] == '/')))
+                    {
+                        dropCount = 3;
+                    }
+                    result = result.Remove(0, dropCount);
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>Returns a file name, for display purposes, of the specified length using "..." to indicate a longer name.</summary>
         /// <remarks>
         /// <para>Minimum value for the <paramref name="length" /> parameter is 12.</para>
