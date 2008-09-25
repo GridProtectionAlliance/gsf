@@ -41,9 +41,7 @@ using System.ComponentModel;
 
 namespace TVA.Data
 {
-    /// <summary>
-    /// Defines handy database connection extension functions.
-    /// </summary>
+    /// <summary>Defines extension functions related to database and SQL interaction.</summary>
     public static class DataExtensions
     {
         #region [ Enumerations ]

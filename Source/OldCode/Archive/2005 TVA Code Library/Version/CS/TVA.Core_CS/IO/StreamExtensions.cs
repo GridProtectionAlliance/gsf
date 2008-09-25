@@ -20,6 +20,7 @@ using System.IO;
 
 namespace TVA
 {
+    /// <summary>Defines extension functions related to stream manipulation.</summary>
     public static class StreamExtensions
     {
         private const int BufferSize = 32768;

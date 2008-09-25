@@ -28,6 +28,7 @@ namespace TVA
         private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
 
         /// <summary>Generates a cryptographically strong double-precision floating-point random number between zero and one.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static double Number
         {
             get
@@ -40,6 +41,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong random decimal between zero and one.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static decimal Decimal
         {
             get
@@ -52,6 +54,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong random integer between specified values.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static double Between(double startNumber, double stopNumber)
         {
             if (stopNumber < startNumber)
@@ -60,7 +63,23 @@ namespace TVA
             return Number * (stopNumber - startNumber) + startNumber;
         }
 
+        /// <summary>
+        /// Fills an array of bytes with a cryptographically strong sequence of random values.
+        /// </summary>
+        /// <param name="buffer">The array to fill with a cryptographically strong sequence of random values.</param>
+        /// <remarks>
+        /// <para>The length of the byte array determines how many cryptographically strong random bytes are produced.</para>
+        /// <para>This method is thread safe.</para>
+        /// </remarks>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="System.ArgumentNullException">buffer is null.</exception>
+        public static void GetBytes(byte[] buffer)
+        {
+            m_randomNumberGenerator.GetBytes(buffer);
+        }
+
         /// <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static bool Boolean
         {
             get
@@ -74,6 +93,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 8-bit random integer.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static byte Byte
         {
             get
@@ -87,6 +107,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 8-bit random integer between specified values.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static byte ByteBetween(byte startNumber, byte stopNumber)
         {
             if (stopNumber < startNumber)
@@ -96,6 +117,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 16-bit random integer.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static short Int16
         {
             get
@@ -109,6 +131,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 16-bit random integer between specified values.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static short Int16Between(short startNumber, short stopNumber)
         {
             if (stopNumber < startNumber)
@@ -118,6 +141,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 32-bit random integer.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static int Int32
         {
             get
@@ -131,6 +155,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 32-bit random integer between specified values.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static int Int32Between(int startNumber, int stopNumber)
         {
             if (stopNumber < startNumber)
@@ -140,6 +165,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 64-bit random integer.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static long Int64
         {
             get
@@ -153,6 +179,7 @@ namespace TVA
         }
 
         /// <summary>Generates a cryptographically strong 64-bit random integer between specified values.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static long Int64Between(long startNumber, long stopNumber)
         {
             if (stopNumber < startNumber)

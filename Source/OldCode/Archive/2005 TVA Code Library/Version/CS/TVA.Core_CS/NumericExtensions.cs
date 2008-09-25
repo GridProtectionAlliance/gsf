@@ -22,6 +22,7 @@ using System.Linq;
 
 namespace TVA
 {
+    /// <summary>Defines extension functions related to numbers.</summary>
     public static class NumericExtensions
     {
         /// <summary>Ensures parameter passed to function is not zero. Returns -1

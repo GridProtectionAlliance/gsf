@@ -103,6 +103,16 @@
       <DependentUpon>GlobalExceptionLogger.cs</DependentUpon>
     </Compile>
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
+    <Compile Include="IO\Checksums\Adler32.cs" />
+    <Compile Include="IO\Checksums\ChecksumExtensions.cs" />
+    <Compile Include="IO\Checksums\Crc16.cs" />
+    <Compile Include="IO\Checksums\Xor64.cs" />
+    <Compile Include="IO\Checksums\Xor32.cs" />
+    <Compile Include="IO\Checksums\Xor16.cs" />
+    <Compile Include="IO\Checksums\Crc32.cs" />
+    <Compile Include="IO\Checksums\IChecksum.cs" />
+    <Compile Include="IO\Checksums\StrangeCrc.cs" />
+    <Compile Include="IO\Checksums\Xor8.cs" />
     <Compile Include="IStatusProvider.cs" />
     <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFile.cs" />
@@ -114,6 +124,11 @@
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
     <Compile Include="IO\StreamExtensions.cs" />
+    <Compile Include="Security\Cryptography\Pkzip\PkzipClassic.cs" />
+    <Compile Include="Security\Cryptography\Pkzip\PkzipClassicCryptoBase.cs" />
+    <Compile Include="Security\Cryptography\Pkzip\PkzipClassicDecryptCryptoTransform.cs" />
+    <Compile Include="Security\Cryptography\Pkzip\PkzipClassicEncryptCryptoTransform.cs" />
+    <Compile Include="Security\Cryptography\Pkzip\PkzipClassicManaged.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="USTimeZones.cs" />
