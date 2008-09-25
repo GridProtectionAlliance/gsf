@@ -81,6 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
+    <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>

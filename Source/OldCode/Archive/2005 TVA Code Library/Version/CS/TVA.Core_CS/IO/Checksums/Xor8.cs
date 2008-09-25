@@ -78,9 +78,6 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Updates the checksum with a byte value.
         /// </summary>
-        /// <param name="value">
-        /// The data value to add. The high byte of the int is ignored.
-        /// </param>
         public void Update(byte value)
         {
             m_checksum ^= value;

@@ -78,11 +78,8 @@ namespace TVA.IO.Checksums
         }
 
         /// <summary>
-        /// Updates the checksum with a byte value.
+        /// Updates the checksum with a ulong value.
         /// </summary>
-        /// <param name="value">
-        /// The data value to add. The high byte of the int is ignored.
-        /// </param>
         [CLSCompliant(false)]
         public void Update(ulong value)
         {
