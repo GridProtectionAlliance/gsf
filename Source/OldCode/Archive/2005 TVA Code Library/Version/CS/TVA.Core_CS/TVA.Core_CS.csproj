@@ -85,6 +85,9 @@
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="ErrorManagement\ErrorDialog.Designer.cs">
+      <DependentUpon>ErrorDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="ErrorManagement\ErrorLogger.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -94,13 +97,6 @@
     </Compile>
     <Compile Include="ErrorManagement\GELDialog.Designer.cs">
       <DependentUpon>GELDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ErrorManagement\GELHttpModule.cs" />
-    <Compile Include="ErrorManagement\GlobalExceptionLogger.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ErrorManagement\GlobalExceptionLogger.Designer.cs">
-      <DependentUpon>GlobalExceptionLogger.cs</DependentUpon>
     </Compile>
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
     <Compile Include="IO\Checksums\Adler32.cs" />
@@ -304,9 +300,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ErrorManagement\GELDialog.resx">
       <DependentUpon>GELDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ErrorManagement\GlobalExceptionLogger.resx">
-      <DependentUpon>GlobalExceptionLogger.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="IO\IsamDataFileBase.resx">
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>
