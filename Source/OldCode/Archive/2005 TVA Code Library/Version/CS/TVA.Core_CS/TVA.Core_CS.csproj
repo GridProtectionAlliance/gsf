@@ -300,7 +300,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
     <EmbeddedResource Include="Embedded Resources\Net.Ftp.Session.bmp" />
-    <EmbeddedResource Include="Embedded Resources\ErrorManagement.GlobalExceptionLogger.bmp" />
+    <EmbeddedResource Include="Embedded Resources\ErrorManagement.ErrorLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
