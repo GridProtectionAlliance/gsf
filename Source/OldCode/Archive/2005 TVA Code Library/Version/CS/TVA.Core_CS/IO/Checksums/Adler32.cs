@@ -101,8 +101,8 @@ namespace TVA.IO.Checksums
 	///    checked separately. (Any sequence of zeroes has a Fletcher
 	///    checksum of zero.)"
 	/// </summary>
-    /// <see cref="TVA.IO.Compression.Zip.Compression.Streams.InflaterInputStream"/>
-    /// <see cref="TVA.IO.Compression.Zip.Compression.Streams.DeflaterOutputStream"/>
+    /// <see cref="TVA.IO.Compression.Zip.Algorithms.Streams.InflaterInputStream"/>
+    /// <see cref="TVA.IO.Compression.Zip.Algorithms.Streams.DeflaterOutputStream"/>
     [CLSCompliant(false)]
     public sealed class Adler32 : IChecksum
 	{

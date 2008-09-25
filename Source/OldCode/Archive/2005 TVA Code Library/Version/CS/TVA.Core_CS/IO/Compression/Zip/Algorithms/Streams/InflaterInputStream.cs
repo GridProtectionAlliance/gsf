@@ -517,7 +517,7 @@ namespace TVA.IO.Compression.Zip.Algorithms.Streams
 		/// <summary>
 		/// Fills the buffer with more data to decompress.
 		/// </summary>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// Stream ends early
 		/// </exception>
 		protected void Fill()
@@ -676,7 +676,7 @@ namespace TVA.IO.Compression.Zip.Algorithms.Streams
 		/// The number of bytes to decompress
 		/// </param>
 		/// <returns>The number of bytes read.  Zero signals the end of stream</returns>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// Inflater needs a dictionary
 		/// </exception>
 		public override int Read(byte[] buffer, int offset, int count) 

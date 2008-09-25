@@ -552,9 +552,14 @@ namespace TVA.IO.Compression.Zip
 			InitializePassword(Password);
 			
 			byte[] cryptBuffer = new byte[ZipConstants.CryptoHeaderSize];
-			Random rnd = new Random();
-			rnd.NextBytes(cryptBuffer);
-			cryptBuffer[11] = (byte)(crcValue >> 24);
+			
+            //Random rnd = new Random();
+			//rnd.NextBytes(cryptBuffer);
+
+            // JRC: Converted to use cryptographically strong sequence of random values.
+            Random.GetBytes(cryptBuffer);
+			
+            cryptBuffer[11] = (byte)(crcValue >> 24);
 			
 			EncryptBlock(cryptBuffer, 0, cryptBuffer.Length);
 			baseOutputStream_.Write(cryptBuffer, 0, cryptBuffer.Length);

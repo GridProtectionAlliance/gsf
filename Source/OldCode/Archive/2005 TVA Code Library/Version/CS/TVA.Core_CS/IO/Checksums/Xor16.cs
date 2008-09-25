@@ -20,6 +20,7 @@ using System;
 namespace TVA.IO.Checksums
 {
     /// <summary>Calculates word length (16-bit) XOR-based check-sum on specified portion of a buffer.</summary>
+    [CLSCompliant(false)]
     public sealed class Xor16 : IChecksum
     {
         #region [ Members ]

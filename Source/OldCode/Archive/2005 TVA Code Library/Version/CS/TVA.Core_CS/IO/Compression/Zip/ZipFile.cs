@@ -3333,8 +3333,13 @@ namespace TVA.IO.Compression.Zip
 		static void WriteEncryptionHeader(Stream stream, long crcValue)
 		{
 			byte[] cryptBuffer = new byte[ZipConstants.CryptoHeaderSize];
-			Random rnd = new Random();
-			rnd.NextBytes(cryptBuffer);
+
+			//Random rnd = new Random();
+			//rnd.NextBytes(cryptBuffer);
+
+            // JRC: Converted to use cryptographically strong sequence of random values.
+            Random.GetBytes(cryptBuffer);
+
 			cryptBuffer[11] = (byte)(crcValue >> 24);
 			stream.Write(cryptBuffer, 0, cryptBuffer.Length);
 		}
