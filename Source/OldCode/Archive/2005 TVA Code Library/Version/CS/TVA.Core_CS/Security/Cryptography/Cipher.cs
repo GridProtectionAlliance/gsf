@@ -836,10 +836,7 @@ namespace TVA.Security.Cryptography
 			for (int x = 0; x <= 2; x++)
 			{
 				alphaIndex = Random.Int32Between(0, 25);
-				if (x > 0)
-				{
-					result.Append('-');
-				}
+				if (x > 0) result.Append('-');
 				result.Append(Convert.ToChar(asciiA + (25 - alphaIndex)));
 				result.Append(seedBytes[x] + alphaIndex);
 			}
