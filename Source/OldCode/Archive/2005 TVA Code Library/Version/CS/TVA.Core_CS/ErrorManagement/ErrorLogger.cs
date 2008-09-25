@@ -148,7 +148,7 @@ namespace TVA.ErrorManagement
         private bool m_logToEventLogOK;
         private bool m_logToScreenshotOK;
         private ApplicationType m_appType;
-        private bool m_disposed;
+        private bool m_isDisposed;
 
         #endregion
 
@@ -611,6 +611,18 @@ namespace TVA.ErrorManagement
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value that indicates whether the <see cref="ErrorLogger"/> object has been disposed.
+        /// </summary>
+        [Browsable(false)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_isDisposed;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -1062,7 +1074,7 @@ namespace TVA.ErrorManagement
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (!m_isDisposed)
             {
                 try
                 {
@@ -1078,7 +1090,7 @@ namespace TVA.ErrorManagement
                 finally
                 {
                     base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
+                    m_isDisposed = true;          // Prevent duplicate dispose.
                 }
             }
         }
