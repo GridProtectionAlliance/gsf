@@ -135,19 +135,20 @@ namespace TVA.ErrorManagement
         private string m_settingsCategoryName;
         private bool m_handleUnhandledException;
         private bool m_exitOnUnhandledException;
+        private LogFile m_logFile;
         private Exception m_lastException;
         private Func<string> m_errorTextMethod;
         private Func<string> m_scopeTextMethod;
         private Func<string> m_actionTextMethod;
         private Func<string> m_moreInfoTextMethod;
         private List<Action<Exception>> m_loggers;
-        private LogFile m_logFile;
         private bool m_logToFileOK;
         private bool m_logToEmailOK;
         private bool m_logToEventLogOK;
         private bool m_logToScreenshotOK;
         private ApplicationType m_appType;
-        private bool m_isDisposed;
+        private bool m_initialized;
+        private bool m_disposed;
 
         #endregion
 
@@ -611,18 +612,6 @@ namespace TVA.ErrorManagement
             }
         }
 
-        /// <summary>
-        /// Gets a boolean value that indicates whether the <see cref="ErrorLogger"/> object has been disposed.
-        /// </summary>
-        [Browsable(false)]
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_isDisposed;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -693,10 +682,14 @@ namespace TVA.ErrorManagement
         /// </remarks>
         public void Initialize()
         {
-            LoadSettings();         // Load settings from the config file.
-            Register();             // Register the logger for unhandled exceptions.
-            m_logFile.EndInit();    // Initialize the log file.
-            m_logFile.Open();       // Open the log file.
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                Register();             // Register the logger for unhandled exceptions.
+                m_logFile.EndInit();    // Initialize the log file.
+                m_logFile.Open();       // Open the log file.
+            }
+            m_initialized = true;
         }
 
         /// <summary>
@@ -1074,7 +1067,7 @@ namespace TVA.ErrorManagement
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_isDisposed)
+            if (!m_disposed)
             {
                 try
                 {
@@ -1090,7 +1083,7 @@ namespace TVA.ErrorManagement
                 finally
                 {
                     base.Dispose(disposing);    // Call base class Dispose().
-                    m_isDisposed = true;          // Prevent duplicate dispose.
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
         }
