@@ -447,7 +447,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 				if (hash != (((window[strstart] << (2*HASH_SHIFT)) ^ 
 								  (window[strstart + 1] << HASH_SHIFT) ^ 
 								  (window[strstart + 2])) & HASH_MASK)) {
-						throw new SharpZipBaseException("hash inconsistent: " + hash + "/"
+						throw new CompressionExceptionBase("hash inconsistent: " + hash + "/"
 												+window[strstart] + ","
 												+window[strstart + 1] + ","
 												+window[strstart + 2] + "," + HASH_SHIFT);
@@ -654,7 +654,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 					{
 						for (int i = 0 ; i < matchLen; i++) {
 							if (window[strstart + i] != window[matchStart + i]) {
-								throw new SharpZipBaseException("Match failure");
+								throw new CompressionExceptionBase("Match failure");
 							}
 						}
 					}
@@ -713,7 +713,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 					if (DeflaterConstants.DEBUGGING && !flush) 
 					{
-						throw new SharpZipBaseException("Not flushing, but no lookahead");
+						throw new CompressionExceptionBase("Not flushing, but no lookahead");
 					}
 #endif               
 					huffman.FlushBlock(window, blockStart, strstart - blockStart,
@@ -757,7 +757,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 					{
 					   for (int i = 0 ; i < matchLen; i++) {
 						  if (window[strstart-1+i] != window[prevMatch + i])
-							 throw new SharpZipBaseException();
+							 throw new CompressionExceptionBase();
 						}
 					}
 #endif

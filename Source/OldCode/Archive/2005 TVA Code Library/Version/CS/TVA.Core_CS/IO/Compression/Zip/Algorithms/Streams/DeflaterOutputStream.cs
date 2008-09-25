@@ -147,7 +147,7 @@ namespace TVA.IO.Compression.Zip.Algorithms.Streams
 		/// <summary>
 		/// Finishes the stream by calling finish() on the deflater. 
 		/// </summary>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// Not all input is deflated
 		/// </exception>
 		public virtual void Finish()

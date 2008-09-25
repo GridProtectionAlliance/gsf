@@ -81,7 +81,6 @@ namespace TVA.IO.Checksums
 	/// the information needed to generate CRC's on data a byte at a time for all
 	/// combinations of CRC register values and incoming bytes.
 	/// </summary>
-    [CLSCompliant(false)]
 	public sealed class Crc32 : IChecksum
 	{
 		const uint CrcSeed = 0xFFFFFFFF;
@@ -154,7 +153,9 @@ namespace TVA.IO.Checksums
 		/// <summary>
 		/// Returns the CRC32 data checksum computed so far.
 		/// </summary>
-		public uint Value {
+        [CLSCompliant(false)]
+        public uint Value
+        {
 			get {
 				return crc;
 			}

@@ -161,7 +161,7 @@ namespace TVA.IO.Compression.Zip
 		/// <exception cref="ArgumentOutOfRangeException">
 		/// Level specified is not supported.
 		/// </exception>
-		/// <see cref="TVA.IO.Compression.Zip.Compression.Deflater"/>
+		/// <see cref="TVA.IO.Compression.Zip.Algorithms.Deflater"/>
 		public void SetLevel(int level)
 		{
 			deflater_.SetLevel(level);

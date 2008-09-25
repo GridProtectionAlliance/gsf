@@ -153,7 +153,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 /* -jr comment this out! doesnt work for dynamic trees and pkzip 2.04g
 			if (code != 65536) 
 			{
-				throw new SharpZipBaseException("Code lengths don't add up properly.");
+				throw new CompressionExceptionBase("Code lengths don't add up properly.");
 			}
 */
 			/* Now create and fill the extra tables from longest to shortest

@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-// SharpZipBaseException.cs
+// CompressionExceptionBase.cs
 //
 // Copyright 2004 John Reilly
 //
@@ -56,7 +56,7 @@ using System.Runtime.Serialization;
 namespace TVA.IO.Compression
 {
 	/// <summary>
-	/// SharpZipBaseException is the base exception class for the SharpZipLibrary.
+	/// CompressionExceptionBase is the base exception class for the SharpZipLibrary.
 	/// All library exceptions are derived from this.
 	/// </summary>
 	/// <remarks>NOTE: Not all exceptions thrown will be derived from this class.
@@ -79,14 +79,14 @@ namespace TVA.IO.Compression
 #endif
 		
 		/// <summary>
-		/// Initializes a new instance of the SharpZipBaseException class.
+		/// Initializes a new instance of the CompressionExceptionBase class.
 		/// </summary>
 		public CompressionExceptionBase()
 		{
 		}
 		
 		/// <summary>
-		/// Initializes a new instance of the SharpZipBaseException class with a specified error message.
+		/// Initializes a new instance of the CompressionExceptionBase class with a specified error message.
 		/// </summary>
 		/// <param name="message">A message describing the exception.</param>
 		public CompressionExceptionBase(string message)
@@ -95,7 +95,7 @@ namespace TVA.IO.Compression
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the SharpZipBaseException class with a specified
+		/// Initializes a new instance of the CompressionExceptionBase class with a specified
 		/// error message and a reference to the inner exception that is the cause of this exception.
 		/// </summary>
 		/// <param name="message">A message describing the exception.</param>

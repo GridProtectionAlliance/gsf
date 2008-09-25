@@ -167,7 +167,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 			/// <summary>
 			/// Check that all frequencies are zero
 			/// </summary>
-			/// <exception cref="SharpZipBaseException">
+			/// <exception cref="CompressionExceptionBase">
 			/// At least one frequency is non-zero
 			/// </exception>
 			public void CheckEmpty()
@@ -224,7 +224,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 				if ( DeflaterConstants.DEBUGGING && (code != 65536) ) 
 				{
-					throw new SharpZipBaseException("Inconsistent bl_counts!");
+					throw new CompressionExceptionBase("Inconsistent bl_counts!");
 				}
 #endif				
 				for (int i=0; i < numCodes; i++) {

@@ -122,7 +122,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) )
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 #endif
 			buffer_[end++] = unchecked((byte) value);
@@ -139,7 +139,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) )
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 #endif
 			buffer_[end++] = unchecked((byte) value);
@@ -155,7 +155,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) )
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 #endif
 			buffer_[end++] = unchecked((byte) value);
@@ -175,7 +175,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) ) 
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 #endif
 			System.Array.Copy(block, offset, buffer_, end, length);
@@ -199,7 +199,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) ) 
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 #endif
 			if (bitCount > 0) 
@@ -223,7 +223,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) ) 
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 
 			//			if (DeflaterConstants.DEBUGGING) {
@@ -249,7 +249,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 #if DebugDeflation
 			if (DeflaterConstants.DEBUGGING && (start != 0) ) 
 			{
-				throw new SharpZipBaseException("Debug check: start != 0");
+				throw new CompressionExceptionBase("Debug check: start != 0");
 			}
 #endif
 			buffer_[end++] = unchecked((byte) (s >> 8));

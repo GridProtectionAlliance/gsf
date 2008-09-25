@@ -253,7 +253,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 		/// <returns>
 		/// False if more input is needed.
 		/// </returns>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// The header is invalid.
 		/// </exception>
 		private bool DecodeHeader()
@@ -317,7 +317,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 		/// false if more input is needed, true if output window is
 		/// full or the current block ends.
 		/// </returns>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// if deflated stream is invalid.
 		/// </exception>
 		private bool DecodeHuffman()
@@ -431,7 +431,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 		/// <returns>
 		/// false if more input is needed.
 		/// </returns>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// If checksum doesn't match.
 		/// </exception>
 		private bool DecodeChksum()
@@ -460,7 +460,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 		/// <returns>
 		/// false if more input is needed, or if finished.
 		/// </returns>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// if deflated stream is invalid.
 		/// </exception>
 		private bool Decode()
@@ -607,7 +607,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 		/// <exception cref="System.InvalidOperationException">
 		/// No dictionary is needed.
 		/// </exception>
-		/// <exception cref="SharpZipBaseException">
+		/// <exception cref="CompressionExceptionBase">
 		/// The adler checksum for the buffer is invalid
 		/// </exception>
 		public void SetDictionary(byte[] buffer, int index, int count)

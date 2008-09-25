@@ -103,7 +103,6 @@ namespace TVA.IO.Checksums
 	/// </summary>
     /// <see cref="TVA.IO.Compression.Zip.Algorithms.Streams.InflaterInputStream"/>
     /// <see cref="TVA.IO.Compression.Zip.Algorithms.Streams.DeflaterOutputStream"/>
-    [CLSCompliant(false)]
     public sealed class Adler32 : IChecksum
 	{
 		/// <summary>
@@ -114,7 +113,8 @@ namespace TVA.IO.Checksums
 		/// <summary>
 		/// Returns the Adler32 data checksum computed so far.
 		/// </summary>
-		public uint Value
+        [CLSCompliant(false)]
+        public uint Value
         {
 			get
             {

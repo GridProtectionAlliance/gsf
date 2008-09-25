@@ -20,7 +20,6 @@ using System;
 namespace TVA.IO.Checksums
 {
     /// <summary>Calculates double-word length (32-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-    [CLSCompliant(false)]
     public sealed class Xor32 : IChecksum
     {
         #region [ Members ]
@@ -48,6 +47,7 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Returns the Xor 8-bit checksum computed so far.
         /// </summary>
+        [CLSCompliant(false)]
         public uint Value
         {
             get
@@ -82,6 +82,7 @@ namespace TVA.IO.Checksums
         /// <param name="value">
         /// The data value to add. The high byte of the int is ignored.
         /// </param>
+        [CLSCompliant(false)]
         public void Update(uint value)
         {
             m_checksum ^= value;

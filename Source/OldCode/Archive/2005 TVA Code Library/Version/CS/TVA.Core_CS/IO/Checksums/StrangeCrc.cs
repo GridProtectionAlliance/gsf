@@ -132,7 +132,7 @@ namespace TVA.IO.Checksums
 		int globalCrc;
 
 		/// <summary>
-		/// Initialise a default instance of <see cref="StrangeCRC"></see>
+		/// Initialize a new instance of StrangeCrc
 		/// </summary>	
 		public StrangeCrc() 
 		{

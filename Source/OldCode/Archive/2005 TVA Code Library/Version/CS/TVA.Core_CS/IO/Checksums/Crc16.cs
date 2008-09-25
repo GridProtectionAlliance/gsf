@@ -27,7 +27,6 @@ namespace TVA.IO.Checksums
     /// <para>       16   12   5    0</para>
     /// <para>G(X) = X  + X  + X  + X</para>
     /// </remarks>
-    [CLSCompliant(false)]
     public sealed class Crc16 : IChecksum
 	{
         #region [ Members ]
@@ -58,6 +57,7 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Returns the CRC16 data checksum computed so far.
         /// </summary>
+        [CLSCompliant(false)]
         public ushort Value
         {
             get

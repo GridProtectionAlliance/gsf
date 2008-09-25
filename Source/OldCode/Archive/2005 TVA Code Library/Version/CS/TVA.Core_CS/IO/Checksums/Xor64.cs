@@ -48,6 +48,7 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Returns the Xor 8-bit checksum computed so far.
         /// </summary>
+        [CLSCompliant(false)]
         public ulong Value
         {
             get
@@ -82,6 +83,7 @@ namespace TVA.IO.Checksums
         /// <param name="value">
         /// The data value to add. The high byte of the int is ignored.
         /// </param>
+        [CLSCompliant(false)]
         public void Update(ulong value)
         {
             m_checksum ^= value;
