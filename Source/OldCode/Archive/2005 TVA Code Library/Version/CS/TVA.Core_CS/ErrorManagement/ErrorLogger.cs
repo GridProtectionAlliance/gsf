@@ -144,7 +144,6 @@ namespace TVA.ErrorManagement
         private LogFile m_logFile;
         private bool m_logToFileOK;
         private bool m_logToEmailOK;
-        private bool m_logToPhoneOK;
         private bool m_logToEventLogOK;
         private bool m_logToScreenshotOK;
         private ApplicationType m_appType;
@@ -159,6 +158,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         public ErrorLogger()
         {
+            m_logFile = new LogFile();
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
