@@ -271,7 +271,7 @@
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="Interop\IniFile.cs" />
     <Compile Include="IO\FilePath.cs" />
-    <Compile Include="CompositeValues.cs" />
+    <Compile Include="NumericalAnalysis\CompositeValues.cs" />
     <Compile Include="Measurements\IFrame.cs" />
     <Compile Include="Measurements\IMeasurement.cs" />
     <Compile Include="Measurements\Measurement.cs" />

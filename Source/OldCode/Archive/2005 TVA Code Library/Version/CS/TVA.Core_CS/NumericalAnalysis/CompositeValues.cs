@@ -23,7 +23,7 @@
 
 using System;
 
-namespace TVA
+namespace TVA.NumericalAnalysis
 {
     /// <summary>Temporarily caches composite values until all values been received, so that a compound value can be created.</summary>
     public class CompositeValues
