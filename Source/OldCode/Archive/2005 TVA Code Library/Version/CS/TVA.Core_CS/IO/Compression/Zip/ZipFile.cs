@@ -61,8 +61,8 @@ using System.Text;
 using System.Globalization;
 using System.Security.Cryptography;
 
-using TVA.IO.Compression.Core;
 using TVA.IO.Checksums;
+using TVA.IO.Compression.Core;
 using TVA.IO.Compression.Zip.Algorithms.Streams;
 using TVA.IO.Compression.Zip.Algorithms;
 using TVA.Security.Cryptography.Pkzip;

@@ -81,7 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
-    <Compile Include="CurveFit.cs" />
+    <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -167,6 +167,8 @@
     <Compile Include="Net\Ftp\ISessionState.cs" />
     <Compile Include="Net\Ftp\OutputDataStream.cs" />
     <Compile Include="Net\Ftp\TimeStampParser.cs" />
+    <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
+    <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
