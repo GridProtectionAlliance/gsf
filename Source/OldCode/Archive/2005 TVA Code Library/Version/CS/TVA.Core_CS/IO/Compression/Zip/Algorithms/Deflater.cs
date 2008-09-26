@@ -171,6 +171,20 @@ namespace TVA.IO.Compression.Zip.Algorithms
 		{
 			
 		}
+
+        /// <summary>
+        /// Creates a new deflater with given compression level.
+        /// </summary>
+        /// <param name="level">
+        /// the compression level, a value between NO_COMPRESSION
+        /// and BEST_COMPRESSION, or DEFAULT_COMPRESSION.
+        /// </param>
+        /// <exception cref="System.ArgumentOutOfRangeException">if lvl is out of range.</exception>
+        public Deflater(CompressionStrength level)
+            : this((int)level, false)
+        {
+            // JRC: I added this to take the CompressionLevel enumeration :)
+        }
 		
 		/// <summary>
 		/// Creates a new deflater with given compression level.

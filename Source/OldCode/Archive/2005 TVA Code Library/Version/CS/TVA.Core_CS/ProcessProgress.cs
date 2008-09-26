@@ -14,6 +14,9 @@
 //      Generated original version of source code.
 //  09/09/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  09/26/2008 - J. Ritchie Carroll
+//      Added a ProcessProgress.Handler class to allow functions with progress delegate
+//      to update progress information using the ProcessProgress class.
 //
 //*******************************************************************************************************
 
@@ -32,6 +35,95 @@ namespace TVA
     public class ProcessProgress<TUnit> where TUnit : struct
     {
         #region [ Members ]
+
+        // Nested Types
+        public class Handler
+        {
+            #region [ Members ]
+
+            // Fields
+            Action<ProcessProgress<TUnit>> m_progressHandler;
+            ProcessProgress<TUnit> m_progressInstance;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public Handler(Action<ProcessProgress<TUnit>> progressHandler, string processName)
+            {
+                m_progressHandler = progressHandler;
+                m_progressInstance = new ProcessProgress<TUnit>(processName);
+            }
+
+            public Handler(Action<ProcessProgress<TUnit>> progressHandler, string processName, TUnit total)
+                : this(progressHandler, processName)
+            {
+                m_progressInstance.Total = total;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public ProcessProgress<TUnit> ProcessProgress
+            {
+                get
+                {
+                    return m_progressInstance;
+                }
+            }
+
+            public Action<ProcessProgress<TUnit>> ProgressHandler
+            {
+                get
+                {
+                    return m_progressHandler;
+                }
+                set
+                {
+                    m_progressHandler = value;
+                }
+            }
+
+            public TUnit Complete
+            {
+                get
+                {
+                    return m_progressInstance.Complete;
+                }
+                set
+                {
+                    UpdateProgress(value);
+                }
+            }
+
+            public TUnit Total
+            {
+                get
+                {
+                    return m_progressInstance.Total;
+                }
+                set
+                {
+                    m_progressInstance.Total = value;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void UpdateProgress(TUnit completed)
+            {
+                // Update bytes completed
+                m_progressInstance.Complete = completed;
+
+                // Call user function
+                m_progressHandler(m_progressInstance);
+            }
+
+            #endregion
+        }
 
         // Fields
         private string m_processName;

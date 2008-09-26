@@ -82,6 +82,8 @@
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
+    <Compile Include="IO\Compression\FileCompressor.cs" />
+    <Compile Include="IO\Compression\CompressionExtensions.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>
@@ -183,7 +185,6 @@
     <Compile Include="Console\Events.cs" />
     <Compile Include="Drawing\Image.cs" />
     <Compile Include="Interop\VBArrayDescriptor.cs" />
-    <Compile Include="IO\Compression\CompressLevel.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\IsamDataFileBase.Designer.cs">
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>

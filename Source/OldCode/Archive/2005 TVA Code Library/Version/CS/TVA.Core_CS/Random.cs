@@ -140,6 +140,30 @@ namespace TVA
             return (short)(Number * (stopNumber - startNumber) + startNumber);
         }
 
+        /// <summary>Generates a cryptographically strong 24-bit random integer.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        public static System.Int24 Int24
+        {
+            get
+            {
+                byte[] value = new byte[3];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return System.Int24.GetValue(value, 0);
+            }
+        }
+
+        /// <summary>Generates a cryptographically strong 24-bit random integer between specified values.</summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        public static System.Int24 Int24Between(System.Int24 startNumber, System.Int24 stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (System.Int24)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
         /// <summary>Generates a cryptographically strong 32-bit random integer.</summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static int Int32
