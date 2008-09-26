@@ -39,10 +39,10 @@ namespace TVA.Collections
         /// <param name="startIndex">The source array index from where the elements are to be copied.</param>
         /// <param name="length">The number of elements to be copied starting from the startIndex.</param>
         /// <returns>An <see cref="Array"/> of elements.</returns>
-        public static T[] Copy<T>(this T[] source, int startIndex, int length)
+        public static TSource[] Copy<TSource>(this TSource[] source, int startIndex, int length)
         {
             // Create a new array that will be returned with the specified array elements.
-            T[] copyOfSource = new T[source.Length - startIndex < length ? source.Length - startIndex : length];
+            TSource[] copyOfSource = new TSource[source.Length - startIndex < length ? source.Length - startIndex : length];
             Array.Copy(source, startIndex, copyOfSource, 0, copyOfSource.Length);
 
             return copyOfSource;
@@ -198,9 +198,9 @@ namespace TVA.Collections
         }
 
         /// <summary>Compares two arrays.</summary>
-        public static int CompareTo<T>(this T[] array1, T[] array2)
+        public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2)
         {
-            return CompareTo(array1, array2, Comparer<T>.Default);
+            return CompareTo(array1, array2, Comparer<TSource>.Default);
         }
 
         /// <summary>Compares two arrays.</summary>
