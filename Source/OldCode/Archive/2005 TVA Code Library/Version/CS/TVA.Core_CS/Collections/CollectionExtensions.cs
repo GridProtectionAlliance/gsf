@@ -34,7 +34,7 @@ namespace TVA.Collections
         /// <summary>
         /// Returns a copy of the <see cref="Array"/>.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> of the <see cref="Array"/> to be copied.</typeparam>
+        /// <typeparam name="TSource"><see cref="Type"/> of the <see cref="Array"/> to be copied.</typeparam>
         /// <param name="source">The source <see cref="Array"/> whose elements are to be copied.</param>
         /// <param name="startIndex">The source array index from where the elements are to be copied.</param>
         /// <param name="length">The number of elements to be copied starting from the startIndex.</param>
