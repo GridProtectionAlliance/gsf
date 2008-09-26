@@ -44,7 +44,7 @@ namespace TVA.Collections
             // Create a new array that will be returned with the specified array elements.
             T[] copyOfSource = new T[source.Length - startIndex < length ? source.Length - startIndex : length];
             Array.Copy(source, startIndex, copyOfSource, 0, copyOfSource.Length);
-            
+
             return copyOfSource;
         }
 
@@ -198,9 +198,9 @@ namespace TVA.Collections
         }
 
         /// <summary>Compares two arrays.</summary>
-        public static int CompareTo(this Array array1, Array array2)
+        public static int CompareTo<T>(this T[] array1, T[] array2)
         {
-            return CompareTo(array1, array2, null);
+            return CompareTo(array1, array2, Comparer<T>.Default);
         }
 
         /// <summary>Compares two arrays.</summary>
