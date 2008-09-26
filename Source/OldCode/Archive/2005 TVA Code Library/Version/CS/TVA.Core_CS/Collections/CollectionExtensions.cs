@@ -222,7 +222,7 @@ namespace TVA.Collections
             {
                 if (array1.Rank == 1 && array2.Rank == 1)
                 {
-                    if (array1.GetUpperBound(0) == array2.GetUpperBound(0))
+                    if (array1.Length == array2.Length)
                     {
                         int comparison = 0;
 
@@ -243,7 +243,7 @@ namespace TVA.Collections
                     {
                         // For arrays that do not have the same number of elements, the array with most elements
                         // is assumed to be larger.
-                        return Common.CompareObjects(array1.GetUpperBound(0), array2.GetUpperBound(0));
+                        return array1.Length.CompareTo(array2.Length);
                     }
                 }
                 else
