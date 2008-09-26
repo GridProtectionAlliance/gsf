@@ -1,23 +1,3 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.Text;
-using System.Threading;
-using System.Drawing;
-using System.ComponentModel;
-//using TVA.Common;
-//using TVA.Serialization;
-using TVA.Services;
-//using TVA.IO.Common;
-using TVA.IO.Compression;
-//using TVA.DateTime.Common;
-using TVA.Communication.CommunicationHelper;
-using TVA.Communication.Common;
-using TVA.Configuration;
-
 //*******************************************************************************************************
 //  TVA.Communication.CommunicationClientBase.vb - Base functionality of a client for transporting data
 //  Copyright © 2006 - TVA, all rights reserved - Gbtc
@@ -42,6 +22,22 @@ using TVA.Configuration;
 //
 //*******************************************************************************************************
 
+using System.Diagnostics;
+using System.Linq;
+using System.Collections;
+using Microsoft.VisualBasic;
+using System.Collections.Generic;
+using System;
+using System.Text;
+using System.Threading;
+using System.Drawing;
+using System.ComponentModel;
+using TVA.Services;
+using TVA.IO.Compression;
+using TVA.Communication.CommunicationHelper;
+using TVA.Communication.Common;
+using TVA.Configuration;
+using TVA.Security.Cryptography;
 
 /// <summary>
 /// Represents a client involved in the transportation of data.
@@ -49,10 +45,8 @@ using TVA.Configuration;
 namespace TVA.Communication
 {
 	[ToolboxBitmap(typeof(CommunicationClientBase)), DefaultEvent("ReceivedData")]public abstract partial class CommunicationClientBase : ICommunicationClient, IPersistSettings, ISupportInitialize
-	{
-		
-		
-		#region " Member Declaration "
+	{	
+		#region " Members "
 		
 		private string m_connectionString;
 		private int m_receiveBufferSize;
@@ -63,9 +57,8 @@ namespace TVA.Communication
 		private bool m_secureSession;
 		private bool m_handshake;
 		private string m_handshakePassphrase;
-		private TVA.Security.Cryptography.EncryptLevel m_encryption;
-		private TVA.IO.Compression.CompressLevel m_compression;
-		private CRCCheckType m_crcCheck;
+		private EncryptLevel m_encryption;
+		private CompressLevel m_compression;
 		private bool m_enabled;
 		private Guid m_serverID;
 		private Guid m_clientID;
@@ -78,190 +71,87 @@ namespace TVA.Communication
 		private long m_connectTime;
 		private long m_disconnectTime;
 		private ManualResetEvent m_connectionWaitHandle;
-		
+
+        // We expose these two members to derived classes for their own internal use
+        protected long m_totalBytesReceived;
+        protected Action<byte[], int, int> m_receiveRawDataFunction;
+        protected byte[] m_buffer;
+
 		#endregion
-		
-		#region " Event Declaration "
-		
-		/// <summary>
+
+        #region " Constants "
+
+        /// <summary>
+        /// The maximum number of bytes that can be sent from the client to server in a single send operation.
+        /// </summary>
+        public const int MaximumDataSize = 524288000; // 500 MB
+
+        /// <summary>
+        /// The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.
+        /// </summary>
+        protected const string DefaultCryptoKey = "6572a33d-826f-4d96-8c28-8be66bbc700e";
+
+        #endregion
+        
+        #region " Events "
+
+        /// <summary>
 		/// Occurs when the client is trying to connect to the server.
 		/// </summary>
-		[Description("Occurs when the client is trying to connect to the server."), Category("Connection")]public delegate void ConnectingEventHandler(object sender, System.EventArgs e);
-		private ConnectingEventHandler ConnectingEvent;
-		
-		public event ConnectingEventHandler Connecting
-		{
-			add
-			{
-				ConnectingEvent = (ConnectingEventHandler) System.Delegate.Combine(ConnectingEvent, value);
-			}
-			remove
-			{
-				ConnectingEvent = (ConnectingEventHandler) System.Delegate.Remove(ConnectingEvent, value);
-			}
-		}
-		
+		[Description("Occurs when the client is trying to connect to the server."), Category("Connection")]
+		public event EventHandler Connecting;
 		
 		/// <summary>
 		/// Occurs when connecting of the client to the server has been cancelled.
 		/// </summary>
-		[Description("Occurs when connecting of the client to the server has been cancelled."), Category("Connection")]public delegate void ConnectingCancelledEventHandler(object sender, System.EventArgs e);
-		private ConnectingCancelledEventHandler ConnectingCancelledEvent;
-		
-		public event ConnectingCancelledEventHandler ConnectingCancelled
-		{
-			add
-			{
-				ConnectingCancelledEvent = (ConnectingCancelledEventHandler) System.Delegate.Combine(ConnectingCancelledEvent, value);
-			}
-			remove
-			{
-				ConnectingCancelledEvent = (ConnectingCancelledEventHandler) System.Delegate.Remove(ConnectingCancelledEvent, value);
-			}
-		}
-		
+		[Description("Occurs when connecting of the client to the server has been cancelled."), Category("Connection")]
+		public event EventHandler ConnectingCancelled;
 		
 		/// <summary>
 		/// Occurs when an exception is encountered while connecting to the server.
 		/// </summary>
-		[Description("Occurs when an exception occurs while connecting to the server."), Category("Connection")]public delegate void ConnectingExceptionEventHandler(object sender, GenericEventArgs<Exception> e);
-		private ConnectingExceptionEventHandler ConnectingExceptionEvent;
-		
-		public event ConnectingExceptionEventHandler ConnectingException
-		{
-			add
-			{
-				ConnectingExceptionEvent = (ConnectingExceptionEventHandler) System.Delegate.Combine(ConnectingExceptionEvent, value);
-			}
-			remove
-			{
-				ConnectingExceptionEvent = (ConnectingExceptionEventHandler) System.Delegate.Remove(ConnectingExceptionEvent, value);
-			}
-		}
-		
+		[Description("Occurs when an exception occurs while connecting to the server."), Category("Connection")]
+        public event EventHandler<GenericEventArgs<Exception>> ConnectingException;
 		
 		/// <summary>
 		/// Occurs when the client has successfully connected to the server.
 		/// </summary>
-		[Description("Occurs when the client has successfully connected to the server."), Category("Connection")]public delegate void ConnectedEventHandler(object sender, System.EventArgs e);
-		private ConnectedEventHandler ConnectedEvent;
-		
-		public event ConnectedEventHandler Connected
-		{
-			add
-			{
-				ConnectedEvent = (ConnectedEventHandler) System.Delegate.Combine(ConnectedEvent, value);
-			}
-			remove
-			{
-				ConnectedEvent = (ConnectedEventHandler) System.Delegate.Remove(ConnectedEvent, value);
-			}
-		}
-		
+		[Description("Occurs when the client has successfully connected to the server."), Category("Connection")]
+		public event EventHandler Connected;
 		
 		/// <summary>
 		/// Occurs when the client has disconnected from the server.
 		/// </summary>
-		[Description("Occurs when the client has disconnected from the server."), Category("Connection")]public delegate void DisconnectedEventHandler(object sender, System.EventArgs e);
-		private DisconnectedEventHandler DisconnectedEvent;
-		
-		public event DisconnectedEventHandler Disconnected
-		{
-			add
-			{
-				DisconnectedEvent = (DisconnectedEventHandler) System.Delegate.Combine(DisconnectedEvent, value);
-			}
-			remove
-			{
-				DisconnectedEvent = (DisconnectedEventHandler) System.Delegate.Remove(DisconnectedEvent, value);
-			}
-		}
-		
+        [Description("Occurs when the client has disconnected from the server."), Category("Connection")]
+        public event EventHandler Disconnected;	
 		
 		/// <summary>
 		/// Occurs when the client begins sending data to the server.
 		/// </summary>
-		[Description("Occurs when the client begins sending data to the server."), Category("Data")]public delegate void SendDataBeginEventHandler(object sender, GenericEventArgs<IdentifiableItem<Guid, byte[]>> e);
-		private SendDataBeginEventHandler SendDataBeginEvent;
-		
-		public event SendDataBeginEventHandler SendDataBegin
-		{
-			add
-			{
-				SendDataBeginEvent = (SendDataBeginEventHandler) System.Delegate.Combine(SendDataBeginEvent, value);
-			}
-			remove
-			{
-				SendDataBeginEvent = (SendDataBeginEventHandler) System.Delegate.Remove(SendDataBeginEvent, value);
-			}
-		}
-		
+		[Description("Occurs when the client begins sending data to the server."), Category("Data")]
+		public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataBegin;	
 		
 		/// <summary>
 		/// Occurs when the client has successfully send data to the server.
 		/// </summary>
-		[Description("Occurs when the client has successfully send data to the server."), Category("Data")]public delegate void SendDataCompleteEventHandler(object sender, GenericEventArgs<IdentifiableItem<Guid, byte[]>> e);
-		private SendDataCompleteEventHandler SendDataCompleteEvent;
-		
-		public event SendDataCompleteEventHandler SendDataComplete
-		{
-			add
-			{
-				SendDataCompleteEvent = (SendDataCompleteEventHandler) System.Delegate.Combine(SendDataCompleteEvent, value);
-			}
-			remove
-			{
-				SendDataCompleteEvent = (SendDataCompleteEventHandler) System.Delegate.Remove(SendDataCompleteEvent, value);
-			}
-		}
-		
+        [Description("Occurs when the client has successfully send data to the server."), Category("Data")]
+        public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataComplete;
 		
 		/// <summary>
 		/// Occurs when the client receives data from the server.
 		/// </summary>
-		[Description("Occurs when the client receives data from the server."), Category("Data")]public delegate void ReceivedDataEventHandler(object sender, GenericEventArgs<IdentifiableItem<Guid, byte[]>> e);
-		private ReceivedDataEventHandler ReceivedDataEvent;
-		
-		public event ReceivedDataEventHandler ReceivedData
-		{
-			add
-			{
-				ReceivedDataEvent = (ReceivedDataEventHandler) System.Delegate.Combine(ReceivedDataEvent, value);
-			}
-			remove
-			{
-				ReceivedDataEvent = (ReceivedDataEventHandler) System.Delegate.Remove(ReceivedDataEvent, value);
-			}
-		}
-		
+        [Description("Occurs when the client receives data from the server."), Category("Data")]
+        public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedData;
 		
 		/// <summary>
 		/// Occurs when no data is received from the server after waiting for the specified time.
 		/// </summary>
-		[Description("Occurs when no data is received from the server after waiting for the specified time."), Category("Data")]public delegate void ReceiveTimedOutEventHandler(object sender, System.EventArgs e);
-		private ReceiveTimedOutEventHandler ReceiveTimedOutEvent;
-		
-		public event ReceiveTimedOutEventHandler ReceiveTimedOut
-		{
-			add
-			{
-				ReceiveTimedOutEvent = (ReceiveTimedOutEventHandler) System.Delegate.Combine(ReceiveTimedOutEvent, value);
-			}
-			remove
-			{
-				ReceiveTimedOutEvent = (ReceiveTimedOutEventHandler) System.Delegate.Remove(ReceiveTimedOutEvent, value);
-			}
-		}
-		
+		[Description("Occurs when no data is received from the server after waiting for the specified time."), Category("Data")]
+		public event EventHandler ReceiveTimedOut;
 		
 		#endregion
 		
 		#region " Code Scope: Public "
-		
-		/// <summary>
-		/// The maximum number of bytes that can be sent from the client to server in a single send operation.
-		/// </summary>
-		public const int MaximumDataSize = 524288000; // 500 MB
 		
 		public CommunicationClientBase(string connectionString) : this()
 		{
@@ -275,7 +165,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The data required by the client to connect to the server.</returns>
-		[Description("The data required by the client to connect to the server."), Category("Configuration")]public virtual string ConnectionString
+		[Description("The data required by the client to connect to the server."), Category("Configuration")]
+        public virtual string ConnectionString
 		{
 			get
 			{
@@ -302,7 +193,8 @@ namespace TVA.Communication
 		/// <value></value>
 		/// <returns>The maximum number of times the client will attempt to connect to the server.</returns>
 		/// <remarks>Set MaximumConnectionAttempts = -1 for infinite connection attempts.</remarks>
-		[Description("The maximum number of times the client will attempt to connect to the server. Set MaximumConnectionAttempts = -1 for infinite connection attempts."), Category("Configuration"), DefaultValue(typeof(int), "-1")]public virtual int MaximumConnectionAttempts
+		[Description("The maximum number of times the client will attempt to connect to the server. Set MaximumConnectionAttempts = -1 for infinite connection attempts."), Category("Configuration"), DefaultValue(typeof(int), "-1")]
+        public virtual int MaximumConnectionAttempts
 		{
 			get
 			{
@@ -331,7 +223,8 @@ namespace TVA.Communication
 		/// passphrase; otherwise False.
 		/// </returns>
 		///<remarks>Handshake and Encryption must be enabled in order to use SecureSession.</remarks>
-		[Description("Indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase."), Category("Security"), DefaultValue(typeof(bool), "False")]public virtual bool SecureSession
+		[Description("Indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase."), Category("Security"), DefaultValue(typeof(bool), "False")]
+        public virtual bool SecureSession
 		{
 			get
 			{
@@ -357,7 +250,8 @@ namespace TVA.Communication
 		/// <value></value>
 		/// <returns>True if the server will do a handshake with the client; otherwise False.</returns>
 		/// <remarks>SecureSession must be disabled before disabling Handshake.</remarks>
-		[Description("Indicates whether the server will do a handshake with the client after accepting its connection."), Category("Security"), DefaultValue(typeof(bool), "True")]public virtual bool Handshake
+		[Description("Indicates whether the server will do a handshake with the client after accepting its connection."), Category("Security"), DefaultValue(typeof(bool), "True")]
+        public virtual bool Handshake
 		{
 			get
 			{
@@ -387,7 +281,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The passpharse that will provided to the server for authentication during the handshake process.</returns>
-		[Description("The passpharse that will provided to the server for authentication during the handshake process."), Category("Security"), DefaultValue(typeof(string), "")]public virtual string HandshakePassphrase
+		[Description("The passpharse that will provided to the server for authentication during the handshake process."), Category("Security"), DefaultValue(typeof(string), "")]
+        public virtual string HandshakePassphrase
 		{
 			get
 			{
@@ -411,7 +306,8 @@ namespace TVA.Communication
 		/// <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while client is connected</exception>
 		/// <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
 		/// <returns>The maximum number of bytes that can be received at a time by the client from the server.</returns>
-		[Description("The maximum number of bytes that can be received at a time by the client from the server."), Category("Data"), DefaultValue(typeof(int), "8192")]public virtual int ReceiveBufferSize
+		[Description("The maximum number of bytes that can be received at a time by the client from the server."), Category("Data"), DefaultValue(typeof(int), "8192")]
+        public virtual int ReceiveBufferSize
 		{
 			get
 			{
@@ -441,7 +337,8 @@ namespace TVA.Communication
 		/// <value></value>
 		/// <returns>The time to wait in milliseconds for data to be received from the server before timing out.</returns>
 		/// <remarks>Set ReceiveTimeout = -1 to disable timeout for receiving data.</remarks>
-		[Description("The time to wait in milliseconds for data to be received from the server before timing out. Set ReceiveTimeout = -1 to disable timeout for receiving data."), Category("Data"), DefaultValue(typeof(int), "-1")]public virtual int ReceiveTimeout
+		[Description("The time to wait in milliseconds for data to be received from the server before timing out. Set ReceiveTimeout = -1 to disable timeout for receiving data."), Category("Data"), DefaultValue(typeof(int), "-1")]
+        public virtual int ReceiveTimeout
 		{
 			get
 			{
@@ -477,7 +374,8 @@ namespace TVA.Communication
 		/// 3) A private session key will be used as the key when SecureSession is enabled.
 		/// </para>
 		/// </remarks>
-		[Description("The encryption level to be used for encrypting the data exchanged between the client and server."), Category("Data"), DefaultValue(typeof(TVA.Security.Cryptography.EncryptLevel), "None")]public virtual TVA.Security.Cryptography.EncryptLevel Encryption
+		[Description("The encryption level to be used for encrypting the data exchanged between the client and server."), Category("Data"), DefaultValue(typeof(TVA.Security.Cryptography.EncryptLevel), "None")]
+        public virtual EncryptLevel Encryption
 		{
 			get
 			{
@@ -485,7 +383,7 @@ namespace TVA.Communication
 			}
 			set
 			{
-				if ((! m_secureSession) || (m_secureSession && value != System.Security.Cryptography.EncryptLevel.None))
+				if ((! m_secureSession) || (m_secureSession && value != EncryptLevel.None))
 				{
 					m_encryption = value;
 				}
@@ -503,7 +401,8 @@ namespace TVA.Communication
 		/// <value></value>
 		/// <returns>The compression level to be used for compressing the data exchanged between the client and server.</returns>
 		/// <remarks>Set Compression = NoCompression to disable compression.</remarks>
-		[Description("The compression level to be used for compressing the data exchanged between the client and server."), Category("Data"), DefaultValue(typeof(TVA.IO.Compression.CompressLevel), "NoCompression")]public virtual TVA.IO.Compression.CompressLevel Compression
+		[Description("The compression level to be used for compressing the data exchanged between the client and server."), Category("Data"), DefaultValue(typeof(TVA.IO.Compression.CompressLevel), "NoCompression")]
+        public virtual CompressLevel Compression
 		{
 			get
 			{
@@ -520,7 +419,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>True if the client is enabled; otherwise False.</returns>
-		[Description("Indicates whether the client is enabled."), Category("Behavior"), DefaultValue(typeof(bool), "True")]public virtual bool Enabled
+		[Description("Indicates whether the client is enabled."), Category("Behavior"), DefaultValue(typeof(bool), "True")]
+        public virtual bool Enabled
 		{
 			get
 			{
@@ -537,7 +437,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The encoding to be used for the text sent to the server.</returns>
-		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public virtual Encoding TextEncoding
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public virtual Encoding TextEncoding
 		{
 			get
 			{
@@ -557,7 +458,8 @@ namespace TVA.Communication
 		/// will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
 		/// bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
 		/// </remarks>
-		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public virtual ReceiveRawDataFunctionSignature ReceiveRawDataFunction
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public virtual Action<byte[], int, int> ReceiveRawDataFunction
 		{
 			get
 			{
@@ -574,7 +476,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The protocol used by the client for transferring data to and from the server.</returns>
-		[Browsable(false)]public virtual TransportProtocol Protocol
+		[Browsable(false)]
+        public virtual TransportProtocol Protocol
 		{
 			get
 			{
@@ -591,7 +494,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>ID of the server to which the client is connected.</returns>
-		[Browsable(false)]public virtual Guid ServerID
+		[Browsable(false)]
+        public virtual Guid ServerID
 		{
 			get
 			{
@@ -608,7 +512,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>ID of the client.</returns>
-		[Browsable(false)]public virtual Guid ClientID
+		[Browsable(false)]
+        public virtual Guid ClientID
 		{
 			get
 			{
@@ -619,26 +524,14 @@ namespace TVA.Communication
 				m_clientID = value;
 			}
 		}
-		
-		/// <summary>
-		/// Gets the current instance of communication client.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The current instance communication client.</returns>
-		[Browsable(false)]public ICommunicationClient This
-		{
-			get
-			{
-				return this;
-			}
-		}
-		
+			
 		/// <summary>
 		/// Gets a boolean value indicating whether the client is currently connected to the server.
 		/// </summary>
 		/// <value></value>
 		/// <returns>True if the client is connected; otherwise False.</returns>
-		[Browsable(false)]public virtual bool IsConnected
+		[Browsable(false)]
+        public virtual bool IsConnected
 		{
 			get
 			{
@@ -651,7 +544,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The time in seconds for which the client has been connected to the server.</returns>
-		[Browsable(false)]public virtual double ConnectionTime
+		[Browsable(false)]
+        public virtual double ConnectionTime
 		{
 			get
 			{
@@ -676,7 +570,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The total number of bytes sent by the client to the server since the connection is established.</returns>
-		[Browsable(false)]public virtual long TotalBytesSent
+		[Browsable(false)]
+        public virtual long TotalBytesSent
 		{
 			get
 			{
@@ -689,7 +584,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The total number of bytes received by the client from the server since the connection is established.</returns>
-		[Browsable(false)]public virtual long TotalBytesReceived
+		[Browsable(false)]
+        public virtual long TotalBytesReceived
 		{
 			get
 			{
@@ -712,9 +608,7 @@ namespace TVA.Communication
 		/// </summary>
 		public virtual void Disconnect()
 		{
-			
 			Disconnect(Timeout.Infinite);
-			
 		}
 		
 		/// <summary>
@@ -728,9 +622,7 @@ namespace TVA.Communication
 		/// <param name="data">The plain-text data that is to be sent to the server.</param>
 		public virtual void Send(string data)
 		{
-			
 			Send(m_textEncoding.GetBytes(data));
-			
 		}
 		
 		/// <summary>
@@ -739,9 +631,7 @@ namespace TVA.Communication
 		/// <param name="serializableObject">The serializable object that is to be sent to the server.</param>
 		public virtual void Send(object serializableObject)
 		{
-			
-			Send(TVA.Serialization.GetBytes(serializableObject));
-			
+			Send(Serialization.GetBytes(serializableObject));
 		}
 		
 		/// <summary>
@@ -750,9 +640,7 @@ namespace TVA.Communication
 		/// <param name="data">The binary data that is to be sent to the server.</param>
 		public virtual void Send(byte[] data)
 		{
-			
 			Send(data, 0, data.Length);
-			
 		}
 		
 		/// <summary>
@@ -763,7 +651,6 @@ namespace TVA.Communication
 		/// <param name="size">The number of bytes to be sent.</param>
 		public virtual void Send(byte[] data, int offset, int size)
 		{
-			
 			if (m_enabled && m_isConnected)
 			{
 				if (data == null)
@@ -795,7 +682,6 @@ namespace TVA.Communication
 					throw (new ArgumentNullException("data"));
 				}
 			}
-			
 		}
 		
 		/// <summary>
@@ -809,9 +695,7 @@ namespace TVA.Communication
 		/// <returns>True if the connection was successful; otherwise False.</returns>
 		public bool WaitForConnection(int waitTime)
 		{
-			
 			return WaitForConnection(waitTime, true);
-			
 		}
 		
 		/// <summary>
@@ -829,7 +713,6 @@ namespace TVA.Communication
 		/// <returns>True if the connection was successful; otherwise False.</returns>
 		public bool WaitForConnection(int waitTime, bool stopRetrying)
 		{
-			
 			if (! m_isConnected)
 			{
 				// We'll wait until client has connected or until the time to wait for connection is reached.
@@ -848,7 +731,6 @@ namespace TVA.Communication
 			{
 				return true;
 			}
-			
 		}
 		
 		#region " Interface Implementation"
@@ -857,7 +739,8 @@ namespace TVA.Communication
 		
 		private bool m_previouslyEnabled = false;
 		
-		[Browsable(false)]public virtual string Name
+		[Browsable(false)]
+        public virtual string Name
 		{
 			get
 			{
@@ -870,7 +753,8 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The current status of the client.</returns>
-		[Browsable(false)]public virtual string Status
+		[Browsable(false)]
+        public virtual string Status
 		{
 			get
 			{
@@ -914,7 +798,6 @@ namespace TVA.Communication
 		
 		public virtual void ServiceStateChanged(Services.ServiceState newState)
 		{
-			
 			if (newState == ServiceState.Started)
 			{
 				this.Connect();
@@ -936,14 +819,14 @@ namespace TVA.Communication
 			{
 				this.Dispose();
 			}
-			
 		}
 		
 		#endregion
 		
 		#region " IPersistSettings "
 		
-		[Category("Settings")]public bool PersistSettings
+		[Category("Settings")]
+        public bool PersistSettings
 		{
 			get
 			{
@@ -955,7 +838,8 @@ namespace TVA.Communication
 			}
 		}
 		
-		[Category("Settings")]public string SettingsCategoryName
+		[Category("Settings")]
+        public string SettingsCategoryName
 		{
 			get
 			{
@@ -1056,19 +940,15 @@ namespace TVA.Communication
 		
 		public void BeginInit()
 		{
-			
 			// We don't need to do anything before the component is initialized.
-			
 		}
 		
 		public void EndInit()
 		{
-			
 			if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
 			{
 				LoadSettings(); // Load settings from the config file.
 			}
-			
 		}
 		
 		#endregion
@@ -1078,17 +958,7 @@ namespace TVA.Communication
 		#endregion
 		
 		#region " Code Scope: Protected "
-		
-		// We expose these two members to derived classes for their own internal use
-		protected long m_totalBytesReceived;
-		protected ReceiveRawDataFunctionSignature m_receiveRawDataFunction;
-		protected byte[] m_buffer;
-		
-		/// <summary>
-		/// The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.
-		/// </summary>
-		protected const string DefaultCryptoKey = "6572a33d-826f-4d96-8c28-8be66bbc700e";
-		
+					
 		/// <summary>
 		/// Raises the TVA.Communication.ClientBase.Connecting event.
 		/// </summary>
@@ -1096,11 +966,8 @@ namespace TVA.Communication
 		/// <remarks>This method is to be called when the client is attempting connection to the server.</remarks>
 		protected virtual void OnConnecting(EventArgs e)
 		{
-			
 			m_connectionWaitHandle.Reset();
-			if (ConnectingEvent != null)
-				ConnectingEvent(this, e);
-			
+			if (Connecting != null) Connecting(this, e);
 		}
 		
 		/// <summary>
@@ -1113,10 +980,7 @@ namespace TVA.Communication
 		/// </remarks>
 		protected virtual void OnConnectingCancelled(EventArgs e)
 		{
-			
-			if (ConnectingCancelledEvent != null)
-				ConnectingCancelledEvent(this, e);
-			
+			if (ConnectingCancelled != null) ConnectingCancelled(this, e);
 		}
 		
 		/// <summary>
@@ -1129,10 +993,7 @@ namespace TVA.Communication
 		/// </remarks>
 		protected virtual void OnConnectingException(Exception e)
 		{
-			
-			if (ConnectingExceptionEvent != null)
-				ConnectingExceptionEvent(this, new GenericEventArgs<Exception>(e));
-			
+			if (ConnectingException != null) ConnectingException(this, new GenericEventArgs<Exception>(e));
 		}
 		
 		/// <summary>
@@ -1142,16 +1003,13 @@ namespace TVA.Communication
 		/// <remarks>This method is to be called when the client has successfully connected to the server.</remarks>
 		protected virtual void OnConnected(EventArgs e)
 		{
-			
 			m_isConnected = true;
 			m_connectTime = System.DateTime.Now.Ticks; // Save the time when the client connected to the server.
 			m_disconnectTime = 0;
 			m_totalBytesSent = 0; // Reset the number of bytes sent and received between the client and server.
 			m_totalBytesReceived = 0;
 			m_connectionWaitHandle.Set();
-			if (ConnectedEvent != null)
-				ConnectedEvent(this, e);
-			
+			if (Connected != null) Connected(this, e);
 		}
 		
 		/// <summary>
@@ -1161,13 +1019,10 @@ namespace TVA.Communication
 		/// <remarks>This method is to be called when the client has disconnected from the server.</remarks>
 		protected virtual void OnDisconnected(EventArgs e)
 		{
-			
 			m_serverID = Guid.Empty;
 			m_isConnected = false;
 			m_disconnectTime = System.DateTime.Now.Ticks; // Save the time when client was disconnected from the server.
-			if (DisconnectedEvent != null)
-				DisconnectedEvent(this, e);
-			
+			if (Disconnected != null) Disconnected(this, e);
 		}
 		
 		/// <summary>
@@ -1177,10 +1032,7 @@ namespace TVA.Communication
 		/// <remarks>This method is to be called when the client begins sending data to the server.</remarks>
 		protected virtual void OnSendDataBegin(IdentifiableItem<Guid, byte[]> e)
 		{
-			
-			if (SendDataBeginEvent != null)
-				SendDataBeginEvent(this, new GenericEventArgs<IdentifiableItem<Guid, byte>>(e));
-			
+			if (SendDataBegin != null) SendDataBegin(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
 		}
 		
 		/// <summary>
@@ -1190,11 +1042,8 @@ namespace TVA.Communication
 		/// <remarks>This method is to be called when the client has finished sending data to the server.</remarks>
 		protected virtual void OnSendDataComplete(IdentifiableItem<Guid, byte[]> e)
 		{
-			
-			m_totalBytesSent += e.Item.Length();
-			if (SendDataCompleteEvent != null)
-				SendDataCompleteEvent(this, new GenericEventArgs<IdentifiableItem<Guid, byte>>(e));
-			
+			m_totalBytesSent += e.Item.Length;
+			if (SendDataComplete != null) SendDataComplete(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
 		}
 		
 		/// <summary>
@@ -1204,9 +1053,7 @@ namespace TVA.Communication
 		/// <remarks>This method is to be called when the client receives data from the server.</remarks>
 		protected virtual void OnReceivedData(IdentifiableItem<Guid, byte[]> e)
 		{
-			
-			m_totalBytesReceived += e.Item.Length();
-			
+			m_totalBytesReceived += e.Item.Length;
 			try
 			{
 				e.Item = GetActualData(e.Item);
@@ -1215,9 +1062,7 @@ namespace TVA.Communication
 			{
 				// We'll just pass on the data that we received.
 			}
-			if (ReceivedDataEvent != null)
-				ReceivedDataEvent(this, new GenericEventArgs<IdentifiableItem<Guid, byte>>(e));
-			
+			if (ReceivedData != null) ReceivedData(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
 		}
 		
 		/// <summary>
@@ -1229,10 +1074,7 @@ namespace TVA.Communication
 		/// </remarks>
 		protected virtual void OnReceiveTimedOut(EventArgs e)
 		{
-			
-			if (ReceiveTimedOutEvent != null)
-				ReceiveTimedOutEvent(this, e);
-			
+			if (ReceiveTimedOut != null) ReceiveTimedOut(this, e);
 		}
 		
 		/// <summary>
