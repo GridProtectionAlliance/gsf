@@ -31,6 +31,23 @@ namespace TVA.Collections
     /// <summary>Defines extension functions related to manipulation of arrays and collections.</summary>
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// Returns a copy of the <see cref="Array"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of the <see cref="Array"/> to be copied.</typeparam>
+        /// <param name="source">The source <see cref="Array"/> whose elements are to be copied.</param>
+        /// <param name="startIndex">The source array index from where the elements are to be copied.</param>
+        /// <param name="length">The number of elements to be copied starting from the startIndex.</param>
+        /// <returns>An <see cref="Array"/> of elements.</returns>
+        public static T[] Copy<T>(this T[] source, int startIndex, int length)
+        {
+            // Create a new array that will be returned with the specified array elements.
+            T[] copyOfSource = new T[source.Length - startIndex < length ? source.Length - startIndex : length];
+            Array.Copy(source, startIndex, copyOfSource, 0, copyOfSource.Length);
+            
+            return copyOfSource;
+        }
+
         /// <summary>Returns the smallest item from the enumeration.</summary>
         public static TSource Min<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, int> comparer)
         {

@@ -26,9 +26,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using TVA.Collections;
 
 namespace TVA.Console
 {
+    /// <summary>
+    /// A class to parse command-line command containing ordered arguments along with optional arguments.
+    /// </summary>
     [Serializable()]
     public class Arguments : IEnumerable, IEnumerable<KeyValuePair<string, string>>
     {
@@ -38,18 +42,91 @@ namespace TVA.Console
         private string m_commandLine;
         private string m_orderedArgID;
         private int m_orderedArgCount;
-        private Dictionary<string, string> m_parameters;
+        private Dictionary<string, string> m_arguments;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Arguments"/> class.
+        /// </summary>
+        /// <param name="commandLine">The command-line command to be parsed.</param>
+        /// <example>
+        /// This sample shows how to parse a command-line command:
+        /// <code>
+        /// using TVA;
+        /// .
+        /// .
+        /// .
+        /// Arguments args = new Arguments("Sample.txt -wrap=false");
+        /// string file = args["OrderedArgs1"];
+        /// bool wrapText = args["wrap"].ParseBoolean();
+        /// </code>
+        /// </example>
         public Arguments(string commandLine)
-            : this(commandLine, "OrderedArg")
+            : this(commandLine, false)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Arguments"/> class.
+        /// </summary>
+        /// <param name="commandLine">The command-line command to be parsed.</param>
+        /// <param name="skipFirstArgument">A boolean value that indicates whether the first argument in the command-line command is to be skipped from being processed.</param>
+        /// <example>
+        /// This sample shows how to parse a command-line command:
+        /// <code>
+        /// // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
+        /// Arguments args = new Arguments(Environment.CommandLine, true);
+        /// string doc = args["OrderedArgs1"];
+        /// string theme = args["theme"];
+        /// </code>
+        /// </example>
+        public Arguments(string commandLine, bool skipFirstArgument)
+            : this(commandLine, "OrderedArg", skipFirstArgument)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Arguments"/> class.
+        /// </summary>
+        /// <param name="commandLine">The command-line command to be parsed.</param>
+        /// <param name="orderedArgID">The prefix to be used in the identifier of ordered arguments.</param>
+        /// <example>
+        /// This sample shows how to parse a command-line command:
+        /// <code>
+        /// using TVA;
+        /// .
+        /// .
+        /// .
+        /// Arguments args = new Arguments(@"'c:\docs\' 'c:\copy\' -overwrite=true", "FileSpecs");
+        /// string source = args["FileSpecs1"];
+        /// string destination = args["FileSpecs2"];
+        /// bool overwrite = args["overwrite"].ParseBoolean();
+        /// </code>
+        /// </example>
         public Arguments(string commandLine, string orderedArgID)
+            : this(commandLine, orderedArgID, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Arguments"/> class.
+        /// </summary>
+        /// <param name="commandLine">The command-line command to be parsed.</param>
+        /// <param name="orderedArgID">The prefix to be used in the identifier of ordered arguments.</param>
+        /// <param name="skipFirstArgument">A boolean value that indicates whether the first argument in the command-line command is to be skipped from being processed.</param>
+        /// <example>
+        /// This sample shows how to parse a command-line command:
+        /// <code>
+        /// // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
+        /// Arguments args = new Arguments(Environment.CommandLine, "FileSpecs",true);
+        /// string doc = args["FileSpecs1"];
+        /// string theme = args["theme"];
+        /// </code>
+        /// </example>
+        public Arguments(string commandLine, string orderedArgID, bool skipFirstArgument)
         {
             Regex spliter = new Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             Regex remover = new Regex("^[\'\"]?(.*?)[\'\"]?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -58,7 +135,7 @@ namespace TVA.Console
             string[] parts;
 
             // We create a case-insensitive dictionary for parameters
-            m_parameters = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+            m_arguments = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             m_orderedArgCount = 0;
             m_commandLine = commandLine;
             m_orderedArgID = orderedArgID;
@@ -68,14 +145,16 @@ namespace TVA.Console
             // Examples:
             //   -param1=value1 --param2 /param3:"Test-:-work"
             //   /param4=happy -param5 '--=nice=--'
-            foreach (string arg in ParseCommand(m_commandLine))
+            string[] args = ParseCommand(m_commandLine);
+            if (skipFirstArgument && args.Length > 0) args = args.Copy(1, args.Length - 1);
+            foreach (string arg in args)
             {
                 // Found just a parameter in last pass...
                 // The last parameter is still waiting, with no value, set it to nothing.
                 if (parameter != null)
                 {
-                    if (!m_parameters.ContainsKey(parameter))
-                        m_parameters.Add(parameter, null);
+                    if (!m_arguments.ContainsKey(parameter))
+                        m_arguments.Add(parameter, null);
                 }
                 parameter = null;
 
@@ -89,10 +168,10 @@ namespace TVA.Console
                         parameter = orderedArgID + m_orderedArgCount;
 
                         // Remove possible enclosing characters (",')
-                        if (!m_parameters.ContainsKey(parameter))
+                        if (!m_arguments.ContainsKey(parameter))
                         {
                             argument = remover.Replace(arg, "$1");
-                            m_parameters.Add(parameter, argument);
+                            m_arguments.Add(parameter, argument);
                         }
 
                         parameter = null;
@@ -111,10 +190,10 @@ namespace TVA.Console
                                 parameter = orderedArgID + m_orderedArgCount;
 
                                 // Remove possible enclosing characters (",')
-                                if (!m_parameters.ContainsKey(parameter))
+                                if (!m_arguments.ContainsKey(parameter))
                                 {
                                     argument = remover.Replace(arg, "$1");
-                                    m_parameters.Add(parameter, argument);
+                                    m_arguments.Add(parameter, argument);
                                 }
 
                                 parameter = null;
@@ -128,10 +207,10 @@ namespace TVA.Console
                                 parameter = parts[1];
 
                                 // Remove possible enclosing characters (",')
-                                if (!m_parameters.ContainsKey(parameter))
+                                if (!m_arguments.ContainsKey(parameter))
                                 {
                                     parts[2] = remover.Replace(parts[2], "$1");
-                                    m_parameters.Add(parameter, parts[2]);
+                                    m_arguments.Add(parameter, parts[2]);
                                 }
 
                                 parameter = null;
@@ -142,31 +221,43 @@ namespace TVA.Console
             }
 
             // In case a parameter is still waiting
-            if (parameter != null && !m_parameters.ContainsKey(parameter))
-                m_parameters.Add(parameter, null);
+            if (parameter != null && !m_arguments.ContainsKey(parameter))
+                m_arguments.Add(parameter, null);
         }
 
         #endregion
 
         #region [ Properties ]
 
-        // Retrieve a parameter value if it exists
-        public virtual string this[string param]
+        /// <summary>
+        /// Gets the value for the specified argument from the command-line command.
+        /// </summary>
+        /// <param name="argument">The argument whose value is to retrieved.</param>
+        /// <returns>Value for the specified argument if found; otherwise null.</returns>
+        public virtual string this[string argument]
         {
             get
             {
-                return m_parameters[param];
+                string value;
+                m_arguments.TryGetValue(argument, out value);
+                return value;
             }
         }
 
+        /// <summary>
+        /// Gets the total number of arguments (ordered and optional) present in the command-line command.
+        /// </summary>
         public virtual int Count
         {
             get
             {
-                return m_parameters.Count;
+                return m_arguments.Count;
             }
         }
 
+        /// <summary>
+        /// Gets the prefix text in the identifier of ordered arguments present in the command-line command.
+        /// </summary>
         public virtual string OrderedArgID
         {
             get
@@ -175,6 +266,9 @@ namespace TVA.Console
             }
         }
 
+        /// <summary>
+        /// Gets the total number of ordered arguments in the command-line command.
+        /// </summary>
         public virtual int OrderedArgCount
         {
             get
@@ -183,19 +277,25 @@ namespace TVA.Console
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value that indicates whether the command-line command contains request for displaying help.
+        /// </summary>
         public virtual bool ContainsHelpRequest
         {
             get
             {
-                return (m_parameters.ContainsKey("?") || m_parameters.ContainsKey("Help"));
+                return (m_arguments.ContainsKey("?") || m_arguments.ContainsKey("Help"));
             }
         }
 
+        /// <summary>
+        /// Gets the dictionary containing all of the arguments present in the command-line command.
+        /// </summary>
         protected Dictionary<string, string> InternalDictionary
         {
             get
             {
-                return m_parameters;
+                return m_arguments;
             }
         }
 
@@ -203,11 +303,19 @@ namespace TVA.Console
 
         #region [ Methods ]
 
-        public virtual bool Exists(string param)
+        /// <summary>
+        /// Gets a boolean value that indicates whether the specified argument is present in the command-line command.
+        /// </summary>
+        /// <param name="argument">The argument to be checked.</param>
+        /// <returns></returns>
+        public virtual bool Exists(string argument)
         {
-            return m_parameters.ContainsKey(param);
+            return m_arguments.ContainsKey(argument);
         }
 
+        /// <summary>
+        /// Gets a string representation of the <see cref="Arguments"/> object.
+        /// </summary>
         public override string ToString()
         {
             return m_commandLine;
@@ -215,23 +323,26 @@ namespace TVA.Console
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable)m_parameters).GetEnumerator();
+            return ((IEnumerable)m_arguments).GetEnumerator();
         }
 
         IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
         {
-            return m_parameters.GetEnumerator();
+            return m_arguments.GetEnumerator();
         }
 
         #endregion
 
         #region [ Static ]
 
-        // Static Methods
-        /// <summary>This function can be used to parse a single parameterized string and turn it into an array of parameters.</summary>
-        /// <remarks>This function will always return at least one argument, even if it is an empty string.</remarks>
+        /// <summary>
+        /// This function can be used to parse a single parameterized string and turn it into an array of parameters.
+        /// </summary>
         /// <param name="command">String of parameters.</param>
         /// <returns>Array of parameters.</returns>
+        /// <remarks>
+        /// This function will always return at least one argument, even if it is an empty string.
+        /// </remarks>
         public static string[] ParseCommand(string command)
         {
             List<string> parsedCommand = new List<string>();
