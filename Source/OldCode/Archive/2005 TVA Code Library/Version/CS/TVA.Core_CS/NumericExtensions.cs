@@ -26,7 +26,7 @@ namespace TVA
         /// if <paramref name="source">source</paramref> is zero.</summary>
         /// <param name="source">Value to test for zero.</param>
         /// <returns>A non-zero value.</returns>
-        public static T NotZero<T>(this T source) where T : IEquatable<T>
+        public static T NotZero<T>(this T source) where T : struct, IEquatable<T>
         {
             return NotZero<T>(source, (T)Convert.ChangeType(-1, typeof(T)));
         }
@@ -38,7 +38,7 @@ namespace TVA
         /// <returns>A non-zero value.</returns>
         /// <remarks>To optimize performance, this function does not validate that the notZeroReturnValue is not
         /// zero.</remarks>
-        public static T NotZero<T>(this T source, T nonZeroReturnValue) where T : IEquatable<T>
+        public static T NotZero<T>(this T source, T nonZeroReturnValue) where T : struct, IEquatable<T>
         {
             return (((IEquatable<T>)source).Equals(default(T)) ? nonZeroReturnValue : source);
         }
