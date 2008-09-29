@@ -26,19 +26,22 @@ using TVA.Communication.Common;
 
 namespace TVA.Communication
 {
-	public partial class UdpServer : TVA.Communication.CommunicationServerBase
-	{
-		
-		
-		[System.Diagnostics.DebuggerNonUserCode()]public UdpServer(System.ComponentModel.IContainer Container) : this()
-		{
-			
-			//Required for Windows.Forms Class Composition Designer support
-			Container.Add(this);
-			
-		}
-		
-		[System.Diagnostics.DebuggerNonUserCode()]public UdpServer()
+    public partial class UdpServer : TVA.Communication.CommunicationServerBase
+    {
+
+
+        [System.Diagnostics.DebuggerNonUserCode()]
+        public UdpServer(System.ComponentModel.IContainer Container)
+            : this()
+        {
+
+            //Required for Windows.Forms Class Composition Designer support
+            Container.Add(this);
+
+        }
+
+        [System.Diagnostics.DebuggerNonUserCode()]
+        public UdpServer()
 		{
 			
 			//This call is required by the Component Designer.
@@ -52,28 +55,30 @@ namespace TVA.Communication
 			base.ReceiveBufferSize = MaximumUdpDatagramSize;
 			
 		}
-		
-		//Component overrides dispose to clean up the component list.
-		[System.Diagnostics.DebuggerNonUserCode()]protected override void Dispose(bool disposing)
-		{
-			if (disposing && (components != null))
-			{
-				components.Dispose();
-			}
-			base.Dispose(disposing);
-		}
-		
-		//Required by the Component Designer
-		private System.ComponentModel.Container components = null;
-		
-		//NOTE: The following procedure is required by the Component Designer
-		//It can be modified using the Component Designer.
-		//Do not modify it using the code editor.
-		[System.Diagnostics.DebuggerStepThrough()]private void InitializeComponent()
-		{
-			components = new System.ComponentModel.Container();
-		}
-		
-	}
-	
+
+        //Component overrides dispose to clean up the component list.
+        [System.Diagnostics.DebuggerNonUserCode()]
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        //Required by the Component Designer
+        private System.ComponentModel.Container components = null;
+
+        //NOTE: The following procedure is required by the Component Designer
+        //It can be modified using the Component Designer.
+        //Do not modify it using the code editor.
+        [System.Diagnostics.DebuggerStepThrough()]
+        private void InitializeComponent()
+        {
+            components = new System.ComponentModel.Container();
+        }
+
+    }
+
 }
