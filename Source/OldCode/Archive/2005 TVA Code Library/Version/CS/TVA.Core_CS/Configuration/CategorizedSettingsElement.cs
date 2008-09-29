@@ -22,6 +22,8 @@
 //       Converted code to C#.
 //  09/22/2008 - J. Ritchie Carroll
 //       Made boolean types a special case (i.e., using ParseBoolean extension).
+//  09/29/2008 - Pinal C Patel
+//       Reviewed code comments.
 //
 //*******************************************************************************************************
 
@@ -39,7 +41,10 @@ namespace TVA.Configuration
         #region [ Members ]
 
         // Constants
-        private const string CryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
+        private const string DefaultCryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
+
+        // Fields
+        private string m_cryptoKey;
 
         #endregion
 
@@ -48,7 +53,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Required by the configuration API and is for internal use only.
         /// </summary>
-        internal CategorizedSettingsElement() 
+        internal CategorizedSettingsElement()
             : this("")
         {
         }
@@ -91,6 +96,7 @@ namespace TVA.Configuration
         /// <param name="encrypted">A boolean value that indicates whether the setting value is to be encrypted.</param>
         public CategorizedSettingsElement(string name, string value, string description, bool encrypted)
         {
+            m_cryptoKey = DefaultCryptoKey;
             this.Name = name;
             Update(value, description, encrypted);
         }
@@ -170,8 +176,24 @@ namespace TVA.Configuration
         }
 
         #endregion
-        
+
         #region [ Methods ]
+
+        /// <summary>
+        /// Sets the key to be used for encrypting and decrypting the <see cref="Value"/>.
+        /// </summary>
+        /// <param name="cryptoKey">New crypto key.</param>
+        public void SetCryptoKey(string cryptoKey)
+        {
+            if (!string.IsNullOrEmpty(cryptoKey))
+            {
+                // Re-encrypt the existing value with the new key. This is done because the value gets encrypted,
+                // if specified, with the default crypto key when the value is set during instantiation.
+                string decryptedValue = Value;
+                m_cryptoKey = cryptoKey;
+                Value = decryptedValue;
+            }
+        }
 
         /// <summary>
         /// Updates setting information.
@@ -226,7 +248,7 @@ namespace TVA.Configuration
         /// If this function fails to properly coerce value to specified type, the default value is returned.
         /// </remarks>
         public T ValueAs<T>()
-        { 
+        {
             return this.ValueAs<T>(default(T));
         }
 
@@ -579,21 +601,21 @@ namespace TVA.Configuration
 
         private string EncryptValue(string value)
         {
-            if ((base["encrypted"] != null) && ((string)base["encrypted"]).ParseBoolean())
+            if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
             {
                 // Encrypts the element's value.
-                value = value.Encrypt(CryptoKey, CipherStrength.Level4);
-            
+                value = value.Encrypt(m_cryptoKey, CipherStrength.Level4);
+
             }
             return value;
         }
 
         private string DecryptValue(string value)
         {
-            if ((base["encrypted"] != null) && ((string)base["encrypted"]).ParseBoolean())
+            if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
             {
                 // Decrypts the element's value.
-                return value.Decrypt(CryptoKey, CipherStrength.Level4);
+                return value.Decrypt(m_cryptoKey, CipherStrength.Level4);
             }
 
             return value;

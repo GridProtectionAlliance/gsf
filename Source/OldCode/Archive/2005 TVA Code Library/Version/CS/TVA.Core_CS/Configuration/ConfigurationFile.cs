@@ -20,6 +20,8 @@
 //       Edited code comments.
 //  09/22/2008 - Pinal C Patel
 //       Converted code to C#.
+//  09/29/2008 - Pinal C Patel
+//       Reviewed code comments.
 //
 //*******************************************************************************************************
 
@@ -38,6 +40,64 @@ namespace TVA.Configuration
     /// <seealso cref="CategorizedSettingsSection"/>
     /// <seealso cref="CategorizedSettingsElement"/>
     /// <seealso cref="CategorizedSettingsElementCollection"/>
+    /// <example>
+    /// This sample shows how to add settings to the config file:
+    /// <code>
+    /// using TVA.Configuration;
+    /// .
+    /// .
+    /// .
+    /// // Get reference to the application config file.
+    /// ConfigurationFile config = ConfigurationFile.Current;
+    /// // Save passwords to the config file encrypted under a "Passwords" section.
+    /// CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
+    /// passwords.Add("Admin", "Adm1nP4ss", "Password used for performing administrative tasks.", true);
+    /// // Save other settings to the config under a seperate "Monitoring" section.
+    /// CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
+    /// monitoring.Add("RefreshInterval", 5, "Interval in seconds at which the Monitor screen is to be refreshed.");
+    /// monitoring.Add("MessagesSnapshot", 30000, "Maximum messages length to be displayed on the Monitor screen.");
+    /// config.Save();
+    /// </code>
+    /// This sample shows how to read settings from the config file:
+    /// <code>
+    /// using TVA.Configuration;
+    /// .
+    /// .
+    /// .
+    /// // Get reference to the application config file.
+    /// ConfigurationFile config = ConfigurationFile.Current;
+    /// // Read settings from the config file.
+    /// CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
+    /// CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
+    /// string adminPassword = passwords["Admin"].Value;
+    /// int refreshInterval = monitoring["RefreshInterval"].ValueAsInt32();
+    /// int messagesSnapshot = monitoring["MessagesSnapshot"].ValueAsInt32();
+    /// </code>
+    /// This sample shows the content of the config file:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0" encoding="utf-8"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <passwords>
+    ///       <add name="Admin" value="C+0j6fE/N0Q9b5xaeDKgvRmSeY9zJkO1EQCr7cHoG3x24tztlbBB54PfWsuMGXc/"
+    ///         description="Password used for performing administrative tasks."
+    ///         encrypted="true" />
+    ///     </passwords>
+    ///     <monitoring>
+    ///       <add name="RefreshInterval" value="5" description="Interval in seconds at which the Monitor screen is to be refreshed."
+    ///         encrypted="false" />
+    ///       <add name="MessagesSnapshot" value="30000" description="Maximum messages length to be displayed on the Monitor screen."
+    ///         encrypted="false" />
+    ///     </monitoring>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
     public class ConfigurationFile
     {
         #region [ Members ]
@@ -47,6 +107,7 @@ namespace TVA.Configuration
         private const string CustomSectionType = "TVA.Configuration.CategorizedSettingsSection, TVA.Core";
 
         // Fields
+        private string m_cryptoKey;
         private System.Configuration.Configuration m_configuration;
 
         #endregion
@@ -94,7 +155,9 @@ namespace TVA.Configuration
         {
             get
             {
-                return (CategorizedSettingsSection)m_configuration.GetSection(CustomSectionName);
+                CategorizedSettingsSection settings = (CategorizedSettingsSection)m_configuration.GetSection(CustomSectionName);
+                settings.SetCryptoKey(m_cryptoKey);
+                return settings;
             }
         }
 
@@ -167,6 +230,15 @@ namespace TVA.Configuration
         public void SaveAs(string fileName)
         {
             m_configuration.SaveAs(fileName);
+        }
+
+        /// <summary>
+        /// Sets the key to be used for encrypting and decrypting values of <see cref="Settings"/>.
+        /// </summary>
+        /// <param name="cryptoKey">New crypto key.</param>
+        public void SetCryptoKey(string cryptoKey)
+        {
+            m_cryptoKey = cryptoKey;
         }
 
         private System.Configuration.Configuration GetConfiguration(string configFilePath)

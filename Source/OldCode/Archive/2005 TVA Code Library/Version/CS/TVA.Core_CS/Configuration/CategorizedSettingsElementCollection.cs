@@ -18,6 +18,8 @@
 //       Edited code comments.
 //  09/17/2008 - Pinal C Patel
 //       Converted code to C#.
+//  09/29/2008 - Pinal C Patel
+//       Reviewed code comments.
 //
 //*******************************************************************************************************
 
@@ -31,6 +33,13 @@ namespace TVA.Configuration
     /// </summary>
     public class CategorizedSettingsElementCollection : ConfigurationElementCollection
     {
+        #region [ Members ]
+
+        // Fields
+        private string m_cryptoKey;
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -46,7 +55,9 @@ namespace TVA.Configuration
                 {
                     throw (new IndexOutOfRangeException());
                 }
-                return (CategorizedSettingsElement)base.BaseGet(index);
+                CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(index);
+                setting.SetCryptoKey(m_cryptoKey);
+                return setting;
             }
             set
             {
@@ -83,15 +94,26 @@ namespace TVA.Configuration
             {
                 if (ensureExistance && base.BaseGet(name) == null)
                 {
-                    Add(name, "");
+                    Add(name, string.Empty);
                 }
-                return (CategorizedSettingsElement)base.BaseGet(name);
+                CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(name);
+                setting.SetCryptoKey(m_cryptoKey);
+                return setting;
             }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Sets the key to be used for encrypting and decrypting setting values.
+        /// </summary>
+        /// <param name="cryptoKey">New crypto key.</param>
+        public void SetCryptoKey(string cryptoKey)
+        {
+            m_cryptoKey = cryptoKey;
+        }
 
         /// <summary>
         /// Gets the index of the specified <see cref="CategorizedSettingsElement"/> object.
@@ -164,7 +186,7 @@ namespace TVA.Configuration
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
         public void Add(string name, string value, string description)
         {
-            Add(new CategorizedSettingsElement(name, value, description, false));
+            Add(name, value, description, false);
         }
 
         /// <summary>
@@ -200,6 +222,7 @@ namespace TVA.Configuration
             if (base.BaseGet(setting.Name) == null)
             {
                 // Adds the element only if it does not exist.
+                setting.SetCryptoKey(m_cryptoKey);
                 base.BaseAdd(setting);
             }
         }

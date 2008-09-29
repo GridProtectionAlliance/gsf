@@ -16,6 +16,8 @@
 //       Edited code comments.
 //  09/17/2008 - Pinal C Patel
 //       Converted code to C#.
+//  09/29/2008 - Pinal C Patel
+//       Reviewed code comments.
 //
 //*******************************************************************************************************
 
@@ -34,6 +36,13 @@ namespace TVA.Configuration
     /// <seealso cref="CategorizedSettingsElementCollection"/>
     public class CategorizedSettingsSection : ConfigurationSection
     {
+        #region [ Members ]
+
+        // Fields
+        private string m_cryptoKey;
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -63,6 +72,8 @@ namespace TVA.Configuration
                 {
                     settingsCategory = (CategorizedSettingsElementCollection)base[configProperty];
                 }
+                settingsCategory.SetCryptoKey(m_cryptoKey);
+
                 return settingsCategory;
             }
         }
@@ -77,6 +88,19 @@ namespace TVA.Configuration
             {
                 return this["general"];
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Sets the key to be used for encrypting and decrypting setting values.
+        /// </summary>
+        /// <param name="cryptoKey">New crypto key.</param>
+        public void SetCryptoKey(string cryptoKey)
+        {
+            m_cryptoKey = cryptoKey;
         }
 
         /// <summary>
