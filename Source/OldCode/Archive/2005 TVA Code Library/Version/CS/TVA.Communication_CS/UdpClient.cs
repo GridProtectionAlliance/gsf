@@ -31,17 +31,17 @@ using System.Collections.Generic;
 using TVA.Configuration;
 using TVA.Threading;
 
-/// <summary>
-/// Represents a UDP-based communication client.
-/// </summary>
-/// <remarks>
-/// UDP by nature is a connectionless protocol, but with this implementation of UDP client we can have a
-/// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
-/// of SecureSession which otherwise is not possible.
-/// </remarks>
 namespace TVA.Communication
 {
-    public partial class UdpClient : CommunicationClientBase
+    /// <summary>
+    /// Represents a UDP-based communication server.
+    /// </summary>
+    /// <remarks>
+    /// UDP by nature is a connectionless protocol, but with this implementation of UDP server we can have a
+    /// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
+    /// of SecureSession which otherwise is not possible.
+    /// </remarks>
+    public class UdpClient : CommunicationClientBase
     {
         #region [ Members ]
 
@@ -622,7 +622,6 @@ namespace TVA.Communication
                                         break;
                                     default:
                                         throw;
-                                        break;
                                 }
                             }
                         }
@@ -713,7 +712,6 @@ namespace TVA.Communication
                                         break;
                                     default:
                                         throw;
-                                        break;
                                 }
                             }
                         }

@@ -511,7 +511,7 @@ namespace TVA.Communication
             {
                 return m_protocol;
             }
-            protected set
+            set
             {
                 m_protocol = value;
             }
@@ -529,7 +529,7 @@ namespace TVA.Communication
             {
                 return m_serverID;
             }
-            protected set
+            set
             {
                 m_serverID = value;
             }
@@ -547,7 +547,7 @@ namespace TVA.Communication
             {
                 return m_clientID;
             }
-            protected set
+            set
             {
                 m_clientID = value;
             }
@@ -717,7 +717,7 @@ namespace TVA.Communication
         /// Releases the unmanaged resources used by an instance of the <see cref="CommunicationServerBase" /> class and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {

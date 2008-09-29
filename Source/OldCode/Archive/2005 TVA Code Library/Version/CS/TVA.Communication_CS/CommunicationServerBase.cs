@@ -467,7 +467,7 @@ namespace TVA.Communication
             {
                 return m_protocol;
             }
-            protected set
+            set
             {
                 m_protocol = value;
             }
@@ -639,7 +639,7 @@ namespace TVA.Communication
         /// Releases the unmanaged resources used by an instance of the <see cref="CommunicationServerBase" /> class and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -896,7 +896,7 @@ namespace TVA.Communication
                     setting.Value = m_receiveBufferSize.ToString();
                     setting.Description = "Maximum number of bytes that can be received at a time by the server from the clients.";
                     
-                    setting = settings.["MaximumClients", true];
+                    setting = settings["MaximumClients", true];
                     setting.Value = m_maximumClients.ToString();
                     setting.Description = "Maximum number of clients that can connect to the server.";
                     

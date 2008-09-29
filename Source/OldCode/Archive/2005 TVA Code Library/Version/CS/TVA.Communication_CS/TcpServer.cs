@@ -42,7 +42,7 @@ namespace TVA.Communication
     /// <remarks>
     /// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
     /// </remarks>
-    public partial class TcpServer : CommunicationServerBase
+    public class TcpServer : CommunicationServerBase
     {
         #region [ Members ]
 
@@ -224,7 +224,7 @@ namespace TVA.Communication
         /// The current state of the specified client which includes its System.Net.Sockets.Socket if the
         /// specified client ID is valid (client is connected); otherwise Nothing.
         /// </returns>
-        public StateInfo Clients(Guid clientID)
+        public StateInfo<Socket> ClientState(Guid clientID)
         {
             StateInfo<Socket> client;
 

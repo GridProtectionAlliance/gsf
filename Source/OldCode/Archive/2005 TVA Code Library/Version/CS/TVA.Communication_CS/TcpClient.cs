@@ -41,7 +41,7 @@ namespace TVA.Communication
     /// <remarks>
     /// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
     /// </remarks>
-    public partial class TcpClient : CommunicationClientBase
+    public class TcpClient : CommunicationClientBase
     {
         #region [ Members ]
 

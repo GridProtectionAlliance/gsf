@@ -10,71 +10,40 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
+//  07/06/2006 - Pinal C. Patel
+//       Original version of source code generated
+//  09/06/2006 - J. Ritchie Carroll
+//       Added bypass optimizations for high-speed socket access
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
 //
 //*******************************************************************************************************
-using System.Diagnostics;
-using System.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
 using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.ComponentModel;
-//using TVA.Serialization;
-using TVA.Communication.CommunicationHelper;
-//using TVA.Security.Cryptography.Common;
+using System.Collections.Generic;
 using TVA.Threading;
+using TVA.Configuration;
+using TVA.Security.Cryptography;
 
-//*******************************************************************************************************
-//  TVA.Communication.UdpServer.vb - UDP-based communication server
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
-//
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
-//       Email: pcpatel@tva.gov
-//
-//  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
-//  07/06/2006 - Pinal C. Patel
-//       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
-//       Added bypass optimizations for high-speed socket access
-//
-//*******************************************************************************************************
-
-
-/// <summary>
-/// Represents a UDP-based communication server.
-/// </summary>
-/// <remarks>
-/// UDP by nature is a connectionless protocol, but with this implementation of UDP server we can have a
-/// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
-/// of SecureSession which otherwise is not possible.
-/// </remarks>
 namespace TVA.Communication
 {
-    public partial class UdpServer
+    /// <summary>
+    /// Represents a UDP-based communication server.
+    /// </summary>
+    /// <remarks>
+    /// UDP by nature is a connectionless protocol, but with this implementation of UDP server we can have a
+    /// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
+    /// of SecureSession which otherwise is not possible.
+    /// </remarks>
+    public class UdpServer : CommunicationServerBase
     {
+        #region [ Members ]
 
-
-        #region " Member Declaration "
-
-        private bool m_payloadAware;
-        private bool m_destinationReachableCheck;
-        private StateInfo<Socket> m_udpServer;
-        private Dictionary<Guid, StateInfo<IPEndPoint>> m_udpClients;
-        private Dictionary<string, string> m_configurationData;
-
-        #endregion
-
-        #region " Code Scope: Public "
+        // Constants
 
         /// <summary>
         /// The minimum size of the receive buffer for UDP.
@@ -86,6 +55,29 @@ namespace TVA.Communication
         /// </summary>
         public const int MaximumUdpDatagramSize = 32768;
 
+        // Fields
+        private bool m_payloadAware;
+        private bool m_destinationReachableCheck;
+        private StateInfo<Socket> m_udpServer;
+        private Dictionary<Guid, StateInfo<IPEndPoint>> m_udpClients;
+        private Dictionary<string, string> m_configurationData;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public UdpServer()
+		{
+			m_payloadAware = false;
+			m_destinationReachableCheck = false;
+			m_udpClients = new Dictionary<Guid, StateInfo<System.Net.IPEndPoint>>();
+
+			base.ConfigurationString = "Port=8888; Clients=255.255.255.255:8888";
+			base.Protocol = TransportProtocol.Udp;
+			base.ReceiveBufferSize = MaximumUdpDatagramSize;
+			
+		}
+
         /// <summary>
         /// Initializes a instance of TVA.Communication.UdpServer with the specified data.
         /// </summary>
@@ -93,10 +85,12 @@ namespace TVA.Communication
         public UdpServer(string configurationString)
             : this()
         {
-
             base.ConfigurationString = configurationString;
-
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets a boolean value indicating whether the messages that are broken down into multiple datagram
@@ -178,34 +172,11 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the current state of the specified client which includes its System.Net.IPEndPoint.
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <value></value>
-        /// <returns>
-        /// The current state of the specified client which includes its System.Net.IPEndPoint if the
-        /// specified client ID is valid (client is connected); otherwise Nothing.
-        /// </returns>
-        public StateInfo Clients(Guid clientID)
-        {
-            StateInfo<IPEndPoint> client = null;
-            lock (m_udpClients)
-            {
-                m_udpClients.TryGetValue(clientID, client);
-            }
-
-            return client;
-        }
-
-        #region " Overrides "
-
-        /// <summary>
         /// Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
         /// </summary>
         /// <value>Receive buffer size</value>
         /// <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while server is running</exception>
         /// <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
-
         public override int ReceiveBufferSize
         {
             get
@@ -220,105 +191,126 @@ namespace TVA.Communication
                 }
                 else
                 {
-                    throw (new ArgumentOutOfRangeException("ReceiveBufferSize", "ReceiveBufferSize for UDP must be between " + UdpClient.MinimumUdpBufferSize + " and " + UdpClient.MaximumUdpDatagramSize + "."));
+                    throw new ArgumentOutOfRangeException("ReceiveBufferSize", "ReceiveBufferSize for UDP must be between " + UdpClient.MinimumUdpBufferSize + " and " + UdpClient.MaximumUdpDatagramSize + ".");
                 }
             }
         }
 
-        public override void Start()
-		{
-			
-			if (Enabled && ! IsRunning && ValidConfigurationString(ConfigurationString))
-			{
-				try
-				{
-					int serverPort = 0;
-					if (m_configurationData.ContainsKey("port"))
-					{
-						serverPort = Convert.ToInt32(m_configurationData("port"));
-					}
-					
-					m_udpServer = new StateInfo<Socket>();
-					m_udpServer.ID = ServerID;
-					m_udpServer.Passphrase = HandshakePassphrase;
-					m_udpServer.Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-					if (Handshake)
-					{
-						// We will listen for data only when Handshake is enabled and a valid port has been specified in
-						// the configuration string. We do this in order to keep the server stable and besides that, the
-						// main purpose of a UDP server is to serve data in most cases.
-						if (serverPort > 0)
-						{
-							m_udpServer.Client.Bind(new IPEndPoint(IPAddress.Any, serverPort));
-							
-							#if ThreadTracking
-							TVA.Threading.ManagedThread with_1 = new ManagedThread(ReceiveClientData);
-							with_1.Name = "TVA.Communication.UdpServer.ReceiveClientData() [" + ServerID.ToString() + "]";
-							#else
-							System.Threading.Thread with_2 = new Thread(new System.Threading.ThreadStart(ReceiveClientData));
-							#endif
-							.Start();
-						}
-						else
-						{
-							throw (new ArgumentException("Server port must be specified in the configuration string."));
-						}
-					}
-					
-					OnServerStarted(EventArgs.Empty);
-					
-					if (! Handshake && m_configurationData.ContainsKey("clients"))
-					{
-						// We will ignore the client list in configuration string when Handshake is enabled.
-						foreach (string clientString in m_configurationData("clients").Replace(" ", "").Split(','))
-						{
-							try
-							{
-								int clientPort = 0;
-								string[] clientStringSegments = clientString.Split(':');
-								if (clientStringSegments.Length == 2)
-								{
-									clientPort = Convert.ToInt32(clientStringSegments[1]);
-								}
-								
-								StateInfo<IPEndPoint> udpClient = new StateInfo<IPEndPoint>();
-								udpClient.ID = Guid.NewGuid();
-								udpClient.Client = GetIpEndPoint(clientStringSegments[0], clientPort);
-								lock(m_udpClients)
-								{
-									m_udpClients.Add(udpClient.ID, udpClient);
-								}
-								
-								OnClientConnected(udpClient.ID);
-							}
-							catch (Exception)
-							{
-								// Ignore invalid client entries.
-							}
-						}
-					}
-				}
-				catch
-				{
-					OnServerStartupException(ex);
-				}
-			}
-			
-		}
+        #endregion
 
-        public override void @Stop()
+        #region [ Methods ]
+
+        /// <summary>
+        /// Gets the current state of the specified client which includes its System.Net.IPEndPoint.
+        /// </summary>
+        /// <param name="clientID"></param>
+        /// <value></value>
+        /// <returns>
+        /// The current state of the specified client which includes its System.Net.IPEndPoint if the
+        /// specified client ID is valid (client is connected); otherwise Nothing.
+        /// </returns>
+        public StateInfo<IPEndPoint> ClientState(Guid clientID)
         {
+            StateInfo<IPEndPoint> client;
 
+            lock (m_udpClients)
+            {
+                m_udpClients.TryGetValue(clientID, out client);
+            }
+
+            return client;
+        }
+
+        public override void Start()
+        {
+            if (Enabled && !IsRunning && ValidConfigurationString(ConfigurationString))
+            {
+                try
+                {
+                    int serverPort = 0;
+
+                    if (m_configurationData.ContainsKey("port"))
+                        serverPort = int.Parse(m_configurationData["port"]);
+
+                    m_udpServer = new StateInfo<Socket>();
+                    m_udpServer.ID = ServerID;
+                    m_udpServer.Passphrase = HandshakePassphrase;
+                    m_udpServer.Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+                    if (Handshake)
+                    {
+                        // We will listen for data only when Handshake is enabled and a valid port has been specified in
+                        // the configuration string. We do this in order to keep the server stable and besides that, the
+                        // main purpose of a UDP server is to serve data in most cases.
+                        if (serverPort > 0)
+                        {
+                            m_udpServer.Client.Bind(new IPEndPoint(IPAddress.Any, serverPort));
+
+#if ThreadTracking
+                            ManagedThread receiveThread = new ManagedThread(ReceiveClientData);
+                            receiveThread.Name = "TVA.Communication.UdpServer.ReceiveClientData() [" + ServerID.ToString() + "]";
+#else
+							Thread receiveThread = new Thread(ReceiveClientData);
+#endif
+                            receiveThread.Start();
+                        }
+                        else
+                        {
+                            throw new ArgumentException("Server port must be specified in the configuration string.");
+                        }
+                    }
+
+                    OnServerStarted(EventArgs.Empty);
+
+                    if (!Handshake && m_configurationData.ContainsKey("clients"))
+                    {
+                        // We will ignore the client list in configuration string when Handshake is enabled.
+                        foreach (string clientString in m_configurationData["clients"].Replace(" ", "").Split(','))
+                        {
+                            try
+                            {
+                                int clientPort = 0;
+
+                                string[] clientStringSegments = clientString.Split(':');
+
+                                if (clientStringSegments.Length == 2)
+                                    clientPort = int.Parse(clientStringSegments[1]);
+
+                                StateInfo<IPEndPoint> udpClient = new StateInfo<IPEndPoint>();
+                                udpClient.ID = Guid.NewGuid();
+                                udpClient.Client = CommunicationHelper.GetIpEndPoint(clientStringSegments[0], clientPort);
+
+                                lock (m_udpClients)
+                                {
+                                    m_udpClients.Add(udpClient.ID, udpClient);
+                                }
+
+                                OnClientConnected(udpClient.ID);
+                            }
+                            catch
+                            {
+                                // Ignore invalid client entries.
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnServerStartupException(ex);
+                }
+            }
+        }
+
+        public override void Stop()
+        {
             if (Enabled && IsRunning)
             {
                 // Disconnect all of the clients.
                 DisconnectAll();
 
                 // Stop the server after we've disconnected the clients.
-                if ((m_udpServer != null) && (m_udpServer.Client != null))
-                {
+                if (m_udpServer != null && m_udpServer.Client != null && m_udpServer.Client.Connected)
                     m_udpServer.Client.Close();
-                }
 
                 OnServerStopped(EventArgs.Empty);
             }
@@ -327,11 +319,11 @@ namespace TVA.Communication
 
         public override void DisconnectOne(Guid clientID)
         {
+            StateInfo<IPEndPoint> udpClient;
 
-            StateInfo<IPEndPoint> udpClient = null;
             lock (m_udpClients)
             {
-                m_udpClients.TryGetValue(clientID, udpClient);
+                m_udpClients.TryGetValue(clientID, out udpClient);
             }
 
             if (udpClient != null)
@@ -339,11 +331,10 @@ namespace TVA.Communication
                 if (Handshake)
                 {
                     // Handshake is enabled so we'll notify the client.
-                    byte[] goodbye = GetPreparedData(TVA.Serialization.GetBytes(new GoodbyeMessage(udpClient.ID)));
+                    byte[] goodbye = GetPreparedData(Serialization.GetBytes(new GoodbyeMessage(udpClient.ID)));
+
                     if (m_payloadAware)
-                    {
                         goodbye = PayloadAwareHelper.AddPayloadHeader(goodbye);
-                    }
 
                     m_udpServer.Client.SendTo(goodbye, udpClient.Client);
                 }
@@ -352,134 +343,120 @@ namespace TVA.Communication
                 {
                     m_udpClients.Remove(udpClient.ID);
                 }
+
                 OnClientDisconnected(udpClient.ID);
             }
             else
             {
-                throw (new ArgumentException("Client ID \'" + clientID.ToString() + "\' is invalid."));
+                throw new ArgumentException("Client ID \'" + clientID.ToString() + "\' is invalid.");
             }
-
         }
 
         public override void LoadSettings()
         {
-
             base.LoadSettings();
 
             try
             {
-                TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName);
-                if (with_1.Count > 0)
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategoryName];
+
+                if (settings.Count > 0)
                 {
-                    PayloadAware = with_1.Item("PayloadAware").GetTypedValue(m_payloadAware);
-                    DestinationReachableCheck = with_1.Item("DestinationReachableCheck").GetTypedValue(m_destinationReachableCheck);
+                    PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
+                    DestinationReachableCheck = settings["DestinationReachableCheck"].ValueAs(m_destinationReachableCheck);
                 }
             }
-            catch (Exception)
+            catch
             {
                 // We'll encounter exceptions if the settings are not present in the config file.
             }
-
         }
 
         public override void SaveSettings()
         {
-
             base.SaveSettings();
 
             if (PersistSettings)
             {
                 try
                 {
-                    TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(SettingsCategoryName);
-                    object with_2 = with_1.Item("PayloadAware", true);
-                    with_2.Value = m_payloadAware.ToString();
-                    with_2.Description = "True if the messages that are broken down into multiple datagram for the purpose of transmission while being sent are to be assembled back when received; otherwise False.";
-                    object with_3 = with_1.Item("DestinationReachableCheck", true);
-                    with_3.Value = m_destinationReachableCheck.ToString();
-                    with_3.Description = "True if a test is to be performed to check if the destination endpoint that is to receive data is listening for data; otherwise False.";
-                    TVA.Configuration.Common.SaveSettings();
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategoryName];
+                    CategorizedSettingsElement setting;
+
+                    setting = settings["PayloadAware", true];
+                    setting.Value = m_payloadAware.ToString();
+                    setting.Description = "True if the messages that are broken down into multiple datagram for the purpose of transmission while being sent are to be assembled back when received; otherwise False.";
+
+                    setting = settings["DestinationReachableCheck", true];
+                    setting.Value = m_destinationReachableCheck.ToString();
+                    setting.Description = "True if a test is to be performed to check if the destination endpoint that is to receive data is listening for data; otherwise False.";
+
+                    ConfigurationFile.Current.Save();
                 }
-                catch (Exception)
+                catch
                 {
                     // We might encounter an exception if for some reason the settings cannot be saved to the config file.
                 }
             }
-
         }
-
-        #endregion
-
-        #endregion
-
-        #region " Code Scope: Protected "
-
-        #region " Overrides "
 
         protected override void SendPreparedDataTo(Guid clientID, byte[] data)
         {
-
             if (Enabled && IsRunning)
             {
-                StateInfo<IPEndPoint> udpClient = null;
+                StateInfo<IPEndPoint> udpClient;
+
                 lock (m_udpClients)
                 {
-                    m_udpClients.TryGetValue(clientID, udpClient);
+                    m_udpClients.TryGetValue(clientID, out udpClient);
                 }
 
                 if (udpClient != null)
                 {
-                    if (m_destinationReachableCheck && !IsDestinationReachable(udpClient.Client))
-                    {
+                    if (m_destinationReachableCheck && !CommunicationHelper.IsDestinationReachable(udpClient.Client))
                         return;
-                    }
 
                     if (SecureSession)
-                    {
-                        data = EncryptData(data, udpClient.Passphrase, Encryption);
-                    }
+                        data = CommunicationHelper.EncryptData(data, 0, data.Length, udpClient.Passphrase, Encryption);
 
                     if (m_payloadAware)
-                    {
                         data = PayloadAwareHelper.AddPayloadHeader(data);
-                    }
 
                     int toIndex = 0;
                     int datagramSize = ReceiveBufferSize;
+
                     if (data.Length > datagramSize)
-                    {
                         toIndex = data.Length - 1;
-                    }
+
                     for (int i = 0; i <= toIndex; i += datagramSize)
                     {
                         // Last or the only datagram in the series.
                         if (data.Length - i < datagramSize)
-                        {
                             datagramSize = data.Length - i;
-                        }
 
                         // PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
                         m_udpServer.Client.SendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client);
                         udpClient.LastSendTimestamp = DateTime.Now;
+
                         //' We'll send the data asynchronously for better performance.
                         //m_udpServer.Client.BeginSendTo(data, i, datagramSize, SocketFlags.None, udpClient.Client, Nothing, Nothing)
                     }
                 }
                 else
                 {
-                    throw (new ArgumentException("Client ID \'" + clientID.ToString() + "\' is invalid."));
+                    throw new ArgumentException("Client ID \'" + clientID.ToString() + "\' is invalid.");
                 }
             }
-
         }
 
         protected override bool ValidConfigurationString(string configurationString)
         {
-
             if (!string.IsNullOrEmpty(configurationString))
             {
-                m_configurationData = TVA.Text.Common.ParseKeyValuePairs(configurationString);
-                if ((m_configurationData.ContainsKey("port") && ValidPortNumber(m_configurationData("port"))) || (m_configurationData.ContainsKey("clients") && !string.IsNullOrEmpty(m_configurationData("clients"))))
+                m_configurationData = configurationString.ParseKeyValuePairs();
+
+                if ((m_configurationData.ContainsKey("port") && CommunicationHelper.ValidPortNumber(m_configurationData["port"])) ||
+                    (m_configurationData.ContainsKey("clients") && !string.IsNullOrEmpty(m_configurationData["clients"])))
                 {
                     // The configuration string must contain either of the following:
                     // >> port - Port number on which the server will be listening for incoming data.
@@ -490,36 +467,31 @@ namespace TVA.Communication
                 else
                 {
                     // Configuration string is not in the expected format.
-                    System.Text.StringBuilder with_1 = new StringBuilder();
-                    with_1.Append("Configuration string must be in the following format:");
-                    with_1.AppendLine();
-                    with_1.Append("   [Port=Local port number;] [Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]]");
-                    with_1.AppendLine();
-                    with_1.Append("Text between square brackets, [...], is optional.");
-                    throw (new ArgumentException(with_1.ToString()));
+                    StringBuilder exceptionMessage = new StringBuilder();
+
+                    exceptionMessage.Append("Configuration string must be in the following format:");
+                    exceptionMessage.AppendLine();
+                    exceptionMessage.Append("   [Port=Local port number;] [Clients=Client name or IP[:Port number], ..., Client name or IP[:Port number]]");
+                    exceptionMessage.AppendLine();
+                    exceptionMessage.Append("Text between square brackets, [...], is optional.");
+
+                    throw new ArgumentException(exceptionMessage.ToString());
                 }
             }
             else
             {
-                throw (new ArgumentNullException("ConfigurationString"));
+                throw new ArgumentNullException("ConfigurationString");
             }
-
         }
-
-        #endregion
-
-        #endregion
-
-        #region " Code Scope: Private "
 
         private void ReceiveClientData()
         {
-
             try
             {
                 int bytesReceived = 0;
                 EndPoint clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                if ((m_receiveRawDataFunction != null) || (m_receiveRawDataFunction == null && !m_payloadAware))
+
+                if (m_receiveRawDataFunction != null || (m_receiveRawDataFunction == null && !m_payloadAware))
                 {
                     // In this section the consumer either wants to receive the datagrams and pass it on to a
                     // delegate or receive datagrams that don't contain metadata used for re-assembling the
@@ -528,31 +500,26 @@ namespace TVA.Communication
                     // the datagrams received are not bigger than the receive buffer.
                     while (true)
                     {
-                        bytesReceived = m_udpServer.Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, clientEndPoint);
+                        bytesReceived = m_udpServer.Client.ReceiveFrom(m_buffer, 0, m_buffer.Length, SocketFlags.None, ref clientEndPoint);
                         m_udpServer.LastReceiveTimestamp = DateTime.Now;
 
                         if (m_receiveRawDataFunction != null)
-                        {
                             m_receiveRawDataFunction(m_buffer, 0, bytesReceived);
-                        }
                         else
-                        {
-                            ProcessReceivedClientData(TVA.IO.Common.CopyBuffer(m_buffer, 0, bytesReceived), clientEndPoint);
-                        }
+                            ProcessReceivedClientData(m_buffer.CopyBuffer(0, bytesReceived), clientEndPoint);
                     }
                 }
                 else
                 {
                     int payloadSize = -1;
                     int totalBytesReceived = 0;
+
                     while (true)
                     {
                         if (payloadSize == -1)
-                        {
-                            m_udpServer.DataBuffer = TVA.Common.CreateArray<byte>(ReceiveBufferSize);
-                        }
+                            m_udpServer.DataBuffer = new byte[ReceiveBufferSize];
 
-                        bytesReceived = m_udpServer.Client.ReceiveFrom(m_udpServer.DataBuffer, totalBytesReceived, (m_udpServer.DataBuffer.Length - totalBytesReceived), SocketFlags.None, clientEndPoint);
+                        bytesReceived = m_udpServer.Client.ReceiveFrom(m_udpServer.DataBuffer, totalBytesReceived, (m_udpServer.DataBuffer.Length - totalBytesReceived), SocketFlags.None, ref clientEndPoint);
                         m_udpServer.LastReceiveTimestamp = DateTime.Now;
 
                         if (payloadSize == -1)
@@ -562,7 +529,7 @@ namespace TVA.Communication
                             {
                                 byte[] payload = PayloadAwareHelper.GetPayload(m_udpServer.DataBuffer);
 
-                                m_udpServer.DataBuffer = TVA.Common.CreateArray<byte>(payloadSize);
+                                m_udpServer.DataBuffer = new byte[payloadSize];
                                 Buffer.BlockCopy(payload, 0, m_udpServer.DataBuffer, 0, payload.Length);
                                 bytesReceived = payload.Length;
                             }
@@ -581,50 +548,45 @@ namespace TVA.Communication
                     }
                 }
             }
-            catch (Exception)
+            catch
             {
                 // We don't need to take any action when an exception is encountered.
             }
             finally
             {
-                if ((m_udpServer != null) && (m_udpServer.Client != null))
-                {
+                if (m_udpServer != null && m_udpServer.Client != null)
                     m_udpServer.Client.Close();
-                }
             }
-
         }
 
         private void ProcessReceivedClientData(byte[] data, EndPoint senderEndPoint)
         {
-
             if (data.Length == 0)
-            {
                 return;
-            }
 
-            object clientMessage = TVA.Serialization.GetObject(GetActualData(data));
+            object clientMessage = Serialization.GetObject(GetActualData(data));
+
             if (clientMessage != null)
             {
                 // We were able to deserialize the data to an object.
                 if (clientMessage is HandshakeMessage)
                 {
                     HandshakeMessage connectedClient = (HandshakeMessage)clientMessage;
+
                     if (connectedClient.ID != Guid.Empty && connectedClient.Passphrase == HandshakePassphrase)
                     {
                         StateInfo<IPEndPoint> udpClient = new StateInfo<IPEndPoint>();
                         udpClient.ID = connectedClient.ID;
                         udpClient.Client = (IPEndPoint)senderEndPoint;
-                        if (SecureSession)
-                        {
-                            udpClient.Passphrase = TVA.Security.Cryptography.Common.GenerateKey();
-                        }
 
-                        byte[] myInfo = GetPreparedData(TVA.Serialization.GetBytes(new HandshakeMessage(ServerID, udpClient.Passphrase)));
+                        if (SecureSession)
+                            udpClient.Passphrase = Cipher.GenerateKey();
+
+                        byte[] myInfo = GetPreparedData(Serialization.GetBytes(new HandshakeMessage(ServerID, udpClient.Passphrase)));
+
                         if (m_payloadAware)
-                        {
                             myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo);
-                        }
+
                         m_udpServer.Client.SendTo(myInfo, udpClient.Client);
 
                         lock (m_udpClients)
@@ -651,7 +613,8 @@ namespace TVA.Communication
             {
                 StateInfo<IPEndPoint> sender = null;
                 IPEndPoint senderIPEndPoint = (IPEndPoint)senderEndPoint;
-                if (!senderIPEndPoint.Equals(GetIpEndPoint(Dns.GetHostName(), Convert.ToInt32(m_configurationData("port")))))
+
+                if (!senderIPEndPoint.Equals(CommunicationHelper.GetIpEndPoint(Dns.GetHostName(), int.Parse(m_configurationData["port"]))))
                 {
                     // The data received is not something that we might have broadcasted.
                     lock (m_udpClients)
@@ -671,21 +634,18 @@ namespace TVA.Communication
                     {
                         if (SecureSession)
                         {
-                            data = DecryptData(data, sender.Passphrase, Encryption);
+                            data = CommunicationHelper.DecryptData(data, sender.Passphrase, Encryption);
                         }
-                        OnReceivedClientData(new IdentifiableItem<Guid, byte>(sender.ID, data));
+                        OnReceivedClientData(new IdentifiableItem<Guid, byte[]>(sender.ID, data));
                     }
                     else
                     {
-                        OnReceivedClientData(new IdentifiableItem<Guid, byte>(Guid.Empty, data));
+                        OnReceivedClientData(new IdentifiableItem<Guid, byte[]>(Guid.Empty, data));
                     }
                 }
             }
-
         }
 
         #endregion
-
     }
-
 }

@@ -56,14 +56,10 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common.cs" />
     <Compile Include="CommunicationClientBase.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.cs" />
-    <Compile Include="FileClient.Designer.cs">
-      <DependentUpon>FileClient.cs</DependentUpon>
-    </Compile>
     <Compile Include="FileClient.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -73,40 +69,22 @@
     <Compile Include="Internal Code\HandshakeMessage.cs" />
     <Compile Include="Internal Code\PayloadAwareHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CommunicationServerBase.designer.cs">
-      <DependentUpon>CommunicationServerBase.cs</DependentUpon>
-    </Compile>
     <Compile Include="CommunicationServerBase.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Internal Code\CommunicationHelper.cs" />
     <Compile Include="StateInfo.cs" />
-    <Compile Include="SerialClient.Designer.cs">
-      <DependentUpon>SerialClient.cs</DependentUpon>
-    </Compile>
     <Compile Include="SerialClient.cs">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="TcpClient.Designer.cs">
-      <DependentUpon>TcpClient.cs</DependentUpon>
     </Compile>
     <Compile Include="TcpClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TcpServer.Designer.cs">
-      <DependentUpon>TcpServer.cs</DependentUpon>
-    </Compile>
     <Compile Include="TcpServer.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UdpClient.Designer.cs">
-      <DependentUpon>UdpClient.cs</DependentUpon>
-    </Compile>
     <Compile Include="UdpClient.cs">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="UdpServer.Designer.cs">
-      <DependentUpon>UdpServer.cs</DependentUpon>
     </Compile>
     <Compile Include="UdpServer.cs">
       <SubType>Component</SubType>
