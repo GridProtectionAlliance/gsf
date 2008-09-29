@@ -1,16 +1,11 @@
-using System;
-using System.Text;
-using TVA.IO.Compression;
-using TVA.Security.Cryptography;
-
 //*******************************************************************************************************
-//  TVA.Communication.ICommunicationClient.vb - Abstract communications client interface
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ICommunicationClient.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
+//  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
 //       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
@@ -23,9 +18,15 @@ using TVA.Security.Cryptography;
 //       Made WaitForConnection() functions that returns a boolean value indicating success or failure
 //  09/27/2007 - J. Ritchie Carroll
 //       Added disconnect timeout overload
+//  09/29/2008 - James R Carroll
+//       Converted to C#.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Text;
+using TVA.IO.Compression;
+using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
@@ -137,7 +138,7 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The encryption level to be used for encrypting the data exchanged between the client and server.</returns>
-		EncryptLevel Encryption{ get; set; }
+		CipherStrength Encryption{ get; set; }
 		
 		/// <summary>
 		/// Gets or sets the compression level to be used for compressing the data exchanged between the client and
@@ -145,7 +146,7 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The compression level to be used for compressing the data exchanged between the client and server.</returns>
-		CompressLevel Compression{ get; set; }
+		CompressionStrength Compression{ get; set; }
 		
 		/// <summary>
 		/// Gets or sets a boolean value indicating whether the client is enabled.
