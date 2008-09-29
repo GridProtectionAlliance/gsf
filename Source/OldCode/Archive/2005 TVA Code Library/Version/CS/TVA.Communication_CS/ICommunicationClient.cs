@@ -25,12 +25,13 @@
 
 using System;
 using System.Text;
+using TVA.Services;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
-	public interface ICommunicationClient : TVA.Services.IServiceComponent
+	public interface ICommunicationClient : IServiceComponent
 	{		
 		/// <summary>
 		/// Occurs when the client is trying to connect to the server.

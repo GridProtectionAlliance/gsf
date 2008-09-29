@@ -1,17 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using TVA.IO.Compression;
-using TVA.Security.Cryptography;
-
 //*******************************************************************************************************
-//  TVA.Communication.ICommunicationClient.vb - Abstract communications client interface
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ICommunicationServer.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
+//  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
 //       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
@@ -20,13 +14,21 @@ using TVA.Security.Cryptography;
 //       Original version of source code generated
 //  09/06/2006 - J. Ritchie Carroll
 //       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
+//  09/29/2008 - James R Carroll
+//       Converted to C#.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Text;
+using System.Collections.Generic;
+using TVA.Services;
+using TVA.IO.Compression;
+using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
-	public interface ICommunicationServer : TVA.Services.IServiceComponent
+	public interface ICommunicationServer : IServiceComponent
 	{	
 		/// <summary>
 		/// Occurs when the server is started.
@@ -111,7 +113,7 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The encryption level to be used for encrypting the data exchanged between the server and clients.</returns>
-		EncryptLevel Encryption{ get; set; }
+		CipherStrength Encryption{ get; set; }
 		
 		/// <summary>
 		/// Gets or sets the compression level to be used for compressing the data exchanged between the server and
@@ -119,7 +121,7 @@ namespace TVA.Communication
 		/// </summary>
 		/// <value></value>
 		/// <returns>The compression level to be used for compressing the data exchanged between the server and clients.</returns>
-		CompressLevel Compression{ get; set; }
+		CompressionStrength Compression{ get; set; }
 		
 		/// <summary>
 		/// Gets or sets a boolean value indicating whether the server is enabled.
