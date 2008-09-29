@@ -30,6 +30,37 @@ namespace TVA.Console
     /// <summary>
     /// A helper class that can be used to subscribe to events raised by a console application.
     /// </summary>
+    /// <example>
+    /// This sample shows how to subscribe to console application events:
+    /// <code>
+    /// using TVA.Console;
+    /// .
+    /// .
+    /// .
+    /// static void Main(string[] args)
+    /// {
+    ///     Events.CancelKeyPress += Events_CancelKeyPress;
+    ///     Events.ConsoleClosing += Events_ConsoleClosing;
+    ///     Events.EnableRaisingEvents();
+    ///
+    ///     string input;
+    ///     while (true)
+    ///     {
+    ///         input = Console.ReadLine();
+    ///     }
+    /// }
+    ///
+    /// static void Events_CancelKeyPress(object sender, System.ComponentModel.CancelEventArgs e)
+    /// {
+    ///     // Abort processing.
+    /// }
+    ///
+    /// static void Events_ConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
+    /// {
+    ///     // Put clean-up code.
+    /// }
+    /// </code>
+    /// </example>
     public static class Events
     {
         private enum ConsoleEventType
@@ -92,37 +123,6 @@ namespace TVA.Console
         /// Enables the raising of console application <see cref="Events"/>. Prior to calling this method, handlers 
         /// must be defined for the <see cref="Events"/> raised by a console application.
         /// </summary>
-        /// <example>
-        /// This sample shows how to subscribe to console application events:
-        /// <code>
-        /// using TVA.Console;
-        /// .
-        /// .
-        /// .
-        /// static void Main(string[] args)
-        /// {
-        ///     Events.CancelKeyPress += Events_CancelKeyPress;
-        ///     Events.ConsoleClosing += Events_ConsoleClosing;
-        ///     Events.EnableRaisingEvents();
-        ///
-        ///     string input;
-        ///     while (true)
-        ///     {
-        ///         input = Console.ReadLine();
-        ///     }
-        /// }
-        ///
-        /// static void Events_CancelKeyPress(object sender, System.ComponentModel.CancelEventArgs e)
-        /// {
-        ///     // Abort processing.
-        /// }
-        ///
-        /// static void Events_ConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
-        /// {
-        ///     // Put clean-up code.
-        /// }
-        /// </code>
-        /// </example>
         public static void EnableRaisingEvents()
         {
             // Member variable is used here so that the delegate is not garbage collected by the time it is called
