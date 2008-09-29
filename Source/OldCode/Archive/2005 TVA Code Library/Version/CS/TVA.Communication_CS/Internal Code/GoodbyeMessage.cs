@@ -1,23 +1,34 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
+//*******************************************************************************************************
+//  GoodbyeMessage.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
+//       Email: pcpatel@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  07/06/2006 - Pinal C. Patel
+//       Original version of source code generated
+//  09/29/2008 - James R Carroll
+//       Converted to C#.
+//
+//*******************************************************************************************************
 
-// 07-06-06
+using System;
 
 namespace TVA.Communication
 {
-	[Serializable()]internal class GoodbyeMessage
+	[Serializable()]
+    internal class GoodbyeMessage
 	{
-		
-		
 		private Guid m_id;
 		
 		public GoodbyeMessage(Guid id)
 		{
-			this.ID = id;
+			ID = id;
 		}
 		
 		/// <summary>
@@ -34,7 +45,5 @@ namespace TVA.Communication
 				m_id = value;
 			}
 		}
-		
 	}
-	
 }
