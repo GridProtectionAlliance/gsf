@@ -18,6 +18,8 @@
 //       Fixed stand-alone argument bug at end of line and changed class to use generic Dictionary class
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  09/26/2008 - Pinal C. Patel
+//      Documented public and protected members.
 //
 //*******************************************************************************************************
 
@@ -56,6 +58,7 @@ namespace TVA.Console
         /// This sample shows how to parse a command-line command:
         /// <code>
         /// using TVA;
+        /// using TVA.Console;
         /// .
         /// .
         /// .
@@ -77,6 +80,10 @@ namespace TVA.Console
         /// <example>
         /// This sample shows how to parse a command-line command:
         /// <code>
+        /// using TVA.Console;
+        /// .
+        /// .
+        /// .
         /// // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
         /// Arguments args = new Arguments(Environment.CommandLine, true);
         /// string doc = args["OrderedArgs1"];
@@ -97,6 +104,7 @@ namespace TVA.Console
         /// This sample shows how to parse a command-line command:
         /// <code>
         /// using TVA;
+        /// using TVA.Console;
         /// .
         /// .
         /// .
@@ -120,6 +128,10 @@ namespace TVA.Console
         /// <example>
         /// This sample shows how to parse a command-line command:
         /// <code>
+        /// using TVA.Console;
+        /// .
+        /// .
+        /// .
         /// // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
         /// Arguments args = new Arguments(Environment.CommandLine, "FileSpecs",true);
         /// string doc = args["FileSpecs1"];
@@ -307,7 +319,7 @@ namespace TVA.Console
         /// Gets a boolean value that indicates whether the specified argument is present in the command-line command.
         /// </summary>
         /// <param name="argument">The argument to be checked.</param>
-        /// <returns></returns>
+        /// <returns>true if the argument exists in the command-line command; otherwise false.</returns>
         public virtual bool Exists(string argument)
         {
             return m_arguments.ContainsKey(argument);
@@ -321,11 +333,19 @@ namespace TVA.Console
             return m_commandLine;
         }
 
+        /// <summary>
+        /// Returns an <see cref="IEnumerator"/> for iterating through all the comman-line command arguments.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator"/> for the command-line command arguments.</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable)m_arguments).GetEnumerator();
         }
 
+        /// <summary>
+        /// Returns an <see cref="IEnumerator"/> for iterating through all the comman-line command arguments.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator"/> for the command-line command arguments.</returns>
         IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
         {
             return m_arguments.GetEnumerator();
@@ -340,14 +360,11 @@ namespace TVA.Console
         /// </summary>
         /// <param name="command">String of parameters.</param>
         /// <returns>Array of parameters.</returns>
-        /// <remarks>
-        /// This function will always return at least one argument, even if it is an empty string.
-        /// </remarks>
         public static string[] ParseCommand(string command)
         {
             List<string> parsedCommand = new List<string>();
 
-            if (command.Length > 0)
+            if (!string.IsNullOrEmpty(command))
             {
                 string encodedQuote = Guid.NewGuid().ToString();
                 string encodedSpace = Guid.NewGuid().ToString();
