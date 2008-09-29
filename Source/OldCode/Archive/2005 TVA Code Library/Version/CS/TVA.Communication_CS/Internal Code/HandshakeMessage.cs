@@ -1,27 +1,36 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
+//*******************************************************************************************************
+//  HandshakeMessage.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
+//       Email: pcpatel@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  07/06/2006 - Pinal C. Patel
+//       Original version of source code generated
+//  09/29/2008 - James R Carroll
+//       Converted to C#.
+//
+//*******************************************************************************************************
 
-// 07-06-06
+using System;
 
 namespace TVA.Communication
 {
-	[Serializable()]internal class HandshakeMessage
+	[Serializable()]
+    internal class HandshakeMessage
 	{
-		
-		
 		private Guid m_id;
 		private string m_passphrase;
 		
 		public HandshakeMessage(Guid id, string passphrase)
 		{
-			
-			this.ID = id;
-			this.Passphrase = passphrase;
-			
+			ID = id;
+			Passphrase = passphrase;
 		}
 		
 		/// <summary>
@@ -53,7 +62,5 @@ namespace TVA.Communication
 				m_passphrase = value;
 			}
 		}
-		
 	}
-	
 }
