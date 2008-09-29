@@ -575,7 +575,7 @@ namespace TVA.Security.Cryptography
             return rgbIV;
         }
 
-        /// <summary>Resturns an encrypted or decrypted stream using XOR based algorithms. Call once to
+        /// <summary>Returns an encrypted or decrypted stream using XOR based algorithms. Call once to
         /// encrypt, call again with same key to decrypt.</summary>
         /// <remarks>
         /// This returns a memory stream of the encrypted or decrypted results, if the incoming
