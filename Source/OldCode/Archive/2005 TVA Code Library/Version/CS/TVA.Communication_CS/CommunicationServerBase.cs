@@ -37,12 +37,12 @@ using TVA.Security.Cryptography;
 using TVA.Configuration;
 using TVA.Security;
 
-/// <summary>
-/// Represents a server involved in the transportation of data.
-/// </summary>
 namespace TVA.Communication
 {
-	[ToolboxBitmap(typeof(CommunicationServerBase)), DefaultEvent("ReceivedClientData")]
+    /// <summary>
+    /// Represents a server involved in the transportation of data.
+    /// </summary>
+    [ToolboxBitmap(typeof(CommunicationServerBase)), DefaultEvent("ReceivedClientData")]
     public abstract partial class CommunicationServerBase : Component, ICommunicationServer, IPersistSettings, ISupportInitialize
 	{
         #region [ Members ]

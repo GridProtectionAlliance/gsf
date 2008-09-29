@@ -28,12 +28,12 @@ using System.Collections.Generic;
 using TVA.Configuration;
 using TVA.Threading;
 
-/// <summary>
-/// Represents a File-based communication client.
-/// </summary>
 namespace TVA.Communication
 {
-	public class FileClient : CommunicationClientBase
+    /// <summary>
+    /// Represents a File-based communication client.
+    /// </summary>
+    public class FileClient : CommunicationClientBase
 	{
         #region [ Members ]
 

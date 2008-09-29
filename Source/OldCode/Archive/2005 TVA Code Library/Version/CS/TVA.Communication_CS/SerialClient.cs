@@ -28,12 +28,12 @@ using System.Collections.Generic;
 using TVA.Configuration;
 using TVA.Threading;
 
-/// <summary>
-/// Represents a serial port communication client.
-/// </summary>
 namespace TVA.Communication
 {
-	public partial class SerialClient : CommunicationClientBase
+    /// <summary>
+    /// Represents a serial port communication client.
+    /// </summary>
+    public partial class SerialClient : CommunicationClientBase
 	{
         #region [ Members ]
 
@@ -108,6 +108,7 @@ namespace TVA.Communication
                 }
             }
         }
+
         /// <summary>
         /// Cancels any active attempts of connecting to the serial port.
         /// </summary>

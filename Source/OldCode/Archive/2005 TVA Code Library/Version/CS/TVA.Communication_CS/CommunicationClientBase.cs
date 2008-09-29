@@ -35,12 +35,12 @@ using TVA.IO.Compression;
 using TVA.Configuration;
 using TVA.Security.Cryptography;
 
-/// <summary>
-/// Represents a client involved in the transportation of data.
-/// </summary>
 namespace TVA.Communication
 {
-	[ToolboxBitmap(typeof(CommunicationClientBase)), DefaultEvent("ReceivedData")]
+    /// <summary>
+    /// Represents a client involved in the transportation of data.
+    /// </summary>
+    [ToolboxBitmap(typeof(CommunicationClientBase)), DefaultEvent("ReceivedData")]
     public abstract class CommunicationClientBase : Component, ICommunicationClient, IPersistSettings, ISupportInitialize
 	{	
         #region [ Members ]

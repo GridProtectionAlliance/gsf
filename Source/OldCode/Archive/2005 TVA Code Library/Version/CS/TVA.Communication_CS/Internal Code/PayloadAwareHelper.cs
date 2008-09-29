@@ -38,7 +38,7 @@ namespace TVA.Communication
 			// The resulting buffer will be 8 bytes bigger than the payload.
 
 			// Resulting buffer = 4 bytes for payload marker + 4 bytes for the payload size + The payload
-			byte[] result = TVA.Common.CreateArray<byte>(payload.Length + PayloadHeaderSize);
+			byte[] result = new byte[payload.Length + PayloadHeaderSize];
 			
 			// First, copy the the payload marker to the buffer.
 			Buffer.BlockCopy(PayloadBeginMarker, 0, result, 0, 4);

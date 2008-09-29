@@ -33,14 +33,14 @@ using System.Collections.Generic;
 using TVA.Configuration;
 using TVA.Threading;
 
-/// <summary>
-/// Represents a TCP-based communication client.
-/// </summary>
-/// <remarks>
-/// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
-/// </remarks>
 namespace TVA.Communication
 {
+    /// <summary>
+    /// Represents a TCP-based communication client.
+    /// </summary>
+    /// <remarks>
+    /// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
+    /// </remarks>
     public partial class TcpClient : CommunicationClientBase
     {
         #region [ Members ]
@@ -54,6 +54,7 @@ namespace TVA.Communication
 		private Thread m_connectionThread;
 #endif
         private Dictionary<string, string> m_connectionData;
+        private bool m_disposed;
 
         #endregion
 
@@ -110,6 +111,42 @@ namespace TVA.Communication
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by an instance of the <see cref="FileClient" /> class and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_connectionThread != null)
+                        {
+                            if (m_connectionThread.IsAlive)
+                                m_connectionThread.Abort();
+                        }
+                        m_connectionThread = null;
+
+                        if (m_tcpClient != null)
+                        {
+                            if (m_tcpClient.Client != null)
+                                m_tcpClient.Client.Shutdown(SocketShutdown.Both);
+                            m_tcpClient.Client = null;
+                        }
+                        m_tcpClient = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
         /// <summary>
         /// Cancels any active attempts of connecting to the server.
@@ -412,12 +449,10 @@ namespace TVA.Communication
 
                     while (true)
                     {
+                        // If we don't have the payload size, we'll begin by reading the payload header which
+                        // contains the payload size. Once we have the payload size we can receive payload.
                         if (payloadSize == -1)
-                        {
-                            // If we don't have the payload size, we'll begin by reading the payload header which
-                            // contains the payload size. Once we have the payload size we can receive payload.
                             m_tcpClient.DataBuffer = new byte[PayloadAwareHelper.PayloadHeaderSize];
-                        }
 
                         try
                         {
