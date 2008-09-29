@@ -77,60 +77,28 @@ namespace TVA.Communication
 			}
 		}
 		
-		public static byte[] CompressData(byte[] data, CompressionStrength compressionLevel)
+		public static byte[] CompressData(byte[] data, int offset, int length, CompressionStrength compressionLevel)
 		{
-            if (compressionLevel != CompressionStrength.NoCompression)
-		    {
-                // Using streaming compression since needed uncompressed size will be serialized into destination stream
-			    return new MemoryStream(data).Compress(compressionLevel).ToArray();
-		    }
-		    else
-		    {
-			    // No compression is required.
-			    return data;
-		    }
+            // Using streaming compression since needed uncompressed size will be serialized into destination stream
+		    return new MemoryStream(data, offset, length).Compress(compressionLevel).ToArray();
 		}
 
         public static byte[] UncompressData(byte[] data, CompressionStrength compressionLevel)
 		{
-            if (compressionLevel != CompressionStrength.NoCompression)
-			{
-                // Using streaming decompression since needed uncompressed size was serialized into source stream
-                return new MemoryStream(data).Decompress().ToArray();
-			}
-			else
-			{
-				// No uncompression is required.
-				return data;
-			}
+            // Using streaming decompression since needed uncompressed size was serialized into source stream
+            return new MemoryStream(data).Decompress().ToArray();
 		}
-		
-		public static byte[] EncryptData(byte[] data, string encryptionKey, CipherStrength encryptionLevel)
+
+        public static byte[] EncryptData(byte[] data, int offset, int length, string encryptionKey, CipherStrength encryptionLevel)
 		{
-			if (encryptionLevel != CipherStrength.None && !string.IsNullOrEmpty(encryptionKey))
-			{
-				byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
-                return data.Encrypt(key, key, encryptionLevel);
-			}
-			else
-			{
-				// No encryption is required.
-				return data;
-			}
+			byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
+            return data.Encrypt(offset, length, key, key, encryptionLevel);
 		}
 
         public static byte[] DecryptData(byte[] data, string encryptionKey, CipherStrength encryptionLevel)
 		{
-            if (encryptionLevel != CipherStrength.None && !string.IsNullOrEmpty(encryptionKey))
-            {
-                byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
-                return data.Decrypt(key, key, encryptionLevel);
-            }
-            else
-            {
-                // No decryption is required.
-                return data;
-            }
+            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
+            return data.Decrypt(key, key, encryptionLevel);
         }
 		
 		public static bool IsDestinationReachable(IPEndPoint targetIPEndPoint)

@@ -148,7 +148,7 @@ namespace TVA.Communication
 
         #region [ Constructors ]
 
-		public CommunicationClientBase()
+        protected CommunicationClientBase()
 		{
 			// Setup the default values.
 			m_receiveBufferSize = 8192;
@@ -247,7 +247,7 @@ namespace TVA.Communication
             }
             set
             {
-                if ((!value) || (value && m_handshake && m_encryption != CipherStrength.None))
+                if (!value || (value && m_handshake && m_encryption != CipherStrength.None))
                 {
                     m_secureSession = value;
                 }
@@ -274,7 +274,7 @@ namespace TVA.Communication
             }
             set
             {
-                if ((value) || (!value && !m_secureSession))
+                if (value || (!value && !m_secureSession))
                 {
                     m_handshake = value;
 
@@ -399,7 +399,7 @@ namespace TVA.Communication
             }
             set
             {
-                if ((!m_secureSession) || (m_secureSession && value != CipherStrength.None))
+                if (!m_secureSession || (m_secureSession && value != CipherStrength.None))
                 {
                     m_encryption = value;
                 }
@@ -1111,22 +1111,32 @@ namespace TVA.Communication
         /// <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
         protected virtual byte[] GetPreparedData(byte[] data, int offset, int length)
         {
-            if (m_compression != CompressionStrength.NoCompression)
+            if (m_encryption == CipherStrength.None && m_compression == CompressionStrength.NoCompression)
             {
-                data = CommunicationHelper.CompressData(data, m_compression);
+                // Return only used part of source buffer
+                return data.CopyBuffer(offset, length);
             }
-
-            if (!m_secureSession)
+            else
             {
-                string key = m_handshakePassphrase;
+                if (m_compression != CompressionStrength.NoCompression)
+                {
+                    data = CommunicationHelper.CompressData(data, offset, length, m_compression);
+                    offset = 0;
+                    length = data.Length;
+                }
 
-                if (string.IsNullOrEmpty(key))
-                    key = DefaultCryptoKey;
+                if (m_encryption != CipherStrength.None)
+                {
+                    string key = m_handshakePassphrase;
 
-                data = CommunicationHelper.EncryptData(data, key, m_encryption);
+                    if (string.IsNullOrEmpty(key))
+                        key = DefaultCryptoKey;
+
+                    data = CommunicationHelper.EncryptData(data, offset, length, key, m_encryption);
+                }
+
+                return data;
             }
-
-            return data;
         }
 
         /// <summary>
@@ -1137,7 +1147,7 @@ namespace TVA.Communication
         /// <remarks>No decryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
         protected virtual byte[] GetActualData(byte[] data)
         {
-            if (!m_secureSession)
+            if (m_encryption != CipherStrength.None)
             {
                 string key = m_handshakePassphrase;
 
