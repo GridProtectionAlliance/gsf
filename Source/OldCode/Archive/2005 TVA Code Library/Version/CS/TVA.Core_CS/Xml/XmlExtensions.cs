@@ -126,11 +126,13 @@ namespace TVA.Xml
 
             if (attr == null)
             {
+                // Add the attribute.
                 attr = node.OwnerDocument.CreateAttribute(name);
                 node.Attributes.Append(attr);
             }
-            else
+            if (attr != null)
             {
+                // Set the attribute value.
                 attr.Value = value;
                 node.Attributes.SetNamedItem(attr);
             }
