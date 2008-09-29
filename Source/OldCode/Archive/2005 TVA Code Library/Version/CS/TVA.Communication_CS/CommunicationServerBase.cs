@@ -149,6 +149,23 @@ namespace TVA.Communication
 			m_buffer = new byte[m_receiveBufferSize];
 		}
 
+        protected CommunicationServerBase(string configurationString)
+            : this()
+		{
+            m_configurationString = configurationString;
+		}
+
+        /// <summary>
+        /// Releases unmanaged resources before an instance of the <see cref="CommunicationServerBase" /> class is reclaimed by garbage collection.
+        /// </summary>
+        /// <remarks>
+        /// This method releases unmanaged resources by calling the virtual <see cref="Dispose(bool)" /> method, passing in <strong>false</strong>.
+        /// </remarks>
+        ~CommunicationServerBase()
+        {
+            Dispose(false);
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -618,20 +635,28 @@ namespace TVA.Communication
 
         #region [ Methods ]
 
-        protected override void Dispose(bool disposing)
+        /// <summary>
+        /// Releases the unmanaged resources used by an instance of the <see cref="CommunicationServerBase" /> class and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                if (disposing)
+                try
                 {
-                    Stop();         // Stop the server.
-                    SaveSettings(); // Saves settings to the config file.
+                    if (disposing)
+                    {
+                        Stop();         // Stop the server.
+                        SaveSettings(); // Saves settings to the config file.
+                    }
                 }
-
-                base.Dispose(disposing);
+                finally
+                {
+                    base.Dispose(disposing);
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
             }
-
-            m_disposed = true;
         }
 
         /// <summary>
