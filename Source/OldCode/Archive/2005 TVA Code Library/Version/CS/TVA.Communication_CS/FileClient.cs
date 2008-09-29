@@ -74,16 +74,6 @@ namespace TVA.Communication
             m_receiveInterval = -1;
             m_startingOffset = 0;
             m_fileClient = new StateInfo<System.IO.FileStream>();
-#if ThreadTracking
-            m_receivingThread = new ManagedThread(ReceiveFileData);
-            m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()";
-
-            m_connectionThread = new ManagedThread(ConnectToFile);
-            m_connectionThread.Name = "TVA.Communication.FileClient.ConnectToFile()";
-#else
-			m_receivingThread = new Thread(ReceiveFileData);
-			m_connectionThread = new Thread(ConnectToFile);
-#endif
             m_receiveDataTimer = new System.Timers.Timer();
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
 
@@ -250,6 +240,12 @@ namespace TVA.Communication
         {
             if (base.Enabled && base.IsConnected && m_receiveOnDemand && !m_receivingThread.IsAlive)
             {
+#if ThreadTracking
+                m_receivingThread = new ManagedThread(ReceiveFileData);
+                m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()";
+#else
+                m_receivingThread = new Thread(ReceiveFileData);
+#endif
                 m_receivingThread.Start();
             }
         }
@@ -260,9 +256,7 @@ namespace TVA.Communication
         public override void CancelConnect()
         {
             if (base.Enabled && m_connectionThread.IsAlive)
-            {
                 m_connectionThread.Abort();
-            }
         }
 
         /// <summary>
@@ -273,9 +267,19 @@ namespace TVA.Communication
             if (base.Enabled && !base.IsConnected && ValidConnectionString(ConnectionString))
             {
                 if (File.Exists(m_connectionData["file"]))
+                {
+#if ThreadTracking
+                    m_connectionThread = new ManagedThread(ConnectToFile);
+                    m_connectionThread.Name = "TVA.Communication.FileClient.ConnectToFile()";
+#else
+                    m_connectionThread = new Thread(ConnectToFile);
+#endif
                     m_connectionThread.Start();
+                }
                 else
+                {
                     throw new FileNotFoundException(m_connectionData["file"] + " does not exist.");
+                }
             }
         }
 
@@ -415,6 +419,12 @@ namespace TVA.Communication
                         else
                         {
                             // We need to start receiving data continuously.
+#if ThreadTracking
+                            m_receivingThread = new ManagedThread(ReceiveFileData);
+                            m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()";
+#else
+                            m_receivingThread = new Thread(ReceiveFileData);
+#endif
                             m_receivingThread.Start();
                         }
                     }
@@ -486,6 +496,12 @@ namespace TVA.Communication
         {
             if (base.Enabled && base.IsConnected && m_receiveInterval > 0 && !m_receivingThread.IsAlive)
             {
+#if ThreadTracking
+                m_receivingThread = new ManagedThread(ReceiveFileData);
+                m_receivingThread.Name = "TVA.Communication.FileClient.ReceiveFileData()";
+#else
+                m_receivingThread = new Thread(ReceiveFileData);
+#endif
                 m_receivingThread.Start();
             }
         }

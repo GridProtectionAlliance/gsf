@@ -63,12 +63,6 @@ namespace TVA.Communication
         public TcpClient()
         {
             m_payloadAware = false;
-#if ThreadTracking
-            m_connectionThread = new TVA.Threading.ManagedThread(ConnectToServer);
-            m_connectionThread.Name = "TVA.Communication.TcpClient.ConnectToServer()";
-#else
-			m_connectionThread = new Thread(ConnectToServer);
-#endif
             base.ConnectionString = "Server=localhost; Port=8888";
             base.Protocol = TransportProtocol.Tcp;
         }
@@ -133,8 +127,11 @@ namespace TVA.Communication
 
                         if (m_tcpClient != null)
                         {
-                            if (m_tcpClient.Client != null)
+                            if (m_tcpClient.Client != null && m_tcpClient.Client.Connected)
+                            {
                                 m_tcpClient.Client.Shutdown(SocketShutdown.Both);
+                                m_tcpClient.Client.Close();
+                            }
                             m_tcpClient.Client = null;
                         }
                         m_tcpClient = null;
@@ -153,13 +150,11 @@ namespace TVA.Communication
         /// </summary>
         public override void CancelConnect()
         {
+            // The client attempts to connect to the server on a seperate thread and since that thread is still
+            // running, we know that the client has not yet connected to the server. We can now abort the thread
+            // to stop the client from attempting to connect to the server.
             if (base.Enabled && m_connectionThread.IsAlive)
-            {
-                // The client attempts to connect to the server on a seperate thread and since that thread is still
-                // running, we know that the client has not yet connected to the server. We can now abort the thread
-                // to stop the client from attempting to connect to the server.
                 m_connectionThread.Abort();
-            }
         }
 
         /// <summary>
@@ -168,7 +163,15 @@ namespace TVA.Communication
         public override void Connect()
         {
             if (base.Enabled && !base.IsConnected && ValidConnectionString(base.ConnectionString))
+            {
+#if ThreadTracking
+                m_connectionThread = new TVA.Threading.ManagedThread(ConnectToServer);
+                m_connectionThread.Name = "TVA.Communication.TcpClient.ConnectToServer()";
+#else
+                m_connectionThread = new Thread(ConnectToServer);
+#endif
                 m_connectionThread.Start();
+            }
         }
 
         /// <summary>
@@ -187,13 +190,9 @@ namespace TVA.Communication
                 try
                 {
                     if (timeout <= 0)
-                    {
                         m_tcpClient.Client.Close();
-                    }
                     else
-                    {
                         m_tcpClient.Client.Close(timeout);
-                    }
                 }
                 catch
                 {
@@ -380,7 +379,7 @@ namespace TVA.Communication
                 if (base.Handshake)
                 {
                     // Handshaking is to be performed so we'll send our information to the server.
-                    byte[] myInfo = GetPreparedData(TVA.Serialization.GetBytes(new HandshakeMessage(m_tcpClient.ID, m_tcpClient.Passphrase)));
+                    byte[] myInfo = GetPreparedData(Serialization.GetBytes(new HandshakeMessage(m_tcpClient.ID, m_tcpClient.Passphrase)));
 
                     // Add payload header if client-server communication is PayloadAware.
                     if (m_payloadAware)
@@ -538,7 +537,7 @@ namespace TVA.Communication
             if (base.ServerID == Guid.Empty && base.Handshake)
             {
                 // Handshaking is to be performed, but it's not complete yet.
-                HandshakeMessage serverInfo = TVA.Serialization.GetObject<HandshakeMessage>(GetActualData(data));
+                HandshakeMessage serverInfo = Serialization.GetObject<HandshakeMessage>(GetActualData(data));
 
                 if ((serverInfo != null) && serverInfo.ID != Guid.Empty)
                 {

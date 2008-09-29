@@ -53,12 +53,6 @@ namespace TVA.Communication
 
         public SerialClient()
         {
-#if ThreadTracking
-            m_connectionThread = new ManagedThread(ConnectToPort);
-            m_connectionThread.Name = "TVA.Communication.SerialClient.ConnectToPort()";
-#else
-			m_connectionThread = new Thread(ConnectToPort);
-#endif
             m_serialClient = new SerialPort();
             m_serialClient.DataReceived += m_serialClient_DataReceived;
 
@@ -115,9 +109,7 @@ namespace TVA.Communication
         public override void CancelConnect()
         {
             if (base.Enabled && m_connectionThread.IsAlive)
-            {
                 m_connectionThread.Abort();
-            }
         }
 
         /// <summary>
@@ -132,8 +124,16 @@ namespace TVA.Communication
                 m_serialClient.DataBits = int.Parse(m_connectionData["databits"]);
                 m_serialClient.Parity = (Parity)(System.Enum.Parse(typeof(Parity), m_connectionData["parity"]));
                 m_serialClient.StopBits = (StopBits)(System.Enum.Parse(typeof(StopBits), m_connectionData["stopbits"]));
+                
                 if (m_connectionData.ContainsKey("dtrenable")) m_serialClient.DtrEnable = m_connectionData["dtrenable"].ParseBoolean();
                 if (m_connectionData.ContainsKey("rtsenable")) m_serialClient.RtsEnable = m_connectionData["rtsenable"].ParseBoolean();
+
+#if ThreadTracking
+                m_connectionThread = new ManagedThread(ConnectToPort);
+                m_connectionThread.Name = "TVA.Communication.SerialClient.ConnectToPort()";
+#else
+                m_connectionThread = new Thread(ConnectToPort);
+#endif
                 m_connectionThread.Start();
             }
         }

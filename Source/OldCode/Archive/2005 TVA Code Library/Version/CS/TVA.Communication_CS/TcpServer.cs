@@ -168,7 +168,11 @@ namespace TVA.Communication
 
                         if (m_tcpServer != null)
                         {
-                            m_tcpServer.Shutdown(SocketShutdown.Both);
+                            if (m_tcpServer.Connected)
+                            {
+                                m_tcpServer.Shutdown(SocketShutdown.Both);
+                                m_tcpServer.Close();
+                            }
                         }
                         m_tcpServer = null;
 
@@ -176,8 +180,11 @@ namespace TVA.Communication
                         {
                             foreach (StateInfo<Socket> client in m_tcpClients.Values)
                             {
-                                if ((client != null) && (client.Client != null))
+                                if (client != null && client.Client != null && client.Client.Connected)
+                                {
                                     client.Client.Shutdown(SocketShutdown.Both);
+                                    client.Client.Close();
+                                }
                             }
 
                             m_tcpClients.Clear();
@@ -188,8 +195,11 @@ namespace TVA.Communication
                         {
                             foreach (StateInfo<Socket> client in m_pendingTcpClients)
                             {
-                                if ((client != null) && (client.Client != null))
+                                if (client != null && client.Client != null && client.Client.Connected)
+                                {
                                     client.Client.Shutdown(SocketShutdown.Both);
+                                    client.Client.Close();
+                                }
                             }
 
                             m_pendingTcpClients.Clear();
@@ -284,8 +294,9 @@ namespace TVA.Communication
                 m_tcpClients.TryGetValue(clientID, out tcpClient);
             }
 
-            if (tcpClient != null)
+            if (tcpClient != null && tcpClient.Client != null && tcpClient.Client.Connected)
             {
+                tcpClient.Client.Shutdown(SocketShutdown.Both);
                 tcpClient.Client.Close();
             }
             else
@@ -646,7 +657,7 @@ namespace TVA.Communication
             {
                 // Authentication is required, but not performed yet. When authentication is required
                 // the first message from the client must be information about itself.
-                HandshakeMessage clientInfo = TVA.Serialization.GetObject<HandshakeMessage>(GetActualData(data));
+                HandshakeMessage clientInfo = Serialization.GetObject<HandshakeMessage>(GetActualData(data));
 
                 if ((clientInfo != null) && clientInfo.ID != Guid.Empty && clientInfo.Passphrase == HandshakePassphrase)
                 {
@@ -655,7 +666,7 @@ namespace TVA.Communication
                     if (SecureSession) tcpClient.Passphrase = Cipher.GenerateKey();
 
                     // We'll send our information to the client which may contain a private crypto key .
-                    byte[] myInfo = GetPreparedData(TVA.Serialization.GetBytes(new HandshakeMessage(ServerID, tcpClient.Passphrase)));
+                    byte[] myInfo = GetPreparedData(Serialization.GetBytes(new HandshakeMessage(ServerID, tcpClient.Passphrase)));
 
                     if (m_payloadAware)
                         myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo);
