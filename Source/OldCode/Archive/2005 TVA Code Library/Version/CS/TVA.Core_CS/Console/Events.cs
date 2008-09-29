@@ -16,6 +16,8 @@
 //       Edited code comments.
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  09/29/2008 - Pinal C. Patel
+//      Entered code comments.
 //
 //*******************************************************************************************************
 
@@ -25,7 +27,9 @@ using System.Runtime.InteropServices;
 
 namespace TVA.Console
 {
-    /// <summary>Provides a console application events raised by the console window.</summary>
+    /// <summary>
+    /// A helper class that can be used to subscribe to events raised by a console application.
+    /// </summary>
     public static class Events
     {
         private enum ConsoleEventType
@@ -37,21 +41,88 @@ namespace TVA.Console
             SystemShutdown = 6
         }
 
-        private static Func<ConsoleEventType, bool> m_handler;
+        private static ConsoleWindowEventHandler m_handler;
 
-        public static event EventHandler<CancelEventArgs> CancelKeyPress;
-
-        public static event EventHandler<CancelEventArgs> BreakKeyPress;
-
-        public static event EventHandler<CancelEventArgs> ConsoleClosing;
-
-        public static event EventHandler UserLoggingOff;
-
-        public static event EventHandler SystemShutdown;
+        private delegate bool ConsoleWindowEventHandler(ConsoleEventType controlType);
 
         [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
-        private static extern bool SetConsoleWindowEventRaising(Func<ConsoleEventType, bool> handler, bool enable);
+        private static extern bool SetConsoleWindowEventRaising(ConsoleWindowEventHandler handler, bool enable);
 
+        /// <summary>
+        /// Occurs when CTRL+C signal is received from keyboard input.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EnableRaisingEvents"/> method must be called to enable event publication.
+        /// </remarks>
+        public static event EventHandler<CancelEventArgs> CancelKeyPress;
+
+        /// <summary>
+        /// Occurs when CTRL+BREAK signal is received from keyboard input.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EnableRaisingEvents"/> method must be called to enable event publication.
+        /// </remarks>
+        public static event EventHandler<CancelEventArgs> BreakKeyPress;
+
+        /// <summary>
+        /// Occurs when the user closes the console application window.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EnableRaisingEvents"/> method must be called to enable event publication.
+        /// </remarks>
+        public static event EventHandler<CancelEventArgs> ConsoleClosing;
+
+        /// <summary>
+        /// Occurs when the user is logging off.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EnableRaisingEvents"/> method must be called to enable event publication.
+        /// </remarks>
+        public static event EventHandler UserLoggingOff;
+
+        /// <summary>
+        /// Occurs when the system is shutting down.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EnableRaisingEvents"/> method must be called to enable event publication.
+        /// </remarks>
+        public static event EventHandler SystemShutdown;
+
+        /// <summary>
+        /// Enables the raising of console application <see cref="Events"/>. Prior to calling this method, handlers 
+        /// must be defined for the <see cref="Events"/> raised by a console application.
+        /// </summary>
+        /// <example>
+        /// This sample shows how to subscribe to console application events:
+        /// <code>
+        /// using TVA.Console;
+        /// .
+        /// .
+        /// .
+        /// static void Main(string[] args)
+        /// {
+        ///     Events.CancelKeyPress += Events_CancelKeyPress;
+        ///     Events.ConsoleClosing += Events_ConsoleClosing;
+        ///     Events.EnableRaisingEvents();
+        ///
+        ///     string input;
+        ///     while (true)
+        ///     {
+        ///         input = Console.ReadLine();
+        ///     }
+        /// }
+        ///
+        /// static void Events_CancelKeyPress(object sender, System.ComponentModel.CancelEventArgs e)
+        /// {
+        ///     // Abort processing.
+        /// }
+        ///
+        /// static void Events_ConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        /// {
+        ///     // Put clean-up code.
+        /// }
+        /// </code>
+        /// </example>
         public static void EnableRaisingEvents()
         {
             // Member variable is used here so that the delegate is not garbage collected by the time it is called
@@ -61,12 +132,18 @@ namespace TVA.Console
             SetConsoleWindowEventRaising(m_handler, true);
         }
 
+        /// <summary>
+        /// Enables the raising of console application <see cref="Events"/>. 
+        /// </summary>
         public static void DisableRaisingEvents()
         {
             m_handler = HandleConsoleWindowEvents;
             SetConsoleWindowEventRaising(m_handler, false);
         }
 
+        /// <summary>
+        /// Delegate method that gets called when console application events occur.
+        /// </summary>
         private static bool HandleConsoleWindowEvents(ConsoleEventType controlType)
         {
             // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.WIN32COM.v10.en/dllproc/base/handlerroutine.htm

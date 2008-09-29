@@ -19,7 +19,7 @@
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
 //  09/26/2008 - Pinal C. Patel
-//      Documented public and protected members.
+//      Entered code comments.
 //
 //*******************************************************************************************************
 
