@@ -126,7 +126,7 @@ namespace TVA.IO.Compression
 	        return destination;
         }
 
-        // Compress a stream onto given output stream using specified compression strength
+        /// <summary>Compress a stream onto given output stream using specified compression strength.</summary>
         public static void Compress(this Stream source, Stream destination, CompressionStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgress<long>.Handler progress = null;
@@ -187,11 +187,13 @@ namespace TVA.IO.Compression
 	        }
         }
 
-        // Uncompress a byte array
+        /// <summary>Uncompress a byte array.</summary>
+        /// <remarks>
+        /// Uncompressed buffer size is requested because we must allocate a buffer large enough to hold resultant uncompressed
+        /// data and user will have a better idea of what this will be since they compressed the original data.
+        /// </remarks>
         public static byte[] Decompress(this byte[] source, int uncompressedSize)
         {
-	        // Uncompressed buffer size is requested because we must allocate a buffer large enough to hold resultant uncompressed
-	        // data and user will have a better idea of what this will be since they compressed the original data
             int destinationLength;
 	        byte[] destination = new byte[uncompressedSize];
 
@@ -224,7 +226,7 @@ namespace TVA.IO.Compression
 	        return destination;
         }
 
-        // Uncompress a stream onto given output stream
+        /// <summary>Uncompress a stream onto given output stream.</summary>
         public static void Decompress(this Stream source, Stream destination, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgress<long>.Handler progress = null;
