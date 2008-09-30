@@ -45,7 +45,6 @@ namespace System
     /// unsigned integer.
     /// </para>
     /// </remarks>
-
     [Serializable(), CLSCompliant(false)]
     public struct UInt24 : IComparable, IFormattable, IConvertible, IComparable<UInt24>, IComparable<UInt32>, IEquatable<UInt24>, IEquatable<UInt32>
     {

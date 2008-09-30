@@ -45,7 +45,6 @@ namespace System
     /// signed integer.
     /// </para>
     /// </remarks>
-
     [Serializable()]
     public struct Int24 : IComparable, IFormattable, IConvertible, IComparable<Int24>, IComparable<Int32>, IEquatable<Int24>, IEquatable<Int32>
     {
