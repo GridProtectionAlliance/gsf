@@ -403,7 +403,7 @@ namespace TVA.Interop
         /// <summary>Little-Endian byte order conversion class.</summary>
         public static EndianOrder LittleEndian;
 
-        EndianOrder()
+        static EndianOrder()
         {
             BigEndian = new EndianOrder(Endianness.BigEndian);
             LittleEndian = new EndianOrder(Endianness.LittleEndian);
