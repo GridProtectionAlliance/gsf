@@ -19,8 +19,8 @@ using System.Security.Permissions;
 [assembly:AssemblyDescription("Shared .NET Communication Functions Library")]
 [assembly:AssemblyCompany("TVA")]
 [assembly:AssemblyProduct("Shared .NET Code Library for TVA")]
-[assembly:AssemblyCopyright("Copyright © 2006, TVA - All rights reserved")]
-[assembly:AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")]
+[assembly: AssemblyCopyright("Copyright © 2006-2008, TVA - All rights reserved")]
+[assembly: AssemblyTrademark("Authors: J. Ritchie Carroll, Pinal C. Patel")]
 
 [assembly:ComVisible(false)]
 [assembly:CLSCompliant(true)]
