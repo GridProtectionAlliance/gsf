@@ -1,25 +1,27 @@
 //*******************************************************************************************************
-//  TVA.Interop.EndianOrder.vb - Endian byte order interoperability class
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  EndianOrder.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//       Generated original version of source code.
 //  01/14/2005 - J. Ritchie Carroll
-//       Added GetByte overloads, and To<Type> functions - changes reviewed by John Shugart
+//       Added GetByte overloads, and To<Type> functions - changes reviewed by John Shugart.
 //  01/05/2006 - J. Ritchie Carroll
-//       2.0 version of source code migrated from 1.1 source (TVA.Interop.EndianOrder)
+//       2.0 version of source code migrated from 1.1 source (TVA.Interop.EndianOrder).
 //  10/18/2006 - J. Ritchie Carroll
-//       Added a few minor optimizations to buffer copy functions
+//       Added a few minor optimizations to buffer copy functions.
 //  09/09/2008 - J. Ritchie Carroll
 //      Converted to C#
+//  09/30/2008 - J. Ritchie Carroll
+//      Added overloads for Int24 and UInt24
 //
 //*******************************************************************************************************
 
@@ -27,12 +29,16 @@ using System;
 
 namespace TVA.Interop
 {
+    #region [ Enumerations ]
+
     /// <summary>Endian Byte Order Enumeration</summary>
     public enum Endianness
     {
         BigEndian,
         LittleEndian
     }
+
+    #endregion
 
     /// <summary>Endian byte order interoperability class</summary>
     /// <remarks>
@@ -42,18 +48,20 @@ namespace TVA.Interop
     /// </remarks>
     public sealed class EndianOrder
     {
-        // Create shared big-endian class
-        public static EndianOrder BigEndian = new EndianOrder(Endianness.BigEndian);
+        #region [ Members ]
 
-        // Create shared little-endian class
-        public static EndianOrder LittleEndian = new EndianOrder(Endianness.LittleEndian);
-
+        // Delegates
         private delegate void CopyBufferFunction(byte[] sourceBuffer, int sourceIndex, byte[] destinationBuffer, int destinationIndex, int length);
         private delegate byte[] CoerceByteOrderFunction(byte[] buffer);
 
+        // Fields
         private Endianness m_targetEndianness;
         private CopyBufferFunction m_copyBuffer;
         private CoerceByteOrderFunction m_coerceByteOrder;
+
+        #endregion
+
+        #region [ Constructors ]
 
         private EndianOrder(Endianness targetEndianness)
         {
@@ -93,6 +101,22 @@ namespace TVA.Interop
             }
         }
 
+        #endregion
+
+        #region [ Properties ]
+
+        public Endianness TargetEndianness
+        {
+            get
+            {
+                return m_targetEndianness;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
         private void BlockCopy(byte[] sourceBuffer, int sourceIndex, byte[] destinationBuffer, int destinationIndex, int length)
         {
             Buffer.BlockCopy(sourceBuffer, sourceIndex, destinationBuffer, destinationIndex, length);
@@ -119,14 +143,6 @@ namespace TVA.Interop
         {
             Array.Reverse(buffer);
             return buffer;
-        }
-
-        public Endianness TargetEndianness
-        {
-            get
-            {
-                return m_targetEndianness;
-            }
         }
 
         // For non-standard length byte manipulations, we expose copy function that will copy OS-ordered source buffer into proper target endian-order
@@ -172,6 +188,15 @@ namespace TVA.Interop
             return BitConverter.ToInt16(buffer, 0);
         }
 
+        public Int24 ToInt24(byte[] value, int startIndex)
+        {
+            byte[] buffer = new byte[3];
+
+            m_copyBuffer(value, startIndex, buffer, 0, 3);
+
+            return Int24.GetValue(buffer, 0);
+        }
+
         public int ToInt32(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[4];
@@ -207,6 +232,16 @@ namespace TVA.Interop
             m_copyBuffer(value, startIndex, buffer, 0, 2);
 
             return BitConverter.ToUInt16(buffer, 0);
+        }
+
+        [CLSCompliant(false)]
+        public UInt24 ToUInt24(byte[] value, int startIndex)
+        {
+            byte[] buffer = new byte[3];
+
+            m_copyBuffer(value, startIndex, buffer, 0, 3);
+
+            return UInt24.GetValue(buffer, 0);
         }
 
         [CLSCompliant(false)]
@@ -250,6 +285,11 @@ namespace TVA.Interop
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        public byte[] GetBytes(Int24 value)
+        {
+            return m_coerceByteOrder(Int24.GetBytes(value));
+        }
+
         public byte[] GetBytes(int value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
@@ -269,6 +309,12 @@ namespace TVA.Interop
         public byte[] GetBytes(ushort value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public byte[] GetBytes(UInt24 value)
+        {
+            return m_coerceByteOrder(UInt24.GetBytes(value));
         }
 
         [CLSCompliant(false)]
@@ -303,6 +349,11 @@ namespace TVA.Interop
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
         }
 
+        public void CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
+        {
+            m_copyBuffer(Int24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
+        }
+
         public void CopyBytes(int value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
@@ -325,6 +376,12 @@ namespace TVA.Interop
         }
 
         [CLSCompliant(false)]
+        public void CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
+        {
+            m_copyBuffer(UInt24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
+        }
+
+        [CLSCompliant(false)]
         public void CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
@@ -335,5 +392,23 @@ namespace TVA.Interop
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        /// <summary>Big-Endian byte order conversion class.</summary>
+        public static EndianOrder BigEndian;
+
+        /// <summary>Little-Endian byte order conversion class.</summary>
+        public static EndianOrder LittleEndian;
+
+        EndianOrder()
+        {
+            BigEndian = new EndianOrder(Endianness.BigEndian);
+            LittleEndian = new EndianOrder(Endianness.LittleEndian);
+        }
+
+        #endregion
     }
 }

@@ -1,11 +1,11 @@
 //*******************************************************************************************************
-//  TVA.Interop.VBArrayDescriptor.vb - Old Style Visual Basic Array Descriptor
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  VBArrayDescriptor.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
 //       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
@@ -31,6 +31,9 @@ namespace TVA.Interop
     /// </remarks>
     public class VBArrayDescriptor : IBinaryDataProvider
     {
+        #region [ Members ]
+
+        // Nested Types
         private class DimensionDescriptor
         {
             public const int BinaryLength = 8;
@@ -45,7 +48,12 @@ namespace TVA.Interop
             }
         }
 
+        // Fields
         private List<DimensionDescriptor> m_arrayDimensionDescriptors;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public VBArrayDescriptor(int[] arrayLengths, int[] arrayLowerBounds)
         {
@@ -63,6 +71,10 @@ namespace TVA.Interop
                 throw new ArgumentException("Number of lengths and lower bounds must be the same.");
             }
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         public byte[] BinaryImage
         {
@@ -90,6 +102,10 @@ namespace TVA.Interop
             }
         }
 
+        #endregion
+
+        #region [ Static ]
+
         public static VBArrayDescriptor ZeroBasedOneDimensionalArray(int arrayLength)
         {
             return new VBArrayDescriptor(new int[] { arrayLength }, new int[] { 0 });
@@ -109,5 +125,7 @@ namespace TVA.Interop
         {
             return new VBArrayDescriptor(new int[] { dimensionOneLength, dimensionTwoLength }, new int[] { 1, 1 });
         }
+
+        #endregion
     }
 }

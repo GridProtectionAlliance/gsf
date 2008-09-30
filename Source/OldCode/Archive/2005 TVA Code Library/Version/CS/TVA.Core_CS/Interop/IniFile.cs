@@ -1,11 +1,11 @@
 //*******************************************************************************************************
-//  TVA.Interop.IniFile.vb - Old style Windows INI file manipulation class
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  IniFile.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
@@ -32,16 +32,14 @@ namespace TVA.Interop
     /// <summary>Old style Windows INI file manipulation class</summary>
     public class IniFile
     {
-        [DllImport("kernel32", EntryPoint = "GetPrivateProfileStringA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
-        private static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
+        #region [ Members ]
 
-        [DllImport("kernel32", EntryPoint = "WritePrivateProfileStringA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
-        private static extern int WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
-
-        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionNamesA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
-        private static extern int GetPrivateProfileSectionNames(byte[] lpszReturnBuffer, int nSize, string lpFileName);
-
+        // Fields
         private string m_fileName;
+
+        #endregion
+
+        #region [ Constructors ]
 
         /// <summary>Creates a new instance of IniFile class</summary>
         /// <remarks>Ini file name defaults to "Win.ini" - change using FileName property</remarks>
@@ -55,6 +53,10 @@ namespace TVA.Interop
         {
             m_fileName = fileName;
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>File name of the INI file</summary>
         public string FileName
@@ -114,34 +116,6 @@ namespace TVA.Interop
             }
         }
 
-        /// <summary>Gets the value of the specified key</summary>
-        /// <param name="section">Section key exists in</param>
-        /// <param name="entry">Name of key</param>
-        /// <returns>Value of key</returns>
-        public string GetKeyValue(string section, string entry)
-        {
-            return this[section, entry, null];
-        }
-
-        /// <summary>Gets the value of the specified key</summary>
-        /// <param name="section">Section key exists in</param>
-        /// <param name="entry">Name of key</param>
-        /// <param name="defaultValue">Default value of key</param>
-        /// <returns>Value of key</returns>
-        public string GetKeyValue(string section, string entry, string defaultValue)
-        {
-            return this[section, entry, defaultValue];
-        }
-
-        /// <summary>Sets the value of the specified key</summary>
-        /// <param name="section">Section key exists in</param>
-        /// <param name="entry">Name of key</param>
-        /// <param name="newValue">The new key value to store in the INI file</param>
-        public void SetKeyValue(string section, string entry, string newValue)
-        {
-            this[section, entry] = newValue;
-        }
-
         /// <summary>Returns a string array of section names in the INI file</summary>
         public string[] SectionNames
         {
@@ -180,5 +154,53 @@ namespace TVA.Interop
                 return sections.ToArray();
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>Gets the value of the specified key</summary>
+        /// <param name="section">Section key exists in</param>
+        /// <param name="entry">Name of key</param>
+        /// <returns>Value of key</returns>
+        public string GetKeyValue(string section, string entry)
+        {
+            return this[section, entry, null];
+        }
+
+        /// <summary>Gets the value of the specified key</summary>
+        /// <param name="section">Section key exists in</param>
+        /// <param name="entry">Name of key</param>
+        /// <param name="defaultValue">Default value of key</param>
+        /// <returns>Value of key</returns>
+        public string GetKeyValue(string section, string entry, string defaultValue)
+        {
+            return this[section, entry, defaultValue];
+        }
+
+        /// <summary>Sets the value of the specified key</summary>
+        /// <param name="section">Section key exists in</param>
+        /// <param name="entry">Name of key</param>
+        /// <param name="newValue">The new key value to store in the INI file</param>
+        public void SetKeyValue(string section, string entry, string newValue)
+        {
+            this[section, entry] = newValue;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileStringA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
+
+        [DllImport("kernel32", EntryPoint = "WritePrivateProfileStringA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern int WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
+
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionNamesA", ExactSpelling = true, CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern int GetPrivateProfileSectionNames(byte[] lpszReturnBuffer, int nSize, string lpFileName);
+
+        #endregion
     }
 }
