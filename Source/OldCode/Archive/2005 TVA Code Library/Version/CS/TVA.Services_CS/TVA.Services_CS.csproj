@@ -46,10 +46,7 @@
     <DefineConstants>ThreadTracking</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="mscorlib" />
-    <Reference Include="C:\My Projects\Sandbox\Win\TVACodeLibrary\Build\Output\Debug\TVA.Communication.dll" />
-    <Reference Include="C:\My Projects\Sandbox\Win\TVACodeLibrary\Build\Output\Debug\TVA.Core.dll" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -62,9 +59,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientHelper.Designer.cs">
-      <DependentUpon>ClientHelper.cs</DependentUpon>
-    </Compile>
     <Compile Include="ClientHelper.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -85,10 +79,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ClientHelper.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>ClientHelper.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="ServiceHelper.resx">
       <SubType>Designer</SubType>
       <DependentUpon>ServiceHelper.cs</DependentUpon>
@@ -97,6 +87,16 @@
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\ClientHelper.bmp" />
     <EmbeddedResource Include="Embedded Resources\ServiceHelper.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TVA.Communication_CS\TVA.Communication_CS.csproj">
+      <Project>{99EE28EA-39F4-4525-8418-3C9A61A4AE14}</Project>
+      <Name>TVA.Communication_CS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">
+      <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
+      <Name>TVA.Core_CS</Name>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
