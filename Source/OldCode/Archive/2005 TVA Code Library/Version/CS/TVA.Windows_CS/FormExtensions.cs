@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  Common.cs
+//  FormExtensions.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -21,7 +21,7 @@
 //       Saving and retrieving setting by instantiating local config file variable in order to avoid the
 //       the "Config file has been modified" exception that is thrown when using shortcut methods
 //  10/01/2008 - James R Carroll
-//       Generated original version of source code.
+//       Converted to C# extensions.
 //
 //*******************************************************************************************************
 
@@ -32,7 +32,7 @@ using TVA.Configuration;
 namespace TVA.Windows
 {
     /// <summary>Extensions applied to all System.Windows.Forms.Form objects.</summary>
-    public static class Common
+    public static class FormExtensions
 	{
         private class WindowSetting
         {
@@ -104,12 +104,10 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size and location information is to be saved.</param>
         /// <remarks>This function simply calls the SaveWindowSize and SaveWindowLocation functions using the default settings categories</remarks>
-        public static void SaveWindowSettings(Form windowsForm)
+        public static void SaveSettings(this Form windowsForm)
         {
-
-            SaveWindowSize(windowsForm);
-            SaveWindowLocation(windowsForm);
-
+            windowsForm.SaveSize();
+            windowsForm.SaveLocation();
         }
 
         /// <summary>
@@ -117,11 +115,9 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size information is to be saved.</param>
         /// <remarks>This function uses the default settings category "LastWindowSize"</remarks>
-        public static void SaveWindowSize(Form windowsForm)
+        public static void SaveSize(this Form windowsForm)
         {
-
-            SaveWindowSize(windowsForm, LastWindowSizeSettingsCategory);
-
+            windowsForm.SaveSize(LastWindowSizeSettingsCategory);
         }
 
         /// <summary>
@@ -129,22 +125,16 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size information is to be saved.</param>
         /// <param name="settingsCategory">Settings category used to persist form size information</param>
-        public static void SaveWindowSize(Form windowsForm, string settingsCategory)
+        public static void SaveSize(this Form windowsForm, string settingsCategory)
         {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
 
-            ConfigurationFile settings = new ConfigurationFile();
-            TVA.Configuration.CategorizedSettingsElementCollection with_1 = settings.CategorizedSettings[settingsCategory];
-            if (with_1[windowsForm.Name] != null)
-            {
-                with_1[windowsForm.Name].Value = windowsForm.Size.ToString();
-            }
+            if (settings[windowsForm.Name] != null)
+                settings[windowsForm.Name].Value = windowsForm.Size.ToString();
             else
-            {
-                with_1.Add(windowsForm.Name, windowsForm.Size.ToString());
-            }
+                settings.Add(windowsForm.Name, windowsForm.Size.ToString());
 
-            settings.Save();
-
+            ConfigurationFile.Current.Save();
         }
 
         /// <summary>
@@ -152,11 +142,9 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose location information is to be saved.</param>
         /// <remarks>This function uses the default settings category "LastWindowLocation"</remarks>
-        public static void SaveWindowLocation(Form windowsForm)
+        public static void SaveLocation(this Form windowsForm)
         {
-
-            SaveWindowLocation(windowsForm, LastWindowLocationSettingsCategory);
-
+            windowsForm.SaveLocation(LastWindowLocationSettingsCategory);
         }
 
         /// <summary>
@@ -164,22 +152,16 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose location information is to be saved.</param>
         /// <param name="settingsCategory">Settings category used to persist form location information</param>
-        public static void SaveWindowLocation(Form windowsForm, string settingsCategory)
+        public static void SaveLocation(this Form windowsForm, string settingsCategory)
         {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
 
-            ConfigurationFile settings = new ConfigurationFile();
-            TVA.Configuration.CategorizedSettingsElementCollection with_1 = settings.CategorizedSettings[settingsCategory];
-            if (with_1[windowsForm.Name] != null)
-            {
-                with_1[windowsForm.Name].Value = windowsForm.Location.ToString();
-            }
+            if (settings[windowsForm.Name] != null)
+                settings[windowsForm.Name].Value = windowsForm.Location.ToString();
             else
-            {
-                with_1.Add(windowsForm.Name, windowsForm.Location.ToString());
-            }
+                settings.Add(windowsForm.Name, windowsForm.Location.ToString());
 
-            settings.Save();
-
+            ConfigurationFile.Current.Save();
         }
 
         /// <summary>
@@ -188,12 +170,10 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size and location is to be restored.</param>
         /// <remarks>This function simply calls the RestoreWindowSize and RestoreWindowLocation functions using the default settings categories</remarks>
-        public static void RestoreWindowSettings(Form windowsForm)
+        public static void RestoreSettings(this Form windowsForm)
         {
-
-            RestoreWindowSize(windowsForm);
-            RestoreWindowLocation(windowsForm);
-
+            windowsForm.RestoreSize();
+            windowsForm.RestoreLocation();
         }
 
         /// <summary>
@@ -201,11 +181,9 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size is to be restored.</param>
         /// <remarks>This function uses the default settings category "LastWindowSize"</remarks>
-        public static void RestoreWindowSize(Form windowsForm)
+        public static void RestoreSize(this Form windowsForm)
         {
-
-            RestoreWindowSize(windowsForm, LastWindowSizeSettingsCategory);
-
+            windowsForm.RestoreSize(LastWindowSizeSettingsCategory);
         }
 
         /// <summary>
@@ -213,20 +191,17 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size is to be restored.</param>
         /// <param name="settingsCategory">Settings category used to persist form size information</param>
-        public static void RestoreWindowSize(Form windowsForm, string settingsCategory)
+        public static void RestoreSize(this Form windowsForm, string settingsCategory)
         {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
 
-            ConfigurationFile settings = new ConfigurationFile();
-            if (settings.CategorizedSettings[settingsCategory][windowsForm.Name] != null)
+            if (settings[windowsForm.Name] != null)
             {
                 // Restore last saved window size
-                WindowSetting sizeSetting = new WindowSetting(settings.CategorizedSettings[settingsCategory][windowsForm.Name].Value());
-
-                Form with_1 = windowsForm;
-                with_1.Width = sizeSetting.ParamA(with_1.MinimumSize.Width, ScreenArea.TotalWidth);
-                with_1.Height = sizeSetting.ParamB(with_1.MinimumSize.Height, ScreenArea.MaximumHeight);
+                WindowSetting sizeSetting = new WindowSetting(settings[windowsForm.Name].Value);
+                windowsForm.Width = sizeSetting.ParamA(windowsForm.MinimumSize.Width, ScreenArea.TotalWidth);
+                windowsForm.Height = sizeSetting.ParamB(windowsForm.MinimumSize.Height, ScreenArea.MaximumHeight);
             }
-
         }
 
         /// <summary>
@@ -234,11 +209,9 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose location is to be restored.</param>
         /// <remarks>This function uses the default settings category "LastWindowLocation"</remarks>
-        public static void RestoreWindowLocation(Form windowsForm)
+        public static void RestoreLocation(this Form windowsForm)
         {
-
-            RestoreWindowLocation(windowsForm, LastWindowLocationSettingsCategory);
-
+            windowsForm.RestoreLocation(LastWindowLocationSettingsCategory);
         }
 
         /// <summary>
@@ -246,20 +219,17 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose location is to be restored.</param>
         /// <param name="settingsCategory">Settings category used to persist form location information</param>
-        public static void RestoreWindowLocation(Form windowsForm, string settingsCategory)
+        public static void RestoreLocation(this Form windowsForm, string settingsCategory)
         {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
 
-            ConfigurationFile settings = new ConfigurationFile();
-            if (settings.CategorizedSettings[settingsCategory][windowsForm.Name] != null)
+            if (settings[windowsForm.Name] != null)
             {
                 // Restore last saved window location
-                WindowSetting locationSetting = new WindowSetting(settings.CategorizedSettings[settingsCategory][windowsForm.Name].Value());
-
-                Form with_1 = windowsForm;
-                with_1.Left = locationSetting.ParamA(ScreenArea.LeftMostBound, ScreenArea.RightMostBound - with_1.MinimumSize.Width);
-                with_1.Top = locationSetting.ParamB(ScreenArea.TopMostBound, ScreenArea.BottomMostBound - with_1.MinimumSize.Height);
+                WindowSetting locationSetting = new WindowSetting(settings[windowsForm.Name].Value);
+                windowsForm.Left = locationSetting.ParamA(ScreenArea.LeftMostBound, ScreenArea.RightMostBound - windowsForm.MinimumSize.Width);
+                windowsForm.Top = locationSetting.ParamB(ScreenArea.TopMostBound, ScreenArea.BottomMostBound - windowsForm.MinimumSize.Height);
             }
-
         }
     }
 }

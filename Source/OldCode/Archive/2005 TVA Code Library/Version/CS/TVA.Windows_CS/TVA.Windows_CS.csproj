@@ -46,27 +46,29 @@
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="mscorlib" />
-    <Reference Include="C:\My Projects\Sandbox\Win\TVACodeLibrary\Build\Output\Debug\TVA.Core.dll" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common.cs" />
+    <Compile Include="FormExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScreenArea.cs" />
     <Compile Include="UI\AboutDialog.Designer.cs">
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\AboutDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Controls\Common.cs" />
+    <Compile Include="UI\Controls\PropertyGridExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -81,6 +83,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resouces\UI.TVADisclaimer.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">
+      <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
+      <Name>TVA.Core_CS</Name>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
