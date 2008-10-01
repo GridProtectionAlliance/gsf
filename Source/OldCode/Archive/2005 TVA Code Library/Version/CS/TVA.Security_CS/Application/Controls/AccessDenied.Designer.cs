@@ -74,7 +74,7 @@ namespace TVA.Security
 					//
 					//AccessDenied
 					//
-					this.AutoScaleDimensions = new System.Drawing.SizeF(6.0, 13.0);
+                    this.AutoScaleDimensions = new System.Drawing.SizeF((float)6.0, (float)13.0);
 					this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 					this.ClientSize = new System.Drawing.Size(394, 118);
 					this.ControlBox = false;
