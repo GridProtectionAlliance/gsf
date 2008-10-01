@@ -104,7 +104,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size and location information is to be saved.</param>
         /// <remarks>This function simply calls the SaveWindowSize and SaveWindowLocation functions using the default settings categories</remarks>
-        public static void SaveSettings(this Form windowsForm)
+        public static void SaveLayout(this Form windowsForm)
         {
             windowsForm.SaveSize();
             windowsForm.SaveLocation();
@@ -170,7 +170,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="windowsForm">The Form whose size and location is to be restored.</param>
         /// <remarks>This function simply calls the RestoreWindowSize and RestoreWindowLocation functions using the default settings categories</remarks>
-        public static void RestoreSettings(this Form windowsForm)
+        public static void RestoreLayout(this Form windowsForm)
         {
             windowsForm.RestoreSize();
             windowsForm.RestoreLocation();
