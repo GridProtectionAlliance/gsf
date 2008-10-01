@@ -128,17 +128,13 @@
     <EmbeddedResource Include="Embedded Resources\Application.Controls.Help.pdf" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TVA.Communication\TVA.Communication.vbproj">
-      <Project>{99F93056-9EDE-4EB8-BF8B-61E3B8728F9D}</Project>
-      <Name>TVA.Communication</Name>
+    <ProjectReference Include="..\TVA.Communication_CS\TVA.Communication_CS.csproj">
+      <Project>{99EE28EA-39F4-4525-8418-3C9A61A4AE14}</Project>
+      <Name>TVA.Communication_CS</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TVA.Core\TVA.Core.vbproj">
-      <Project>{29A7B606-D1BC-4A4B-96D0-258D5A72C3EC}</Project>
-      <Name>TVA.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TVA.IO.Compression\TVA.IO.Compression.vcproj">
-      <Project>{F611B9BA-C69D-449B-B596-FABFB746EA2A}</Project>
-      <Name>TVA.IO.Compression</Name>
+    <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">
+      <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
+      <Name>TVA.Core_CS</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
