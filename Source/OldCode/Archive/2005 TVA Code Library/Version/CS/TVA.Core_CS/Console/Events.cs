@@ -33,31 +33,30 @@ namespace TVA.Console
     /// <example>
     /// This sample shows how to subscribe to console application events:
     /// <code>
+    /// using System;
     /// using TVA.Console;
-    /// .
-    /// .
-    /// .
-    /// static void Main(string[] args)
-    /// {
-    ///     Events.CancelKeyPress += Events_CancelKeyPress;
-    ///     Events.ConsoleClosing += Events_ConsoleClosing;
-    ///     Events.EnableRaisingEvents();
     ///
-    ///     string input;
-    ///     while (true)
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
     ///     {
-    ///         input = Console.ReadLine();
+    ///         // Subscribe to console events.
+    ///         Events.CancelKeyPress += Events_CancelKeyPress;
+    ///         Events.ConsoleClosing += Events_ConsoleClosing;
+    ///         Events.EnableRaisingEvents();
+    ///        
+    ///         Console.ReadLine();
     ///     }
-    /// }
-    ///
-    /// static void Events_CancelKeyPress(object sender, System.ComponentModel.CancelEventArgs e)
-    /// {
-    ///     // Abort processing.
-    /// }
-    ///
-    /// static void Events_ConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
-    /// {
-    ///     // Put clean-up code.
+    ///    
+    ///     static void Events_CancelKeyPress(object sender, System.ComponentModel.CancelEventArgs e)
+    ///     {
+    ///         // Abort processing.
+    ///     }
+    ///    
+    ///     static void Events_ConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
+    ///     {
+    ///         // Put clean-up code.
+    ///     }
     /// }
     /// </code>
     /// </example>
