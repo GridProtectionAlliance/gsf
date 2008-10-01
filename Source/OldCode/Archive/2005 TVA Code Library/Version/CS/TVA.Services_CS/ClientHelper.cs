@@ -196,7 +196,7 @@ namespace TVA.Services
 		/// Releases the unmanaged resources used by an instance of the <see cref="ClientHelper" /> class and optionally releases the managed resources.
 		/// </summary>
 		/// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-		protected virtual void Dispose(bool disposing)
+		protected override void Dispose(bool disposing)
 		{
 			if (!m_disposed)
 			{
