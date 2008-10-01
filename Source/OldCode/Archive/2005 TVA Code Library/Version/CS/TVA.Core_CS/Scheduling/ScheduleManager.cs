@@ -342,7 +342,7 @@ namespace TVA.Scheduling
         /// <param name="scheduleName">Name of the schedule that is to be found.</param>
         /// <value></value>
         /// <returns>The TVA.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
-        public Schedule Schedules(string scheduleName)
+        public Schedule GetSchedule(string scheduleName)
         {
             Schedule match = null;
 
