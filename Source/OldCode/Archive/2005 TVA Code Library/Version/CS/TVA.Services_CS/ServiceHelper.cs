@@ -145,10 +145,10 @@ namespace TVA.Services
 		private ServiceBase m_service;
 		private List<ServiceProcess> m_processes;
 		private List<IServiceComponent> m_serviceComponents;		
-		private PerformanceMonitor m_performanceMonitor;
 		private List<ClientInfo> m_connectedClients;
 		private List<ClientRequestInfo> m_clientRequestHistory;
 		private List<ClientRequestHandlerInfo> m_clientRequestHandlers;
+		private PerformanceMonitor m_performanceMonitor;
 		private Process m_remoteCommandProcess;
 		private CommunicationServerBase m_remotingServer;
 		private LogFile m_statusLog;
@@ -491,7 +491,31 @@ namespace TVA.Services
                         }
                         m_errorLogger = null;
 
-                        // Detach any remoting server events
+                        if (m_performanceMonitor != null)
+			            {
+				            m_performanceMonitor.Dispose();
+			            }
+                        m_performanceMonitor = null;
+
+                        if (m_remoteCommandProcess != null)
+                        {
+                            m_remoteCommandProcess.Dispose();
+                        }
+                        m_remoteCommandProcess = null;
+
+                        // Service processes are created and owned by remoting server, so we dispose them
+                        if (m_processes != null)
+                        {
+                            foreach (ServiceProcess process in m_processes)
+	                        {
+                        		process.Dispose(); 
+	                        }
+
+                            m_processes.Clear();
+                        }
+                        m_processes = null;
+
+                        // Detach any remoting server events, we don't own this component so we don't dispose it
                         RemotingServer = null;
 				    }
                 }
@@ -579,6 +603,7 @@ namespace TVA.Services
 		{
 			if (m_service != null)
 			{
+                // Notify service event consumers of pending service start
 				if (ServiceStarting != null)
 					ServiceStarting(this, new EventArgs<object>(args));
 				
@@ -638,134 +663,126 @@ namespace TVA.Services
 			}
 			else
 			{
-				throw (new InvalidOperationException("Service cannot be started. The Service property of ServiceHelper is not set."));
+				throw new InvalidOperationException("Service cannot be started. The Service property of ServiceHelper is not set.");
 			}
-			
 		}
 		
 		/// <summary>
 		/// To be called when the service is stopped (inside the service's OnStop method).
 		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Advanced)]public void OnStop()
+		[EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnStop()
 		{
+            // Notify service event consumers of pending service stop
+			if (ServiceStopping != null)
+				ServiceStopping(this, EventArgs.Empty);
 			
-			if (ServiceStoppingEvent != null)
-				ServiceStoppingEvent(this, EventArgs.Empty);
-			
+            // Notify all remote clients of service stop
 			SendServiceStateChangedResponse(ServiceState.Stopped);
 			
-			// Abort any processes that are currently executing.
+			// Abort any processes that may be currently executing.
 			foreach (ServiceProcess process in m_processes)
 			{
 				if (process != null)
-				{
 					process.Abort();
-				}
 			}
 			
-			// Notify all of the components that the service is stopping.
+			// Notify all service components of service stopping
 			foreach (IServiceComponent component in m_serviceComponents)
 			{
 				if (component != null)
-				{
 					component.ServiceStateChanged(ServiceState.Stopped);
-				}
 			}
-			
+
+			// Close the status log, if open
 			if (m_statusLog.IsOpen)
-			{
 				m_statusLog.Close();
-			}
-			if (m_performanceMonitor != null)
-			{
-				m_performanceMonitor.Dispose();
-			}
-			
-			// We do this to prevent any updates from being posted from other threads as this might cause exceptions.
+            			
+			// Set flag to prevent status updates from being posted from other threads, at this point this might cause exceptions.
 			m_suppressUpdates = true;
 			
-			if (ServiceStoppedEvent != null)
-				ServiceStoppedEvent(this, EventArgs.Empty);
-			
+            // Notify service event consumers that service has stopped
+			if (ServiceStopped != null)
+				ServiceStopped(this, EventArgs.Empty);
 		}
 		
 		/// <summary>
 		/// To be called when the service is paused (inside the service's OnPause method).
 		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Advanced)]public void OnPause()
+		[EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnPause()
 		{
+            // Notify service event consumers of pending service stop
+			if (ServicePausing != null)
+				ServicePausing(this, EventArgs.Empty);
 			
-			if (ServicePausingEvent != null)
-				ServicePausingEvent(this, EventArgs.Empty);
-			
+            // Notify all remote clients of service pause
 			SendServiceStateChangedResponse(ServiceState.Paused);
 			
+			// Notify all service components of service pausing
 			foreach (IServiceComponent component in m_serviceComponents)
 			{
 				if (component != null)
-				{
 					component.ServiceStateChanged(ServiceState.Paused);
-				}
 			}
 			
-			if (ServicePausedEvent != null)
-				ServicePausedEvent(this, EventArgs.Empty);
-			
+            // Notify service event consumers that service has been paused
+			if (ServicePaused != null)
+				ServicePaused(this, EventArgs.Empty);
 		}
 		
 		/// <summary>
 		/// To be called when the service is resumed (inside the service's OnContinue method).
 		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Advanced)]public void OnResume()
+		[EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnResume()
 		{
+            // Notify service event consumers of pending service resume
+			if (ServiceResuming != null)
+				ServiceResuming(this, EventArgs.Empty);
 			
-			if (ServiceResumingEvent != null)
-				ServiceResumingEvent(this, EventArgs.Empty);
-			
+			// Notify all service components of service resuming
 			foreach (IServiceComponent component in m_serviceComponents)
 			{
 				if (component != null)
-				{
 					component.ServiceStateChanged(ServiceState.Resumed);
-				}
 			}
 			
+            // Notify all remote clients of service resume
 			SendServiceStateChangedResponse(ServiceState.Resumed);
 			
-			if (ServiceResumedEvent != null)
-				ServiceResumedEvent(this, EventArgs.Empty);
-			
+            // Notify service event consumers that service has been resumed
+			if (ServiceResumed != null)
+				ServiceResumed(this, EventArgs.Empty);
 		}
 		
 		/// <summary>
 		/// To be when the system is shutting down (inside the service's OnShutdown method).
 		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Advanced)]public void OnShutdown()
+		[EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnShutdown()
 		{
-			
+            // Notify service event consumers of pending service shutdown
 			SendServiceStateChangedResponse(ServiceState.Shutdown);
 			
-			// Abort any processes that are executing.
+			// Abort any processes that may be currently executing.
 			foreach (ServiceProcess process in m_processes)
 			{
 				if (process != null)
-				{
 					process.Abort();
-				}
 			}
 			
-			// Stop all of the components that implement IServiceComponent interface.
+			// Notify all service components of service shutdown - typically components
+            // self-dispose when this message is received
 			foreach (IServiceComponent component in m_serviceComponents)
 			{
 				if (component != null)
-				{
 					component.ServiceStateChanged(ServiceState.Shutdown);
-				}
 			}
 			
-			if (SystemShutdownEvent != null)
-				SystemShutdownEvent(this, EventArgs.Empty);
-			
+            // Notify service event consumers that service has shutdown
+			if (SystemShutdown != null)
+				SystemShutdown(this, EventArgs.Empty);			
 		}
 		
 		/// <summary>
@@ -775,17 +792,15 @@ namespace TVA.Services
 		/// <param name="processState">New state of the process.</param>
 		public void ProcessStateChanged(string processName, ProcessState processState)
 		{
-			
+			// Notify all service components of change in process state
 			foreach (IServiceComponent component in m_serviceComponents)
 			{
 				if (component != null)
-				{
 					component.ProcessStateChanged(processName, processState);
-				}
 			}
 			
+            // Notify all remote clients of change in process state
 			SendProcessStateChangedResponse(processName, processState);
-			
 		}
 		
 		/// <summary>
@@ -794,9 +809,7 @@ namespace TVA.Services
 		/// <param name="response">The response to be sent to the clients.</param>
 		public void SendResponse(ServiceResponse response)
 		{
-			
 			SendResponse(Guid.Empty, response);
-			
 		}
 		
 		/// <summary>
@@ -806,74 +819,63 @@ namespace TVA.Services
 		/// <param name="response">The response to be sent to the client.</param>
 		public void SendResponse(Guid clientID, ServiceResponse response)
 		{
-			
 			if (clientID == Guid.Empty)
 			{
+                // Multi-cast message to all connected clients if no client ID is specified
 				m_remotingServer.Multicast(response);
 			}
 			else
 			{
+                // Send message directly to specified client
 				m_remotingServer.SendTo(clientID, response);
 			}
-			
 		}
 		
 		public void UpdateStatus(string message)
 		{
-			
 			UpdateStatus(Guid.Empty, message);
-			
 		}
 		
 		public void UpdateStatus(Guid clientID, string message)
 		{
-			
 			UpdateStatus(clientID, message, 0);
-			
 		}
 		
 		public void UpdateStatus(string message, int crlfCount)
 		{
-			
 			UpdateStatus(Guid.Empty, message, crlfCount);
-			
 		}
 		
 		public void UpdateStatus(Guid clientID, string message, int crlfCount)
 		{
-			
-			if (! m_suppressUpdates)
+			if (!m_suppressUpdates)
 			{
-				System.Text.StringBuilder with_1 = new StringBuilder();
-				with_1.Append(message);
+                // Append desired number of line feeds to message
+				System.Text.StringBuilder formattedMessage = new StringBuilder();
+
+				formattedMessage.Append(message);
 				
-				for (int i = 0; i <= crlfCount - 1; i++)
+				for (int i = 0; i < crlfCount; i++)
 				{
-					with_1.AppendLine();
+					formattedMessage.AppendLine();
 				}
 				
-				// Send the status update to all connected clients.
-				SendUpdateClientStatusResponse(clientID, with_1.ToString());
+				// Send the status update to specified client(s)
+				SendUpdateClientStatusResponse(clientID, formattedMessage.ToString());
 				
 				// Log the status update to the log file if logging is enabled.
 				if (m_logStatusUpdates)
-				{
-					m_statusLog.WriteTimestampedLine(with_1.ToString());
-				}
+					m_statusLog.WriteTimestampedLine(formattedMessage.ToString());
 			}
-			
 		}
 		
-		public void AddProcess(ServiceProcess.ExecutionMethodSignature processExecutionMethod, string processName)
+		public void AddProcess(ProcessExecutionMethod processExecutionMethod, string processName)
 		{
-			
 			AddProcess(processExecutionMethod, processName, null);
-			
 		}
 		
-		public void AddProcess(ServiceProcess.ExecutionMethodSignature processExecutionMethod, string processName, object[] processParameters)
+		public void AddProcess(ProcessExecutionMethod processExecutionMethod, string processName, object[] processParameters)
 		{
-			
 			processName = processName.Trim();
 			
 			if (Processes(processName) == null)
@@ -882,36 +884,28 @@ namespace TVA.Services
 			}
 			else
 			{
-				throw (new InvalidOperationException(string.Format("Process \"{0}\" is already defined.", processName)));
+				throw new InvalidOperationException(string.Format("Process \"{0}\" is already defined.", processName));
 			}
-			
 		}
 		
-		public void AddScheduledProcess(ServiceProcess.ExecutionMethodSignature processExecutionMethod, string processName, string processSchedule)
+		public void AddScheduledProcess(ProcessExecutionMethod processExecutionMethod, string processName, string processSchedule)
 		{
-			
 			AddScheduledProcess(processExecutionMethod, processName, null, processSchedule);
-			
 		}
 		
-		public void AddScheduledProcess(ServiceProcess.ExecutionMethodSignature processExecutionMethod, string processName, object[] processParameters, string processSchedule)
+		public void AddScheduledProcess(ProcessExecutionMethod processExecutionMethod, string processName, object[] processParameters, string processSchedule)
 		{
-			
 			AddProcess(processExecutionMethod, processName, processParameters);
 			ScheduleProcess(processName, processSchedule);
-			
 		}
 		
 		public void ScheduleProcess(string processName, string scheduleRule)
 		{
-			
 			ScheduleProcess(processName, scheduleRule, false);
-			
 		}
 		
 		public void ScheduleProcess(string processName, string scheduleRule, bool updateExistingSchedule)
 		{
-			
 			processName = processName.Trim();
 			
 			if (Processes(processName) != null)
@@ -921,292 +915,269 @@ namespace TVA.Services
 				
 				if (existingSchedule != null)
 				{
+				    // Update the process schedule if it is already exists.
 					if (updateExistingSchedule)
-					{
-						// Update the process schedule if it is already exists.
 						existingSchedule.Rule = scheduleRule;
-					}
 				}
 				else
 				{
 					// Schedule the process if it is not scheduled already.
-					m_scheduler.Schedules.Add(new Schedule(processName, scheduleRule));
+					m_scheduler.Schedules().Add(new Schedule(processName, scheduleRule));
 				}
 			}
 			else
 			{
-				throw (new InvalidOperationException(string.Format("Process \"{0}\" is not defined.", processName)));
+				throw new InvalidOperationException(string.Format("Process \"{0}\" is not defined.", processName));
 			}
-			
 		}
 		
 		public void LoadSettings()
 		{
-			
 			try
 			{
-				TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-				if (with_1.Count > 0)
+				CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+
+				if (settings.Count > 0)
 				{
-					m_pursip = with_1.Item("Pursip").GetTypedValue(m_pursip);
-					LogStatusUpdates = with_1.Item("LogStatusUpdates").GetTypedValue(m_logStatusUpdates);
-					MonitorServiceHealth = with_1.Item("MonitorServiceHealth").GetTypedValue(m_monitorServiceHealth);
-					RequestHistoryLimit = with_1.Item("RequestHistoryLimit").GetTypedValue(m_requestHistoryLimit);
-					QueryableSettingsCategories = with_1.Item("QueryableSettingsCategories").GetTypedValue(m_queryableSettingsCategories);
+					m_pursip = settings["Pursip"].ValueAs(m_pursip);
+					LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
+					MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
+					RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
+					QueryableSettingsCategories = settings["QueryableSettingsCategories"].ValueAs(m_queryableSettingsCategories);
 				}
 			}
-			catch (Exception)
+			catch
 			{
 				// We'll encounter exceptions if the settings are not present in the config file.
 			}
-			
 		}
 		
 		public void SaveSettings()
 		{
-			
 			if (m_persistSettings)
 			{
 				try
 				{
-					TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
-					with_1.Clear();
-					object with_2 = with_1.Item("Pursip", true);
-					with_2.Value = m_pursip;
-					with_2.Description = "";
-					with_2.Encrypted = true;
-					object with_3 = with_1.Item("LogStatusUpdates", true);
-					with_3.Value = m_logStatusUpdates.ToString();
-					with_3.Description = "";
-					object with_4 = with_1.Item("MonitorServiceHealth", true);
-					with_4.Value = m_monitorServiceHealth.ToString();
-					with_4.Description = "";
-					object with_5 = with_1.Item("RequestHistoryLimit", true);
-					with_5.Value = m_requestHistoryLimit.ToString();
-					with_5.Description = "";
-					object with_6 = with_1.Item("QueryableSettingsCategories", true);
-					with_6.Value = m_queryableSettingsCategories;
-					with_6.Description = "";
-					TVA.Configuration.Common.SaveSettings();
+					CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElement setting;
+
+					settings.Clear();
+
+					setting = settings["Pursip", true];
+					setting.Value = m_pursip;
+					setting.Description = "";
+					setting.Encrypted = true;
+
+					setting = settings["LogStatusUpdates", true];
+					setting.Value = m_logStatusUpdates.ToString();
+					setting.Description = "";
+
+					setting = settings["MonitorServiceHealth", true];
+					setting.Value = m_monitorServiceHealth.ToString();
+					setting.Description = "";
+
+					setting = settings["RequestHistoryLimit", true];
+					setting.Value = m_requestHistoryLimit.ToString();
+					setting.Description = "";
+
+					setting = settings["QueryableSettingsCategories", true];
+					setting.Value = m_queryableSettingsCategories;
+					setting.Description = "";
+
+					ConfigurationFile.Current.Save();
 				}
-				catch (Exception)
+				catch
 				{
 					// We might encounter an exception if for some reason the settings cannot be saved to the config file.
 				}
 			}
-			
 		}
 		
 		public void BeginInit()
 		{
-			
 			// We don't need to do anything before the component is initialized.
-			
 		}
 		
 		public void EndInit()
 		{
-			
+            // Load settings from the config file at run-time
 			if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-			{
-				LoadSettings(); // Load settings from the config file.
-			}
-			
+				LoadSettings(); 
 		}
 		
 		private void SendUpdateClientStatusResponse(string response)
 		{
-			
 			SendUpdateClientStatusResponse(Guid.Empty, response);
-			
 		}
 		
 		private void SendUpdateClientStatusResponse(Guid clientID, string response)
 		{
-			
 			ServiceResponse serviceResponse = new ServiceResponse();
 			serviceResponse.Type = "UPDATECLIENTSTATUS";
 			serviceResponse.Message = response;
 			SendResponse(clientID, serviceResponse);
-			
 		}
 		
 		private void SendServiceStateChangedResponse(ServiceState currentState)
 		{
-			
 			ServiceResponse serviceResponse = new ServiceResponse("SERVICESTATECHANGED");
-			ServiceResponse.Attachments.Add(new ObjectState<ServiceState>(m_service.ServiceName, currentState));
-			
+			serviceResponse.Attachments.Add(new ObjectState<ServiceState>(m_service.ServiceName, currentState));
 			SendResponse(serviceResponse);
-			
 		}
 		
 		private void SendProcessStateChangedResponse(string processName, ProcessState currentState)
 		{
-			
 			ServiceResponse serviceResponse = new ServiceResponse("PROCESSSTATECHANGED");
-			ServiceResponse.Attachments.Add(new ObjectState<ProcessState>(processName, currentState));
-			
-			SendResponse(serviceResponse);
-			
+			serviceResponse.Attachments.Add(new ObjectState<ProcessState>(processName, currentState));			
+			SendResponse(serviceResponse);			
 		}
 		
-		#endregion
-		
-		#region " Handlers "
+		#region [ Client Request Handlers ]
 		
 		private void ShowClients(ClientRequestInfo requestInfo)
 		{
-			
 			if (requestInfo.Request.Arguments.ContainsHelpRequest)
 			{
-				System.Text.StringBuilder with_1 = new StringBuilder();
-				with_1.Append("Displays a list of clients currently connected to the service.");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Usage:");
-				with_1.AppendLine();
-				with_1.Append("       Clients -options");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Options:");
-				with_1.AppendLine();
-				with_1.Append("       -".PadRight(20));
-				with_1.Append("Displays this help message");
+				StringBuilder helpMessage = new StringBuilder();
+
+				helpMessage.Append("Displays a list of clients currently connected to the service.");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Usage:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       Clients -options");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Options:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       -".PadRight(20));
+				helpMessage.Append("Displays this help message");
 				
-				UpdateStatus(requestInfo.Sender.ClientID, with_1.ToString(), UpdateCrlfCount);
+				UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
 			}
 			else
 			{
 				if (m_connectedClients.Count > 0)
 				{
 					// Display info about all of the clients connected to the service.
-					System.Text.StringBuilder with_2 = new StringBuilder();
-					with_2.AppendFormat("Clients connected to {0}:", m_service.ServiceName);
-					with_2.AppendLine();
-					with_2.AppendLine();
-					with_2.Append("Client".PadRight(25));
-					with_2.Append(' ');
-					with_2.Append("Machine".PadRight(15));
-					with_2.Append(' ');
-					with_2.Append("User".PadRight(15));
-					with_2.Append(' ');
-					with_2.Append("Connected".PadRight(20));
-					with_2.AppendLine();
-					with_2.Append(new string('-', 25));
-					with_2.Append(' ');
-					with_2.Append(new string('-', 15));
-					with_2.Append(' ');
-					with_2.Append(new string('-', 15));
-					with_2.Append(' ');
-					with_2.Append(new string('-', 20));
+					StringBuilder resposneMessage = new StringBuilder();
+
+					resposneMessage.AppendFormat("Clients connected to {0}:", m_service.ServiceName);
+					resposneMessage.AppendLine();
+					resposneMessage.AppendLine();
+					resposneMessage.Append("Client".PadRight(25));
+					resposneMessage.Append(' ');
+					resposneMessage.Append("Machine".PadRight(15));
+					resposneMessage.Append(' ');
+					resposneMessage.Append("User".PadRight(15));
+					resposneMessage.Append(' ');
+					resposneMessage.Append("Connected".PadRight(20));
+					resposneMessage.AppendLine();
+					resposneMessage.Append(new string('-', 25));
+					resposneMessage.Append(' ');
+					resposneMessage.Append(new string('-', 15));
+					resposneMessage.Append(' ');
+					resposneMessage.Append(new string('-', 15));
+					resposneMessage.Append(' ');
+					resposneMessage.Append(new string('-', 20));
+
 					foreach (ClientInfo clientInfo in m_connectedClients)
 					{
-						with_2.AppendLine();
-						if (! string.IsNullOrEmpty(clientInfo.ClientName))
-						{
-							with_2.Append(clientInfo.ClientName.PadRight(25));
-						}
+						resposneMessage.AppendLine();
+						
+                        if (!string.IsNullOrEmpty(clientInfo.ClientName))
+							resposneMessage.Append(clientInfo.ClientName.PadRight(25));
 						else
-						{
-							with_2.Append("[Not Available]".PadRight(25));
-						}
-						with_2.Append(' ');
-						if (! string.IsNullOrEmpty(clientInfo.MachineName))
-						{
-							with_2.Append(clientInfo.MachineName.PadRight(15));
-						}
+							resposneMessage.Append("[Not Available]".PadRight(25));
+
+                        resposneMessage.Append(' ');
+						if (!string.IsNullOrEmpty(clientInfo.MachineName))
+							resposneMessage.Append(clientInfo.MachineName.PadRight(15));
 						else
-						{
-							with_2.Append("[Not Available]".PadRight(15));
-						}
-						with_2.Append(' ');
-						if (! string.IsNullOrEmpty(clientInfo.UserName))
-						{
-							with_2.Append(clientInfo.UserName.PadRight(15));
-						}
+							resposneMessage.Append("[Not Available]".PadRight(15));
+
+                        resposneMessage.Append(' ');
+						if (!string.IsNullOrEmpty(clientInfo.UserName))
+							resposneMessage.Append(clientInfo.UserName.PadRight(15));
 						else
-						{
-							with_2.Append("[Not Available]".PadRight(15));
-						}
-						with_2.Append(' ');
-						with_2.Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+							resposneMessage.Append("[Not Available]".PadRight(15));
+
+                        resposneMessage.Append(' ');
+						resposneMessage.Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
 					}
 					
-					UpdateStatus(requestInfo.Sender.ClientID, with_2.ToString(), UpdateCrlfCount);
+					UpdateStatus(requestInfo.Sender.ClientID, resposneMessage.ToString(), UpdateCrlfCount);
 				}
 				else
 				{
-					// This will never be the case because at the least the client sending the request will be connected.
 					UpdateStatus(requestInfo.Sender.ClientID, string.Format("No clients are connected to {0}", m_service.ServiceName), UpdateCrlfCount);
 				}
 			}
-			
 		}
 		
 		private void ShowSettings(ClientRequestInfo requestInfo)
 		{
-			
 			if (requestInfo.Request.Arguments.ContainsHelpRequest)
 			{
-				System.Text.StringBuilder with_1 = new StringBuilder();
-				with_1.Append("Displays a list of queryable settings of the service from the config file.");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Usage:");
-				with_1.AppendLine();
-				with_1.Append("       Settings -options");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Options:");
-				with_1.AppendLine();
-				with_1.Append("       -".PadRight(20));
-				with_1.Append("Displays this help message");
+				StringBuilder helpMessage = new StringBuilder();
+
+				helpMessage.Append("Displays a list of queryable settings of the service from the config file.");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Usage:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       Settings -options");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Options:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       -".PadRight(20));
+				helpMessage.Append("Displays this help message");
 				
-				UpdateStatus(requestInfo.Sender.ClientID, with_1.ToString(), UpdateCrlfCount);
+				UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
 			}
 			else
 			{
 				string[] settingsCategories = m_queryableSettingsCategories.Replace(" ", "").Split(',');
+
 				if (settingsCategories.Length > 0)
 				{
 					// Display info about all of the queryable settings defined in the service.
-					System.Text.StringBuilder with_2 = new StringBuilder();
-					with_2.AppendFormat("Queryable settings of {0}:", m_service.ServiceName);
-					with_2.AppendLine();
-					with_2.AppendLine();
-					with_2.Append("Category".PadRight(25));
-					with_2.Append(' ');
-					with_2.Append("Name".PadRight(20));
-					with_2.Append(' ');
-					with_2.Append("Value".PadRight(30));
-					with_2.AppendLine();
-					with_2.Append(new string('-', 25));
-					with_2.Append(' ');
-					with_2.Append(new string('-', 20));
-					with_2.Append(' ');
-					with_2.Append(new string('-', 30));
+					StringBuilder responseMessage = new StringBuilder();
+
+					responseMessage.AppendFormat("Queryable settings of {0}:", m_service.ServiceName);
+					responseMessage.AppendLine();
+					responseMessage.AppendLine();
+					responseMessage.Append("Category".PadRight(25));
+					responseMessage.Append(' ');
+					responseMessage.Append("Name".PadRight(20));
+					responseMessage.Append(' ');
+					responseMessage.Append("Value".PadRight(30));
+					responseMessage.AppendLine();
+					responseMessage.Append(new string('-', 25));
+					responseMessage.Append(' ');
+					responseMessage.Append(new string('-', 20));
+					responseMessage.Append(' ');
+					responseMessage.Append(new string('-', 30));
+
 					foreach (string category in settingsCategories)
 					{
-						foreach (CategorizedSettingsElement setting in TVA.Configuration.Common.CategorizedSettings(category))
+						foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[category])
 						{
-							with_2.AppendLine();
-							with_2.Append(category.PadRight(25));
-							with_2.Append(' ');
-							with_2.Append(setting.Name.PadRight(20));
-							with_2.Append(' ');
-							if (! string.IsNullOrEmpty(setting.Value))
-							{
-								with_2.Append(setting.Value.PadRight(30));
-							}
+							responseMessage.AppendLine();
+							responseMessage.Append(category.PadRight(25));
+							responseMessage.Append(' ');
+							responseMessage.Append(setting.Name.PadRight(20));
+							responseMessage.Append(' ');
+
+							if (!string.IsNullOrEmpty(setting.Value))
+								responseMessage.Append(setting.Value.PadRight(30));
 							else
-							{
-								with_2.Append("[Not Set]".PadRight(30));
-							}
+								responseMessage.Append("[Not Set]".PadRight(30));
 						}
 					}
 					
-					UpdateStatus(requestInfo.Sender.ClientID, with_2.ToString(), UpdateCrlfCount);
+					UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
 				}
 				else
 				{
@@ -1214,100 +1185,97 @@ namespace TVA.Services
 					UpdateStatus(requestInfo.Sender.ClientID, string.Format("No queryable settings are defined in {0}.", m_service.ServiceName), UpdateCrlfCount);
 				}
 			}
-			
 		}
 		
 		private void ShowProcesses(ClientRequestInfo requestInfo)
 		{
-			
 			if (requestInfo.Request.Arguments.ContainsHelpRequest)
 			{
 				bool showAdvancedHelp = requestInfo.Request.Arguments.Exists("advanced");
 				
-				System.Text.StringBuilder with_1 = new StringBuilder();
-				with_1.Append("Displays a list of defined service processes or running system processes.");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Usage:");
-				with_1.AppendLine();
-				with_1.Append("       Processes -options");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Options:");
-				with_1.AppendLine();
-				with_1.Append("       -".PadRight(20));
-				with_1.Append("Displays this help message");
+				StringBuilder helpMessage = new StringBuilder();
+
+				helpMessage.Append("Displays a list of defined service processes or running system processes.");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Usage:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       Processes -options");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Options:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       -".PadRight(20));
+				helpMessage.Append("Displays this help message");
+
 				if (showAdvancedHelp)
 				{
-					with_1.AppendLine();
-					with_1.Append("       -system".PadRight(20));
-					with_1.Append("Displays system processes instead of service processes");
+					helpMessage.AppendLine();
+					helpMessage.Append("       -system".PadRight(20));
+					helpMessage.Append("Displays system processes instead of service processes");
 				}
 				
-				UpdateStatus(requestInfo.Sender.ClientID, with_1.ToString(), UpdateCrlfCount);
+				UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
 			}
 			else
 			{
 				bool listSystemProcesses = requestInfo.Request.Arguments.Exists("system");
 				
-				if (! listSystemProcesses)
+				if (!listSystemProcesses)
 				{
 					if (m_processes.Count > 0)
 					{
 						// Display info about all the processes defined in the service.
-						System.Text.StringBuilder with_2 = new StringBuilder();
-						with_2.AppendFormat("Processes defined in {0}:", m_service.ServiceName);
-						with_2.AppendLine();
-						with_2.AppendLine();
-						with_2.Append("Name".PadRight(20));
-						with_2.Append(' ');
-						with_2.Append("State".PadRight(15));
-						with_2.Append(' ');
-						with_2.Append("Last Exec. Start".PadRight(20));
-						with_2.Append(' ');
-						with_2.Append("Last Exec. Stop".PadRight(20));
-						with_2.AppendLine();
-						with_2.Append(new string('-', 20));
-						with_2.Append(' ');
-						with_2.Append(new string('-', 15));
-						with_2.Append(' ');
-						with_2.Append(new string('-', 20));
-						with_2.Append(' ');
-						with_2.Append(new string('-', 20));
+						StringBuilder responseMessage = new StringBuilder();
+
+						responseMessage.AppendFormat("Processes defined in {0}:", m_service.ServiceName);
+						responseMessage.AppendLine();
+						responseMessage.AppendLine();
+						responseMessage.Append("Name".PadRight(20));
+						responseMessage.Append(' ');
+						responseMessage.Append("State".PadRight(15));
+						responseMessage.Append(' ');
+						responseMessage.Append("Last Exec. Start".PadRight(20));
+						responseMessage.Append(' ');
+						responseMessage.Append("Last Exec. Stop".PadRight(20));
+						responseMessage.AppendLine();
+						responseMessage.Append(new string('-', 20));
+						responseMessage.Append(' ');
+						responseMessage.Append(new string('-', 15));
+						responseMessage.Append(' ');
+						responseMessage.Append(new string('-', 20));
+						responseMessage.Append(' ');
+						responseMessage.Append(new string('-', 20));
+
 						foreach (ServiceProcess process in m_processes)
 						{
-							with_2.AppendLine();
-							with_2.Append(process.name.PadRight(20));
-							with_2.Append(' ');
-							with_2.Append(process.CurrentState.ToString().PadRight(15));
-							with_2.Append(' ');
+							responseMessage.AppendLine();
+							responseMessage.Append(process.Name.PadRight(20));
+							responseMessage.Append(' ');
+							responseMessage.Append(process.CurrentState.ToString().PadRight(15));
+							responseMessage.Append(' ');
+
 							if (process.ExecutionStartTime != DateTime.MinValue)
-							{
-								with_2.Append(process.ExecutionStartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
-							}
+								responseMessage.Append(process.ExecutionStartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
 							else
+								responseMessage.Append("[Not Executed]".PadRight(20));
+
+                            responseMessage.Append(' ');
+							
+                            if (process.ExecutionStopTime != DateTime.MinValue)
 							{
-								with_2.Append("[Not Executed]".PadRight(20));
-							}
-							with_2.Append(' ');
-							if (process.ExecutionStopTime != DateTime.MinValue)
-							{
-								with_2.Append(process.ExecutionStopTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+								responseMessage.Append(process.ExecutionStopTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
 							}
 							else
 							{
 								if (process.ExecutionStartTime != DateTime.MinValue)
-								{
-									with_2.Append("[Executing]".PadRight(20));
-								}
+									responseMessage.Append("[Executing]".PadRight(20));
 								else
-								{
-									with_2.Append("[Not Executed]".PadRight(20));
-								}
+									responseMessage.Append("[Not Executed]".PadRight(20));
 							}
 						}
 						
-						UpdateStatus(requestInfo.Sender.ClientID, with_2.ToString(), UpdateCrlfCount);
+						UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
 					}
 					else
 					{
@@ -1317,81 +1285,82 @@ namespace TVA.Services
 				}
 				else
 				{
-					System.Text.StringBuilder with_3 = new StringBuilder();
-					with_3.AppendFormat("Processes running on {0}:", Environment.MachineName);
-					with_3.AppendLine();
-					with_3.AppendLine();
-					with_3.Append("ID".PadRight(5));
-					with_3.Append(' ');
-					with_3.Append("Name".PadRight(25));
-					with_3.Append(' ');
-					with_3.Append("Priority".PadRight(15));
-					with_3.Append(' ');
-					with_3.Append("Responding".PadRight(10));
-					with_3.Append(' ');
-					with_3.Append("Start Time".PadRight(20));
-					with_3.AppendLine();
-					with_3.Append(new string('-', 5));
-					with_3.Append(' ');
-					with_3.Append(new string('-', 25));
-					with_3.Append(' ');
-					with_3.Append(new string('-', 15));
-					with_3.Append(' ');
-					with_3.Append(new string('-', 10));
-					with_3.Append(' ');
-					with_3.Append(new string('-', 20));
-					foreach (System.Diagnostics.Process process in System.Diagnostics.Process.GetProcesses())
+                    // We enumerate "system" processes when -system parameter is specified
+					StringBuilder ResponseMessage = new StringBuilder();
+
+					ResponseMessage.AppendFormat("Processes running on {0}:", Environment.MachineName);
+					ResponseMessage.AppendLine();
+					ResponseMessage.AppendLine();
+					ResponseMessage.Append("ID".PadRight(5));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append("Name".PadRight(25));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append("Priority".PadRight(15));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append("Responding".PadRight(10));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append("Start Time".PadRight(20));
+					ResponseMessage.AppendLine();
+					ResponseMessage.Append(new string('-', 5));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append(new string('-', 25));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append(new string('-', 15));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append(new string('-', 10));
+					ResponseMessage.Append(' ');
+					ResponseMessage.Append(new string('-', 20));
+
+					foreach (Process process in Process.GetProcesses())
 					{
 						try
 						{
-							with_3.Append(process.StartInfo.UserName);
-							with_3.AppendLine();
-							with_3.Append(process.Id.ToString().PadRight(5));
-							with_3.Append(' ');
-							with_3.Append(process.ProcessName.PadRight(25));
-							with_3.Append(' ');
-							with_3.Append(process.PriorityClass.ToString().PadRight(15));
-							with_3.Append(' ');
-							with_3.Append(TVA.Common.IIf(process.Responding, "Yes", "No").PadRight(10));
-							with_3.Append(' ');
-							with_3.Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+							ResponseMessage.Append(process.StartInfo.UserName);
+							ResponseMessage.AppendLine();
+							ResponseMessage.Append(process.Id.ToString().PadRight(5));
+							ResponseMessage.Append(' ');
+							ResponseMessage.Append(process.ProcessName.PadRight(25));
+							ResponseMessage.Append(' ');
+							ResponseMessage.Append(process.PriorityClass.ToString().PadRight(15));
+							ResponseMessage.Append(' ');
+							ResponseMessage.Append((process.Responding ? "Yes" : "No").PadRight(10));
+							ResponseMessage.Append(' ');
+							ResponseMessage.Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
 						}
-						catch (Exception)
+						catch
 						{
-							
 						}
 					}
 					
-					UpdateStatus(requestInfo.Sender.ClientID, with_3.ToString(), UpdateCrlfCount);
+					UpdateStatus(requestInfo.Sender.ClientID, ResponseMessage.ToString(), UpdateCrlfCount);
 				}
 			}
-			
 		}
 		
 		private void ShowSchedules(ClientRequestInfo requestInfo)
 		{
-			
 			if (requestInfo.Request.Arguments.ContainsHelpRequest)
 			{
-				System.Text.StringBuilder with_1 = new StringBuilder();
-				with_1.Append("Displays a list of schedules for processes defined in the service.");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Usage:");
-				with_1.AppendLine();
-				with_1.Append("       Schedules -options");
-				with_1.AppendLine();
-				with_1.AppendLine();
-				with_1.Append("   Options:");
-				with_1.AppendLine();
-				with_1.Append("       -".PadRight(20));
-				with_1.Append("Displays this help message");
+				StringBuilder helpMessage = new StringBuilder();
+
+				helpMessage.Append("Displays a list of schedules for processes defined in the service.");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Usage:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       Schedules -options");
+				helpMessage.AppendLine();
+				helpMessage.AppendLine();
+				helpMessage.Append("   Options:");
+				helpMessage.AppendLine();
+				helpMessage.Append("       -".PadRight(20));
+				helpMessage.Append("Displays this help message");
 				
-				UpdateStatus(requestInfo.Sender.ClientID, with_1.ToString(), UpdateCrlfCount);
+				UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
 			}
 			else
 			{
-				if (m_scheduler.Schedules.Count > 0)
+				if (m_scheduler.Schedules().Count > 0)
 				{
 					// Display info about all the process schedules defined in the service.
 					System.Text.StringBuilder with_2 = new StringBuilder();
@@ -2477,49 +2446,6 @@ namespace TVA.Services
 			
 		}
 		
-		#endregion
-		
-		#region " Obsolete "
-		
-		[Obsolete("Property is replaced by RemotingServer and will be deleted in version 3.3."), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public CommunicationServerBase CommunicationServer
-		{
-			get
-			{
-				return m_remotingServer;
-			}
-			set
-			{
-				m_remotingServer = value;
-				m_remotingServer.ClientDisconnected += new System.EventHandler`1[[TVA.GenericEventArgs`1[[System.Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_remotingServer_ClientDisconnected);
-				m_remotingServer.ReceivedClientData += new System.EventHandler`1[[TVA.GenericEventArgs`1[[TVA.IdentifiableItem`2[[System.Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_remotingServer_ReceivedClientData);
-			}
-		}
-		
-		[Obsolete("Property is replaced by StatusLog and will be deleted in version 3.3."), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public TVA.IO.LogFile LogFile
-		{
-			get
-			{
-				return m_statusLog;
-			}
-		}
-		
-		[Obsolete("Property is replaced by Scheduler and will be deleted in version 3.3."), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public TVA.Scheduling.ScheduleManager ScheduleManager
-		{
-			get
-			{
-				return m_scheduler;
-			}
-		}
-		
-		[Obsolete("Property is replaced by ErrorLogger and will be deleted in version 3.3."), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public TVA.ErrorManagement.GlobalExceptionLogger GlobalExceptionLogger
-		{
-			get
-			{
-				return m_errorLogger;
-			}
-		}
-		
-		#endregion
-		
+		#endregion		
 	}
 }

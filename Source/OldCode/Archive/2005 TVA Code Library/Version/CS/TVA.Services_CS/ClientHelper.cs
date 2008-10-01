@@ -207,7 +207,7 @@ namespace TVA.Services
 				        Disconnect();
 				        SaveSettings();
 
-                        // Detach any remoting client events
+                        // Detach any remoting client events, we don't own this component so we don't dispose it
                         RemotingClient = null;
 				    }
 			    }

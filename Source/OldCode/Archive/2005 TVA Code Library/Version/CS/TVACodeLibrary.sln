@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{2A314CE4-AD10-4148-B94F-C8F8E3835E80}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.vbproj", "{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication_CS", "TVA.Communication_CS\TVA.Communication_CS.csproj", "{99EE28EA-39F4-4525-8418-3C9A61A4AE14}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core_CS", "TVA.Core_CS\TVA.Core_CS.csproj", "{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}"
@@ -23,36 +21,32 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows_CS", "TVA.Windo
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 10
+		SccNumberOfProjects = 9
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = Tools\\ConfigCrypter\\ConfigCrypter.vbproj
-		SccProjectTopLevelParentUniqueName1 = TVACodeLibrary.sln
+		SccProjectUniqueName1 = TVA.Communication_CS\\TVA.Communication_CS.csproj
 		SccLocalPath1 = .
-		SccProjectFilePathRelativizedFromConnection1 = Tools\\ConfigCrypter\\
-		SccProjectUniqueName2 = TVA.Communication_CS\\TVA.Communication_CS.csproj
+		SccProjectFilePathRelativizedFromConnection1 = TVA.Communication_CS\\
+		SccProjectUniqueName2 = TVA.Core_CS\\TVA.Core_CS.csproj
 		SccLocalPath2 = .
-		SccProjectFilePathRelativizedFromConnection2 = TVA.Communication_CS\\
-		SccProjectUniqueName3 = TVA.Core_CS\\TVA.Core_CS.csproj
+		SccProjectFilePathRelativizedFromConnection2 = TVA.Core_CS\\
+		SccProjectUniqueName3 = TVA.Security_CS\\TVA.Security_CS.csproj
 		SccLocalPath3 = .
-		SccProjectFilePathRelativizedFromConnection3 = TVA.Core_CS\\
-		SccProjectUniqueName4 = TVA.Security_CS\\TVA.Security_CS.csproj
+		SccProjectFilePathRelativizedFromConnection3 = TVA.Security_CS\\
+		SccProjectUniqueName4 = TVA.Services_CS\\TVA.Services_CS.csproj
 		SccLocalPath4 = .
-		SccProjectFilePathRelativizedFromConnection4 = TVA.Security_CS\\
-		SccProjectUniqueName5 = TVA.Services_CS\\TVA.Services_CS.csproj
+		SccProjectFilePathRelativizedFromConnection4 = TVA.Services_CS\\
+		SccProjectUniqueName5 = TVA.TIBCO_CS\\TVA.TIBCO_CS.csproj
 		SccLocalPath5 = .
-		SccProjectFilePathRelativizedFromConnection5 = TVA.Services_CS\\
-		SccProjectUniqueName6 = TVA.TIBCO_CS\\TVA.TIBCO_CS.csproj
+		SccProjectFilePathRelativizedFromConnection5 = TVA.TIBCO_CS\\
+		SccProjectUniqueName6 = TVA.TRO_CS\\TVA.TRO_CS.csproj
 		SccLocalPath6 = .
-		SccProjectFilePathRelativizedFromConnection6 = TVA.TIBCO_CS\\
-		SccProjectUniqueName7 = TVA.TRO_CS\\TVA.TRO_CS.csproj
+		SccProjectFilePathRelativizedFromConnection6 = TVA.TRO_CS\\
+		SccProjectUniqueName7 = TVA.Web_CS\\TVA.Web_CS.csproj
 		SccLocalPath7 = .
-		SccProjectFilePathRelativizedFromConnection7 = TVA.TRO_CS\\
-		SccProjectUniqueName8 = TVA.Web_CS\\TVA.Web_CS.csproj
+		SccProjectFilePathRelativizedFromConnection7 = TVA.Web_CS\\
+		SccProjectUniqueName8 = TVA.Windows_CS\\TVA.Windows_CS.csproj
 		SccLocalPath8 = .
-		SccProjectFilePathRelativizedFromConnection8 = TVA.Web_CS\\
-		SccProjectUniqueName9 = TVA.Windows_CS\\TVA.Windows_CS.csproj
-		SccLocalPath9 = .
-		SccProjectFilePathRelativizedFromConnection9 = TVA.Windows_CS\\
+		SccProjectFilePathRelativizedFromConnection8 = TVA.Windows_CS\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,16 +57,6 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0}.Release|Win32.ActiveCfg = Release|Any CPU
 		{99EE28EA-39F4-4525-8418-3C9A61A4AE14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{99EE28EA-39F4-4525-8418-3C9A61A4AE14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99EE28EA-39F4-4525-8418-3C9A61A4AE14}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -156,8 +140,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{1F68C886-8BFF-4D7C-8797-71BE9B447FC0} = {2A314CE4-AD10-4148-B94F-C8F8E3835E80}
 	EndGlobalSection
 EndGlobal

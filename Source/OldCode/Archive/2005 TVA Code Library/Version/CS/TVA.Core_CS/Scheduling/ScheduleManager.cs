@@ -454,7 +454,7 @@ namespace TVA.Scheduling
                 foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[m_settingsCategoryName])
                 {
                     // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                    Schedule existingSchedule = Schedules(setting.Name);
+                    Schedule existingSchedule = GetSchedule(setting.Name);
 
                     if (existingSchedule == null)
                     {

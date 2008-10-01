@@ -25,12 +25,11 @@ using TVA.Threading;
 
 namespace TVA.Services
 {
-	public class ServiceProcess : IDisposable
+    public delegate void ProcessExecutionMethod(string name, object[] parameters);
+
+    public class ServiceProcess : IDisposable
 	{
         #region [ Members ]
-
-        // Delegates
-        public delegate void ExecutionMethodSignature(string name, object[] parameters);
 
         // Fields
 #if ThreadTracking
@@ -40,7 +39,7 @@ namespace TVA.Services
 #endif
         private string m_name;
         private object[] m_parameters;
-        private ExecutionMethodSignature m_executionMethod;
+        private ProcessExecutionMethod m_executionMethod;
         private ServiceHelper m_serviceHelper;
         private ProcessState m_currentState;
         private DateTime m_executionStartTime;
@@ -51,12 +50,12 @@ namespace TVA.Services
 
         #region [ Constructors ]
 
-        public ServiceProcess(ExecutionMethodSignature executionMethod, string name, ServiceHelper serviceHelper)
+        public ServiceProcess(ProcessExecutionMethod executionMethod, string name, ServiceHelper serviceHelper)
             : this(executionMethod, name, null, serviceHelper)
         {
         }
 
-        public ServiceProcess(ExecutionMethodSignature executionMethod, string name, object[] parameters, ServiceHelper serviceHelper)
+        public ServiceProcess(ProcessExecutionMethod executionMethod, string name, object[] parameters, ServiceHelper serviceHelper)
         {
             m_name = name;
             m_parameters = parameters;
@@ -107,7 +106,7 @@ namespace TVA.Services
             }
         }
 
-        public ExecutionMethodSignature ExecutionMethod
+        public ProcessExecutionMethod ExecutionMethod
         {
             get
             {
@@ -243,15 +242,8 @@ namespace TVA.Services
 
                     if (disposing)
                     {
-                        if (m_processThread != null)
-                        {
-                            if (m_processThread.IsAlive)
-                                m_processThread.Abort();
-                        }
-                        m_processThread = null;
-
+                        Abort();
                         m_executionMethod = null;
-
                         m_serviceHelper = null;
                     }
                 }
@@ -278,7 +270,11 @@ namespace TVA.Services
         {
             // We'll abort the process only if it is currently executing.
             if (m_processThread != null)
-                m_processThread.Abort();
+            {
+                if (m_processThread.IsAlive)
+                    m_processThread.Abort();
+            }
+            m_processThread = null;
         }
 
         private void InvokeExecutionMethod()
