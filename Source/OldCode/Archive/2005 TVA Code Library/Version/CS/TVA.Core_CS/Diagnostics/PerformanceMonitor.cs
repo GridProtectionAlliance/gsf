@@ -18,81 +18,131 @@
 //       Added Status property.
 //  09/22/2008 - James R Carroll
 //       Converted to C#.
+//  10/01/2008 - Pinal C. Patel
+//      Entered code comments.
 //
 //*******************************************************************************************************
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Timers;
 
 namespace TVA.Diagnostics
 {
-    public class PerformanceMonitor : IDisposable
+    /// <summary>
+    /// A class that can be used to monitor system and process performance similar to the Performance Monitor utility.
+    /// </summary>
+    /// <example>
+    /// This sample shows how to use <see cref="PerformanceMonitor"/> for monitoring application performance:
+    /// <code>
+    /// using System;
+    /// using System.Threading;
+    /// using TVA.Diagnostics;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         PerformanceMonitor perfMon = new PerformanceMonitor();
+    ///         while (true)
+    ///         {
+    ///             // Display process performance.
+    ///             Thread.Sleep(5000);
+    ///             Console.WriteLine("");
+    ///             Console.Write(perfMon.Status);
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public class PerformanceMonitor : IDisposable, IStatusProvider
     {
         #region [ Members ]
 
         // Constants
+        /// <summary>
+        /// Default interval of sampling the <see cref="Counters"/>.
+        /// </summary>
         public const int DefaultSamplingInterval = 1000;
 
         // Fields
         private string m_processName;
         private List<PerformanceCounter> m_counters;
-        private Dictionary<string, PerformanceCounter> m_counterCache;
-        private System.Timers.Timer m_samplingTimer;
+        private Timer m_samplingTimer;
         private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
+        /// </summary>
         public PerformanceMonitor()
             : this(DefaultSamplingInterval)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
+        /// </summary>
+        /// <param name="samplingInterval">Interval at which the <see cref="Counters"/> are to be sampled.</param>
         public PerformanceMonitor(double samplingInterval)
             : this(Process.GetCurrentProcess().ProcessName, samplingInterval)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="Process"/> whose performance is to be monitored.</param>
         public PerformanceMonitor(string processName)
             : this(processName, DefaultSamplingInterval)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="Process"/> whose performance is to be monitored.</param>
+        /// <param name="samplingInterval">Interval at which the <see cref="Counters"/> are to be sampled.</param>
         public PerformanceMonitor(string processName, double samplingInterval)
         {
             m_processName = processName;
             m_counters = new List<PerformanceCounter>();
-            m_counterCache = new Dictionary<string,PerformanceCounter>();
 
-            if (System.Diagnostics.PerformanceCounterCategory.Exists("Process"))
+            // Add default process counters.
+            if (PerformanceCounterCategory.Exists("Process"))
             {
-                m_counters.Add(new PerformanceCounter("Process", "% Processor Time", m_processName));
-                m_counters.Add(new PerformanceCounter("Process", "IO Data Bytes/sec", m_processName));
-                m_counters.Add(new PerformanceCounter("Process", "IO Data Operations/sec", m_processName));
-                m_counters.Add(new PerformanceCounter("Process", "Handle Count", m_processName));
-                m_counters.Add(new PerformanceCounter("Process", "Thread Count", m_processName));
-                m_counters.Add(new PerformanceCounter("Process", "Working Set", m_processName));
+                AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Percent / CPU", Environment.ProcessorCount);
+                AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", 1024);
+                AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
+                AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
+                AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "Total Threads", 1);
+                AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", 1048576);
             }
 
-            if (System.Diagnostics.PerformanceCounterCategory.Exists("IPv4"))
+            // Add default networking counters.
+            if (PerformanceCounterCategory.Exists("IPv4"))
             {
-                m_counters.Add(new PerformanceCounter("IPv4", "Datagrams Sent/sec", ""));
-                m_counters.Add(new PerformanceCounter("IPv4", "Datagrams Received/sec", ""));
+                AddCounter("IPv4", "Datagrams Sent/sec", "", "Outgoing Packet Rate", "Datagrams / sec", 1);
+                AddCounter("IPv4", "Datagrams Received/sec", "", "Incoming Packet Rate", "Datagrams / sec", 1);
             }
-            else if (System.Diagnostics.PerformanceCounterCategory.Exists("IP"))
+            else if (PerformanceCounterCategory.Exists("IP"))
             {
-                m_counters.Add(new PerformanceCounter("IP", "Datagrams Sent/sec", ""));
-                m_counters.Add(new PerformanceCounter("IP", "Datagrams Received/sec", ""));
-            }
-
-            if (System.Diagnostics.PerformanceCounterCategory.Exists(".NET CLR LocksAndThreads"))
-            {
-                m_counters.Add(new PerformanceCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName));
+                AddCounter("IP", "Datagrams Sent/sec", "", "Outgoing Packet Rate", "Datagrams / sec", 1);
+                AddCounter("IP", "Datagrams Received/sec", "", "Incoming Packet Rate", "Datagrams / sec", 1);
             }
 
-            m_samplingTimer = new System.Timers.Timer(samplingInterval);
+            // Add default .NET counters.
+            if (PerformanceCounterCategory.Exists(".NET CLR LocksAndThreads"))
+            {
+                AddCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName, "Lock Contention Rate", "Attempts / sec", 1);
+            }
+
+            m_samplingTimer = new Timer(samplingInterval);
             m_samplingTimer.Elapsed += m_samplingTimer_Elapsed;
             m_samplingTimer.Start();
         }
@@ -101,6 +151,9 @@ namespace TVA.Diagnostics
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets the name of the <see cref="Process"/> to be monitored.
+        /// </summary>
         public string ProcessName
         {
             get
@@ -114,15 +167,17 @@ namespace TVA.Diagnostics
                 {
                     foreach (PerformanceCounter counter in m_counters)
                     {
-                        lock (counter.BaseCounter)
-                        {
+                        // Only update the InstanceName for counters that had it set.
+                        if (!string.IsNullOrEmpty(counter.BaseCounter.InstanceName))
                             counter.BaseCounter.InstanceName = m_processName;
-                        }
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Gets or sets the interval at which the <see cref="Counters"/> are to be sampled.
+        /// </summary>
         public double SamplingInterval
         {
             get
@@ -136,121 +191,152 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
-        /// Gets the counter that monitors the processor utilization of the process.
+        /// Gets a list of <see cref="PerformanceCounter"/> objects monitored by the <see cref="PerformanceMonitor"/> object.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// The TVA.Diagnostics.PerformanceCounter instance that monitors the processor utilization of the process.
-        /// </returns>
+        public PerformanceCounter[] Counters
+        {
+            get 
+            {
+                lock (m_counters)
+                {
+                    // Return an array instead of the backing list to prevent it from being updated directly.
+                    return m_counters.ToArray();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the processor utilization of the monitored process.
+        /// </summary>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter CPUUsage
         {
             get
             {
-                return Counters("% Processor Time");
+                return FindCounters("% Processor Time");
             }
         }
 
         /// <summary>
-        /// Gets the counter that monitors the IP based datagrams sent / second of the system.
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the IP based datagrams sent / second of the system.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// The TVA.Diagnostics.PerformanceCounter instance that monitors the IP based datagrams sent / second of the system.
-        /// </returns>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter DatagramSendRate
         {
             get
             {
-                return Counters("Datagrams Sent/sec");
+                return FindCounters("Datagrams Sent/sec");
             }
         }
 
         /// <summary>
-        /// Gets the counter that monitors the IP based datagrams received / second of the system.
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the IP based datagrams received / second of the system.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// The TVA.Diagnostics.PerformanceCounter instance that monitors the IP based datagrams received / second of the system.
-        /// </returns>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter DatagramReceiveRate
         {
             get
             {
-                return Counters("Datagrams Received/sec");
+                return FindCounters("Datagrams Received/sec");
             }
         }
 
         /// <summary>
-        /// Gets the counter that monitors the .NET threading contention rate / second of the process.
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the .NET threading contention rate / second of the process.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// The TVA.Diagnostics.PerformanceCounter instance that monitors the .NET threading contention rate / second of the process.
-        /// </returns>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter ThreadingContentionRate
         {
             get
             {
-                return Counters("Contention Rate / sec");
+                return FindCounters("Contention Rate / sec");
             }
         }
 
         /// <summary>
-        /// Gets the counter that monitors the memory utilization of the process.
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the memory utilization of the monitored process.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// The TVA.Diagnostics.PerformanceCounter instance that monitors the memory utilization of the process.
-        /// </returns>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter MemoryUsage
         {
             get
             {
-                return Counters("Working Set");
+                return FindCounters("Working Set");
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the rate at which the monitored process is 
+        /// issuing bytes to I/O operations that do not involve data such as control operations.
+        /// </summary>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter IOUsage
         {
             get
             {
-                return Counters("IO Data Bytes/sec");
+                return FindCounters("IO Data Bytes/sec");
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the rate at which the monitored process is 
+        /// issuing read and write I/O operations.
+        /// </summary>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter IOActivity
         {
             get
             {
-                return Counters("IO Data Operations/sec");
+                return FindCounters("IO Data Operations/sec");
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the total number of handles currently open by 
+        /// the monitored process.
+        /// </summary>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter HandleCount
         {
             get
             {
-                return Counters("Handle Count");
+                return FindCounters("Handle Count");
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the number of threads currently active in the 
+        /// monitored process.
+        /// </summary>
+        /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter ThreadCount
         {
             get
             {
-                return Counters("Thread Count");
+                return FindCounters("Thread Count");
             }
         }
 
+        /// <summary>
+        /// Gets the friendly name of the <see cref="PerformanceMonitor"/> object.
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                return this.GetType().Name;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current status of the <see cref="PerformanceMonitor"/> object.
+        /// </summary>
         public string Status
         {
             get
             {
-                int processorCount = System.Environment.ProcessorCount;
-                PerformanceCounter counter;
-
                 StringBuilder status = new StringBuilder();
-
+                // Status header.
                 status.Append("Counter".PadRight(20));
                 status.Append(' ');
                 status.Append("Last".CenterText(13));
@@ -271,176 +357,22 @@ namespace TVA.Diagnostics
                 status.Append(' ');
                 status.Append(new string('-', 16));
                 status.AppendLine();
-
-                counter = CPUUsage;
-
-                if (counter != null)
+                lock (m_counters)
                 {
-                    //             12345678901234567890
-                    status.Append("CPU Utilization".PadLeft(20));
-                    status.Append(' ');
-                    status.Append((counter.LastValue / processorCount).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append((counter.AverageValue / processorCount).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append((counter.MaximumValue / processorCount).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Percent / CPU");
-                    status.AppendLine();
-                }
-
-                counter = MemoryUsage;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("Process Memory Usage".PadLeft(20));
-                    status.Append(' ');
-                    status.Append((counter.LastValue / 1048576).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append((counter.AverageValue / 1048576).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append((counter.MaximumValue / 1048576).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Megabytes");
-                    status.AppendLine();
-                }
-
-                counter = HandleCount;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("Process Handle Count".PadLeft(20));
-                    status.Append(' ');
-                    status.Append(counter.LastValue.ToString().CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.MaximumValue.ToString().CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Total Handles");
-                    status.AppendLine();
-                }
-
-                counter = ThreadCount;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("Process Thread Count".PadLeft(20));
-                    status.Append(' ');
-                    status.Append(counter.LastValue.ToString().CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.MaximumValue.ToString().CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Total Threads");
-                    status.AppendLine();
-                }
-
-                counter = IOUsage;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("I/O Data Rate".PadLeft(20));
-                    status.Append(' ');
-                    status.Append((counter.LastValue / 1024).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append((counter.AverageValue / 1024).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append((counter.MaximumValue / 1024).ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Kilobytes / sec");
-                    status.AppendLine();
-                }
-
-                counter = IOActivity;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("I/O Activity Rate".PadLeft(20));
-                    status.Append(' ');
-                    status.Append(counter.LastValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Operations / sec");
-                    status.AppendLine();
-                }
-
-                counter = DatagramReceiveRate;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("Incoming Packet Rate".PadLeft(20));
-                    status.Append(' ');
-                    status.Append(counter.LastValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Datagrams / sec");
-                    status.AppendLine();
-                }
-
-                counter = DatagramSendRate;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("Outgoing Packet Rate".PadLeft(20));
-                    status.Append(' ');
-                    status.Append(counter.LastValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Datagrams / sec");
-                    status.AppendLine();
-                }
-
-                counter = ThreadingContentionRate;
-
-                if (counter != null)
-                {
-                    //             12345678901234567890
-                    status.Append("Lock Contention Rate".PadLeft(20));
-                    status.Append(' ');
-                    status.Append(counter.LastValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-                    status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
-                    status.Append(' ');
-
-                    //             1234567890123456
-                    status.Append("Attempts / sec");
-                    status.AppendLine();
+                    foreach (PerformanceCounter counter in m_counters)
+                    {
+                        // Counter status.
+                        status.Append(counter.AliasName.PadLeft(20));
+                        status.Append(' ');
+                        status.Append(counter.LastValue.ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append(counter.AverageValue.ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append(counter.MaximumValue.ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append(counter.ValueUnit);
+                        status.AppendLine();
+                    }
                 }
 
                 return status.ToString();
@@ -451,71 +383,135 @@ namespace TVA.Diagnostics
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Adds a <see cref="PerformanceCounter"/> to be monitored.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName)
+        {
+            AddCounter(categoryName, counterName, instanceName, counterName);
+        }
+
+        /// <summary>
+        /// Adds a <see cref="PerformanceCounter"/> to be monitored.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName)
+        {
+            AddCounter(categoryName, counterName, instanceName, aliasName, PerformanceCounter.DefaultValueUnit);
+        }
+
+        /// <summary>
+        /// Adds a <see cref="PerformanceCounter"/> to be monitored.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
+        /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit)
+        {
+            AddCounter(categoryName, counterName, instanceName, aliasName, valueUnit, PerformanceCounter.DefaultValueDivisor);
+        }
+
+        /// <summary>
+        /// Adds a <see cref="PerformanceCounter"/> to be monitored.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
+        /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
+        /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor)
+        {
+            AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor));
+        }
+
+        /// <summary>
+        /// Adds a <see cref="PerformanceCounter"/> to be monitored.
+        /// </summary>
+        /// <param name="counter">The <see cref="PerformanceCounter"/> object to be monitored.</param>
+        public void AddCounter(PerformanceCounter counter)
+        {
+            lock (m_counters)
+            {
+                m_counters.Add(counter);
+            }
+        }
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="PerformanceMonitor"/> object.
+        /// </summary>
         public void Dispose()
         {
-            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="PerformanceMonitor"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~PerformanceMonitor()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="PerformanceCounter"/> object matching the specified counter name.
+        /// </summary>
+        /// <param name="counterName">Name of the <see cref="PerformanceCounter"/> to be retrieved.</param>
+        /// <returns>A <see cref="PerformanceCounter"/> object if a match is found; otherwise null.</returns>
+        public PerformanceCounter FindCounters(string counterName)
+        {
+            lock (m_counters)
+            {
+                foreach (PerformanceCounter counter in m_counters)
+                {
+                    if (string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                        return counter; // Return the match.
+                }
+            }
+
+            return null;    // No match found.
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PerformanceMonitor"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                if (disposing)
+                try
                 {
-                    if (m_samplingTimer != null)
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
                     {
+                        // This will be done only when the object is disposed by calling Dispose().
                         m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
                         m_samplingTimer.Dispose();
-                    }
-                    m_samplingTimer = null;
 
-                    if (m_counters != null)
-                    {
                         lock (m_counters)
                         {
                             foreach (PerformanceCounter counter in m_counters)
                             {
                                 counter.Dispose();
                             }
-
-                            m_counters.Clear();
                         }
                     }
                 }
-            }
-
-            m_disposed = true;
-        }
-
-        public PerformanceCounter Counters(string counterName)
-        {
-            PerformanceCounter match;
-
-            lock (m_counters)
-            {
-                if (!m_counterCache.TryGetValue(counterName, out match))
+                finally
                 {
-                    foreach (PerformanceCounter counter in m_counters)
-                    {
-                        lock (counter.BaseCounter)
-                        {
-                            if (string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
-                            {
-                                // Cache counter in dictionary by name for quick lookup
-                                m_counterCache.Add(counterName, counter);
-
-                                // Return match
-                                match = counter;
-                                break;
-                            }
-                        }
-                    }
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
-
-            return match;
         }
 
         private void m_samplingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

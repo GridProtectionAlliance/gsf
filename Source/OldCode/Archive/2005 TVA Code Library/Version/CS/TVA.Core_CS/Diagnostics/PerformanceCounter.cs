@@ -14,28 +14,71 @@
 //       Generated original version of source code.
 //  09/22/2008 - James R Carroll
 //       Converted to C#.
+//  09/30/2008 - Pinal C. Patel
+//      Entered code comments.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace TVA.Diagnostics
 {
+    /// <summary>
+    /// A wrapper class to <see cref="System.Diagnostics.PerformanceCounter"/> with additional statistical logic.
+    /// </summary>
+    /// <example>
+    /// This sample shows how to create a performance counter for processor utilization:
+    /// <code>
+    /// using System;
+    /// using System.Threading;
+    /// using TVA.Diagnostics;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         PerformanceCounter counter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+    ///         while (true)
+    ///         {
+    ///             Thread.Sleep(1000);
+    ///             counter.Sample();
+    ///             Console.WriteLine(string.Format("Last value: {0}", counter.LastValue));
+    ///             Console.WriteLine(string.Format("Minimum value: {0}", counter.MinimumValue));
+    ///             Console.WriteLine(string.Format("Maximum value: {0}", counter.MaximumValue));
+    ///             Console.WriteLine(string.Format("Average value: {0}", counter.AverageValue));
+    ///             Console.WriteLine(new string('-', 30));
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class PerformanceCounter : IDisposable
     {
         #region [ Members ]
 
         // Constants
-        public const int DefaultAveragingWindow = 120;
+        /// <summary>
+        /// Default measurement unit of the statistical values.
+        /// </summary>
+        public const string DefaultValueUnit = "Unknown";
+
+        /// <summary>
+        /// Default divisor to be applied to the statistical value.
+        /// </summary>
+        public const float DefaultValueDivisor = 1;
+
+        /// <summary>
+        /// Default number of samples over which statistical values are to be calculated.
+        /// </summary>
+        public const int DefaultSamplingWindow = 120;
 
         // Fields
-        private float m_lastValue;
-        private float m_minimumValue;
-        private float m_maximumValue;
-        private int m_averagingWindow;
+        private string m_aliasName;
+        private string m_valueUnit;
+        private float m_valueDivisor;
+        private int m_samplingWindow;
         private System.Diagnostics.PerformanceCounter m_counter;
         private List<double> m_counterValues;
         private bool m_disposed;
@@ -44,78 +87,199 @@ namespace TVA.Diagnostics
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceCounter"/> class.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
         public PerformanceCounter(string categoryName, string counterName, string instanceName)
+            : this(categoryName, counterName, instanceName, counterName)
         {
-            m_minimumValue = float.MaxValue;
-            m_maximumValue = float.MinValue;
-            m_averagingWindow = DefaultAveragingWindow;
-            m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
-            m_counterValues = new List<double>();
         }
 
-        ~PerformanceCounter()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceCounter"/> class.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
+        public PerformanceCounter(string categoryName, string counterName, string instanceName, string aliasName)
+            : this(categoryName, counterName, instanceName, aliasName, DefaultValueUnit)
         {
-            Dispose(false);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceCounter"/> class.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
+        /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
+        public PerformanceCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit)
+            : this(categoryName, counterName, instanceName, aliasName, valueUnit, DefaultValueDivisor)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceCounter"/> class.
+        /// </summary>
+        /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
+        /// <param name="counterName">The name of the performance counter.</param>
+        /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
+        /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
+        /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
+        /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
+        public PerformanceCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor)
+        {
+            this.AliasName = aliasName;
+            this.ValueUnit = valueUnit;
+            this.ValueDivisor = valueDivisor;
+            m_samplingWindow = DefaultSamplingWindow;
+            m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
+            m_counterValues = new List<double>();
+            Reset();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public int AveragingWindow
+        /// <summary>
+        /// Gets or sets an alias name for the <see cref="PerformanceCounter"/>.
+        /// </summary>
+        public string AliasName
         {
             get
             {
-                return m_averagingWindow;
+                return m_aliasName;
             }
             set
             {
-                if (value > 0)
-                {
-                    Interlocked.Exchange(ref m_averagingWindow, value);
-                }
-                else
-                {
-                    throw new ArgumentOutOfRangeException("AveragingWindow", "Value must be greater than 0.");
-                }
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+                m_aliasName = value;
             }
         }
 
+        /// <summary>
+        /// Gets or sets the measurement unit of <see cref="LastValue"/>, <see cref="MinimumValue"/>, 
+        /// <see cref="MaximumValue"/> and <see cref="AverageValue"/>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
+        public string ValueUnit
+        {
+            get
+            {
+                return m_valueUnit;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+                m_valueUnit = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the divisor to be applied to the <see cref="LastValue"/>, <see cref="MinimumValue"/>, 
+        /// <see cref="MaximumValue"/> and <see cref="AverageValue"/>.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being set is not greater than 0.</exception>
+        public float ValueDivisor
+        {
+            get
+            {
+                return m_valueDivisor;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("ValueDivisor", "Value must be greater than 0.");
+                m_valueDivisor = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of samples to use to determine the <see cref="LastValue"/>, 
+        /// <see cref="MinimumValue"/>, <see cref="MaximumValue"/> and <see cref="AverageValue"/>.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being set is not greater than 0.</exception>
+        public int SamplingWindow
+        {
+            get
+            {
+                return m_samplingWindow;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("SamplingWindow", "Value must be greater than 0.");
+                m_samplingWindow = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the last sample value from the samples of the <see cref="BaseCounter"/>.
+        /// </summary>
         public float LastValue
         {
             get
             {
-                return m_lastValue;
+                if (m_counterValues.Count <= 0)
+                    return float.NaN;
+                else
+                    return (float)m_counterValues[m_counterValues.Count - 1] / m_valueDivisor;
             }
         }
 
+        /// <summary>
+        /// Gets the minimum sample value from the samples of the <see cref="BaseCounter"/>.
+        /// </summary>
         public float MinimumValue
         {
             get
             {
-                return m_minimumValue;
+                if (m_counterValues.Count <= 0)
+                    return float.NaN;
+                else
+                    return (float)m_counterValues.Min() / m_valueDivisor;
             }
         }
 
+        /// <summary>
+        /// Gets the maximum sample value from the samples of the <see cref="BaseCounter"/>.
+        /// </summary>
         public float MaximumValue
         {
             get
             {
-                return m_maximumValue;
+                if (m_counterValues.Count <= 0)
+                    return float.NaN;
+                else
+                    return (float)m_counterValues.Max() / m_valueDivisor;
             }
         }
 
+        /// <summary>
+        /// Gets the average value from the samples of the <see cref="BaseCounter"/>.
+        /// </summary>
         public float AverageValue
         {
             get
             {
-                lock (m_counterValues)
-                {
-                    return (float)m_counterValues.Average();
-                }
+                if (m_counterValues.Count <= 0)
+                    return float.NaN;
+                else
+                    return (float)m_counterValues.Average() / m_valueDivisor;
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="System.Diagnostics.PerformanceCounter"/> object that this <see cref="PerformanceCounter"/> objects wraps.
+        /// </summary>
         public System.Diagnostics.PerformanceCounter BaseCounter
         {
             get
@@ -128,78 +292,77 @@ namespace TVA.Diagnostics
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Obtains a sample value from the <see cref="BaseCounter"/>.
+        /// </summary>
         public void Sample()
         {
             try
             {
-                lock (m_counter)
+                m_counterValues.Add(m_counter.NextValue());         // Update counter samples.
+                while (m_counterValues.Count > m_samplingWindow)
                 {
-                    Interlocked.Exchange(ref m_lastValue, m_counter.NextValue());
-                }
-
-                if (m_lastValue < m_minimumValue)
-                {
-                    Interlocked.Exchange(ref m_minimumValue, m_lastValue);
-                }
-
-                if (m_lastValue > m_maximumValue)
-                {
-                    Interlocked.Exchange(ref m_maximumValue, m_lastValue);
-                }
-
-                lock (m_counterValues)
-                {
-                    m_counterValues.Add(m_lastValue);
-                    while (m_counterValues.Count > m_averagingWindow)
-                    {
-                        m_counterValues.RemoveAt(0);
-                    }
+                    m_counterValues.RemoveAt(0);                    // Keep the counter samples window rolling.
                 }
             }
             catch (InvalidOperationException)
             {
-                // If we're monitoring performance of an application that's not running (it was not running to begin with,
-                // or it was running but it no longer running), we'll encounter an InvalidOperationException exception.
-                // In this case we'll reset the values and absorb the exception.
+                // If we're monitoring performance of an application that's not running (it was not running to begin 
+                // with, or it was running but it no longer running), we'll encounter an InvalidOperationException 
+                // exception. In this case we'll reset the values and absorb the exception.
                 Reset();
             }
         }
 
+        /// <summary>
+        /// Resets the <see cref="PerformanceCounter"/> object to its initial state.
+        /// </summary>
         public void Reset()
         {
-            Interlocked.Exchange(ref m_lastValue, 0);
-            Interlocked.Exchange(ref m_minimumValue, 0);
-            Interlocked.Exchange(ref m_maximumValue, 0);
-
-            lock (m_counterValues)
-            {
-                m_counterValues.Clear();
-            }
+            m_counterValues.Clear();
         }
 
-
+        /// <summary>
+        /// Releases all the resources used by the <see cref="PerformanceCounter" /> object.
+        /// </summary>
         public void Dispose()
         {
-            // Do not change this code.  Put cleanup code in Dispose method.
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="PerformanceCounter" /> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~PerformanceCounter()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PerformanceCounter" /> object and optionally 
+        /// releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                if (disposing)
+                try
                 {
-                    Reset();
-                    lock (m_counter)
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
                     {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Reset();
                         m_counter.Dispose();
                     }
                 }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
             }
-
-            m_disposed = true;
         }
 
         #endregion
