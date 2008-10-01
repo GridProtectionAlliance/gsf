@@ -111,6 +111,18 @@ namespace TVA.Windows
         }
 
         /// <summary>
+        /// Restores the size and location of the specified windowsForm from the size and location information saved in the
+        /// application configuration file.
+        /// </summary>
+        /// <param name="windowsForm">The Form whose size and location is to be restored.</param>
+        /// <remarks>This function simply calls the RestoreWindowSize and RestoreWindowLocation functions using the default settings categories</remarks>
+        public static void RestoreLayout(this Form windowsForm)
+        {
+            windowsForm.RestoreSize();
+            windowsForm.RestoreLocation();
+        }
+
+        /// <summary>
         /// Saves the size information of the specified windowsForm to the application configuration file.
         /// </summary>
         /// <param name="windowsForm">The Form whose size information is to be saved.</param>
@@ -162,18 +174,6 @@ namespace TVA.Windows
                 settings.Add(windowsForm.Name, windowsForm.Location.ToString());
 
             ConfigurationFile.Current.Save();
-        }
-
-        /// <summary>
-        /// Restores the size and location of the specified windowsForm from the size and location information saved in the
-        /// application configuration file.
-        /// </summary>
-        /// <param name="windowsForm">The Form whose size and location is to be restored.</param>
-        /// <remarks>This function simply calls the RestoreWindowSize and RestoreWindowLocation functions using the default settings categories</remarks>
-        public static void RestoreLayout(this Form windowsForm)
-        {
-            windowsForm.RestoreSize();
-            windowsForm.RestoreLocation();
         }
 
         /// <summary>
