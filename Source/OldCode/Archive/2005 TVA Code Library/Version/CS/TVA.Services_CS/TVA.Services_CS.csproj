@@ -66,9 +66,6 @@
     <Compile Include="ClientRequestHandlerInfo.cs" />
     <Compile Include="ClientRequestInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServiceHelper.Designer.cs">
-      <DependentUpon>ServiceHelper.cs</DependentUpon>
-    </Compile>
     <Compile Include="ServiceHelper.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -77,12 +74,6 @@
     <Compile Include="ServiceResponse.cs" />
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ServiceHelper.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>ServiceHelper.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded Resources\ClientHelper.bmp" />

@@ -25,23 +25,16 @@ namespace TVA
     /// <typeparam name="T">Type of argument for this event arguments instance.</typeparam>
     public class EventArgs<T> : EventArgs
     {
-        private T m_argument;
+        public T Argument;
+
+        public EventArgs()
+        {
+            Argument = default(T);
+        }
 
         public EventArgs(T argument)
         {
-            m_argument = argument;
-        }
-
-        public T Argument
-        {
-            get
-            {
-                return m_argument;
-            }
-            set
-            {
-                m_argument = value;
-            }
+            Argument = argument;
         }
     }
 }

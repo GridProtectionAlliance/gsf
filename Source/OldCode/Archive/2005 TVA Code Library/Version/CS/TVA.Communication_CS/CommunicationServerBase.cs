@@ -79,25 +79,25 @@ namespace TVA.Communication
         /// Occurs when an exception is encountered while starting up the server.
         /// </summary>
         [Description("Occurs when an exception is encountered while starting up the server."), Category("Server")]
-        public event EventHandler<GenericEventArgs<Exception>> ServerStartupException;
+        public event EventHandler<EventArgs<Exception>> ServerStartupException;
 
         /// <summary>
         /// Occurs when a client is connected to the server.
         /// </summary>
         [Description("Occurs when a client is connected to the server."), Category("Client")]
-        public event EventHandler<GenericEventArgs<Guid>> ClientConnected;
+        public event EventHandler<EventArgs<Guid>> ClientConnected;
 
         /// <summary>
         /// Occurs when a client is disconnected from the server.
         /// </summary>
         [Description("Occurs when a client is disconnected from the server."), Category("Client")]
-        public event EventHandler<GenericEventArgs<Guid>> ClientDisconnected;
+        public event EventHandler<EventArgs<Guid>> ClientDisconnected;
 
         /// <summary>
         /// Occurs when data is received from a client.
         /// </summary>
         [Description("Occurs when data is received from a client."), Category("Data")]
-        public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedClientData;		
+        public event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedClientData;		
 
         // Fields
         private string m_configurationString;
@@ -978,7 +978,7 @@ namespace TVA.Communication
         /// <remarks>This method is to be called if the server throws an exception during startup.</remarks>
         protected virtual void OnServerStartupException(Exception e)
         {
-            if (ServerStartupException != null) ServerStartupException(this, new GenericEventArgs<Exception>(e));
+            if (ServerStartupException != null) ServerStartupException(this, new EventArgs<Exception>(e));
         }
 
         /// <summary>
@@ -993,7 +993,7 @@ namespace TVA.Communication
                 m_clientIDs.Add(e);
             }
 
-            if (ClientConnected != null) ClientConnected(this, new GenericEventArgs<Guid>(e));
+            if (ClientConnected != null) ClientConnected(this, new EventArgs<Guid>(e));
         }
 
         /// <summary>
@@ -1008,7 +1008,7 @@ namespace TVA.Communication
                 m_clientIDs.Remove(e);
             }
 
-            if (ClientDisconnected != null) ClientDisconnected(this, new GenericEventArgs<Guid>(e));
+            if (ClientDisconnected != null) ClientDisconnected(this, new EventArgs<Guid>(e));
         }
 
         /// <summary>
@@ -1027,7 +1027,7 @@ namespace TVA.Communication
                 // We'll just pass on the data that we received.
             }
 
-            if (ReceivedClientData != null) ReceivedClientData(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
+            if (ReceivedClientData != null) ReceivedClientData(this, new EventArgs<IdentifiableItem<Guid, byte[]>>(e));
         }
 
         /// <summary>

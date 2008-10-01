@@ -75,7 +75,7 @@ namespace TVA.Communication
 		/// Occurs when an exception is encountered while connecting to the server.
 		/// </summary>
 		[Description("Occurs when an exception occurs while connecting to the server."), Category("Connection")]
-        public event EventHandler<GenericEventArgs<Exception>> ConnectingException;
+        public event EventHandler<EventArgs<Exception>> ConnectingException;
 		
 		/// <summary>
 		/// Occurs when the client has successfully connected to the server.
@@ -93,19 +93,19 @@ namespace TVA.Communication
 		/// Occurs when the client begins sending data to the server.
 		/// </summary>
 		[Description("Occurs when the client begins sending data to the server."), Category("Data")]
-		public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataBegin;	
+		public event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataBegin;	
 		
 		/// <summary>
 		/// Occurs when the client has successfully send data to the server.
 		/// </summary>
         [Description("Occurs when the client has successfully send data to the server."), Category("Data")]
-        public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataComplete;
+        public event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataComplete;
 		
 		/// <summary>
 		/// Occurs when the client receives data from the server.
 		/// </summary>
         [Description("Occurs when the client receives data from the server."), Category("Data")]
-        public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedData;
+        public event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedData;
 		
 		/// <summary>
 		/// Occurs when no data is received from the server after waiting for the specified time.
@@ -1026,7 +1026,7 @@ namespace TVA.Communication
         /// </remarks>
         protected virtual void OnConnectingException(Exception e)
         {
-            if (ConnectingException != null) ConnectingException(this, new GenericEventArgs<Exception>(e));
+            if (ConnectingException != null) ConnectingException(this, new EventArgs<Exception>(e));
         }
 
         /// <summary>
@@ -1065,7 +1065,7 @@ namespace TVA.Communication
         /// <remarks>This method is to be called when the client begins sending data to the server.</remarks>
         protected virtual void OnSendDataBegin(IdentifiableItem<Guid, byte[]> e)
         {
-            if (SendDataBegin != null) SendDataBegin(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
+            if (SendDataBegin != null) SendDataBegin(this, new EventArgs<IdentifiableItem<Guid, byte[]>>(e));
         }
 
         /// <summary>
@@ -1076,7 +1076,7 @@ namespace TVA.Communication
         protected virtual void OnSendDataComplete(IdentifiableItem<Guid, byte[]> e)
         {
             m_totalBytesSent += e.Item.Length;
-            if (SendDataComplete != null) SendDataComplete(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
+            if (SendDataComplete != null) SendDataComplete(this, new EventArgs<IdentifiableItem<Guid, byte[]>>(e));
         }
 
         /// <summary>
@@ -1097,7 +1097,7 @@ namespace TVA.Communication
                 // We'll just pass on the data that we received.
             }
 
-            if (ReceivedData != null) ReceivedData(this, new GenericEventArgs<IdentifiableItem<Guid, byte[]>>(e));
+            if (ReceivedData != null) ReceivedData(this, new EventArgs<IdentifiableItem<Guid, byte[]>>(e));
         }
 
         /// <summary>

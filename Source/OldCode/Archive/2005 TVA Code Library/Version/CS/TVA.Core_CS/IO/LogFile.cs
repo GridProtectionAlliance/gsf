@@ -134,7 +134,7 @@ namespace TVA.IO
         /// Occurs when an exception is encountered while writing entries to the log file.
         /// </summary>
         [Description("Occurs when an exception is encountered while writing entries to the log file.")]
-        public event EventHandler<GenericEventArgs<Exception>> LogException;
+        public event EventHandler<EventArgs<Exception>> LogException;
 
         // Fields
         private string m_name;
@@ -652,7 +652,7 @@ namespace TVA.IO
         private void m_logEntryQueue_ProcessException(Exception ex)
         {
             if (LogException != null)
-                LogException(this, new GenericEventArgs<Exception>(ex));
+                LogException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

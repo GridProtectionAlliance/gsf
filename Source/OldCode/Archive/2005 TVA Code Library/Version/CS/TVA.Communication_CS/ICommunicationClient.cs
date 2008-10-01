@@ -46,7 +46,7 @@ namespace TVA.Communication
 		/// <summary>
 		/// Occurs when an exception is encountered while connecting to the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<Exception>> ConnectingException;
+		event EventHandler<EventArgs<Exception>> ConnectingException;
 		
 		/// <summary>
 		/// Occurs when the client has successfully connected to the server.
@@ -61,17 +61,17 @@ namespace TVA.Communication
 		/// <summary>
 		/// Occurs when the client begins sending data to the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataBegin;
+		event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataBegin;
 		
 		/// <summary>
 		/// Occurs when the client has successfully send data to the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataComplete;
+		event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> SendDataComplete;
 		
 		/// <summary>
 		/// Occurs when the client receives data from the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedData;
+		event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedData;
 		
 		/// <summary>
 		/// Occurs when no data is received from the server after waiting for the specified time.

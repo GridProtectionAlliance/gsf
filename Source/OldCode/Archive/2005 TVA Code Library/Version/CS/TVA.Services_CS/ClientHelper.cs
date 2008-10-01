@@ -58,22 +58,22 @@ namespace TVA.Services
         /// <summary>
 		/// Occurs when the service client must update its status.
 		/// </summary>
-		public event EventHandler<GenericEventArgs<string>> UpdateClientStatus;
+		public event EventHandler<EventArgs<string>> UpdateClientStatus;
 				
 		/// <summary>
 		/// Occurs when a response is received from the service.
 		/// </summary>
-		public event EventHandler<GenericEventArgs<ServiceResponse>> ReceivedServiceResponse;
+		public event EventHandler<EventArgs<ServiceResponse>> ReceivedServiceResponse;
 		
 		/// <summary>
 		/// Occurs when the service state changes.
 		/// </summary>
-		public event EventHandler<GenericEventArgs<ObjectState<ServiceState>>> ServiceStateChanged;
+		public event EventHandler<EventArgs<ObjectState<ServiceState>>> ServiceStateChanged;
 		
 		/// <summary>
 		/// Occurs when the state of a process changes.
 		/// </summary>
-		public event EventHandler<GenericEventArgs<ObjectState<ProcessState>>> ProcessStateChanged;
+		public event EventHandler<EventArgs<ObjectState<ProcessState>>> ProcessStateChanged;
 		
 		/// <summary>
 		/// Occurs when a remote command session has been established.
@@ -205,7 +205,9 @@ namespace TVA.Services
 				    if (disposing)
 				    {
 				        Disconnect();
-				        SaveSettings(); // Saves settings to the config file.
+				        SaveSettings();
+
+                        // Detach any remoting client events
                         RemotingClient = null;
 				    }
 			    }
@@ -235,9 +237,10 @@ namespace TVA.Services
 
                 UpdateStatus(status.ToString(), 1);
 
-                // We'll always use handshaking to ensure the availability of SecureSession.
-                m_remotingClient.Handshake = true;
-                m_remotingClient.HandshakePassphrase = m_serviceName;
+                // JRC: Disabled override of remoting client handshake operations since ClientHelper doesn't
+                // own remoting server - consumer does - and they may have specially defined transport options                
+                //m_remotingClient.Handshake = true;
+                //m_remotingClient.HandshakePassphrase = m_serviceName;
 
                 // Initiate connection to the service's communication server.
                 m_remotingClient.Connect();
@@ -289,7 +292,7 @@ namespace TVA.Services
             }
 
             if (UpdateClientStatus != null)
-                UpdateClientStatus(this, new GenericEventArgs<string>(status.ToString()));
+                UpdateClientStatus(this, new EventArgs<string>(status.ToString()));
         }
 
         public void LoadSettings()
@@ -378,14 +381,14 @@ namespace TVA.Services
             UpdateStatus(status.ToString(), 1);
         }
 
-        private void m_remotingClient_ReceivedData(object sender, GenericEventArgs<IdentifiableItem<System.Guid, byte[]>> e)
+        private void m_remotingClient_ReceivedData(object sender, EventArgs<IdentifiableItem<System.Guid, byte[]>> e)
         {
             ServiceResponse response = Serialization.GetObject<ServiceResponse>(e.Argument.Item);
 
             if (response != null)
             {
                 if (ReceivedServiceResponse != null)
-                    ReceivedServiceResponse(this, new GenericEventArgs<ServiceResponse>(response));
+                    ReceivedServiceResponse(this, new EventArgs<ServiceResponse>(response));
 
                 switch (response.Type)
                 {
@@ -401,7 +404,7 @@ namespace TVA.Services
                             {
                                 // Notify change in service state by raising the ServiceStateChanged event.
                                 if (ServiceStateChanged != null)
-                                    ServiceStateChanged(this, new GenericEventArgs<ObjectState<ServiceState>>(state));
+                                    ServiceStateChanged(this, new EventArgs<ObjectState<ServiceState>>(state));
 
                                 UpdateStatus(string.Format("State of service \"{0}\" has changed to \"{1}\".", state.ObjectName, state.CurrentState), ServiceHelper.UpdateCrlfCount);
                             }
@@ -416,7 +419,7 @@ namespace TVA.Services
                             {
                                 // Notify change in process state by raising the ProcessStateChanged event.
                                 if (ProcessStateChanged != null)
-                                    ProcessStateChanged(this, new GenericEventArgs<ObjectState<ProcessState>>(state));
+                                    ProcessStateChanged(this, new EventArgs<ObjectState<ProcessState>>(state));
 
                                 UpdateStatus(string.Format("State of process \"{0}\" has changed to \"{1}\".", state.ObjectName, state.CurrentState), ServiceHelper.UpdateCrlfCount);
                             }

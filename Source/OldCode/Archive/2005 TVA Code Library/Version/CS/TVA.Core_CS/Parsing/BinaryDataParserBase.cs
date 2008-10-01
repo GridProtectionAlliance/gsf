@@ -53,22 +53,22 @@ namespace TVA.Parsing
         /// <summary>
         /// Occurs when a data image has been parsed.
         /// </summary>
-        public event EventHandler<GenericEventArgs<IdentifiableItem<Guid, List<TOutput>>>> DataParsed;
+        public event EventHandler<EventArgs<IdentifiableItem<Guid, List<TOutput>>>> DataParsed;
 
         /// <summary>
         /// Occurs when a matching output type is not found for parsing the data image.
         /// </summary>
-        public event EventHandler<GenericEventArgs<TIdentifier>> OutputTypeNotFound;
+        public event EventHandler<EventArgs<TIdentifier>> OutputTypeNotFound;
 
         /// <summary>
         /// Occurs when unparsed data is reused and not discarded.
         /// </summary>
-        public event EventHandler<GenericEventArgs<TIdentifier>> UnparsedDataReused;
+        public event EventHandler<EventArgs<TIdentifier>> UnparsedDataReused;
 
         /// <summary>
         /// Occurs when unparsed data is discarded and not re-used.
         /// </summary>
-        public event EventHandler<GenericEventArgs<TIdentifier>> UnparsedDataDiscarded;
+        public event EventHandler<EventArgs<TIdentifier>> UnparsedDataDiscarded;
 
         // Fields
         private string m_idPropertyName;
@@ -389,7 +389,7 @@ namespace TVA.Parsing
                                     m_unparsedDataReuseCount[item[i].Source] = reuseCount;
                                     cursor = item[i].Item.Length; // Move on to the next data image.
                                     if (UnparsedDataReused != null)
-                                        UnparsedDataReused(this, new GenericEventArgs<TIdentifier>(typeID));
+                                        UnparsedDataReused(this, new EventArgs<TIdentifier>(typeID));
                                 }
                                 else
                                 {
@@ -397,7 +397,7 @@ namespace TVA.Parsing
 
                                     m_unparsedDataReuseCount[item[i].Source] = 0;
                                     if (UnparsedDataDiscarded != null)
-                                        UnparsedDataDiscarded(this, new GenericEventArgs<TIdentifier>(typeID));
+                                        UnparsedDataDiscarded(this, new EventArgs<TIdentifier>(typeID));
                                 }
                             }
                         }
@@ -409,12 +409,12 @@ namespace TVA.Parsing
 
                             cursor = item[i].Item.Length; // Move on to the next data image.
                             if (OutputTypeNotFound != null)
-                                OutputTypeNotFound(this, new GenericEventArgs<TIdentifier>(typeID));
+                                OutputTypeNotFound(this, new EventArgs<TIdentifier>(typeID));
                         }
                     }
 
                     if (DataParsed != null)
-                        DataParsed(this, new GenericEventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].Source, output)));
+                        DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].Source, output)));
                 }
             }
         }

@@ -43,22 +43,22 @@ namespace TVA.Communication
 		/// <summary>
 		/// Occurs when an exception is encountered while starting up the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<Exception>> ServerStartupException;
+		event EventHandler<EventArgs<Exception>> ServerStartupException;
 		
 		/// <summary>
 		/// Occurs when a client is connected to the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<Guid>> ClientConnected;
+		event EventHandler<EventArgs<Guid>> ClientConnected;
 		
 		/// <summary>
 		/// Occurs when a client is disconnected from the server.
 		/// </summary>
-		event EventHandler<GenericEventArgs<Guid>> ClientDisconnected;
+		event EventHandler<EventArgs<Guid>> ClientDisconnected;
 		
 		/// <summary>
 		/// Occurs when data is received from a client.
 		/// </summary>
-		event EventHandler<GenericEventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedClientData;
+		event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedClientData;
 		
 		/// <summary>
 		/// Gets or sets the data that is required by the server to initialize.

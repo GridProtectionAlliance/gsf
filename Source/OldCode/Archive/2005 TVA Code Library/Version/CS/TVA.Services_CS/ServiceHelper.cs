@@ -1,29 +1,11 @@
-using System.Diagnostics;
-using System.Linq;
-using System.Collections;
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System;
-using System.Text;
-using System.Drawing;
-using System.ComponentModel;
-using System.ServiceProcess;
-//using TVA.Common;
-using TVA.Communication;
-//using TVA.Serialization;
-using TVA.Scheduling;
-using TVA.Configuration;
-//using TVA.Configuration.Common;
-using TVA.Diagnostics;
-
 //*******************************************************************************************************
-//  TVA.Services.ServiceHelper.vb - Helper class for a windows service
-//  Copyright © 2006 - TVA, all rights reserved - Gbtc
+//  ServiceHelper.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2005
-//  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2250
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
 //       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
@@ -34,48 +16,35 @@ using TVA.Diagnostics;
 //       Modified the "design time" check in EndInit() method to use LicenseManager. UsageMode property
 //       instead of DesignMode property as the former is more accurate than the latter.
 //  12/14/2007 - Pinal C. Patel
-//       Made monitoring of service health optional via the MonitorServiceHealth property as this
-//       feature was causing the highly utilized services to die after running for a prolonged period of
-//       time. By default monitoring service health is off.
+//       Made monitoring of service health optional via the MonitorServiceHealth property.
+//  09/30/2008 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Text;
+using System.Drawing;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.ServiceProcess;
+using System.Diagnostics;
+using TVA.IO;
+using TVA.ErrorManagement;
+using TVA.Communication;
+using TVA.Scheduling;
+using TVA.Configuration;
+using TVA.Diagnostics;
 
 namespace TVA.Services
 {
-	[ToolboxBitmap(typeof(ServiceHelper))]public partial class ServiceHelper : TVA.Configuration.IPersistSettings, ISupportInitialize
+    /// <summary>Helper class for a windows service</summary>
+	[ToolboxBitmap(typeof(ServiceHelper))]
+    public class ServiceHelper : Component, IPersistSettings, ISupportInitialize
 	{
+		#region [ Members ]
 		
-		
-		#region " Variables "
-		
-		private string m_pursip;
-		private bool m_logStatusUpdates;
-		private bool m_monitorServiceHealth;
-		private int m_requestHistoryLimit;
-		private string m_queryableSettingsCategories;
-		private bool m_persistSettings;
-		private string m_settingsCategoryName;
-		private ServiceBase m_service;
-		private List<ServiceProcess> m_processes;
-		private List<IServiceComponent> m_serviceComponents;
-		
-		private bool m_suppressUpdates;
-		private Guid m_remoteCommandClientID;
-		private PerformanceMonitor m_performanceMonitor;
-		private List<ClientInfo> m_connectedClients;
-		private List<ClientRequestInfo> m_clientRequestHistory;
-		private List<ClientRequestHandlerInfo> m_clientRequestHandlers;
-		
-		private Process m_remoteCommandProcess;
-		private CommunicationServerBase m_remotingServer;
-		private TVA.IO.LogFile m_statusLog;
-		private TVA.Scheduling.ScheduleManager m_scheduler;
-		private TVA.ErrorManagement.GlobalExceptionLogger m_exceptionLogger;
-		
-		#endregion
-		
-		#region " Constants "
+        // Constants
 		
 		/// <summary>
 		/// The number of CrLfs to be appended to all the updates.
@@ -90,7 +59,7 @@ namespace TVA.Services
 		/// <summary>
 		/// Default value for MonitorServiceHealth property.
 		/// </summary>
-		public const bool DefaultMonitorServiceHealth = false;
+		public const bool DefaultMonitorServiceHealth = true;
 		
 		/// <summary>
 		/// Default value for RequestHistoryLimit property.
@@ -100,7 +69,7 @@ namespace TVA.Services
 		/// <summary>
 		/// Default value for QueryableSettingsCategories property.
 		/// </summary>
-		public const string DefaultQueryableSettingsCategories = "ServiceHelper, StatusLog, ExceptionLogger";
+		public const string DefaultQueryableSettingsCategories = "ServiceHelper, StatusLog, ErrorLogger";
 		
 		/// <summary>
 		/// Default value for PersistSettings property.
@@ -111,195 +80,131 @@ namespace TVA.Services
 		/// Default value for SettingsCategoryName property.
 		/// </summary>
 		public const string DefaultSettingsCategoryName = "ServiceHelper";
-		
-		#endregion
-		
-		#region " Events "
+
+        // Events
 		
 		/// <summary>
 		/// Occurs when the service is starting.
 		/// </summary>
-		public delegate void ServiceStartingEventHandler(object Of);
-		private ServiceStartingEventHandler ServiceStartingEvent;
-		
-		public event ServiceStartingEventHandler ServiceStarting
-		{
-			add
-			{
-				ServiceStartingEvent = (ServiceStartingEventHandler) System.Delegate.Combine(ServiceStartingEvent, value);
-			}
-			remove
-			{
-				ServiceStartingEvent = (ServiceStartingEventHandler) System.Delegate.Remove(ServiceStartingEvent, value);
-			}
-		}
-		
+		public event EventHandler<EventArgs<object>> ServiceStarting;
 		
 		/// <summary>
 		/// Occurs when the service has started.
 		/// </summary>
-		private EventHandler ServiceStartedEvent;
-		public event EventHandler ServiceStarted
-		{
-			add
-			{
-				ServiceStartedEvent = (EventHandler) System.Delegate.Combine(ServiceStartedEvent, value);
-			}
-			remove
-			{
-				ServiceStartedEvent = (EventHandler) System.Delegate.Remove(ServiceStartedEvent, value);
-			}
-		}
-		
+		public event EventHandler ServiceStarted;
 		
 		/// <summary>
 		/// Occurs when the service is stopping.
 		/// </summary>
-		private EventHandler ServiceStoppingEvent;
-		public event EventHandler ServiceStopping
-		{
-			add
-			{
-				ServiceStoppingEvent = (EventHandler) System.Delegate.Combine(ServiceStoppingEvent, value);
-			}
-			remove
-			{
-				ServiceStoppingEvent = (EventHandler) System.Delegate.Remove(ServiceStoppingEvent, value);
-			}
-		}
-		
+		public event EventHandler ServiceStopping;
 		
 		/// <summary>
 		/// Occurs when the service has stopped.
 		/// </summary>
-		private EventHandler ServiceStoppedEvent;
-		public event EventHandler ServiceStopped
-		{
-			add
-			{
-				ServiceStoppedEvent = (EventHandler) System.Delegate.Combine(ServiceStoppedEvent, value);
-			}
-			remove
-			{
-				ServiceStoppedEvent = (EventHandler) System.Delegate.Remove(ServiceStoppedEvent, value);
-			}
-		}
-		
+		public event EventHandler ServiceStopped;
 		
 		/// <summary>
 		/// Occurs when the service is pausing.
 		/// </summary>
-		private EventHandler ServicePausingEvent;
-		public event EventHandler ServicePausing
-		{
-			add
-			{
-				ServicePausingEvent = (EventHandler) System.Delegate.Combine(ServicePausingEvent, value);
-			}
-			remove
-			{
-				ServicePausingEvent = (EventHandler) System.Delegate.Remove(ServicePausingEvent, value);
-			}
-		}
-		
+		public event EventHandler ServicePausing;
 		
 		/// <summary>
 		/// Occurs when the service has paused.
 		/// </summary>
-		private EventHandler ServicePausedEvent;
-		public event EventHandler ServicePaused
-		{
-			add
-			{
-				ServicePausedEvent = (EventHandler) System.Delegate.Combine(ServicePausedEvent, value);
-			}
-			remove
-			{
-				ServicePausedEvent = (EventHandler) System.Delegate.Remove(ServicePausedEvent, value);
-			}
-		}
-		
+		public event EventHandler ServicePaused;
 		
 		/// <summary>
 		/// Occurs when the service is resuming.
 		/// </summary>
-		private EventHandler ServiceResumingEvent;
-		public event EventHandler ServiceResuming
-		{
-			add
-			{
-				ServiceResumingEvent = (EventHandler) System.Delegate.Combine(ServiceResumingEvent, value);
-			}
-			remove
-			{
-				ServiceResumingEvent = (EventHandler) System.Delegate.Remove(ServiceResumingEvent, value);
-			}
-		}
-		
+		public event EventHandler ServiceResuming;
 		
 		/// <summary>
 		/// Occurs when the service has resumed.
 		/// </summary>
-		private EventHandler ServiceResumedEvent;
-		public event EventHandler ServiceResumed
-		{
-			add
-			{
-				ServiceResumedEvent = (EventHandler) System.Delegate.Combine(ServiceResumedEvent, value);
-			}
-			remove
-			{
-				ServiceResumedEvent = (EventHandler) System.Delegate.Remove(ServiceResumedEvent, value);
-			}
-		}
-		
+		public event EventHandler ServiceResumed;
 		
 		/// <summary>
 		/// Occurs when the system is being shutdowm.
 		/// </summary>
-		private EventHandler SystemShutdownEvent;
-		public event EventHandler SystemShutdown
-		{
-			add
-			{
-				SystemShutdownEvent = (EventHandler) System.Delegate.Combine(SystemShutdownEvent, value);
-			}
-			remove
-			{
-				SystemShutdownEvent = (EventHandler) System.Delegate.Remove(SystemShutdownEvent, value);
-			}
-		}
-		
+		public event EventHandler SystemShutdown;	
 		
 		/// <summary>
 		/// Occurs when a request is received from a client.
 		/// </summary>
-		public delegate void ReceivedClientRequestEventHandler(object sender, GenericEventArgs<IdentifiableItem<Guid, ClientRequest>> e);
-		private ReceivedClientRequestEventHandler ReceivedClientRequestEvent;
+		public event EventHandler<EventArgs<IdentifiableItem<Guid, ClientRequest>>> ReceivedClientRequest;
+
+        // Fields
+		private bool m_logStatusUpdates;
+		private bool m_monitorServiceHealth;
+		private int m_requestHistoryLimit;
+		private string m_queryableSettingsCategories;
+		private bool m_persistSettings;
+		private string m_settingsCategoryName;
+		private bool m_suppressUpdates;
+		private Guid m_remoteCommandClientID;
+		private ServiceBase m_service;
+		private List<ServiceProcess> m_processes;
+		private List<IServiceComponent> m_serviceComponents;		
+		private PerformanceMonitor m_performanceMonitor;
+		private List<ClientInfo> m_connectedClients;
+		private List<ClientRequestInfo> m_clientRequestHistory;
+		private List<ClientRequestHandlerInfo> m_clientRequestHandlers;
+		private Process m_remoteCommandProcess;
+		private CommunicationServerBase m_remotingServer;
+		private LogFile m_statusLog;
+		private ScheduleManager m_scheduler;
+		private ErrorLogger m_errorLogger;
+		private string m_pursip;		
+        private bool m_disposed;
 		
-		public event ReceivedClientRequestEventHandler ReceivedClientRequest
+        #endregion
+
+        #region [ Constructors ]
+        
+        public ServiceHelper()
 		{
-			add
-			{
-				ReceivedClientRequestEvent = (ReceivedClientRequestEventHandler) System.Delegate.Combine(ReceivedClientRequestEvent, value);
-			}
-			remove
-			{
-				ReceivedClientRequestEvent = (ReceivedClientRequestEventHandler) System.Delegate.Remove(ReceivedClientRequestEvent, value);
-			}
+			m_logStatusUpdates = DefaultLogStatusUpdates;
+			m_monitorServiceHealth = DefaultMonitorServiceHealth;
+			m_requestHistoryLimit = DefaultRequestHistoryLimit;
+			m_queryableSettingsCategories = DefaultQueryableSettingsCategories;
+			m_persistSettings = DefaultPersistSettings;
+			m_settingsCategoryName = DefaultSettingsCategoryName;
+			m_processes = new List<ServiceProcess>();
+			m_connectedClients = new List<ClientInfo>();
+			m_clientRequestHistory = new List<ClientRequestInfo>();
+			m_serviceComponents = new List<IServiceComponent>();
+			m_clientRequestHandlers = new List<ClientRequestHandlerInfo>();
+			m_pursip = "s3cur3";
+
+			// Components
+			m_statusLog = new LogFile();
+			m_statusLog.LogException += m_statusLog_LogException;
+			m_statusLog.Name = "StatusLog.txt";
+			m_statusLog.PersistSettings = true;
+			m_statusLog.SettingsCategoryName = "StatusLog";
+
+            m_scheduler = new ScheduleManager();
+			m_scheduler.ScheduleDue += m_scheduler_ScheduleDue;
+			m_scheduler.PersistSettings = true;
+			m_scheduler.SettingsCategoryName = "Scheduler";
+
+			m_errorLogger = new ErrorLogger();
+			m_errorLogger.ExitOnUnhandledException = false;
+			m_errorLogger.PersistSettings = true;
+			m_errorLogger.SettingsCategoryName = "ErrorLogger";
 		}
-		
-		
-		#endregion
-		
-		#region " Properties "
+
+        #endregion
+
+        #region [ Properties ]
 		
 		/// <summary>
 		/// Gets or sets a boolean value indicating whether status updates are to be logged to a text file.
 		/// </summary>
 		/// <value></value>
 		/// <returns>True if status updates are to be logged to a text file; otherwise false.</returns>
-		[Category("Preferences"), DefaultValue(DefaultLogStatusUpdates)]public bool LogStatusUpdates
+		[Category("Preferences"), DefaultValue(DefaultLogStatusUpdates)]
+        public bool LogStatusUpdates
 		{
 			get
 			{
@@ -316,7 +221,8 @@ namespace TVA.Services
 		/// </summary>
 		/// <value></value>
 		/// <returns>True if the service health is to be monitored; otherwise False.</returns>
-		[Category("Preferences"), DefaultValue(DefaultMonitorServiceHealth)]public bool MonitorServiceHealth
+		[Category("Preferences"), DefaultValue(DefaultMonitorServiceHealth)]
+        public bool MonitorServiceHealth
 		{
 			get
 			{
@@ -333,7 +239,8 @@ namespace TVA.Services
 		/// </summary>
 		/// <value></value>
 		/// <returns>The number of request entries to be kept in the history.</returns>
-		[Category("Preferences"), DefaultValue(DefaultRequestHistoryLimit)]public int RequestHistoryLimit
+		[Category("Preferences"), DefaultValue(DefaultRequestHistoryLimit)]
+        public int RequestHistoryLimit
 		{
 			get
 			{
@@ -347,7 +254,7 @@ namespace TVA.Services
 				}
 				else
 				{
-					throw (new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0."));
+					throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0.");
 				}
 			}
 		}
@@ -357,7 +264,8 @@ namespace TVA.Services
 		/// </summary>
 		/// <value></value>
 		/// <returns>A comma seperated list of config file settings categories updateable by the service.</returns>
-		[Category("Preferences"), DefaultValue(DefaultQueryableSettingsCategories)]public string QueryableSettingsCategories
+		[Category("Preferences"), DefaultValue(DefaultQueryableSettingsCategories)]
+        public string QueryableSettingsCategories
 		{
 			get
 			{
@@ -365,18 +273,19 @@ namespace TVA.Services
 			}
 			set
 			{
-				if (! string.IsNullOrEmpty(value))
+				if (!string.IsNullOrEmpty(value))
 				{
 					m_queryableSettingsCategories = value;
 				}
 				else
 				{
-					throw (new ArgumentNullException("QueryableSettingsCategories"));
+					throw new ArgumentNullException("QueryableSettingsCategories");
 				}
 			}
 		}
 		
-		[Category("Persistance"), DefaultValue(DefaultPersistSettings)]public bool PersistSettings
+		[Category("Persistance"), DefaultValue(DefaultPersistSettings)]
+        public bool PersistSettings
 		{
 			get
 			{
@@ -388,7 +297,8 @@ namespace TVA.Services
 			}
 		}
 		
-		[Category("Persistance"), DefaultValue(DefaultSettingsCategoryName)]public string SettingsCategoryName
+		[Category("Persistance"), DefaultValue(DefaultSettingsCategoryName)]
+        public string SettingsCategoryName
 		{
 			get
 			{
@@ -396,13 +306,13 @@ namespace TVA.Services
 			}
 			set
 			{
-				if (! string.IsNullOrEmpty(value))
+				if (!string.IsNullOrEmpty(value))
 				{
 					m_settingsCategoryName = value;
 				}
 				else
 				{
-					throw (new ArgumentNullException("SettingsCategoryName"));
+					throw new ArgumentNullException("SettingsCategoryName");
 				}
 			}
 		}
@@ -412,7 +322,8 @@ namespace TVA.Services
 		/// </summary>
 		/// <value></value>
 		/// <returns>The parent service to which the service helper belongs.</returns>
-		[Category("Components")]public ServiceBase Service
+		[Category("Components")]
+        public ServiceBase Service
 		{
 			get
 			{
@@ -429,7 +340,8 @@ namespace TVA.Services
 		/// </summary>
 		/// <value></value>
 		/// <returns>An instance of TCP server.</returns>
-		[Category("Components")]public CommunicationServerBase RemotingServer
+		[Category("Components")]
+        public CommunicationServerBase RemotingServer
 		{
 			get
 			{
@@ -437,13 +349,26 @@ namespace TVA.Services
 			}
 			set
 			{
+                if (m_remotingServer != null)
+                {
+                    // Detach events from any existing instance
+				    m_remotingServer.ClientDisconnected -= m_remotingServer_ClientDisconnected;
+				    m_remotingServer.ReceivedClientData -= m_remotingServer_ReceivedClientData;
+                }
+
 				m_remotingServer = value;
-				m_remotingServer.ClientDisconnected += new System.EventHandler`1[[TVA.GenericEventArgs`1[[System.Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_remotingServer_ClientDisconnected);
-				m_remotingServer.ReceivedClientData += new System.EventHandler`1[[TVA.GenericEventArgs`1[[TVA.IdentifiableItem`2[[System.Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_remotingServer_ReceivedClientData);
+
+                if (m_remotingServer != null)
+                {
+                    // Attach events to new instance
+				    m_remotingServer.ClientDisconnected += m_remotingServer_ClientDisconnected;
+				    m_remotingServer.ReceivedClientData += m_remotingServer_ReceivedClientData;
+                }
 			}
 		}
 		
-		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]public TVA.Scheduling.ScheduleManager Scheduler
+		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public ScheduleManager Scheduler
 		{
 			get
 			{
@@ -451,7 +376,8 @@ namespace TVA.Services
 			}
 		}
 		
-		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]public TVA.IO.LogFile StatusLog
+		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public LogFile StatusLog
 		{
 			get
 			{
@@ -459,11 +385,12 @@ namespace TVA.Services
 			}
 		}
 		
-		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]public TVA.ErrorManagement.GlobalExceptionLogger ExceptionLogger
+		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public ErrorLogger ErrorLogger
 		{
 			get
 			{
-				return m_exceptionLogger;
+				return m_errorLogger;
 			}
 		}
 		
@@ -472,7 +399,8 @@ namespace TVA.Services
 		/// </summary>
 		/// <value></value>
 		/// <returns>An instance of System.Collections.Generic.List(Of TVA.Services.IServiceComponent).</returns>
-		[Browsable(false)]public List<IServiceComponent> ServiceComponents
+		[Browsable(false)]
+        public List<IServiceComponent> ServiceComponents
 		{
 			get
 			{
@@ -480,7 +408,8 @@ namespace TVA.Services
 			}
 		}
 		
-		[Browsable(false)]public List<ServiceProcess> Processes
+		[Browsable(false)]
+        public List<ServiceProcess> Processes
 		{
 			get
 			{
@@ -488,31 +417,132 @@ namespace TVA.Services
 			}
 		}
 		
-		public ServiceProcess Processes(string processName)
-		{
-			ServiceProcess match = null;
-			foreach (ServiceProcess process in m_processes)
-			{
-				if (string.Compare(process.name, processName, true) == 0)
-				{
-					match = process;
-					break;
-				}
-			}
-			return match;
-		}
-		
-		[Browsable(false)]public List<ClientInfo> ConnectedClients
+		[Browsable(false)]
+        public List<ClientInfo> ConnectedClients
 		{
 			get
 			{
 				return m_connectedClients;
 			}
 		}
+				
+		[Browsable(false)]
+        public List<ClientRequestInfo> ClientRequestHistory
+		{
+			get
+			{
+				return m_clientRequestHistory;
+			}
+		}
 		
-		public ClientInfo ConnectedClients(Guid clientID)
+		[Browsable(false)]
+        public List<ClientRequestHandlerInfo> ClientRequestHandlers
+		{
+			get
+			{
+				return m_clientRequestHandlers;
+			}
+		}
+		
+		[Browsable(false)]
+        public PerformanceMonitor PerformanceMonitor
+		{
+			get
+			{
+				return m_performanceMonitor;
+			}
+		}
+
+        #endregion
+
+        #region [ Methods ]
+				
+		/// <summary>
+		/// Releases the unmanaged resources used by an instance of the <see cref="ServiceHelper" /> class and optionally releases the managed resources.
+		/// </summary>
+		/// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!m_disposed)
+			{
+			    try
+			    {			
+				    if (disposing)
+				    {
+				        SaveSettings();
+
+                        if (m_statusLog != null)
+                        {
+			                m_statusLog.LogException -= m_statusLog_LogException;
+				            m_statusLog.Dispose();
+                        }
+                        m_statusLog = null;
+
+                        if (m_scheduler != null)
+                        {
+			                m_scheduler.ScheduleDue -= m_scheduler_ScheduleDue;
+				            m_scheduler.Dispose();
+                        }
+                        m_scheduler = null;
+
+                        if (m_errorLogger != null)
+                        {
+				            m_errorLogger.Dispose();
+                        }
+                        m_errorLogger = null;
+
+                        // Detach any remoting server events
+                        RemotingServer = null;
+				    }
+                }
+			    finally
+			    {
+			    	base.Dispose(disposing);    // Call base class Dispose().
+				    m_disposed = true;          // Prevent duplicate dispose.
+			    }
+			}
+		}
+
+        #endregion
+
+        #region [ Operators ]
+
+        #endregion
+
+        #region [ Static ]
+		
+        // Static Fields
+		
+        // Static Constructor
+		
+        // Static Properties
+		
+        // Static Methods
+
+        #endregion
+				
+		#region " Methods "
+		
+		public ServiceProcess Processes(string processName)
+		{
+			ServiceProcess match = null;
+
+			foreach (ServiceProcess process in m_processes)
+			{
+				if (string.Compare(process.Name, processName, true) == 0)
+				{
+					match = process;
+					break;
+				}
+			}
+
+			return match;
+		}
+
+        public ClientInfo ConnectedClients(Guid clientID)
 		{
 			ClientInfo match = null;
+
 			foreach (ClientInfo clientInfo in m_connectedClients)
 			{
 				if (clientID == clientInfo.ClientID)
@@ -521,28 +551,14 @@ namespace TVA.Services
 					break;
 				}
 			}
+
 			return match;
-		}
-		
-		[Browsable(false)]public List<ClientRequestInfo> ClientRequestHistory
-		{
-			get
-			{
-				return m_clientRequestHistory;
-			}
-		}
-		
-		[Browsable(false)]public List<ClientRequestHandlerInfo> ClientRequestHandlers
-		{
-			get
-			{
-				return m_clientRequestHandlers;
-			}
 		}
 		
 		public ClientRequestHandlerInfo ClientRequestHandlers(string requestType)
 		{
 			ClientRequestHandlerInfo match = null;
+
 			foreach (ClientRequestHandlerInfo handler in m_clientRequestHandlers)
 			{
 				if (string.Compare(handler.Command, requestType, true) == 0)
@@ -551,84 +567,74 @@ namespace TVA.Services
 					break;
 				}
 			}
+
 			return match;
 		}
-		
-		[Browsable(false)]public PerformanceMonitor PerformanceMonitor
-		{
-			get
-			{
-				return m_performanceMonitor;
-			}
-		}
-		
-		#endregion
-		
-		#region " Methods "
 		
 		/// <summary>
 		/// To be called when the service is starts (inside the service's OnStart method).
 		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Advanced)]public void OnStart(string[] args)
+		[EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnStart(string[] args)
 		{
-			
 			if (m_service != null)
 			{
-				if (ServiceStartingEvent != null)
-					ServiceStartingEvent(this, new GenericEventArgs<object>(args));
+				if (ServiceStarting != null)
+					ServiceStarting(this, new EventArgs<object>(args));
 				
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowClients)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowSettings)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Processes", "Displays list of service or system processes", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowProcesses)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowSchedules)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowRequestHistory)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowRequestHelp)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Status", "Displays the current service status", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowServiceStatus)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Start", "Start a service or system process", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(StartProcess)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Abort", "Aborts a service or system process", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(AbortProcess)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("UpdateSettings", "Updates service setting in the config file", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(UpdateSettings)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("ReloadSettings", "Reloads services settings from the config file", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ReloadSettings)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Reschedule", "Reschedules a process defined in the service", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(RescheduleProcess)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Unschedule", "Unschedules a process defined in the service", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(UnscheduleProcess)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(SaveSchedules)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(LoadSchedules)));
-				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Command", "Allows for a telnet-like remote command session", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(RemoteCommandSession), false));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", ShowClients));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", ShowSettings));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Processes", "Displays list of service or system processes", ShowProcesses));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", ShowSchedules));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", ShowRequestHistory));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", ShowRequestHelp));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Status", "Displays the current service status", ShowServiceStatus));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Start", "Start a service or system process", StartProcess));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Abort", "Aborts a service or system process", AbortProcess));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("UpdateSettings", "Updates service setting in the config file", UpdateSettings));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("ReloadSettings", "Reloads services settings from the config file", ReloadSettings));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Reschedule", "Reschedules a process defined in the service", RescheduleProcess));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
+				m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Command", "Allows for a telnet-like remote command session", RemoteCommandSession, false));
+
+				// Define "Health" command only if monitoring service health is enabled
 				if (m_monitorServiceHealth)
-				{
-					// Advertise "Health" command only if monitoring service health is enabled.
-					m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", new TVA.Services.ClientRequestHandlerInfo.HandlerMethodSignature(ShowHealthReport)));
-				}
+                {
+                    m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
+                    m_performanceMonitor = new PerformanceMonitor();
+                }
 				
+                // Add scheduler and remoting server as service components by default
 				m_serviceComponents.Add(m_scheduler);
 				m_serviceComponents.Add(m_remotingServer);
-				if (m_monitorServiceHealth)
-				{
-					m_performanceMonitor = new PerformanceMonitor();
-				}
+
+                // JRC: Disabled override of remoting server handshake operations since ServiceHelper doesn't
+                // own remoting server - consumer does - and they may have specially defined transport options
+                //if (m_remotingServer != null)
+                //{
+                //    m_remotingServer.Handshake = true;
+                //    m_remotingServer.HandshakePassphrase = m_service.ServiceName;
+                //}
+
+				// Open the status log
+				if (m_logStatusUpdates)
+					m_statusLog.Open();
 				
-				if (m_remotingServer != null)
-				{
-					m_remotingServer.Handshake = true;
-					m_remotingServer.HandshakePassphrase = m_service.ServiceName;
-				}
-				
+                // Notify all service components of service started
 				foreach (IServiceComponent component in m_serviceComponents)
 				{
 					if (component != null)
-					{
 						component.ServiceStateChanged(ServiceState.Started);
-					}
 				}
 				
-				if (m_logStatusUpdates)
-				{
-					m_statusLog.Open();
-				}
-				
+                // Notify all remote clients that might possibly be connected at of service start (not likely)
 				SendServiceStateChangedResponse(ServiceState.Started);
 				
-				if (ServiceStartedEvent != null)
-					ServiceStartedEvent(this, EventArgs.Empty);
+                // Notify service event consumers that service has started
+				if (ServiceStarted != null)
+					ServiceStarted(this, EventArgs.Empty);
 			}
 			else
 			{
@@ -2350,7 +2356,7 @@ namespace TVA.Services
 			
 		}
 		
-		private void m_statusLog_LogException(object sender, GenericEventArgs<System.Exception> e)
+		private void m_statusLog_LogException(object sender, EventArgs<System.Exception> e)
 		{
 			
 			// We'll let the connected clients know that we encountered an exception while logging the status update.
@@ -2371,7 +2377,7 @@ namespace TVA.Services
 			
 		}
 		
-		private void m_remotingServer_ClientDisconnected(object sender, GenericEventArgs<System.Guid> e)
+		private void m_remotingServer_ClientDisconnected(object sender, EventArgs<System.Guid> e)
 		{
 			
 			ClientInfo disconnectedClient = ConnectedClients(e.Argument);
@@ -2396,7 +2402,7 @@ namespace TVA.Services
 			
 		}
 		
-		private void m_remotingServer_ReceivedClientData(object sender, GenericEventArgs<IdentifiableItem<System.Guid, byte[]>> e)
+		private void m_remotingServer_ReceivedClientData(object sender, EventArgs<IdentifiableItem<System.Guid, byte[]>> e)
 		{
 			
 			ClientInfo client = TVA.Serialization.GetObject<ClientInfo>(e.Argument.Item);
@@ -2427,7 +2433,7 @@ namespace TVA.Services
 						
 						// Notify the consumer about the incoming request from client.
 						if (ReceivedClientRequestEvent != null)
-							ReceivedClientRequestEvent(this, new GenericEventArgs<IdentifiableItem<Guid, ClientRequest>>(new IdentifiableItem<Guid, ClientRequest>(requestSender.ClientID, request)));
+							ReceivedClientRequestEvent(this, new EventArgs<IdentifiableItem<Guid, ClientRequest>>(new IdentifiableItem<Guid, ClientRequest>(requestSender.ClientID, request)));
 						
 						ClientRequestHandlerInfo requestHandler = ClientRequestHandlers(request.Command);
 						if (requestHandler != null)
@@ -2446,7 +2452,7 @@ namespace TVA.Services
 				}
 				catch (Exception ex)
 				{
-					m_exceptionLogger.Log(ex);
+					m_errorLogger.Log(ex);
 					UpdateStatus(requestSender.ClientID, string.Format("Failed to process request \"{0}\" - {1}.", request.Command, ex.Message), UpdateCrlfCount);
 				}
 			}
@@ -2505,11 +2511,11 @@ namespace TVA.Services
 			}
 		}
 		
-		[Obsolete("Property is replaced by ExceptionLogger and will be deleted in version 3.3."), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public TVA.ErrorManagement.GlobalExceptionLogger GlobalExceptionLogger
+		[Obsolete("Property is replaced by ErrorLogger and will be deleted in version 3.3."), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]public TVA.ErrorManagement.GlobalExceptionLogger GlobalExceptionLogger
 		{
 			get
 			{
-				return m_exceptionLogger;
+				return m_errorLogger;
 			}
 		}
 		
