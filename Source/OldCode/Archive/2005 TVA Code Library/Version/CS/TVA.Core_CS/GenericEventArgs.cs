@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  GenericEventArgs.cs
+//  EventArgs.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -23,11 +23,11 @@ namespace TVA
 {
     /// <summary>Generic event arguments class.</summary>
     /// <typeparam name="T">Type of argument for this event arguments instance.</typeparam>
-    public class GenericEventArgs<T> : EventArgs
+    public class EventArgs<T> : EventArgs
     {
         private T m_argument;
 
-        public GenericEventArgs(T argument)
+        public EventArgs(T argument)
         {
             m_argument = argument;
         }
