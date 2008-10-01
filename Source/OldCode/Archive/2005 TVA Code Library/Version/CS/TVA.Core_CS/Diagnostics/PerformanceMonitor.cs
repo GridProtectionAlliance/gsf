@@ -19,7 +19,7 @@
 //  09/22/2008 - James R Carroll
 //       Converted to C#.
 //  10/01/2008 - Pinal C. Patel
-//      Entered code comments.
+//       Entered code comments.
 //
 //*******************************************************************************************************
 
@@ -62,6 +62,7 @@ namespace TVA.Diagnostics
         #region [ Members ]
 
         // Constants
+
         /// <summary>
         /// Default interval of sampling the <see cref="Counters"/>.
         /// </summary>
@@ -145,6 +146,14 @@ namespace TVA.Diagnostics
             m_samplingTimer = new Timer(samplingInterval);
             m_samplingTimer.Elapsed += m_samplingTimer_Elapsed;
             m_samplingTimer.Start();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="PerformanceMonitor"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~PerformanceMonitor()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -336,6 +345,7 @@ namespace TVA.Diagnostics
             get
             {
                 StringBuilder status = new StringBuilder();
+
                 // Status header.
                 status.Append("Counter".PadRight(20));
                 status.Append(' ');
@@ -357,6 +367,7 @@ namespace TVA.Diagnostics
                 status.Append(' ');
                 status.Append(new string('-', 16));
                 status.AppendLine();
+
                 lock (m_counters)
                 {
                     foreach (PerformanceCounter counter in m_counters)
@@ -382,6 +393,52 @@ namespace TVA.Diagnostics
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="PerformanceMonitor"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PerformanceMonitor"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_samplingTimer != null)
+                        {
+                            m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
+                            m_samplingTimer.Dispose();
+                        }
+                        m_samplingTimer = null;
+
+                        lock (m_counters)
+                        {
+                            foreach (PerformanceCounter counter in m_counters)
+                            {
+                                counter.Dispose();
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
         /// <summary>
         /// Adds a <see cref="PerformanceCounter"/> to be monitored.
@@ -446,23 +503,6 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="PerformanceMonitor"/> object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="PerformanceMonitor"/> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~PerformanceMonitor()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
         /// Returns a <see cref="PerformanceCounter"/> object matching the specified counter name.
         /// </summary>
         /// <param name="counterName">Name of the <see cref="PerformanceCounter"/> to be retrieved.</param>
@@ -479,39 +519,6 @@ namespace TVA.Diagnostics
             }
 
             return null;    // No match found.
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="PerformanceMonitor"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
-                        m_samplingTimer.Dispose();
-
-                        lock (m_counters)
-                        {
-                            foreach (PerformanceCounter counter in m_counters)
-                            {
-                                counter.Dispose();
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
         }
 
         private void m_samplingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

@@ -15,7 +15,7 @@
 //  09/22/2008 - James R Carroll
 //       Converted to C#.
 //  09/30/2008 - Pinal C. Patel
-//      Entered code comments.
+//       Entered code comments.
 //
 //*******************************************************************************************************
 
@@ -59,6 +59,7 @@ namespace TVA.Diagnostics
         #region [ Members ]
 
         // Constants
+
         /// <summary>
         /// Default measurement unit of the statistical values.
         /// </summary>
@@ -141,6 +142,14 @@ namespace TVA.Diagnostics
             m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
             m_counterValues = new List<double>();
             Reset();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="PerformanceCounter" /> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~PerformanceCounter()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -293,6 +302,44 @@ namespace TVA.Diagnostics
         #region [ Methods ]
 
         /// <summary>
+        /// Releases all the resources used by the <see cref="PerformanceCounter" /> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PerformanceCounter" /> object and optionally 
+        /// releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_counter != null)
+                        {
+                            m_counter.Dispose();
+                        }
+                        m_counter = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
         /// Obtains a sample value from the <see cref="BaseCounter"/>.
         /// </summary>
         public void Sample()
@@ -320,49 +367,6 @@ namespace TVA.Diagnostics
         public void Reset()
         {
             m_counterValues.Clear();
-        }
-
-        /// <summary>
-        /// Releases all the resources used by the <see cref="PerformanceCounter" /> object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="PerformanceCounter" /> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~PerformanceCounter()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="PerformanceCounter" /> object and optionally 
-        /// releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Reset();
-                        m_counter.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
         }
 
         #endregion
