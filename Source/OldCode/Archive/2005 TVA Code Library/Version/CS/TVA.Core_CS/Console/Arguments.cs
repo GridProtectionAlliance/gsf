@@ -57,14 +57,23 @@ namespace TVA.Console
         /// <example>
         /// This sample shows how to parse a command-line command:
         /// <code>
+        /// using System;
         /// using TVA;
         /// using TVA.Console;
-        /// .
-        /// .
-        /// .
-        /// Arguments args = new Arguments("Sample.txt -wrap=false");
-        /// string file = args["OrderedArgs1"];
-        /// bool wrapText = args["wrap"].ParseBoolean();
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         Arguments args = new Arguments("Sample.txt -wrap=true");
+        ///         string file = args["OrderedArg1"];
+        ///         bool wrapText = args["wrap"].ParseBoolean();
+        ///        
+        ///         Console.WriteLine(string.Format("File: {0}", file));
+        ///         Console.WriteLine(string.Format("Wrap text: {0}", wrapText));
+        ///         Console.ReadLine();
+        ///     }
+        /// }
         /// </code>
         /// </example>
         public Arguments(string commandLine)
@@ -80,14 +89,23 @@ namespace TVA.Console
         /// <example>
         /// This sample shows how to parse a command-line command:
         /// <code>
+        /// using System;
         /// using TVA.Console;
-        /// .
-        /// .
-        /// .
-        /// // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
-        /// Arguments args = new Arguments(Environment.CommandLine, true);
-        /// string doc = args["OrderedArgs1"];
-        /// string theme = args["theme"];
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
+        ///         Arguments args = new Arguments(Environment.CommandLine, true);
+        ///         string doc = args["OrderedArg1"];
+        ///         string theme = args["theme"];
+        ///        
+        ///         Console.WriteLine(string.Format("Document: {0}", doc));
+        ///         Console.WriteLine(string.Format("Application theme: {0}", theme));
+        ///         Console.ReadLine();
+        ///     }
+        /// }
         /// </code>
         /// </example>
         public Arguments(string commandLine, bool skipFirstArgument)
@@ -103,15 +121,25 @@ namespace TVA.Console
         /// <example>
         /// This sample shows how to parse a command-line command:
         /// <code>
+        /// using System;
         /// using TVA;
         /// using TVA.Console;
-        /// .
-        /// .
-        /// .
-        /// Arguments args = new Arguments(@"'c:\docs\' 'c:\copy\' -overwrite=true", "FileSpecs");
-        /// string source = args["FileSpecs1"];
-        /// string destination = args["FileSpecs2"];
-        /// bool overwrite = args["overwrite"].ParseBoolean();
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         Arguments args = new Arguments(@"'c:\docs\' 'c:\copy\' -overwrite=true", "FileSpecs");
+        ///         string source = args["FileSpecs1"];
+        ///         string destination = args["FileSpecs2"];
+        ///         bool overwrite = args["overwrite"].ParseBoolean();
+        ///        
+        ///         Console.WriteLine(string.Format("Source: {0}", source));
+        ///         Console.WriteLine(string.Format("Destination: {0}", destination));
+        ///         Console.WriteLine(string.Format("Overwrite existing: {0}", overwrite));
+        ///         Console.ReadLine();
+        ///     }
+        /// }
         /// </code>
         /// </example>
         public Arguments(string commandLine, string orderedArgID)
@@ -128,14 +156,23 @@ namespace TVA.Console
         /// <example>
         /// This sample shows how to parse a command-line command:
         /// <code>
+        /// using System;
         /// using TVA.Console;
-        /// .
-        /// .
-        /// .
-        /// // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
-        /// Arguments args = new Arguments(Environment.CommandLine, "FileSpecs",true);
-        /// string doc = args["FileSpecs1"];
-        /// string theme = args["theme"];
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
+        ///         Arguments args = new Arguments(Environment.CommandLine, "FileSpecs", true);
+        ///         string doc = args["FileSpecs1"];
+        ///         string theme = args["theme"];
+        ///        
+        ///         Console.WriteLine(string.Format("Document: {0}", doc));
+        ///         Console.WriteLine(string.Format("Application theme: {0}", theme));
+        ///         Console.ReadLine();
+        ///     }
+        /// }
         /// </code>
         /// </example>
         public Arguments(string commandLine, string orderedArgID, bool skipFirstArgument)
