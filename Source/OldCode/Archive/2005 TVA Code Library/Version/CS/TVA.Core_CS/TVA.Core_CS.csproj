@@ -224,9 +224,6 @@
     <Compile Include="Int24.cs" />
     <Compile Include="Scheduling\Schedule.cs" />
     <Compile Include="Scheduling\ScheduleEventArgs.cs" />
-    <Compile Include="Scheduling\ScheduleManager.Designer.cs">
-      <DependentUpon>ScheduleManager.cs</DependentUpon>
-    </Compile>
     <Compile Include="Scheduling\ScheduleManager.cs">
       <SubType>Component</SubType>
     </Compile>

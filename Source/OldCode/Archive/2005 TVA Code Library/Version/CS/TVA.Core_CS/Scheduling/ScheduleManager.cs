@@ -100,7 +100,7 @@ namespace TVA.Scheduling
     /// </para>
     /// </remarks>
     [ToolboxBitmap(typeof(ScheduleManager)), DefaultEvent("ScheduleDue")]
-    public partial class ScheduleManager : IServiceComponent, IPersistSettings, ISupportInitialize
+    public partial class ScheduleManager : Component, IServiceComponent, IPersistSettings, ISupportInitialize
     {
         #region [ Members ]
 
@@ -165,16 +165,38 @@ namespace TVA.Scheduling
 #else
         private Thread m_startTimerThread;
 #endif
+        private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
-        // TODO: Make a single file and move constructor initialization here...
+        public ScheduleManager()
+        {
+            m_enabled = DefaultEnabled;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategoryName = DefaultSettingsCategoryName;
+            m_schedules = new List<Schedule>();
+            m_timer = new System.Timers.Timer(60000);
+            m_timer.Elapsed += m_timer_Elapsed;
+        }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets a list of all the schedules.
+        /// </summary>
+        /// <value></value>
+        /// <returns>A list of the schedules.</returns>
+        public List<Schedule> Schedules
+        {
+            get
+            {
+                return m_schedules;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value indicating whether the schedule manager is enabled.
@@ -283,13 +305,35 @@ namespace TVA.Scheduling
         #region [ Methods ]
 
         /// <summary>
-        /// Gets a list of all the schedules.
+        /// Releases the unmanaged resources used by an instance of the <see cref="ScheduleManager" /> class and optionally releases the managed resources.
         /// </summary>
-        /// <value></value>
-        /// <returns>A list of the schedules.</returns>
-        public List<Schedule> Schedules()
+        /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
         {
-            return m_schedules;
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        Stop();         // Stop the schedule manager.
+                        SaveSettings(); // Saves settings to the config file.
+
+                        if (m_timer != null)
+                        {
+                            m_timer.Elapsed -= m_timer_Elapsed;
+                            m_timer.Dispose();
+                        }
+
+                        m_timer = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         /// <summary>
@@ -341,9 +385,8 @@ namespace TVA.Scheduling
             if (m_enabled)
             {
                 if ((m_startTimerThread != null) && m_startTimerThread.IsAlive)
-                {
                     m_startTimerThread.Abort();
-                }
+
                 if (m_timer.Enabled)
                 {
                     m_timer.Stop();
@@ -378,26 +421,26 @@ namespace TVA.Scheduling
 
         public void ServiceStateChanged(ServiceState newState)
         {
-            if (newState == ServiceState.Started)
+            switch (newState)
             {
-                this.Start();
-            }
-            else if ((newState == ServiceState.Stopped) || (newState == ServiceState.Shutdown))
-            {
-                this.Stop();
-            }
-            else if (newState == ServiceState.Paused)
-            {
-                m_previouslyEnabled = Enabled;
-                this.Enabled = false;
-            }
-            else if (newState == ServiceState.Resumed)
-            {
-                this.Enabled = m_previouslyEnabled;
-            }
-            else if (newState == ServiceState.Shutdown)
-            {
-                this.Dispose();
+                case ServiceState.Started:
+                    Start();
+                    break;
+                case ServiceState.Stopped:
+                    Stop();
+                    break;
+                case ServiceState.Paused:
+                    m_previouslyEnabled = Enabled;
+                    Enabled = false;
+                    break;
+                case ServiceState.Resumed:
+                    Enabled = m_previouslyEnabled;
+                    break;
+                case ServiceState.Shutdown:
+                    Dispose();
+                    break;
+                default:
+                    break;
             }
         }
 
