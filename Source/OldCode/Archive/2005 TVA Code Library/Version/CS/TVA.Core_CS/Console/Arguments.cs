@@ -35,6 +35,48 @@ namespace TVA.Console
     /// <summary>
     /// A class to parse command-line command containing ordered arguments along with optional arguments.
     /// </summary>
+    /// <example>
+    /// This sample shows how to parse a command-line command that does not contain an executable name:
+    /// <code>
+    /// using System;
+    /// using TVA;
+    /// using TVA.Console;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         Arguments args = new Arguments("Sample.txt -wrap=true");
+    ///         string file = args["OrderedArg1"];
+    ///         bool wrapText = args["wrap"].ParseBoolean();
+    ///        
+    ///         Console.WriteLine(string.Format("File: {0}", file));
+    ///         Console.WriteLine(string.Format("Wrap text: {0}", wrapText));
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// </code>
+    /// This sample shows how to parse a command-line command that contains an executable name in it:
+    /// <code>
+    /// using System;
+    /// using TVA.Console;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         // Environment.CommandLine = @"""c:\program files\tva\theme application\app.exe"" Document1.dcx -theme=default"
+    ///         Arguments args = new Arguments(Environment.CommandLine, true);
+    ///         string doc = args["OrderedArg1"];
+    ///         string theme = args["theme"];
+    ///        
+    ///         Console.WriteLine(string.Format("Document: {0}", doc));
+    ///         Console.WriteLine(string.Format("Application theme: {0}", theme));
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     [Serializable()]
     public class Arguments : IEnumerable, IEnumerable<KeyValuePair<string, string>>
     {
@@ -54,28 +96,6 @@ namespace TVA.Console
         /// Initializes a new instance of the <see cref="Arguments"/> class.
         /// </summary>
         /// <param name="commandLine">The command-line command to be parsed.</param>
-        /// <example>
-        /// This sample shows how to parse a command-line command:
-        /// <code>
-        /// using System;
-        /// using TVA;
-        /// using TVA.Console;
-        ///
-        /// class Program
-        /// {
-        ///     static void Main()
-        ///     {
-        ///         Arguments args = new Arguments("Sample.txt -wrap=true");
-        ///         string file = args["OrderedArg1"];
-        ///         bool wrapText = args["wrap"].ParseBoolean();
-        ///        
-        ///         Console.WriteLine(string.Format("File: {0}", file));
-        ///         Console.WriteLine(string.Format("Wrap text: {0}", wrapText));
-        ///         Console.ReadLine();
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
         public Arguments(string commandLine)
             : this(commandLine, false)
         {
@@ -86,28 +106,6 @@ namespace TVA.Console
         /// </summary>
         /// <param name="commandLine">The command-line command to be parsed.</param>
         /// <param name="skipFirstArgument">A boolean value that indicates whether the first argument in the command-line command is to be skipped from being processed.</param>
-        /// <example>
-        /// This sample shows how to parse a command-line command:
-        /// <code>
-        /// using System;
-        /// using TVA.Console;
-        ///
-        /// class Program
-        /// {
-        ///     static void Main()
-        ///     {
-        ///         // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
-        ///         Arguments args = new Arguments(Environment.CommandLine, true);
-        ///         string doc = args["OrderedArg1"];
-        ///         string theme = args["theme"];
-        ///        
-        ///         Console.WriteLine(string.Format("Document: {0}", doc));
-        ///         Console.WriteLine(string.Format("Application theme: {0}", theme));
-        ///         Console.ReadLine();
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
         public Arguments(string commandLine, bool skipFirstArgument)
             : this(commandLine, "OrderedArg", skipFirstArgument)
         {
@@ -118,30 +116,6 @@ namespace TVA.Console
         /// </summary>
         /// <param name="commandLine">The command-line command to be parsed.</param>
         /// <param name="orderedArgID">The prefix to be used in the identifier of ordered arguments.</param>
-        /// <example>
-        /// This sample shows how to parse a command-line command:
-        /// <code>
-        /// using System;
-        /// using TVA;
-        /// using TVA.Console;
-        ///
-        /// class Program
-        /// {
-        ///     static void Main()
-        ///     {
-        ///         Arguments args = new Arguments(@"'c:\docs\' 'c:\copy\' -overwrite=true", "FileSpecs");
-        ///         string source = args["FileSpecs1"];
-        ///         string destination = args["FileSpecs2"];
-        ///         bool overwrite = args["overwrite"].ParseBoolean();
-        ///        
-        ///         Console.WriteLine(string.Format("Source: {0}", source));
-        ///         Console.WriteLine(string.Format("Destination: {0}", destination));
-        ///         Console.WriteLine(string.Format("Overwrite existing: {0}", overwrite));
-        ///         Console.ReadLine();
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
         public Arguments(string commandLine, string orderedArgID)
             : this(commandLine, orderedArgID, false)
         {
@@ -153,28 +127,6 @@ namespace TVA.Console
         /// <param name="commandLine">The command-line command to be parsed.</param>
         /// <param name="orderedArgID">The prefix to be used in the identifier of ordered arguments.</param>
         /// <param name="skipFirstArgument">A boolean value that indicates whether the first argument in the command-line command is to be skipped from being processed.</param>
-        /// <example>
-        /// This sample shows how to parse a command-line command:
-        /// <code>
-        /// using System;
-        /// using TVA.Console;
-        ///
-        /// class Program
-        /// {
-        ///     static void Main()
-        ///     {
-        ///         // Environment.CommandLine = "c:\program files\tva\theme application" Document1.dcx -theme=default
-        ///         Arguments args = new Arguments(Environment.CommandLine, "FileSpecs", true);
-        ///         string doc = args["FileSpecs1"];
-        ///         string theme = args["theme"];
-        ///        
-        ///         Console.WriteLine(string.Format("Document: {0}", doc));
-        ///         Console.WriteLine(string.Format("Application theme: {0}", theme));
-        ///         Console.ReadLine();
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
         public Arguments(string commandLine, string orderedArgID, bool skipFirstArgument)
         {
             Regex spliter = new Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase | RegexOptions.Compiled);
