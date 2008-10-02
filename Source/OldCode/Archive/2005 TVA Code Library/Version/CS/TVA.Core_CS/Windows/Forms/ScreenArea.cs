@@ -23,7 +23,7 @@ using TVA.Drawing;
 
 namespace TVA.Windows.Forms
 {
-    /// <summary>Returns screen area statistics for all connected screens.</summary>
+    /// <summary>Returns screen area statistics and capture functionality for all connected screens.</summary>
     public static class ScreenArea
     {
         /// <summary>
