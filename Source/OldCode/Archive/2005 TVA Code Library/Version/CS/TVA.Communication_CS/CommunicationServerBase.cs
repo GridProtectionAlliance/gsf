@@ -695,7 +695,7 @@ namespace TVA.Communication
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
         /// <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
-        /// <param name="size">The number of bytes to be sent.</param>
+        /// <param name="length">The number of bytes to be sent.</param>
         public virtual void SendTo(Guid clientID, byte[] data, int offset, int length)
         {
             if (m_enabled && m_isRunning)
@@ -754,7 +754,7 @@ namespace TVA.Communication
         /// </summary>
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
         /// <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
-        /// <param name="size">The number of bytes to be sent.</param>
+        /// <param name="length">The number of bytes to be sent.</param>
         public virtual void Multicast(byte[] data, int offset, int length)
         {
             if (m_enabled && m_isRunning)
@@ -1045,6 +1045,8 @@ namespace TVA.Communication
         /// Performs the necessary compression and encryption on the specified data and returns it.
         /// </summary>
         /// <param name="data">The data on which compression and encryption is to be performed.</param>
+        /// <param name="offset">The index into buffer at which the desired data begins.</param>
+        /// <param name="length">The length of the stream in bytes.</param>
         /// <returns>Compressed and encrypted data.</returns>
         /// <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
         protected virtual byte[] GetPreparedData(byte[] data, int offset, int length)
