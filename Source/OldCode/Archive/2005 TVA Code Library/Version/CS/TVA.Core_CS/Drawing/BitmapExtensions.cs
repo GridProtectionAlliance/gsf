@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  Image.cs
+//  BitmapExtensions.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -25,7 +25,10 @@ using System.IO;
 
 namespace TVA.Drawing
 {
-    public static class Image
+    /// <summary>
+    /// Defines extension functions related to bitmap image manipulation.
+    /// </summary>
+    public static class BitmapExtensions
     {
         public static Bitmap Resize(this Bitmap originalImage, Size newSize)
         {
