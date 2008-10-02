@@ -38,6 +38,7 @@ using TVA.Identity;
 using TVA.IO;
 using TVA.Net.Smtp;
 using TVA.Reflection;
+using TVA.Windows.Forms;
 
 namespace TVA.ErrorManagement
 {
@@ -1035,28 +1036,10 @@ namespace TVA.ErrorManagement
                 ApplicationType != ApplicationType.WindowsGui) return;
 
             m_logToScreenshotOK = false;
-
-            Size fullScreen = new Size(0, 0);
-            foreach (Screen myScreen in Screen.AllScreens)
-            {
-                if (fullScreen.IsEmpty)
-                {
-                    fullScreen = myScreen.Bounds.Size;
-                }
-                else
-                {
-                    if (myScreen.Bounds.Location.X > 0)
-                        fullScreen.Width += myScreen.Bounds.Width;
-                    if (myScreen.Bounds.Location.Y > 0)
-                        fullScreen.Height += myScreen.Bounds.Height;
-                }
-            }
-
-            using (Bitmap screenshot = TVA.Drawing.BitmapExtensions.CaptureScreenshot(fullScreen, ImageFormat.Png))
+            using (Bitmap screenshot = ScreenArea.Capture(ImageFormat.Png))
             {
                 screenshot.Save(GetScreenshotFileName());
             }
-
             m_logToScreenshotOK = true;
         }
 

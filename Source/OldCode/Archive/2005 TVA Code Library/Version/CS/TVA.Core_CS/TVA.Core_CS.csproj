@@ -122,6 +122,11 @@
     <Compile Include="IO\Compression\GZip\GzipInputStream.cs" />
     <Compile Include="IO\Compression\GZip\GzipOutputStream.cs" />
     <Content Include="IO\Compression\CopyrightNotice.txt" />
+    <EmbeddedResource Include="Resources\TVA.Scheduling.ScheduleManager.bmp" />
+    <EmbeddedResource Include="Resources\TVA.Net.Ftp.Session.bmp" />
+    <EmbeddedResource Include="Resources\TVA.Net.Ftp.FileWatcher.bmp" />
+    <EmbeddedResource Include="Resources\TVA.IO.LogFile.bmp" />
+    <EmbeddedResource Include="Resources\TVA.ErrorManagement.ErrorLogger.bmp" />
     <Compile Include="IO\Compression\CompressionExceptionBase.cs" />
     <Compile Include="IO\Compression\Tar\InvalidHeaderException.cs" />
     <Compile Include="IO\Compression\Tar\TarArchive.cs" />
@@ -167,6 +172,11 @@
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
     <Compile Include="IO\StreamExtensions.cs" />
@@ -285,10 +295,6 @@
     <Compile Include="Serialization.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\TVA.Scheduling.ScheduleManager.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\TVA.IO.LogFile.bmp" />
     <EmbeddedResource Include="ErrorManagement\ErrorDialog.resx">
       <DependentUpon>ErrorDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -296,9 +302,10 @@
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Embedded Resources\TVA.Net.Ftp.FileWatcher.bmp" />
-    <EmbeddedResource Include="Embedded Resources\TVA.Net.Ftp.Session.bmp" />
-    <EmbeddedResource Include="Embedded Resources\TVA.ErrorManagement.ErrorLogger.bmp" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
