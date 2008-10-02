@@ -34,6 +34,7 @@ namespace TVA.Diagnostics
     /// <summary>
     /// A class that can be used to monitor system and process performance similar to the Performance Monitor utility.
     /// </summary>
+    /// <seealso cref="PerformaceCounter"/>
     /// <example>
     /// This sample shows how to use <see cref="PerformanceMonitor"/> for monitoring application performance:
     /// <code>
