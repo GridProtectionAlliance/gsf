@@ -212,7 +212,7 @@ namespace TVA.IO
         /// </summary>
         /// <value>The encoding to be used to encode text data being exported.</value>
         /// <returns>The encoding to be used to encode text data being exported.</returns>
-        [Browsable(false)]
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
             get
