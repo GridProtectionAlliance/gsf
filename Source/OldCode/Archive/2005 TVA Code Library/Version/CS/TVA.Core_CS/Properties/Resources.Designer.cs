@@ -74,6 +74,13 @@ namespace TVA.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap TVA_IO_MultipleDestinationExporter {
+            get {
+                object obj = ResourceManager.GetObject("TVA_IO_MultipleDestinationExporter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap TVA_Net_Ftp_FileWatcher {
             get {
                 object obj = ResourceManager.GetObject("TVA_Net_Ftp_FileWatcher", resourceCulture);

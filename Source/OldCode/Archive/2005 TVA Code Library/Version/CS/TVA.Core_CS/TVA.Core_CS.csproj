@@ -122,6 +122,8 @@
     <Compile Include="IO\Compression\GZip\GzipInputStream.cs" />
     <Compile Include="IO\Compression\GZip\GzipOutputStream.cs" />
     <Content Include="IO\Compression\CopyrightNotice.txt" />
+    <None Include="Resources\TVA_IO_MultipleDestinationExporter.bmp" />
+    <None Include="Resources\TVA.IO.LogFile1.bmp" />
     <EmbeddedResource Include="Resources\TVA.Scheduling.ScheduleManager.bmp" />
     <EmbeddedResource Include="Resources\TVA.Net.Ftp.Session.bmp" />
     <EmbeddedResource Include="Resources\TVA.Net.Ftp.FileWatcher.bmp" />
@@ -205,7 +207,9 @@
     <Compile Include="IO\LogFile.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IO\MultipleDestinationExporter.cs" />
+    <Compile Include="IO\MultipleDestinationExporter.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Measurements\FrameQueue.cs" />
     <Compile Include="Measurements\MeasurementKey.cs" />
     <Compile Include="PrecisionTimer.cs" />

@@ -124,6 +124,9 @@
   <data name="TVA_IO_LogFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TVA.IO.LogFile.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="TVA_IO_MultipleDestinationExporter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TVA_IO_MultipleDestinationExporter.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="TVA_Net_Ftp_FileWatcher" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TVA.Net.Ftp.FileWatcher.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
