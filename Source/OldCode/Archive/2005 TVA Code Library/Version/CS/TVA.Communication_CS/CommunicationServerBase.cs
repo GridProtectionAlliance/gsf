@@ -831,11 +831,12 @@ namespace TVA.Communication
         /// <param name="clientID">ID of the client to be disconnected.</param>
         public abstract void DisconnectOne(Guid clientID);
 
-        public virtual void ProcessStateChanged(string processName, Services.ProcessState newState)
+        private void ProcessStateChanged(string processName, ProcessState newState)
         {
+            // This component is not abstractly associated with any particular service process...
         }
 
-        public virtual void ServiceStateChanged(ServiceState newState)
+        private virtual void ServiceStateChanged(ServiceState newState)
         {
             switch (newState)
             {

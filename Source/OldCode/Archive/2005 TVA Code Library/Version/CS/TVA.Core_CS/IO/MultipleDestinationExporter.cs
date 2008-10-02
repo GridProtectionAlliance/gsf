@@ -56,8 +56,9 @@ namespace TVA.IO
         private int m_exportTimeout;
         private long m_totalExports;
         private Encoding m_textEncoding;
-        private bool m_disposed;
         private ProcessQueue<byte[]> m_exportQueue;
+        private bool m_previouslyEnabled;
+        private bool m_disposed;
 
         #endregion
 
@@ -165,7 +166,7 @@ namespace TVA.IO
 			{
 				StringBuilder status = new StringBuilder();
 
-				status.Append("     Configuration Section: ");
+				status.Append("     Configuration section: ");
 				status.Append(m_configSection);
 				status.AppendLine();
 				status.Append("       Export destinations: ");
@@ -445,26 +446,25 @@ namespace TVA.IO
             UpdateStatus("Export exception: " + ex.Message);
         }
 
-        public void ProcessStateChanged(string processName, ProcessState newState)
+        private void ProcessStateChanged(string processName, ProcessState newState)
         {
             // This component is not abstractly associated with any particular service process...
         }
 
-        public void ServiceStateChanged(Services.ServiceState newState)
+        private void ServiceStateChanged(Services.ServiceState newState)
         {
-            if (newState == ServiceState.Paused)
+            switch (newState)
             {
-                if (m_exportQueue != null)
-                    m_exportQueue.Stop();
-            }
-            else if (newState == ServiceState.Resumed)
-            {
-                if (m_exportQueue != null)
-                    m_exportQueue.Start();
-            }
-            else if (newState == ServiceState.Shutdown)
-            {
-                Dispose();
+                case ServiceState.Paused:
+                    m_previouslyEnabled = m_exportQueue.Enabled;
+                    m_exportQueue.Enabled = false;
+                    break;
+                case ServiceState.Resumed:
+                    m_exportQueue.Enabled = m_previouslyEnabled;
+                    break;
+                case ServiceState.Shutdown:
+                    Dispose();
+                    break;
             }
         }
 

@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
+using TVA.Services;
 
 namespace TVA.IO
 {
@@ -52,7 +53,7 @@ namespace TVA.IO
     #endregion
 
     [ToolboxBitmap(typeof(LogFile))]
-    public partial class LogFile : IPersistSettings, ISupportInitialize
+    public partial class LogFile : Component, IServiceComponent, IPersistSettings, ISupportInitialize
     {       
         #region [ Members ]
 
@@ -147,13 +148,29 @@ namespace TVA.IO
         private ManualResetEvent m_operationWaitHandle;
         private ProcessQueue<string> m_logEntryQueue;
         private Encoding m_textEncoding;
+        private bool m_previouslyEnabled;
         private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
-        // TODO: Make a single file and move constructor initialization here...
+        public LogFile()
+        {
+            m_name = DefaultName;
+            m_size = DefaultSize;
+            m_autoOpen = DefaultAutoOpen;
+            m_fileFullOperation = DefaultFileFullOperation;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategoryName = DefaultSettingsCategoryName;
+
+            m_operationWaitHandle = new ManualResetEvent(true);
+
+            m_logEntryQueue = ProcessQueue<string>.CreateSynchronousQueue(WriteLogEntries);
+            m_logEntryQueue.ProcessException += m_logEntryQueue_ProcessException;
+
+            m_textEncoding = Encoding.Default;
+        }
 
         #endregion
 
@@ -316,9 +333,81 @@ namespace TVA.IO
             }
         }
 
+        /// <summary>
+        /// Gets the current descriptive status of the log file.
+        /// </summary>
+        /// <returns>The current status of the log file.</returns>
+        [Browsable(false)]
+        public string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append("     Configuration section: ");
+                status.Append(m_settingsCategoryName);
+                status.AppendLine();
+                status.Append("       Maximum export size: ");
+                status.Append(m_size.ToString());
+                status.Append(" MB");
+                status.AppendLine();
+                status.Append("       File full operation: ");
+                status.Append(m_fileFullOperation);
+                status.AppendLine();
+
+                if (m_logEntryQueue != null)
+                    status.Append(m_logEntryQueue.Status);
+
+                return status.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="LogFile"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_logEntryQueue != null)
+                        {
+                            // Flush any unwritten log records
+                            Close(true);
+                            m_logEntryQueue.Dispose();
+                        }
+                        m_logEntryQueue = null;
+
+                        if (m_fileStream != null)
+                        {
+                            m_fileStream.Dispose();
+                        }
+                        m_fileStream = null;
+
+                        if (m_operationWaitHandle != null)
+                        {
+                            m_operationWaitHandle.Close();
+                        }
+                        m_operationWaitHandle = null;
+
+                        SaveSettings(); // Saves settings to the config file.
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
         /// <summary>
         /// Opens the log file if it is closed.
@@ -653,6 +742,28 @@ namespace TVA.IO
         {
             if (LogException != null)
                 LogException(this, new EventArgs<Exception>(ex));
+        }
+
+        private void ProcessStateChanged(string processName, ProcessState newState)
+        {
+            // This component is not abstractly associated with any particular service process...
+        }
+
+        private virtual void ServiceStateChanged(ServiceState newState)
+        {
+            switch (newState)
+            {
+                case ServiceState.Paused:
+                    m_previouslyEnabled = m_logEntryQueue.Enabled;
+                    m_logEntryQueue.Enabled = false;
+                    break;
+                case ServiceState.Resumed:
+                    m_logEntryQueue.Enabled = m_previouslyEnabled;
+                    break;
+                case ServiceState.Shutdown:
+                    Dispose();
+                    break;
+            }
         }
 
         #endregion

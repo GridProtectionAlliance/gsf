@@ -202,9 +202,6 @@
     <Compile Include="IO\IsamDataFileBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IO\LogFile.Designer.cs">
-      <DependentUpon>LogFile.cs</DependentUpon>
-    </Compile>
     <Compile Include="IO\LogFile.cs">
       <SubType>Component</SubType>
     </Compile>
