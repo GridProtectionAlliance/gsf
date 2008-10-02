@@ -13,7 +13,7 @@
 //  04/11/2007 - Pinal C. Patel
 //       Original version of source code generated.
 //  09/12/2008 - J. Ritchie Carroll
-//      Converted to C# (some available as extensions).
+//      Converted to C# extensions.
 //
 //*******************************************************************************************************
 
@@ -131,36 +131,6 @@ namespace TVA.Drawing
             if (disposeOriginal) originalImage.Dispose(); // Dispose the original if requested.
 
             return newImage;
-        }
-
-        public static Bitmap CaptureScreenshot(Size screenshotSize)
-        {
-            return CaptureScreenshot(new Point(0, 0), screenshotSize);
-        }
-
-        public static Bitmap CaptureScreenshot(Point upperLeftCorner, Size screenshotSize)
-        {
-            return CaptureScreenshot(upperLeftCorner, screenshotSize, ImageFormat.Bmp);
-        }
-
-        public static Bitmap CaptureScreenshot(Size screenshotSize, ImageFormat imageFormat)
-        {
-            return CaptureScreenshot(new Point(0, 0), screenshotSize, imageFormat);
-        }
-
-        public static Bitmap CaptureScreenshot(Point upperLeftCorner, Size screenshotSize, ImageFormat imageFormat)
-        {
-            // Create a blank image of the specified size.
-            Bitmap screenshot = new Bitmap(screenshotSize.Width, screenshotSize.Height);
-
-            using (Graphics screenshotGraphic = Graphics.FromImage(screenshot))
-            {
-                // Copy the area of the screen to the blank image.
-                screenshotGraphic.CopyFromScreen(upperLeftCorner.X, upperLeftCorner.Y, 0, 0, screenshotSize);
-            }
-
-            // We'll return the captured screenshot in the specified image format.
-            return ConvertTo(screenshot, imageFormat, true);
         }
     }
 }
