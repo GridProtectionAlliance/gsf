@@ -234,7 +234,7 @@ namespace TVA.Windows.Forms
         /// <summary>
         /// Performs screen capture over all monitors.
         /// </summary>
-        /// <param name="imageFormat">Desired image format for captured bitmap.</param>
+        /// <param name="imageFormat">Desired <see cref="ImageFormat"/> for captured <see cref="Bitmap"/>.</param>
         /// <returns>Captured screen image over all monitors.</returns>
         /// <remarks>
         /// Size captured will be for total width and height of all screens relative to their arrangement.
@@ -246,35 +246,41 @@ namespace TVA.Windows.Forms
         }
 
         /// <summary>
-        /// Performs screen capture for given screen.
+        /// Performs screen capture for given <see cref="Screen"/>.
         /// </summary>
-        /// <returns>Captured screen image for gievn screen.</returns>
+        /// <returns>Captured screen image for given <see cref="Screen"/>.</returns>
         public static Bitmap Capture(Screen captureScreen)
         {
             return Capture(captureScreen.Bounds);
         }
 
         /// <summary>
-        /// Performs screen capture for given screen.
+        /// Performs screen capture for given <see cref="Screen"/> and <see cref="ImageFormat"/>.
         /// </summary>
-        /// <param name="captureScreen">Desired <see cref="System.Windows.Forms.Screen"/> to capture</param>
-        /// <param name="imageFormat">Desired image format for captured bitmap.</param>
-        /// <returns>Captured screen image for gievn screen.</returns>
+        /// <param name="captureScreen">Desired <see cref="Screen"/> to capture</param>
+        /// <param name="imageFormat">Desired <see cref="ImageFormat"/> for captured <see cref="Bitmap"/>.</param>
+        /// <returns>Captured screen image for given <see cref="Screen"/>.</returns>
         public static Bitmap Capture(Screen captureScreen, ImageFormat imageFormat)
         {
             return Capture(captureScreen.Bounds, imageFormat);
         }
 
         /// <summary>
-        /// Performs a screen capture relative to the primary montior starting from the top left corner for the given size.
+        /// Performs a screen capture the given <see cref="Rectangle"/>.
         /// </summary>
-        /// <param name="captureSize"></param>
-        /// <returns></returns>
+        /// <param name="captureArea">Screen area <see cref="Rectangle"/> to capture.</param>
+        /// <returns>Captured screen image for given area.</returns>
         public static Bitmap Capture(Rectangle captureArea)
         {
             return Capture(captureArea, ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// Performs a screen capture the given <see cref="Rectangle"/> and <see cref="ImageFormat"/>.
+        /// </summary>
+        /// <param name="captureArea">Screen area <see cref="Rectangle"/> to capture.</param>
+        /// <param name="imageFormat">Desired <see cref="ImageFormat"/> for captured <see cref="Bitmap"/>.</param>
+        /// <returns>Captured screen image for given area.</returns>
         public static Bitmap Capture(Rectangle captureArea, ImageFormat imageFormat)
         {
             // Create a blank image of the specified size.
