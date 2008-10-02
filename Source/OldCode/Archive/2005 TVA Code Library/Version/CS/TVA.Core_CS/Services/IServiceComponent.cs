@@ -46,8 +46,8 @@ namespace TVA.Services
     #endregion
 
     /// <summary>
-    /// Defines an interface for user created components used by the service so that components can inform service
-    /// of current status and automatically react to service events.
+    /// Defines an interface for components consumed by a Windows Service to allow notification
+    /// and proper response to external service events.
     /// </summary>
     public interface IServiceComponent : IStatusProvider
     {
