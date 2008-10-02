@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  ICommunicationServer.cs
+//  IServer.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -28,7 +28,7 @@ using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
-	public interface ICommunicationServer : IServiceComponent
+	public interface IServer : IServiceComponent
 	{	
 		/// <summary>
 		/// Occurs when the server is started.

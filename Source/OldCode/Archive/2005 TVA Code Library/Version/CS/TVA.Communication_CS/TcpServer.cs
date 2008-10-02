@@ -42,7 +42,7 @@ namespace TVA.Communication
     /// <remarks>
     /// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
     /// </remarks>
-    public class TcpServer : CommunicationServerBase
+    public class TcpServer : ServerBase
     {
         #region [ Members ]
 
@@ -368,11 +368,11 @@ namespace TVA.Communication
                 {
                     // Encrypt the data with private key if SecureSession is enabled.
                     if (SecureSession)
-                        data = CommunicationHelper.EncryptData(data, 0, data.Length, tcpClient.Passphrase, Encryption);
+                        data = Transport.EncryptData(data, 0, data.Length, tcpClient.Passphrase, Encryption);
 
                     // Add payload header if client-server communication is PayloadAware.
                     if (m_payloadAware)
-                        data = PayloadAwareHelper.AddPayloadHeader(data);
+                        data = Payload.AddHeader(data);
 
                     // PCP - 05/30/2007: Using synchronous send to see if asynchronous transmission get out-of-sequence.
                     tcpClient.Client.Send(data);
@@ -399,7 +399,7 @@ namespace TVA.Communication
             {
                 m_configurationData = configurationString.ParseKeyValuePairs();
 
-                if (m_configurationData.ContainsKey("port") && CommunicationHelper.ValidPortNumber(m_configurationData["port"]))
+                if (m_configurationData.ContainsKey("port") && Transport.IsValidPortNumber(m_configurationData["port"]))
                 {
                     // The configuration string must always contain the following:
                     // >> port - Port number on which the server will be listening for incoming connections.
@@ -575,7 +575,7 @@ namespace TVA.Communication
                         // If we don't have the payload size, we'll begin by reading the payload header which
                         // contains the payload size. Once we have the payload size we can receive payload.
                         if (payloadSize == -1)
-                            tcpClient.DataBuffer = new byte[PayloadAwareHelper.PayloadHeaderSize];
+                            tcpClient.DataBuffer = new byte[Payload.HeaderSize];
 
                         // Since TCP is a streaming protocol we can receive a part of the available data and
                         // the remaing data can be received in subsequent receives.
@@ -589,9 +589,9 @@ namespace TVA.Communication
                         {
                             // We don't what the payload size is, so we'll check if the data we have contains
                             // the size of the payload we need to receive.
-                            payloadSize = PayloadAwareHelper.GetPayloadSize(tcpClient.DataBuffer);
+                            payloadSize = Payload.GetSize(tcpClient.DataBuffer);
 
-                            if (payloadSize != -1 && payloadSize <= CommunicationClientBase.MaximumDataSize)
+                            if (payloadSize != -1 && payloadSize <= ClientBase.MaximumDataSize)
                             {
                                 // We have a valid payload size, so we'll create a buffer that's big enough
                                 // to hold the entire payload. Remember, the payload at the most can be as big
@@ -669,7 +669,7 @@ namespace TVA.Communication
                     byte[] myInfo = GetPreparedData(Serialization.GetBytes(new HandshakeMessage(ServerID, tcpClient.Passphrase)));
 
                     if (m_payloadAware)
-                        myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo);
+                        myInfo = Payload.AddHeader(myInfo);
 
                     tcpClient.Client.Send(myInfo);
                     tcpClient.ID = clientInfo.ID;
@@ -699,7 +699,7 @@ namespace TVA.Communication
             {
                 // Decrypt the data usign private key if SecureSession is enabled.
                 if (SecureSession)
-                    data = CommunicationHelper.DecryptData(data, tcpClient.Passphrase, Encryption);
+                    data = Transport.DecryptData(data, tcpClient.Passphrase, Encryption);
 
                 // We'll pass the received data along to the consumer via event.
                 OnReceivedClientData(new IdentifiableItem<Guid, byte[]>(tcpClient.ID, data));

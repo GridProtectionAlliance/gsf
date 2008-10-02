@@ -56,23 +56,23 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommunicationClientBase.cs">
+    <Compile Include="ClientBase.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Enumerations.cs" />
     <Compile Include="FileClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ICommunicationClient.cs" />
-    <Compile Include="ICommunicationServer.cs" />
+    <Compile Include="IClient.cs" />
+    <Compile Include="IServer.cs" />
     <Compile Include="Internal Code\GoodbyeMessage.cs" />
     <Compile Include="Internal Code\HandshakeMessage.cs" />
-    <Compile Include="Internal Code\PayloadAwareHelper.cs" />
+    <Compile Include="Internal Code\Payload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CommunicationServerBase.cs">
+    <Compile Include="ServerBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Internal Code\CommunicationHelper.cs" />
+    <Compile Include="Internal Code\Transport.cs" />
     <Compile Include="StateInfo.cs" />
     <Compile Include="SerialClient.cs">
       <SubType>Component</SubType>
@@ -91,8 +91,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\CommunicationClientBase.bmp" />
-    <EmbeddedResource Include="Embedded Resources\CommunicationServerBase.bmp" />
+    <EmbeddedResource Include="Resources\TVA.Communication.ClientBase.bmp" />
+    <EmbeddedResource Include="Resources\TVA.Communication.ServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

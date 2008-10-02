@@ -41,7 +41,7 @@ namespace TVA.Communication
     /// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
     /// of SecureSession which otherwise is not possible.
     /// </remarks>
-    public class UdpClient : CommunicationClientBase
+    public class UdpClient : ClientBase
     {
         #region [ Members ]
 
@@ -281,7 +281,7 @@ namespace TVA.Communication
                     // Add payload header if client-server communication is PayloadAware.
                     if (m_payloadAware)
                     {
-                        goodbye = PayloadAwareHelper.AddPayloadHeader(goodbye);
+                        goodbye = Payload.AddHeader(goodbye);
                     }
 
                     try
@@ -365,16 +365,16 @@ namespace TVA.Communication
             if (base.Enabled && base.IsConnected)
             {
                 // We'll check if the server is reachable before send data to it.
-                if (m_destinationReachableCheck && !CommunicationHelper.IsDestinationReachable(m_udpServer))
+                if (m_destinationReachableCheck && !Transport.IsDestinationReachable(m_udpServer))
                     return;
 
                 // Encrypt the data with private key if SecureSession is enabled.
                 if (base.SecureSession)
-                    data = CommunicationHelper.EncryptData(data, 0, data.Length, m_udpClient.Passphrase, base.Encryption);
+                    data = Transport.EncryptData(data, 0, data.Length, m_udpClient.Passphrase, base.Encryption);
 
                 // Add payload header if client-server communication is PayloadAware.
                 if (m_payloadAware)
-                    data = PayloadAwareHelper.AddPayloadHeader(data);
+                    data = Payload.AddHeader(data);
 
                 OnSendDataBegin(new IdentifiableItem<Guid, byte[]>(ClientID, data));
 
@@ -418,10 +418,10 @@ namespace TVA.Communication
                 // to the server will fail. So, it becomes the consumer's responsibility to provide a valid server name
                 // and remote port if Handshake is enabled. At the same time when Handshake is enabled, the local port
                 // value will be ignored even if it is specified.
-                if ((m_connectionData.ContainsKey("localport") && CommunicationHelper.ValidPortNumber(m_connectionData["localport"])) ||
+                if ((m_connectionData.ContainsKey("localport") && Transport.IsValidPortNumber(m_connectionData["localport"])) ||
                     (m_connectionData.ContainsKey("server") && !string.IsNullOrEmpty(m_connectionData["server"])) &&
-                    (m_connectionData.ContainsKey("port") && CommunicationHelper.ValidPortNumber(m_connectionData["port"])) ||
-                    m_connectionData.ContainsKey("remoteport") && CommunicationHelper.ValidPortNumber(m_connectionData["remoteport"]))
+                    (m_connectionData.ContainsKey("port") && Transport.IsValidPortNumber(m_connectionData["port"])) ||
+                    m_connectionData.ContainsKey("remoteport") && Transport.IsValidPortNumber(m_connectionData["remoteport"]))
                 {
                     // The connection string must always contain the following:
                     // >> localport - Port number on which the client is listening for data.
@@ -493,7 +493,7 @@ namespace TVA.Communication
                         localPort = int.Parse(m_connectionData["localport"]);
 
                     // Create the server endpoint that will be used for sending data.
-                    m_udpServer = CommunicationHelper.GetIpEndPoint(server, remotePort);
+                    m_udpServer = Transport.GetIpEndPoint(server, remotePort);
 
                     // Create a UDP socket and bind it to a local endpoint for receiving data.
                     m_udpClient = new StateInfo<Socket>();
@@ -556,7 +556,7 @@ namespace TVA.Communication
 
                         // Add payload header if client-server communication is PayloadAware.
                         if (m_payloadAware)
-                            myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo);
+                            myInfo = Payload.AddHeader(myInfo);
 
                         m_udpClient.Client.SendTo(myInfo, m_udpServer);
                     }
@@ -658,11 +658,11 @@ namespace TVA.Communication
                                     // contains the payload size. Remember, only the first datagram (even in a
                                     // series, if the message needs to be broken down into multiple datagrams)
                                     // contains the payload size.
-                                    payloadSize = PayloadAwareHelper.GetPayloadSize(m_udpClient.DataBuffer);
-                                    if (payloadSize != -1 && payloadSize <= CommunicationClientBase.MaximumDataSize)
+                                    payloadSize = Payload.GetSize(m_udpClient.DataBuffer);
+                                    if (payloadSize != -1 && payloadSize <= ClientBase.MaximumDataSize)
                                     {
                                         // We have a valid payload size.
-                                        byte[] payload = PayloadAwareHelper.GetPayload(m_udpClient.DataBuffer);
+                                        byte[] payload = Payload.Retrieve(m_udpClient.DataBuffer);
 
                                         // We'll extract the payload we've received in the datagram. It may be
                                         // that this is the only datagram in the series and that this datagram
@@ -781,7 +781,7 @@ namespace TVA.Communication
                 // Decrypt the data usign private key if SecureSession is enabled.
                 if (base.SecureSession)
                 {
-                    data = CommunicationHelper.DecryptData(data, m_udpClient.Passphrase, base.Encryption);
+                    data = Transport.DecryptData(data, m_udpClient.Passphrase, base.Encryption);
                 }
 
                 // We'll pass the received data along to the consumer via event.

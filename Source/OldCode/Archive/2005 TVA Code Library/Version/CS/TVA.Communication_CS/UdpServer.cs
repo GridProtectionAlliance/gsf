@@ -39,7 +39,7 @@ namespace TVA.Communication
     /// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
     /// of SecureSession which otherwise is not possible.
     /// </remarks>
-    public class UdpServer : CommunicationServerBase
+    public class UdpServer : ServerBase
     {
         #region [ Members ]
 
@@ -278,7 +278,7 @@ namespace TVA.Communication
 
                                 StateInfo<IPEndPoint> udpClient = new StateInfo<IPEndPoint>();
                                 udpClient.ID = Guid.NewGuid();
-                                udpClient.Client = CommunicationHelper.GetIpEndPoint(clientStringSegments[0], clientPort);
+                                udpClient.Client = Transport.GetIpEndPoint(clientStringSegments[0], clientPort);
 
                                 lock (m_udpClients)
                                 {
@@ -334,7 +334,7 @@ namespace TVA.Communication
                     byte[] goodbye = GetPreparedData(Serialization.GetBytes(new GoodbyeMessage(udpClient.ID)));
 
                     if (m_payloadAware)
-                        goodbye = PayloadAwareHelper.AddPayloadHeader(goodbye);
+                        goodbye = Payload.AddHeader(goodbye);
 
                     m_udpServer.Client.SendTo(goodbye, udpClient.Client);
                 }
@@ -413,14 +413,14 @@ namespace TVA.Communication
 
                 if (udpClient != null)
                 {
-                    if (m_destinationReachableCheck && !CommunicationHelper.IsDestinationReachable(udpClient.Client))
+                    if (m_destinationReachableCheck && !Transport.IsDestinationReachable(udpClient.Client))
                         return;
 
                     if (SecureSession)
-                        data = CommunicationHelper.EncryptData(data, 0, data.Length, udpClient.Passphrase, Encryption);
+                        data = Transport.EncryptData(data, 0, data.Length, udpClient.Passphrase, Encryption);
 
                     if (m_payloadAware)
-                        data = PayloadAwareHelper.AddPayloadHeader(data);
+                        data = Payload.AddHeader(data);
 
                     int toIndex = 0;
                     int datagramSize = ReceiveBufferSize;
@@ -455,7 +455,7 @@ namespace TVA.Communication
             {
                 m_configurationData = configurationString.ParseKeyValuePairs();
 
-                if ((m_configurationData.ContainsKey("port") && CommunicationHelper.ValidPortNumber(m_configurationData["port"])) ||
+                if ((m_configurationData.ContainsKey("port") && Transport.IsValidPortNumber(m_configurationData["port"])) ||
                     (m_configurationData.ContainsKey("clients") && !string.IsNullOrEmpty(m_configurationData["clients"])))
                 {
                     // The configuration string must contain either of the following:
@@ -524,10 +524,10 @@ namespace TVA.Communication
 
                         if (payloadSize == -1)
                         {
-                            payloadSize = PayloadAwareHelper.GetPayloadSize(m_udpServer.DataBuffer);
-                            if (payloadSize != -1 && payloadSize <= CommunicationClientBase.MaximumDataSize)
+                            payloadSize = Payload.GetSize(m_udpServer.DataBuffer);
+                            if (payloadSize != -1 && payloadSize <= ClientBase.MaximumDataSize)
                             {
-                                byte[] payload = PayloadAwareHelper.GetPayload(m_udpServer.DataBuffer);
+                                byte[] payload = Payload.Retrieve(m_udpServer.DataBuffer);
 
                                 m_udpServer.DataBuffer = new byte[payloadSize];
                                 Buffer.BlockCopy(payload, 0, m_udpServer.DataBuffer, 0, payload.Length);
@@ -585,7 +585,7 @@ namespace TVA.Communication
                         byte[] myInfo = GetPreparedData(Serialization.GetBytes(new HandshakeMessage(ServerID, udpClient.Passphrase)));
 
                         if (m_payloadAware)
-                            myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo);
+                            myInfo = Payload.AddHeader(myInfo);
 
                         m_udpServer.Client.SendTo(myInfo, udpClient.Client);
 
@@ -614,7 +614,7 @@ namespace TVA.Communication
                 StateInfo<IPEndPoint> sender = null;
                 IPEndPoint senderIPEndPoint = (IPEndPoint)senderEndPoint;
 
-                if (!senderIPEndPoint.Equals(CommunicationHelper.GetIpEndPoint(Dns.GetHostName(), int.Parse(m_configurationData["port"]))))
+                if (!senderIPEndPoint.Equals(Transport.GetIpEndPoint(Dns.GetHostName(), int.Parse(m_configurationData["port"]))))
                 {
                     // The data received is not something that we might have broadcasted.
                     lock (m_udpClients)
@@ -634,7 +634,7 @@ namespace TVA.Communication
                     {
                         if (SecureSession)
                         {
-                            data = CommunicationHelper.DecryptData(data, sender.Passphrase, Encryption);
+                            data = Transport.DecryptData(data, sender.Passphrase, Encryption);
                         }
                         OnReceivedClientData(new IdentifiableItem<Guid, byte[]>(sender.ID, data));
                     }

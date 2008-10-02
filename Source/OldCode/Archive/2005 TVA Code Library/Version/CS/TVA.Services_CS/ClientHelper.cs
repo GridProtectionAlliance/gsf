@@ -89,7 +89,7 @@ namespace TVA.Services
 		private string m_serviceName;
 		private bool m_persistSettings;
 		private string m_settingsCategoryName;		
-		private CommunicationClientBase m_remotingClient;
+		private ClientBase m_remotingClient;
         private bool m_disposed;
 		
         #endregion
@@ -129,7 +129,7 @@ namespace TVA.Services
         /// <value></value>
         /// <returns>An instance of TCP client.</returns>
         [Category("Service")]
-        public CommunicationClientBase RemotingClient
+        public ClientBase RemotingClient
         {
             get
             {

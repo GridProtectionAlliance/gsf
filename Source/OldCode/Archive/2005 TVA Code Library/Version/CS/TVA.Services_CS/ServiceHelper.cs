@@ -150,7 +150,7 @@ namespace TVA.Services
 		private List<ClientRequestHandlerInfo> m_clientRequestHandlers;
 		private PerformanceMonitor m_performanceMonitor;
 		private Process m_remoteCommandProcess;
-		private CommunicationServerBase m_remotingServer;
+		private ServerBase m_remotingServer;
 		private LogFile m_statusLog;
 		private ScheduleManager m_scheduler;
 		private ErrorLogger m_errorLogger;
@@ -341,7 +341,7 @@ namespace TVA.Services
 		/// <value></value>
 		/// <returns>An instance of TCP server.</returns>
 		[Category("Components")]
-        public CommunicationServerBase RemotingServer
+        public ServerBase RemotingServer
 		{
 			get
 			{

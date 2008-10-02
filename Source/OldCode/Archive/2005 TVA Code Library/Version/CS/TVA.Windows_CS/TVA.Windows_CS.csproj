@@ -76,10 +76,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resouces\TVA.Windows.Forms.TVALogo.bmp" />
+    <EmbeddedResource Include="Resources\TVA.Windows.Forms.TVALogo.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resouces\TVA.Windows.Forms.TVADisclaimer.txt" />
+    <EmbeddedResource Include="Resources\TVA.Windows.Forms.TVADisclaimer.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">

@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  ICommunicationClient.cs
+//  IClient.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -31,7 +31,7 @@ using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
-	public interface ICommunicationClient : IServiceComponent
+	public interface IClient : IServiceComponent
 	{		
 		/// <summary>
 		/// Occurs when the client is trying to connect to the server.

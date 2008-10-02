@@ -33,7 +33,7 @@ namespace TVA.Communication
     /// <summary>
     /// Represents a serial port communication client.
     /// </summary>
-    public class SerialClient : CommunicationClientBase
+    public class SerialClient : ClientBase
 	{
         #region [ Members ]
 

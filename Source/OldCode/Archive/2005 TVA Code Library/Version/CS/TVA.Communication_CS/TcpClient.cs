@@ -41,7 +41,7 @@ namespace TVA.Communication
     /// <remarks>
     /// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
     /// </remarks>
-    public class TcpClient : CommunicationClientBase
+    public class TcpClient : ClientBase
     {
         #region [ Members ]
 
@@ -252,11 +252,11 @@ namespace TVA.Communication
             {
                 // Encrypt the data with private key if SecureSession is enabled.
                 if (base.SecureSession)
-                    data = CommunicationHelper.EncryptData(data, 0, data.Length, m_tcpClient.Passphrase, base.Encryption);
+                    data = Transport.EncryptData(data, 0, data.Length, m_tcpClient.Passphrase, base.Encryption);
 
                 // Add payload header if client-server communication is PayloadAware.
                 if (m_payloadAware)
-                    data = PayloadAwareHelper.AddPayloadHeader(data);
+                    data = Payload.AddHeader(data);
 
                 OnSendDataBegin(new IdentifiableItem<Guid, byte[]>(ClientID, data));
 
@@ -283,7 +283,7 @@ namespace TVA.Communication
                 if (m_connectionData.ContainsKey("server") &&
                     !string.IsNullOrEmpty(m_connectionData["server"]) &&
                     m_connectionData.ContainsKey("port") &&
-                    CommunicationHelper.ValidPortNumber(m_connectionData["port"]))
+                    Transport.IsValidPortNumber(m_connectionData["port"]))
                 {
                     // The connection string must always contain the following:
                     // >> server - Name or IP of the machine machine on which the server is running.
@@ -336,7 +336,7 @@ namespace TVA.Communication
                         m_tcpClient.Client.ReceiveTimeout = base.ReceiveTimeout;
 
                     // Attempt to connect the client socket to the remote server endpoint.
-                    m_tcpClient.Client.Connect(CommunicationHelper.GetIpEndPoint(m_connectionData["server"], int.Parse(m_connectionData["port"])));
+                    m_tcpClient.Client.Connect(Transport.GetIpEndPoint(m_connectionData["server"], int.Parse(m_connectionData["port"])));
 
                     if (m_tcpClient.Client.Connected) // Client connected to the server successfully.
                     {
@@ -383,7 +383,7 @@ namespace TVA.Communication
 
                     // Add payload header if client-server communication is PayloadAware.
                     if (m_payloadAware)
-                        myInfo = PayloadAwareHelper.AddPayloadHeader(myInfo);
+                        myInfo = Payload.AddHeader(myInfo);
 
                     m_tcpClient.Client.Send(myInfo);
                 }
@@ -451,7 +451,7 @@ namespace TVA.Communication
                         // If we don't have the payload size, we'll begin by reading the payload header which
                         // contains the payload size. Once we have the payload size we can receive payload.
                         if (payloadSize == -1)
-                            m_tcpClient.DataBuffer = new byte[PayloadAwareHelper.PayloadHeaderSize];
+                            m_tcpClient.DataBuffer = new byte[Payload.HeaderSize];
 
                         try
                         {
@@ -466,9 +466,9 @@ namespace TVA.Communication
                             {
                                 // We don't what the payload size is, so we'll check if the data we have contains
                                 // the size of the payload we need to receive.
-                                payloadSize = PayloadAwareHelper.GetPayloadSize(m_tcpClient.DataBuffer);
+                                payloadSize = Payload.GetSize(m_tcpClient.DataBuffer);
 
-                                if (payloadSize != -1 && payloadSize <= CommunicationClientBase.MaximumDataSize)
+                                if (payloadSize != -1 && payloadSize <= ClientBase.MaximumDataSize)
                                 {
                                     // We have a valid payload size, so we'll create a buffer that's big enough
                                     // to hold the entire payload. Remember, the payload at the most can be as big
@@ -558,7 +558,7 @@ namespace TVA.Communication
                 // Decrypt the data usign private key if SecureSession is enabled.
                 if (base.SecureSession)
                 {
-                    data = CommunicationHelper.DecryptData(data, m_tcpClient.Passphrase, base.Encryption);
+                    data = Transport.DecryptData(data, m_tcpClient.Passphrase, base.Encryption);
                 }
 
                 // We'll pass the received data along to the consumer via event.

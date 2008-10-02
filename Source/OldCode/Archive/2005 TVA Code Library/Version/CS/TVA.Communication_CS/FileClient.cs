@@ -33,7 +33,7 @@ namespace TVA.Communication
     /// <summary>
     /// Represents a File-based communication client.
     /// </summary>
-    public class FileClient : CommunicationClientBase
+    public class FileClient : ClientBase
 	{
         #region [ Members ]
 

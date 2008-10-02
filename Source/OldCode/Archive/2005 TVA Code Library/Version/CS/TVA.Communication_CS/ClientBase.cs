@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  CommunicationClientBase.cs
+//  ClientBase.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -40,8 +40,8 @@ namespace TVA.Communication
     /// <summary>
     /// Represents a client involved in the transportation of data.
     /// </summary>
-    [ToolboxBitmap(typeof(CommunicationClientBase)), DefaultEvent("ReceivedData")]
-    public abstract class CommunicationClientBase : Component, ICommunicationClient, IPersistSettings, ISupportInitialize
+    [ToolboxBitmap(typeof(ClientBase)), DefaultEvent("ReceivedData")]
+    public abstract class ClientBase : Component, IClient, IPersistSettings, ISupportInitialize
 	{	
         #region [ Members ]
 		
@@ -148,7 +148,7 @@ namespace TVA.Communication
 
         #region [ Constructors ]
 
-        protected CommunicationClientBase()
+        protected ClientBase()
 		{
 			// Setup the default values.
 			m_receiveBufferSize = 8192;
@@ -166,18 +166,18 @@ namespace TVA.Communication
 			m_buffer = new byte[m_receiveBufferSize];
 		}
 
-        protected CommunicationClientBase(string connectionString) : this()
+        protected ClientBase(string connectionString) : this()
 		{
 			m_connectionString = connectionString;
 		}
         
         /// <summary>
-        /// Releases unmanaged resources before an instance of the <see cref="CommunicationServerBase" /> class is reclaimed by garbage collection.
+        /// Releases unmanaged resources before an instance of the <see cref="ServerBase" /> class is reclaimed by garbage collection.
         /// </summary>
         /// <remarks>
         /// This method releases unmanaged resources by calling the virtual <see cref="Dispose(bool)" /> method, passing in <strong>false</strong>.
         /// </remarks>
-        ~CommunicationClientBase()
+        ~ClientBase()
         {
             Dispose(false);
         }
@@ -714,7 +714,7 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by an instance of the <see cref="CommunicationServerBase" /> class and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by an instance of the <see cref="ServerBase" /> class and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -1143,7 +1143,7 @@ namespace TVA.Communication
             {
                 if (m_compression != CompressionStrength.NoCompression)
                 {
-                    data = CommunicationHelper.CompressData(data, offset, length, m_compression);
+                    data = Transport.CompressData(data, offset, length, m_compression);
                     offset = 0;
                     length = data.Length;
                 }
@@ -1155,7 +1155,7 @@ namespace TVA.Communication
                     if (string.IsNullOrEmpty(key))
                         key = DefaultCryptoKey;
 
-                    data = CommunicationHelper.EncryptData(data, offset, length, key, m_encryption);
+                    data = Transport.EncryptData(data, offset, length, key, m_encryption);
                 }
 
                 return data;
@@ -1177,12 +1177,12 @@ namespace TVA.Communication
                 if (string.IsNullOrEmpty(key))
                     key = DefaultCryptoKey;
 
-                data = CommunicationHelper.DecryptData(data, key, m_encryption);
+                data = Transport.DecryptData(data, key, m_encryption);
             }
 
             if (m_compression != CompressionStrength.NoCompression)
             {
-                data = CommunicationHelper.UncompressData(data, m_compression);
+                data = Transport.DecompressData(data, m_compression);
             }
 
             return data;
@@ -1211,10 +1211,10 @@ namespace TVA.Communication
         /// <remarks>
         /// Note that typical connection string should be prefixed with a "protocol=tcp", "protocol=udp", "protocol=serial" or "protocol=file"
         /// </remarks>
-        public static ICommunicationClient Create(string connectionString)
+        public static IClient Create(string connectionString)
         {
             Dictionary<string, string> connectionData = connectionString.ParseKeyValuePairs();
-            ICommunicationClient client = null;
+            IClient client = null;
             string protocol;
 
             if (connectionData.TryGetValue("protocol", out protocol))
