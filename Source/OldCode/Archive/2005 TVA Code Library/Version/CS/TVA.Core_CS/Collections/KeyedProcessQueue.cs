@@ -278,20 +278,28 @@ namespace TVA.Collections
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="KeyedProcessQueue"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                base.Dispose(disposing);
-
-                if (disposing)
+                try
                 {
-                    m_processItemFunction = null;
-                    m_canProcessItemFunction = null;
+                    if (disposing)
+                    {
+                        m_processItemFunction = null;
+                        m_canProcessItemFunction = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
-
-            m_disposed = true;
         }
 
         #region [ Item Processing Translation Functions ]

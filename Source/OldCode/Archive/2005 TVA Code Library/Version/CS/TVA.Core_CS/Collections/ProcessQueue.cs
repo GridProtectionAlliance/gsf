@@ -984,33 +984,42 @@ namespace TVA.Collections
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ProcessQueue"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                // Must stop thread, otherwise your app will keep running :)
-                Stop();
-
-                if (disposing)
+                try
                 {
-                    if (m_processTimer != null)
+                    // Must stop thread, otherwise your app will keep running :)
+                    Stop();
+
+                    if (disposing)
                     {
-                        m_processTimer.Elapsed -= ProcessTimerThreadProc;
-                        m_processTimer.Dispose();
+                        if (m_processTimer != null)
+                        {
+                            m_processTimer.Elapsed -= ProcessTimerThreadProc;
+                            m_processTimer.Dispose();
+                        }
+                        m_processTimer = null;
+                        if (m_processQueue != null)
+                        {
+                            m_processQueue.Clear();
+                        }
+                        m_processQueue = null;
+                        m_processItemFunction = null;
+                        m_processItemsFunction = null;
+                        m_canProcessItemFunction = null;
                     }
-                    m_processTimer = null;
-                    if (m_processQueue != null)
-                    {
-                        m_processQueue.Clear();
-                    }
-                    m_processQueue = null;
-                    m_processItemFunction = null;
-                    m_processItemsFunction = null;
-                    m_canProcessItemFunction = null;
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
-
-            m_disposed = true;
         }
 
         /// <summary>
