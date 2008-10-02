@@ -34,11 +34,25 @@ using TVA.Threading;
 namespace TVA.IO
 {
     /// <summary>
-    /// Handles exporting the same file to multiple destinations that are defined in the configuration file.  Includes feature for network share authentication.
+    /// Handles exporting the same file to multiple destinations that are defined in the configuration file.
+    /// Includes feature for network share authentication.
     /// </summary>
     /// <example>
     /// <code>
-    /// 
+    /// string xmlData;
+    /// MultipleDestinationExporter exporter = new MultipleDestinationExporter();
+    /// ExportDestination[] defaultDestinations = new ExportDestination[]
+    /// {
+    ///     new ExportDestination("\\\\server1\\share\\exportFile.xml", true, "domain", "user1", "password1"),
+    ///     new ExportDestination("\\\\server2\\share\\exportFile.xml", true, "domain", "user2", "password2")
+    /// };
+    ///
+    /// // Provide a default set of export destinations to exporter - note that
+    /// // actual exports will always be based on entries in configuration file
+    /// exporter.Initialize(defaultDestinations);
+    ///
+    /// // Export data to all defined locations...
+    /// exporter.ExportData(xmlData);
     /// </code>
     /// </example>
     /// <remarks>
@@ -297,6 +311,7 @@ namespace TVA.IO
             }
         }
 
+        // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
         private void Shutdown()
         {
             if (m_exportQueue != null)
@@ -471,10 +486,10 @@ namespace TVA.IO
                         // We'll wait on file lock for up to one second - then give up with IO exception
                         FilePath.WaitForWriteLock(filename, 1);
                     }
-                    catch (ThreadAbortException ex)
+                    catch (ThreadAbortException)
                     {
                         // This exception is normal, we'll just rethrow this back up the try stack
-                        throw ex;
+                        throw;
                     }
                     catch (FileNotFoundException)
                     {
@@ -495,10 +510,10 @@ namespace TVA.IO
                     // Track successful exports
                     m_totalExports++;
                 }
-                catch (ThreadAbortException ex)
+                catch (ThreadAbortException)
                 {
                     // This exception is normal, we'll just rethrow this back up the try stack
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {
