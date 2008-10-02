@@ -279,7 +279,7 @@ namespace TVA.Collections
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="KeyedProcessQueue"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="KeyedProcessQueue{TKey, TValue}"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)

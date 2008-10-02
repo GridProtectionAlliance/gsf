@@ -228,9 +228,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Scheduling\SchedulePart.cs" />
-    <Compile Include="Parsing\BinaryDataParserBase.Designer.cs">
-      <DependentUpon>BinaryDataParserBase.cs</DependentUpon>
-    </Compile>
     <Compile Include="Parsing\BinaryDataParserBase.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -278,6 +275,8 @@
     <Compile Include="Measurements\TemporalMeasurement.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
+    <Compile Include="Windows\Forms\FormExtensions.cs" />
+    <Compile Include="Windows\Forms\ScreenArea.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="Configuration\IPersistSettings.cs" />
@@ -286,10 +285,10 @@
     <Compile Include="Serialization.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\Scheduling.ScheduleManager.bmp" />
+    <EmbeddedResource Include="Embedded Resources\TVA.Scheduling.ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\IO.LogFile.bmp" />
+    <EmbeddedResource Include="Embedded Resources\TVA.IO.LogFile.bmp" />
     <EmbeddedResource Include="ErrorManagement\ErrorDialog.resx">
       <DependentUpon>ErrorDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -297,9 +296,9 @@
       <DependentUpon>IsamDataFileBase.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Embedded Resources\Net.Ftp.FileWatcher.bmp" />
-    <EmbeddedResource Include="Embedded Resources\Net.Ftp.Session.bmp" />
-    <EmbeddedResource Include="Embedded Resources\ErrorManagement.ErrorLogger.bmp" />
+    <EmbeddedResource Include="Embedded Resources\TVA.Net.Ftp.FileWatcher.bmp" />
+    <EmbeddedResource Include="Embedded Resources\TVA.Net.Ftp.Session.bmp" />
+    <EmbeddedResource Include="Embedded Resources\TVA.ErrorManagement.ErrorLogger.bmp" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">

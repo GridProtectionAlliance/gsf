@@ -33,7 +33,7 @@ using TVA.IO;
 namespace TVA.Parsing
 {
     [DefaultEvent("DataParsed")]
-    public abstract partial class BinaryDataParserBase<TIdentifier, TOutput> : IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
+    public abstract class BinaryDataParserBase<TIdentifier, TOutput> : Component, IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
     {
         #region [ Members ]
 
@@ -79,12 +79,21 @@ namespace TVA.Parsing
         private Dictionary<TIdentifier, TypeInfo> m_outputTypes;
         private Dictionary<Guid, int> m_unparsedDataReuseCount;
         private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
+        private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
-        // TODO: Merge into single Component class moving constructor(s) here...
+        public BinaryDataParserBase()
+        {
+            m_idPropertyName = "ClassID";
+            m_optimizeParsing = true;
+            m_settingsCategoryName = this.GetType().Name;
+            m_outputTypes = new Dictionary<TIdentifier, TypeInfo>();
+            m_unparsedDataReuseCount = new Dictionary<Guid, int>();
+            m_dataQueue = ProcessQueue<IdentifiableItem<Guid, byte[]>>.CreateRealTimeQueue(ParseData);
+        }
 
         #endregion
 
@@ -168,6 +177,35 @@ namespace TVA.Parsing
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="BinaryDataParserBase{TIdentifier, TOutput}"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_dataQueue != null)
+                        {
+                            m_dataQueue.Dispose();
+                        }
+                        m_dataQueue = null;
+
+                        SaveSettings(); // Saves settings to the config file.
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
         /// <summary>
         /// Starts the parser.
