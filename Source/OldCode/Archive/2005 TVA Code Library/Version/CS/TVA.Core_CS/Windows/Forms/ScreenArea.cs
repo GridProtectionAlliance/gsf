@@ -16,7 +16,10 @@
 //*******************************************************************************************************
 
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
+using TVA.Drawing;
 
 namespace TVA.Windows.Forms
 {
@@ -192,43 +195,99 @@ namespace TVA.Windows.Forms
         }
 
         /// <summary>
-        /// Gets the total width of all the screens. This assumes all the screens are arranged horizontally.
+        /// Gets the total width of all the screens relative to their arrangement.
         /// </summary>
-        /// <returns>The total width of all the screens assuming the screens are arranged horizontally.</returns>
+        /// <returns>The total width of all the screens relative to their arrangement.</returns>
         public static int TotalWidth
         {
             get
             {
-                int totalWidth = 0;
-
-                // We just assume screens are side-by-side and get cumulative screen widths
-                foreach (Screen display in Screen.AllScreens)
-                {
-                    totalWidth += display.Bounds.Width;
-                }
-
-                return totalWidth;
+                return RightMostBound - LeftMostBound;
             }
         }
 
         /// <summary>
-        /// Gets the total height of all the screens. This assumes all the screens are arranged vertically.
+        /// Gets the total height of all the screens relative to their arrangement.
         /// </summary>
-        /// <returns>The total width of all the screens assuming the screens are arranged vertically.</returns>
+        /// <returns>The total height of all the screens relative to their arrangement.</returns>
         public static int TotalHeight
         {
             get
             {
-                int totalHeight = 0;
-
-                // We just assume screens are side-by-side and get cumulative screen widths
-                foreach (Screen display in Screen.AllScreens)
-                {
-                    totalHeight += display.Bounds.Height;
-                }
-
-                return totalHeight;
+                return BottomMostBound - TopMostBound;
             }
+        }
+
+        /// <summary>
+        /// Performs screen capture over all monitors.
+        /// </summary>
+        /// <returns>Captured screen image over all monitors.</returns>
+        /// <remarks>
+        /// Size captured will be for total width and height of all screens relative to their arrangement.
+        /// An image square will be created large enough to cover all screens for the capture.
+        /// </remarks>
+        public static Bitmap Capture()
+        {
+            return Capture(new Rectangle(LeftMostBound, TopMostBound, TotalWidth, TotalHeight));
+        }
+
+        /// <summary>
+        /// Performs screen capture over all monitors.
+        /// </summary>
+        /// <param name="imageFormat">Desired image format for captured bitmap.</param>
+        /// <returns>Captured screen image over all monitors.</returns>
+        /// <remarks>
+        /// Size captured will be for total width and height of all screens relative to their arrangement.
+        /// An image square will be created large enough to cover all screens for the capture.
+        /// </remarks>
+        public static Bitmap Capture(ImageFormat imageFormat)
+        {
+            return Capture(new Rectangle(LeftMostBound, TopMostBound, TotalWidth, TotalHeight), imageFormat);
+        }
+
+        /// <summary>
+        /// Performs screen capture for given screen.
+        /// </summary>
+        /// <returns>Captured screen image for gievn screen.</returns>
+        public static Bitmap Capture(Screen captureScreen)
+        {
+            return Capture(captureScreen.Bounds);
+        }
+
+        /// <summary>
+        /// Performs screen capture for given screen.
+        /// </summary>
+        /// <param name="captureScreen">Desired <see cref="System.Windows.Forms.Screen"/> to capture</param>
+        /// <param name="imageFormat">Desired image format for captured bitmap.</param>
+        /// <returns>Captured screen image for gievn screen.</returns>
+        public static Bitmap Capture(Screen captureScreen, ImageFormat imageFormat)
+        {
+            return Capture(captureScreen.Bounds, imageFormat);
+        }
+
+        /// <summary>
+        /// Performs a screen capture relative to the primary montior starting from the top left corner for the given size.
+        /// </summary>
+        /// <param name="captureSize"></param>
+        /// <returns></returns>
+        public static Bitmap Capture(Rectangle captureArea)
+        {
+            return Capture(captureArea, ImageFormat.Bmp);
+        }
+
+        public static Bitmap Capture(Rectangle captureArea, ImageFormat imageFormat)
+        {
+            // Create a blank image of the specified size.
+            Bitmap screenCaptureImage = new Bitmap(captureArea.Width, captureArea.Height);
+
+            using (Graphics screenCaptureGraphics = Graphics.FromImage(screenCaptureImage))
+            {
+                // Copy the area of the screen to the blank image.
+                screenCaptureGraphics.CopyFromScreen(captureArea.X, captureArea.Y, 0, 0, captureArea.Size);
+            }
+
+            // We'll return the captured screenshot in the specified image format.
+            return screenCaptureImage.ConvertTo(imageFormat, true);
         }
     }
 }

@@ -183,7 +183,7 @@
     <Compile Include="Collections\DictionaryList.cs" />
     <Compile Include="Console\Arguments.cs" />
     <Compile Include="Console\Events.cs" />
-    <Compile Include="Drawing\Image.cs" />
+    <Compile Include="Drawing\BitmapExtensions.cs" />
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\IsamDataFileBase.Designer.cs">

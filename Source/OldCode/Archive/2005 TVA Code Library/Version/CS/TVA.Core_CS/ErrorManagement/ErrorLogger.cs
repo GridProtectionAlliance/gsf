@@ -1052,7 +1052,7 @@ namespace TVA.ErrorManagement
                 }
             }
 
-            using (Bitmap screenshot = TVA.Drawing.Image.CaptureScreenshot(fullScreen, ImageFormat.Png))
+            using (Bitmap screenshot = TVA.Drawing.BitmapExtensions.CaptureScreenshot(fullScreen, ImageFormat.Png))
             {
                 screenshot.Save(GetScreenshotFileName());
             }
