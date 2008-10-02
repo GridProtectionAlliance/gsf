@@ -81,7 +81,7 @@ namespace TVA.Diagnostics
         private float m_valueDivisor;
         private int m_samplingWindow;
         private System.Diagnostics.PerformanceCounter m_counter;
-        private List<double> m_counterValues;
+        private List<float> m_samples;
         private bool m_disposed;
 
         #endregion
@@ -139,8 +139,8 @@ namespace TVA.Diagnostics
             this.ValueUnit = valueUnit;
             this.ValueDivisor = valueDivisor;
             m_samplingWindow = DefaultSamplingWindow;
+            m_samples = new List<float>();
             m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
-            m_counterValues = new List<double>();
             Reset();
         }
 
@@ -231,16 +231,28 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
+        /// Gets a list of sampled values from the <see cref="BaseCounter/>.
+        /// </summary>
+        public float[] Samples
+        {
+            get
+            {
+                // Return an array instead of the backing list to prevent modification.
+                return m_samples.ToArray();
+            }
+        }
+
+        /// <summary>
         /// Gets the last sample value from the samples of the <see cref="BaseCounter"/>.
         /// </summary>
         public float LastValue
         {
             get
             {
-                if (m_counterValues.Count <= 0)
+                if (m_samples.Count <= 0)
                     return float.NaN;
                 else
-                    return (float)m_counterValues[m_counterValues.Count - 1] / m_valueDivisor;
+                    return m_samples[m_samples.Count - 1] / m_valueDivisor;
             }
         }
 
@@ -251,10 +263,10 @@ namespace TVA.Diagnostics
         {
             get
             {
-                if (m_counterValues.Count <= 0)
+                if (m_samples.Count <= 0)
                     return float.NaN;
                 else
-                    return (float)m_counterValues.Min() / m_valueDivisor;
+                    return m_samples.Min() / m_valueDivisor;
             }
         }
 
@@ -265,10 +277,10 @@ namespace TVA.Diagnostics
         {
             get
             {
-                if (m_counterValues.Count <= 0)
+                if (m_samples.Count <= 0)
                     return float.NaN;
                 else
-                    return (float)m_counterValues.Max() / m_valueDivisor;
+                    return m_samples.Max() / m_valueDivisor;
             }
         }
 
@@ -279,10 +291,10 @@ namespace TVA.Diagnostics
         {
             get
             {
-                if (m_counterValues.Count <= 0)
+                if (m_samples.Count <= 0)
                     return float.NaN;
                 else
-                    return (float)m_counterValues.Average() / m_valueDivisor;
+                    return m_samples.Average() / m_valueDivisor;
             }
         }
 
@@ -346,10 +358,10 @@ namespace TVA.Diagnostics
         {
             try
             {
-                m_counterValues.Add(m_counter.NextValue());         // Update counter samples.
-                while (m_counterValues.Count > m_samplingWindow)
+                m_samples.Add(m_counter.NextValue());         // Update counter samples.
+                while (m_samples.Count > m_samplingWindow)
                 {
-                    m_counterValues.RemoveAt(0);                    // Keep the counter samples window rolling.
+                    m_samples.RemoveAt(0);                    // Keep the counter samples window rolling.
                 }
             }
             catch (InvalidOperationException)
@@ -366,7 +378,7 @@ namespace TVA.Diagnostics
         /// </summary>
         public void Reset()
         {
-            m_counterValues.Clear();
+            m_samples.Clear();
         }
 
         #endregion
