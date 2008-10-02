@@ -35,7 +35,7 @@ namespace TVA.Windows.Forms
 
         // Fields
         private string m_url;
-        private List<Assembly> m_assemblies;
+        private List<AssemblyInfo> m_assemblies;
 
         #endregion
 
@@ -204,14 +204,14 @@ namespace TVA.Windows.Forms
             // Query all the assemblies used by the calling application.
             if (m_assemblies == null)
             {
-                m_assemblies = new List<Assembly>();
+                m_assemblies = new List<AssemblyInfo>();
                 foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     try
                     {
                         // Ignore assemblies that are not physically accessible from the file system.
                         if (File.Exists(asm.Location))
-                            m_assemblies.Add(asm);
+                            m_assemblies.Add(new AssemblyInfo(asm));
                     }
                     catch
                     {
@@ -247,7 +247,7 @@ namespace TVA.Windows.Forms
             {
                 ListViewAssemblyInfo.Items.Clear();
 
-                NameValueCollection attributes = ((Assembly)ComboBoxAssemblies.SelectedItem).GetAttributes();
+                NameValueCollection attributes = ((AssemblyInfo)ComboBoxAssemblies.SelectedItem).GetAttributes();
 
                 foreach (string key in attributes)
                 {
