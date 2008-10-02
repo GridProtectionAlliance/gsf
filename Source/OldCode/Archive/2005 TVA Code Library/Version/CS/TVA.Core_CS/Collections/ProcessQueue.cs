@@ -676,9 +676,12 @@ namespace TVA.Collections
             {
                 return m_enabled;
             }
-            protected set
+            set
             {
-                m_enabled = value;
+                if (m_enabled && !value)
+                    Stop();
+                else if (!m_enabled && value)
+                    Start();
             }
         }
 

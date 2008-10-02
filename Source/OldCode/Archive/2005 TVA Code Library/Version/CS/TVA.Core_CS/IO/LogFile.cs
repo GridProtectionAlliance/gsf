@@ -744,12 +744,12 @@ namespace TVA.IO
                 LogException(this, new EventArgs<Exception>(ex));
         }
 
-        private void ProcessStateChanged(string processName, ProcessState newState)
+        public virtual void ProcessStateChanged(string processName, ProcessState newState)
         {
             // This component is not abstractly associated with any particular service process...
         }
 
-        private virtual void ServiceStateChanged(ServiceState newState)
+        public virtual void ServiceStateChanged(ServiceState newState)
         {
             switch (newState)
             {

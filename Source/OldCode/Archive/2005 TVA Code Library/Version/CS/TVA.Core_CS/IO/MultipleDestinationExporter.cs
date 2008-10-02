@@ -52,7 +52,7 @@ namespace TVA.IO
 
         // Fields
         private ExportDestination[] m_exportDestinations;
-        private string m_configSection;
+        private string m_settingsCategoryName;
         private int m_exportTimeout;
         private long m_totalExports;
         private Encoding m_textEncoding;
@@ -74,9 +74,9 @@ namespace TVA.IO
         {
         }
 
-        public MultipleDestinationExporter(string configSection, int exportTimeout, ExportDestination[] defaultDestinations)
+        public MultipleDestinationExporter(string settingsCategoryName, int exportTimeout, ExportDestination[] defaultDestinations)
         {
-            m_configSection = configSection;
+            m_settingsCategoryName = settingsCategoryName;
             m_exportTimeout = exportTimeout;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
 
@@ -101,15 +101,15 @@ namespace TVA.IO
         /// <summary>
         /// Defines name of configuration section used to store settings.
         /// </summary>
-        public string ConfigSection
+        public string SettingsCategoryName
         {
             get
             {
-                return m_configSection;
+                return m_settingsCategoryName;
             }
             set
             {
-                m_configSection = value;
+                m_settingsCategoryName = value;
             }
         }
 
@@ -167,7 +167,7 @@ namespace TVA.IO
 				StringBuilder status = new StringBuilder();
 
 				status.Append("     Configuration section: ");
-				status.Append(m_configSection);
+				status.Append(m_settingsCategoryName);
 				status.AppendLine();
 				status.Append("       Export destinations: ");
 				status.Append(m_exportDestinations.ToDelimitedString(','));
@@ -217,7 +217,7 @@ namespace TVA.IO
         {
             get
             {
-                return m_configSection;
+                return m_settingsCategoryName;
             }
         }
 
@@ -283,7 +283,7 @@ namespace TVA.IO
             m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
             m_exportQueue.ProcessException += m_exportQueue_ProcessException;
 
-            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_configSection];
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
 
             if ((defaultDestinations != null) && defaultDestinations.Length > 0)
             {
@@ -446,12 +446,12 @@ namespace TVA.IO
             UpdateStatus("Export exception: " + ex.Message);
         }
 
-        private void ProcessStateChanged(string processName, ProcessState newState)
+        public virtual void ProcessStateChanged(string processName, ProcessState newState)
         {
             // This component is not abstractly associated with any particular service process...
         }
 
-        private void ServiceStateChanged(Services.ServiceState newState)
+        public virtual void ServiceStateChanged(Services.ServiceState newState)
         {
             switch (newState)
             {
