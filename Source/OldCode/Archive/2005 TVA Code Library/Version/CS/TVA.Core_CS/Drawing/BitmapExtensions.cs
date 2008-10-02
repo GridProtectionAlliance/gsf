@@ -14,6 +14,8 @@
 //       Original version of source code generated.
 //  09/12/2008 - J. Ritchie Carroll
 //      Converted to C# extensions.
+//  10/02/2008 - Pinal C Patel
+//       Entered code comments.
 //
 //*******************************************************************************************************
 
@@ -37,7 +39,7 @@ namespace TVA.Drawing
         /// <param name="newSize">The <see cref="Size"/> to which the original image is to be resized.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows show to resize an image:
+        /// This sample shows how to resize an image:
         /// <code>
         /// using System;
         /// using TVA.Drawing;
@@ -155,70 +157,39 @@ namespace TVA.Drawing
             return resizedImage;
         }
 
-        ///// <summary>
-        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
-        ///// </summary>
-        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
-        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
-        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
-        //public static Bitmap Crop(this Bitmap originalImage, Size croppedSize)
-        //{
-        //    return originalImage.Crop(croppedSize, false);
-        //}
-
-        ///// <summary>
-        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
-        ///// </summary>
-        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
-        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
-        ///// <param name="disposeOriginal">true if the original image is to be disposed; otherwise false.</param>
-        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
-        //public static Bitmap Crop(this Bitmap originalImage, Size croppedSize, bool disposeOriginal)
-        //{
-        //    return originalImage.Crop(new Point(0, 0), croppedSize, disposeOriginal);
-        //}
-
-        ///// <summary>
-        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
-        ///// </summary>
-        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
-        ///// <param name="startingPoint">The starting <see cref="Point"/> in the upper-left corner of the original image from where it is to be cropped.</param>
-        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
-        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
-        //public static Bitmap Crop(this Bitmap originalImage, Point startingPoint, Size croppedSize)
-        //{
-        //    return originalImage.Crop(startingPoint, croppedSize, false);
-        //}
-
-        ///// <summary>
-        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
-        ///// </summary>
-        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
-        ///// <param name="startingPoint">The starting <see cref="Point"/> in the upper-left corner of the original image from where it is to be cropped.</param>
-        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
-        ///// <param name="disposeOriginal">true if the original image is to be disposed; otherwise false.</param>
-        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
-        //public static Bitmap Crop(this Bitmap originalImage, Point startingPoint, Size croppedSize, bool disposeOriginal)
-        //{
-        //    // Create a crop of the original image.
-        //    Bitmap croppedImage = new Bitmap(croppedSize.Width, croppedSize.Height, originalImage.PixelFormat);
-        //    croppedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution);
-        //    using (Graphics croppedImageGraphic = Graphics.FromImage(croppedImage))
-        //    {
-        //        croppedImageGraphic.DrawImage(originalImage, 0, 0, new Rectangle(startingPoint, croppedSize), GraphicsUnit.Pixel);
-        //    }
-
-        //    if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
-
-        //    return croppedImage;
-        //}
-
         /// <summary>
         /// Returns a cropped <see cref="Bitmap"/> image of the original.
         /// </summary>
         /// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
         /// <param name="croppedArea">The <see cref="Rectangle"/> area of the original image to be cropped.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        /// <example>
+        /// This sample shows how to crop an image:
+        /// <code>
+        /// using System;
+        /// using System.Drawing;
+        /// using TVA.Drawing;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Load the original image.
+        ///         Bitmap original = (Bitmap)Bitmap.FromFile("Original.jpg");
+        ///         // Crop the original image.
+        ///         Bitmap originalCropped = original.Crop(new Rectangle(0, 0, 300, 300));
+        ///         // Save the cropped image to file.
+        ///         originalCropped.Save("OriginalCropped.jpg");
+        ///         
+        ///         // Clean-up.
+        ///         original.Dispose();
+        ///         originalCropped.Dispose();
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }        
+        /// </code>
+        /// </example>
         public static Bitmap Crop(this Bitmap originalImage, Rectangle croppedArea)
         {
             return Crop(originalImage, croppedArea, false);
@@ -231,6 +202,29 @@ namespace TVA.Drawing
         /// <param name="croppedArea">The <see cref="Rectangle"/> area of the original image to be cropped.</param>
         /// <param name="disposeOriginal">true if the original image is to be disposed after cropping it; otherwise false.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        /// <example>
+        /// This sample shows how to crop an image and dispose the original image that was cropped:
+        /// <code>
+        /// using System;
+        /// using System.Drawing;
+        /// using TVA.Drawing;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Load original, crop it, and dispose original.
+        ///         using (Bitmap cropped = ((Bitmap)Bitmap.FromFile("Original.jpg")).Crop(new Rectangle(0, 0, 300, 300), true))
+        ///         {
+        ///             // Save the cropped image to file.
+        ///             cropped.Save("OriginalCropped.jpg");
+        ///         }
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static Bitmap Crop(this Bitmap originalImage, Rectangle croppedArea, bool disposeOriginal)
         {
             // Create a crop of the original image.
@@ -246,21 +240,85 @@ namespace TVA.Drawing
             return croppedImage;
         }
 
+        /// <summary>
+        /// Converts a <see cref="Bitmap"/> image to the specified <see cref="ImageFormat"/>.
+        /// </summary>
+        /// <param name="originalImage">The <see cref="Bitmap"/> image to be converted.</param>
+        /// <param name="newFormat">The new <see cref="ImageFormat"/> of the image.</param>
+        /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        /// <example>
+        /// This sample shows how to convert the format of an image:
+        /// <code>
+        /// using System;
+        /// using System.Drawing;
+        /// using System.Drawing.Imaging;
+        /// using TVA.Drawing;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Load the original image.
+        ///         Bitmap original = (Bitmap)Bitmap.FromFile("Original.jpg");
+        ///         // Convert the original image.
+        ///         Bitmap originalGif = original.ConvertTo(ImageFormat.Gif);
+        ///         // Save the converted image to file.
+        ///         originalGif.Save("OriginalGif.gif");
+        ///
+        ///         // Clean-up.
+        ///         original.Dispose();
+        ///         originalGif.Dispose();
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat)
         {
             return originalImage.ConvertTo(newFormat, false);
         }
 
+        /// <summary>
+        /// Converts a <see cref="Bitmap"/> image to the specified <see cref="ImageFormat"/>.
+        /// </summary>
+        /// <param name="originalImage">The <see cref="Bitmap"/> image to be converted.</param>
+        /// <param name="newFormat">The new <see cref="ImageFormat"/> of the image.</param>
+        /// <param name="disposeOriginal">true if the original image is to be disposed after converting it; otherwise false.</param>
+        /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        /// <example>
+        /// This sample shows how to convert the format of an image and dispose the original image that was converted:
+        /// <code>
+        /// using System;
+        /// using System.Drawing;
+        /// using System.Drawing.Imaging;
+        /// using TVA.Drawing;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Load original, convert it, and dispose original.
+        ///         using (Bitmap converted = ((Bitmap)Bitmap.FromFile("Original.jpg")).ConvertTo(ImageFormat.Gif))
+        ///         {
+        ///             // Save the converted image to file.
+        ///             converted.Save("OriginalGif.gif");
+        ///         }
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat, bool disposeOriginal)
         {
             Bitmap newImage = null;
             MemoryStream newImageStream = new MemoryStream();
 
-            originalImage.Save(newImageStream, newFormat); // Save image to memory stream in the specified format.
+            originalImage.Save(newImageStream, newFormat);  // Save image to memory stream in the specified format.
+            newImage = new Bitmap(newImageStream);          // Create new bitmap from the memory stream.
 
-            newImage = new Bitmap(newImageStream); // Create new bitmap from the memory stream.
-
-            if (disposeOriginal) originalImage.Dispose(); // Dispose the original if requested.
+            if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
 
             return newImage;
         }
