@@ -96,7 +96,7 @@ namespace TVA.IO.Compression.Zip
 		}
 
 		/// <summary>
-		/// Initialise a new instance of ZipException.
+		/// Initialize a new instance of ZipException.
 		/// </summary>
 		/// <param name="message">A message describing the error.</param>
 		/// <param name="exception">The exception that is the cause of the current exception.</param>

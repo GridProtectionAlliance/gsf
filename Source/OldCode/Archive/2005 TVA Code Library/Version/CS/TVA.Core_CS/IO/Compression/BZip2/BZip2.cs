@@ -119,7 +119,7 @@ namespace TVA.IO.Compression.BZip2
 		}
 
 		/// <summary>
-		/// Initialise a default instance of this class.
+		/// Initialize a default instance of this class.
 		/// </summary>
 		BZip2()
 		{

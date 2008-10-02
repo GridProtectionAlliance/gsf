@@ -76,7 +76,7 @@ namespace TVA.IO.Compression.Zip
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a new instance of <see cref="KeysRequiredEventArgs"></see>
+		/// Initialize a new instance of <see cref="KeysRequiredEventArgs"></see>
 		/// </summary>
 		/// <param name="name">The name of the file for which keys are required.</param>
 		public KeysRequiredEventArgs(string name)
@@ -85,7 +85,7 @@ namespace TVA.IO.Compression.Zip
 		}
 	
 		/// <summary>
-		/// Initialise a new instance of <see cref="KeysRequiredEventArgs"></see>
+		/// Initialize a new instance of <see cref="KeysRequiredEventArgs"></see>
 		/// </summary>
 		/// <param name="name">The name of the file for which keys are required.</param>
 		/// <param name="keyValue">The current key value.</param>
@@ -183,7 +183,7 @@ namespace TVA.IO.Compression.Zip
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a new instance of <see cref="TestStatus"/>
+		/// Initialize a new instance of <see cref="TestStatus"/>
 		/// </summary>
 		/// <param name="file">The <see cref="ZipFile"/> this status applies to.</param>
 		public TestStatus(ZipFile file)
@@ -524,7 +524,7 @@ namespace TVA.IO.Compression.Zip
 		}
 
 		/// <summary>
-		/// Initialises a default <see cref="ZipFile"/> instance with no entries and no file storage.
+		/// Initializes a default <see cref="ZipFile"/> instance with no entries and no file storage.
 		/// </summary>
 		internal ZipFile()
 		{
@@ -3385,7 +3385,7 @@ namespace TVA.IO.Compression.Zip
 		{
 			#region Constructors
 			/// <summary>
-			/// Initialise a <see cref="ZipString"/> with a string.
+			/// Initialize a <see cref="ZipString"/> with a string.
 			/// </summary>
 			/// <param name="comment">The textual string form.</param>
 			public ZipString(string comment)
@@ -3395,7 +3395,7 @@ namespace TVA.IO.Compression.Zip
 			}
 
 			/// <summary>
-			/// Initialise a <see cref="ZipString"/> using a string in its binary 'raw' form.
+			/// Initialize a <see cref="ZipString"/> using a string in its binary 'raw' form.
 			/// </summary>
 			/// <param name="rawString"></param>
 			public ZipString(byte[] rawString)
@@ -3677,7 +3677,7 @@ namespace TVA.IO.Compression.Zip
 		{
 			#region Constructors
 			/// <summary>
-			/// Initialise a new instance of the <see cref="PartialInputStream"/> class.
+			/// Initialize a new instance of the <see cref="PartialInputStream"/> class.
 			/// </summary>
 			/// <param name="zipFile">The <see cref="ZipFile"/> containing the underlying stream to use for IO.</param>
 			/// <param name="start">The start of the partial data.</param>
@@ -3967,7 +3967,7 @@ namespace TVA.IO.Compression.Zip
 	public class StaticDiskDataSource : IStaticDataSource
 	{
 		/// <summary>
-		/// Initialise a new instnace of <see cref="StaticDiskDataSource"/>
+		/// Initialize a new instnace of <see cref="StaticDiskDataSource"/>
 		/// </summary>
 		/// <param name="fileName">The name of the file to obtain data from.</param>
 		public StaticDiskDataSource(string fileName)
@@ -3999,7 +3999,7 @@ namespace TVA.IO.Compression.Zip
 	public class DynamicDiskDataSource : IDynamicDataSource
 	{
 		/// <summary>
-		/// Initialise a default instance of <see cref="DynamicDiskDataSource"/>.
+		/// Initialize a default instance of <see cref="DynamicDiskDataSource"/>.
 		/// </summary>
 		public DynamicDiskDataSource()
 		{

@@ -81,14 +81,14 @@ namespace TVA.IO.Compression.GZip
 #endif
 
 		/// <summary>
-		/// Initialise a new instance of GZipException
+		/// Initialize a new instance of GZipException
 		/// </summary>
 		public GZipException()
 		{
 		}
 		
 		/// <summary>
-		/// Initialise a new instance of GZipException with its message string.
+		/// Initialize a new instance of GZipException with its message string.
 		/// </summary>
 		/// <param name="message">A <see cref="string"/> that describes the error.</param>
 		public GZipException(string message)
@@ -97,7 +97,7 @@ namespace TVA.IO.Compression.GZip
 		}
 		
 		/// <summary>
-		/// Initialise a new instance of <see cref="GZipException"></see>.
+		/// Initialize a new instance of <see cref="GZipException"></see>.
 		/// </summary>
 		/// <param name="message">A <see cref="string"/> that describes the error.</param>
 		/// <param name="innerException">The <see cref="Exception"/> that caused this exception.</param>

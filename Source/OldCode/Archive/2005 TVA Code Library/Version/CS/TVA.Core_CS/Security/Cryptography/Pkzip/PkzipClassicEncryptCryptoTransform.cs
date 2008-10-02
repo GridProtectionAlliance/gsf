@@ -61,7 +61,7 @@ namespace TVA.Security.Cryptography.Pkzip
     class PkzipClassicEncryptCryptoTransform : PkzipClassicCryptoBase, ICryptoTransform
     {
         /// <summary>
-        /// Initialise a new instance of <see cref="PkzipClassicEncryptCryptoTransform"></see>
+        /// Initialize a new instance of <see cref="PkzipClassicEncryptCryptoTransform"></see>
         /// </summary>
         /// <param name="keyBlock">The key block to use.</param>
         internal PkzipClassicEncryptCryptoTransform(byte[] keyBlock)

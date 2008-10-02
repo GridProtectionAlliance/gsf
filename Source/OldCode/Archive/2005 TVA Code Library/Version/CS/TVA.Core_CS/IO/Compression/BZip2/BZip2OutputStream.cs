@@ -107,7 +107,7 @@ namespace TVA.IO.Compression.BZip2
 		}
 		
 		/// <summary>
-		/// Initialise a new instance of the <see cref="BZip2OutputStream"></see> 
+		/// Initialize a new instance of the <see cref="BZip2OutputStream"></see> 
 		/// for the specified stream, using the given blocksize.
 		/// </summary>
 		/// <param name="stream">The stream to write compressed data to.</param>
@@ -1135,7 +1135,7 @@ namespace TVA.IO.Compression.BZip2
 			set up the overshoot area for block.
 			--*/
 			
-			//   if (verbosity >= 4) fprintf ( stderr, "        sort initialise ...\n" );
+			//   if (verbosity >= 4) fprintf ( stderr, "        sort initialize ...\n" );
 			for (i = 0; i < BZip2Constants.OvershootBytes; i++) {
 				block[last + i + 2] = block[(i % (last + 1)) + 1];
 			}

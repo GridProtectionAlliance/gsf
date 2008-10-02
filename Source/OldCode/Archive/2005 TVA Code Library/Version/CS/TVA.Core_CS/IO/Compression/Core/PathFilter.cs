@@ -64,7 +64,7 @@ namespace TVA.IO.Compression.Core
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a new instance of <see cref="PathFilter"></see>.
+		/// Initialize a new instance of <see cref="PathFilter"></see>.
 		/// </summary>
 		/// <param name="filter">The <see cref="NameFilter">filter</see> expression to apply.</param>
 		public PathFilter(string filter)
@@ -105,7 +105,7 @@ namespace TVA.IO.Compression.Core
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a new instance of ExtendedPathFilter.
+		/// Initialize a new instance of ExtendedPathFilter.
 		/// </summary>
 		/// <param name="filter">The filter to apply.</param>
 		/// <param name="minSize">The minimum file size to include.</param>
@@ -119,7 +119,7 @@ namespace TVA.IO.Compression.Core
 		}
 
 		/// <summary>
-		/// Initialise a new instance of ExtendedPathFilter.
+		/// Initialize a new instance of ExtendedPathFilter.
 		/// </summary>
 		/// <param name="filter">The filter to apply.</param>
 		/// <param name="minDate">The minimum <see cref="DateTime"/> to include.</param>
@@ -133,7 +133,7 @@ namespace TVA.IO.Compression.Core
 		}
 
 		/// <summary>
-		/// Initialise a new instance of ExtendedPathFilter.
+		/// Initialize a new instance of ExtendedPathFilter.
 		/// </summary>
 		/// <param name="filter">The filter to apply.</param>
 		/// <param name="minSize">The minimum file size to include.</param>
@@ -281,7 +281,7 @@ namespace TVA.IO.Compression.Core
 	{
 
 		/// <summary>
-		/// Initialise a new instance of NameAndSizeFilter.
+		/// Initialize a new instance of NameAndSizeFilter.
 		/// </summary>
 		/// <param name="filter">The filter to apply.</param>
 		/// <param name="minSize">The minimum file size to include.</param>

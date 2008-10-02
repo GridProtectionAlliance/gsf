@@ -58,36 +58,37 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FormExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScreenArea.cs" />
-    <Compile Include="UI\AboutDialog.Designer.cs">
+    <Compile Include="Forms\AboutDialog.Designer.cs">
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\AboutDialog.cs">
+    <Compile Include="Forms\AboutDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Controls\PropertyGridExtensions.cs" />
+    <Compile Include="Forms\PropertyGridExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\AboutDialog.resx">
+    <EmbeddedResource Include="Forms\AboutDialog.resx">
       <SubType>Designer</SubType>
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resouces\UI.TVALogo.bmp" />
+    <EmbeddedResource Include="Embedded Resouces\TVA.Windows.Forms.TVALogo.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resouces\UI.TVADisclaimer.txt" />
+    <EmbeddedResource Include="Embedded Resouces\TVA.Windows.Forms.TVADisclaimer.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">
       <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
       <Name>TVA.Core_CS</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="UI\Controls\" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

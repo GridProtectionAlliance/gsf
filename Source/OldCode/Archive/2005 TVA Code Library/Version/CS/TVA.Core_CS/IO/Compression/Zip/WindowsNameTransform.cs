@@ -64,7 +64,7 @@ namespace TVA.IO.Compression.Zip
 	public class WindowsNameTransform : INameTransform
 	{
 		/// <summary>
-		/// Initialises a new instance of <see cref="WindowsNameTransform"/>
+		/// Initializes a new instance of <see cref="WindowsNameTransform"/>
 		/// </summary>
 		/// <param name="baseDirectory"></param>
 		public WindowsNameTransform(string baseDirectory)
@@ -77,7 +77,7 @@ namespace TVA.IO.Compression.Zip
 		}
 		
 		/// <summary>
-		/// Initialise a default instance of <see cref="WindowsNameTransform"/>
+		/// Initialize a default instance of <see cref="WindowsNameTransform"/>
 		/// </summary>
 		public WindowsNameTransform()
 		{
@@ -171,7 +171,7 @@ namespace TVA.IO.Compression.Zip
 		}
 
 		/// <summary>
-		/// Initialise static class information.
+		/// Initialize static class information.
 		/// </summary>
 		static WindowsNameTransform()
 		{

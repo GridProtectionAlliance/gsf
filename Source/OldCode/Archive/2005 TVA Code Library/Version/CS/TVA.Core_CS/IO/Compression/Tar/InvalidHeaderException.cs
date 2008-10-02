@@ -82,14 +82,14 @@ namespace TVA.IO.Compression.Tar {
 #endif
 
 		/// <summary>
-		/// Initialise a new instance of the InvalidHeaderException class.
+		/// Initialize a new instance of the InvalidHeaderException class.
 		/// </summary>
 		public InvalidHeaderException()
 		{
 		}
 
 		/// <summary>
-		/// Initialises a new instance of the InvalidHeaderException class with a specified message.
+		/// Initializes a new instance of the InvalidHeaderException class with a specified message.
 		/// </summary>
 		/// <param name="message">Message describing the exception cause.</param>
 		public InvalidHeaderException(string message)
@@ -98,7 +98,7 @@ namespace TVA.IO.Compression.Tar {
 		}
 
 		/// <summary>
-		/// Initialise a new instance of InvalidHeaderException
+		/// Initialize a new instance of InvalidHeaderException
 		/// </summary>
 		/// <param name="message">Message describing the problem.</param>
 		/// <param name="exception">The exception that is the cause of the current exception.</param>

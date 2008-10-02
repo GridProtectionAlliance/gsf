@@ -81,14 +81,14 @@ namespace TVA.IO.Compression.Tar {
 #endif
 
 		/// <summary>
-		/// Initialises a new instance of the TarException class.
+		/// Initializes a new instance of the TarException class.
 		/// </summary>
 		public TarException()
 		{
 		}
 		
 		/// <summary>
-		/// Initialises a new instance of the TarException class with a specified message.
+		/// Initializes a new instance of the TarException class with a specified message.
 		/// </summary>
 		/// <param name="message">The message that describes the error.</param>
 		public TarException(string message)

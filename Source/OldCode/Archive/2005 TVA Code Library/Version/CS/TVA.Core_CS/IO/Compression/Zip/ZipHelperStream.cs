@@ -122,7 +122,7 @@ namespace TVA.IO.Compression.Zip
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise an instance of this class.
+		/// Initialize an instance of this class.
 		/// </summary>
 		/// <param name="name">The name of the file to open.</param>
 		public ZipHelperStream(string name)
@@ -132,7 +132,7 @@ namespace TVA.IO.Compression.Zip
 		}
 
 		/// <summary>
-		/// Initialise a new instance of <see cref="ZipHelperStream"/>.
+		/// Initialize a new instance of <see cref="ZipHelperStream"/>.
 		/// </summary>
 		/// <param name="stream">The stream to use.</param>
 		public ZipHelperStream(Stream stream)

@@ -291,7 +291,7 @@ namespace TVA.IO.Compression.Tar
 
 		#region Constructors
 		/// <summary>
-		/// Initialise a default TarHeader instance
+		/// Initialize a default TarHeader instance
 		/// </summary>
 		public TarHeader()
 		{

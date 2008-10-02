@@ -66,7 +66,7 @@ namespace TVA.Security.Cryptography.Pkzip
 		/// <summary>
 		/// Generates new encryption keys based on given seed
 		/// </summary>
-		/// <param name="seed">The seed value to initialise keys with.</param>
+		/// <param name="seed">The seed value to initialize keys with.</param>
 		/// <returns>A new key value.</returns>
 		static public byte[] GenerateKeys(byte[] seed)
 		{

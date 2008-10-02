@@ -72,7 +72,7 @@ namespace TVA.IO.Compression.Zip.Algorithms.Streams
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a new instance of <see cref="InflaterInputBuffer"/> with a default buffer size
+		/// Initialize a new instance of <see cref="InflaterInputBuffer"/> with a default buffer size
 		/// </summary>
 		/// <param name="stream">The stream to buffer.</param>
 		public InflaterInputBuffer(Stream stream) : this(stream , 4096)
@@ -80,7 +80,7 @@ namespace TVA.IO.Compression.Zip.Algorithms.Streams
 		}
 		
 		/// <summary>
-		/// Initialise a new instance of <see cref="InflaterInputBuffer"/>
+		/// Initialize a new instance of <see cref="InflaterInputBuffer"/>
 		/// </summary>
 		/// <param name="stream">The stream to buffer.</param>
 		/// <param name="bufferSize">The size to use for the buffer</param>

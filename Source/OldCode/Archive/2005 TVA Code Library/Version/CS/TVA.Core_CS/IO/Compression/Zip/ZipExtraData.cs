@@ -90,7 +90,7 @@ namespace TVA.IO.Compression.Zip
 	public class RawTaggedData : ITaggedData
 	{
 		/// <summary>
-		/// Initialise a new instance.
+		/// Initialize a new instance.
 		/// </summary>
 		/// <param name="tag">The tag ID.</param>
 		public RawTaggedData(short tag)
@@ -536,7 +536,7 @@ namespace TVA.IO.Compression.Zip
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a default instance.
+		/// Initialize a default instance.
 		/// </summary>
 		public ZipExtraData()
 		{
@@ -544,7 +544,7 @@ namespace TVA.IO.Compression.Zip
 		}
 
 		/// <summary>
-		/// Initialise with known extra data.
+		/// Initialize with known extra data.
 		/// </summary>
 		/// <param name="data">The extra data.</param>
 		public ZipExtraData(byte[] data)

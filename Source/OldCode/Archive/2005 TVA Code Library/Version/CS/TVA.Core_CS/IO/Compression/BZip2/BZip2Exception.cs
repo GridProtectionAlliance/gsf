@@ -78,14 +78,14 @@ namespace TVA.IO.Compression.BZip2
 		}
 #endif
 		/// <summary>
-		/// Initialise a new instance of BZip2Exception.
+		/// Initialize a new instance of BZip2Exception.
 		/// </summary>
 		public BZip2Exception()
 		{
 		}
 		
 		/// <summary>
-		/// Initialise a new instance of BZip2Exception with its message set to message.
+		/// Initialize a new instance of BZip2Exception with its message set to message.
 		/// </summary>
 		/// <param name="message">The message describing the error.</param>
 		public BZip2Exception(string message) : base(message)
@@ -93,7 +93,7 @@ namespace TVA.IO.Compression.BZip2
 		}
 
 		/// <summary>
-		/// Initialise an instance of BZip2Exception
+		/// Initialize an instance of BZip2Exception
 		/// </summary>
 		/// <param name="message">A message describing the error.</param>
 		/// <param name="exception">The exception that is the cause of the current exception.</param>

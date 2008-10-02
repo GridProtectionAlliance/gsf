@@ -27,7 +27,7 @@ using System.Collections.Specialized;
 using System.Reflection;
 using TVA.Reflection;
 
-namespace TVA.Windows.UI
+namespace TVA.Windows.Forms
 {
     public partial class AboutDialog
     {
@@ -54,8 +54,8 @@ namespace TVA.Windows.UI
             // Set the defaults.
             AssemblyInfo executingAssembly = AssemblyInfo.ExecutingAssembly;
             SetCompanyUrl("http://www.tva.gov");
-            SetCompanyLogo(executingAssembly.GetEmbeddedResource("TVA.Windows.UI.TVALogo.bmp"));
-            SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("TVA.Windows.UI.TVADisclaimer.txt"));
+            SetCompanyLogo(executingAssembly.GetEmbeddedResource("TVA.Windows.Forms.TVALogo.bmp"));
+            SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("TVA.Windows.Forms.TVADisclaimer.txt"));
         }
 
         #endregion

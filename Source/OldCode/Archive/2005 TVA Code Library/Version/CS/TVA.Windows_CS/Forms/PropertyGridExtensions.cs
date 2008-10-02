@@ -21,7 +21,7 @@ using System;
 using System.Windows.Forms;
 using System.Reflection;
 
-namespace TVA.Windows.UI.Controls
+namespace TVA.Windows.Forms
 {
     public static class PropertyGridExtensions
     {

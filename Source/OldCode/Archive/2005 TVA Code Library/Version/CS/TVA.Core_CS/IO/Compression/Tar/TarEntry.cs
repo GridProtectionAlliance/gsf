@@ -86,7 +86,7 @@ namespace TVA.IO.Compression.Tar
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialise a default instance of <see cref="TarEntry"/>.
+		/// Initialize a default instance of <see cref="TarEntry"/>.
 		/// </summary>
 		private TarEntry()
 		{

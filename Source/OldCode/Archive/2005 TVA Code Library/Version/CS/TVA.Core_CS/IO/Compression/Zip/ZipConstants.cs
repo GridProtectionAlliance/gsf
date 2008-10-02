@@ -624,7 +624,7 @@ namespace TVA.IO.Compression.Zip
 
 		
 		/// <summary>
-		/// Initialise default instance of <see cref="ZipConstants">ZipConstants</see>
+		/// Initialize default instance of <see cref="ZipConstants">ZipConstants</see>
 		/// </summary>
 		/// <remarks>
 		/// Private to prevent instances being created.

@@ -123,7 +123,7 @@ namespace TVA.IO.Compression.Tar
 		}
 		
 		/// <summary>
-		/// Initialise a TarArchive for output.
+		/// Initialize a TarArchive for output.
 		/// </summary>
 		/// <param name="stream">The <see cref="TarOutputStream"/> to use for output.</param> 
 		protected TarArchive(TarOutputStream stream)

@@ -226,14 +226,14 @@ namespace TVA.IO.Compression.Zip
 		
 		#region Constructors
 		/// <summary>
-		/// Initialise a default instance of <see cref="FastZip"/>.
+		/// Initialize a default instance of <see cref="FastZip"/>.
 		/// </summary>
 		public FastZip()
 		{
 		}
 
 		/// <summary>
-		/// Initialise a new instance of <see cref="FastZip"/>
+		/// Initialize a new instance of <see cref="FastZip"/>
 		/// </summary>
 		/// <param name="events">The <see cref="FastZipEvents">events</see> to use during operations.</param>
 		public FastZip(FastZipEvents events)

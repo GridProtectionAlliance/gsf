@@ -21,7 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-namespace TVA.Windows.UI
+namespace TVA.Windows.Forms
 {
     public partial class AboutDialog : Form
     {
