@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  PayloadAwareHelper.cs
+//  Payload.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -21,27 +21,27 @@ using System;
 
 namespace TVA.Communication
 {
-	internal static class PayloadAwareHelper
+	internal static class Payload
 	{
 		/// <summary>
 		/// Size of the header that is prepended to the payload. This header has information about the payload.
 		/// </summary>
-		public const int PayloadHeaderSize = 8;
+		public const int HeaderSize = 8;
 		
 		/// <summary>
 		/// A sequence of bytes that will mark the beginning of a payload.
 		/// </summary>
-		public static byte[] PayloadBeginMarker = {0xAA, 0xBB, 0xCC, 0xDD};
+		public static byte[] BeginMarker = {0xAA, 0xBB, 0xCC, 0xDD};
 		
-		public static byte[] AddPayloadHeader(byte[] payload)
+		public static byte[] AddHeader(byte[] payload)
 		{
 			// The resulting buffer will be 8 bytes bigger than the payload.
 
 			// Resulting buffer = 4 bytes for payload marker + 4 bytes for the payload size + The payload
-			byte[] result = new byte[payload.Length + PayloadHeaderSize];
+			byte[] result = new byte[payload.Length + HeaderSize];
 			
 			// First, copy the the payload marker to the buffer.
-			Buffer.BlockCopy(PayloadBeginMarker, 0, result, 0, 4);
+			Buffer.BlockCopy(BeginMarker, 0, result, 0, 4);
 
 			// Then, copy the payload's size to the buffer after the payload marker.
 			Buffer.BlockCopy(BitConverter.GetBytes(payload.Length), 0, result, 4, 4);
@@ -52,23 +52,23 @@ namespace TVA.Communication
 			return result;
 		}
 		
-		public static bool HasPayloadBeginMarker(byte[] data)
+		public static bool HasBeginMarker(byte[] data)
 		{
-			for (int i = 0; i <= PayloadBeginMarker.Length - 1; i++)
+			for (int i = 0; i <= BeginMarker.Length - 1; i++)
 			{
-				if (data[i] != PayloadBeginMarker[i])
+				if (data[i] != BeginMarker[i])
 					return false;
 			}
 
 			return true;
 		}
 		
-		public static int GetPayloadSize(byte[] data)
+		public static int GetSize(byte[] data)
 		{
-			if (data.Length >= PayloadHeaderSize && HasPayloadBeginMarker(data))
+			if (data.Length >= HeaderSize && HasBeginMarker(data))
 			{
 				// We have a buffer that's at least as big as the payload header and has the payload marker.
-				return BitConverter.ToInt32(data, PayloadBeginMarker.Length);
+				return BitConverter.ToInt32(data, BeginMarker.Length);
 			}
 			else
 			{
@@ -76,16 +76,16 @@ namespace TVA.Communication
 			}
 		}
 		
-		public static byte[] GetPayload(byte[] data)
+		public static byte[] Retrieve(byte[] data)
 		{
-			if (data.Length > PayloadHeaderSize && HasPayloadBeginMarker(data))
+			if (data.Length > HeaderSize && HasBeginMarker(data))
 			{
-				int payloadSize = GetPayloadSize(data);
+				int payloadSize = GetSize(data);
 
-				if (payloadSize > (data.Length - PayloadHeaderSize))
-					payloadSize = data.Length - PayloadHeaderSize;
+				if (payloadSize > (data.Length - HeaderSize))
+					payloadSize = data.Length - HeaderSize;
 				
-				return data.CopyBuffer(PayloadHeaderSize, payloadSize);
+				return data.CopyBuffer(HeaderSize, payloadSize);
 			}
 			else
 			{
