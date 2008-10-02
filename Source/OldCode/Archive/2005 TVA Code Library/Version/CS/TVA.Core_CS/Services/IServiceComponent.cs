@@ -49,6 +49,57 @@ namespace TVA.Services
     /// Defines an interface for components consumed by a Windows Service to allow notification
     /// and proper response to external service events.
     /// </summary>
+    /// <remarks>
+    /// Typically components will respond to service events in the following manner:
+    /// <list type="table">
+    /// <listheader>
+    ///     <term>ServiceState</term>
+    ///     <description>Component response</description>
+    /// </listheader>
+    /// <item>
+    ///     <term>Paused</term>
+    ///     <description>Stop processing (e.g., <c>this.Enabled = false;</c>)</description>
+    /// </item>
+    /// <item>
+    ///     <term>Resumed</term>
+    ///     <description>Start processing (e.g., <c>this.Enabled = true;</c>)</description>
+    /// </item>
+    /// <item>
+    ///     <term>Shutdown</term>
+    ///     <description>Dispose component (e.g., <c>this.Dispose();</c>)</description>
+    /// </item>
+    /// </list>
+    /// Note that when component receives a "Paused" notification, the current enabled state
+    /// should be cached so that it can be properly restored when the "Resumed" notification
+    /// is received so that the component won't be started inadvertently.
+    /// <example>
+    /// Here is a typical implementation example:
+    /// <code>
+    /// private bool m_previouslyEnabled;
+    /// .
+    /// .
+    /// .
+    /// public void ServiceStateChanged(ServiceState newState)
+    ///{
+    ///    switch (newState)
+    ///    {
+    ///        case ServiceState.Paused:
+    ///            m_previouslyEnabled = Enabled;
+    ///            Enabled = false;
+    ///            break;
+    ///        case ServiceState.Resumed:
+    ///            Enabled = m_previouslyEnabled;
+    ///            break;
+    ///        case ServiceState.Shutdown:
+    ///            Dispose();
+    ///            break;
+    ///        default:
+    ///            break;
+    ///    }
+    ///}
+    /// </code>
+    /// </example>
+    /// </remarks>
     public interface IServiceComponent : IStatusProvider
     {
         void ServiceStateChanged(ServiceState newState);

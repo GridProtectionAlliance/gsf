@@ -96,7 +96,7 @@ namespace TVA.Scheduling
     /// or a list of elements separated by commas. 
     /// </para>
     /// <para>
-    /// See http://en.wikipedia.org/wiki/Cron for more information.
+    /// See <a href="http://en.wikipedia.org/wiki/Cron" target="_blank">http://en.wikipedia.org/wiki/Cron</a> for more information.
     /// </para>
     /// </remarks>
     [ToolboxBitmap(typeof(ScheduleManager)), DefaultEvent("ScheduleDue")]
@@ -423,12 +423,6 @@ namespace TVA.Scheduling
         {
             switch (newState)
             {
-                case ServiceState.Started:
-                    Start();
-                    break;
-                case ServiceState.Stopped:
-                    Stop();
-                    break;
                 case ServiceState.Paused:
                     m_previouslyEnabled = Enabled;
                     Enabled = false;
