@@ -231,7 +231,7 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
-        /// Gets a list of sampled values from the <see cref="BaseCounter/>.
+        /// Gets a list of sampled values from the <see cref="BaseCounter"/>
         /// </summary>
         public float[] Samples
         {
