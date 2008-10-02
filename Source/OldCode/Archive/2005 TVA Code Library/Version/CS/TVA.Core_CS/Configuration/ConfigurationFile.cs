@@ -41,39 +41,56 @@ namespace TVA.Configuration
     /// <seealso cref="CategorizedSettingsElement"/>
     /// <seealso cref="CategorizedSettingsElementCollection"/>
     /// <example>
-    /// This sample shows how to add settings to the config file:
+    /// This samples shows how to save and read settings from the config file:
     /// <code>
+    /// using System;
+    /// using System.Configuration;
+    /// using TVA;
     /// using TVA.Configuration;
-    /// .
-    /// .
-    /// .
-    /// // Get reference to the application config file.
-    /// ConfigurationFile config = ConfigurationFile.Current;
-    /// // Save passwords to the config file encrypted under a "Passwords" section.
-    /// CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
-    /// passwords.Add("Admin", "Adm1nP4ss", "Password used for performing administrative tasks.", true);
-    /// // Save other settings to the config under a seperate "Monitoring" section.
-    /// CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
-    /// monitoring.Add("RefreshInterval", 5, "Interval in seconds at which the Monitor screen is to be refreshed.");
-    /// monitoring.Add("MessagesSnapshot", 30000, "Maximum messages length to be displayed on the Monitor screen.");
-    /// config.Save();
+    ///
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Get the application config file.
+    ///         ConfigurationFile config = ConfigurationFile.Current;
+    ///         
+    ///         // Get the sections of config file.
+    ///         CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
+    ///         CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
+    ///         KeyValueConfigurationCollection appSettings = config.AppSettings.Settings;
+    ///         ConnectionStringSettingsCollection connStrings = config.ConnectionStrings.ConnectionStrings;
+    ///        
+    ///         // Add settings to the config file under the "appSettings" section.
+    ///         appSettings.Add("SaveSettingOnExit", true.ToString());
+    ///         // Add settings to the config file under the "connectionStrings" section.
+    ///         connStrings.Add(new ConnectionStringSettings("DevSql", "Server=SqlServer;Database=Sandbox;Trusted_Connection=True"));
+    ///         // Add settings to the config (if they don't exist) under a custom "monitoring" section.
+    ///         monitoring.Add("RefreshInterval", 5, "Interval in seconds at which the Monitor screen is to be refreshed.");
+    ///         monitoring.Add("MessagesSnapshot", 30000, "Maximum messages length to be displayed on the Monitor screen.");
+    ///         // Add passwords to the config file encrypted (if they don't exist) under a custom "passwords" section.
+    ///         passwords.Add("Admin", "Adm1nP4ss", "Password used for performing administrative tasks.", true);
+    ///         config.Save();  // Save settings to the config file.
+    ///        
+    ///         // Read saved settings from the config file.
+    ///         bool saveSettingsOnExit = appSettings["SaveSettingOnExit"].Value.ParseBoolean();
+    ///         string devConnectionString = connStrings["DevSql"].ConnectionString;
+    ///         string adminPassword = passwords["Admin"].Value;
+    ///         int refreshInterval = monitoring["RefreshInterval"].ValueAsInt32();
+    ///         int messagesSnapshot = monitoring["MessagesSnapshot"].ValueAsInt32();
+    ///        
+    ///         // Print the retrieved settings to the console.
+    ///         Console.WriteLine(string.Format("SaveSettingOnExit = {0}", saveSettingsOnExit));
+    ///         Console.WriteLine(string.Format("DevSql = {0}", devConnectionString));
+    ///         Console.WriteLine(string.Format("Admin = {0}", adminPassword));
+    ///         Console.WriteLine(string.Format("RefreshInterval = {0}", refreshInterval));
+    ///         Console.WriteLine(string.Format("MessagesSnapshot = {0}", messagesSnapshot));
+    ///        
+    ///         Console.ReadLine();
+    ///     }
+    /// }
     /// </code>
-    /// This sample shows how to read settings from the config file:
-    /// <code>
-    /// using TVA.Configuration;
-    /// .
-    /// .
-    /// .
-    /// // Get reference to the application config file.
-    /// ConfigurationFile config = ConfigurationFile.Current;
-    /// // Read settings from the config file.
-    /// CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
-    /// CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
-    /// string adminPassword = passwords["Admin"].Value;
-    /// int refreshInterval = monitoring["RefreshInterval"].ValueAsInt32();
-    /// int messagesSnapshot = monitoring["MessagesSnapshot"].ValueAsInt32();
-    /// </code>
-    /// This sample shows the content of the config file:
+    /// This sample shows the content of the config file from the sample code above:
     /// <code>
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8"?>
@@ -81,6 +98,9 @@ namespace TVA.Configuration
     ///   <configSections>
     ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
     ///   </configSections>
+    ///   <appSettings>
+    ///     <add key="SaveSettingOnExit" value="True" />
+    ///   </appSettings>
     ///   <categorizedSettings>
     ///     <passwords>
     ///       <add name="Admin" value="C+0j6fE/N0Q9b5xaeDKgvRmSeY9zJkO1EQCr7cHoG3x24tztlbBB54PfWsuMGXc/"
@@ -94,6 +114,9 @@ namespace TVA.Configuration
     ///         encrypted="false" />
     ///     </monitoring>
     ///   </categorizedSettings>
+    ///   <connectionStrings>
+    ///     <add name="DevSql" connectionString="Server=SqlServer;Database=Sandbox;Trusted_Connection=True" />
+    ///   </connectionStrings>
     /// </configuration>
     /// ]]>
     /// </code>
