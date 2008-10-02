@@ -30,15 +30,77 @@ namespace TVA.Drawing
     /// </summary>
     public static class BitmapExtensions
     {
+        /// <summary>
+        /// Returns a resized <see cref="Bitmap"/> image of the original.
+        /// </summary>
+        /// <param name="originalImage">The original <see cref="Bitmap"/> image to be resized.</param>
+        /// <param name="newSize">The <see cref="Size"/> to which the original image is to be resized.</param>
+        /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        /// <example>
+        /// This sample shows show to resize an image:
+        /// <code>
+        /// using System;
+        /// using TVA.Drawing;
+        /// using System.Drawing;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Load the original image.
+        ///         Bitmap original = (Bitmap)Bitmap.FromFile("Original.jpg");
+        ///         // Resize the original image.
+        ///         Bitmap originalResized = original.Resize(new Size(800, 600));
+        ///         // Save the resized image to file.
+        ///         originalResized.Save("OriginalResized.jpg");
+        ///
+        ///         // Clean-up.
+        ///         original.Dispose();
+        ///         originalResized.Dispose();
+        ///         
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static Bitmap Resize(this Bitmap originalImage, Size newSize)
         {
             return originalImage.Resize(newSize, false);
         }
 
+        /// <summary>
+        /// Returns a resized <see cref="Bitmap"/> image of the original.
+        /// </summary>
+        /// <param name="originalImage">The original <see cref="Bitmap"/> image to be resized.</param>
+        /// <param name="newSize">The <see cref="Size"/> to which the original image is to be resized.</param>
+        /// <param name="disposeOriginal">true if the original image is to be disposed after resizing it; otherwise false.</param>
+        /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        /// <example>
+        /// This sample shows how to resize an image and dispose the original image that was resized:
+        /// <code>
+        /// using System;
+        /// using System.Drawing;
+        /// using TVA.Drawing;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Load original, resize it, and dispose original.
+        ///         using (Bitmap resized = ((Bitmap)Bitmap.FromFile("Original.jpg")).Resize(new Size(800, 600), true))
+        ///         {
+        ///             // Save the resized image to file.
+        ///             resized.Save("OriginalResized.jpg");
+        ///         }
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static Bitmap Resize(this Bitmap originalImage, Size newSize, bool disposeOriginal)
         {
             Bitmap resizedImage = null;
-            Graphics resizedImageGraphic = null;
 
             if (!(originalImage.PixelFormat == PixelFormat.Format1bppIndexed ||
                   originalImage.PixelFormat == PixelFormat.Format4bppIndexed ||
@@ -55,64 +117,131 @@ namespace TVA.Drawing
                 if (originalImage.Width > originalImage.Height)
                 {
                     // Original image has landscape orientation.
-                    resizedImage = new Bitmap(newSize.Width, (int)System.Math.Floor((double)(newSize.Width * originalImage.Height) / (double)originalImage.Width), originalImage.PixelFormat);
+                    resizedImage = new Bitmap(newSize.Width, 
+                                              (int)Math.Floor((double)(newSize.Width * originalImage.Height) / (double)originalImage.Width), 
+                                              originalImage.PixelFormat);
                 }
                 else if (originalImage.Width < originalImage.Height)
                 {
                     // Original image has portrait orientation.
-                    resizedImage = new Bitmap(newSize.Height, (int)System.Math.Floor((double)(newSize.Height * originalImage.Height) / (double)originalImage.Width), originalImage.PixelFormat);
+                    resizedImage = new Bitmap(newSize.Height, 
+                                              (int)Math.Floor((double)(newSize.Height * originalImage.Height) / (double)originalImage.Width), 
+                                              originalImage.PixelFormat);
                 }
                 else
                 {
                     // Original image is square.
                     resizedImage = new Bitmap(newSize.Width, newSize.Width, originalImage.PixelFormat);
                 }
-
-                // Get the drawing canvas from bitmap.
-                resizedImageGraphic = Graphics.FromImage(resizedImage);
+                // Match the resolution of resized image to the original.
+                resizedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution);
 
                 // Create high quality resized image.
-                resizedImageGraphic.CompositingQuality = CompositingQuality.HighQuality;
-                resizedImageGraphic.SmoothingMode = SmoothingMode.HighQuality;
-                resizedImageGraphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                resizedImageGraphic.DrawImage(originalImage, 0, 0, resizedImage.Width, resizedImage.Height);
-                resizedImageGraphic.Dispose();
+                using (Graphics resizedImageGraphic = Graphics.FromImage(resizedImage))
+                {
+                    resizedImageGraphic.CompositingQuality = CompositingQuality.HighQuality;
+                    resizedImageGraphic.SmoothingMode = SmoothingMode.HighQuality;
+                    resizedImageGraphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    resizedImageGraphic.DrawImage(originalImage, 0, 0, resizedImage.Width, resizedImage.Height);                   
+                }
+
+                if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
             }
             else
             {
                 throw (new NotSupportedException(string.Format("Images of pixel format \"{0}\" cannot be resized.", originalImage.PixelFormat.ToString())));
             }
 
-            if (disposeOriginal) originalImage.Dispose();
-
             return resizedImage;
         }
 
-        public static Bitmap Crop(this Bitmap originalImage, Size newSize)
+        ///// <summary>
+        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
+        ///// </summary>
+        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
+        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
+        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
+        //public static Bitmap Crop(this Bitmap originalImage, Size croppedSize)
+        //{
+        //    return originalImage.Crop(croppedSize, false);
+        //}
+
+        ///// <summary>
+        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
+        ///// </summary>
+        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
+        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
+        ///// <param name="disposeOriginal">true if the original image is to be disposed; otherwise false.</param>
+        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
+        //public static Bitmap Crop(this Bitmap originalImage, Size croppedSize, bool disposeOriginal)
+        //{
+        //    return originalImage.Crop(new Point(0, 0), croppedSize, disposeOriginal);
+        //}
+
+        ///// <summary>
+        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
+        ///// </summary>
+        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
+        ///// <param name="startingPoint">The starting <see cref="Point"/> in the upper-left corner of the original image from where it is to be cropped.</param>
+        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
+        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
+        //public static Bitmap Crop(this Bitmap originalImage, Point startingPoint, Size croppedSize)
+        //{
+        //    return originalImage.Crop(startingPoint, croppedSize, false);
+        //}
+
+        ///// <summary>
+        ///// Returns a cropped <see cref="Bitmap"/> image of the original.
+        ///// </summary>
+        ///// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
+        ///// <param name="startingPoint">The starting <see cref="Point"/> in the upper-left corner of the original image from where it is to be cropped.</param>
+        ///// <param name="croppedSize">The <see cref="Size"/> to which the original image is to be cropped.</param>
+        ///// <param name="disposeOriginal">true if the original image is to be disposed; otherwise false.</param>
+        ///// <returns>A <see cref="Bitmap"/> instance.</returns>
+        //public static Bitmap Crop(this Bitmap originalImage, Point startingPoint, Size croppedSize, bool disposeOriginal)
+        //{
+        //    // Create a crop of the original image.
+        //    Bitmap croppedImage = new Bitmap(croppedSize.Width, croppedSize.Height, originalImage.PixelFormat);
+        //    croppedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution);
+        //    using (Graphics croppedImageGraphic = Graphics.FromImage(croppedImage))
+        //    {
+        //        croppedImageGraphic.DrawImage(originalImage, 0, 0, new Rectangle(startingPoint, croppedSize), GraphicsUnit.Pixel);
+        //    }
+
+        //    if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
+
+        //    return croppedImage;
+        //}
+
+        /// <summary>
+        /// Returns a cropped <see cref="Bitmap"/> image of the original.
+        /// </summary>
+        /// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
+        /// <param name="croppedArea">The <see cref="Rectangle"/> area of the original image to be cropped.</param>
+        /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        public static Bitmap Crop(this Bitmap originalImage, Rectangle croppedArea)
         {
-            return originalImage.Crop(newSize, false);
+            return Crop(originalImage, croppedArea, false);
         }
 
-        public static Bitmap Crop(this Bitmap originalImage, Size newSize, bool disposeOriginal)
+        /// <summary>
+        /// Returns a cropped <see cref="Bitmap"/> image of the original.
+        /// </summary>
+        /// <param name="originalImage">The original <see cref="Bitmap"/> image to be cropped.</param>
+        /// <param name="croppedArea">The <see cref="Rectangle"/> area of the original image to be cropped.</param>
+        /// <param name="disposeOriginal">true if the original image is to be disposed after cropping it; otherwise false.</param>
+        /// <returns>A <see cref="Bitmap"/> instance.</returns>
+        public static Bitmap Crop(this Bitmap originalImage, Rectangle croppedArea, bool disposeOriginal)
         {
-            return originalImage.Crop(new Point(0, 0), newSize, disposeOriginal);
-        }
-
-        public static Bitmap Crop(this Bitmap originalImage, Point upperLeftCorner, Size newSize)
-        {
-            return originalImage.Crop(upperLeftCorner, newSize, false);
-        }
-
-        public static Bitmap Crop(this Bitmap originalImage, Point upperLeftCorner, Size newSize, bool disposeOriginal)
-        {
-            Bitmap croppedImage = new Bitmap(newSize.Width, newSize.Height);
-
+            // Create a crop of the original image.
+            Bitmap croppedImage = new Bitmap(croppedArea.Width, croppedArea.Height, originalImage.PixelFormat);
+            croppedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution);
             using (Graphics croppedImageGraphic = Graphics.FromImage(croppedImage))
             {
-                croppedImageGraphic.DrawImage(originalImage, 0, 0, new Rectangle(upperLeftCorner, newSize), GraphicsUnit.Pixel);
+                croppedImageGraphic.DrawImage(originalImage, 0, 0, croppedArea, GraphicsUnit.Pixel);
             }
 
-            if (disposeOriginal) originalImage.Dispose();
+            if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
 
             return croppedImage;
         }
