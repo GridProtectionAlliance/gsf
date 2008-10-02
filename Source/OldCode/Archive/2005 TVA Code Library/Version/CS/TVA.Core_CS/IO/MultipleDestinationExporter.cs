@@ -13,7 +13,7 @@
 //  02/13/2008 - J. Ritchie Carroll
 //       Initial version of source generated
 //  07/29/2008 - J. Ritchie Carroll
-//       Added "Reauthenticate" method to enable user to reconnect to network shares.
+//       Added "Initialize" method to enable user to reconnect to network shares.
 //       Added more descriptive status messages to provide more detailed user feedback.
 //  09/19/2008 - James R Carroll
 //       Converted to C#.
