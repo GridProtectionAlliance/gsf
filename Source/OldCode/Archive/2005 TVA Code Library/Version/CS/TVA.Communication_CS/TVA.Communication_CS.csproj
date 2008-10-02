@@ -65,14 +65,14 @@
     </Compile>
     <Compile Include="IClient.cs" />
     <Compile Include="IServer.cs" />
-    <Compile Include="Internal Code\GoodbyeMessage.cs" />
-    <Compile Include="Internal Code\HandshakeMessage.cs" />
-    <Compile Include="Internal Code\Payload.cs" />
+    <Compile Include="GoodbyeMessage.cs" />
+    <Compile Include="HandshakeMessage.cs" />
+    <Compile Include="Payload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Internal Code\Transport.cs" />
+    <Compile Include="Transport.cs" />
     <Compile Include="StateInfo.cs" />
     <Compile Include="SerialClient.cs">
       <SubType>Component</SubType>
