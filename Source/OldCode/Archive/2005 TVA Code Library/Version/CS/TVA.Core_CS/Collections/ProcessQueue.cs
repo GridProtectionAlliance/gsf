@@ -554,7 +554,7 @@ namespace TVA.Collections
         /// Gets or sets the maximum time, in milliseconds, allowed for processing an item.
         /// </summary>
         /// <value>Sets the maximum number of milliseconds allowed to process an item.</value>
-        /// <returns>Gets the maximum number of milliseconds allowed to process an item.</returns>
+        /// <returns>The maximum number of milliseconds allowed to process an item.</returns>
         /// <remarks>Set to Timeout.Infinite (i.e., -1) to allow processing to take as long as needed.</remarks>
         public virtual int ProcessTimeout
         {
