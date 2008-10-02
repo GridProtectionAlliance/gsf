@@ -46,35 +46,32 @@ namespace TVA.Windows.Forms
         [DebuggerStepThrough()]
         private void InitializeComponent()
         {
-            this.TabControlInformation = new TabControl();
-            base.Load += new System.EventHandler(AboutDialog_Load);
-            this.TabPageDisclaimer = new TabPage();
-            this.RichTextBoxDisclaimer = new RichTextBox();
-            this.RichTextBoxDisclaimer.LinkClicked += new LinkClickedEventHandler(RichTextBoxDisclaimer_LinkClicked);
-            this.TabPageApplication = new TabPage();
-            this.ListViewApplicationInfo = new ListView();
-            this.ColumnHeaderApplicationKey = new ColumnHeader();
-            this.ColumnHeaderApplicationValue = new ColumnHeader();
-            this.TabPageAssemblies = new TabPage();
-            this.ListViewAssemblyInfo = new ListView();
-            this.ColumnHeaderAssemblyKey = new ColumnHeader();
-            this.ColumnHeaderAssemblyValue = new ColumnHeader();
-            this.ComboBoxAssemblies = new ComboBox();
-            this.ComboBoxAssemblies.SelectedIndexChanged += new System.EventHandler(ComboBoxAssemblies_SelectedIndexChanged);
-            this.ButtonOK = new Button();
-            this.ButtonOK.Click += new System.EventHandler(ButtonOK_Click);
-            this.PictureBoxLogo = new PictureBox();
-            this.PictureBoxLogo.Click += new System.EventHandler(PictureBoxLogo_Click);
+            this.TabControlInformation = new System.Windows.Forms.TabControl();
+            this.TabPageDisclaimer = new System.Windows.Forms.TabPage();
+            this.RichTextBoxDisclaimer = new System.Windows.Forms.RichTextBox();
+            this.TabPageApplication = new System.Windows.Forms.TabPage();
+            this.ListViewApplicationInfo = new System.Windows.Forms.ListView();
+            this.ColumnHeaderApplicationKey = new System.Windows.Forms.ColumnHeader();
+            this.ColumnHeaderApplicationValue = new System.Windows.Forms.ColumnHeader();
+            this.TabPageAssemblies = new System.Windows.Forms.TabPage();
+            this.ListViewAssemblyInfo = new System.Windows.Forms.ListView();
+            this.ColumnHeaderAssemblyKey = new System.Windows.Forms.ColumnHeader();
+            this.ColumnHeaderAssemblyValue = new System.Windows.Forms.ColumnHeader();
+            this.ComboBoxAssemblies = new System.Windows.Forms.ComboBox();
+            this.ButtonOK = new System.Windows.Forms.Button();
+            this.PictureBoxLogo = new System.Windows.Forms.PictureBox();
             this.TabControlInformation.SuspendLayout();
             this.TabPageDisclaimer.SuspendLayout();
             this.TabPageApplication.SuspendLayout();
             this.TabPageAssemblies.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)this.PictureBoxLogo).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PictureBoxLogo)).BeginInit();
             this.SuspendLayout();
-            //
-            //TabControlInformation
-            //
-            this.TabControlInformation.Anchor = (AnchorStyles)(((AnchorStyles.Top | AnchorStyles.Bottom) | AnchorStyles.Left) | AnchorStyles.Right);
+            // 
+            // TabControlInformation
+            // 
+            this.TabControlInformation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.TabControlInformation.Controls.Add(this.TabPageDisclaimer);
             this.TabControlInformation.Controls.Add(this.TabPageApplication);
             this.TabControlInformation.Controls.Add(this.TabPageAssemblies);
@@ -83,21 +80,21 @@ namespace TVA.Windows.Forms
             this.TabControlInformation.SelectedIndex = 0;
             this.TabControlInformation.Size = new System.Drawing.Size(410, 253);
             this.TabControlInformation.TabIndex = 2;
-            //
-            //TabPageDisclaimer
-            //
+            // 
+            // TabPageDisclaimer
+            // 
             this.TabPageDisclaimer.Controls.Add(this.RichTextBoxDisclaimer);
             this.TabPageDisclaimer.Location = new System.Drawing.Point(4, 22);
             this.TabPageDisclaimer.Name = "TabPageDisclaimer";
-            this.TabPageDisclaimer.Padding = new Padding(3);
+            this.TabPageDisclaimer.Padding = new System.Windows.Forms.Padding(3);
             this.TabPageDisclaimer.Size = new System.Drawing.Size(402, 227);
             this.TabPageDisclaimer.TabIndex = 0;
             this.TabPageDisclaimer.Text = "Disclaimer";
             this.TabPageDisclaimer.UseVisualStyleBackColor = true;
-            //
-            //RichTextBoxDisclaimer
-            //
-            this.RichTextBoxDisclaimer.Dock = DockStyle.Fill;
+            // 
+            // RichTextBoxDisclaimer
+            // 
+            this.RichTextBoxDisclaimer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.RichTextBoxDisclaimer.Font = new System.Drawing.Font("Trebuchet MS", 9.75F, System.Drawing.FontStyle.Bold);
             this.RichTextBoxDisclaimer.Location = new System.Drawing.Point(3, 3);
             this.RichTextBoxDisclaimer.Name = "RichTextBoxDisclaimer";
@@ -105,42 +102,45 @@ namespace TVA.Windows.Forms
             this.RichTextBoxDisclaimer.Size = new System.Drawing.Size(396, 221);
             this.RichTextBoxDisclaimer.TabIndex = 0;
             this.RichTextBoxDisclaimer.Text = "";
-            //
-            //TabPageApplication
-            //
+            this.RichTextBoxDisclaimer.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.RichTextBoxDisclaimer_LinkClicked);
+            // 
+            // TabPageApplication
+            // 
             this.TabPageApplication.Controls.Add(this.ListViewApplicationInfo);
             this.TabPageApplication.Location = new System.Drawing.Point(4, 22);
             this.TabPageApplication.Name = "TabPageApplication";
-            this.TabPageApplication.Padding = new Padding(3);
+            this.TabPageApplication.Padding = new System.Windows.Forms.Padding(3);
             this.TabPageApplication.Size = new System.Drawing.Size(402, 227);
             this.TabPageApplication.TabIndex = 1;
             this.TabPageApplication.Text = "Application";
             this.TabPageApplication.UseVisualStyleBackColor = true;
-            //
-            //ListViewApplicationInfo
-            //
-            this.ListViewApplicationInfo.Columns.AddRange(new ColumnHeader[] { this.ColumnHeaderApplicationKey, this.ColumnHeaderApplicationValue });
-            this.ListViewApplicationInfo.Dock = DockStyle.Fill;
+            // 
+            // ListViewApplicationInfo
+            // 
+            this.ListViewApplicationInfo.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.ColumnHeaderApplicationKey,
+            this.ColumnHeaderApplicationValue});
+            this.ListViewApplicationInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ListViewApplicationInfo.FullRowSelect = true;
             this.ListViewApplicationInfo.Location = new System.Drawing.Point(3, 3);
             this.ListViewApplicationInfo.Name = "ListViewApplicationInfo";
             this.ListViewApplicationInfo.Size = new System.Drawing.Size(396, 221);
             this.ListViewApplicationInfo.TabIndex = 0;
             this.ListViewApplicationInfo.UseCompatibleStateImageBehavior = false;
-            this.ListViewApplicationInfo.View = View.Details;
-            //
-            //ColumnHeaderApplicationKey
-            //
+            this.ListViewApplicationInfo.View = System.Windows.Forms.View.Details;
+            // 
+            // ColumnHeaderApplicationKey
+            // 
             this.ColumnHeaderApplicationKey.Text = "Key";
             this.ColumnHeaderApplicationKey.Width = 110;
-            //
-            //ColumnHeaderApplicationValue
-            //
+            // 
+            // ColumnHeaderApplicationValue
+            // 
             this.ColumnHeaderApplicationValue.Text = "Value";
             this.ColumnHeaderApplicationValue.Width = 260;
-            //
-            //TabPageAssemblies
-            //
+            // 
+            // TabPageAssemblies
+            // 
             this.TabPageAssemblies.Controls.Add(this.ListViewAssemblyInfo);
             this.TabPageAssemblies.Controls.Add(this.ComboBoxAssemblies);
             this.TabPageAssemblies.Location = new System.Drawing.Point(4, 22);
@@ -149,84 +149,91 @@ namespace TVA.Windows.Forms
             this.TabPageAssemblies.TabIndex = 2;
             this.TabPageAssemblies.Text = "Assemblies";
             this.TabPageAssemblies.UseVisualStyleBackColor = true;
-            //
-            //ListViewAssemblyInfo
-            //
-            this.ListViewAssemblyInfo.Columns.AddRange(new ColumnHeader[] { this.ColumnHeaderAssemblyKey, this.ColumnHeaderAssemblyValue });
-            this.ListViewAssemblyInfo.Dock = DockStyle.Fill;
+            // 
+            // ListViewAssemblyInfo
+            // 
+            this.ListViewAssemblyInfo.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.ColumnHeaderAssemblyKey,
+            this.ColumnHeaderAssemblyValue});
+            this.ListViewAssemblyInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ListViewAssemblyInfo.FullRowSelect = true;
             this.ListViewAssemblyInfo.Location = new System.Drawing.Point(0, 21);
             this.ListViewAssemblyInfo.Name = "ListViewAssemblyInfo";
             this.ListViewAssemblyInfo.Size = new System.Drawing.Size(402, 206);
             this.ListViewAssemblyInfo.TabIndex = 1;
             this.ListViewAssemblyInfo.UseCompatibleStateImageBehavior = false;
-            this.ListViewAssemblyInfo.View = View.Details;
-            //
-            //ColumnHeaderAssemblyKey
-            //
+            this.ListViewAssemblyInfo.View = System.Windows.Forms.View.Details;
+            // 
+            // ColumnHeaderAssemblyKey
+            // 
             this.ColumnHeaderAssemblyKey.Text = "Key";
             this.ColumnHeaderAssemblyKey.Width = 110;
-            //
-            //ColumnHeaderAssemblyValue
-            //
+            // 
+            // ColumnHeaderAssemblyValue
+            // 
             this.ColumnHeaderAssemblyValue.Text = "Value";
             this.ColumnHeaderAssemblyValue.Width = 260;
-            //
-            //ComboBoxAssemblies
-            //
-            this.ComboBoxAssemblies.Dock = DockStyle.Top;
-            this.ComboBoxAssemblies.DropDownStyle = ComboBoxStyle.DropDownList;
+            // 
+            // ComboBoxAssemblies
+            // 
+            this.ComboBoxAssemblies.Dock = System.Windows.Forms.DockStyle.Top;
+            this.ComboBoxAssemblies.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ComboBoxAssemblies.FormattingEnabled = true;
             this.ComboBoxAssemblies.Location = new System.Drawing.Point(0, 0);
             this.ComboBoxAssemblies.Name = "ComboBoxAssemblies";
             this.ComboBoxAssemblies.Size = new System.Drawing.Size(402, 21);
             this.ComboBoxAssemblies.TabIndex = 0;
-            //
-            //ButtonOK
-            //
-            this.ButtonOK.Anchor = AnchorStyles.Bottom;
-            this.ButtonOK.DialogResult = DialogResult.Cancel;
+            this.ComboBoxAssemblies.SelectedIndexChanged += new System.EventHandler(this.ComboBoxAssemblies_SelectedIndexChanged);
+            // 
+            // ButtonOK
+            // 
+            this.ButtonOK.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.ButtonOK.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.ButtonOK.Location = new System.Drawing.Point(181, 333);
             this.ButtonOK.Name = "ButtonOK";
             this.ButtonOK.Size = new System.Drawing.Size(75, 23);
             this.ButtonOK.TabIndex = 3;
             this.ButtonOK.Text = "OK";
             this.ButtonOK.UseVisualStyleBackColor = true;
-            //
-            //PictureBoxLogo
-            //
-            this.PictureBoxLogo.Anchor = (AnchorStyles)((AnchorStyles.Top | AnchorStyles.Left) | AnchorStyles.Right);
+            this.ButtonOK.Click += new System.EventHandler(this.ButtonOK_Click);
+            // 
+            // PictureBoxLogo
+            // 
+            this.PictureBoxLogo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.PictureBoxLogo.BackColor = System.Drawing.Color.Transparent;
-            this.PictureBoxLogo.Cursor = Cursors.Hand;
+            this.PictureBoxLogo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.PictureBoxLogo.Location = new System.Drawing.Point(12, 12);
             this.PictureBoxLogo.Name = "PictureBoxLogo";
             this.PictureBoxLogo.Size = new System.Drawing.Size(410, 50);
-            this.PictureBoxLogo.SizeMode = PictureBoxSizeMode.StretchImage;
+            this.PictureBoxLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.PictureBoxLogo.TabIndex = 4;
             this.PictureBoxLogo.TabStop = false;
-            //
-            //AboutDialog
-            //
+            this.PictureBoxLogo.Click += new System.EventHandler(this.PictureBoxLogo_Click);
+            // 
+            // AboutDialog
+            // 
             this.AcceptButton = this.ButtonOK;
-            this.AutoScaleDimensions = new System.Drawing.SizeF((float)6.0, (float)13.0);
-            this.AutoScaleMode = AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.ButtonOK;
             this.ClientSize = new System.Drawing.Size(434, 368);
             this.Controls.Add(this.PictureBoxLogo);
             this.Controls.Add(this.ButtonOK);
             this.Controls.Add(this.TabControlInformation);
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AboutDialog";
             this.ShowInTaskbar = false;
-            this.StartPosition = FormStartPosition.CenterParent;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "About {0}";
+            this.Load += new System.EventHandler(this.AboutDialog_Load);
             this.TabControlInformation.ResumeLayout(false);
             this.TabPageDisclaimer.ResumeLayout(false);
             this.TabPageApplication.ResumeLayout(false);
             this.TabPageAssemblies.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)this.PictureBoxLogo).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PictureBoxLogo)).EndInit();
             this.ResumeLayout(false);
 
         }
