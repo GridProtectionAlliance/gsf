@@ -212,7 +212,7 @@ namespace TVA.Parsing
         /// </summary>
         public void Start()
         {
-            System.Reflection.Assembly asm = null;
+            Assembly asm = null;
             ConstructorInfo typeCtor = null;
             string dllDirectory = FilePath.AbsolutePath("");
             AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("InMemory"), AssemblyBuilderAccess.Run);
@@ -232,7 +232,7 @@ namespace TVA.Parsing
                 try
                 {
                     // Load the assembly in the curent app domain.
-                    asm = System.Reflection.Assembly.LoadFrom(dll);
+                    asm = Assembly.LoadFrom(dll);
 
                     // Process all of the public types in the assembly.
                     foreach (Type asmType in asm.GetExportedTypes())
@@ -255,20 +255,20 @@ namespace TVA.Parsing
                                 // Invokation approach: Reflection.Emit + Delegate
                                 // This is hands-down that most fastest way of instantiating objects using reflection.
                                 MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public | MethodAttributes.Static, asmType, Type.EmptyTypes);
-                                System.Reflection.Emit.ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
-                                ilGen.Emit(System.Reflection.Emit.OpCodes.Nop);
-                                ilGen.Emit(System.Reflection.Emit.OpCodes.Newobj, typeCtor);
-                                ilGen.Emit(System.Reflection.Emit.OpCodes.Ret);
+                                ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+                                ilGen.Emit(OpCodes.Nop);
+                                ilGen.Emit(OpCodes.Newobj, typeCtor);
+                                ilGen.Emit(OpCodes.Ret);
                             }
                             else
                             {
                                 // Invokation approach: DynamicMethod + Delegate
                                 // This method is very fast compared to rest of the approaches, but not as fast as the one above.
                                 DynamicMethod dynamicTypeCtor = new DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, true);
-                                System.Reflection.Emit.ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
-                                ilGen.Emit(System.Reflection.Emit.OpCodes.Nop);
-                                ilGen.Emit(System.Reflection.Emit.OpCodes.Newobj, typeCtor);
-                                ilGen.Emit(System.Reflection.Emit.OpCodes.Ret);
+                                ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+                                ilGen.Emit(OpCodes.Nop);
+                                ilGen.Emit(OpCodes.Newobj, typeCtor);
+                                ilGen.Emit(OpCodes.Ret);
 
                                 // Create a delegate to the constructor that'll be called to create a new instance of the type.
                                 outputType.CreateNew = (DefaultConstructor)(dynamicTypeCtor.CreateDelegate(typeof(DefaultConstructor)));
