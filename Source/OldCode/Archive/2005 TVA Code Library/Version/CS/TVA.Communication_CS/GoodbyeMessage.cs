@@ -24,26 +24,14 @@ namespace TVA.Communication
 	[Serializable()]
     internal class GoodbyeMessage
 	{
-		private Guid m_id;
+        /// <summary>
+        /// Gets or sets the disconnecting client's ID.
+        /// </summary>
+        public Guid ID;
 		
 		public GoodbyeMessage(Guid id)
 		{
 			ID = id;
-		}
-		
-		/// <summary>
-		/// Gets or sets the disconnecting client's ID.
-		/// </summary>
-		public Guid ID
-		{
-			get
-			{
-				return m_id;
-			}
-			set
-			{
-				m_id = value;
-			}
 		}
 	}
 }

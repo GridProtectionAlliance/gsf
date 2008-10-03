@@ -84,6 +84,11 @@
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
+    <Compile Include="Media\RiffChunk.cs" />
+    <Compile Include="Media\RiffHeaderChunk.cs" />
+    <Compile Include="Media\WaveDataChunk.cs" />
+    <Compile Include="Media\WaveFile.cs" />
+    <Compile Include="Media\WaveFormatChunk.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>
@@ -122,6 +127,9 @@
     <Compile Include="IO\Compression\GZip\GzipInputStream.cs" />
     <Compile Include="IO\Compression\GZip\GzipOutputStream.cs" />
     <Content Include="IO\Compression\CopyrightNotice.txt" />
+    <None Include="Media\Wavefile Information\IFF.txt" />
+    <None Include="Media\Wavefile Information\JingleBells.wav" />
+    <None Include="Media\Wavefile Information\Longitudinal Wave.mov" />
     <EmbeddedResource Include="Resources\TVA.IO.MultipleDestinationExporter.bmp" />
     <EmbeddedResource Include="Resources\TVA.Scheduling.ScheduleManager.bmp" />
     <EmbeddedResource Include="Resources\TVA.Net.Ftp.Session.bmp" />
@@ -314,6 +322,9 @@
       <ProductName>.NET Framework 3.5</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Media\Wavefile Information\Waveform Audio Format.ppt" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

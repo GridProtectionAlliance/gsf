@@ -24,43 +24,20 @@ namespace TVA.Communication
 	[Serializable()]
     internal class HandshakeMessage
 	{
-		private Guid m_id;
-		private string m_passphrase;
+        /// <summary>
+        /// Gets or sets the connecting client's ID.
+        /// </summary>
+        public Guid ID;
+
+        /// <summary>
+        /// Gets or sets the passphrase used for authentication.
+        /// </summary>
+        public string Passphrase;
 		
 		public HandshakeMessage(Guid id, string passphrase)
 		{
 			ID = id;
 			Passphrase = passphrase;
-		}
-		
-		/// <summary>
-		/// Gets or sets the connecting client's ID.
-		/// </summary>
-		public Guid ID
-		{
-			get
-			{
-				return m_id;
-			}
-			set
-			{
-				m_id = value;
-			}
-		}
-		
-		/// <summary>
-		/// Gets or sets the passphrase used for authentication.
-		/// </summary>
-		public string Passphrase
-		{
-			get
-			{
-				return m_passphrase;
-			}
-			set
-			{
-				m_passphrase = value;
-			}
 		}
 	}
 }

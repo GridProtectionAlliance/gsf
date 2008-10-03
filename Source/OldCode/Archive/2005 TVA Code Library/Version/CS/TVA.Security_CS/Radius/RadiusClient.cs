@@ -115,7 +115,7 @@ namespace TVA.Security
 				this.NewPinModeMessage3 = DefaultNewPinModeMessage3;
 				this.NextTokenModeMessage = DefaultNextTokenModeMessage;
 				m_udpClient = new UdpClient(string.Format("Server={0}; RemotePort={1}; LocalPort=0", serverName, serverPort));
-				m_udpClient.ReceivedData += new System.EventHandler`1[[TVA.GenericEventArgs`1[[TVA.IdentifiableItem`2[[System.Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_udpClient_ReceivedData);
+				m_udpClient.ReceivedData += new System.EventHandler`1[[TVA.GenericEventArgs`1[[TVA.IdentifiableItem`2[[Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_udpClient_ReceivedData);
 				m_udpClient.Handshake = false;
 				m_udpClient.PayloadAware = false;
 				m_udpClient.Connect(); // Start the connection cycle.
@@ -674,7 +674,7 @@ namespace TVA.Security
 					{
 						m_udpClient.Dispose();
 						m_udpClient = null;
-						m_udpClient.ReceivedData += new System.EventHandler`1[[TVA.GenericEventArgs`1[[TVA.IdentifiableItem`2[[System.Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_udpClient_ReceivedData);
+						m_udpClient.ReceivedData += new System.EventHandler`1[[TVA.GenericEventArgs`1[[TVA.IdentifiableItem`2[[Guid, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]], TVA.Core, Version=3.0.116.286, Culture=neutral, PublicKeyToken=null]](m_udpClient_ReceivedData);
 					}
 				}
 				m_disposed = true;
@@ -685,7 +685,7 @@ namespace TVA.Security
 			
 			#region " Code Scope: Private "
 			
-			private void m_udpClient_ReceivedData(object sender, GenericEventArgs<IdentifiableItem<System.Guid, byte[]>> e)
+			private void m_udpClient_ReceivedData(object sender, GenericEventArgs<IdentifiableItem<Guid, byte[]>> e)
 			{
 				
 				m_responseBytes = e.Argument.Item;

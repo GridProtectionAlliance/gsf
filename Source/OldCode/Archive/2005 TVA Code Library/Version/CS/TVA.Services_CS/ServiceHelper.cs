@@ -154,7 +154,7 @@ namespace TVA.Services
 		private LogFile m_statusLog;
 		private ScheduleManager m_scheduler;
 		private ErrorLogger m_errorLogger;
-		private string m_pursip;		
+		private string m_pursip;
         private bool m_disposed;
 		
         #endregion
@@ -658,8 +658,9 @@ namespace TVA.Services
                     m_performanceMonitor = new PerformanceMonitor();
                 }
 
-                // Add scheduler and remoting server as service components by default
+                // Add scheduler, status log and remoting server as service components by default
                 m_serviceComponents.Add(m_scheduler);
+                m_serviceComponents.Add(m_statusLog);
                 m_serviceComponents.Add(m_remotingServer);
 
                 // JRC: Disabled override of remoting server handshake operations since ServiceHelper doesn't
@@ -878,7 +879,7 @@ namespace TVA.Services
             if (!m_suppressUpdates)
             {
                 // Append desired number of line feeds to message
-                System.Text.StringBuilder formattedMessage = new StringBuilder();
+                StringBuilder formattedMessage = new StringBuilder();
 
                 formattedMessage.Append(message);
 
@@ -1076,7 +1077,7 @@ namespace TVA.Services
                 scheduledProcess.Start();
         }
 
-        private void m_remotingServer_ClientDisconnected(object sender, EventArgs<System.Guid> e)
+        private void m_remotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
             ClientInfo disconnectedClient = GetConnectedClient(e.Argument);
 
@@ -1100,7 +1101,7 @@ namespace TVA.Services
             }
         }
 
-        private void m_remotingServer_ReceivedClientData(object sender, EventArgs<IdentifiableItem<System.Guid, byte[]>> e)
+        private void m_remotingServer_ReceivedClientData(object sender, EventArgs<IdentifiableItem<Guid, byte[]>> e)
         {
             ClientInfo client = Serialization.GetObject<ClientInfo>(e.Argument.Item);
             ClientRequest request = Serialization.GetObject<ClientRequest>(e.Argument.Item);

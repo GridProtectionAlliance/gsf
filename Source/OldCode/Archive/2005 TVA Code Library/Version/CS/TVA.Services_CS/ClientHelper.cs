@@ -381,7 +381,7 @@ namespace TVA.Services
             UpdateStatus(status.ToString(), 1);
         }
 
-        private void m_remotingClient_ReceivedData(object sender, EventArgs<IdentifiableItem<System.Guid, byte[]>> e)
+        private void m_remotingClient_ReceivedData(object sender, EventArgs<IdentifiableItem<Guid, byte[]>> e)
         {
             ServiceResponse response = Serialization.GetObject<ServiceResponse>(e.Argument.Item);
 
