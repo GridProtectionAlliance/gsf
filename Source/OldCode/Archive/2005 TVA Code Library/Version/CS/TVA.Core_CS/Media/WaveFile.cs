@@ -327,7 +327,7 @@ namespace TVA.Media
 
         // Fields
         private RiffHeaderChunk m_waveHeader;
-        private WaveFormatChunk m_waveFomat;
+        private WaveFormatChunk m_waveFormat;
         private WaveDataChunk m_waveData;
 
         #endregion
@@ -338,8 +338,8 @@ namespace TVA.Media
         public WaveFile()
         {
             m_waveHeader = new RiffHeaderChunk("WAVE");
-            m_waveFomat = new WaveFormatChunk(44100, 16, 2, 0x1);
-            m_waveData = new WaveDataChunk(m_waveFomat);
+            m_waveFormat = new WaveFormatChunk(44100, 16, 2, 0x1);
+            m_waveData = new WaveDataChunk(m_waveFormat);
         }
 
         /// <summary>Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format</summary>
@@ -380,15 +380,15 @@ namespace TVA.Media
         public WaveFile(int sampleRate, short bitsPerSample, short channels, short audioFormat)
         {
             m_waveHeader = new RiffHeaderChunk("WAVE");
-            m_waveFomat = new WaveFormatChunk(sampleRate, bitsPerSample, channels, audioFormat);
-            m_waveData = new WaveDataChunk(m_waveFomat);
+            m_waveFormat = new WaveFormatChunk(sampleRate, bitsPerSample, channels, audioFormat);
+            m_waveData = new WaveDataChunk(m_waveFormat);
         }
 
         /// <summary>Creates a new empty in-memory wave file using existing constituent chunks</summary>
         public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData)
         {
             m_waveHeader = waveHeader;
-            m_waveFomat = waveFormat;
+            m_waveFormat = waveFormat;
             m_waveData = waveData;
         }
 
@@ -400,11 +400,11 @@ namespace TVA.Media
         {
             get
             {
-                return m_waveFomat.AudioFormat;
+                return m_waveFormat.AudioFormat;
             }
             set
             {
-                m_waveFomat.AudioFormat = value;
+                m_waveFormat.AudioFormat = value;
             }
         }
 
@@ -412,11 +412,11 @@ namespace TVA.Media
         {
             get
             {
-                return m_waveFomat.Channels;
+                return m_waveFormat.Channels;
             }
             set
             {
-                m_waveFomat.Channels = value;
+                m_waveFormat.Channels = value;
             }
         }
 
@@ -424,11 +424,11 @@ namespace TVA.Media
         {
             get
             {
-                return m_waveFomat.SampleRate;
+                return m_waveFormat.SampleRate;
             }
             set
             {
-                m_waveFomat.SampleRate = value;
+                m_waveFormat.SampleRate = value;
             }
         }
 
@@ -436,11 +436,11 @@ namespace TVA.Media
         {
             get
             {
-                return m_waveFomat.BlockAlignment;
+                return m_waveFormat.BlockAlignment;
             }
             set
             {
-                m_waveFomat.BlockAlignment = value;
+                m_waveFormat.BlockAlignment = value;
             }
         }
 
@@ -448,11 +448,11 @@ namespace TVA.Media
         {
             get
             {
-                return m_waveFomat.BitsPerSample;
+                return m_waveFormat.BitsPerSample;
             }
             set
             {
-                m_waveFomat.BitsPerSample = value;
+                m_waveFormat.BitsPerSample = value;
             }
         }
 
@@ -460,15 +460,15 @@ namespace TVA.Media
         {
             get
             {
-                return m_waveFomat.ExtraParameters;
+                return m_waveFormat.ExtraParameters;
             }
             set
             {
-                m_waveFomat.ExtraParameters = value;
+                m_waveFormat.ExtraParameters = value;
             }
         }
 
-        public List<BinaryValue[]> SampleBlocks
+        public List<LittleEndianBinaryValue[]> SampleBlocks
         {
             get
             {
@@ -479,6 +479,34 @@ namespace TVA.Media
         #endregion
 
         #region [ Methods ]
+
+        public void Play()
+        {
+            MemoryStream stream = new MemoryStream();
+            SoundPlayer player = new SoundPlayer(stream);
+            Save(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            player.Play();
+        }
+
+        public void Save(string waveFileName)
+        {
+            FileStream stream = File.Create(waveFileName);
+            Save(stream);
+            stream.Close();
+        }
+
+        public void Save(Stream destination)
+        {
+            destination.Write(m_waveHeader.BinaryImage, 0, m_waveHeader.BinaryLength);
+            destination.Write(m_waveFormat.BinaryImage, 0, m_waveFormat.BinaryLength);
+            destination.Write(m_waveData.BinaryImage, 0, m_waveData.BinaryLength);
+        }
+        
+        public void Reverse()
+        {
+            m_waveData.SampleBlocks.Reverse();
+        }
 
         #endregion
 
@@ -491,9 +519,9 @@ namespace TVA.Media
         {
             FileStream source = File.Open(waveFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             RiffChunk riffChunk;
-            RiffHeaderChunk waveHeader;
-            WaveFormatChunk waveFormat;
-            WaveDataChunk waveData;
+            RiffHeaderChunk waveHeader = null;
+            WaveFormatChunk waveFormat = null;
+            WaveDataChunk waveData = null;
 
             while (waveData == null)
             {
