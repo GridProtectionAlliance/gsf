@@ -108,7 +108,7 @@ namespace TVA.Media
             }
         }
 
-        public override int BinaryLength
+        public new int BinaryLength
         {
             get
             {

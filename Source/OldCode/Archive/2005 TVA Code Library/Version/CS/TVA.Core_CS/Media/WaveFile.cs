@@ -480,6 +480,36 @@ namespace TVA.Media
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Adds a block of samples to the wave file.
+        /// </summary>
+        /// <param name="samples">Samples to add to the wave file.</param>
+        /// <remarks>
+        /// <para>
+        /// You need to pass in one sample for each defined channel (e.g., if wave is configured for stereo
+        /// you will need to pass in two parameters).
+        /// </para>
+        /// You should only add values that match the wave file's bits-per-sample (e.g., if wave file is
+        /// configured for 16-bits only pass in Int16 values, casting if necessary).
+        /// </remarks>
+        public void AddBlock(params LittleEndianBinaryValue[] samples)
+        {
+            // Validate number of samples
+            if (samples.Length != m_waveFormat.Channels)
+                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel.");
+
+            int byteLength = m_waveFormat.BitsPerSample / 8;
+
+            // Validate bit-lengths of samples
+            foreach (LittleEndianBinaryValue item in samples)
+            {
+                if (item.Buffer.Length != byteLength)
+                    throw new ArrayTypeMismatchException(string.Format("One of the parameters is {0}-bits and wave is configured for {1}-bits per sample.", item.Buffer.Length * 8, m_waveFormat.BitsPerSample));
+            }
+
+            m_waveData.SampleBlocks.Add(samples);
+        }
+
         public void Play()
         {
             MemoryStream stream = new MemoryStream();

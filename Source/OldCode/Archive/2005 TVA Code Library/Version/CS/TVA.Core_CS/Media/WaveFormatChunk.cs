@@ -67,7 +67,7 @@ namespace TVA.Media
         public WaveFormatChunk(RiffChunk preRead, Stream source)
             : base(preRead, RiffTypeID)
         {
-            int length = BinaryLength - preRead.BinaryLength;
+            int length = ChunkSize;
             byte[] buffer = new byte[length];
 
             int bytesRead = source.Read(buffer, 0, length);
@@ -85,17 +85,20 @@ namespace TVA.Media
             if (m_bitsPerSample % 8 != 0)
                 throw new InvalidDataException("Invalid bit rate encountered - wave file bit rates must be a multiple of 8");
 
-            m_extraParametersSize = EndianOrder.LittleEndian.ToInt16(buffer, 16);
-
-            // Read extra parameters, if any
-            if (m_extraParametersSize > 0)
+            if (length > 16)
             {
-                m_extraParameters = new byte[m_extraParametersSize];
+                m_extraParametersSize = EndianOrder.LittleEndian.ToInt16(buffer, 16);
 
-                bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
+                // Read extra parameters, if any
+                if (m_extraParametersSize > 0)
+                {
+                    m_extraParameters = new byte[m_extraParametersSize];
 
-                if (bytesRead < m_extraParametersSize)
-                    throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted.");
+                    bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
+
+                    if (bytesRead < m_extraParametersSize)
+                        throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted.");
+                }
             }
         }
 
@@ -117,20 +120,27 @@ namespace TVA.Media
                 Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_byteRate), 0, binaryImage, startIndex + 8, 4);
                 Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_blockAlignment), 0, binaryImage, startIndex + 12, 2);
                 Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_bitsPerSample), 0, binaryImage, startIndex + 14, 2);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_extraParametersSize), 0, binaryImage, startIndex + 16, 2);
 
-                if (m_extraParametersSize > 0 && m_extraParameters != null)
-                    Buffer.BlockCopy(m_extraParameters, 0, binaryImage, startIndex + 18, m_extraParametersSize);
+                if (m_extraParametersSize > 0)
+                {
+                    Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_extraParametersSize), 0, binaryImage, startIndex + 16, 2);
 
+                    if (m_extraParametersSize > 0 && m_extraParameters != null)
+                        Buffer.BlockCopy(m_extraParameters, 0, binaryImage, startIndex + 18, m_extraParametersSize);
+                }
+                
                 return binaryImage;
             }
         }
 
-        public override int BinaryLength
+        public new int BinaryLength
         {
             get
             {
-                return base.BinaryLength + 18 + m_extraParametersSize;
+                if (m_extraParametersSize > 0)
+                    return base.BinaryLength + 18 + m_extraParametersSize;
+                else
+                    return base.BinaryLength + 16;
             }
         }
 

@@ -117,7 +117,7 @@ namespace TVA.Media
         /// <summary>
         /// Gets the length of a RIFF chunk consisting of type ID and chunk size (i.e., 8 bytes).
         /// </summary>
-        public virtual int BinaryLength
+        public int BinaryLength
         {
             get
             {
