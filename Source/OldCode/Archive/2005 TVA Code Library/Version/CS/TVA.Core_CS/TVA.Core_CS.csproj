@@ -84,6 +84,7 @@
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
+    <Compile Include="Interop\DataSample.cs" />
     <Compile Include="Media\RiffChunk.cs" />
     <Compile Include="Media\RiffHeaderChunk.cs" />
     <Compile Include="Media\WaveDataChunk.cs" />

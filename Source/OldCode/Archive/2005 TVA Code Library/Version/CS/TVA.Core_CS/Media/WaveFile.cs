@@ -59,16 +59,15 @@ namespace TVA.Media
     /// </summary>
     public enum BitsPerSample : short
     {
-        /// <summary>8 bits per sample</summary>
+        /// <summary>8-bits per sample</summary>
         Bits8 = 8,
-        /// <summary>16 bits per sample</summary>
+        /// <summary>16-bits per sample</summary>
         /// <remarks>This is the standard setting for CD audio quality</remarks>
         Bits16 = 16,
-        /// <summary>24 bits per sample</summary>
-        /// <remarks>This requires a 32-bit integer for in-memory storage</remarks>
+        /// <summary>24-bits per sample</summary>
         Bits24 = 24,
-        /// <summary>32 bits per sample</summary>
-        Bits32 = 32
+        /// <summary>32-bits per sample</summary>
+        Bits32 = 32,
     }
 
     /// <summary>
@@ -261,7 +260,7 @@ namespace TVA.Media
     /// <summary>
     /// Represents a waveform audio format file (WAV).
     /// </summary>
-    class WaveFile
+    public class WaveFile
     {
         #region [ Waveform Format Structure ]
 
@@ -328,6 +327,8 @@ namespace TVA.Media
 
         // Nested Types
 
+
+
         // Constants
 
         // Delegates
@@ -335,6 +336,9 @@ namespace TVA.Media
         // Events
 
         // Fields
+        private WaveFormatChunk m_waveFomat;
+        private WaveDataChunk m_waveData;
+
         private short m_audioFormat;
         private short m_channels;
         private int m_sampleRate;
