@@ -26,10 +26,20 @@ namespace TVA.Media
     /// </summary>
     public class RiffHeaderChunk : RiffChunk
     {
+        #region [ Members ]
+
+        // Constants
+        public const string RiffTypeID = "RIFF";
+
+        // Fields
         private string m_format;
 
+        #endregion
+
+        #region [ Constructors ]
+
         public RiffHeaderChunk(string format)
-            : base("RIFF")
+            : base(RiffTypeID)
         {
             Format = format;
         }
@@ -41,7 +51,7 @@ namespace TVA.Media
         /// <exception cref="ArgumentNullException"><paramref name="format"/> cannot be null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="format"/> must be extactly 4 characters in length.</exception>
         public RiffHeaderChunk(RiffChunk preRead, Stream source, string format)
-            : base(preRead, "RIFF")
+            : base(preRead, RiffTypeID)
         {
             Format = format;
 
@@ -53,19 +63,35 @@ namespace TVA.Media
             if (bytesRead < length)
                 throw new InvalidOperationException("RIFF format section too small, media file corrupted.");
 
-            Initialize(buffer, 0);
-        }
+            // Read and validate format stored in RIFF section
+            format = Encoding.ASCII.GetString(buffer, 0, 4);
 
-        public override int Initialize(byte[] binaryImage, int startIndex)
-        {
-            string format = Encoding.ASCII.GetString(binaryImage, startIndex, 4);
-
-            if (format != m_format)
-                throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", m_format, format));
+            if (format != Format)
+                throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", Format, format));
 
             m_format = format;
+        }
 
-            return BinaryLength;
+        #endregion
+
+        #region [ Properties ]
+
+        public string Format
+        {
+            get
+            {
+                return m_format;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("Format");
+
+                if (value.Length != 4)
+                    throw new ArgumentOutOfRangeException("Format", "Format must be exactly 4 characters in length");
+
+                m_format = value;
+            }
         }
 
         public override byte[] BinaryImage
@@ -90,22 +116,6 @@ namespace TVA.Media
             }
         }
 
-        public string Format
-        {
-            get
-            {
-                return m_format;
-            }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("Format");
-
-                if (value.Length != 4)
-                    throw new ArgumentOutOfRangeException("Format", "Format must be exactly 4 characters in length");
-
-                m_format = value;
-            }
-        }
+        #endregion
     }
 }

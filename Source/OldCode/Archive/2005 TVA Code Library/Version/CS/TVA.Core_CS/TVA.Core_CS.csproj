@@ -81,6 +81,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
+    <Compile Include="Interop\BigEndianBinaryValue.cs" />
+    <Compile Include="Interop\LittleEndianBinaryValue.cs" />
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />

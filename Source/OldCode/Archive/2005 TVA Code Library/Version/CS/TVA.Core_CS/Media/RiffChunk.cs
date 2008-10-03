@@ -18,7 +18,7 @@
 using System;
 using System.IO;
 using System.Text;
-using TVA.Parsing;
+using TVA.Interop;
 
 namespace TVA.Media
 {
@@ -30,10 +30,17 @@ namespace TVA.Media
     /// originally developed Electronic Arts in 1985.  The primary difference is that RIFF uses
     /// little-endian byte order for integer encoding.
     /// </remarks>
-    public class RiffChunk : IBinaryDataConsumer, IBinaryDataProvider
+    public class RiffChunk
     {
+        #region [ Members ]
+
+        // Fields
         private string m_typeID;
         private int m_chunkSize;
+
+        #endregion
+
+        #region [ Constructors ]
 
         private RiffChunk()
         {
@@ -53,23 +60,9 @@ namespace TVA.Media
             m_typeID = typeID;
         }
 
-        public static RiffChunk ReadNext(Stream source)
-        {
-            RiffChunk riffChunk = new RiffChunk();
-            int length = riffChunk.BinaryLength;
+        #endregion
 
-            byte[] buffer = new byte[length];
-
-            int bytesRead = source.Read(buffer, 0, length);
-
-            if (bytesRead < length)
-                throw new InvalidOperationException("RIFF chunk too small, media file corrupted.");
-
-            riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
-            riffChunk.ChunkSize = BitConverter.ToInt32(buffer, 4);
-
-            return riffChunk;
-        }
+        #region [ Properties ]
 
         /// <summary>Four character text identifer for RIFF chunk.</summary>
         /// <exception cref="ArgumentNullException">TypeID cannot be null.</exception>
@@ -93,7 +86,7 @@ namespace TVA.Media
         }
 
         /// <summary>Size of RIFF chunk.</summary>
-        public int ChunkSize
+        public virtual int ChunkSize
         {
             get
             {
@@ -106,17 +99,6 @@ namespace TVA.Media
         }
 
         /// <summary>
-        /// Initialize RIFF chunk by parsing out type ID and chunk size.
-        /// </summary>
-        /// <param name="binaryImage">Source buffer.</param>
-        /// <param name="startIndex">Start index into buffer.</param>
-        /// <returns>Total number of bytes actually parsed.</returns>
-        public virtual int Initialize(byte[] binaryImage, int startIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Returns a binary representation of this RIFF chunk.
         /// </summary>
         public virtual byte[] BinaryImage
@@ -126,7 +108,7 @@ namespace TVA.Media
                 byte[] binaryImage = new byte[BinaryLength];
 
                 Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_typeID), 0, binaryImage, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_chunkSize), 0, binaryImage, 4, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_chunkSize), 0, binaryImage, 4, 4);
 
                 return binaryImage;
             }
@@ -142,5 +124,30 @@ namespace TVA.Media
                 return 8;
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        public static RiffChunk ReadNext(Stream source)
+        {
+            RiffChunk riffChunk = new RiffChunk();
+            int length = riffChunk.BinaryLength;
+
+            byte[] buffer = new byte[length];
+
+            int bytesRead = source.Read(buffer, 0, length);
+
+            if (bytesRead < length)
+                throw new InvalidOperationException("RIFF chunk too small, media file corrupted.");
+
+            riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
+            riffChunk.ChunkSize = EndianOrder.LittleEndian.ToInt32(buffer, 4);
+
+            return riffChunk;
+        }
+
+        #endregion
     }
 }

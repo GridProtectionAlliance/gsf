@@ -17,6 +17,7 @@
 
 using System;
 using System.IO;
+using TVA.Interop;
 
 namespace TVA.Media
 {
@@ -25,6 +26,12 @@ namespace TVA.Media
     /// </summary>
     public class WaveFormatChunk : RiffChunk
     {
+        #region [ Members ]
+
+        // Constants
+        public const string RiffTypeID = "fmt ";
+
+        // Fields
         private short m_audioFormat;
         private short m_channels;
         private int m_sampleRate;
@@ -34,7 +41,9 @@ namespace TVA.Media
         private short m_extraParametersSize;
         private byte[] m_extraParameters;
 
-        public const string RiffTypeID = "fmt ";
+        #endregion
+
+        #region [ Constructors ]
 
         public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, short audioFormat)
             : base(RiffTypeID)
@@ -66,7 +75,17 @@ namespace TVA.Media
             if (bytesRead < length)
                 throw new InvalidOperationException("WAVE format section too small, wave file corrupted.");
 
-            Initialize(buffer, 0);
+            m_audioFormat = EndianOrder.LittleEndian.ToInt16(buffer, 0);
+            m_channels = EndianOrder.LittleEndian.ToInt16(buffer, 2);
+            m_sampleRate = EndianOrder.LittleEndian.ToInt32(buffer, 4);
+            m_byteRate = EndianOrder.LittleEndian.ToInt32(buffer, 8);
+            m_blockAlignment = EndianOrder.LittleEndian.ToInt16(buffer, 12);
+            m_bitsPerSample = EndianOrder.LittleEndian.ToInt16(buffer, 14);
+
+            if (m_bitsPerSample % 8 != 0)
+                throw new InvalidDataException("Invalid bit rate encountered - wave file bit rates must be a multiple of 8");
+
+            m_extraParametersSize = EndianOrder.LittleEndian.ToInt16(buffer, 16);
 
             // Read extra parameters, if any
             if (m_extraParametersSize > 0)
@@ -80,22 +99,9 @@ namespace TVA.Media
             }
         }
 
-        public override int Initialize(byte[] binaryImage, int startIndex)
-        {
-            m_audioFormat = BitConverter.ToInt16(binaryImage, startIndex);
-            m_channels = BitConverter.ToInt16(binaryImage, startIndex + 2);
-            m_sampleRate = BitConverter.ToInt32(binaryImage, startIndex + 4);
-            m_byteRate = BitConverter.ToInt32(binaryImage, startIndex + 8);
-            m_blockAlignment = BitConverter.ToInt16(binaryImage, startIndex + 12);
-            m_bitsPerSample = BitConverter.ToInt16(binaryImage, startIndex + 14);
+        #endregion
 
-            if (m_bitsPerSample % 8 != 0)
-                throw new InvalidDataException("Invalid bit rate encountered - wave file bit rates must be a multiple of 8");
-
-            m_extraParametersSize = BitConverter.ToInt16(binaryImage, startIndex + 16);
-
-            return BinaryLength;
-        }
+        #region [ Properties ]
 
         public override byte[] BinaryImage
         {
@@ -105,13 +111,13 @@ namespace TVA.Media
                 int startIndex = base.BinaryLength;
 
                 Buffer.BlockCopy(base.BinaryImage, 0, binaryImage, 0, startIndex);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_audioFormat), 0, binaryImage, startIndex, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_channels), 0, binaryImage, startIndex + 2, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_sampleRate), 0, binaryImage, startIndex + 4, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_byteRate), 0, binaryImage, startIndex + 8, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_blockAlignment), 0, binaryImage, startIndex + 12, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_bitsPerSample), 0, binaryImage, startIndex + 14, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_extraParametersSize), 0, binaryImage, startIndex + 16, 2);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_audioFormat), 0, binaryImage, startIndex, 2);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_channels), 0, binaryImage, startIndex + 2, 2);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_sampleRate), 0, binaryImage, startIndex + 4, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_byteRate), 0, binaryImage, startIndex + 8, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_blockAlignment), 0, binaryImage, startIndex + 12, 2);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_bitsPerSample), 0, binaryImage, startIndex + 14, 2);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_extraParametersSize), 0, binaryImage, startIndex + 16, 2);
 
                 if (m_extraParametersSize > 0 && m_extraParameters != null)
                     Buffer.BlockCopy(m_extraParameters, 0, binaryImage, startIndex + 18, m_extraParametersSize);
@@ -167,7 +173,7 @@ namespace TVA.Media
             }
         }
 
-        public short BlockAlignent
+        public short BlockAlignment
         {
             get
             {
@@ -218,6 +224,10 @@ namespace TVA.Media
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         private void UpdateByteRate()
         {
             m_byteRate = m_sampleRate * m_channels * (m_bitsPerSample / 8);
@@ -227,5 +237,7 @@ namespace TVA.Media
         {
             m_blockAlignment = (short)(m_channels * (m_bitsPerSample / 8));
         }
+
+        #endregion
     }
 }

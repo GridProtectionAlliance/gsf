@@ -22,7 +22,7 @@ using System.Media;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
-using TVA.Parsing;
+using TVA.Interop;
 
 namespace TVA.Media
 {
@@ -325,30 +325,22 @@ namespace TVA.Media
 
         #region [ Members ]
 
-        // Nested Types
-
-
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
         // Fields
+        private RiffHeaderChunk m_waveHeader;
         private WaveFormatChunk m_waveFomat;
         private WaveDataChunk m_waveData;
-
-        private short m_audioFormat;
-        private short m_channels;
-        private int m_sampleRate;
-        private short m_blockAlign;
-        private short m_bitsPerSample;
-        private List<byte[]> m_waveFormData;
 
         #endregion
 
         #region [ Constructors ]
+
+        /// <summary>Creates a new empty in-memory wave file using standard CD quality settings</summary>
+        public WaveFile()
+        {
+            m_waveHeader = new RiffHeaderChunk("WAVE");
+            m_waveFomat = new WaveFormatChunk(44100, 16, 2, 0x1);
+            m_waveData = new WaveDataChunk(m_waveFomat);
+        }
 
         /// <summary>Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format</summary>
         /// <param name="sampleRate">Desired sample rate</param>
@@ -387,19 +379,102 @@ namespace TVA.Media
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
         public WaveFile(int sampleRate, short bitsPerSample, short channels, short audioFormat)
         {
-            if (bitsPerSample % 8 != 0)
-                throw new InvalidDataException("Invalid bit rate specified - wave file bit rates must be a multiple of 8");
+            m_waveHeader = new RiffHeaderChunk("WAVE");
+            m_waveFomat = new WaveFormatChunk(sampleRate, bitsPerSample, channels, audioFormat);
+            m_waveData = new WaveDataChunk(m_waveFomat);
+        }
 
-            m_waveFormData = new List<Byte[]>();
-            m_audioFormat = audioFormat;
-            m_channels = channels;
-            m_sampleRate = sampleRate;
-            m_bitsPerSample = bitsPerSample;
+        /// <summary>Creates a new empty in-memory wave file using existing constituent chunks</summary>
+        public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData)
+        {
+            m_waveHeader = waveHeader;
+            m_waveFomat = waveFormat;
+            m_waveData = waveData;
         }
 
         #endregion
 
         #region [ Properties ]
+
+        public short AudioFormat
+        {
+            get
+            {
+                return m_waveFomat.AudioFormat;
+            }
+            set
+            {
+                m_waveFomat.AudioFormat = value;
+            }
+        }
+
+        public short Channels
+        {
+            get
+            {
+                return m_waveFomat.Channels;
+            }
+            set
+            {
+                m_waveFomat.Channels = value;
+            }
+        }
+
+        public int SampleRate
+        {
+            get
+            {
+                return m_waveFomat.SampleRate;
+            }
+            set
+            {
+                m_waveFomat.SampleRate = value;
+            }
+        }
+
+        public short BlockAlignment
+        {
+            get
+            {
+                return m_waveFomat.BlockAlignment;
+            }
+            set
+            {
+                m_waveFomat.BlockAlignment = value;
+            }
+        }
+
+        public short BitsPerSample
+        {
+            get
+            {
+                return m_waveFomat.BitsPerSample;
+            }
+            set
+            {
+                m_waveFomat.BitsPerSample = value;
+            }
+        }
+
+        public byte[] ExtraParameters
+        {
+            get
+            {
+                return m_waveFomat.ExtraParameters;
+            }
+            set
+            {
+                m_waveFomat.ExtraParameters = value;
+            }
+        }
+
+        public List<BinaryValue[]> SampleBlocks
+        {
+            get
+            {
+                return m_waveData.SampleBlocks;
+            }
+        }
 
         #endregion
 
@@ -407,21 +482,48 @@ namespace TVA.Media
 
         #endregion
 
-        #region [ Operators ]
-
-        #endregion
-
         #region [ Static ]
 
-        // Static Fields
+        /// <summary>Creates a new in-memory wave loaded from an existing wave file.</summary>
+        /// <param name="waveFileName">File name of WAV file to load.</param>
+        /// <returns>In-memory representation of wave file.</returns>
+        public static WaveFile Load(string waveFileName)
+        {
+            FileStream source = File.Open(waveFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            RiffChunk riffChunk;
+            RiffHeaderChunk waveHeader;
+            WaveFormatChunk waveFormat;
+            WaveDataChunk waveData;
 
-        // Static Constructor
+            while (waveData == null)
+            {
+                riffChunk = RiffChunk.ReadNext(source);
 
-        // Static Properties
+                switch (riffChunk.TypeID)
+                {
+                    case RiffHeaderChunk.RiffTypeID:
+                        waveHeader = new RiffHeaderChunk(riffChunk, source, "WAVE");
+                        break;
+                    case WaveFormatChunk.RiffTypeID:
+                        if (waveHeader == null)
+                            throw new InvalidDataException("WAVE format section encountered before RIFF header, wave file corrupted.");
 
-        // Static Methods
+                        waveFormat = new WaveFormatChunk(riffChunk, source);
+                        break;
+                    case WaveDataChunk.RiffTypeID:
+                        if (waveFormat == null)
+                            throw new InvalidDataException("WAVE data section encountered before format section, wave file corrupted.");
+
+                        waveData = new WaveDataChunk(riffChunk, source, waveFormat);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return new WaveFile(waveHeader, waveFormat, waveData);
+        }
 
         #endregion
-
     }
 }

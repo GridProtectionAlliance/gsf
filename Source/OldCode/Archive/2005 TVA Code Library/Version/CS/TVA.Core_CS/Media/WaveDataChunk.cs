@@ -28,56 +28,82 @@ namespace TVA.Media
     /// </summary>
     public class WaveDataChunk : RiffChunk
     {
+        #region [ Members ]
+
+        // Constants
         public const string RiffTypeID = "data";
 
+        // Fields
         private WaveFormatChunk m_waveFormat;
-        private List<BinaryValue[]> m_dataSamples;
+        private List<BinaryValue[]> m_sampleBlocks;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public WaveDataChunk(WaveFormatChunk waveFormat)
+            : base(RiffTypeID)
+        {
+            m_waveFormat = waveFormat;
+            m_sampleBlocks = new List<BinaryValue[]>();
+        }
 
         /// <summary>Reads a new WAVE format section from the specified stream.</summary>
         /// <param name="preRead">Pre-parsed RIFF chunk header.</param>
-        /// <param name="waveFormat">Format of the data section to be parsed.</param>
         /// <param name="source">Source stream to read data from.</param>
+        /// <param name="waveFormat">Format of the data section to be parsed.</param>
         /// <exception cref="InvalidOperationException">WAVE format or extra parameters section too small, wave file corrupted.</exception>
-        public WaveDataChunk(RiffChunk preRead, WaveFormatChunk waveFormat, Stream source)
+        public WaveDataChunk(RiffChunk preRead, Stream source, WaveFormatChunk waveFormat)
             : base(preRead, RiffTypeID)
         {
             m_waveFormat = waveFormat;
-            m_dataSamples = new List<BinaryValue[]>();
+            m_sampleBlocks = new List<BinaryValue[]>();
 
-            int blockSize = waveFormat.BlockAlignent;
+            int blockSize = waveFormat.BlockAlignment;
             int sampleSize = waveFormat.BitsPerSample / 8;
             byte[] buffer = new byte[blockSize];
             int channels = waveFormat.Channels;
-            BinaryValue[] sampleChannels;
+            BinaryValue[] sampleBlock;
 
             int bytesRead = source.Read(buffer, 0, blockSize);
 
             while (bytesRead == blockSize)
             {
-                // Create a new data sample (one integer for each channel - most bits per sample will fit within a 32-bit integer)
-                sampleChannels = new BinaryValue[channels];
+                // Create a new sample block, one binary sample value for each channel
+                sampleBlock = new BinaryValue[channels];
 
                 for (int x = 0; x < channels; x++)
                 {
-                    sampleChannels[x] = new BinaryValue(buffer.CopyBuffer(x * sampleSize, sampleSize));
+                    sampleBlock[x] = new BinaryValue(buffer.CopyBuffer(x * sampleSize, sampleSize));
                 }
 
-                m_dataSamples.Add(sampleChannels);
+                m_sampleBlocks.Add(sampleBlock);
 
                 bytesRead = source.Read(buffer, 0, blockSize);
-            }          
+            }
         }
 
-        public override int Initialize(byte[] binaryImage, int startIndex)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
 
-        public List<BinaryValue[]> DataSamples
+        #region [ Properties ]
+
+        public List<BinaryValue[]> SampleBlocks
         {
             get
             {
-                return m_dataSamples;
+                return m_sampleBlocks;
+            }
+        }
+
+        public override int ChunkSize
+        {
+            get
+            {
+                return m_sampleBlocks.Count * m_waveFormat.BlockAlignment;
+            }
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -86,11 +112,22 @@ namespace TVA.Media
             get
             {
                 byte[] binaryImage = new byte[BinaryLength];
+                int blockSize = m_waveFormat.BlockAlignment;
+                int sampleSize = m_waveFormat.BitsPerSample / 8;
                 int startIndex = base.BinaryLength;
+                BinaryValue[] sampleChannels;
 
                 Buffer.BlockCopy(base.BinaryImage, 0, binaryImage, 0, startIndex);
 
-                // TODO: copy in data...
+                for (int block = 0; block < m_sampleBlocks.Count; block++)
+                {
+                    sampleChannels = m_sampleBlocks[block];
+
+                    for (int sample = 0; sample < sampleChannels.Length; sample++)
+                    {
+                        Buffer.BlockCopy(sampleChannels[sample].Buffer, 0, binaryImage, startIndex + block * blockSize + sample * sampleSize, sampleSize);
+                    }
+                }
 
                 return binaryImage;
             }
@@ -103,5 +140,7 @@ namespace TVA.Media
                 return base.BinaryLength + ChunkSize;
             }
         }
+
+        #endregion
     }
 }

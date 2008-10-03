@@ -19,7 +19,10 @@ using System;
 
 namespace TVA.Interop
 {
-    /// <summary>Represents a binary data sample stored as a byte array, but implicitly castable to most common native types.</summary>
+    /// <summary>
+    /// Represents a binary data sample stored as a byte array ordered in the
+    /// endianness of the OS, but implicitly castable to most common native types.
+    /// </summary>
     public class BinaryValue
     {
         #region [ Members ]
