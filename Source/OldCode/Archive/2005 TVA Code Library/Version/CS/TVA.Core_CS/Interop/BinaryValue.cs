@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  BinaryData.cs
+//  BinaryValue.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -20,35 +20,35 @@ using System;
 namespace TVA.Interop
 {
     /// <summary>Represents a binary data sample stored as a byte array, but implicitly castable to most common native types.</summary>
-    public class BinaryData
+    public class BinaryValue
     {
         #region [ Members ]
 
         // Fields
-        private byte[] m_dataSample;
+        private byte[] m_buffer;
 
         #endregion
 
         #region [ Constructors ]
 
-        public BinaryData(byte[] dataSample)
+        public BinaryValue(byte[] buffer)
         {
-            m_dataSample = dataSample;
+            m_buffer = buffer;
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public byte[] Value
+        public byte[] Buffer
         {
             get
             {
-                return m_dataSample;
+                return m_buffer;
             }
             set
             {
-                m_dataSample = value;
+                m_buffer = value;
             }
         }
 
@@ -119,122 +119,122 @@ namespace TVA.Interop
 
         #region [ Operators ]
 
-        public static implicit operator Byte(BinaryData value)
+        public static implicit operator Byte(BinaryValue value)
         {
-            return value.m_dataSample[0];
+            return value.m_buffer[0];
         }
 
-        public static implicit operator BinaryData(Byte value)
+        public static implicit operator BinaryValue(Byte value)
         {
-            return new BinaryData(new byte[] { value });
+            return new BinaryValue(new byte[] { value });
         }
 
-        public static implicit operator Int16(BinaryData value)
+        public static implicit operator Int16(BinaryValue value)
         {
-            return BitConverter.ToInt16(value.m_dataSample, 0);
+            return BitConverter.ToInt16(value.m_buffer, 0);
         }
 
-        public static implicit operator BinaryData(Int16 value)
+        public static implicit operator BinaryValue(Int16 value)
         {
-            return new BinaryData(BitConverter.GetBytes(value));
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator UInt16(BinaryData value)
-        {
-            return BitConverter.ToUInt16(value.m_dataSample, 0);
+            return new BinaryValue(BitConverter.GetBytes(value));
         }
 
         [CLSCompliant(false)]
-        public static implicit operator BinaryData(UInt16 value)
+        public static implicit operator UInt16(BinaryValue value)
         {
-            return new BinaryData(BitConverter.GetBytes(value));
-        }
-
-        public static implicit operator Int24(BinaryData value)
-        {
-            return Int24.GetValue(value.m_dataSample, 0);
-        }
-
-        public static implicit operator BinaryData(Int24 value)
-        {
-            return new BinaryData(Int24.GetBytes(value));
+            return BitConverter.ToUInt16(value.m_buffer, 0);
         }
 
         [CLSCompliant(false)]
-        public static implicit operator UInt24(BinaryData value)
+        public static implicit operator BinaryValue(UInt16 value)
         {
-            return UInt24.GetValue(value.m_dataSample, 0);
+            return new BinaryValue(BitConverter.GetBytes(value));
+        }
+
+        public static implicit operator Int24(BinaryValue value)
+        {
+            return Int24.GetValue(value.m_buffer, 0);
+        }
+
+        public static implicit operator BinaryValue(Int24 value)
+        {
+            return new BinaryValue(Int24.GetBytes(value));
         }
 
         [CLSCompliant(false)]
-        public static implicit operator BinaryData(UInt24 value)
+        public static implicit operator UInt24(BinaryValue value)
         {
-            return new BinaryData(UInt24.GetBytes(value));
-        }
-
-        public static implicit operator Int32(BinaryData value)
-        {
-            return BitConverter.ToInt32(value.m_dataSample, 0);
-        }
-
-        public static implicit operator BinaryData(Int32 value)
-        {
-            return new BinaryData(BitConverter.GetBytes(value));
+            return UInt24.GetValue(value.m_buffer, 0);
         }
 
         [CLSCompliant(false)]
-        public static implicit operator UInt32(BinaryData value)
+        public static implicit operator BinaryValue(UInt24 value)
         {
-            return BitConverter.ToUInt32(value.m_dataSample, 0);
+            return new BinaryValue(UInt24.GetBytes(value));
+        }
+
+        public static implicit operator Int32(BinaryValue value)
+        {
+            return BitConverter.ToInt32(value.m_buffer, 0);
+        }
+
+        public static implicit operator BinaryValue(Int32 value)
+        {
+            return new BinaryValue(BitConverter.GetBytes(value));
         }
 
         [CLSCompliant(false)]
-        public static implicit operator BinaryData(UInt32 value)
+        public static implicit operator UInt32(BinaryValue value)
         {
-            return new BinaryData(BitConverter.GetBytes(value));
-        }
-
-        public static implicit operator Int64(BinaryData value)
-        {
-            return BitConverter.ToInt64(value.m_dataSample, 0);
-        }
-
-        public static implicit operator BinaryData(Int64 value)
-        {
-            return new BinaryData(BitConverter.GetBytes(value));
+            return BitConverter.ToUInt32(value.m_buffer, 0);
         }
 
         [CLSCompliant(false)]
-        public static implicit operator UInt64(BinaryData value)
+        public static implicit operator BinaryValue(UInt32 value)
         {
-            return BitConverter.ToUInt64(value.m_dataSample, 0);
+            return new BinaryValue(BitConverter.GetBytes(value));
+        }
+
+        public static implicit operator Int64(BinaryValue value)
+        {
+            return BitConverter.ToInt64(value.m_buffer, 0);
+        }
+
+        public static implicit operator BinaryValue(Int64 value)
+        {
+            return new BinaryValue(BitConverter.GetBytes(value));
         }
 
         [CLSCompliant(false)]
-        public static implicit operator BinaryData(UInt64 value)
+        public static implicit operator UInt64(BinaryValue value)
         {
-            return new BinaryData(BitConverter.GetBytes(value));
+            return BitConverter.ToUInt64(value.m_buffer, 0);
         }
 
-        public static implicit operator Single(BinaryData value)
+        [CLSCompliant(false)]
+        public static implicit operator BinaryValue(UInt64 value)
         {
-            return BitConverter.ToSingle(value.m_dataSample, 0);
+            return new BinaryValue(BitConverter.GetBytes(value));
         }
 
-        public static implicit operator BinaryData(Single value)
+        public static implicit operator Single(BinaryValue value)
         {
-            return new BinaryData(BitConverter.GetBytes(value));
+            return BitConverter.ToSingle(value.m_buffer, 0);
         }
 
-        public static implicit operator Double(BinaryData value)
+        public static implicit operator BinaryValue(Single value)
         {
-            return BitConverter.ToDouble(value.m_dataSample, 0);
+            return new BinaryValue(BitConverter.GetBytes(value));
         }
 
-        public static implicit operator BinaryData(Double value)
+        public static implicit operator Double(BinaryValue value)
         {
-            return new BinaryData(BitConverter.GetBytes(value));
+            return BitConverter.ToDouble(value.m_buffer, 0);
+        }
+
+        public static implicit operator BinaryValue(Double value)
+        {
+            return new BinaryValue(BitConverter.GetBytes(value));
         }
 
         #endregion
