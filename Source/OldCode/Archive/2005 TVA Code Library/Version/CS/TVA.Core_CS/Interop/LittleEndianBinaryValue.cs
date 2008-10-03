@@ -156,24 +156,24 @@ namespace TVA.Interop
 
         public static implicit operator Int24(LittleEndianBinaryValue value)
         {
-            return Int24.GetValue(value.m_buffer, 0);
+            return EndianOrder.LittleEndian.ToInt24(value.m_buffer, 0);
         }
 
         public static implicit operator LittleEndianBinaryValue(Int24 value)
         {
-            return new LittleEndianBinaryValue(Int24.GetBytes(value));
+            return new LittleEndianBinaryValue(EndianOrder.LittleEndian.GetBytes(value));
         }
 
         [CLSCompliant(false)]
         public static implicit operator UInt24(LittleEndianBinaryValue value)
         {
-            return UInt24.GetValue(value.m_buffer, 0);
+            return EndianOrder.LittleEndian.ToUInt24(value.m_buffer, 0);
         }
 
         [CLSCompliant(false)]
         public static implicit operator LittleEndianBinaryValue(UInt24 value)
         {
-            return new LittleEndianBinaryValue(UInt24.GetBytes(value));
+            return new LittleEndianBinaryValue(EndianOrder.LittleEndian.GetBytes(value));
         }
 
         public static implicit operator Int32(LittleEndianBinaryValue value)
