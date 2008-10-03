@@ -4,8 +4,8 @@
 //
 //  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: James R Carroll
-//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
-//       Phone: 423/751-2827
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
@@ -126,7 +126,7 @@ namespace TVA.Media
         /// <summary>μ-law encoding algorithm (used in North America and Japan)</summary>
         MULAW = 0x7,
         /// <summary>Decode Timestamp encoding algorithm (used in MPEG-coded multimedia)</summary>
-        //DTS = 0x8,                           // Microsoft Corporation    
+        DTS = 0x8,                             // Microsoft Corporation    
         //DRM = 0x9,                           // Microsoft Corporation
         //OKI_ADPCM = 0x10,                    // OKI
         //DVI_ADPCM = 0x11,                    // Intel Corporation
@@ -349,7 +349,7 @@ namespace TVA.Media
         /// <summary>Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format</summary>
         /// <param name="sampleRate">Desired sample rate</param>
         /// <param name="bitsPerSample">Desired bits-per-sample</param>
-        /// <param name="dataChannels">Desired data channels</param>
+        /// <param name="channels">Desired data channels</param>
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels)
             : this((int)sampleRate, (short)bitsPerSample, (short)channels, (short)WaveFormats.PCM)
         {
@@ -358,7 +358,7 @@ namespace TVA.Media
         /// <summary>Creates a new empty in-memory wave file in specified audio format</summary>
         /// <param name="sampleRate">Desired sample rate</param>
         /// <param name="bitsPerSample">Desired bits-per-sample</param>
-        /// <param name="dataChannels">Desired data channels</param>
+        /// <param name="channels">Desired data channels</param>
         /// <param name="audioFormat">Desired audio format</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels, WaveFormats audioFormat)
@@ -369,7 +369,7 @@ namespace TVA.Media
         /// <summary>Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format</summary>
         /// <param name="sampleRate">Desired sample rate (e.g., 44100)</param>
         /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16)</param>
-        /// <param name="dataChannels">Desired data channels (e.g., 2 for stereo)</param>
+        /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
         public WaveFile(int sampleRate, short bitsPerSample, short channels)
             : this(sampleRate, bitsPerSample, channels, (short)WaveFormats.PCM)
         {
@@ -378,7 +378,7 @@ namespace TVA.Media
         /// <summary>Creates a new empty in-memory wave file in specified audio format</summary>
         /// <param name="sampleRate">Desired sample rate (e.g., 44100)</param>
         /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16)</param>
-        /// <param name="dataChannels">Desired data channels (e.g., 2 for stereo)</param>
+        /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
         /// <param name="audioFormat">Desired audio format (e.g., 0x1 for Pulse Code Modulation)</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
         public WaveFile(int sampleRate, short bitsPerSample, short channels, short audioFormat)

@@ -1,4 +1,21 @@
-﻿using System;
+﻿//*******************************************************************************************************
+//  RiffHeaderChunk.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  10/03/2008 - James R Carroll
+//       Generated original version of source code.
+//
+//*******************************************************************************************************
+
+using System;
 using System.IO;
 using System.Text;
 
@@ -18,6 +35,7 @@ namespace TVA.Media
         }
 
         /// <summary>Reads a new RIFF header from the specified stream.</summary>
+        /// <param name="preRead">Pre-parsed RIFF chunk header.</param>
         /// <param name="source">Source stream to read data from.</param>
         /// <param name="format">Expected RIFF media format (e.g., "WAVE").</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> cannot be null.</exception>
