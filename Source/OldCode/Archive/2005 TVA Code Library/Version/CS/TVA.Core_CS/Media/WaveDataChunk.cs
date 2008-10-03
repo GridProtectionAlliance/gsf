@@ -31,39 +31,41 @@ namespace TVA.Media
         public const string RiffTypeID = "data";
 
         private WaveFormatChunk m_waveFormat;
-        private List<DataSample[]> m_dataSamples;
+        private List<BinaryValue[]> m_dataSamples;
 
         /// <summary>Reads a new WAVE format section from the specified stream.</summary>
         /// <param name="preRead">Pre-parsed RIFF chunk header.</param>
+        /// <param name="waveFormat">Format of the data section to be parsed.</param>
         /// <param name="source">Source stream to read data from.</param>
         /// <exception cref="InvalidOperationException">WAVE format or extra parameters section too small, wave file corrupted.</exception>
         public WaveDataChunk(RiffChunk preRead, WaveFormatChunk waveFormat, Stream source)
             : base(preRead, RiffTypeID)
         {
             m_waveFormat = waveFormat;
-            m_dataSamples = new List<DataSample[]>();
+            m_dataSamples = new List<BinaryValue[]>();
 
             int blockSize = waveFormat.BlockAlignent;
             int sampleSize = waveFormat.BitsPerSample / 8;
             byte[] buffer = new byte[blockSize];
             int channels = waveFormat.Channels;
-            DataSample[] dataSamples;
+            BinaryValue[] sampleChannels;
 
             int bytesRead = source.Read(buffer, 0, blockSize);
 
             while (bytesRead == blockSize)
             {
                 // Create a new data sample (one integer for each channel - most bits per sample will fit within a 32-bit integer)
-                dataSamples = new DataSample[channels];
+                sampleChannels = new BinaryValue[channels];
 
-                for (int x = 0; x < waveFormat.Channels; x++)
+                for (int x = 0; x < channels; x++)
                 {
-                    dataSamples[x] = new DataSample(buffer.CopyBuffer(x * sampleSize, sampleSize));
+                    sampleChannels[x] = new BinaryValue(buffer.CopyBuffer(x * sampleSize, sampleSize));
                 }
 
+                m_dataSamples.Add(sampleChannels);
+
                 bytesRead = source.Read(buffer, 0, blockSize);
-            }
-            
+            }          
         }
 
         public override int Initialize(byte[] binaryImage, int startIndex)
@@ -71,7 +73,7 @@ namespace TVA.Media
             throw new NotImplementedException();
         }
 
-        public List<DataSample[]> DataSamples
+        public List<BinaryValue[]> DataSamples
         {
             get
             {
