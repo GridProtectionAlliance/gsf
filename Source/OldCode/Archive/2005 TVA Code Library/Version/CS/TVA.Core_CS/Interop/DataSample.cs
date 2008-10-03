@@ -178,7 +178,7 @@ namespace TVA.Interop
             return BitConverter.ToInt32(value.m_dataSample, 0);
         }
 
-        public static implicit operator DataSample(UInt32 value)
+        public static implicit operator DataSample(Int32 value)
         {
             return new DataSample(BitConverter.GetBytes(value));
         }
