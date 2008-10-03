@@ -1,6 +1,6 @@
-//*******************************************************************************************************
-//  Enumerations.cs
-//  Copyright � 2008 - TVA, all rights reserved - Gbtc
+﻿//*******************************************************************************************************
+//  TransportProtocol.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: Pinal C. Patel, Operations Data Architecture [TVA]
@@ -17,21 +17,15 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace TVA.Communication
 {
-	public enum TransportProtocol
-	{
-		Tcp,
-		Udp,
-		Serial,
-		File
-	}
-	
-	public enum CRCCheckType
-	{
-		None,
-		CRC16,
-		CRC32,
-		CRC_CCITT
-	}
+    public enum TransportProtocol
+    {
+        Tcp,
+        Udp,
+        Serial,
+        File
+    }
 }
