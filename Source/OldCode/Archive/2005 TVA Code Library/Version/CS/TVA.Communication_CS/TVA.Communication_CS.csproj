@@ -51,7 +51,9 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -59,7 +61,6 @@
     <Compile Include="ClientBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Enumerations.cs" />
     <Compile Include="FileClient.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -83,6 +84,7 @@
     <Compile Include="TcpServer.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="TransportProtocol.cs" />
     <Compile Include="UdpClient.cs">
       <SubType>Component</SubType>
     </Compile>
