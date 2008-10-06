@@ -414,6 +414,7 @@ namespace TVA.Identity
         ///     }
         /// }
         /// </code>
+        /// </example>
         public static bool AuthenticateUser(string username, string password, string domain)
         {
             string errorMessage;
@@ -450,6 +451,7 @@ namespace TVA.Identity
         ///     }
         /// }
         /// </code>
+        /// </example>
         public static bool AuthenticateUser(string username, string password, string domain, out string errorMessage)
         {
             IntPtr tokenHandle = IntPtr.Zero;
