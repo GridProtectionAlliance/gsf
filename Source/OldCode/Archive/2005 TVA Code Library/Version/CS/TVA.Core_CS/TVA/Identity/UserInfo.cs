@@ -387,6 +387,33 @@ namespace TVA.Identity
         // Static Methods
 
         /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        /// <param name="username">Username of user to authenticate.</param>
+        /// <param name="password">Password of user to authenticate.</param>
+        /// <param name="domain">Domain of user to authenticate.</param>
+        /// <example>
+        /// This example shows how to validate a user's credentials:
+        /// <code>
+        /// using System;
+        /// using TVA.Identity;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         string username = "johndoe";
+        ///         string password = "password";
+        ///         string domain = "XYZCorp";
+        ///         bool authenticated = UserInfo.AuthenticateUser(username, password, domain);
+        ///
+        ///         if (authenticated)
+        ///             Console.WriteLine("Successfully authenticated user \"{1}\\{0}\".", username, domain);
+        ///         else
+        ///             Console.WriteLine("Failed to authenticate user \"{1}\\{0}\".", username, domain);
+        ///         
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
         public static bool AuthenticateUser(string username, string password, string domain)
         {
             string errorMessage;
@@ -394,6 +421,35 @@ namespace TVA.Identity
         }
 
         /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        /// <param name="username">Username of user to authenticate.</param>
+        /// <param name="password">Password of user to authenticate.</param>
+        /// <param name="domain">Domain of user to authenticate.</param>
+        /// <param name="errorMessage">Error message, if authentication fails.</param>
+        /// <example>
+        /// This example shows how to validate a user's credentials and show an error message:
+        /// <code>
+        /// using System;
+        /// using TVA.Identity;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         string username = "johndoe";
+        ///         string password = "password";
+        ///         string domain = "XYZCorp";
+        ///         string errorMessage;
+        ///         bool authenticated = UserInfo.AuthenticateUser(username, password, domain, out errorMessage);
+        ///
+        ///         if (authenticated)
+        ///             Console.WriteLine("Successfully authenticated user \"{1}\\{0}\".", username, domain);
+        ///         else
+        ///             Console.WriteLine("Failed to authenticate user \"{1}\\{0}\" due to exception: {2}", username, domain, errorMessage);
+        ///         
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
         public static bool AuthenticateUser(string username, string password, string domain, out string errorMessage)
         {
             IntPtr tokenHandle = IntPtr.Zero;
@@ -423,6 +479,7 @@ namespace TVA.Identity
         /// <param name="username">Name of user to impersonate.</param>
         /// <param name="password">Password of user to impersonate.</param>
         /// <param name="domain">Domain of user to impersonate.</param>
+        /// </example>
         public static WindowsImpersonationContext ImpersonateUser(string username, string password, string domain)
         {
             WindowsImpersonationContext impersonatedUser;
