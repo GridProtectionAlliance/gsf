@@ -481,7 +481,6 @@ namespace TVA.Identity
         /// <param name="username">Name of user to impersonate.</param>
         /// <param name="password">Password of user to impersonate.</param>
         /// <param name="domain">Domain of user to impersonate.</param>
-        /// </example>
         public static WindowsImpersonationContext ImpersonateUser(string username, string password, string domain)
         {
             WindowsImpersonationContext impersonatedUser;
