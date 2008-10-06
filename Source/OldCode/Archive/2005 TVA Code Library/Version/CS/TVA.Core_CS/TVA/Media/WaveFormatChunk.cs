@@ -106,6 +106,21 @@ namespace TVA.Media
 
         #region [ Properties ]
 
+        public override int ChunkSize
+        {
+            get
+            {
+                if (m_extraParametersSize > 0)
+                    return 18 + m_extraParametersSize;
+                else
+                    return 16;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public override byte[] BinaryImage
         {
             get
@@ -137,10 +152,7 @@ namespace TVA.Media
         {
             get
             {
-                if (m_extraParametersSize > 0)
-                    return base.BinaryLength + 18 + m_extraParametersSize;
-                else
-                    return base.BinaryLength + 16;
+                return base.BinaryLength + ChunkSize;
             }
         }
 

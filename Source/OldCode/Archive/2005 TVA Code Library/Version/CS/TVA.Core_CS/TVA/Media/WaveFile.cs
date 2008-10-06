@@ -528,6 +528,7 @@ namespace TVA.Media
 
         public void Save(Stream destination)
         {
+            m_waveHeader.ChunkSize = 4 + m_waveFormat.BinaryLength + m_waveData.BinaryLength;
             destination.Write(m_waveHeader.BinaryImage, 0, m_waveHeader.BinaryLength);
             destination.Write(m_waveFormat.BinaryImage, 0, m_waveFormat.BinaryLength);
             destination.Write(m_waveData.BinaryImage, 0, m_waveData.BinaryLength);

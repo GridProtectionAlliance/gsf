@@ -107,8 +107,8 @@ namespace TVA.Media
             {
                 byte[] binaryImage = new byte[BinaryLength];
 
-                Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_typeID), 0, binaryImage, 0, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_chunkSize), 0, binaryImage, 4, 4);
+                Buffer.BlockCopy(Encoding.ASCII.GetBytes(TypeID), 0, binaryImage, 0, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(ChunkSize), 0, binaryImage, 4, 4);
 
                 return binaryImage;
             }
