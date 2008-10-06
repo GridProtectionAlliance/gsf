@@ -81,12 +81,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferExtensions.cs" />
-    <Compile Include="Interop\BigEndianBinaryValue.cs" />
-    <Compile Include="Interop\LittleEndianBinaryValue.cs" />
+    <Compile Include="Interop\BinaryValue.cs" />
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
-    <Compile Include="Interop\BinaryValue.cs" />
     <Compile Include="Media\RiffChunk.cs" />
     <Compile Include="Media\RiffHeaderChunk.cs" />
     <Compile Include="Media\WaveDataChunk.cs" />

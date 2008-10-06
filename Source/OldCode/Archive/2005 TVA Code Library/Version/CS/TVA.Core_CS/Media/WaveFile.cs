@@ -468,7 +468,7 @@ namespace TVA.Media
             }
         }
 
-        public List<LittleEndianBinaryValue[]> SampleBlocks
+        public List<LittleBinaryValue[]> SampleBlocks
         {
             get
             {
@@ -492,7 +492,7 @@ namespace TVA.Media
         /// You should only add values that match the wave file's bits-per-sample (e.g., if wave file is
         /// configured for 16-bits only pass in Int16 values, casting if necessary).
         /// </remarks>
-        public void AddBlock(params LittleEndianBinaryValue[] samples)
+        public void AddBlock(params LittleBinaryValue[] samples)
         {
             // Validate number of samples
             if (samples.Length != m_waveFormat.Channels)
@@ -501,7 +501,7 @@ namespace TVA.Media
             int byteLength = m_waveFormat.BitsPerSample / 8;
 
             // Validate bit-lengths of samples
-            foreach (LittleEndianBinaryValue item in samples)
+            foreach (LittleBinaryValue item in samples)
             {
                 if (item.Buffer.Length != byteLength)
                     throw new ArrayTypeMismatchException(string.Format("One of the parameters is {0}-bits and wave is configured for {1}-bits per sample.", item.Buffer.Length * 8, m_waveFormat.BitsPerSample));

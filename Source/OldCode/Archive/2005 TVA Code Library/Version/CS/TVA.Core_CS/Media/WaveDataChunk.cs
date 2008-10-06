@@ -35,7 +35,7 @@ namespace TVA.Media
 
         // Fields
         private WaveFormatChunk m_waveFormat;
-        private List<LittleEndianBinaryValue[]> m_sampleBlocks;
+        private List<LittleBinaryValue[]> m_sampleBlocks;
 
         #endregion
 
@@ -45,7 +45,7 @@ namespace TVA.Media
             : base(RiffTypeID)
         {
             m_waveFormat = waveFormat;
-            m_sampleBlocks = new List<LittleEndianBinaryValue[]>();
+            m_sampleBlocks = new List<LittleBinaryValue[]>();
         }
 
         /// <summary>Reads a new WAVE format section from the specified stream.</summary>
@@ -57,24 +57,24 @@ namespace TVA.Media
             : base(preRead, RiffTypeID)
         {
             m_waveFormat = waveFormat;
-            m_sampleBlocks = new List<LittleEndianBinaryValue[]>();
+            m_sampleBlocks = new List<LittleBinaryValue[]>();
 
             int blockSize = waveFormat.BlockAlignment;
             int sampleSize = waveFormat.BitsPerSample / 8;
             byte[] buffer = new byte[blockSize];
             int channels = waveFormat.Channels;
-            LittleEndianBinaryValue[] sampleBlock;
+            LittleBinaryValue[] sampleBlock;
 
             int bytesRead = source.Read(buffer, 0, blockSize);
 
             while (bytesRead == blockSize)
             {
                 // Create a new sample block, one binary sample value for each channel
-                sampleBlock = new LittleEndianBinaryValue[channels];
+                sampleBlock = new LittleBinaryValue[channels];
 
                 for (int x = 0; x < channels; x++)
                 {
-                    sampleBlock[x] = new LittleEndianBinaryValue(buffer.CopyBuffer(x * sampleSize, sampleSize));
+                    sampleBlock[x] = new LittleBinaryValue(buffer.CopyBuffer(x * sampleSize, sampleSize));
                 }
 
                 m_sampleBlocks.Add(sampleBlock);
@@ -87,7 +87,7 @@ namespace TVA.Media
 
         #region [ Properties ]
 
-        public List<LittleEndianBinaryValue[]> SampleBlocks
+        public List<LittleBinaryValue[]> SampleBlocks
         {
             get
             {
@@ -115,7 +115,7 @@ namespace TVA.Media
                 int blockSize = m_waveFormat.BlockAlignment;
                 int sampleSize = m_waveFormat.BitsPerSample / 8;
                 int startIndex = base.BinaryLength;
-                LittleEndianBinaryValue[] sampleChannels;
+                LittleBinaryValue[] sampleChannels;
 
                 Buffer.BlockCopy(base.BinaryImage, 0, binaryImage, 0, startIndex);
 

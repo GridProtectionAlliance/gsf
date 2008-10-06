@@ -40,13 +40,74 @@ namespace TVA.Interop
 
     #endregion
 
+    /// <summary>Big-endian byte order interoperability class</summary>
+    public class BigEndianOrder : EndianOrder
+    {
+        private static BigEndianOrder m_endianOrder;
+
+        public BigEndianOrder()
+            : base(Endianness.BigEndian)
+        {
+        }
+
+        public static BigEndianOrder Default
+        {
+            get
+            {
+                if (m_endianOrder == null) m_endianOrder = new BigEndianOrder();
+                return m_endianOrder;
+            }
+        }
+    }
+
+    /// <summary>Little-endian byte order interoperability class</summary>
+    public class LittleEndianOrder : EndianOrder
+    {
+        private static LittleEndianOrder m_endianOrder;
+
+        public LittleEndianOrder()
+            : base(Endianness.BigEndian)
+        {
+        }
+
+        public static LittleEndianOrder Default
+        {
+            get
+            {
+                if (m_endianOrder == null) m_endianOrder = new LittleEndianOrder();
+                return m_endianOrder;
+            }
+        }
+    }
+
+    /// <summary>Native-endian byte order interoperability class</summary>
+    public class NativeEndianOrder : EndianOrder
+    {
+        private static NativeEndianOrder m_endianOrder;
+
+        public NativeEndianOrder()
+            : base(BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian)
+        {
+        }
+
+        public static NativeEndianOrder Default
+        {
+            get
+            {
+                if (m_endianOrder == null) m_endianOrder = new NativeEndianOrder();
+                return m_endianOrder;
+            }
+        }
+    }
+
+
     /// <summary>Endian byte order interoperability class</summary>
     /// <remarks>
     /// Intel systems use little-endian byte order, other systems, such as Unix, use big-endian byte ordering.
     /// Little-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.
     /// Big-endian ordering means bits are ordered such that the bit whose in-memory representation is left-most is the most-significant-bit in a byte.
     /// </remarks>
-    public sealed class EndianOrder
+    public class EndianOrder
     {
         #region [ Members ]
 
@@ -63,7 +124,7 @@ namespace TVA.Interop
 
         #region [ Constructors ]
 
-        private EndianOrder(Endianness targetEndianness)
+        internal EndianOrder(Endianness targetEndianness)
         {
             m_targetEndianness = targetEndianness;
 
