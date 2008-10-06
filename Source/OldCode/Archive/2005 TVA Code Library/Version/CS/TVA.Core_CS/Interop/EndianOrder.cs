@@ -43,12 +43,18 @@ namespace TVA.Interop
     /// <summary>Big-endian byte order interoperability class</summary>
     public class BigEndianOrder : EndianOrder
     {
-        private static BigEndianOrder m_endianOrder;
+        #region [ Constructors ]
 
         public BigEndianOrder()
             : base(Endianness.BigEndian)
         {
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        private static BigEndianOrder m_endianOrder;
 
         public static BigEndianOrder Default
         {
@@ -58,17 +64,25 @@ namespace TVA.Interop
                 return m_endianOrder;
             }
         }
+
+        #endregion
     }
 
     /// <summary>Little-endian byte order interoperability class</summary>
     public class LittleEndianOrder : EndianOrder
     {
-        private static LittleEndianOrder m_endianOrder;
+        #region [ Constructors ]
 
         public LittleEndianOrder()
-            : base(Endianness.BigEndian)
+            : base(Endianness.LittleEndian)
         {
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        private static LittleEndianOrder m_endianOrder;
 
         public static LittleEndianOrder Default
         {
@@ -78,17 +92,25 @@ namespace TVA.Interop
                 return m_endianOrder;
             }
         }
+
+        #endregion
     }
 
     /// <summary>Native-endian byte order interoperability class</summary>
     public class NativeEndianOrder : EndianOrder
     {
-        private static NativeEndianOrder m_endianOrder;
+        #region [ Constructors ]
 
         public NativeEndianOrder()
             : base(BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian)
         {
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        private static NativeEndianOrder m_endianOrder;
 
         public static NativeEndianOrder Default
         {
@@ -98,6 +120,8 @@ namespace TVA.Interop
                 return m_endianOrder;
             }
         }
+
+        #endregion
     }
 
 
@@ -124,7 +148,7 @@ namespace TVA.Interop
 
         #region [ Constructors ]
 
-        internal EndianOrder(Endianness targetEndianness)
+        protected EndianOrder(Endianness targetEndianness)
         {
             m_targetEndianness = targetEndianness;
 

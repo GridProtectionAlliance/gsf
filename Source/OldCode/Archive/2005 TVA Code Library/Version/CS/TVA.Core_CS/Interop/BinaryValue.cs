@@ -25,15 +25,23 @@ namespace TVA.Interop
     /// </summary>
     public class BinaryValue : BinaryValue<NativeEndianOrder>
     {
-        static BinaryValue()
-        {
-            m_endianOrder = NativeEndianOrder.Default;
-        }
+        #region [ Constructors ]
 
         public BinaryValue(byte[] buffer)
             : base(buffer)
         {
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        static BinaryValue()
+        {
+            m_endianOrder = NativeEndianOrder.Default;
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -42,15 +50,23 @@ namespace TVA.Interop
     /// </summary>
     public class LittleBinaryValue : BinaryValue<LittleEndianOrder>
     {
-        static LittleBinaryValue()
-        {
-            m_endianOrder = LittleEndianOrder.Default;
-        }
+        #region [ Constructors ]
 
         public LittleBinaryValue(byte[] buffer)
             : base(buffer)
         {
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        static LittleBinaryValue()
+        {
+            m_endianOrder = LittleEndianOrder.Default;
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -59,15 +75,23 @@ namespace TVA.Interop
     /// </summary>
     public class BigBinaryValue : BinaryValue<BigEndianOrder>
     {
-        static BigBinaryValue()
-        {
-            m_endianOrder = BigEndianOrder.Default;
-        }
+        #region [ Constructors ]
 
         public BigBinaryValue(byte[] buffer)
             : base(buffer)
         {
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        static BigBinaryValue()
+        {
+            m_endianOrder = BigEndianOrder.Default;
+        }
+
+        #endregion
     }
 
     /// <summary>
