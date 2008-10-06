@@ -15,9 +15,7 @@
 //
 //*******************************************************************************************************
 
-using System;
-
-namespace TVA.Interop
+namespace System
 {
     /// <summary>
     /// Represents a binary data sample stored as a byte array ordered in the

@@ -29,9 +29,7 @@
 //
 //*******************************************************************************************************
 
-using System;
-
-namespace TVA.Interop
+namespace System
 {
     public static class Bit
     {

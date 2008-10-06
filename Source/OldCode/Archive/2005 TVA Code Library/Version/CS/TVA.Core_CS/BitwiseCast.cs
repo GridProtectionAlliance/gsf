@@ -17,9 +17,7 @@
 //
 //*******************************************************************************************************
 
-using System;
-
-namespace TVA.Interop
+namespace System
 {
     /// <summary>Defines specialized bitwise integer data type conversion functions</summary>
     /// <remarks>
