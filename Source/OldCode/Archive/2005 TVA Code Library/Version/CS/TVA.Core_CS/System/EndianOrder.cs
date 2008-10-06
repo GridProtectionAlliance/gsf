@@ -25,9 +25,7 @@
 //
 //*******************************************************************************************************
 
-using System;
-
-namespace TVA.Interop
+namespace System
 {
     #region [ Enumerations ]
 
