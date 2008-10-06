@@ -32,6 +32,130 @@ namespace System
 
         #endregion
 
+        #region [ Operators ]
+
+        // Operators cannot be inherited from the base class, they are static methods tied to their class instance
+
+        public static implicit operator Byte(BinaryValue value)
+        {
+            return value.m_buffer[0];
+        }
+
+        public static implicit operator BinaryValue(Byte value)
+        {
+            return new BinaryValue(new byte[] { value });
+        }
+
+        public static implicit operator Int16(BinaryValue value)
+        {
+            return value.ToInt16();
+        }
+
+        public static implicit operator BinaryValue(Int16 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt16(BinaryValue value)
+        {
+            return value.ToUInt16();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BinaryValue(UInt16 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int24(BinaryValue value)
+        {
+            return value.ToInt24();
+        }
+
+        public static implicit operator BinaryValue(Int24 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt24(BinaryValue value)
+        {
+            return value.ToUInt24();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BinaryValue(UInt24 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int32(BinaryValue value)
+        {
+            return value.ToInt32();
+        }
+
+        public static implicit operator BinaryValue(Int32 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt32(BinaryValue value)
+        {
+            return value.ToUInt32();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BinaryValue(UInt32 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int64(BinaryValue value)
+        {
+            return value.ToInt64();
+        }
+
+        public static implicit operator BinaryValue(Int64 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt64(BinaryValue value)
+        {
+            return value.ToUInt64();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BinaryValue(UInt64 value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Single(BinaryValue value)
+        {
+            return value.ToSingle();
+        }
+
+        public static implicit operator BinaryValue(Single value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Double(BinaryValue value)
+        {
+            return value.ToDouble();
+        }
+
+        public static implicit operator BinaryValue(Double value)
+        {
+            return new BinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        #endregion
+
         #region [ Static ]
 
         static BinaryValue()
@@ -53,6 +177,130 @@ namespace System
         public LittleBinaryValue(byte[] buffer)
             : base(buffer)
         {
+        }
+
+        #endregion
+
+        #region [ Operators ]
+
+        // Operators cannot be inherited from the base class, they are static methods tied to their class instance
+
+        public static implicit operator Byte(LittleBinaryValue value)
+        {
+            return value.m_buffer[0];
+        }
+
+        public static implicit operator LittleBinaryValue(Byte value)
+        {
+            return new LittleBinaryValue(new byte[] { value });
+        }
+
+        public static implicit operator Int16(LittleBinaryValue value)
+        {
+            return value.ToInt16();
+        }
+
+        public static implicit operator LittleBinaryValue(Int16 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt16(LittleBinaryValue value)
+        {
+            return value.ToUInt16();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator LittleBinaryValue(UInt16 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int24(LittleBinaryValue value)
+        {
+            return value.ToInt24();
+        }
+
+        public static implicit operator LittleBinaryValue(Int24 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt24(LittleBinaryValue value)
+        {
+            return value.ToUInt24();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator LittleBinaryValue(UInt24 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int32(LittleBinaryValue value)
+        {
+            return value.ToInt32();
+        }
+
+        public static implicit operator LittleBinaryValue(Int32 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt32(LittleBinaryValue value)
+        {
+            return value.ToUInt32();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator LittleBinaryValue(UInt32 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int64(LittleBinaryValue value)
+        {
+            return value.ToInt64();
+        }
+
+        public static implicit operator LittleBinaryValue(Int64 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt64(LittleBinaryValue value)
+        {
+            return value.ToUInt64();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator LittleBinaryValue(UInt64 value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Single(LittleBinaryValue value)
+        {
+            return value.ToSingle();
+        }
+
+        public static implicit operator LittleBinaryValue(Single value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Double(LittleBinaryValue value)
+        {
+            return value.ToDouble();
+        }
+
+        public static implicit operator LittleBinaryValue(Double value)
+        {
+            return new LittleBinaryValue(m_endianOrder.GetBytes(value));
         }
 
         #endregion
@@ -82,6 +330,130 @@ namespace System
 
         #endregion
 
+        #region [ Operators ]
+
+        // Operators cannot be inherited from the base class, they are static methods tied to their class instance
+
+        public static implicit operator Byte(BigBinaryValue value)
+        {
+            return value.m_buffer[0];
+        }
+
+        public static implicit operator BigBinaryValue(Byte value)
+        {
+            return new BigBinaryValue(new byte[] { value });
+        }
+
+        public static implicit operator Int16(BigBinaryValue value)
+        {
+            return value.ToInt16();
+        }
+
+        public static implicit operator BigBinaryValue(Int16 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt16(BigBinaryValue value)
+        {
+            return value.ToUInt16();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BigBinaryValue(UInt16 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int24(BigBinaryValue value)
+        {
+            return value.ToInt24();
+        }
+
+        public static implicit operator BigBinaryValue(Int24 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt24(BigBinaryValue value)
+        {
+            return value.ToUInt24();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BigBinaryValue(UInt24 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int32(BigBinaryValue value)
+        {
+            return value.ToInt32();
+        }
+
+        public static implicit operator BigBinaryValue(Int32 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt32(BigBinaryValue value)
+        {
+            return value.ToUInt32();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BigBinaryValue(UInt32 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Int64(BigBinaryValue value)
+        {
+            return value.ToInt64();
+        }
+
+        public static implicit operator BigBinaryValue(Int64 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator UInt64(BigBinaryValue value)
+        {
+            return value.ToUInt64();
+        }
+
+        [CLSCompliant(false)]
+        public static implicit operator BigBinaryValue(UInt64 value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Single(BigBinaryValue value)
+        {
+            return value.ToSingle();
+        }
+
+        public static implicit operator BigBinaryValue(Single value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        public static implicit operator Double(BigBinaryValue value)
+        {
+            return value.ToDouble();
+        }
+
+        public static implicit operator BigBinaryValue(Double value)
+        {
+            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+        }
+
+        #endregion
+
         #region [ Static ]
 
         static BigBinaryValue()
@@ -101,7 +473,7 @@ namespace System
         #region [ Members ]
 
         // Fields
-        private byte[] m_buffer;
+        protected byte[] m_buffer;
 
         #endregion
 
@@ -109,6 +481,9 @@ namespace System
 
         protected BinaryValue(byte[] buffer)
         {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
             m_buffer = buffer;
         }
 
@@ -134,183 +509,84 @@ namespace System
 
         public Byte ToByte()
         {
-            return (Byte)this;
+            ValidateBufferLength(TypeCode.Byte, sizeof(Byte));
+            return m_buffer[0];
         }
 
         public Int16 ToInt16()
         {
-            return (Int16)this;
+            ValidateBufferLength(TypeCode.Int16, sizeof(Int16));
+            return m_endianOrder.ToInt16(m_buffer, 0);
         }
 
         [CLSCompliant(false)]
         public UInt16 ToUInt16()
         {
-            return (UInt16)this;
+            ValidateBufferLength(TypeCode.UInt16, sizeof(UInt16));
+            return m_endianOrder.ToUInt16(m_buffer, 0);
         }
 
         public Int24 ToInt24()
         {
-            return (Int24)this;
+            // There is no system type code for Int24
+            if (m_buffer.Length < 3)
+                throw new InvalidOperationException("Binary value buffer is too small to represent a Int24 - buffer length needs to be at least 3");
+
+            return m_endianOrder.ToInt24(m_buffer, 0);
         }
 
         [CLSCompliant(false)]
         public UInt24 ToUInt24()
         {
-            return (UInt24)this;
+            // There is no system type code for UInt24
+            if (m_buffer.Length < 3)
+                throw new InvalidOperationException("Binary value buffer is too small to represent a UInt24 - buffer length needs to be at least 3");
+
+            return m_endianOrder.ToUInt24(m_buffer, 0);
         }
 
         public Int32 ToInt32()
         {
-            return (Int32)this;
+            ValidateBufferLength(TypeCode.Int32, sizeof(Int32));
+            return m_endianOrder.ToInt32(m_buffer, 0);
         }
 
         [CLSCompliant(false)]
         public UInt32 ToUInt32()
         {
-            return (UInt32)this;
+            ValidateBufferLength(TypeCode.UInt32, sizeof(UInt32));
+            return m_endianOrder.ToUInt32(m_buffer, 0);
         }
 
         public Int64 ToInt64()
         {
-            return (Int64)this;
+            ValidateBufferLength(TypeCode.Int64, sizeof(Int64));
+            return m_endianOrder.ToInt64(m_buffer, 0);
         }
 
         [CLSCompliant(false)]
         public UInt64 ToUInt64()
         {
-            return (UInt64)this;
+            ValidateBufferLength(TypeCode.UInt64, sizeof(UInt64));
+            return m_endianOrder.ToUInt64(m_buffer, 0);
         }
 
         public Single ToSingle()
         {
-            return (Single)this;
+            ValidateBufferLength(TypeCode.Single, sizeof(Single));
+            return m_endianOrder.ToSingle(m_buffer, 0);
         }
 
         public Double ToDouble()
         {
-            return (Double)this;
+            ValidateBufferLength(TypeCode.Double, sizeof(Double));
+            return m_endianOrder.ToDouble(m_buffer, 0);
         }
 
-        #endregion
-
-        #region [ Operators ]
-
-        public static implicit operator Byte(BinaryValue<TEndianOrder> value)
+        private void ValidateBufferLength(TypeCode typeCode, int size)
         {
-            return value.m_buffer[0];
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Byte value)
-        {
-            return new BinaryValue<TEndianOrder>(new byte[] { value });
-        }
-
-        public static implicit operator Int16(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToInt16(value.m_buffer, 0);
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Int16 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator UInt16(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToUInt16(value.m_buffer, 0);
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator BinaryValue<TEndianOrder>(UInt16 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        public static implicit operator Int24(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToInt24(value.m_buffer, 0);
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Int24 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator UInt24(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToUInt24(value.m_buffer, 0);
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator BinaryValue<TEndianOrder>(UInt24 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        public static implicit operator Int32(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToInt32(value.m_buffer, 0);
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Int32 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator UInt32(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToUInt32(value.m_buffer, 0);
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator BinaryValue<TEndianOrder>(UInt32 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        public static implicit operator Int64(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToInt64(value.m_buffer, 0);
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Int64 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator UInt64(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToUInt64(value.m_buffer, 0);
-        }
-
-        [CLSCompliant(false)]
-        public static implicit operator BinaryValue<TEndianOrder>(UInt64 value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        public static implicit operator Single(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToSingle(value.m_buffer, 0);
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Single value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
-        }
-
-        public static implicit operator Double(BinaryValue<TEndianOrder> value)
-        {
-            return m_endianOrder.ToDouble(value.m_buffer, 0);
-        }
-
-        public static implicit operator BinaryValue<TEndianOrder>(Double value)
-        {
-            return new BinaryValue<TEndianOrder>(m_endianOrder.GetBytes(value));
+            if (m_buffer.Length < size)
+                throw new InvalidOperationException(string.Format("Binary value buffer is too small to represent a {0} - buffer length needs to be at least {1}", typeCode, size));
         }
 
         #endregion
