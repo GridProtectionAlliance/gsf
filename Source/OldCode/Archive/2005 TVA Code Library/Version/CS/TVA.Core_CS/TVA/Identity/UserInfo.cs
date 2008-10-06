@@ -433,7 +433,7 @@ namespace TVA.Identity
             {
                 // Calls LogonUser to obtain a handle to an access token.
                 if (!LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
-                    throw new InvalidOperationException("Failed to impersonate user " + domain + "\\" + username + ".  " + WindowsApi.GetErrorMessage(Marshal.GetLastWin32Error()));
+                    throw new InvalidOperationException("Failed to impersonate user " + domain + "\\" + username + ".  " + WindowsApi.GetLastErrorMessage());
 
                 if (!DuplicateToken(tokenHandle, SECURITY_IMPERSONATION, ref dupeTokenHandle))
                 {
