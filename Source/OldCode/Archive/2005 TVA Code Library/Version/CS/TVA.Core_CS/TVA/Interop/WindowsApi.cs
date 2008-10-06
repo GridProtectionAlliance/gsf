@@ -28,7 +28,7 @@ namespace TVA.Interop
         [DllImport("kernel32.dll")]
         private static extern int FormatMessage(int dwFlags, ref IntPtr lpSource, int dwMessageId, int dwLanguageId, ref string lpBuffer, int nSize, ref IntPtr Arguments);
 
-        /// <summary>Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code</summary>
+        /// <summary>Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code.</summary>
         public static string GetErrorMessage(int errorCode)
         {
             const int FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x100;
@@ -45,6 +45,13 @@ namespace TVA.Interop
                 throw new InvalidOperationException("Failed to format message for error code " + errorCode);
 
             return lpMsgBuf;
+        
+        }
+
+        /// <summary>Formats and returns a .NET string containing the Windows API level error message from the last Win32 call.</summary>
+        public static string GetLastErrorMessage()
+        {
+            return GetErrorMessage(Marshal.GetLastWin32Error());
         }
     }
 }

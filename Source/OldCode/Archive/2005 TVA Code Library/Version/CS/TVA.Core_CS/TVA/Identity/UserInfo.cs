@@ -389,13 +389,25 @@ namespace TVA.Identity
         /// <summary>Validates NT authentication, given the specified credentials.</summary>
         public static bool AuthenticateUser(string username, string password, string domain)
         {
+            string errorMessage;
+            return AuthenticateUser(username, password, domain, out errorMessage);
+        }
+
+        /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        public static bool AuthenticateUser(string username, string password, string domain, out string errorMessage)
+        {
             IntPtr tokenHandle = IntPtr.Zero;
             bool authenticated;
 
             try
             {
+                errorMessage = null;
+
                 // Call LogonUser to attempt authentication
-                authenticated = LogonUser(username, domain, password, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, ref tokenHandle);
+                authenticated = LogonUser(username, domain, password, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, out tokenHandle);
+
+                if (!authenticated)
+                    errorMessage = WindowsApi.GetLastErrorMessage();
             }
             finally
             {
@@ -428,7 +440,7 @@ namespace TVA.Identity
             try
             {
                 // Calls LogonUser to obtain a handle to an access token.
-                if (!LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, ref tokenHandle))
+                if (!LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
                     throw new InvalidOperationException("Failed to impersonate user " + domain + "\\" + username + ".  " + WindowsApi.GetErrorMessage(Marshal.GetLastWin32Error()));
 
                 if (!DuplicateToken(tokenHandle, SECURITY_IMPERSONATION, ref dupeTokenHandle))
@@ -462,13 +474,13 @@ namespace TVA.Identity
             impersonatedUser = null;
         }
 
-        [DllImport("advapi32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, ref IntPtr phToken);
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
 
-        [DllImport("kernel32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool CloseHandle(IntPtr handle);
 
-        [DllImport("advapi32.dll", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
 
         #endregion
