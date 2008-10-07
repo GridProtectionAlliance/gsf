@@ -1,0 +1,15 @@
+﻿Very careful consideration should be taken when adding things to the .NET System namespace.
+In general, the following rules should apply:
+
+1) The object name should not conflict with any existing .NET objects.
+2) The object should naturally extend the .NET libraries (as if item were missing from .NET).
+3) Object should be pure and generally not rely on classes within TVA namespace
+	a) Internally calling TVA functions within code would be OK (you're in the same assembly)
+	b) Publically exposing anything within the TVA namespace would *not* be OK
+4) If item will naturally fit within TVA namespace, it may be better there instead.  Remember
+   that anything added to this namespace "becomes" part of .NET and hence should be extremely
+   well documented and compliment the .NET System namespace.
+   
+These are the rules.
+
+Ritchie
