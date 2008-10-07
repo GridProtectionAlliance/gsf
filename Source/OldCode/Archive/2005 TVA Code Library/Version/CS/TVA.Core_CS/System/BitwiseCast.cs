@@ -23,7 +23,7 @@ namespace System
     /// <remarks>
     /// This class allows for proper bitwise casting between signed and unsigned integers. It may be most
     /// useful in languages that do not allow override of numerical overflow checks.  For example, C#
-    /// provides an "unchecked" keyword to allow for bitwise casting.
+    /// provides an "unchecked" keyword to allow for bitwise casting, but VB.NET does not.
     /// </remarks>
     public static class BitwiseCast
     {
