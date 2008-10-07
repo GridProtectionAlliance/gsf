@@ -54,10 +54,10 @@ namespace System.Media.Music
     ///         double frequency = Note.GetNoteFrequency(noteID);   // Get frequency for middle C
     ///         double time;                                        // Time index
     ///
-    ///         for (int sample = 0; sample &lt; samplePeriod; sample++)
+    ///         for (int sample = 0; sample <![CDATA[<]]> samplePeriod; sample++)
     ///         {
     ///             // Change notes at even intervals within the sample period
-    ///             if (sample &gt; 0 &amp;&amp; (sample % (samplePeriod / totalNotes)) == 0)
+    ///             if (sample <![CDATA[>]]> 0 <![CDATA[&&]]> (sample % (samplePeriod / totalNotes)) == 0)
     ///             {
     ///                 noteID = Note.GetNextNoteID(noteID, false);
     ///                 frequency = Note.GetNoteFrequency(noteID);
