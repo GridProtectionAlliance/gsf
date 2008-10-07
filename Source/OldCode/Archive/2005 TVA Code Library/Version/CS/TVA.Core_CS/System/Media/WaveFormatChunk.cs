@@ -18,7 +18,7 @@
 using System;
 using System.IO;
 
-namespace System
+namespace System.Media
 {
     /// <summary>
     /// Represents the format chunk in a WAVE media format file.

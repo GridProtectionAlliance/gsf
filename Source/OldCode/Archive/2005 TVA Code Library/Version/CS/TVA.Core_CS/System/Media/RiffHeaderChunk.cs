@@ -15,10 +15,11 @@
 //
 //*******************************************************************************************************
 
+using System;
 using System.IO;
 using System.Text;
 
-namespace System
+namespace System.Media
 {
     /// <summary>
     /// Represents the header chunk in a RIFF media format file.

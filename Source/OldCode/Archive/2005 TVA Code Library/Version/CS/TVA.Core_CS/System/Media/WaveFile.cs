@@ -17,12 +17,12 @@
 //
 //*******************************************************************************************************
 
-using System.Media;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
 
-namespace System
+namespace System.Media
 {
     #region [ Enumerations ]
 
