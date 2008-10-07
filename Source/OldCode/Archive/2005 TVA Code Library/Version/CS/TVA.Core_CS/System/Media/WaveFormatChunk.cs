@@ -17,9 +17,8 @@
 
 using System;
 using System.IO;
-using TVA.Interop;
 
-namespace TVA.Media
+namespace System
 {
     /// <summary>
     /// Represents the format chunk in a WAVE media format file.

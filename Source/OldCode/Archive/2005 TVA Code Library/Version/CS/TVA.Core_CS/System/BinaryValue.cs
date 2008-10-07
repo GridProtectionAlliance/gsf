@@ -25,16 +25,31 @@ namespace System
     {
         #region [ Constructors ]
 
+        /// <summary>Creates a new binary value, ordered in the endianness of the OS, from the given byte array.</summary>
+        /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
+        /// <param name="startIndex">The offset in the buffer where the data starts.</param>
+        /// <param name="length">The number of data bytes that make up the binary value.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of the <paramref name="buffer"/> -or-
+        /// <paramref name="length"/> is less than 0 -or-
+        /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
+        /// </exception>
+        public BinaryValue(byte[] buffer, int startIndex, int length)
+            : base(buffer, startIndex, length)
+        {
+        }
+
+        /// <summary>Creates a new binary value, ordered in the endianness of the OS, from the given byte array.</summary>
+        /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
         public BinaryValue(byte[] buffer)
-            : base(buffer)
+            : base(buffer, 0, buffer.Length)
         {
         }
 
         #endregion
 
         #region [ Operators ]
-
-        // Operators cannot be inherited from the base class, they are static methods tied to their class instance
 
         public static implicit operator Byte(BinaryValue value)
         {

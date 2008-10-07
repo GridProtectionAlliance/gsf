@@ -32,12 +32,37 @@ namespace System
 
         #region [ Constructors ]
 
-        protected BinaryValueBase(byte[] buffer)
+        /// <summary>Creates a new binary value from the given byte array.</summary>
+        /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
+        /// <param name="startIndex">The offset in the buffer where the data starts.</param>
+        /// <param name="length">The number of data bytes that make up the binary value.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of the <paramref name="buffer"/> -or-
+        /// <paramref name="length"/> is less than 0 -or-
+        /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
+        /// </exception>
+        protected BinaryValueBase(byte[] buffer, int startIndex, int length)
         {
             if (buffer == null)
                 throw new ArgumentNullException("buffer");
 
-            m_buffer = buffer;
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+
+            if (startIndex >= buffer.Length)
+                throw new ArgumentOutOfRangeException("startIndex", "not a valid index in buffer");
+
+            if (startIndex + length > buffer.Length)
+                throw new ArgumentOutOfRangeException("length", "exceeds buffer size");
+
+            m_buffer = new byte[length];
+
+            // Extract specified region of source buffer as desired representation of binary value
+            System.Buffer.BlockCopy(buffer, startIndex, m_buffer, 0, length);
         }
 
         #endregion

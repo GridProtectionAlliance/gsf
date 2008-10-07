@@ -15,11 +15,10 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.IO;
 using System.Text;
 
-namespace TVA.Media
+namespace System
 {
     /// <summary>
     /// Represents the header chunk in a RIFF media format file.

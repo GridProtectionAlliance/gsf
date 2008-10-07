@@ -15,12 +15,10 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.IO;
 using System.Text;
-using TVA.Interop;
 
-namespace TVA.Media
+namespace System
 {
     /// <summary>
     /// Represents the type ID and size for a "chunk" in a RIFF media format file.

@@ -15,13 +15,10 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.IO;
 using System.Collections.Generic;
-using TVA;
-using TVA.Interop;
 
-namespace TVA.Media
+namespace System
 {
     /// <summary>
     /// Represents the data chunk in a WAVE media format file.
@@ -74,7 +71,7 @@ namespace TVA.Media
 
                 for (int x = 0; x < channels; x++)
                 {
-                    sampleBlock[x] = new LittleBinaryValue(buffer.CopyBuffer(x * sampleSize, sampleSize));
+                    sampleBlock[x] = new LittleBinaryValue(buffer, x * sampleSize, sampleSize);
                 }
 
                 m_sampleBlocks.Add(sampleBlock);

@@ -17,14 +17,12 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.Media;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
-using TVA.Interop;
 
-namespace TVA.Media
+namespace System
 {
     #region [ Enumerations ]
 
