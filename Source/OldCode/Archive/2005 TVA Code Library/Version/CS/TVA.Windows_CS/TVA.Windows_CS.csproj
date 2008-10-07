@@ -82,9 +82,9 @@
     <EmbeddedResource Include="Resources\TVA.Windows.Forms.TVADisclaimer.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">
+    <ProjectReference Include="..\TVA.Core_CS\TVA.Core.csproj">
       <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
-      <Name>TVA.Core_CS</Name>
+      <Name>TVA.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
