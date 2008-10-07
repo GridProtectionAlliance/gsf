@@ -3,48 +3,48 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{2A314CE4-AD10-4148-B94F-C8F8E3835E80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication_CS", "TVA.Communication_CS\TVA.Communication_CS.csproj", "{99EE28EA-39F4-4525-8418-3C9A61A4AE14}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication", "TVA.Communication_CS\TVA.Communication.csproj", "{99EE28EA-39F4-4525-8418-3C9A61A4AE14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core_CS", "TVA.Core_CS\TVA.Core_CS.csproj", "{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "TVA.Core_CS\TVA.Core.csproj", "{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security_CS", "TVA.Security_CS\TVA.Security_CS.csproj", "{2F86FF4E-3696-4388-9226-E2A8C3D7581D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security", "TVA.Security_CS\TVA.Security.csproj", "{2F86FF4E-3696-4388-9226-E2A8C3D7581D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services_CS", "TVA.Services_CS\TVA.Services_CS.csproj", "{DE7D748B-E0AF-40BB-9BA6-63A5808AA0B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services", "TVA.Services_CS\TVA.Services.csproj", "{DE7D748B-E0AF-40BB-9BA6-63A5808AA0B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.TIBCO_CS", "TVA.TIBCO_CS\TVA.TIBCO_CS.csproj", "{BBA26317-3FAF-4CB0-A954-F14F2308FC25}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.TIBCO", "TVA.TIBCO_CS\TVA.TIBCO.csproj", "{BBA26317-3FAF-4CB0-A954-F14F2308FC25}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.TRO_CS", "TVA.TRO_CS\TVA.TRO_CS.csproj", "{800E58AE-18EF-41F2-A7A5-351BEB7D05F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.TRO", "TVA.TRO_CS\TVA.TRO.csproj", "{800E58AE-18EF-41F2-A7A5-351BEB7D05F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web_CS", "TVA.Web_CS\TVA.Web_CS.csproj", "{104AFCF3-3697-4CA6-8AAE-8C4ADCB37B8C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web", "TVA.Web_CS\TVA.Web.csproj", "{104AFCF3-3697-4CA6-8AAE-8C4ADCB37B8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows_CS", "TVA.Windows_CS\TVA.Windows_CS.csproj", "{2D903B51-F1FC-44A1-9E3C-630FECC7B2CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "TVA.Windows_CS\TVA.Windows.csproj", "{2D903B51-F1FC-44A1-9E3C-630FECC7B2CE}"
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 9
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = TVA.Communication_CS\\TVA.Communication_CS.csproj
+		SccProjectUniqueName1 = TVA.Communication_CS\\TVA.Communication.csproj
 		SccLocalPath1 = .
 		SccProjectFilePathRelativizedFromConnection1 = TVA.Communication_CS\\
-		SccProjectUniqueName2 = TVA.Core_CS\\TVA.Core_CS.csproj
+		SccProjectUniqueName2 = TVA.Core_CS\\TVA.Core.csproj
 		SccLocalPath2 = .
 		SccProjectFilePathRelativizedFromConnection2 = TVA.Core_CS\\
-		SccProjectUniqueName3 = TVA.Security_CS\\TVA.Security_CS.csproj
+		SccProjectUniqueName3 = TVA.Security_CS\\TVA.Security.csproj
 		SccLocalPath3 = .
 		SccProjectFilePathRelativizedFromConnection3 = TVA.Security_CS\\
-		SccProjectUniqueName4 = TVA.Services_CS\\TVA.Services_CS.csproj
+		SccProjectUniqueName4 = TVA.Services_CS\\TVA.Services.csproj
 		SccLocalPath4 = .
 		SccProjectFilePathRelativizedFromConnection4 = TVA.Services_CS\\
-		SccProjectUniqueName5 = TVA.TIBCO_CS\\TVA.TIBCO_CS.csproj
+		SccProjectUniqueName5 = TVA.TIBCO_CS\\TVA.TIBCO.csproj
 		SccLocalPath5 = .
 		SccProjectFilePathRelativizedFromConnection5 = TVA.TIBCO_CS\\
-		SccProjectUniqueName6 = TVA.TRO_CS\\TVA.TRO_CS.csproj
+		SccProjectUniqueName6 = TVA.TRO_CS\\TVA.TRO.csproj
 		SccLocalPath6 = .
 		SccProjectFilePathRelativizedFromConnection6 = TVA.TRO_CS\\
-		SccProjectUniqueName7 = TVA.Web_CS\\TVA.Web_CS.csproj
+		SccProjectUniqueName7 = TVA.Web_CS\\TVA.Web.csproj
 		SccLocalPath7 = .
 		SccProjectFilePathRelativizedFromConnection7 = TVA.Web_CS\\
-		SccProjectUniqueName8 = TVA.Windows_CS\\TVA.Windows_CS.csproj
+		SccProjectUniqueName8 = TVA.Windows_CS\\TVA.Windows.csproj
 		SccLocalPath8 = .
 		SccProjectFilePathRelativizedFromConnection8 = TVA.Windows_CS\\
 	EndGlobalSection
