@@ -80,13 +80,13 @@
     <EmbeddedResource Include="Embedded Resources\ServiceHelper.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TVA.Communication_CS\TVA.Communication_CS.csproj">
+    <ProjectReference Include="..\TVA.Communication_CS\TVA.Communication.csproj">
       <Project>{99EE28EA-39F4-4525-8418-3C9A61A4AE14}</Project>
-      <Name>TVA.Communication_CS</Name>
+      <Name>TVA.Communication</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TVA.Core_CS\TVA.Core_CS.csproj">
+    <ProjectReference Include="..\TVA.Core_CS\TVA.Core.csproj">
       <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
-      <Name>TVA.Core_CS</Name>
+      <Name>TVA.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
