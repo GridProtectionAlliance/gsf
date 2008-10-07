@@ -48,7 +48,7 @@ namespace System.Media
     /// </item>
     /// <item>
     ///     <term>AVI</term>
-    ///     <description>Windows movie file</description>
+    ///     <description>Windows audio/video file</description>
     /// </item>
     /// <item>
     ///     <term>ANI</term>
