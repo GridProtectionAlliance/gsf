@@ -25,9 +25,45 @@ namespace System.Media
     /// Represents the type ID and size for a "chunk" in a RIFF media format file.
     /// </summary>
     /// <remarks>
-    /// The RIFF media format is Microsoft's implementation of the Interchange File Format (IFF)
-    /// originally developed Electronic Arts in 1985.  The primary difference is that RIFF uses
-    /// little-endian byte order for integer encoding.
+    /// <para>
+    /// The Resource Interchange File Format (RIFF) is a generic meta-format for storing data in tagged chunks.
+    /// It was introduced in 1991 by Microsoft and IBM, and was presented by Microsoft as the default format for
+    /// Windows 3.1 multimedia files. It is based on Electronic Arts's Interchange File Format, introduced in 1985,
+    /// the only difference being that multi-byte integers are in little-endian format, native to the 80x86 processor
+    /// series used in IBM PCs, rather than the big-endian format native to the 68k processor series used in Amiga and
+    /// Apple Macintosh computers, where IFF files were heavily used. (The specification for AIFF, the big-endian
+    /// analogue of RIFF, was published by Apple Computer in 1988.) The Microsoft implementation is mostly known
+    /// through file formats like AVI, ANI and WAV, which use the RIFF meta-format as their basis.
+    /// </para>
+    /// <para>
+    /// Some common RIFF file types:
+    /// <list type="table">
+    /// <listheader>
+    ///     <term>File extension</term>
+    ///     <description>Description</description>
+    /// </listheader>
+    /// <item>
+    ///     <term>WAV</term>
+    ///     <description>Windows audio file</description>
+    /// </item>
+    /// <item>
+    ///     <term>AVI</term>
+    ///     <description>Windows movie file</description>
+    /// </item>
+    /// <item>
+    ///     <term>ANI</term>
+    ///     <description>Animated Windows cursors</description>
+    /// </item>
+    /// <item>
+    ///     <term>RMI</term>
+    ///     <description>Windows RIFF MIDI file</description>
+    /// </item>
+    /// <item>
+    ///     <term>CDR</term>
+    ///     <description>CorelDRAW vector graphics file</description>
+    /// </item>
+    /// </list>
+    /// </para>
     /// </remarks>
     public class RiffChunk
     {
