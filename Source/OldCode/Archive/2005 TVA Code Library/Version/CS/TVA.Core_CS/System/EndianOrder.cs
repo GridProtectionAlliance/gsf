@@ -122,7 +122,6 @@ namespace System
         #endregion
     }
 
-
     /// <summary>Endian byte order interoperability class</summary>
     /// <remarks>
     /// Intel systems use little-endian byte order, other systems, such as Unix, use big-endian byte ordering.
