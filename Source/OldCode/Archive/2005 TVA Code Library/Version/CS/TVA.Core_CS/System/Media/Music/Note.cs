@@ -24,11 +24,62 @@ namespace System.Media.Music
     /// Provides a function signature for methods that produce an amplitude representing the
     /// acoustic pressure of a represented musical timbre for the given time.
     /// </summary>
-    /// <param name="frequency">Frequency in Hz.</param>
+    /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
     /// <param name="time">Time in seconds.</param>
     /// <returns>The amplitude of the represented musical timbre at the given time.</returns>
     public delegate double TimbreFunction(double frequency, double time);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <example>
+    /// This example creates an in-memory wave file and adds notes to create a basic musical scale:
+    /// <code>
+    /// using System;
+    /// using System.Media;
+    /// using System.Media.Music;
+    ///
+    /// static class Program
+    /// {
+    ///     /// <summary>
+    ///     /// The main entry point for the application.
+    ///     /// </summary>
+    ///     [STAThread]
+    ///     static void Main()
+    ///     {
+    ///         WaveFile waveFile = new WaveFile(SampleRate.Hz8000, BitsPerSample.Bits16, DataChannels.Mono);            
+    ///         TimbreFunction timbre = Note.BasicNote;             // Set the musical timbre
+    ///         double amplitude = 0.25D * short.MaxValue;          // Set volume to 25% of maximum
+    ///         double seconds = 4.0D;                              // Set length of wave file in seconds
+    ///         double samplesPerSecond = waveFile.SampleRate;      // Gets the defined sample rate
+    ///         double samplePeriod = seconds * samplesPerSecond;   // Compute total sample period
+    ///         int totalNotes = 8;                                 // Total notes to traverse
+    ///         string noteID = Note.MiddleC;                       // Start note at middle C
+    ///         double frequency = Note.GetNoteFrequency(noteID);   // Get frequency for middle C
+    ///         double time;                                        // Time index
+    ///
+    ///         for (int sample = 0; sample &lt; samplePeriod; sample++)
+    ///         {
+    ///             // Change notes at even intervals within the sample period
+    ///             if (sample &gt; 0 &amp;&amp; (sample % (samplePeriod / totalNotes)) == 0)
+    ///             {
+    ///                 noteID = Note.GetNextNoteID(noteID, false);
+    ///                 frequency = Note.GetNoteFrequency(noteID);
+    ///             }
+    ///
+    ///             // Compute time index of the current sample
+    ///             time = sample / samplesPerSecond;
+    ///
+    ///             waveFile.AddBlock((short)(timbre(frequency, time) * amplitude));
+    ///         }
+    ///
+    ///         waveFile.Play();
+    ///
+    ///         Console.ReadKey();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public static class Note
     {
         // Fundamental musical note frequencies (http://www.phy.mtu.edu/~suits/notefreqs.html)
@@ -133,6 +184,7 @@ namespace System.Media.Music
         public const double D8 = 4698.64;
         public const double D8S = 4978.03;
 
+        /// <summary>Note ID for "Middle C"</summary>
         public const string MiddleC = "C4";
 
         /// <summary>
@@ -226,31 +278,61 @@ namespace System.Media.Music
 
         // Timbre functions
 
+        /// <summary>
+        /// Generates a pure tone for the given frequency and time.
+        /// </summary>
+        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
+        /// <param name="time">Time in seconds.</param>
+        /// <returns>The amplitude for a pure tone at the given time.</returns>
+        /// <remarks>
+        /// This method computes an amplitude representing the acoustic pressure of a
+        /// pure tone of the given frequency for the given time.
+        /// </remarks>
         public static double PureTone(double frequency, double time)
         {
             return Math.Sin(AngularFrequency(frequency, time));
         }
 
+        /// <summary>
+        /// Generates a basic note for the given frequency and time.
+        /// </summary>
+        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
+        /// <param name="time">Time in seconds.</param>
+        /// <returns>The amplitude for a basic note at the given time.</returns>
+        /// <remarks>
+        /// This method computes an amplitude representing the acoustic pressure of a
+        /// basic note of the given frequency for the given time.
+        /// </remarks>
         public static double BasicNote(double frequency, double time)
         {
-            double w1t, r1, r2;
+            double wt, r1, r2;
 
-            w1t = AngularFrequency(frequency, time);
-            r1 = Math.Sin(w1t) + 0.75 * Math.Sin(3 * w1t);
-            r2 = Math.Sin(w1t);
+            wt = AngularFrequency(frequency, time);
+            r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt);
+            r2 = Math.Sin(wt);
 
             return r1 + r2;
         }
 
+        /// <summary>
+        /// Generates a simulated clarinet note for the given frequency and time.
+        /// </summary>
+        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
+        /// <param name="time">Time in seconds.</param>
+        /// <returns>The amplitude for a simulated clarinet note at the given time.</returns>
+        /// <remarks>
+        /// This method computes an amplitude representing the acoustic pressure of a
+        /// simulated clarinet note of the given frequency for the given time.
+        /// </remarks>
         public static double SimulatedClarinet(double frequency, double time)
         {
-            double w1t, r1;
+            double wt, r1;
 
-            w1t = AngularFrequency(frequency, time);
+            wt = AngularFrequency(frequency, time);
 
             // Simulated Clarinet equation
             // s(t) = sin(w1t) + 0.75 *      sin(3 * w1t) + 0.5 *      sin(5 * w1t) + 0.14 *      sin(7 * w1t) + 0.5 *      sin(9 * w1t) + 0.12 *      sin(11 * w1t) + 0.17 *      sin(13 * w1t)
-            r1 = Math.Sin(w1t) + 0.75 * Math.Sin(3 * w1t) + 0.5 * Math.Sin(5 * w1t) + 0.14 * Math.Sin(7 * w1t) + 0.5 * Math.Sin(9 * w1t) + 0.12 * Math.Sin(11 * w1t) + 0.17 * Math.Sin(13 * w1t);
+            r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt) + 0.5 * Math.Sin(5 * wt) + 0.14 * Math.Sin(7 * wt) + 0.5 * Math.Sin(9 * wt) + 0.12 * Math.Sin(11 * wt) + 0.17 * Math.Sin(13 * wt);
 
             return r1;
         }
