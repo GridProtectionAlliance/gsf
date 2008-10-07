@@ -80,6 +80,9 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include=".NET\System\BigBinaryValue.cs" />
+    <Compile Include=".NET\System\BinaryValueBase.cs" />
+    <Compile Include=".NET\System\LittleBinaryValue.cs" />
     <Compile Include="TVA\BufferExtensions.cs" />
     <Compile Include=".NET\System\BinaryValue.cs" />
     <Compile Include="TVA\IO\Checksums\CrcCCITT.cs" />

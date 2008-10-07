@@ -80,7 +80,7 @@ namespace TVA.Services
     /// .
     /// .
     /// public void ServiceStateChanged(ServiceState newState)
-    ///{
+    /// {
     ///    switch (newState)
     ///    {
     ///        case ServiceState.Paused:
@@ -96,7 +96,7 @@ namespace TVA.Services
     ///        default:
     ///            break;
     ///    }
-    ///}
+    /// }
     /// </code>
     /// </example>
     /// </remarks>
