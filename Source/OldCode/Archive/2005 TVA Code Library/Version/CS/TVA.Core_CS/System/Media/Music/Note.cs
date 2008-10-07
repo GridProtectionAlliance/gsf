@@ -326,7 +326,7 @@ namespace System.Media.Music
             wt = AngularFrequency(frequency, time);
 
             // Simulated Clarinet equation
-            // s(t) = sin(w1t) + 0.75 *      sin(3 * w1t) + 0.5 *      sin(5 * w1t) + 0.14 *      sin(7 * w1t) + 0.5 *      sin(9 * w1t) + 0.12 *      sin(11 * w1t) + 0.17 *      sin(13 * w1t)
+            // s(t) = sin(wt) + 0.75 *      sin(3 * wt) + 0.5 *      sin(5 * wt) + 0.14 *      sin(7 * wt) + 0.5 *      sin(9 * wt) + 0.12 *      sin(11 * wt) + 0.17 *      sin(13 * wt)
             r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt) + 0.5 * Math.Sin(5 * wt) + 0.14 * Math.Sin(7 * wt) + 0.5 * Math.Sin(9 * wt) + 0.12 * Math.Sin(11 * wt) + 0.17 * Math.Sin(13 * wt);
 
             return r1;
