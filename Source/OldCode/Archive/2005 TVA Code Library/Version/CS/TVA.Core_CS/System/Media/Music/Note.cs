@@ -30,7 +30,7 @@ namespace System.Media.Music
     public delegate double TimbreFunction(double frequency, double time);
 
     /// <summary>
-    /// 
+    /// Defines fundamental musical note frequencies and methods to create them.
     /// </summary>
     /// <example>
     /// This example creates an in-memory wave file and adds notes to create a basic musical scale:
@@ -41,10 +41,6 @@ namespace System.Media.Music
     ///
     /// static class Program
     /// {
-    ///     /// <summary>
-    ///     /// The main entry point for the application.
-    ///     /// </summary>
-    ///     [STAThread]
     ///     static void Main()
     ///     {
     ///         WaveFile waveFile = new WaveFile(SampleRate.Hz8000, BitsPerSample.Bits16, DataChannels.Mono);            
@@ -74,7 +70,6 @@ namespace System.Media.Music
     ///         }
     ///
     ///         waveFile.Play();
-    ///
     ///         Console.ReadKey();
     ///     }
     /// }
