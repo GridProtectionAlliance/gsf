@@ -423,7 +423,6 @@ namespace TVA.Diagnostics
                             m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
                             m_samplingTimer.Dispose();
                         }
-                        m_samplingTimer = null;
 
                         lock (m_counters)
                         {

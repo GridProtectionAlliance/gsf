@@ -338,10 +338,7 @@ namespace TVA.Diagnostics
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         if (m_counter != null)
-                        {
                             m_counter.Dispose();
-                        }
-                        m_counter = null;
                     }
                 }
                 finally
