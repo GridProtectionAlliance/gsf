@@ -51,30 +51,34 @@ namespace TVA.Identity
         private const int SECURITY_IMPERSONATION = 2;
 
         // Fields
-        private string m_username;
         private string m_domain;
+        private string m_username;
         private DirectoryEntry m_userEntry;
         private bool m_usePrivilegedAccount;
+        private string m_previlegedDomain;
         private string m_previlegedUserName;
         private string m_previlegedPassword;
-        private string m_previlegedDomain;
-
+        
         #endregion
 
         #region [ Constructors ]
 
-        /// <summary>Initializes a new instance of the user information class.</summary>
-        public UserInfo(string username, string domain)
-            : this(username, domain, false)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserInfo"/> class.
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="username"></param>
+        public UserInfo(string domain, string username)
+            : this(domain, username, false)
         {
         }
 
         /// <summary>Initializes a new instance of the user information class.</summary>
         /// <remarks>Specify login information as domain\username.</remarks>
-        public UserInfo(string username, string domain, bool usePrivilegedAccount)
+        public UserInfo(string domain, string username, bool usePrivilegedAccount)
         {
-            m_username = username;
             m_domain = domain;
+            m_username = username;
             m_usePrivilegedAccount = usePrivilegedAccount;
         }
 
@@ -143,7 +147,7 @@ namespace TVA.Identity
                             if (string.IsNullOrEmpty(m_previlegedUserName))
                                 throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
 
-                            currentContext = ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain);
+                            currentContext = ImpersonateUser(m_previlegedDomain, m_previlegedUserName, m_previlegedPassword);
                         }
 
                         // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
@@ -308,20 +312,20 @@ namespace TVA.Identity
         /// <returns>True is the user can be authenticated; otherwise False.</returns>
         public bool Authenticate(string password)
         {
-            return UserInfo.AuthenticateUser(m_username, password, m_domain);
+            return UserInfo.AuthenticateUser(m_domain, m_username, password);
         }
 
         /// <summary>
         /// Defines privileged account information
         /// </summary>
+        /// <param name="domain">Domain of privileged account</param>
         /// <param name="username">Username of privileged account</param>
         /// <param name="password">Password of privileged account</param>
-        /// <param name="domain">Domain of privileged account</param>
-        public void DefinePrivilegedAccount(string username, string password, string domain)
+        public void DefinePrivilegedAccount(string domain, string username, string password)
         {
+            m_previlegedDomain = domain;
             m_previlegedUserName = username;
             m_previlegedPassword = password;
-            m_previlegedDomain = domain;
         }
 
         /// <summary>Returns adctive directory value for specified property</summary>
@@ -337,7 +341,7 @@ namespace TVA.Identity
                     if (string.IsNullOrEmpty(m_previlegedUserName))
                         throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
 
-                    currentContext = ImpersonateUser(m_previlegedUserName, m_previlegedPassword, m_previlegedDomain);
+                    currentContext = ImpersonateUser(m_previlegedDomain, m_previlegedUserName, m_previlegedPassword);
                 }
 
                 return UserEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
@@ -387,9 +391,9 @@ namespace TVA.Identity
         // Static Methods
 
         /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        /// <param name="domain">Domain of user to authenticate.</param>
         /// <param name="username">Username of user to authenticate.</param>
         /// <param name="password">Password of user to authenticate.</param>
-        /// <param name="domain">Domain of user to authenticate.</param>
         /// <example>
         /// This example shows how to validate a user's credentials:
         /// <code>
@@ -415,16 +419,16 @@ namespace TVA.Identity
         /// }
         /// </code>
         /// </example>
-        public static bool AuthenticateUser(string username, string password, string domain)
+        public static bool AuthenticateUser(string domain, string username, string password)
         {
             string errorMessage;
-            return AuthenticateUser(username, password, domain, out errorMessage);
+            return AuthenticateUser(domain, username, password, out errorMessage);
         }
 
         /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        /// <param name="domain">Domain of user to authenticate.</param>
         /// <param name="username">Username of user to authenticate.</param>
         /// <param name="password">Password of user to authenticate.</param>
-        /// <param name="domain">Domain of user to authenticate.</param>
         /// <param name="errorMessage">Error message, if authentication fails.</param>
         /// <example>
         /// This example shows how to validate a user's credentials and show an error message:
@@ -452,7 +456,7 @@ namespace TVA.Identity
         /// }
         /// </code>
         /// </example>
-        public static bool AuthenticateUser(string username, string password, string domain, out string errorMessage)
+        public static bool AuthenticateUser(string domain, string username, string password, out string errorMessage)
         {
             IntPtr tokenHandle = IntPtr.Zero;
             bool authenticated;
@@ -478,10 +482,10 @@ namespace TVA.Identity
         }
 
         /// <summary>Impersonates the specified user.</summary>
+        /// <param name="domain">Domain of user to impersonate.</param>
         /// <param name="username">Username of user to impersonate.</param>
         /// <param name="password">Password of user to impersonate.</param>
-        /// <param name="domain">Domain of user to impersonate.</param>
-        public static WindowsImpersonationContext ImpersonateUser(string username, string password, string domain)
+        public static WindowsImpersonationContext ImpersonateUser(string domain, string username, string password)
         {
             WindowsImpersonationContext impersonatedUser;
             IntPtr tokenHandle = IntPtr.Zero;
