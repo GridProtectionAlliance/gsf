@@ -23,14 +23,10 @@ namespace TVA
     /// </summary>
     public interface IStatusProvider
     {
-        string Name
-        {
-            get;
-        }
+        /// <summary>Name of the adapter</summary>
+        string Name { get; }
 
-        string Status
-        {
-            get;
-        }
+        /// <summary>Provides current status information about the adapter</summary>
+        string Status { get; }
     }
  }

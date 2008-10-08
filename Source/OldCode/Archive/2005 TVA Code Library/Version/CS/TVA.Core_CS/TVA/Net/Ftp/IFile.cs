@@ -21,47 +21,20 @@ namespace TVA.Net.Ftp
 {
     public interface IFile : IComparable, IComparable<IFile>
     {
-        Directory Parent
-        {
-            get;
-        }
+        Directory Parent { get; }
 
-        string Name
-        {
-            get;
-        }
+        string Name { get; }
 
-        string FullPath
-        {
-            get;
-        }
+        string FullPath { get; }
 
-        bool IsFile
-        {
-            get;
-        }
+        bool IsFile { get; }
 
-        bool IsDirectory
-        {
-            get;
-        }
+        bool IsDirectory { get; }
 
-        long Size
-        {
-            get;
-            set;
-        }
+        long Size { get; set; }
 
-        string Permission
-        {
-            get;
-            set;
-        }
+        string Permission { get; set; }
 
-        DateTime TimeStamp
-        {
-            get;
-            set;
-        }
+        DateTime TimeStamp { get; set; }
     }
 }

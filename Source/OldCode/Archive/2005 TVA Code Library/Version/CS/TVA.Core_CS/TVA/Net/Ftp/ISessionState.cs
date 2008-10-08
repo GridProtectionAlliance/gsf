@@ -20,38 +20,17 @@ namespace TVA.Net.Ftp
 {
     internal interface ISessionState
     {
-        string Server
-        {
-            get;
-            set;
-        }
+        string Server { get; set; }
 
-        int Port
-        {
-            get;
-            set;
-        }
+        int Port { get; set; }
 
-        Directory CurrentDirectory
-        {
-            get;
-            set;
-        }
+        Directory CurrentDirectory { get; set; }
 
-        Directory RootDirectory
-        {
-            get;
-        }
+        Directory RootDirectory { get; }
 
-        ControlChannel ControlChannel
-        {
-            get;
-        }
+        ControlChannel ControlChannel { get; }
 
-        bool IsBusy
-        {
-            get;
-        }
+        bool IsBusy { get; }
 
         void AbortTransfer();
 
