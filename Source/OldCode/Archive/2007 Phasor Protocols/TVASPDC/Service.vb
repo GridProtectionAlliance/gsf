@@ -113,6 +113,7 @@ Public Class Service
             End With
         End With
 
+        ' TODO: Add a "reauthenticate" for the multiple-destination exporter...
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("List", "Displays current PMU/PDC connections", AddressOf ShowCurrentConnections))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Connect", "Starts connection cycle to specified device", AddressOf ConnectDevice))
         ServiceHelper.ClientRequestHandlers.Add(New ClientRequestHandlerInfo("Disconnect", "Disconnects specified device", AddressOf DisconnectDevice))
@@ -738,6 +739,8 @@ Public Class Service
     End Sub
 
     Private Sub StatusExportProcess(ByVal name As String, ByVal parameters As Object())
+
+        ' TODO: New C# version has a "status" propety which will replace this code...
 
         With New StringBuilder()
             .Append(String.Format("Status of components used by {0}:", ServiceName))
