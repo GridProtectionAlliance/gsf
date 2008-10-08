@@ -26,6 +26,8 @@
 //       Also, implemented user customizable implementation of previleged account credentials.
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  10/06/2008 - Pinal C. Patel
+//      Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -43,6 +45,29 @@ namespace TVA.Identity
     /// <remarks>
     /// For more information on active directory properties see http://msdn.microsoft.com/en-us/library/ms677980.aspx.
     /// </remarks>
+    /// <example>
+    /// This example shows how to retrieve user information from Active Directory:
+    /// <code>
+    /// using System;
+    /// using TVA.Identity;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Retrieve and display user information from Active Directory.
+    ///         UserInfo user = new UserInfo("XYZCorp\\johndoe");
+    ///         Console.WriteLine(string.Format("First Name: {0}", user.FirstName));
+    ///         Console.WriteLine(string.Format("Last Name: {0}", user.LastName));
+    ///         Console.WriteLine(string.Format("Middle Initial: {0}", user.MiddleInitial));
+    ///         Console.WriteLine(string.Format("Email Address: {0}", user.Email));
+    ///         Console.WriteLine(string.Format("Telephone Number: {0}", user.Telephone));
+    ///
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class UserInfo : IDisposable
     {
         #region [ Members ]
@@ -473,10 +498,13 @@ namespace TVA.Identity
 
         // Static Methods
 
-        /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        /// <summary>
+        /// Authenticates the specified user credentials.
+        /// </summary>
         /// <param name="domain">Domain of user to authenticate.</param>
         /// <param name="username">Username of user to authenticate.</param>
         /// <param name="password">Password of user to authenticate.</param>
+        /// <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
         /// <example>
         /// This example shows how to validate a user's credentials:
         /// <code>
@@ -487,16 +515,16 @@ namespace TVA.Identity
         /// {
         ///     static void Main(string[] args)
         ///     {
+        ///         string domain = "XYZCorp";
         ///         string username = "johndoe";
         ///         string password = "password";
-        ///         string domain = "XYZCorp";
-        ///         bool authenticated = UserInfo.AuthenticateUser(username, password, domain);
-        ///
-        ///         if (authenticated)
-        ///             Console.WriteLine("Successfully authenticated user \"{1}\\{0}\".", username, domain);
+        ///        
+        ///         // Authenticate user credentials.
+        ///         if (UserInfo.AuthenticateUser(domain, username, password))
+        ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
-        ///             Console.WriteLine("Failed to authenticate user \"{1}\\{0}\".", username, domain);
-        ///         
+        ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\".", domain, username);
+        ///
         ///         Console.ReadLine();
         ///     }
         /// }
@@ -508,13 +536,16 @@ namespace TVA.Identity
             return AuthenticateUser(domain, username, password, out errorMessage);
         }
 
-        /// <summary>Validates NT authentication, given the specified credentials.</summary>
+        /// <summary>
+        /// Authenticates the specified user credentials.
+        /// </summary>
         /// <param name="domain">Domain of user to authenticate.</param>
         /// <param name="username">Username of user to authenticate.</param>
         /// <param name="password">Password of user to authenticate.</param>
-        /// <param name="errorMessage">Error message, if authentication fails.</param>
+        /// <param name="errorMessage">Error message returned, if authentication fails.</param>
+        /// <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
         /// <example>
-        /// This example shows how to validate a user's credentials and show an error message:
+        /// This example shows how to validate a user's credentials and retrieve an error message if validation fails: 
         /// <code>
         /// using System;
         /// using TVA.Identity;
@@ -523,17 +554,17 @@ namespace TVA.Identity
         /// {
         ///     static void Main(string[] args)
         ///     {
+        ///         string domain = "XYZCorp";
         ///         string username = "johndoe";
         ///         string password = "password";
-        ///         string domain = "XYZCorp";
         ///         string errorMessage;
-        ///         bool authenticated = UserInfo.AuthenticateUser(username, password, domain, out errorMessage);
         ///
-        ///         if (authenticated)
-        ///             Console.WriteLine("Successfully authenticated user \"{1}\\{0}\".", username, domain);
+        ///         // Authenticate user credentials.
+        ///         if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage))
+        ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
-        ///             Console.WriteLine("Failed to authenticate user \"{1}\\{0}\" due to exception: {2}", username, domain, errorMessage);
-        ///         
+        ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\" due to exception: {2}", domain, username, errorMessage);
+        ///
         ///         Console.ReadLine();
         ///     }
         /// }
@@ -564,10 +595,33 @@ namespace TVA.Identity
             return authenticated;
         }
 
-        /// <summary>Impersonates the specified user.</summary>
+        /// <summary>
+        /// Impersonates the specified user.
+        /// </summary>
         /// <param name="domain">Domain of user to impersonate.</param>
         /// <param name="username">Username of user to impersonate.</param>
         /// <param name="password">Password of user to impersonate.</param>
+        /// <returns>A <see cref="WindowsImpersonationContext"/> object of the impersonated user.</returns>
+        /// <remarks>After impersonating a user the code executes under the impersonated user's identity.</remarks>
+        /// <example>
+        /// This example shows how to impersonate a user:
+        /// <code>
+        /// using System;
+        /// using TVA.Identity;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         Console.WriteLine(string.Format("User before impersonation: {0}", UserInfo.CurrentUserID));
+        ///         UserInfo.ImpersonateUser("XYZCorp", "johndoe", "password"); // Impersonate user.
+        ///         Console.WriteLine(string.Format("User after impersonation: {0}", UserInfo.CurrentUserID));
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static WindowsImpersonationContext ImpersonateUser(string domain, string username, string password)
         {
             WindowsImpersonationContext impersonatedUser;
@@ -602,7 +656,34 @@ namespace TVA.Identity
             return impersonatedUser;
         }
 
-        /// <summary>Ends impersonation of the specified user.</summary>
+        /// <summary>
+        /// Ends the impersonation of the specified user.
+        /// </summary>
+        /// <param name="impersonatedUser"><see cref="WindowsImpersonationContext"/> of the impersonated user.</param>
+        /// <example>
+        /// This example shows how to terminate an active user impersonation:
+        /// <code>
+        /// using System;
+        /// using System.IO;
+        /// using System.Security.Principal;
+        /// using TVA.Identity;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         // Impersonate user.
+        ///         WindowsImpersonationContext context = UserInfo.ImpersonateUser("XYZCorp", "johndoe", "password");
+        ///         // Perform operation requiring elevated previleges.
+        ///         Console.WriteLine(File.ReadAllText(@"\\server\share\file.xml"));
+        ///         // End the impersonation.
+        ///         UserInfo.EndImpersonation(context);
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public static void EndImpersonation(WindowsImpersonationContext impersonatedUser)
         {
             if (impersonatedUser != null)
