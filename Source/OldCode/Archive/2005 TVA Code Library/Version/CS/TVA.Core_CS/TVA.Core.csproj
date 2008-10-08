@@ -131,7 +131,7 @@
     <Compile Include="TVA\IO\Compression\GZip\GZipException.cs" />
     <Compile Include="TVA\IO\Compression\GZip\GzipInputStream.cs" />
     <Compile Include="TVA\IO\Compression\GZip\GzipOutputStream.cs" />
-    <Content Include="System\!!-Namespace Rules.txt" />
+    <Content Include="System\!! System Namespace Rules !!.txt" />
     <Content Include="TVA\IO\Compression\CopyrightNotice.txt" />
     <None Include="System\Media\Wavefile Information\IFF.txt" />
     <None Include="System\Media\Wavefile Information\JingleBells.wav" />
