@@ -68,7 +68,7 @@ namespace TVA.IO.Compression.GZip
 	/// 
 	/// author of the original java version : John Leuner
 	/// </summary>
-	/// <example> This sample shows how to unzip a gzipped file
+    /// <example> This example shows how to unzip a gzipped file
 	/// <code>
 	/// using System;
 	/// using System.IO;

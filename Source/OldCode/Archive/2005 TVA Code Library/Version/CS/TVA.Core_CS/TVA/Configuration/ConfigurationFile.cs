@@ -41,7 +41,7 @@ namespace TVA.Configuration
     /// <seealso cref="CategorizedSettingsElement"/>
     /// <seealso cref="CategorizedSettingsElementCollection"/>
     /// <example>
-    /// This samples shows how to save and read settings from the config file:
+    /// This example shows how to save and read settings from the config file:
     /// <code>
     /// using System;
     /// using System.Configuration;
@@ -90,7 +90,7 @@ namespace TVA.Configuration
     ///     }
     /// }
     /// </code>
-    /// This sample shows the content of the config file from the sample code above:
+    /// This example shows the content of the config file from the sample code above:
     /// <code>
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8"?>

@@ -550,7 +550,7 @@ namespace TVA.Security
 							if (! string.IsNullOrEmpty(password))
 							{
 								// We'll validate the password against the Active Directory.
-								m_isAuthenticated = new UserInfo(m_username, "TVA", true).Authenticate(password);
+                                m_isAuthenticated = new UserInfo("TVA", m_username, true).Authenticate(password);
 							}
 							else
 							{

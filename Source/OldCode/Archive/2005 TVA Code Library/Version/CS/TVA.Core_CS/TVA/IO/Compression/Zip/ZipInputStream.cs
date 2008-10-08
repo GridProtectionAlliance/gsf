@@ -74,7 +74,7 @@ namespace TVA.IO.Compression.Zip
 	/// <br/>Author of the original java version : Jochen Hoenicke
 	/// </summary>
 	/// 
-	/// <example> This sample shows how to read a zip file
+    /// <example> This example shows how to read a zip file
 	/// <code lang="C#">
 	/// using System;
 	/// using System.Text;

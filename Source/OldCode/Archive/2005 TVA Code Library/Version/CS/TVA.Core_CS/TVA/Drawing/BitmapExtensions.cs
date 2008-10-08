@@ -39,7 +39,7 @@ namespace TVA.Drawing
         /// <param name="newSize">The <see cref="Size"/> to which the original image is to be resized.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows how to resize an image:
+        /// This example shows how to resize an image:
         /// <code>
         /// using System;
         /// using TVA.Drawing;
@@ -78,7 +78,7 @@ namespace TVA.Drawing
         /// <param name="disposeOriginal">true if the original image is to be disposed after resizing it; otherwise false.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows how to resize an image and dispose the original image that was resized:
+        /// This example shows how to resize an image and dispose the original image that was resized:
         /// <code>
         /// using System;
         /// using System.Drawing;
@@ -164,7 +164,7 @@ namespace TVA.Drawing
         /// <param name="croppedArea">The <see cref="Rectangle"/> area of the original image to be cropped.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows how to crop an image:
+        /// This example shows how to crop an image:
         /// <code>
         /// using System;
         /// using System.Drawing;
@@ -203,7 +203,7 @@ namespace TVA.Drawing
         /// <param name="disposeOriginal">true if the original image is to be disposed after cropping it; otherwise false.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows how to crop an image and dispose the original image that was cropped:
+        /// This example shows how to crop an image and dispose the original image that was cropped:
         /// <code>
         /// using System;
         /// using System.Drawing;
@@ -247,7 +247,7 @@ namespace TVA.Drawing
         /// <param name="newFormat">The new <see cref="ImageFormat"/> of the image.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows how to convert the format of an image:
+        /// This example shows how to convert the format of an image:
         /// <code>
         /// using System;
         /// using System.Drawing;
@@ -287,7 +287,7 @@ namespace TVA.Drawing
         /// <param name="disposeOriginal">true if the original image is to be disposed after converting it; otherwise false.</param>
         /// <returns>A <see cref="Bitmap"/> instance.</returns>
         /// <example>
-        /// This sample shows how to convert the format of an image and dispose the original image that was converted:
+        /// This example shows how to convert the format of an image and dispose the original image that was converted:
         /// <code>
         /// using System;
         /// using System.Drawing;

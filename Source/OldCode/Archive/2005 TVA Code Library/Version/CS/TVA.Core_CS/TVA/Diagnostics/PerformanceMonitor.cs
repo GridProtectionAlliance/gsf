@@ -36,7 +36,7 @@ namespace TVA.Diagnostics
     /// </summary>
     /// <seealso cref="PerformanceCounter"/>
     /// <example>
-    /// This sample shows how to use <see cref="PerformanceMonitor"/> for monitoring application performance:
+    /// This example shows how to use <see cref="PerformanceMonitor"/> for monitoring application performance:
     /// <code>
     /// using System;
     /// using System.Threading;

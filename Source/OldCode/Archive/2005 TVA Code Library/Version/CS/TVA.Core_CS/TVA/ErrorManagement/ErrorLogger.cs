@@ -1273,7 +1273,7 @@ namespace TVA.ErrorManagement
                     info.AppendLine();
                     break;
                 case ApplicationType.Web:
-                    UserInfo remoteUserInfo = new UserInfo(Thread.CurrentPrincipal.Identity.Name, true);
+                    UserInfo remoteUserInfo = new UserInfo(Thread.CurrentPrincipal.Identity.Name);
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());

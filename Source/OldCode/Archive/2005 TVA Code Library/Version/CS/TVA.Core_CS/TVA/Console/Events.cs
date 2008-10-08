@@ -31,7 +31,7 @@ namespace TVA.Console
     /// A helper class that can be used to subscribe to events raised by a console application.
     /// </summary>
     /// <example>
-    /// This sample shows how to subscribe to console application events:
+    /// This example shows how to subscribe to console application events:
     /// <code>
     /// using System;
     /// using TVA.Console;

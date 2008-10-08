@@ -36,7 +36,7 @@ namespace TVA.Console
     /// A class to parse command-line command containing ordered arguments along with optional arguments.
     /// </summary>
     /// <example>
-    /// This sample shows how to parse a command-line command that does not contain an executable name:
+    /// This example shows how to parse a command-line command that does not contain an executable name:
     /// <code>
     /// using System;
     /// using TVA;
@@ -56,7 +56,7 @@ namespace TVA.Console
     ///     }
     /// }
     /// </code>
-    /// This sample shows how to parse a command-line command that contains an executable name in it:
+    /// This example shows how to parse a command-line command that contains an executable name in it:
     /// <code>
     /// using System;
     /// using TVA.Console;

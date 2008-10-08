@@ -29,7 +29,7 @@ namespace TVA.Diagnostics
     /// A wrapper class to <see cref="System.Diagnostics.PerformanceCounter"/> with additional statistical logic.
     /// </summary>
     /// <example>
-    /// This sample shows how to create a performance counter for processor utilization:
+    /// This example shows how to create a performance counter for processor utilization:
     /// <code>
     /// using System;
     /// using System.Threading;

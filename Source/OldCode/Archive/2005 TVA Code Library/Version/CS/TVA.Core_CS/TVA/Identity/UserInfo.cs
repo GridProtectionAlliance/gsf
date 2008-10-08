@@ -38,9 +38,12 @@ using TVA.Interop;
 namespace TVA.Identity
 {
     /// <summary>
-    /// User Information Class.
+    /// A class that can be used to retrieve information about a domain user from Active Directory.
     /// </summary>
-    public class UserInfo
+    /// <remarks>
+    /// For more information on active directory properties see http://msdn.microsoft.com/en-us/library/ms677980.aspx.
+    /// </remarks>
+    public class UserInfo : IDisposable
     {
         #region [ Members ]
 
@@ -54,11 +57,11 @@ namespace TVA.Identity
         private string m_domain;
         private string m_username;
         private DirectoryEntry m_userEntry;
-        private bool m_usePrivilegedAccount;
         private string m_previlegedDomain;
         private string m_previlegedUserName;
         private string m_previlegedPassword;
-        
+        private bool m_disposed;
+
         #endregion
 
         #region [ Constructors ]
@@ -66,29 +69,19 @@ namespace TVA.Identity
         /// <summary>
         /// Initializes a new instance of the <see cref="UserInfo"/> class.
         /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="username"></param>
+        /// <param name="domain">Domain where the user's account exists.</param>
+        /// <param name="username">Username of user's account whose information is to be retrieved.</param>
         public UserInfo(string domain, string username)
-            : this(domain, username, false)
-        {
-        }
-
-        /// <summary>Initializes a new instance of the user information class.</summary>
-        /// <remarks>Specify login information as domain\username.</remarks>
-        public UserInfo(string domain, string username, bool usePrivilegedAccount)
         {
             m_domain = domain;
             m_username = username;
-            m_usePrivilegedAccount = usePrivilegedAccount;
         }
 
-        /// <summary>Initializes a new instance of the user information class.</summary>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserInfo"/> class.
+        /// </summary>
+        /// <param name="loginID">Login ID in "domain\username" format of the user's account whose information is to be retrieved.</param>
         public UserInfo(string loginID)
-            : this(loginID, false)
-        {
-        }
-
-        public UserInfo(string loginID, bool usePrivilegedAccount)
         {
             string[] parts = loginID.Split('\\');
 
@@ -96,7 +89,6 @@ namespace TVA.Identity
             {
                 m_domain = parts[0];
                 m_username = parts[1];
-                m_usePrivilegedAccount = usePrivilegedAccount;
             }
             else
             {
@@ -104,29 +96,22 @@ namespace TVA.Identity
             }
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="UserInfo"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~UserInfo()
+        {
+            Dispose(false);
+        }
+
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether a privileged account will be used for retrieving
-        /// information about the user from the Active Directory.
+        /// Gets the <see cref="DirectoryEntry"/> of user that can be used to retrieve information about the user 
+        /// from Active Directory.
         /// </summary>
-        /// <value></value>
-        /// <returns>True if privileged account is to be used; otherwise False.</returns>
-        public bool UsePrivilegedAccount
-        {
-            get
-            {
-                return m_usePrivilegedAccount;
-            }
-            set
-            {
-                m_usePrivilegedAccount = value;
-            }
-        }
-
-        /// <summary>Gets the System.DirectoryServices.DirectoryEntry of the user</summary>
         public DirectoryEntry UserEntry
         {
             get
@@ -142,12 +127,13 @@ namespace TVA.Identity
                         // before only AD property lookup had this behavior.
 
                         // Impersonate to the privileged account if specified.
-                        if (m_usePrivilegedAccount)
+                        if (!string.IsNullOrEmpty(m_previlegedDomain) &&
+                            !string.IsNullOrEmpty(m_previlegedUserName) &&
+                            !string.IsNullOrEmpty(m_previlegedPassword))
                         {
-                            if (string.IsNullOrEmpty(m_previlegedUserName))
-                                throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
-
-                            currentContext = ImpersonateUser(m_previlegedDomain, m_previlegedUserName, m_previlegedPassword);
+                            currentContext = ImpersonateUser(m_previlegedDomain,
+                                                             m_previlegedUserName,
+                                                             m_previlegedPassword);
                         }
 
                         // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
@@ -155,10 +141,11 @@ namespace TVA.Identity
                         // encountered when a domain name was being specified.
                         DirectoryEntry entry = new DirectoryEntry();
 
-                        //Dim entry As New DirectoryEntry("LDAP://" & m_domain)
-                        DirectorySearcher searcher = new DirectorySearcher(entry);
-                        searcher.Filter = "(SAMAccountName=" + m_username + ")";
-                        m_userEntry = searcher.FindOne().GetDirectoryEntry();
+                        using (DirectorySearcher searcher = new DirectorySearcher(entry))
+                        {
+                            searcher.Filter = "(SAMAccountName=" + m_username + ")";
+                            m_userEntry = searcher.FindOne().GetDirectoryEntry();
+                        }
                     }
                     catch
                     {
@@ -167,9 +154,7 @@ namespace TVA.Identity
                     }
                     finally
                     {
-                        // Undo impersonation if it was performed.
-                        if (currentContext != null)
-                            EndImpersonation(currentContext);
+                        EndImpersonation(currentContext);   // Undo impersonation if it was performed.
                     }
                 }
 
@@ -177,6 +162,10 @@ namespace TVA.Identity
             }
         }
 
+        /// <summary>
+        /// Gets the Login ID of the user.
+        /// </summary>
+        /// <remarks>Returns the value provided in the <see cref="UserInfo(string)"/> constructor.</remarks>
         public string LoginID
         {
             get
@@ -185,41 +174,60 @@ namespace TVA.Identity
             }
         }
 
+        /// <summary>
+        /// Gets the First Name of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "givenName" active directory property.</remarks>
         public string FirstName
         {
             get
             {
-                return UserProperty("givenName");
+                return GetUserProperty("givenName");
             }
         }
 
+        /// <summary>
+        /// Gets the Last Name of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "sn" active directory property.</remarks>
         public string LastName
         {
             get
             {
-                return UserProperty("sn");
+                return GetUserProperty("sn");
             }
         }
 
+        /// <summary>
+        /// Gets the Middle Initial of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "initials" active directory property.</remarks>
         public string MiddleInitial
         {
             get
             {
-                return UserProperty("initials");
+                return GetUserProperty("initials");
             }
         }
 
-        /// <summary>Gets the full name of the user</summary>
+        /// <summary>
+        /// Gets the Full Name of the user.
+        /// </summary>
+        /// <remarks>Returns the concatenation of <see cref="FirstName"/>, <see cref="MiddleInitial"/> and <see cref="LastName"/> properties.</remarks>
         public string FullName
         {
             get
             {
-                if (!string.IsNullOrEmpty(FirstName) && !string.IsNullOrEmpty(LastName))
+                string fName = FirstName;
+                string lName = LastName;
+                string mInitial = MiddleInitial;
+                if (!string.IsNullOrEmpty(fName) && !string.IsNullOrEmpty(lName))
                 {
-                    if (!string.IsNullOrEmpty(MiddleInitial))
-                        return FirstName + " " + MiddleInitial + " " + LastName;
+                    if (string.IsNullOrEmpty(mInitial))
+                        return fName + " " + lName;
+
                     else
-                        return FirstName + " " + LastName;
+                        return fName + " " + mInitial + " " + lName;
                 }
                 else
                 {
@@ -228,75 +236,99 @@ namespace TVA.Identity
             }
         }
 
-        /// <summary>Gets the e-mail address of the user</summary>
+        /// <summary>
+        /// Gets the E-Mail address of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "mail" active directory property.</remarks>
         public string Email
         {
             get
             {
-                return UserProperty("mail");
+                return GetUserProperty("mail");
             }
         }
 
-        /// <summary>Gets the telephone number of the user</summary>
+        /// <summary>
+        /// Gets the Telephone Number of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "telephoneNumber" active directory property.</remarks>
         public string Telephone
         {
             get
             {
-                return UserProperty("telephoneNumber");
+                return GetUserProperty("telephoneNumber");
             }
         }
 
-        /// <summary>Gets the title of the user</summary>
+        /// <summary>
+        /// Gets the Title of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "title" active directory property.</remarks>
         public string Title
         {
             get
             {
-                return UserProperty("title");
+                return GetUserProperty("title");
             }
         }
 
-        /// <summary>Gets the company of the user</summary>
+        /// <summary>
+        /// Gets the Company of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "company" active directory property.</remarks>
         public string Company
         {
             get
             {
-                return UserProperty("company");
+                return GetUserProperty("company");
             }
         }
 
-        /// <summary>Returns the office location of the user</summary>
+        /// <summary>
+        /// Gets the Office location of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "physicalDeliveryOfficeName" active directory property.</remarks>
         public string Office
         {
             get
             {
-                return UserProperty("physicalDeliveryOfficeName");
+                return GetUserProperty("physicalDeliveryOfficeName");
             }
         }
 
-        /// <summary>Gets the department name where the user works</summary>
+        /// <summary>
+        /// Gets the Department where the user works.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "department" active directory property.</remarks>
         public string Department
         {
             get
             {
-                return UserProperty("department");
+                return GetUserProperty("department");
             }
         }
 
-        /// <summary>Gets the city where the user works</summary>
+        /// <summary>
+        /// Gets the City where the user works.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "l" active directory property.</remarks>
         public string City
         {
             get
             {
-                return UserProperty("l");
+                return GetUserProperty("l");
             }
         }
 
-        /// <summary>Returns the mailbox of where the user works</summary>
+        /// <summary>
+        /// Gets the Mailbox address of where the user works.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "streetAddress" active directory property.</remarks>
         public string Mailbox
         {
             get
             {
-                return UserProperty("streetAddress");
+                return GetUserProperty("streetAddress");
             }
         }
 
@@ -306,42 +338,81 @@ namespace TVA.Identity
         #region [ Methods ]
 
         /// <summary>
-        /// Authenticates the current user using the specified password.
+        /// Releases all the resources used by the <see cref="UserInfo"/> object.
         /// </summary>
-        /// <param name="password">The password to be used for authentication.</param>
-        /// <returns>True is the user can be authenticated; otherwise False.</returns>
-        public bool Authenticate(string password)
+        public void Dispose()
         {
-            return UserInfo.AuthenticateUser(m_domain, m_username, password);
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Defines privileged account information
+        /// Releases the unmanaged resources used by the <see cref="UserInfo"/> object and optionally releases the managed resources.
         /// </summary>
-        /// <param name="domain">Domain of privileged account</param>
-        /// <param name="username">Username of privileged account</param>
-        /// <param name="password">Password of privileged account</param>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_userEntry != null)
+                            m_userEntry.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Defines the credentials of a previleged domain account that can be used for impersonation prior to the 
+        /// retrieval of user information from the Active Directory.
+        /// </summary>
+        /// <param name="domain">Domain of privileged domain user account.</param>
+        /// <param name="username">Username of privileged domain user account.</param>
+        /// <param name="password">Password of privileged domain user account.</param>
         public void DefinePrivilegedAccount(string domain, string username, string password)
         {
+            // Check input parameters.
+            if (string.IsNullOrEmpty(domain))
+                throw new ArgumentNullException("domain");
+            if (string.IsNullOrEmpty(username))
+                throw new ArgumentNullException("userName");
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentNullException("password");
+
+            // Set the credentials for previleged domain user account.
             m_previlegedDomain = domain;
             m_previlegedUserName = username;
             m_previlegedPassword = password;
         }
 
-        /// <summary>Returns adctive directory value for specified property</summary>
-        public string UserProperty(string propertyName)
+        /// <summary>
+        /// Returns the value for specified active directory property.
+        /// </summary>
+        /// <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
+        /// <returns>Value for the specified active directory property.</returns>
+        public string GetUserProperty(string propertyName)
         {
             WindowsImpersonationContext currentContext = null;
 
             try
             {
                 // Impersonate to the privileged account if specified.
-                if (m_usePrivilegedAccount)
+                if (!string.IsNullOrEmpty(m_previlegedDomain) &&
+                    !string.IsNullOrEmpty(m_previlegedUserName) &&
+                    !string.IsNullOrEmpty(m_previlegedPassword))
                 {
-                    if (string.IsNullOrEmpty(m_previlegedUserName))
-                        throw new ArgumentNullException("PrevilegedUserName", "Privileged account information has not been defined - call DefinePrivilegedAccount first.");
-
-                    currentContext = ImpersonateUser(m_previlegedDomain, m_previlegedUserName, m_previlegedPassword);
+                    currentContext = ImpersonateUser(m_previlegedDomain,
+                                                     m_previlegedUserName,
+                                                     m_previlegedPassword);
                 }
 
                 return UserEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
@@ -352,9 +423,7 @@ namespace TVA.Identity
             }
             finally
             {
-                // Undo impersonation if it was performed.
-                if (currentContext != null)
-                    EndImpersonation(currentContext);
+                EndImpersonation(currentContext);   // Undo impersonation if it was performed.
             }
         }
 
@@ -365,10 +434,33 @@ namespace TVA.Identity
         // Static Fields
         private static UserInfo m_currentUserInfo;
 
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr handle);
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
+
         // Static Properties
 
-        /// <summary>Gets the current user's information.</summary>
-        public static UserInfo CurrentUser
+        /// <summary>
+        /// Gets the Login ID of the current user.
+        /// </summary>
+        /// <remarks>The Login ID returned is that of the user account under which the code is executing.</remarks>
+        public static string CurrentUserID
+        {
+            get
+            {
+                return WindowsIdentity.GetCurrent().Name;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="UserInfo"/> object for the current user.
+        /// </summary>
+        public static UserInfo CurrentUserInfo
         {
             get
             {
@@ -376,15 +468,6 @@ namespace TVA.Identity
                     m_currentUserInfo = new UserInfo(CurrentUserID);
 
                 return m_currentUserInfo;
-            }
-        }
-
-        /// <summary>Gets the current user's NT ID.</summary>
-        public static string CurrentUserID
-        {
-            get
-            {
-                return WindowsIdentity.GetCurrent().Name;
             }
         }
 
@@ -523,19 +606,13 @@ namespace TVA.Identity
         public static void EndImpersonation(WindowsImpersonationContext impersonatedUser)
         {
             if (impersonatedUser != null)
+            {
                 impersonatedUser.Undo();
+                impersonatedUser.Dispose();
+            }
 
             impersonatedUser = null;
         }
-
-        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr handle);
-
-        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
 
         #endregion
     }

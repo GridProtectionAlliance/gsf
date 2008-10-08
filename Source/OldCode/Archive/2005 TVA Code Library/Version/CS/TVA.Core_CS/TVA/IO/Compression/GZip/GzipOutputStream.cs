@@ -69,7 +69,7 @@ namespace TVA.IO.Compression.GZip
 	///
 	/// author of the original java version : John Leuner
 	/// </summary>
-	/// <example> This sample shows how to gzip a file
+    /// <example> This example shows how to gzip a file
 	/// <code>
 	/// using System;
 	/// using System.IO;

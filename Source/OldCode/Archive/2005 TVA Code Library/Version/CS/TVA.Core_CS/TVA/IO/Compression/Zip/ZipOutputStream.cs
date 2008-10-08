@@ -74,7 +74,7 @@ namespace TVA.IO.Compression.Zip
 	/// <br/>
 	/// <br/>Author of the original java version : Jochen Hoenicke
 	/// </summary>
-	/// <example> This sample shows how to create a zip file
+    /// <example> This example shows how to create a zip file
 	/// <code>
 	/// using System;
 	/// using System.IO;
