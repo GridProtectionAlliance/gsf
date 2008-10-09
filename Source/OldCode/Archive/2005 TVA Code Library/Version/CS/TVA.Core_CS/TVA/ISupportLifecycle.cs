@@ -23,7 +23,7 @@ namespace TVA
     /// Specifies that this object provides supporting methods throughout its lifecycle from birth 
     /// (<see cref="Initialize()"/>) to death (<see cref="IDisposable.Dispose()"/>).
     /// </summary>
-    interface ISupportLifecycle : IDisposable
+    public interface ISupportLifecycle : IDisposable
     {
         /// <summary>
         /// Initializes the state of the object.
