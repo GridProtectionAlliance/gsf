@@ -30,7 +30,7 @@ namespace TVA.Security
 				//This call is required by the Component Designer.
 				InitializeComponent();
 				
-				m_settingsCategoryName = "SecurityProvider";
+				m_settingsCategory = "SecurityProvider";
 				m_extendeeControls = new Hashtable();
 				
 			}

@@ -143,7 +143,7 @@ namespace TVA.IO
         private bool m_autoOpen;
         private LogFileFullOperation m_fileFullOperation;
         private bool m_persistSettings;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private FileStream m_fileStream;
         private ManualResetEvent m_operationWaitHandle;
         private ProcessQueue<string> m_logEntryQueue;
@@ -162,7 +162,7 @@ namespace TVA.IO
             m_autoOpen = DefaultAutoOpen;
             m_fileFullOperation = DefaultFileFullOperation;
             m_persistSettings = DefaultPersistSettings;
-            m_settingsCategoryName = DefaultSettingsCategoryName;
+            m_settingsCategory = DefaultSettingsCategoryName;
 
             m_operationWaitHandle = new ManualResetEvent(true);
 
@@ -284,16 +284,16 @@ namespace TVA.IO
         /// </summary>
         /// <returns>The category name under which the component settings are to be saved in the config file.</returns>
         [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName), Description("The category name under which the component settings are to be saved in the config file.")]
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                    m_settingsCategoryName = value;
+                    m_settingsCategory = value;
                 else
                     throw new ArgumentNullException("SettingsCategoryName");
             }
@@ -345,7 +345,7 @@ namespace TVA.IO
                 StringBuilder status = new StringBuilder();
 
                 status.Append("     Configuration section: ");
-                status.Append(m_settingsCategoryName);
+                status.Append(m_settingsCategory);
                 status.AppendLine();
                 status.Append("       Maximum export size: ");
                 status.Append(m_size.ToString());
@@ -539,7 +539,7 @@ namespace TVA.IO
         {
             try
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                 if (settings.Count > 0)
                 {
@@ -564,7 +564,7 @@ namespace TVA.IO
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                     CategorizedSettingsElement setting;
 
                     settings.Clear();

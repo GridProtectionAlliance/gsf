@@ -36,6 +36,7 @@ using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using TVA.Interop;
+using TVA.Configuration;
 
 namespace TVA.Identity
 {
@@ -68,7 +69,7 @@ namespace TVA.Identity
     /// }
     /// </code>
     /// </example>
-    public class UserInfo : IDisposable
+    public class UserInfo : IDisposable, IPersistSettings
     {
         #region [ Members ]
 
@@ -85,6 +86,8 @@ namespace TVA.Identity
         private string m_previlegedDomain;
         private string m_previlegedUserName;
         private string m_previlegedPassword;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
         private bool m_disposed;
 
         #endregion
@@ -100,6 +103,7 @@ namespace TVA.Identity
         {
             m_domain = domain;
             m_username = username;
+            m_settingsCategory = this.GetType().Name;
         }
 
         /// <summary>
@@ -114,10 +118,11 @@ namespace TVA.Identity
             {
                 m_domain = parts[0];
                 m_username = parts[1];
+                m_settingsCategory = this.GetType().Name;
             }
             else
             {
-                throw new ArgumentException("Expected login ID in format of domain\\username");
+                throw new ArgumentException("Expected login ID in format of domain\\username.");
             }
         }
 
@@ -132,6 +137,33 @@ namespace TVA.Identity
         #endregion
 
         #region [ Properties ]
+
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="DirectoryEntry"/> of user that can be used to retrieve information about the user 
@@ -382,6 +414,7 @@ namespace TVA.Identity
                 try
                 {
                     // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings();
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
@@ -449,6 +482,41 @@ namespace TVA.Identity
             finally
             {
                 EndImpersonation(currentContext);   // Undo impersonation if it was performed.
+            }
+        }
+
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["PrevilegedDomain", true].Update(m_previlegedDomain, "Domain of privileged domain user account.");
+                settings["PrevilegedUserName", true].Update(m_previlegedUserName, "Username of privileged domain user account.");
+                settings["PrevilegedPassword", true].Update(m_previlegedPassword, "Password of privileged domain user account.");
+                config.Save();
+            }
+        }
+
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                m_previlegedDomain = settings["PrevilegedDomain", true].ValueAs(m_previlegedDomain);
+                m_previlegedUserName = settings["PrevilegedUserName", true].ValueAs(m_previlegedDomain);
+                m_previlegedPassword = settings["PrevilegedPassword", true].ValueAs(m_previlegedDomain);
             }
         }
 
@@ -632,12 +700,12 @@ namespace TVA.Identity
             {
                 // Calls LogonUser to obtain a handle to an access token.
                 if (!LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
-                    throw new InvalidOperationException("Failed to impersonate user " + domain + "\\" + username + ".  " + WindowsApi.GetLastErrorMessage());
+                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\". {2}", domain, username, WindowsApi.GetLastErrorMessage()));
 
                 if (!DuplicateToken(tokenHandle, SECURITY_IMPERSONATION, ref dupeTokenHandle))
                 {
                     CloseHandle(tokenHandle);
-                    throw new InvalidOperationException("Failed to impersonate user " + domain + "\\" + username + ".  Exception thrown while trying to duplicate token.");
+                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\". Exception thrown while trying to duplicate token.", domain, username));
                 }
 
                 // The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation.

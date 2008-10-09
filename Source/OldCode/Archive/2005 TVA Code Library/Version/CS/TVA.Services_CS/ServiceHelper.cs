@@ -139,7 +139,7 @@ namespace TVA.Services
 		private int m_requestHistoryLimit;
 		private string m_queryableSettingsCategories;
 		private bool m_persistSettings;
-		private string m_settingsCategoryName;
+		private string m_settingsCategory;
 		private bool m_suppressUpdates;
 		private Guid m_remoteCommandClientID;
 		private ServiceBase m_service;
@@ -168,7 +168,7 @@ namespace TVA.Services
 			m_requestHistoryLimit = DefaultRequestHistoryLimit;
 			m_queryableSettingsCategories = DefaultQueryableSettingsCategories;
 			m_persistSettings = DefaultPersistSettings;
-			m_settingsCategoryName = DefaultSettingsCategoryName;
+			m_settingsCategory = DefaultSettingsCategoryName;
 			m_processes = new List<ServiceProcess>();
 			m_connectedClients = new List<ClientInfo>();
 			m_clientRequestHistory = new List<ClientRequestInfo>();
@@ -181,17 +181,17 @@ namespace TVA.Services
 			m_statusLog.LogException += m_statusLog_LogException;
 			m_statusLog.Name = "StatusLog.txt";
 			m_statusLog.PersistSettings = true;
-			m_statusLog.SettingsCategoryName = "StatusLog";
+			m_statusLog.SettingsCategory = "StatusLog";
 
             m_scheduler = new ScheduleManager();
 			m_scheduler.ScheduleDue += m_scheduler_ScheduleDue;
 			m_scheduler.PersistSettings = true;
-			m_scheduler.SettingsCategoryName = "Scheduler";
+			m_scheduler.SettingsCategory = "Scheduler";
 
 			m_errorLogger = new ErrorLogger();
 			m_errorLogger.ExitOnUnhandledException = false;
 			m_errorLogger.PersistSettings = true;
-			m_errorLogger.SettingsCategoryName = "ErrorLogger";
+			m_errorLogger.SettingsCategory = "ErrorLogger";
 		}
 
         #endregion
@@ -298,17 +298,17 @@ namespace TVA.Services
 		}
 		
 		[Category("Persistance"), DefaultValue(DefaultSettingsCategoryName)]
-        public string SettingsCategoryName
+        public string SettingsCategory
 		{
 			get
 			{
-				return m_settingsCategoryName;
+				return m_settingsCategory;
 			}
 			set
 			{
 				if (!string.IsNullOrEmpty(value))
 				{
-					m_settingsCategoryName = value;
+					m_settingsCategory = value;
 				}
 				else
 				{
@@ -963,7 +963,7 @@ namespace TVA.Services
         {
             try
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                 if (settings.Count > 0)
                 {
@@ -986,7 +986,7 @@ namespace TVA.Services
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                     CategorizedSettingsElement setting;
 
                     settings.Clear();
@@ -1734,7 +1734,7 @@ namespace TVA.Services
 
                 if (m_queryableSettingsCategories.IndexOf(categoryName) >= 0)
                 {
-                    if (m_settingsCategoryName == categoryName)
+                    if (m_settingsCategory == categoryName)
                     {
                         LoadSettings();
                         settingsTarget = categoryName;
@@ -1747,7 +1747,7 @@ namespace TVA.Services
                             foreach (IServiceComponent component in m_serviceComponents)
                             {
                                 IPersistSettings reloadableComponent = component as IPersistSettings;
-                                if (reloadableComponent != null && reloadableComponent.SettingsCategoryName == categoryName)
+                                if (reloadableComponent != null && reloadableComponent.SettingsCategory == categoryName)
                                 {
                                     reloadableComponent.LoadSettings();
                                     settingsTarget = component.Name;
@@ -1762,7 +1762,7 @@ namespace TVA.Services
                             foreach (Component component in Container.Components)
                             {
                                 IPersistSettings reloadableComponent = component as IPersistSettings;
-                                if (reloadableComponent != null && reloadableComponent.SettingsCategoryName == categoryName)
+                                if (reloadableComponent != null && reloadableComponent.SettingsCategory == categoryName)
                                 {
                                     reloadableComponent.LoadSettings();
                                     settingsTarget = component.GetType().Name;

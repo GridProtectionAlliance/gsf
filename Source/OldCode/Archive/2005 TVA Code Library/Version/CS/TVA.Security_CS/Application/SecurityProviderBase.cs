@@ -62,7 +62,7 @@ namespace TVA.Security
 			private string m_applicationName;
 			private AuthenticationMode m_authenticationMode;
 			private bool m_persistSettings;
-			private string m_settingsCategoryName;
+			private string m_settingsCategory;
 			private Hashtable m_extendeeControls;
 			
 			#endregion
@@ -640,17 +640,17 @@ namespace TVA.Security
 			/// </summary>
 			/// <value></value>
 			/// <returns>Category name under which the property values are to be saved in the config file.</returns>
-			[Category("Persistance")]public string SettingsCategoryName
+			[Category("Persistance")]public string SettingsCategory
 			{
 				get
 				{
-					return m_settingsCategoryName;
+					return m_settingsCategory;
 				}
 				set
 				{
 					if (! string.IsNullOrEmpty(value))
 					{
-						m_settingsCategoryName = value;
+						m_settingsCategory = value;
 					}
 					else
 					{
@@ -669,7 +669,7 @@ namespace TVA.Security
 				{
 					try
 					{
-						TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+						TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategory);
 						Server = with_1.Item("Server", true).GetTypedValue(m_server);
 						ApplicationName = with_1.Item("ApplicationName", true).GetTypedValue(m_applicationName);
 						AuthenticationMode = with_1.Item("AuthenticationMode", true).GetTypedValue(m_authenticationMode);
@@ -692,7 +692,7 @@ namespace TVA.Security
 				{
 					try
 					{
-						TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategoryName);
+						TVA.Configuration.CategorizedSettingsElement with_1 = TVA.Configuration.Common.CategorizedSettings(m_settingsCategory);
 						with_1.Clear();
 						object with_2 = with_1.Item("Server", true);
 						with_2.Value = m_server.ToString();

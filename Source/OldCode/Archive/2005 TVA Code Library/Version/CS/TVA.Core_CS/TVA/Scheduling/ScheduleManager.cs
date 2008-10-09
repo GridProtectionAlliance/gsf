@@ -157,7 +157,7 @@ namespace TVA.Scheduling
         private bool m_enabled;
         private List<Schedule> m_schedules;
         private bool m_persistSettings;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private bool m_previouslyEnabled;
         private System.Timers.Timer m_timer;
 #if ThreadTracking
@@ -175,7 +175,7 @@ namespace TVA.Scheduling
         {
             m_enabled = DefaultEnabled;
             m_persistSettings = DefaultPersistSettings;
-            m_settingsCategoryName = DefaultSettingsCategoryName;
+            m_settingsCategory = DefaultSettingsCategoryName;
             m_schedules = new List<Schedule>();
             m_timer = new System.Timers.Timer(60000);
             m_timer.Elapsed += m_timer_Elapsed;
@@ -240,16 +240,16 @@ namespace TVA.Scheduling
         /// <value></value>
         /// <returns>The category name under which the component settings are to be saved in the config file.</returns>
         [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName), Description("The category name under which the component settings are to be saved in the config file.")]
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                    m_settingsCategoryName = value;
+                    m_settingsCategory = value;
                 else
                     throw new ArgumentNullException("SettingsCategoryName");
             }
@@ -445,7 +445,7 @@ namespace TVA.Scheduling
         {
             try
             {
-                foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[m_settingsCategoryName])
+                foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[m_settingsCategory])
                 {
                     // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
                     Schedule existingSchedule = GetSchedule(setting.Name);
@@ -479,7 +479,7 @@ namespace TVA.Scheduling
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                     settings.Clear();
                     foreach (Schedule schedule in m_schedules)

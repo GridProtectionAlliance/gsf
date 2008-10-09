@@ -34,7 +34,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets the category name under which the object settings are persisted in the config file.
         /// </summary>
-        string SettingsCategoryName { get; set; }
+        string SettingsCategory { get; set; }
 
         /// <summary>
         /// Saves settings to the config file.

@@ -311,7 +311,7 @@ namespace TVA.Communication
 
             try
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategoryName];
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
 
                 if (settings.Count > 0)
                 {
@@ -332,7 +332,7 @@ namespace TVA.Communication
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
                     CategorizedSettingsElement setting;
 
                     setting = settings["PayloadAware", true];

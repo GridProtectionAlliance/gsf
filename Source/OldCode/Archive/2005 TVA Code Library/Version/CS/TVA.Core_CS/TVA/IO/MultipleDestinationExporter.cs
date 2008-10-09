@@ -91,7 +91,7 @@ namespace TVA.IO
         // Fields
         private ExportDestination[] m_exportDestinations;
         private object m_destinationLock;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private int m_exportTimeout;
         private long m_totalExports;
         private Encoding m_textEncoding;
@@ -111,7 +111,7 @@ namespace TVA.IO
 
         public MultipleDestinationExporter(string settingsCategoryName, int exportTimeout)
         {
-            m_settingsCategoryName = settingsCategoryName;
+            m_settingsCategory = settingsCategoryName;
             m_exportTimeout = exportTimeout;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
             m_destinationLock = new object();
@@ -185,7 +185,7 @@ namespace TVA.IO
 				StringBuilder status = new StringBuilder();
 
 				status.Append("     Configuration section: ");
-				status.Append(m_settingsCategoryName);
+				status.Append(m_settingsCategory);
 				status.AppendLine();
 				status.Append("       Export destinations: ");
                 lock (m_destinationLock)
@@ -241,7 +241,7 @@ namespace TVA.IO
             get
             {
                 // We just return the settings category name for unique identification of this component
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
         }
 
@@ -268,16 +268,16 @@ namespace TVA.IO
         /// </summary>
         /// <returns>The category name under which the component settings are to be saved in the config file.</returns>
         [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName), Description("The category name under which the component settings are to be saved in the config file.")]
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                    m_settingsCategoryName = value;
+                    m_settingsCategory = value;
                 else
                     throw new ArgumentNullException("SettingsCategoryName");
             }
@@ -580,7 +580,7 @@ namespace TVA.IO
             {
                 lock (m_destinationLock)
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                     // We make sure at least a default set of configuration exists before we start load cycle
                     settings.Add("ExportTimeout", DefaultExportTimeout, "Total allowed time for all exports to execute in milliseconds.");
@@ -648,7 +648,7 @@ namespace TVA.IO
                 {
                     lock (m_destinationLock)
                     {
-                        CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                        CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                         settings["ExportTimeout"].Value = m_exportTimeout.ToString();
 

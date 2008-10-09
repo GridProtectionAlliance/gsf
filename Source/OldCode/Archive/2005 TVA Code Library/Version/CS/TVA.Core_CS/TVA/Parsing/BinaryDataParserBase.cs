@@ -75,7 +75,7 @@ namespace TVA.Parsing
         private bool m_optimizeParsing;
         private int m_unparsedDataReuseLimit;
         private bool m_persistSettings;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private Dictionary<TIdentifier, TypeInfo> m_outputTypes;
         private Dictionary<Guid, int> m_unparsedDataReuseCount;
         private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
@@ -89,7 +89,7 @@ namespace TVA.Parsing
         {
             m_idPropertyName = "ClassID";
             m_optimizeParsing = true;
-            m_settingsCategoryName = this.GetType().Name;
+            m_settingsCategory = this.GetType().Name;
             m_outputTypes = new Dictionary<TIdentifier, TypeInfo>();
             m_unparsedDataReuseCount = new Dictionary<Guid, int>();
             m_dataQueue = ProcessQueue<IdentifiableItem<Guid, byte[]>>.CreateRealTimeQueue(ParseData);
@@ -469,16 +469,16 @@ namespace TVA.Parsing
             }
         }
 
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                    m_settingsCategoryName = value;
+                    m_settingsCategory = value;
                 else
                     throw new ArgumentNullException("SettingsCategoryName");
             }
@@ -488,7 +488,7 @@ namespace TVA.Parsing
         {
             try
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                 if (settings.Count > 0)
                 {
                     IDPropertyName = settings["IDPropertyName"].ValueAs(m_idPropertyName);
@@ -508,7 +508,7 @@ namespace TVA.Parsing
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                     CategorizedSettingsElement element;
                     settings.Clear();
 

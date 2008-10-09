@@ -24,7 +24,7 @@ namespace TVA.IO
             m_loadOnOpen = true;
             m_reloadOnModify = true;
             m_autoSaveInterval = -1;
-            m_settingsCategoryName = this.GetType().Name;
+            m_settingsCategory = this.GetType().Name;
 
             m_autoSaveTimer = new System.Timers.Timer();
             m_autoSaveTimer.Elapsed += m_autoSaveTimer_Elapsed;

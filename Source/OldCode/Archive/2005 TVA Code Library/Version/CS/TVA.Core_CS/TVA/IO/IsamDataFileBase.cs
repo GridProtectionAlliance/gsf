@@ -65,7 +65,7 @@ namespace TVA.IO
         private int m_autoSaveInterval;
         private int m_minimumRecordCount;
         private bool m_persistSettings;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private FileStream m_fileStream;
         private List<T> m_fileRecords;
         private ManualResetEvent m_loadWaitHandle;
@@ -290,16 +290,16 @@ namespace TVA.IO
             }
         }
 
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                    m_settingsCategoryName = value;
+                    m_settingsCategory = value;
                 else
                     throw new ArgumentNullException("SettingsCategoryName");
             }
@@ -633,7 +633,7 @@ namespace TVA.IO
         {
             try
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                 if (settings.Count > 0)
                 {
@@ -657,7 +657,7 @@ namespace TVA.IO
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                     CategorizedSettingsElement setting;
 
                     settings.Clear();

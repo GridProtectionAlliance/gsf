@@ -133,7 +133,7 @@ namespace TVA.ErrorManagement
         private string m_contactEmail;
         private string m_contactPhone;
         private bool m_persistSettings;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private bool m_handleUnhandledException;
         private bool m_exitOnUnhandledException;
         private LogFile m_logFile;
@@ -171,7 +171,7 @@ namespace TVA.ErrorManagement
             m_contactEmail = DefaultContactEmail;
             m_contactPhone = DefaultContactPhone;
             m_persistSettings = DefaultPersistSettings;
-            m_settingsCategoryName = DefaultSettingsCategoryName;
+            m_settingsCategory = DefaultSettingsCategoryName;
             m_exitOnUnhandledException = DefaultExitOnUnhandledException;
             // Initialize delegate methods.
             m_errorTextMethod = GetErrorText;
@@ -388,17 +388,17 @@ namespace TVA.ErrorManagement
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategoryName),
         Description("Category under which the settings of ErrorLogger object are to be saved in the config file if the PersistSettings property is set to true.")]
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (string.IsNullOrEmpty(value))
                     throw (new ArgumentNullException());
-                m_settingsCategoryName = value;
+                m_settingsCategory = value;
             }
         }
 
@@ -704,7 +704,7 @@ namespace TVA.ErrorManagement
                 if (m_persistSettings)
                 {
                     ConfigurationFile config = ConfigurationFile.Current;
-                    CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
                     LogToUI = settings["LogToUI", true].ValueAs(m_logToUI);
                     LogToFile = settings["LogToFile", true].ValueAs(m_logToFile);
@@ -736,7 +736,7 @@ namespace TVA.ErrorManagement
                 try
                 {
                     ConfigurationFile config = ConfigurationFile.Current;
-                    CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
                     settings.Clear();
                     settings["LogToUI", true].Update(m_logToUI, "True if an encountered exception is to be logged to the User Interface; otherwise False.");

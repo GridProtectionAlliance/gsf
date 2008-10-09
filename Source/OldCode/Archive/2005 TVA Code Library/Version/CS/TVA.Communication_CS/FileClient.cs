@@ -306,7 +306,7 @@ namespace TVA.Communication
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
                     ReceiveOnDemand = settings["ReceiveOnDemand"].ValueAs(m_receiveOnDemand);
                     ReceiveInterval = settings["ReceiveInterval"].ValueAs(m_receiveInterval);
                     StartingOffset = settings["StartingOffset"].ValueAs(m_startingOffset);
@@ -326,7 +326,7 @@ namespace TVA.Communication
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
                     CategorizedSettingsElement setting;
 
                     setting = settings["ReceiveOnDemand", true];

@@ -116,7 +116,7 @@ namespace TVA.Communication
         private List<Guid> m_clientIDs;
         private bool m_isRunning;
         private bool m_persistSettings;
-        private string m_settingsCategoryName;
+        private string m_settingsCategory;
         private bool m_disposed;
         private long m_startTime;
         private long m_stopTime;
@@ -143,7 +143,7 @@ namespace TVA.Communication
 			m_textEncoding = System.Text.Encoding.ASCII;
 			m_serverID = Guid.NewGuid(); // Create an ID for the server.
 			m_clientIDs = new List<Guid>();
-			m_settingsCategoryName = this.GetType().Name;			
+			m_settingsCategory = this.GetType().Name;			
 			m_startTime = 0;
 			m_stopTime = 0;
 			m_buffer = new byte[m_receiveBufferSize];
@@ -547,7 +547,7 @@ namespace TVA.Communication
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
         }
 
@@ -612,17 +612,17 @@ namespace TVA.Communication
         }
 
         [Category("Settings")]
-        public string SettingsCategoryName
+        public string SettingsCategory
         {
             get
             {
-                return m_settingsCategoryName;
+                return m_settingsCategory;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    m_settingsCategoryName = value;
+                    m_settingsCategory = value;
                 }
                 else
                 {
@@ -857,7 +857,7 @@ namespace TVA.Communication
         {
             try
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
 
                 if (settings.Count > 0)
                 {
@@ -884,7 +884,7 @@ namespace TVA.Communication
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategoryName];
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                     CategorizedSettingsElement setting;
 
                     settings.Clear();
