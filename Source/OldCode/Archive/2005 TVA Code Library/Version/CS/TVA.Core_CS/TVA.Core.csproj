@@ -80,6 +80,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TVA\ISupportLifecycle.cs" />
     <Compile Include="System\BigBinaryValue.cs" />
     <Compile Include="System\BinaryValueBase.cs" />
     <Compile Include="System\LittleBinaryValue.cs" />
