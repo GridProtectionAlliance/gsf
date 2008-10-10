@@ -190,7 +190,6 @@ namespace System.Media.Sound
         /// <param name="destination"><see cref="WaveFile"/> used to store generated dual-tone multi-frequencies.</param>
         /// <param name="tones">Dual-tone multi-frequencies to generate.</param>
         /// <param name="volume">Volume of generated dual-tones as a percentage (0 to 1).</param>
-        /// <param name="volume">Volume of note as a percentage.</param>
         public static void Generate(WaveFile destination, DTMF[] tones, double volume)
         {
             Generate(destination, tones, volume, 1);
