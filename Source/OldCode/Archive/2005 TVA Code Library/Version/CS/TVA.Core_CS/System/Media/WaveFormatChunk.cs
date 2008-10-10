@@ -44,7 +44,7 @@ namespace System.Media
         public const string RiffTypeID = "fmt ";
 
         // Fields
-        private short m_audioFormat;
+        private ushort m_audioFormat;
         private short m_channels;
         private int m_sampleRate;
         private int m_byteRate;
@@ -57,7 +57,8 @@ namespace System.Media
 
         #region [ Constructors ]
 
-        public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, short audioFormat)
+        [CLSCompliant(false)]
+        public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
             : base(RiffTypeID)
         {
             if (bitsPerSample % 8 != 0)
@@ -87,7 +88,7 @@ namespace System.Media
             if (bytesRead < length)
                 throw new InvalidOperationException("WAVE format section too small, wave file corrupted.");
 
-            m_audioFormat = EndianOrder.LittleEndian.ToInt16(buffer, 0);
+            m_audioFormat = EndianOrder.LittleEndian.ToUInt16(buffer, 0);
             m_channels = EndianOrder.LittleEndian.ToInt16(buffer, 2);
             m_sampleRate = EndianOrder.LittleEndian.ToInt32(buffer, 4);
             m_byteRate = EndianOrder.LittleEndian.ToInt32(buffer, 8);
@@ -168,7 +169,8 @@ namespace System.Media
             }
         }
 
-        public short AudioFormat
+        [CLSCompliant(false)]
+        public ushort AudioFormat
         {
             get
             {

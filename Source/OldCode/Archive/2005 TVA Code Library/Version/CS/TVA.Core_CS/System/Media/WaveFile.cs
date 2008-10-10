@@ -110,7 +110,7 @@ namespace System.Media
     /// Microsoft defines 133 different audio encoding formats for WAVE files.
     /// </remarks>
     [CLSCompliant(false)]
-    public enum WaveFormats : ushort
+    public enum WaveFormat : ushort
     {
         /// <summary>Wave format type is undefined.</summary>
         Unknown = 0x0,
@@ -361,7 +361,7 @@ namespace System.Media
         /// <param name="bitsPerSample">Desired bits-per-sample</param>
         /// <param name="channels">Desired data channels</param>
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels)
-            : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)WaveFormats.PCM)
+            : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)WaveFormat.PCM)
         {
         }
 
@@ -372,7 +372,7 @@ namespace System.Media
         /// <param name="audioFormat">Desired audio format</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
         [CLSCompliant(false)]
-        public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels, WaveFormats audioFormat)
+        public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels, WaveFormat audioFormat)
             : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)audioFormat)
         {
         }
@@ -382,7 +382,7 @@ namespace System.Media
         /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16)</param>
         /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
         public WaveFile(int sampleRate, short bitsPerSample, short channels)
-            : this(sampleRate, bitsPerSample, channels, (ushort)WaveFormats.PCM)
+            : this(sampleRate, bitsPerSample, channels, (ushort)WaveFormat.PCM)
         {
         }
 

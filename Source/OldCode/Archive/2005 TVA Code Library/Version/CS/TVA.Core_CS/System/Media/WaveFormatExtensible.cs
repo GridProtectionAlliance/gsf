@@ -62,14 +62,6 @@ namespace System.Media
         All = -2147483648 // 0x80000000
     }
 
-    /// <summary>Element selection of WAVEFORMATEXTENSIBLE.Samples union.</summary>
-    public enum SampleType
-    {
-        ValidBitsPerSample,
-        SamplesPerBlock,
-        Reserved
-    }
-
     /// <summary>Common sub-type GUID's for <see cref="WaveFormatExtensible.SubFormat"/> property.</summary>
     public static class DataFormatSubType
     {
@@ -109,14 +101,18 @@ namespace System.Media
     /// <summary>
     /// Represents the "extensible" format structure for a WAVE media format file.
     /// </summary>
+    /// <remarks>
+    /// In order to get Windows Media Player to play a 24-bit encoded <see cref="WaveFile"/>, you will need to
+    /// set your <see cref="WaveFile.AudioFormat"/> to <see cref="WaveFormat.WaveFormatExtensible"/>, and set the
+    /// <see cref="WaveFile.ExtraParameters"/> to <see cref="WaveFormatExtensible.BinaryImage"/>.
+    /// </remarks>
     public class WaveFormatExtensible
     {
         #region [ Members ]
 
         // Fields
         private WaveFormatChunk m_waveFormat;
-        private SampleType m_sampleValueType;
-        private short m_sampleValue;
+        private ushort m_sampleValue;
         private Speakers m_channelMask;
         private Guid m_subFormat;
 
@@ -130,8 +126,7 @@ namespace System.Media
         public WaveFormatExtensible(WaveFormatChunk waveFormat)
         {
             m_waveFormat = waveFormat;
-            m_sampleValueType = SampleType.ValidBitsPerSample;
-            m_sampleValue = m_waveFormat.BitsPerSample;
+            m_sampleValue = (ushort)m_waveFormat.BitsPerSample;
             m_channelMask = Speakers.All;
             m_subFormat = DataFormatSubType.PCM;
         }
@@ -139,9 +134,9 @@ namespace System.Media
         /// <summary>
         /// Generate an extensible object based on the given settings.
         /// </summary>
-        public WaveFormatExtensible(WaveFormatChunk waveFormat, SampleType sampleValueType, short sampleValue, Speakers channelMask, Guid subFormat)
+        [CLSCompliant(false)]
+        public WaveFormatExtensible(WaveFormatChunk waveFormat, ushort sampleValue, Speakers channelMask, Guid subFormat)
         {
-            m_sampleValueType = sampleValueType;
             m_sampleValue = sampleValue;
             m_channelMask = channelMask;
             m_subFormat = subFormat;
@@ -151,22 +146,9 @@ namespace System.Media
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets sample type.</summary>
-        public SampleType SampleValueType
-        {
-            get
-            {
-                return m_sampleValueType;
-            }
-            set
-            {
-                m_sampleValueType = value;
-            }
-        }
-
-        /// <summary>Gets or sets sample value represented by type specfied in <see cref="SampleValueType"/> property.</summary>
-        /// <exception cref="ArgumentOutOfRangeException">When <see cref="SampleValueType"/> is ValidBitsPerSample, value should never exceed defined BitsPerSample.</exception>
-        public short SampleValue
+        /// <summary>Gets or sets sample value.</summary>
+        [CLSCompliant(false)]
+        public ushort SampleValue
         {
             get
             {
@@ -174,9 +156,6 @@ namespace System.Media
             }
             set
             {
-                if (m_sampleValueType == SampleType.ValidBitsPerSample && value > m_waveFormat.BitsPerSample)
-                    throw new ArgumentOutOfRangeException("sampleValue", "ValidBitsPerSample value should never exceed that of BitsPerSample");
-
                 m_sampleValue = value;
             }
         }
