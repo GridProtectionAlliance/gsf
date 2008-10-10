@@ -189,7 +189,7 @@ namespace System.Media.Sound
         }
 
         /// <summary>
-        /// Converts the character representation of a touch tone key into a 
+        /// Converts the character representation of a touch tone key into 
         /// an instance of the <see cref="TouchTone"/> class. A return value
         /// indicates whether the conversion succeeded.
         /// </summary>
@@ -215,7 +215,7 @@ namespace System.Media.Sound
         }
 
         /// <summary>
-        /// Converts the character representation of a touch tone key into a 
+        /// Converts the character representation of a touch tone key into
         /// an instance of the <see cref="TouchTone"/> class.
         /// </summary>
         /// <param name="key">A character containing a touch tone key to convert.</param>
