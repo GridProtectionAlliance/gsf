@@ -108,7 +108,7 @@ namespace System.Media
     /// using System;
     /// using System.Media;
     /// using System.Media.Sound;
-
+    ///
     /// static class Program
     /// {
     ///     static void Main()
