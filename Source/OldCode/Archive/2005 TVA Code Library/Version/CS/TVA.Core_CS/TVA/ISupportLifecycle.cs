@@ -63,7 +63,7 @@ namespace TVA
         /// Gets or sets a boolean value that indicates whether the object is enabled.
         /// </summary>
         /// <remarks>
-        /// Typical implementation of this property should suspend the internal processing when the object is 
+        /// Typical implementation of <see cref="Enabled"/> should suspend the internal processing when the object is 
         /// disabled and resume processing when the object is enabled.
         /// </remarks>
         bool Enabled { get; set; }
