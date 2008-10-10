@@ -44,13 +44,12 @@ namespace System.Media
         public const string RiffTypeID = "fmt ";
 
         // Fields
-        private ushort m_audioFormat;
+        private short m_audioFormat;
         private short m_channels;
         private int m_sampleRate;
         private int m_byteRate;
         private short m_blockAlignment;
         private short m_bitsPerSample;
-        private WaveFormatExtensible m_extensibleFormat;
         private short m_extraParametersSize;
         private byte[] m_extraParameters;
 
@@ -58,8 +57,7 @@ namespace System.Media
 
         #region [ Constructors ]
 
-        [CLSCompliant(false)]
-        public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
+        public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, short audioFormat)
             : base(RiffTypeID)
         {
             if (bitsPerSample % 8 != 0)
@@ -68,16 +66,10 @@ namespace System.Media
             m_sampleRate = sampleRate;
             m_bitsPerSample = bitsPerSample;
             m_channels = channels;
-            AudioFormat = audioFormat;
+            m_audioFormat = audioFormat;
 
             UpdateByteRate();
             UpdateBlockAlignment();
-
-            // In order to get Windows Media Player to play a 24-bit encoded WAVE file, you have to use the
-            // WaveFormatExtensible audio format, but even then the .NET Windows SoundPlayer will only play
-            // PCM encoded files - bah...
-            if (bitsPerSample == 24 && audioFormat == (short)WaveFormats.PCM)
-                AudioFormat = (ushort)WaveFormats.WaveFormatExtensible;
         }
 
         /// <summary>Reads a new WAVE format section from the specified stream.</summary>
@@ -95,7 +87,7 @@ namespace System.Media
             if (bytesRead < length)
                 throw new InvalidOperationException("WAVE format section too small, wave file corrupted.");
 
-            AudioFormat = EndianOrder.LittleEndian.ToUInt16(buffer, 0);
+            m_audioFormat = EndianOrder.LittleEndian.ToInt16(buffer, 0);
             m_channels = EndianOrder.LittleEndian.ToInt16(buffer, 2);
             m_sampleRate = EndianOrder.LittleEndian.ToInt32(buffer, 4);
             m_byteRate = EndianOrder.LittleEndian.ToInt32(buffer, 8);
@@ -130,8 +122,8 @@ namespace System.Media
         {
             get
             {
-                if (ExtraParametersSize > 0)
-                    return 18 + ExtraParametersSize;
+                if (m_extraParametersSize > 0)
+                    return 18 + m_extraParametersSize;
                 else
                     return 16;
             }
@@ -156,12 +148,12 @@ namespace System.Media
                 Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_blockAlignment), 0, binaryImage, startIndex + 12, 2);
                 Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_bitsPerSample), 0, binaryImage, startIndex + 14, 2);
 
-                if (ExtraParametersSize > 0)
+                if (m_extraParametersSize > 0)
                 {
-                    Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(ExtraParametersSize), 0, binaryImage, startIndex + 16, 2);
+                    Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_extraParametersSize), 0, binaryImage, startIndex + 16, 2);
 
-                    if (ExtraParametersSize > 0)
-                        Buffer.BlockCopy(ExtraParameters, 0, binaryImage, startIndex + 18, ExtraParametersSize);
+                    if (m_extraParametersSize > 0 && m_extraParameters != null)
+                        Buffer.BlockCopy(m_extraParameters, 0, binaryImage, startIndex + 18, m_extraParametersSize);
                 }
                 
                 return binaryImage;
@@ -176,8 +168,7 @@ namespace System.Media
             }
         }
 
-        [CLSCompliant(false)]
-        public ushort AudioFormat
+        public short AudioFormat
         {
             get
             {
@@ -186,10 +177,6 @@ namespace System.Media
             set
             {
                 m_audioFormat = value;
-
-                // Create extensible format object if needed
-                if (m_audioFormat == (ushort)WaveFormats.WaveFormatExtensible && m_extensibleFormat == null)
-                    m_extensibleFormat = new WaveFormatExtensible(this);
             }
         }
 
@@ -246,53 +233,22 @@ namespace System.Media
             }
         }
 
-        /// <summary>Gets or sets new extensible extensible wave format object.</summary>
-        public WaveFormatExtensible ExtensibleFormat
-        {
-            get
-            {
-                return m_extensibleFormat;
-            }
-            set
-            {
-                m_extensibleFormat = value;
-
-                // If user is creating a new extensible format object, audio format must match...
-                if (m_extensibleFormat != null && m_audioFormat != (ushort)WaveFormats.WaveFormatExtensible)
-                    m_audioFormat = (ushort)WaveFormats.WaveFormatExtensible;
-            }
-        }
-
-        /// <summary>Gets extra parameter size based on value in <see cref="ExtraParameters"/>.</summary>
         public short ExtraParametersSize
         {
             get
             {
-                if (m_extensibleFormat == null)
-                    return m_extraParametersSize;
-                else
-                    return (short)m_extensibleFormat.BinaryLength;
+                return m_extraParametersSize;
             }
         }
 
-        /// <summary>
-        /// When <see cref="ExtensibleFormat"/> is defined, this returns a binary image for the <see cref="WaveFormatExtensible"/> instance,
-        /// otherwise this gets or sets custom set of extra parameters for Wave format chunk.
-        /// </summary>
         public byte[] ExtraParameters
         {
             get
             {
-                if (m_extensibleFormat == null)
-                    return m_extraParameters;
-                else
-                    return m_extensibleFormat.BinaryImage;
+                return m_extraParameters;
             }
             set
             {
-                if (value != null && m_extensibleFormat != null)
-                    throw new InvalidOperationException("Cannot assign custom extra parameters when an ExtensibleFormat object is already defined.");
-
                 m_extraParameters = value;
 
                 if (m_extraParameters == null)
