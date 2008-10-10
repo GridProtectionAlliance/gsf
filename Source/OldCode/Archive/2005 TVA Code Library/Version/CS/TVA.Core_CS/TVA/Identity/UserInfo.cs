@@ -144,8 +144,11 @@ namespace TVA.Identity
         #region [ Properties ]
 
         /// <summary>
-        /// 
+        /// Gets or sets a boolean value that indicates whether the <see cref="UserInfo"/> object is currently enabled.
         /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> is implemented as part of the <see cref="ISupportLifecycle"/> interface but is not used.
+        /// </remarks>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public bool Enabled
         {
@@ -453,7 +456,7 @@ namespace TVA.Identity
                 }
                 finally
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
         }
