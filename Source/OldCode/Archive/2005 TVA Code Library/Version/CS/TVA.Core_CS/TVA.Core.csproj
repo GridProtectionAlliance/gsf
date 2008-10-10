@@ -80,11 +80,13 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="System\Media\Sound\DTMF.cs" />
+    <Compile Include="System\Media\Sound\TouchTone.cs" />
     <Compile Include="TVA\ISupportLifecycle.cs" />
     <Compile Include="System\BigBinaryValue.cs" />
     <Compile Include="System\BinaryValueBase.cs" />
     <Compile Include="System\LittleBinaryValue.cs" />
-    <Compile Include="System\Media\Music\Note.cs" />
+    <Compile Include="System\Media\Sound\Note.cs" />
     <Compile Include="TVA\BufferExtensions.cs" />
     <Compile Include="System\BinaryValue.cs" />
     <Compile Include="TVA\IO\Checksums\CrcCCITT.cs" />

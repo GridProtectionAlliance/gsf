@@ -31,7 +31,7 @@
 using System;
 using System.Reflection;
 
-namespace System.Media.Music
+namespace System.Media.Sound
 {
     /// <summary>
     /// Provides a function signature for methods that produce an amplitude representing the
@@ -50,7 +50,7 @@ namespace System.Media.Music
     /// <code>
     /// using System;
     /// using System.Media;
-    /// using System.Media.Music;
+    /// using System.Media.Sound;
     ///
     /// static class Program
     /// {
