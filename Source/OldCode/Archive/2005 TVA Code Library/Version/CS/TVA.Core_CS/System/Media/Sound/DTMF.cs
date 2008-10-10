@@ -118,7 +118,7 @@ namespace System.Media.Sound
 
         // Static Properties
 
-        /// <summary>Gets the <see cref="DTMF"/> instances representing a telephone dial tone.</summary>
+        /// <summary>Gets the <see cref="DTMF"/> instance representing a telephone dial tone.</summary>
         public static DTMF[] DialTone
         {
             get
@@ -154,7 +154,7 @@ namespace System.Media.Sound
             }
         }
 
-        /// <summary>Gets the <see cref="DTMF"/> instances representing the Emergency Broadcast System alert tone.</summary>
+        /// <summary>Gets the <see cref="DTMF"/> instance representing the Emergency Broadcast System alert tone.</summary>
         /// <remarks>The official duration of an EBS Alert is 22.5 seconds.</remarks>
         public static DTMF[] EmergencyBroadcastSystemAlert
         {
