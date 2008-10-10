@@ -469,7 +469,7 @@ namespace TVA.Identity
         /// <param name="username">Username of privileged domain user account.</param>
         /// <param name="password">Password of privileged domain user account.</param>
         /// <example>
-        /// This example shows how to defined the identity of the user to be used for retrieving information from Active Directory:
+        /// This example shows how to define the identity of the user to be used for retrieving information from Active Directory:
         /// <code>
         /// using System;
         /// using TVA.Identity;
