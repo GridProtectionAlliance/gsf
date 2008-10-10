@@ -104,15 +104,16 @@ namespace System.Media
     }
 
     /// <summary>
-    /// Typical WAVE audio encoding formats.
+    /// Common WAVE audio encoding formats.
     /// </summary>
     /// <remarks>
     /// Microsoft defines 133 different audio encoding formats for WAVE files.
     /// </remarks>
-    public enum WaveFormats : short
+    [CLSCompliant(false)]
+    public enum WaveFormats : ushort
     {
         /// <summary>Wave format type is undefined.</summary>
-        UNKNOWN = 0x0,
+        Unknown = 0x0,
         /// <summary>Standard pulse-code modulation audio format</summary>
         /// <remarks>
         /// PCM (Pulse Code Modulation) is a common method of storing and transmitting uncompressed digital audio.
@@ -124,18 +125,24 @@ namespace System.Media
         /// <summary>Adpative differential pulse-code modulation encoding algorithm</summary>
         ADPCM = 0x2,
         /// <summary>Floating point PCM encoding algorithm</summary>
-        IEEE_FLOAT = 0x3,
-        /// <summary>Vector sum excited linear prediction (VSELP) speech encoding algorithm</summary>
-        VSELP = 0x4,
-        /// <summary>Continuously variable slope delta modulation speech encoding algorithm</summary>
-        IBM_CVSD = 0x5,
+        IeeeFloat = 0x3,
         /// <summary>A-law encoding algorithm (used in Europe and the rest of the world)</summary>
-        ALAW = 0x6,
+        ALaw = 0x6,
         /// <summary>μ-law encoding algorithm (used in North America and Japan)</summary>
-        MULAW = 0x7,
+        MuLaw = 0x7,
         /// <summary>Decode Timestamp encoding algorithm (used in MPEG-coded multimedia)</summary>
-        DTS = 0x8,                             // Microsoft Corporation    
-        //DRM = 0x9,                           // Microsoft Corporation
+        DTS = 0x8,
+        /// <summary>Digital Rights Management encoded format (for digital-audio content protected by Microsoft DRM).</summary>
+        DRM = 0x9,
+        /// <summary>MPEG Audio is a family of open standards for compressed audio that includes MP2, MP3 and AAC.</summary>
+        Mpeg = 0x50,
+        /// <summary>ISO MPEG-Layer 3 audio format.</summary>
+        MpegLayer3 = 0x55,
+        /// <summary>Use WAVEFORMATEXTENSIBLE structure.</summary>
+        WaveFormatExtensible = 0xFFFE
+
+        #region [ Other Wave Formats ]
+
         //OKI_ADPCM = 0x10,                    // OKI
         //DVI_ADPCM = 0x11,                    // Intel Corporation
         //IMA_ADPCM = 0x11,                    // Intel Corporation
@@ -173,12 +180,8 @@ namespace System.Media
         //G721_ADPCM = 0x40,                   // Antex Electronics Corporation
         //G728_CELP = 0x41,                    // Antex Electronics Corporation
         //MSG723 = 0x42,                       // Microsoft Corporation
-        /// <summary>MPEG Audio is a family of open standards for compressed audio that includes MP2, MP3 and AAC.</summary>
-        MPEG = 0x50,                         // Microsoft Corporation
         //RT24 = 0x52,                         // InSoft, Inc.
         //PAC = 0x53,                          // InSoft, Inc.
-        /// <summary>ISO MPEG-Layer 3 audio format.</summary>
-        MPEGLAYER3 = 0x55                    // ISO/MPEG Layer3 Format Tag
         //LUCENT_G723 = 0x59,                  // Lucent Technologies
         //CIRRUS = 0x60,                       // Cirrus Logic
         //ESPCM = 0x61,                        // ESS Technology
@@ -262,6 +265,8 @@ namespace System.Media
         //NORRIS = 0x1400,                     // Norris Communications, Inc.
         //SOUNDSPACE_MUSICOMPRESS = 0x1500,    // AT&T Labs, Inc.
         //DVM = 0x2000                         // FAST Multimedia AG
+
+        #endregion
     }
 
     #endregion
@@ -356,7 +361,7 @@ namespace System.Media
         /// <param name="bitsPerSample">Desired bits-per-sample</param>
         /// <param name="channels">Desired data channels</param>
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels)
-            : this((int)sampleRate, (short)bitsPerSample, (short)channels, (short)WaveFormats.PCM)
+            : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)WaveFormats.PCM)
         {
         }
 
@@ -366,8 +371,9 @@ namespace System.Media
         /// <param name="channels">Desired data channels</param>
         /// <param name="audioFormat">Desired audio format</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
+        [CLSCompliant(false)]
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels, WaveFormats audioFormat)
-            : this((int)sampleRate, (short)bitsPerSample, (short)channels, (short)audioFormat)
+            : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)audioFormat)
         {
         }
 
@@ -376,7 +382,7 @@ namespace System.Media
         /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16)</param>
         /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
         public WaveFile(int sampleRate, short bitsPerSample, short channels)
-            : this(sampleRate, bitsPerSample, channels, (short)WaveFormats.PCM)
+            : this(sampleRate, bitsPerSample, channels, (ushort)WaveFormats.PCM)
         {
         }
 
@@ -386,7 +392,8 @@ namespace System.Media
         /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
         /// <param name="audioFormat">Desired audio format (e.g., 0x1 for Pulse Code Modulation)</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
-        public WaveFile(int sampleRate, short bitsPerSample, short channels, short audioFormat)
+        [CLSCompliant(false)]
+        public WaveFile(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
         {
             m_waveHeader = new RiffHeaderChunk("WAVE");
             m_waveFormat = new WaveFormatChunk(sampleRate, bitsPerSample, channels, audioFormat);
@@ -405,7 +412,8 @@ namespace System.Media
 
         #region [ Properties ]
 
-        public short AudioFormat
+        [CLSCompliant(false)]
+        public ushort AudioFormat
         {
             get
             {

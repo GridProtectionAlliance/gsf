@@ -80,6 +80,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="System\Media\WaveFormatExtensible.cs" />
     <Compile Include="System\Media\Sound\DTMF.cs" />
     <Compile Include="System\Media\Sound\TouchTone.cs" />
     <Compile Include="TVA\ISupportLifecycle.cs" />
