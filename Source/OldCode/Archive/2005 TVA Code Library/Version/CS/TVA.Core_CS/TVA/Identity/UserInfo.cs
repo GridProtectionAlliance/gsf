@@ -422,7 +422,7 @@ namespace TVA.Identity
                     EndImpersonation(currentContext);   // Undo impersonation if it was performed.
                 }
 
-                m_initialized = true;
+                m_initialized = true;   // Initialize only once.
             }
         }
 
