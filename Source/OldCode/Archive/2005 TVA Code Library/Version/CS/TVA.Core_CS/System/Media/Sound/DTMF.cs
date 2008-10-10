@@ -47,32 +47,32 @@ namespace System.Media.Sound
     ///     {
     ///         WaveFile waveFile = new WaveFile(SampleRate.Hz8000, BitsPerSample.Bits16, DataChannels.Mono);
     ///         double volume = 0.25D;  // Set volume of tones to 25% of maximum
-    ///         DTMF[] tones;
+    ///         DTMF tone;
     ///
     ///         // Get the dial tone dual-frequencies
-    ///         tones = DTMF.DialTone;
+    ///         tone = DTMF.DialTone;
     ///
     ///         // Change the duration of the dial-tone to 3 seconds
-    ///         tones[0].Duration = 3.0D;
+    ///         tone.Duration = 3.0D;
     ///
     ///         // Generate a dial tone
-    ///         DTMF.Generate(waveFile, tones, volume);
+    ///         DTMF.Generate(waveFile, tone, volume);
     ///
     ///         // Generate a busy-signal tone, repeat four times
     ///         DTMF.Generate(waveFile, DTMF.BusySignal, volume, 4);
     ///
-    ///         // Generate an off-the-hook tone, repeat ten times
-    ///         DTMF.Generate(waveFile, DTMF.OffHook, volume, 10);
+    ///         // Generate an off-the-hook tone, repeat eight times
+    ///         DTMF.Generate(waveFile, DTMF.OffHook, volume, 8);
     ///
     ///         // Get the EBS Alert dual-frequencies
-    ///         tones = DTMF.EmergencyBroadcastSystemAlert;
+    ///         tone = DTMF.EmergencyBroadcastSystemAlert;
     ///
     ///         // The official duration of an EBS Alert is 22.5 seconds, but
-    ///         // the noise is rather annoying - so we set to 4 seconds
-    ///         tones[0].Duration = 4.0D;
+    ///         // the noise is rather annoying - so we set it to 4 seconds
+    ///         tone.Duration = 4.0D;
     ///
     ///         // Generate the EBS Alert noise
-    ///         DTMF.Generate(waveFile, tones, volume);
+    ///         DTMF.Generate(waveFile, tone, volume);
     ///
     ///         // Play all the generated tones
     ///         waveFile.Play();
@@ -110,23 +110,14 @@ namespace System.Media.Sound
 
         #region [ Static ]
 
-        // Static Fields
-        private static DTMF[] m_dialTone;
-        private static DTMF[] m_busySignal;
-        private static DTMF[] m_offHook;
-        private static DTMF[] m_ebsAlert;
-
         // Static Properties
 
         /// <summary>Gets the <see cref="DTMF"/> instance representing a telephone dial tone.</summary>
-        public static DTMF[] DialTone
+        public static DTMF DialTone
         {
             get
             {
-                if (m_dialTone == null)
-                    m_dialTone = new DTMF[] { new DTMF(350.0D, 440.0D, 1.0D) };
-
-                return m_dialTone;
+                return new DTMF(350.0D, 440.0D, 1.0D);
             }
         }
 
@@ -135,10 +126,7 @@ namespace System.Media.Sound
         {
             get
             {
-                if (m_offHook == null)
-                    m_offHook = new DTMF[] { new DTMF(1400.0D, 2450.0D, 0.1D), new DTMF(2060.0D, 2600.0D, 0.1D) };
-
-                return m_offHook;
+                return new DTMF[] { new DTMF(1400.0D, 2450.0D, 0.1D), new DTMF(2060.0D, 2600.0D, 0.1D) };
             }
         }
 
@@ -147,23 +135,17 @@ namespace System.Media.Sound
         {
             get
             {
-                if (m_busySignal == null)
-                    m_busySignal = new DTMF[] { new DTMF(480.0D, 620.0D, 0.5D), new DTMF(0.0D, 0.0D, 0.5D) };
-
-                return m_busySignal;
+                return new DTMF[] { new DTMF(480.0D, 620.0D, 0.5D), new DTMF(0.0D, 0.0D, 0.5D) };
             }
         }
 
         /// <summary>Gets the <see cref="DTMF"/> instance representing the Emergency Broadcast System alert tone.</summary>
         /// <remarks>The official duration of an EBS Alert is 22.5 seconds.</remarks>
-        public static DTMF[] EmergencyBroadcastSystemAlert
+        public static DTMF EmergencyBroadcastSystemAlert
         {
             get
             {
-                if (m_ebsAlert == null)
-                    m_ebsAlert = new DTMF[] { new DTMF(853.0D, 960.0D, 22.5D) };
-
-                return m_ebsAlert;
+                return new DTMF(853.0D, 960.0D, 22.5D);
             }
         }
 
@@ -185,6 +167,29 @@ namespace System.Media.Sound
         }
 
         /// <summary>
+        /// Generates the specified dual-tone multi-frequency storing it in the specified <see cref="WaveFile"/>.
+        /// </summary>
+        /// <param name="destination"><see cref="WaveFile"/> used to store generated dual-tone multi-frequencies.</param>
+        /// <param name="tone">Dual-tone multi-frequency to generate.</param>
+        /// <param name="volume">Volume of generated dual-tones as a percentage (0 to 1).</param>
+        public static void Generate(WaveFile destination, DTMF tone, double volume)
+        {
+            Generate(destination, new DTMF[] { tone }, volume, 1);
+        }
+
+        /// <summary>
+        /// Generates the specified dual-tone multi-frequency <paramref name="repeatCount"/> times storing it in the specified <see cref="WaveFile"/>.
+        /// </summary>
+        /// <param name="destination"><see cref="WaveFile"/> used to store generated dual-tone multi-frequencies.</param>
+        /// <param name="tone">Dual-tone multi-frequency to generate.</param>
+        /// <param name="volume">Volume of generated dual-tones as a percentage (0 to 1).</param>
+        /// <param name="repeatCount">Number of times to repeat the tone.</param>
+        public static void Generate(WaveFile destination, DTMF tone, double volume, int repeatCount)
+        {
+            Generate(destination, new DTMF[] { tone }, volume, repeatCount);
+        }
+
+        /// <summary>
         /// Generates a single instance of each of the specified dual-tone multi-frequencies storing them in the specified <see cref="WaveFile"/>.
         /// </summary>
         /// <param name="destination"><see cref="WaveFile"/> used to store generated dual-tone multi-frequencies.</param>
@@ -201,7 +206,8 @@ namespace System.Media.Sound
         /// <param name="destination"><see cref="WaveFile"/> used to store generated dual-tone multi-frequencies.</param>
         /// <param name="tones">Dual-tone multi-frequencies to generate.</param>
         /// <param name="volume">Volume of generated dual-tones as a percentage (0 to 1).</param>
-        /// <param name="repeatCount">Number of times to repeat the tone.</param>
+        /// <param name="repeatCount">Number of times to repeat each tone.</param>
+        /// <exception cref="InvalidOperationException"><see cref="DTMF"/> only generated for <see cref="WaveFile"/> with a sample rate of 8, 16, 24, 32 or 64 bits per sample.</exception>
         public static void Generate(WaveFile destination, DTMF[] tones, double volume, int repeatCount)
         {
             short bitsPerSample = destination.BitsPerSample;
@@ -213,7 +219,7 @@ namespace System.Media.Sound
             switch (bitsPerSample)
             {
                 case 8:
-                    amplitude = Byte.MaxValue * volume;
+                    amplitude = SByte.MaxValue * volume;
                     break;
                 case 16:
                     amplitude = Int16.MaxValue * volume;
@@ -228,7 +234,7 @@ namespace System.Media.Sound
                     amplitude = Int64.MaxValue * volume;
                     break;
                 default:
-                    throw new InvalidOperationException(string.Format("Cannot generate DTMF for {0} bits per sample - mutst be 8, 16, 24, 32 or 64", bitsPerSample));
+                    throw new InvalidOperationException(string.Format("Cannot generate DTMF for {0} bits per sample - must be 8, 16, 24, 32 or 64", bitsPerSample));
             }
 
             // Iterate through each repeat count
@@ -253,7 +259,7 @@ namespace System.Media.Sound
                             switch (bitsPerSample)
                             {
                                 case 8: // Bytes are unsigned and need 128 byte offset
-                                    samples[z] = (Byte)sample + (Byte)128;
+                                    samples[z] = (Byte)(sample + 128);
                                     break;
                                 case 16:
                                     samples[z] = (Int16)sample;
