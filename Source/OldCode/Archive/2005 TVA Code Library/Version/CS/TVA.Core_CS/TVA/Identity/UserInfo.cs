@@ -32,11 +32,12 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using TVA.Interop;
 using TVA.Configuration;
+using TVA.Interop;
 
 namespace TVA.Identity
 {
@@ -57,19 +58,21 @@ namespace TVA.Identity
     ///     static void Main(string[] args)
     ///     {
     ///         // Retrieve and display user information from Active Directory.
-    ///         UserInfo user = new UserInfo("XYZCorp\\johndoe");
-    ///         Console.WriteLine(string.Format("First Name: {0}", user.FirstName));
-    ///         Console.WriteLine(string.Format("Last Name: {0}", user.LastName));
-    ///         Console.WriteLine(string.Format("Middle Initial: {0}", user.MiddleInitial));
-    ///         Console.WriteLine(string.Format("Email Address: {0}", user.Email));
-    ///         Console.WriteLine(string.Format("Telephone Number: {0}", user.Telephone));
+    ///         using (UserInfo user = new UserInfo("XYZCorp\\johndoe"))
+    ///         {
+    ///             Console.WriteLine(string.Format("First Name: {0}", user.FirstName));
+    ///             Console.WriteLine(string.Format("Last Name: {0}", user.LastName));
+    ///             Console.WriteLine(string.Format("Middle Initial: {0}", user.MiddleInitial));
+    ///             Console.WriteLine(string.Format("Email Address: {0}", user.Email));
+    ///             Console.WriteLine(string.Format("Telephone Number: {0}", user.Telephone));
+    ///         }
     ///
     ///         Console.ReadLine();
     ///     }
     /// }
     /// </code>
     /// </example>
-    public class UserInfo : IDisposable, IPersistSettings
+    public class UserInfo : ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]
 
@@ -88,7 +91,9 @@ namespace TVA.Identity
         private string m_previlegedPassword;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private bool m_enabled;
         private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
@@ -138,6 +143,26 @@ namespace TVA.Identity
 
         #region [ Properties ]
 
+        /// <summary>
+        /// 
+        /// </summary>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the settings of <see cref="UserInfo"/> object are 
+        /// to be saved to the config file.
+        /// </summary>
         public bool PersistSettings
         {
             get
@@ -150,6 +175,11 @@ namespace TVA.Identity
             }
         }
 
+        /// <summary>
+        /// Gets or sets the category under which the settings of <see cref="UserInfo"/> object are to be saved
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
         public string SettingsCategory
         {
             get
@@ -162,60 +192,6 @@ namespace TVA.Identity
                     throw (new ArgumentNullException());
 
                 m_settingsCategory = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="DirectoryEntry"/> of user that can be used to retrieve information about the user 
-        /// from Active Directory.
-        /// </summary>
-        public DirectoryEntry UserEntry
-        {
-            get
-            {
-                if (m_userEntry == null)
-                {
-                    WindowsImpersonationContext currentContext = null;
-
-                    try
-                    {
-                        // 11/06/2007 - PCP: Some change in the AD now causes the searching the AD to fail also if
-                        // this code is not being executed under a domain account which was not the case before;
-                        // before only AD property lookup had this behavior.
-
-                        // Impersonate to the privileged account if specified.
-                        if (!string.IsNullOrEmpty(m_previlegedDomain) &&
-                            !string.IsNullOrEmpty(m_previlegedUserName) &&
-                            !string.IsNullOrEmpty(m_previlegedPassword))
-                        {
-                            currentContext = ImpersonateUser(m_previlegedDomain,
-                                                             m_previlegedUserName,
-                                                             m_previlegedPassword);
-                        }
-
-                        // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
-                        // This is done to overcome "The server is not operational" COM exception that was being
-                        // encountered when a domain name was being specified.
-                        DirectoryEntry entry = new DirectoryEntry();
-
-                        using (DirectorySearcher searcher = new DirectorySearcher(entry))
-                        {
-                            searcher.Filter = "(SAMAccountName=" + m_username + ")";
-                            m_userEntry = searcher.FindOne().GetDirectoryEntry();
-                        }
-                    }
-                    catch
-                    {
-                        m_userEntry = null;
-                        throw;
-                    }
-                    finally
-                    {
-                        EndImpersonation(currentContext);   // Undo impersonation if it was performed.
-                    }
-                }
-
-                return m_userEntry;
             }
         }
 
@@ -395,6 +371,59 @@ namespace TVA.Identity
         #region [ Methods ]
 
         /// <summary>
+        /// Initializes the <see cref="UserInfo"/> object.
+        /// </summary>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                // Load settings from config file.
+                LoadSettings();
+
+                // Initialize the directory entry object used to retrieve AD info.
+                WindowsImpersonationContext currentContext = null;
+                try
+                {
+                    // 11/06/2007 - PCP: Some change in the AD now causes the searching the AD to fail also if
+                    // this code is not being executed under a domain account which was not the case before;
+                    // before only AD property lookup had this behavior.
+
+                    // Impersonate to the privileged account if specified.
+                    if (!string.IsNullOrEmpty(m_previlegedDomain) &&
+                        !string.IsNullOrEmpty(m_previlegedUserName) &&
+                        !string.IsNullOrEmpty(m_previlegedPassword))
+                    {
+                        currentContext = ImpersonateUser(m_previlegedDomain,
+                                                         m_previlegedUserName,
+                                                         m_previlegedPassword);
+                    }
+
+                    // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
+                    // This is done to overcome "The server is not operational" COM exception that was being
+                    // encountered when a domain name was being specified.
+                    DirectoryEntry entry = new DirectoryEntry();
+
+                    using (DirectorySearcher searcher = new DirectorySearcher(entry))
+                    {
+                        searcher.Filter = "(SAMAccountName=" + m_username + ")";
+                        m_userEntry = searcher.FindOne().GetDirectoryEntry();
+                    }
+                }
+                catch
+                {
+                    m_userEntry = null;
+                    throw;
+                }
+                finally
+                {
+                    EndImpersonation(currentContext);   // Undo impersonation if it was performed.
+                }
+
+                m_initialized = true;
+            }
+        }
+
+        /// <summary>
         /// Releases all the resources used by the <see cref="UserInfo"/> object.
         /// </summary>
         public void Dispose()
@@ -436,6 +465,36 @@ namespace TVA.Identity
         /// <param name="domain">Domain of privileged domain user account.</param>
         /// <param name="username">Username of privileged domain user account.</param>
         /// <param name="password">Password of privileged domain user account.</param>
+        /// <example>
+        /// This example shows how to defined the identity of the user to be used for retrieving information from Active Directory:
+        /// <code>
+        /// using System;
+        /// using TVA.Identity;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main(string[] args)
+        ///     {
+        ///         using (UserInfo user = new UserInfo("XYZCorp\\johndoe"))
+        ///         {
+        ///             // Define the identity to use for retrieving Active Directory information.
+        ///             // Persist identity credentials encrypted to the config for easy access.
+        ///             user.PersistSettings = true;
+        ///             user.DefinePrivilegedAccount("XYZCorp", "admin", "Passw0rd");
+        ///
+        ///             // Retrieve and display user information from Active Directory.
+        ///             Console.WriteLine(string.Format("First Name: {0}", user.FirstName));
+        ///             Console.WriteLine(string.Format("Last Name: {0}", user.LastName));
+        ///             Console.WriteLine(string.Format("Middle Initial: {0}", user.MiddleInitial));
+        ///             Console.WriteLine(string.Format("Email Address: {0}", user.Email));
+        ///             Console.WriteLine(string.Format("Telephone Number: {0}", user.Telephone));
+        ///         }
+        ///
+        ///         Console.ReadLine();
+        ///     }
+        /// }
+        /// </code>
+        ///</example>
         public void DefinePrivilegedAccount(string domain, string username, string password)
         {
             // Check input parameters.
@@ -459,8 +518,9 @@ namespace TVA.Identity
         /// <returns>Value for the specified active directory property.</returns>
         public string GetUserProperty(string propertyName)
         {
-            WindowsImpersonationContext currentContext = null;
+            Initialize();   // Initialize if not already.
 
+            WindowsImpersonationContext currentContext = null;
             try
             {
                 // Impersonate to the privileged account if specified.
@@ -473,7 +533,7 @@ namespace TVA.Identity
                                                      m_previlegedPassword);
                 }
 
-                return UserEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
+                return m_userEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
             }
             catch
             {
@@ -498,7 +558,7 @@ namespace TVA.Identity
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["PrevilegedDomain", true].Update(m_previlegedDomain, "Domain of privileged domain user account.");
                 settings["PrevilegedUserName", true].Update(m_previlegedUserName, "Username of privileged domain user account.");
-                settings["PrevilegedPassword", true].Update(m_previlegedPassword, "Password of privileged domain user account.");
+                settings["PrevilegedPassword", true].Update(m_previlegedPassword, "Password of privileged domain user account.", true);
                 config.Save();
             }
         }
@@ -515,8 +575,8 @@ namespace TVA.Identity
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 m_previlegedDomain = settings["PrevilegedDomain", true].ValueAs(m_previlegedDomain);
-                m_previlegedUserName = settings["PrevilegedUserName", true].ValueAs(m_previlegedDomain);
-                m_previlegedPassword = settings["PrevilegedPassword", true].ValueAs(m_previlegedDomain);
+                m_previlegedUserName = settings["PrevilegedUserName", true].ValueAs(m_previlegedUserName);
+                m_previlegedPassword = settings["PrevilegedPassword", true].ValueAs(m_previlegedPassword);
             }
         }
 
