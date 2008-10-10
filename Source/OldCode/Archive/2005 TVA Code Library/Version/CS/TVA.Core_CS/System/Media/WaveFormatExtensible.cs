@@ -101,11 +101,37 @@ namespace System.Media
     /// <summary>
     /// Represents the "extensible" format structure for a WAVE media format file.
     /// </summary>
-    /// <remarks>
-    /// In order to get Windows Media Player to play a 24-bit encoded <see cref="WaveFile"/>, you will need to
-    /// set your <see cref="WaveFile.AudioFormat"/> to <see cref="WaveFormat.WaveFormatExtensible"/>, and set the
-    /// <see cref="WaveFile.ExtraParameters"/> to <see cref="WaveFormatExtensible.BinaryImage"/>.
-    /// </remarks>
+    /// <example>
+    /// For some special bit-encodings you may need to use the "WaveFormatExtensible" audio format,
+    /// here is an example of how to use that format:
+    /// <code>
+    /// using System;
+    /// using System.Media;
+    /// using System.Media.Sound;
+
+    /// static class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         // Generate an 8000 Hz, 32 bits per sample, mono channeled WAVE file in "Extensible" format
+    ///         WaveFile waveFile = new WaveFile(8000, 32, 1, (ushort)WaveFormat.WaveFormatExtensible);
+    ///
+    ///         // Apply the "WaveFormatExtensible" extra parameters
+    ///         WaveFormatExtensible extensible = new WaveFormatExtensible(waveFile.FormatChunk);
+    ///         waveFile.ExtraParameters = extensible.BinaryImage;
+    ///
+    ///         // Generate the EBS Alert noise
+    ///         DTMF.Generate(waveFile, DTMF.EmergencyBroadcastSystemAlert, 0.25D);
+    ///
+    ///         // Play all the generated tones
+    ///         waveFile.Save("ExtensibleTest.wav");
+    ///
+    ///         Console.Write("File available to be played from Windows Media Player...");
+    ///         Console.ReadKey();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class WaveFormatExtensible
     {
         #region [ Members ]

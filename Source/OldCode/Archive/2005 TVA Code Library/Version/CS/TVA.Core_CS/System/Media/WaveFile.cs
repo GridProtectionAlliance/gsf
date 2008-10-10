@@ -31,6 +31,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 
 namespace System.Media
@@ -401,6 +402,7 @@ namespace System.Media
         }
 
         /// <summary>Creates a new empty in-memory wave file using existing constituent chunks</summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData)
         {
             m_waveHeader = waveHeader;
@@ -493,6 +495,33 @@ namespace System.Media
             }
         }
 
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public RiffHeaderChunk HeaderChunk
+        {
+            get
+            {
+                return m_waveHeader;
+            }
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public WaveFormatChunk FormatChunk
+        {
+            get
+            {
+                return m_waveFormat;
+            }
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public WaveDataChunk DataChunk
+        {
+            get
+            {
+                return m_waveData;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -555,7 +584,7 @@ namespace System.Media
         {
             m_waveData.SampleBlocks.Reverse();
         }
-
+        
         #endregion
 
         #region [ Static ]
