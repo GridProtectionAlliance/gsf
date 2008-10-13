@@ -521,7 +521,7 @@ namespace TVA.Identity
         /// <returns>Value for the specified active directory property.</returns>
         public string GetUserProperty(string propertyName)
         {
-            Initialize();   // Initialize if not already.
+            Initialize();   // Initialize if uninitialized.
 
             WindowsImpersonationContext currentContext = null;
             try
