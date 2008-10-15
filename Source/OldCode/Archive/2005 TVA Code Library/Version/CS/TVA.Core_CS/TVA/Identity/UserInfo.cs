@@ -28,6 +28,8 @@
 //      Converted to C#.
 //  10/06/2008 - Pinal C. Patel
 //      Edited code comments.
+//  10/06/2008 - Pinal C. Patel
+//      Added static properties RemoteUserID and RemoteUserInfo.
 //
 //*******************************************************************************************************
 
@@ -36,6 +38,7 @@ using System.ComponentModel;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Threading;
 using TVA.Configuration;
 using TVA.Interop;
 
@@ -521,11 +524,11 @@ namespace TVA.Identity
         /// <returns>Value for the specified active directory property.</returns>
         public string GetUserProperty(string propertyName)
         {
-            Initialize();   // Initialize if uninitialized.
-
             WindowsImpersonationContext currentContext = null;
             try
             {
+                Initialize();   // Initialize if uninitialized.
+
                 // Impersonate to the privileged account if specified.
                 if (!string.IsNullOrEmpty(m_previlegedDomain) &&
                     !string.IsNullOrEmpty(m_previlegedUserName) &&
@@ -610,9 +613,11 @@ namespace TVA.Identity
         // Static Properties
 
         /// <summary>
-        /// Gets the Login ID of the current user.
+        /// Gets the <see cref="LoginID"/> of the current user.
         /// </summary>
-        /// <remarks>The Login ID returned is that of the user account under which the code is executing.</remarks>
+        /// <remarks>
+        /// The <see cref="LoginID"/> returned is that of the user account under which the code is executing.
+        /// </remarks>
         public static string CurrentUserID
         {
             get
@@ -622,7 +627,7 @@ namespace TVA.Identity
         }
 
         /// <summary>
-        /// Gets the <see cref="UserInfo"/> object for the current user.
+        /// Gets the <see cref="UserInfo"/> object for the <see cref="CurrentUserID"/>.
         /// </summary>
         public static UserInfo CurrentUserInfo
         {
@@ -632,6 +637,37 @@ namespace TVA.Identity
                     m_currentUserInfo = new UserInfo(CurrentUserID);
 
                 return m_currentUserInfo;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="LoginID"/> of the remote web user.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="LoginID"/> returned is that of the remote user accessing the web application. This is 
+        /// available only if the virtual directory hosting the web application is configured to use "Integrated 
+        /// Windows Authentication".
+        /// </remarks>
+        public static string RemoteUserID
+        {
+            get
+            {
+                return Thread.CurrentPrincipal.Identity.Name;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="UserInfo"/> object for the <see cref="RemoteUserID"/>.
+        /// </summary>
+        public static UserInfo RemoteUserInfo
+        {
+            get
+            {
+                string userID = RemoteUserID;
+                if (userID == null)
+                    return null;
+                else
+                    return new UserInfo(RemoteUserID);
             }
         }
 
