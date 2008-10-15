@@ -16,6 +16,8 @@
 //       Edited Code Comments.
 //  09/22/2008 - James R Carroll
 //       Converted to C# - restructured.
+//  10/15/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -26,14 +28,44 @@ using System.Net.Mime;
 
 namespace TVA.Net.Smtp
 {
-    /// <summary>Defines common e-mail related functions.</summary>
+    /// <summary>
+    /// A wrapper class to the <see cref="MailMessage"/> class that simplifies sending mail messages.
+    /// </summary>
+    /// <example>
+    /// This sample shows how to send an email message with attachment:
+    /// <code>
+    /// using System;
+    /// using TVA.Net.Smtp;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         Mail email = new Mail("sender@xyzcorp.com", "recipient@xyzcorp.com", "smtp.xyzcorp.com");
+    ///         email.Subject = "Test Message";
+    ///         email.Body = "This is a test message.";
+    ///         email.IsBodyHtml = true;
+    ///         email.Attachments = @"c:\attachment.txt";
+    ///         email.Send();
+    ///
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class Mail
     {
         #region [ Members ]
 
+        // Constants
+        /// <summary>
+        /// Default <see cref="SmtpServer"/> to be used if one is not specified.
+        /// </summary>
+        public const string DefaultSmtpServer = "mailhost.cha.tva.gov";
+
         // Fields
         private string m_from;
-        private string m_recipients;
+        private string m_toRecipients;
         private string m_ccRecipients;
         private string m_bccRecipients;
         private string m_subject;
@@ -46,13 +78,27 @@ namespace TVA.Net.Smtp
 
         #region [ Constructors ]
 
-        public Mail()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Mail"/> class.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        public Mail(string from, string toRecipients)
+            : this(from, toRecipients, DefaultSmtpServer)
         {
         }
 
-        public Mail(string smtpServer)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Mail"/> class.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
+        public Mail(string from, string toRecipients, string smtpServer)
         {
-            m_smtpServer = smtpServer;
+            this.From = from;
+            this.ToRecipients = toRecipients;
+            this.SmtpServer = smtpServer;
         }
 
         #endregion
@@ -60,10 +106,8 @@ namespace TVA.Net.Smtp
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the sender's address for this e-mail message.
+        /// Gets or sets the e-mail address of the <see cref="Mail"/> message sender.
         /// </summary>
-        /// <value></value>
-        /// <returns>The sender's address for this e-mail message.</returns>
         public string From
         {
             get
@@ -72,38 +116,36 @@ namespace TVA.Net.Smtp
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_from = value;
-                else
-                    throw new ArgumentNullException("From");
+                // This is a required field.
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
+                m_from = value;
             }
         }
 
         /// <summary>
-        /// Gets the comma (,) or semicolon (;) delimited list of recipients for this e-mail message.
+        /// Gets or sets the comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The comma (,) or semicolon (;) delimited list of recipients for this e-mail message.</returns>
-        public string Recipients
+        public string ToRecipients
         {
             get
             {
-                return m_recipients;
+                return m_toRecipients;
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_recipients = value;
-                else
-                    throw new ArgumentNullException("Recipients");
+                // This is a required field.
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
+                m_toRecipients = value;
             }
         }
 
         /// <summary>
-        /// Gets the comma (,) or semicolon (;) delimited list of carbon copy recipients for this e-mail message.
+        /// Gets or sets the comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message carbon copy (CC) recipients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The comma (,) or semicolon (;) delimited list of carbon copy recipients for this e-mail message.</returns>
         public string CcRecipients
         {
             get
@@ -117,10 +159,8 @@ namespace TVA.Net.Smtp
         }
 
         /// <summary>
-        /// Gets the comma (,) or semicolon (;) delimited list of blind carbon copy recipients for this e-mail message.
+        /// Gets or sets the comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message blank carbon copy (BCC) recipients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The comma (,) or semicolon (;) delimited list of blind carbon copy recipients for this e-mail message.</returns>
         public string BccRecipients
         {
             get
@@ -134,10 +174,8 @@ namespace TVA.Net.Smtp
         }
 
         /// <summary>
-        /// Gets or sets the subject line for this e-mail message.
+        /// Gets or sets the subject of the <see cref="Mail"/> message.
         /// </summary>
-        /// <value></value>
-        /// <returns>The subject line for this e-mail message.</returns>
         public string Subject
         {
             get
@@ -151,10 +189,8 @@ namespace TVA.Net.Smtp
         }
 
         /// <summary>
-        /// Gets or sets the message body.
+        /// Gets or sets the body of the <see cref="Mail"/> message.
         /// </summary>
-        /// <value></value>
-        /// <returns>The body text.</returns>
         public string Body
         {
             get
@@ -168,10 +204,8 @@ namespace TVA.Net.Smtp
         }
 
         /// <summary>
-        /// Gets or sets the name or IP address of the mail server for this e-mail message.
+        /// Gets or sets the name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.
         /// </summary>
-        /// <value></value>
-        /// <returns>The name or IP address of the mail server for this e-mail message.</returns>
         public string SmtpServer
         {
             get
@@ -180,18 +214,17 @@ namespace TVA.Net.Smtp
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_smtpServer = value;
-                else
-                    throw new ArgumentNullException("SmtpServer");
+                // This is a required field.
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
+                m_smtpServer = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the comma (,) or semicolon (;) delimited list of file names that are to be attached to this e-mail message.
+        /// Gets or sets the comma-separated or semicolon-seperated list of file names to be attached to the <see cref="Mail"/> message.
         /// </summary>
-        /// <value></value>
-        /// <returns>The comma (,) or semicolon (;) delimited list of file names that are to be attached to this e-mail message.</returns>
         public string Attachments
         {
             get
@@ -205,10 +238,8 @@ namespace TVA.Net.Smtp
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the mail message body is in Html.
+        /// Gets or sets a boolean value that indicating whether the <see cref="Mail"/> message <see cref="Body"/> is to be formatted as HTML.
         /// </summary>
-        /// <value></value>
-        /// <returns>True if the message body is in Html; otherwise False.</returns>
         public bool IsBodyHtml
         {
             get
@@ -226,116 +257,128 @@ namespace TVA.Net.Smtp
         #region [ Methods ]
 
         /// <summary>
-        /// Send this e-mail message to its recipients.
+        /// Send the <see cref="Mail"/> message with <see cref="Attachments"/> to the <see cref="ToRecipients"/>, 
+        /// <see cref="CcRecipients"/> and <see cref="BccRecipients"/> using the specified <see cref="SmtpServer"/>.
         /// </summary>
         public void Send()
         {
-            Mail.Send(m_from, m_recipients, m_ccRecipients, m_bccRecipients, m_subject, m_body, m_isBodyHtml, m_attachments, m_smtpServer);
+            MailMessage emailMessage = new MailMessage(m_from, m_toRecipients, m_subject, m_body);
+            emailMessage.IsBodyHtml = m_isBodyHtml;
+
+            if (!string.IsNullOrEmpty(m_ccRecipients))
+            {
+                // Add the specified CC recipients for the mail message.
+                foreach (string ccRecipient in m_ccRecipients.Split(new char[] { ';', ',' }))
+                {
+                    emailMessage.CC.Add(ccRecipient.Trim());
+                }
+            }
+
+            if (!string.IsNullOrEmpty(m_bccRecipients))
+            {
+                // Add the specified BCC recipients for the mail message.
+                foreach (string bccRecipient in m_bccRecipients.Split(new char[] { ';', ',' }))
+                {
+                    emailMessage.Bcc.Add(bccRecipient.Trim());
+                }
+            }
+
+            if (!string.IsNullOrEmpty(m_attachments))
+            {
+                // Attach the specified files to the mail message.
+                foreach (string attachment in m_attachments.Split(new char[] { ';', ',' }))
+                {
+                    // Create the file attachment for the mail message.
+                    Attachment data = new Attachment(attachment.Trim(), MediaTypeNames.Application.Octet);
+                    ContentDisposition header = data.ContentDisposition;
+
+                    // Add time stamp information for the file.
+                    header.CreationDate = File.GetCreationTime(attachment);
+                    header.ModificationDate = File.GetLastWriteTime(attachment);
+                    header.ReadDate = File.GetLastAccessTime(attachment);
+
+                    emailMessage.Attachments.Add(data); // Attach the file.
+                }
+            }
+
+            SmtpClient smtpClient = new SmtpClient(m_smtpServer);
+            smtpClient.Send(emailMessage);  // Send the mail.
+            emailMessage.Dispose();         // Clean-up.
         }
 
         #endregion
 
         #region [ Static ]
 
-        /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
-        /// <param name="from">The address of the mail message sender.</param>
-        /// <param name="toRecipients">A comma-separated address list of the mail message recipients.</param>
-        /// <param name="subject">The subject of the mail message.</param>
-        /// <param name="body">The body of the mail message.</param>
-        /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
-        /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
+        /// <summary>
+        /// Sends a <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
         public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer)
         {
             Send(from, toRecipients, null, null, subject, body, isBodyHtml, smtpServer);
         }
 
-        /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
-        /// <param name="from">The address of the mail message sender.</param>
-        /// <param name="toRecipients">A comma-separated address list of the mail message recipients.</param>
-        /// <param name="ccRecipients">A comma-separated address list of the mail message carbon copy (CC) recipients.</param>
-        /// <param name="bccRecipients">A comma-separated address list of the mail message blank carbon copy (BCC) recipients.</param>
-        /// <param name="subject">The subject of the mail message.</param>
-        /// <param name="body">The body of the mail message.</param>
-        /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
-        /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
+        /// <summary>
+        /// Sends a <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="ccRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message carbon copy (CC) recipients.</param>
+        /// <param name="bccRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message blank carbon copy (BCC) recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
         public static void Send(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string smtpServer)
         {
             Send(from, toRecipients, ccRecipients, bccRecipients, subject, body, isBodyHtml, null, smtpServer);
         }
 
-        /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
-        /// <param name="from">The address of the mail message sender.</param>
-        /// <param name="toRecipients">A comma-separated address list of the mail message recipients.</param>
-        /// <param name="subject">The subject of the mail message.</param>
-        /// <param name="body">The body of the mail message.</param>
-        /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
-        /// <param name="attachments">A comma-separated list of file names to be attached to the mail message.</param>
-        /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
+        /// <summary>
+        /// Sends a <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="attachments">A comma-separated or semicolon-seperated list of file names to be attached to the <see cref="Mail"/> message.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
         public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
         {
             Send(from, toRecipients, null, null, subject, body, isBodyHtml, attachments, smtpServer);
         }
 
-        /// <summary>Creates a mail message from the specified information, and sends it to an SMTP server for delivery.</summary>
-        /// <param name="from">The address of the mail message sender.</param>
-        /// <param name="toRecipients">A comma-separated address list of the mail message recipients.</param>
-        /// <param name="ccRecipients">A comma-separated address list of the mail message carbon copy (CC) recipients.</param>
-        /// <param name="bccRecipients">A comma-separated address list of the mail message blank carbon copy (BCC) recipients.</param>
-        /// <param name="subject">The subject of the mail message.</param>
-        /// <param name="body">The body of the mail message.</param>
-        /// <param name="isBodyHtml">A boolean value indicating whether the mail message body is in Html.</param>
-        /// <param name="attachments">A comma-separated list of file names to be attached to the mail message.</param>
-        /// <param name="smtpServer">The name or IP address of the SMTP server. Pass null or Nothing to use the default SMTP server.</param>
+        /// <summary>
+        /// Sends a <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="ccRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message carbon copy (CC) recipients.</param>
+        /// <param name="bccRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message blank carbon copy (BCC) recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="attachments">A comma-separated or semicolon-seperated list of file names to be attached to the <see cref="Mail"/> message.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
         public static void Send(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
         {
-            if (smtpServer == null)
-                throw new ArgumentNullException("smtpServer", "No SMTP server was specified");
-
-            MailMessage emailMessage = new MailMessage(from, toRecipients, subject, body);
-
-            if (!string.IsNullOrEmpty(ccRecipients))
-            {
-                // Specifies the CC e-mail addresses for the e-mail message.
-                foreach (string ccRecipient in ccRecipients.Replace(" ", "").Split(new char[] { ';', ',' }))
-                {
-                    emailMessage.CC.Add(ccRecipient);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(bccRecipients))
-            {
-                // Specifies the BCC e-mail addresses for the e-mail message.
-                foreach (string bccRecipient in bccRecipients.Replace(" ", "").Split(new char[] { ';', ',' }))
-                {
-                    emailMessage.Bcc.Add(bccRecipient);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(attachments))
-            {
-                // Attaches all of the specified files to the e-mail message.
-                foreach (string attachment in attachments.Replace(" ", "").Split(new char[] { ';', ',' }))
-                {
-                    // Creates the file attachment for the e-mail message.
-                    Attachment data = new Attachment(attachment, MediaTypeNames.Application.Octet);
-                    ContentDisposition header = data.ContentDisposition;
-
-                    // Adds time stamp information for the file.
-                    header.CreationDate = File.GetCreationTime(attachment);
-                    header.ModificationDate = File.GetLastWriteTime(attachment);
-                    header.ReadDate = File.GetLastAccessTime(attachment);
-
-                    emailMessage.Attachments.Add(data); // Attaches the file.
-                }
-            }
-
-            emailMessage.IsBodyHtml = isBodyHtml;
-
-            SmtpClient smtpClient = new SmtpClient(smtpServer);
-
-            smtpClient.Send(emailMessage);
+            Mail email = new Mail(from, toRecipients, smtpServer);
+            email.CcRecipients = ccRecipients;
+            email.BccRecipients = bccRecipients;
+            email.Subject = subject;
+            email.Body = body;
+            email.IsBodyHtml = isBodyHtml;
+            email.Attachments = attachments;
+            email.Send();
         }
 
         #endregion
-   }
+    }
 }
