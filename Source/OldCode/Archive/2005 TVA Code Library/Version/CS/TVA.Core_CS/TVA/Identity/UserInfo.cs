@@ -576,8 +576,8 @@ namespace TVA.Identity
         }
 
         /// <summary>
-        /// Loads saved settings for the <see cref="UserInfo"/> object from the config file if the
-        /// <see cref="PersistSettings"/> property is set to true.
+        /// Loads saved settings for the <see cref="UserInfo"/> object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
         /// </summary>
         public void LoadSettings()
         {
