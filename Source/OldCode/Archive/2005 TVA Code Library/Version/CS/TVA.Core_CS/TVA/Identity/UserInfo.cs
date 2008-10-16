@@ -150,7 +150,7 @@ namespace TVA.Identity
         /// Gets or sets a boolean value that indicates whether the <see cref="UserInfo"/> object is currently enabled.
         /// </summary>
         /// <remarks>
-        /// <see cref="Enabled"/> is implemented as part of the <see cref="ISupportLifecycle"/> interface but is not used.
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
         /// </remarks>
         [Browsable(false), 
         EditorBrowsable(EditorBrowsableState.Never), 
