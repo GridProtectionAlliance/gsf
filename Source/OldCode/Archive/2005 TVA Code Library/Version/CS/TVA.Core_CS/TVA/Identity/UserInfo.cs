@@ -152,7 +152,9 @@ namespace TVA.Identity
         /// <remarks>
         /// <see cref="Enabled"/> is implemented as part of the <see cref="ISupportLifecycle"/> interface but is not used.
         /// </remarks>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false), 
+        EditorBrowsable(EditorBrowsableState.Never), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
             get
