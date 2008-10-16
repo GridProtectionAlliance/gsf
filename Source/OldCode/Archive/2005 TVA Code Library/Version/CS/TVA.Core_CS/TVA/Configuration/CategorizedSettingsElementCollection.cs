@@ -86,7 +86,7 @@ namespace TVA.Configuration
         /// Gets the <see cref="CategorizedSettingsElement"/> object with the specified name.
         /// </summary>
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object to retrieve.</param>
-        /// <param name="ensureExistance">A boolean value that indicates whether the <see cref="CategorizedSettingsElement"/> object is to be created if it does not exist.</param>
+        /// <param name="ensureExistance">true if the <see cref="CategorizedSettingsElement"/> object is to be created if it does not exist; otherwise false.</param>
         /// <returns>The <see cref="CategorizedSettingsElement"/> object with the specified name if it exists; otherwise null.</returns>
         public CategorizedSettingsElement this[string name, bool ensureExistance]
         {
@@ -150,7 +150,7 @@ namespace TVA.Configuration
         /// </summary>
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">A boolean value that indicates whether the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted.</param>
+        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, object value, bool encryptValue)
         {
             Add(name, value.ToString(), encryptValue);
@@ -161,7 +161,7 @@ namespace TVA.Configuration
         /// </summary>
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">A boolean value that indicates whether the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted.</param>
+        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, string value, bool encryptValue)
         {
             Add(name, value, "", encryptValue);
@@ -195,7 +195,7 @@ namespace TVA.Configuration
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">A boolean value that indicates whether the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted.</param>
+        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, object value, string description, bool encryptValue)
         {
             Add(name, value.ToString(), description, encryptValue);
@@ -207,7 +207,7 @@ namespace TVA.Configuration
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">A boolean value that indicates whether the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted.</param>
+        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, string value, string description, bool encryptValue)
         {
             Add(new CategorizedSettingsElement(name, value, description, encryptValue));

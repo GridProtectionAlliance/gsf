@@ -93,7 +93,7 @@ namespace TVA.Configuration
         /// <param name="name">The identifier of the setting.</param>
         /// <param name="value">The value of the setting.</param>
         /// <param name="description">The description of the setting.</param>
-        /// <param name="encrypted">A boolean value that indicates whether the setting value is to be encrypted.</param>
+        /// <param name="encrypted">true if the setting value is to be encrypted; otherwise false.</param>
         public CategorizedSettingsElement(string name, string value, string description, bool encrypted)
         {
             m_cryptoKey = DefaultCryptoKey;

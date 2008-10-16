@@ -105,7 +105,7 @@ namespace TVA.Console
         /// Initializes a new instance of the <see cref="Arguments"/> class.
         /// </summary>
         /// <param name="commandLine">The command-line command to be parsed.</param>
-        /// <param name="skipFirstArgument">A boolean value that indicates whether the first argument in the command-line command is to be skipped from being processed.</param>
+        /// <param name="skipFirstArgument">true if the first argument in the command-line command is to be skipped from being processed; otherwise false.</param>
         public Arguments(string commandLine, bool skipFirstArgument)
             : this(commandLine, "OrderedArg", skipFirstArgument)
         {
@@ -126,7 +126,7 @@ namespace TVA.Console
         /// </summary>
         /// <param name="commandLine">The command-line command to be parsed.</param>
         /// <param name="orderedArgID">The prefix to be used in the identifier of ordered arguments.</param>
-        /// <param name="skipFirstArgument">A boolean value that indicates whether the first argument in the command-line command is to be skipped from being processed.</param>
+        /// <param name="skipFirstArgument">true if the first argument in the command-line command is to be skipped from being processed; otherwise false.</param>
         public Arguments(string commandLine, string orderedArgID, bool skipFirstArgument)
         {
             Regex spliter = new Regex("^-{1,2}|^/|=|:", RegexOptions.IgnoreCase | RegexOptions.Compiled);
