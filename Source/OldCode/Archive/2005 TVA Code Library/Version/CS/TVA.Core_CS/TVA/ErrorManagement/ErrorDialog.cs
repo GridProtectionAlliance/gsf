@@ -23,28 +23,39 @@ namespace TVA.ErrorManagement
 {
     public partial class ErrorDialog : Form
     {
+        #region [ Members ]
+
+        // Constants
         private const int Spacing = 10;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public ErrorDialog()
         {
             InitializeComponent();
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         private void ErrorDialog_Load(object sender, EventArgs e)
         {
             this.TopMost = true;
             this.TopMost = false;
 
-            //-- More >> has to be expanded
+            // More >> has to be expanded.
             RichTextBoxMoreInfo.Anchor = AnchorStyles.None;
             RichTextBoxMoreInfo.Visible = false;
 
-            //-- size the labels' height to accommodate the amount of text in them
+            // Size the label height to accommodate of text in them.
             SizeBox(RichTextBoxScope);
             SizeBox(RichTextBoxAction);
             SizeBox(RichTextBoxError);
 
-            //-- now shift everything up
+            // Now shift everything up.
             LabelScope.Top = RichTextBoxError.Top + RichTextBoxError.Height + Spacing;
             RichTextBoxScope.Top = LabelScope.Top + LabelScope.Height + Spacing;
 
@@ -94,7 +105,7 @@ namespace TVA.ErrorManagement
             Graphics g = null;
             try
             {
-                //-- note that the height is taken as MAXIMUM, so size the label for maximum desired height!
+                // Note that the height is taken as MAXIMUM, so size the label for maximum desired height!
                 g = Graphics.FromHwnd(ctl.Handle);
                 SizeF objSizeF = g.MeasureString(ctl.Text, ctl.Font, new SizeF(ctl.Width, ctl.Height));
                 g.Dispose();
@@ -102,7 +113,7 @@ namespace TVA.ErrorManagement
             }
             catch (System.Security.SecurityException)
             {
-                //-- do nothing; we can't set control sizes without full trust
+                // Do nothing; we can't set control sizes without full trust.
             }
             finally
             {
@@ -112,5 +123,7 @@ namespace TVA.ErrorManagement
                 }
             }
         }
+
+        #endregion
     }
 }
