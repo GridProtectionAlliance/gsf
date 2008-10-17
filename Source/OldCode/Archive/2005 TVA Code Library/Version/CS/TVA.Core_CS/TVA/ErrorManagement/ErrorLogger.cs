@@ -17,6 +17,8 @@
 //       instead of DesignMode property as the former is more accurate than the latter.
 //  09/17/2008 - Pinal C Patel
 //       Converted code to C#.
+//  10/16/2008 - Pinal C Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -30,7 +32,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Web;
 using System.Windows.Forms;
 using TVA.Configuration;
@@ -51,6 +52,56 @@ namespace TVA.ErrorManagement
     /// exception in both windows and web environment by Jeff Atwood are available at The Code Project web site.
     /// See: http://www.codeproject.com/script/articles/list_articles.asp?userid=450027
     /// </remarks>
+    /// <example>
+    /// This example shows how to use the <see cref="ErrorLogger"/> component to log handled and unhandled exceptions:
+    /// <code>
+    /// using System;
+    /// using System.IO;
+    /// using TVA.ErrorManagement;
+    ///
+    /// class Program
+    /// {
+    ///     private static ErrorLogger m_logger;
+    ///
+    ///     static Program()
+    ///     {
+    ///         m_logger = new ErrorLogger();
+    ///         m_logger.LogToUI = true;                    // Show exception info on the UI.
+    ///         m_logger.LogToFile = true;                  // Log exception info to a file.
+    ///         m_logger.LogToEmail = true;                 // Send exception info in an e-mail.
+    ///         m_logger.LogToEventLog = true;              // Log exception info to the event log.
+    ///         m_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
+    ///         m_logger.ContactEmail = "dev@xyzcorp.com";  // Provide an e-mail address.
+    ///         m_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
+    ///         m_logger.PersistSettings = true;            // Save settings to the config file.
+    ///         m_logger.Initialize();                      // Initialize ErrorLogger component for use.
+    ///     }
+    ///
+    ///     static void Main(string[] args)
+    ///     {
+    ///         try
+    ///         {
+    ///             // This may cause a handled FileNotFoundException if the file doesn't exist.
+    ///             string data = File.ReadAllText(@"c:\NonExistentFile.txt");
+    ///         }
+    ///         catch (Exception ex)
+    ///         {
+    ///             // When logging handled exceptions we want to disable loggers (UI logger and E-mail logger) that
+    ///             // may require interaction either directly or indirectly as it can be annoying. All the loggers
+    ///             // are enabled automatically after the handled exception has been logged.
+    ///             m_logger.SuppressInteractiveLogging();
+    ///             m_logger.Log(ex);
+    ///         }
+    ///
+    ///         int numerator = 1;
+    ///         int denominator = 0;
+    ///         int result = numerator / denominator;   // This will cause an unhandled DivideByZeroException.
+    ///
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// <seealso cref="ErrorModule"/>
     [ToolboxBitmap(typeof(ErrorLogger))]
     public class ErrorLogger : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings
@@ -137,8 +188,9 @@ namespace TVA.ErrorManagement
         private bool m_enabled;
         private bool m_handleUnhandledException;
         private bool m_exitOnUnhandledException;
-        private LogFile m_logFile;
+        private LogFile m_errorLog;
         private Exception m_lastException;
+        private ApplicationType m_appType;
         private Func<string> m_errorTextMethod;
         private Func<string> m_scopeTextMethod;
         private Func<string> m_actionTextMethod;
@@ -148,9 +200,9 @@ namespace TVA.ErrorManagement
         private bool m_logToEmailOK;
         private bool m_logToEventLogOK;
         private bool m_logToScreenshotOK;
-        private ApplicationType m_appType;
-        private bool m_initialized;
         private bool m_disposed;
+        private bool m_initialized;
+        private bool m_suppressInteractiveLogging;
 
         #endregion
 
@@ -161,7 +213,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         public ErrorLogger()
         {
-            m_logFile = new LogFile();
+            m_errorLog = new LogFile();
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
@@ -173,6 +225,7 @@ namespace TVA.ErrorManagement
             m_contactPhone = DefaultContactPhone;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
+            m_handleUnhandledException = DefaultHandleUnhandledException;
             m_exitOnUnhandledException = DefaultExitOnUnhandledException;
             // Initialize delegate methods.
             m_errorTextMethod = GetErrorText;
@@ -216,11 +269,11 @@ namespace TVA.ErrorManagement
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="Exception"/> information is to be 
-        /// written to the <see cref="LogFile"/>.
+        /// written to the <see cref="ErrorLog"/>.
         /// </summary>
         [Category("Logging"),
         DefaultValue(DefaultLogToFile),
-        Description("Indicates whether Exception information is to be written to the LogFile.")]
+        Description("Indicates whether Exception information is to be written to the ErrorLog.")]
         public bool LogToFile
         {
             get
@@ -369,11 +422,11 @@ namespace TVA.ErrorManagement
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ErrorLogger"/> object are 
-        /// to be persisted to the config file.
+        /// to be saved to the config file.
         /// </summary>
         [Category("Persistance"),
         DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the settings of ErrorLogger object are to be persisted to the config file.")]
+        Description("Indicates whether the settings of ErrorLogger object are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -388,12 +441,12 @@ namespace TVA.ErrorManagement
 
         /// <summary>
         /// Gets or sets the category under which the settings of <see cref="ErrorLogger"/> object are to be saved
-        /// in the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the settings of ErrorLogger object are to be saved in the config file if the PersistSettings property is set to true.")]
+        Description("Category under which the settings of ErrorLogger object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -611,11 +664,11 @@ namespace TVA.ErrorManagement
         /// Get the <see cref="LogFile"/> object used for logging <see cref="Exception"/> information to a file.
         /// </summary>
         [Browsable(false)]
-        public LogFile LogFile
+        public LogFile ErrorLog
         {
             get
             {
-                return m_logFile;
+                return m_errorLog;
             }
         }
 
@@ -669,7 +722,7 @@ namespace TVA.ErrorManagement
         public void Log(Exception ex, bool exitApplication)
         {
             Initialize();           // Initialize if uninitialized.
-            
+
             m_lastException = ex;   // Save the encountered exception.
 
             // Iterate through all of the registered logger methods and invoke them for processing the exception.
@@ -684,6 +737,7 @@ namespace TVA.ErrorManagement
                     // Absorb any exception.
                 }
             }
+            m_suppressInteractiveLogging = false;   // Enable interactive logging if disabled.
 
             // Exit the current application if specified.
             if (exitApplication)
@@ -707,6 +761,16 @@ namespace TVA.ErrorManagement
         }
 
         /// <summary>
+        /// Disables <see cref="Loggers"/> that require interaction either directly or indirectly when logging 
+        /// handled <see cref="Exception"/> using the <see cref="Log(Exception)"/> method. All loggers are enabled
+        /// automatically after a handled <see cref="Exception"/> has been logged.
+        /// </summary>
+        public void SuppressInteractiveLogging()
+        {
+            m_suppressInteractiveLogging = true;
+        }
+
+        /// <summary>
         /// Initializes the <see cref="ErrorLogger"/> object.
         /// </summary>
         /// <remarks>
@@ -717,12 +781,12 @@ namespace TVA.ErrorManagement
         {
             if (!m_initialized)
             {
-                LoadSettings();                     // Load settings from the config file.
-                Register();                         // Register the logger for unhandled exceptions.
-                m_logFile.Name = GetDefaultLogFileName();  // Assign the default log file name.
-                m_logFile.EndInit();                // Initialize the log file. // TODO: Remove this!
-                m_logFile.Open();                   // Open the log file.
-                m_initialized = true;               // Initialize only once.
+                LoadSettings();                                 // Load settings from the config file.
+                Register();                                     // Register the logger for unhandled exceptions.
+                m_errorLog.Name = GetDefaultLogFileName();      // Assign a default filename for the error log.
+                m_errorLog.EndInit();                           // Initialize the log file. // TODO: Remove this!
+                m_errorLog.Open();                              // Open the log file.
+                m_initialized = true;                           // Initialize only once.
             }
         }
 
@@ -808,7 +872,7 @@ namespace TVA.ErrorManagement
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
+            if (!DesignMode)
             {
                 Initialize();
             }
@@ -848,7 +912,7 @@ namespace TVA.ErrorManagement
         protected virtual void ExceptionToUI(Exception exception)
         {
             // Check if logging to UI is enabled.
-            if (!m_logToUI) 
+            if (!m_logToUI || m_suppressInteractiveLogging)
                 return;
 
             switch (ApplicationType)
@@ -914,6 +978,7 @@ namespace TVA.ErrorManagement
 
             // Display the exception information.
             System.Console.Write(message.ToString());
+            System.Console.ReadLine();
         }
 
         /// <summary>
@@ -1015,17 +1080,17 @@ namespace TVA.ErrorManagement
         }
 
         /// <summary>
-        /// Logs encountered <see cref="Exception"/> to the <see cref="LogFile"/>.
+        /// Logs encountered <see cref="Exception"/> to the <see cref="ErrorLog"/>.
         /// </summary>
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
         protected virtual void ExceptionToFile(Exception exception)
         {
             // Check if logging to text file is enabled.
-            if (!m_logToFile) 
+            if (!m_logToFile)
                 return;
 
             m_logToFileOK = false;
-            m_logFile.WriteTimestampedLine(GetExceptionInfo(exception));
+            m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception));
             m_logToFileOK = true;
         }
 
@@ -1036,7 +1101,7 @@ namespace TVA.ErrorManagement
         protected virtual void ExceptionToEmail(Exception exception)
         {
             // Check if logging to e-mail message is enabled.
-            if (!m_logToEmail || string.IsNullOrEmpty(m_contactEmail)) 
+            if (!m_logToEmail || string.IsNullOrEmpty(m_contactEmail) || m_suppressInteractiveLogging)
                 return;
 
             m_logToEmailOK = false;
@@ -1056,7 +1121,7 @@ namespace TVA.ErrorManagement
         protected virtual void ExceptionToEventLog(Exception exception)
         {
             // Check if logging to event log is enabled.
-            if (!m_logToEventLog) 
+            if (!m_logToEventLog)
                 return;
 
             m_logToEventLogOK = false;
@@ -1072,7 +1137,7 @@ namespace TVA.ErrorManagement
         {
             // Check if screenshot of user desktop is to be taken.
             if (!m_logToScreenshot ||
-                !(ApplicationType == ApplicationType.WindowsCui ||ApplicationType == ApplicationType.WindowsGui)) 
+                !(ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
                 return;
 
             m_logToScreenshotOK = false;
@@ -1100,8 +1165,8 @@ namespace TVA.ErrorManagement
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_logFile != null)
-                            m_logFile.Dispose();
+                        if (m_errorLog != null)
+                            m_errorLog.Dispose();
                     }
                 }
                 finally
@@ -1163,7 +1228,7 @@ namespace TVA.ErrorManagement
             actionText.Append("Try alternative methods of performing the same action. ");
 
             // Add information about the contact person if provided.
-            if (!string.IsNullOrEmpty(m_contactName) && 
+            if (!string.IsNullOrEmpty(m_contactName) &&
                 (!string.IsNullOrEmpty(m_contactPhone) || !string.IsNullOrEmpty(m_contactPhone)))
             {
                 actionText.AppendFormat("If you need immediate assistance, contact {0} ", m_contactName);
@@ -1248,7 +1313,7 @@ namespace TVA.ErrorManagement
                 }
                 moreInfoText.AppendLine();
                 moreInfoText.Append("   ");
-                moreInfoText.Append(GetDefaultLogFileName());
+                moreInfoText.Append(m_errorLog.Name);
                 moreInfoText.AppendLine();
             }
             if (m_logToEmail)
@@ -1289,6 +1354,7 @@ namespace TVA.ErrorManagement
 
         private void ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
+            m_suppressInteractiveLogging = false;
             Log(new Exception("ThreadException", e.Exception), m_exitOnUnhandledException);
         }
 
@@ -1299,6 +1365,7 @@ namespace TVA.ErrorManagement
             // .NET CLR is going to terminate the application, we terminate the application before .NET CLR does
             // in order to prevent the .NET "Application has encountered a problem and needs to close" error.
             // See: http://msdn.microsoft.com/en-us/library/system.unhandledexceptioneventargs.isterminating.aspx
+            m_suppressInteractiveLogging = false;
             Log(new Exception("UnhandledException", (Exception)e.ExceptionObject), e.IsTerminating);
         }
 
@@ -1387,68 +1454,68 @@ namespace TVA.ErrorManagement
                     break;
             }
 
-            StringBuilder text = new StringBuilder();
+            StringBuilder info = new StringBuilder();
             AssemblyInfo parentAssemblyInfo = new AssemblyInfo(parentAssembly);
-            text.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
-            text.AppendLine();
-            text.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
-            text.AppendLine();
-            text.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
-            text.AppendLine();
-            text.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
-            text.AppendLine();
-            text.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
-            text.AppendLine();
-            text.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
-            text.AppendLine();
+            info.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
+            info.AppendLine();
+            info.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
+            info.AppendLine();
+            info.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
+            info.AppendLine();
+            info.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
+            info.AppendLine();
+            info.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
+            info.AppendLine();
+            info.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
+            info.AppendLine();
 
-            return text.ToString();
+            return info.ToString();
         }
 
         /// <summary>
-        /// Gets information about an <see cref="Exception"/>.
+        /// Gets information about an <see cref="Exception"/> complete with system and application information.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose information is to be retrieved.</param>
-        /// <returns>Exception information in text.</returns>
+        /// <returns><see cref="Exception"/> information in text.</returns>
         public static string GetExceptionInfo(Exception ex)
         {
-            StringBuilder text = new StringBuilder();
+            StringBuilder info = new StringBuilder();
             if (ex.InnerException != null)
             {
-                // sometimes the original exception is wrapped in a more relevant outer exception
+                // Sometimes the original exception is wrapped in a more relevant outer exception
                 // the detail exception is the "inner" exception
-                // see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
-                text.Append("(Inner Exception)");
-                text.AppendLine();
-                text.Append(GetExceptionInfo(ex.InnerException));
-                text.AppendLine();
-                text.Append("(Outer Exception)");
-                text.AppendLine();
+                // See: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
+                info.Append("(Inner Exception)");
+                info.AppendLine();
+                info.Append(GetExceptionInfo(ex.InnerException));
+                info.AppendLine();
+                info.Append("(Outer Exception)");
+                info.AppendLine();
             }
 
             // Get general system information.
-            text.Append(GetSystemInfo());
-            text.AppendLine();
+            info.Append(GetSystemInfo());
+            info.AppendLine();
             // Get general application information.
-            text.Append(GetApplicationInfo());
-            text.AppendLine();
+            info.Append(GetApplicationInfo());
+            info.AppendLine();
             // Get general exception information.
-            text.Append(GetExceptionGeneralInfo(ex));
-            text.AppendLine();
+            info.Append(GetExceptionGeneralInfo(ex));
+            info.AppendLine();
             // Get the stack trace for the exception.
-            text.Append("---- Stack Trace ----");
-            text.AppendLine();
-            text.Append(GetExceptionStackTrace(ex));
-            text.AppendLine();
+            info.Append("---- Stack Trace ----");
+            info.AppendLine();
+            info.Append(GetExceptionStackTrace(ex));
+            info.AppendLine();
 
-            return text.ToString();
+            return info.ToString();
         }
 
         /// <summary>
         /// Gets common information about an <see cref="Exception"/>.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose common information is to be retrieved.</param>
-        /// <returns>Common exception information in text.</returns>
+        /// <returns>Common <see cref="Exception"/> information in text.</returns>
         public static string GetExceptionGeneralInfo(Exception ex)
         {
             StringBuilder info = new StringBuilder();
@@ -1471,7 +1538,7 @@ namespace TVA.ErrorManagement
         /// Gets stack trace information about an <see cref="Exception"/>.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose stack trace information is to be retrieved.</param>
-        /// <returns>Exception stack trace in text.</returns>
+        /// <returns><see cref="Exception"/> stack trace in text.</returns>
         public static string GetExceptionStackTrace(Exception ex)
         {
             StringBuilder trace = new StringBuilder();
@@ -1482,10 +1549,10 @@ namespace TVA.ErrorManagement
                 MemberInfo method = stackFrame.GetMethod();
                 string codeFileName = stackFrame.GetFileName();
 
-                // build method name
+                // Build method name.
                 trace.AppendFormat("   {0}.{1}.{2}", method.DeclaringType.Namespace, method.DeclaringType.Name, method.Name);
 
-                // build method params
+                // Build method params.
                 trace.Append("(");
                 int parameterCount = 0;
                 foreach (ParameterInfo parameter in stackFrame.GetMethod().GetParameters())
@@ -1500,7 +1567,7 @@ namespace TVA.ErrorManagement
                 trace.Append(")");
                 trace.AppendLine();
 
-                // if source code is available, append location info
+                // If source code is available, append location info.
                 trace.Append("       ");
 
                 if (!string.IsNullOrEmpty(codeFileName))
@@ -1508,7 +1575,7 @@ namespace TVA.ErrorManagement
                     trace.Append(Path.GetFileName(codeFileName));
                     trace.AppendFormat(": Ln {0:#0000}", stackFrame.GetFileLineNumber());
                     trace.AppendFormat(", Col {0:#00}", stackFrame.GetFileColumnNumber());
-                    // if IL is available, append IL location info
+                    // If IL is available, append IL location info.
                     if (stackFrame.GetILOffset() != StackFrame.OFFSET_UNKNOWN)
                     {
                         trace.AppendFormat(", IL {0:#0000}", stackFrame.GetILOffset());
@@ -1525,7 +1592,7 @@ namespace TVA.ErrorManagement
                     {
                         trace.Append("(unknown file)");
                     }
-                    // native code offset is always available
+                    // Native code offset is always available.
                     trace.AppendFormat(": N {0:#00000}", stackFrame.GetNativeOffset());
                 }
                 trace.AppendLine();
