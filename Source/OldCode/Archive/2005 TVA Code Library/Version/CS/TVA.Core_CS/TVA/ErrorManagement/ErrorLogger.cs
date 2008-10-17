@@ -911,21 +911,21 @@ namespace TVA.ErrorManagement
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
         protected virtual void ExceptionToUI(Exception exception)
         {
-            // Check if logging to UI is enabled.
-            if (!m_logToUI || m_suppressInteractiveLogging)
-                return;
-
-            switch (ApplicationType)
+            // Log if enabled.
+            if (m_logToUI && !m_suppressInteractiveLogging)
             {
-                case ApplicationType.Web:           // Web Application
-                    ExceptionToWebPage();
-                    break;
-                case ApplicationType.WindowsCui:    // Console Application
-                    ExceptionToWindowsCui();
-                    break;
-                case ApplicationType.WindowsGui:    // Windows Application
-                    ExceptionToWindowsGui();
-                    break;
+                switch (ApplicationType)
+                {
+                    case ApplicationType.Web:           // Web Application
+                        ExceptionToWebPage();
+                        break;
+                    case ApplicationType.WindowsCui:    // Console Application
+                        ExceptionToWindowsCui();
+                        break;
+                    case ApplicationType.WindowsGui:    // Windows Application
+                        ExceptionToWindowsGui();
+                        break;
+                }
             }
         }
 
@@ -1085,13 +1085,13 @@ namespace TVA.ErrorManagement
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
         protected virtual void ExceptionToFile(Exception exception)
         {
-            // Check if logging to text file is enabled.
-            if (!m_logToFile)
-                return;
-
-            m_logToFileOK = false;
-            m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception));
-            m_logToFileOK = true;
+            // Log if enabled.
+            if (m_logToFile)
+            {
+                m_logToFileOK = false;
+                m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception));
+                m_logToFileOK = true;
+            }
         }
 
         /// <summary>
@@ -1100,18 +1100,18 @@ namespace TVA.ErrorManagement
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
         protected virtual void ExceptionToEmail(Exception exception)
         {
-            // Check if logging to e-mail message is enabled.
-            if (!m_logToEmail || string.IsNullOrEmpty(m_contactEmail) || m_suppressInteractiveLogging)
-                return;
-
-            m_logToEmailOK = false;
-            Mail email = new Mail(m_contactEmail, m_contactEmail);
-            email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
-            email.Body = GetExceptionInfo(exception);
-            email.Attachments = GetScreenshotFileName();
-            email.SmtpServer = m_smtpServer;
-            email.Send();
-            m_logToEmailOK = true;
+            // Log if enabled.
+            if (m_logToEmail && !string.IsNullOrEmpty(m_contactEmail) && !m_suppressInteractiveLogging)
+            {
+                m_logToEmailOK = false;
+                Mail email = new Mail(m_contactEmail, m_contactEmail);
+                email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
+                email.Body = GetExceptionInfo(exception);
+                email.Attachments = GetScreenshotFileName();
+                email.SmtpServer = m_smtpServer;
+                email.Send();
+                m_logToEmailOK = true;
+            }
         }
 
         /// <summary>
@@ -1120,13 +1120,13 @@ namespace TVA.ErrorManagement
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
         protected virtual void ExceptionToEventLog(Exception exception)
         {
-            // Check if logging to event log is enabled.
-            if (!m_logToEventLog)
-                return;
-
-            m_logToEventLogOK = false;
-            EventLog.WriteEntry(ApplicationName, GetExceptionInfo(exception), EventLogEntryType.Error);
-            m_logToEventLogOK = true;
+            // Log if enabled.
+            if (m_logToEventLog)
+            {
+                m_logToEventLogOK = false;
+                EventLog.WriteEntry(ApplicationName, GetExceptionInfo(exception), EventLogEntryType.Error);
+                m_logToEventLogOK = true;
+            }
         }
 
         /// <summary>
@@ -1135,17 +1135,17 @@ namespace TVA.ErrorManagement
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
         protected virtual void ExceptionToScreenshot(Exception exception)
         {
-            // Check if screenshot of user desktop is to be taken.
-            if (!m_logToScreenshot ||
-                !(ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
-                return;
-
-            m_logToScreenshotOK = false;
-            using (Bitmap screenshot = ScreenArea.Capture(ImageFormat.Png))
+            // Log if enabled.
+            if (m_logToScreenshot && 
+                (ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
             {
-                screenshot.Save(GetScreenshotFileName());
+                m_logToScreenshotOK = false;
+                using (Bitmap screenshot = ScreenArea.Capture(ImageFormat.Png))
+                {
+                    screenshot.Save(GetScreenshotFileName());
+                }
+                m_logToScreenshotOK = true;
             }
-            m_logToScreenshotOK = true;
         }
 
         /// <summary>
