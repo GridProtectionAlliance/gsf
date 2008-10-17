@@ -32,7 +32,7 @@ namespace TVA.Net.Smtp
     /// A wrapper class to the <see cref="MailMessage"/> class that simplifies sending mail messages.
     /// </summary>
     /// <example>
-    /// This sample shows how to send an email message with attachment:
+    /// This example shows how to send an email message with attachment:
     /// <code>
     /// using System;
     /// using TVA.Net.Smtp;
