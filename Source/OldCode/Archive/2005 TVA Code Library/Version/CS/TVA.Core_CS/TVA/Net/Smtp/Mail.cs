@@ -41,7 +41,7 @@ namespace TVA.Net.Smtp
     /// {
     ///     static void Main(string[] args)
     ///     {
-    ///         Mail email = new Mail("sender@xyzcorp.com", "recipient@xyzcorp.com", "smtp.xyzcorp.com");
+    ///         Mail email = new Mail("sender@email.com", "recipient@email.com", "smtp.email.com");
     ///         email.Subject = "Test Message";
     ///         email.Body = "This is a test message.";
     ///         email.IsBodyHtml = true;

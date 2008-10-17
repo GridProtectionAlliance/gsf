@@ -71,7 +71,7 @@ namespace TVA.ErrorManagement
     ///         m_logger.LogToEmail = true;                 // Send exception info in an e-mail.
     ///         m_logger.LogToEventLog = true;              // Log exception info to the event log.
     ///         m_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
-    ///         m_logger.ContactEmail = "dev@xyzcorp.com";  // Provide an e-mail address.
+    ///         m_logger.ContactEmail = "dev@email.com";    // Provide an e-mail address.
     ///         m_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
     ///         m_logger.PersistSettings = true;            // Save settings to the config file.
     ///         m_logger.Initialize();                      // Initialize ErrorLogger component for use.

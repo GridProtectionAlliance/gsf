@@ -61,7 +61,7 @@ namespace TVA.ErrorManagement
     ///       encrypted="false" />
     ///     <add name="LogToScreenshot" value="False" description="True if a screenshot is to be taken when an exception is encountered; otherwise False."
     ///       encrypted="false" />
-    ///     <add name="SmtpServer" value="smtp.xyzcorp.com" description="Name of the SMTP server to be used for sending the email messages."
+    ///     <add name="SmtpServer" value="smtp.email.com" description="Name of the SMTP server to be used for sending the email messages."
     ///       encrypted="false" />
     ///     <add name="ContactEmail" value="" description="Comma-seperated list of recipient email addresses for the email message."
     ///       encrypted="false" />
