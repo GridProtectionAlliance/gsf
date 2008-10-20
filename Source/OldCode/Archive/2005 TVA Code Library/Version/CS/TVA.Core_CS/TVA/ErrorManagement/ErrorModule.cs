@@ -46,35 +46,37 @@ namespace TVA.ErrorManagement
     /// Below is the config file entry required for changing the settings of <see cref="ErrorModule.Logger"/>:
     /// <code>
     /// <![CDATA[
-    /// <configSections>
-    ///   <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-    /// </configSections>
-    /// <categorizedSettings>
-    ///   <errorLogger>
-    ///     <add name="LogToUI" value="False" description="True if an encountered exception is to be logged to the User Interface; otherwise False."
-    ///       encrypted="false" />
-    ///     <add name="LogToFile" value="True" description="True if an encountered exception is to be logged to a file; otherwise False."
-    ///       encrypted="false" />
-    ///     <add name="LogToEmail" value="False" description="True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False."
-    ///       encrypted="false" />
-    ///     <add name="LogToEventLog" value="True" description="True if an encountered exception is to be logged to the Event Log; otherwise False."
-    ///       encrypted="false" />
-    ///     <add name="LogToScreenshot" value="False" description="True if a screenshot is to be taken when an exception is encountered; otherwise False."
-    ///       encrypted="false" />
-    ///     <add name="SmtpServer" value="smtp.email.com" description="Name of the SMTP server to be used for sending the email messages."
-    ///       encrypted="false" />
-    ///     <add name="ContactEmail" value="" description="Comma-seperated list of recipient email addresses for the email message."
-    ///       encrypted="false" />
-    ///     <add name="ContactName" value="" description="Name of the person that the end-user can contact when an exception is encountered."
-    ///       encrypted="false" />
-    ///     <add name="ContactPhone" value="" description="Phone number of the person that the end-user can contact when an exception is encountered."
-    ///       encrypted="false" />
-    ///     <add name="HandleUnhandledException" value="True" description="True if unhandled exceptions are to be handled automatically; otherwise False."
-    ///       encrypted="false" />
-    ///     <add name="ExitOnUnhandledException" value="False" description="True if the application must exit when an unhandled exception is encountered; otherwise False."
-    ///       encrypted="false" />
-    ///   </errorLogger>
-    /// </categorizedSettings>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <errorLogger>
+    ///       <add name="LogToUI" value="False" description="True if an encountered exception is to be logged to the User Interface; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="LogToFile" value="True" description="True if an encountered exception is to be logged to a file; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="LogToEmail" value="False" description="True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="LogToEventLog" value="True" description="True if an encountered exception is to be logged to the Event Log; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="LogToScreenshot" value="False" description="True if a screenshot is to be taken when an exception is encountered; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="SmtpServer" value="smtp.email.com" description="Name of the SMTP server to be used for sending the email messages."
+    ///         encrypted="false" />
+    ///       <add name="ContactEmail" value="" description="Comma-seperated list of recipient email addresses for the email message."
+    ///         encrypted="false" />
+    ///       <add name="ContactName" value="" description="Name of the person that the end-user can contact when an exception is encountered."
+    ///         encrypted="false" />
+    ///       <add name="ContactPhone" value="" description="Phone number of the person that the end-user can contact when an exception is encountered."
+    ///         encrypted="false" />
+    ///       <add name="HandleUnhandledException" value="True" description="True if unhandled exceptions are to be handled automatically; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="ExitOnUnhandledException" value="False" description="True if the application must exit when an unhandled exception is encountered; otherwise False."
+    ///         encrypted="false" />
+    ///     </errorLogger>
+    ///   </categorizedSettings>
+    /// </configuration>
     /// ]]>
     /// </code>
     /// </example>
