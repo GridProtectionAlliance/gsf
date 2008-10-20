@@ -43,6 +43,14 @@ namespace System.Media.Music
     public delegate double TimbreFunction(double frequency, double time);
 
     /// <summary>
+    /// Provides a function signature for methods that damp an amplitude representing a
+    /// lowering of the acoustic pressure over time.
+    /// </summary>
+    /// <param name="time">Time in seconds.</param>
+    /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
+    public delegate double DampingFunction(double time);
+
+    /// <summary>
     /// Defines fundamental musical note frequencies and methods to create them.
     /// </summary>
     /// <example>
@@ -786,6 +794,21 @@ namespace System.Media.Music
             //      t = period    (Seconds)
 
             return (2 * Math.PI * frequency) * time;
+        }
+
+        // Damping functions
+
+        /// <summary>
+        /// Produces a damping signature that represents no damping over time.
+        /// </summary>
+        /// <param name="time">Time in seconds.</param>
+        /// <returns>Returns a scalar of 1.0 regardless to time.</returns>
+        /// <remarks>
+        /// Zero damped sounds would be produced by synthetic sources such as an electronic keyboard.
+        /// </remarks>
+        public static double ZeroDamping(double time)
+        {
+            return 1.0D;
         }
 
         #endregion
