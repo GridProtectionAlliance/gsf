@@ -20,7 +20,7 @@ using System.IO;
 
 namespace TVA
 {
-    /// <summary>Defines extension fucntions related to buffer manipulation.</summary>
+    /// <summary>Defines extension functions related to buffer manipulation.</summary>
     public static class BufferExtensions
     {
         /// <summary>Returns a copy of the specified portion of the source buffer.</summary>
