@@ -7,7 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>TVA</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <AssemblyName>TVA.Core</AssemblyName>
     <MyType>Windows</MyType>
     <SccProjectName>SAK</SccProjectName>
@@ -141,12 +142,12 @@
     <None Include="System\Media\Wavefile Information\IFF.txt" />
     <None Include="System\Media\Wavefile Information\JingleBells.wav" />
     <None Include="System\Media\Wavefile Information\Longitudinal Wave.mov" />
-    <EmbeddedResource Include="TVA\Resources\TVA.IO.MultipleDestinationExporter.bmp" />
-    <EmbeddedResource Include="TVA\Resources\TVA.Scheduling.ScheduleManager.bmp" />
-    <EmbeddedResource Include="TVA\Resources\TVA.Net.Ftp.Session.bmp" />
-    <EmbeddedResource Include="TVA\Resources\TVA.Net.Ftp.FileWatcher.bmp" />
-    <EmbeddedResource Include="TVA\Resources\TVA.IO.LogFile.bmp" />
-    <EmbeddedResource Include="TVA\Resources\TVA.ErrorManagement.ErrorLogger.bmp" />
+    <EmbeddedResource Include="TVA\IO\MultipleDestinationExporter.bmp" />
+    <EmbeddedResource Include="TVA\Scheduling\ScheduleManager.bmp" />
+    <EmbeddedResource Include="TVA\Net\Ftp\Session.bmp" />
+    <EmbeddedResource Include="TVA\Net\Ftp\FileWatcher.bmp" />
+    <EmbeddedResource Include="TVA\IO\LogFile.bmp" />
+    <EmbeddedResource Include="TVA\ErrorManagement\ErrorLogger.bmp" />
     <Compile Include="TVA\IO\Compression\CompressionExceptionBase.cs" />
     <Compile Include="TVA\IO\Compression\Tar\InvalidHeaderException.cs" />
     <Compile Include="TVA\IO\Compression\Tar\TarArchive.cs" />
