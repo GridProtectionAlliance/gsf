@@ -216,6 +216,7 @@ namespace System.Media.Music
         private double m_frequency;
         private string m_noteID;
         private int m_noteValue;
+        private int m_dots;
         private double m_noteValueTime;
         private double m_dynamic;
         private TimbreFunction m_timbre;
@@ -228,241 +229,28 @@ namespace System.Media.Music
         /// <summary>
         /// Creates a new note of the specified frequency and length.
         /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        public Note(double frequency, NoteValue noteValue)
+        /// <remarks>
+        /// <para>
+        /// Default note will be rest (zero frequency), quarter note.
+        /// </para>
+        /// <para>
+        /// It is expected that <see cref="Note"/> objects will be constructed using
+        /// object intializers.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// // Create a 3/8th length , middle C note
+        /// Note note1 = new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter, Dots = 1 };
+        /// 
+        /// // Create a 1/8th length, E above middle C note
+        /// Note note2 = new Note { NoteID = "E4", NoteValueBritish = NoteValueBritish.Quaver };
+        /// </code>
+        /// </example>
+        public Note()
         {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
             m_dynamic = -1.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValue noteValue)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        public Note(double frequency, NoteValue noteValue, Dynamic dynamic)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValue noteValue, Dynamic dynamic)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        public Note(double frequency, NoteValue noteValue, TimbreFunction timbre)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValue noteValue, TimbreFunction timbre)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        public Note(double frequency, NoteValue noteValue, Dynamic dynamic, TimbreFunction timbre)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValue noteValue, Dynamic dynamic, TimbreFunction timbre)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        public Note(double frequency, NoteValueBritish noteValue)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValueBritish noteValue)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        public Note(double frequency, NoteValueBritish noteValue, Dynamic dynamic)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValueBritish noteValue, Dynamic dynamic)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        public Note(double frequency, NoteValueBritish noteValue, TimbreFunction timbre)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValueBritish noteValue, TimbreFunction timbre)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = -1.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note of the specified frequency and length.
-        /// </summary>
-        /// <param name="frequency">Frequency of the note to create.</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        public Note(double frequency, NoteValueBritish noteValue, Dynamic dynamic, TimbreFunction timbre)
-        {
-            m_frequency = frequency;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-            m_timbre = timbre;
-        }
-
-        /// <summary>
-        /// Creates a new note from specified note ID and length.
-        /// </summary>
-        /// <param name="noteID">ID of the note to create - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
-        /// <param name="noteValue">Length of note to create.</param>
-        /// <param name="dynamic">Volume of the note to create.</param>
-        /// <param name="timbre">Instrument function used to synthesize the note.</param>
-        /// <exception cref="ArgumentNullException">noteID is null.</exception>
-        /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public Note(string noteID, NoteValueBritish noteValue, Dynamic dynamic, TimbreFunction timbre)
-        {
-            m_frequency = GetNoteFrequency(noteID);
-            m_noteID = noteID;
-            m_noteValue = (int)noteValue;
-            m_dynamic = (double)dynamic / 100.0D;
-            m_timbre = timbre;
+            m_timbre = null;
         }
 
         #endregion
@@ -524,6 +312,19 @@ namespace System.Media.Music
             set
             {
                 m_noteValue = (int)value;
+            }
+        }
+
+        /// <summary>Gets or sets the total dotted note length extensions that apply to this note.</summary>
+        public int Dots
+        {
+            get
+            {
+                return m_dots;
+            }
+            set
+            {
+                m_dots = value;
             }
         }
 
@@ -669,7 +470,7 @@ namespace System.Media.Music
         /// </remarks>
         public double CalculateNoteValueTime(Tempo tempo)
         {
-            m_noteValueTime = tempo.CalculateNoteValueTime((NoteValue)m_noteValue);
+            m_noteValueTime = tempo.CalculateNoteValueTime((NoteValue)m_noteValue, m_dots);
             return m_noteValueTime;
         }
         

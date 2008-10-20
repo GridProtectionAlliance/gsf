@@ -51,7 +51,7 @@ namespace System.Media.Music
         private double m_dynamic;
         private int m_beat;
         private long m_totalBeats;
-        private long m_time;
+        //private long m_time;
 
         #endregion
 
@@ -275,7 +275,8 @@ namespace System.Media.Music
 
             foreach (Note note in notes)
             {
-                // Validate note length for remaining time in measure
+                // Validate note length for remaining time in measure - dotted notes are allowed
+                // to cross measures, so only the root note value is validated
                 m_measureSize.ValidateNoteValueAtBeat(note.NoteValue, m_beat);
 
                 // Calculate note value times for each note to be added
@@ -301,7 +302,7 @@ namespace System.Media.Music
         /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(NoteValue restLength)
         {
-            AddNotes(new Note(0.0D, restLength));
+            AddNotes(new Note { NoteValue = restLength });
         }
 
         /// <summary>
@@ -310,7 +311,27 @@ namespace System.Media.Music
         /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(NoteValueBritish restLength)
         {
-            AddNotes(new Note(0.0D, restLength));
+            AddNotes(new Note { NoteValueBritish = restLength });
+        }
+
+        /// <summary>
+        /// Add a rest for the given length for the current beat.
+        /// </summary>
+        /// <param name="restLength">Duration of wait specified as a note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
+        public void AddRest(NoteValue restLength, int dots)
+        {
+            AddNotes(new Note { NoteValue = restLength, Dots = dots });
+        }
+
+        /// <summary>
+        /// Add a rest for the given length for the current beat.
+        /// </summary>
+        /// <param name="restLength">Duration of wait specified as a note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
+        public void AddRest(NoteValueBritish restLength, int dots)
+        {
+            AddNotes(new Note { NoteValueBritish = restLength, Dots = dots });
         }
 
         /// <summary>

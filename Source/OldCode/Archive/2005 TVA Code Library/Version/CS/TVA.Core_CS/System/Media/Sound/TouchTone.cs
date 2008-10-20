@@ -100,8 +100,8 @@ namespace System.Media.Sound
 
         public TouchTone(TouchToneKey key)
         {
-            this.Key = key;
-            this.Duration = DefaultKeyDuration;
+            Key = key;
+            Duration = DefaultKeyDuration;
         }
 
         #endregion

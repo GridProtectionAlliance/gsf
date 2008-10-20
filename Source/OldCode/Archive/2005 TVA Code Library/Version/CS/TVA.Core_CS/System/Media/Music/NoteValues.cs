@@ -167,32 +167,54 @@ namespace System.Media.Music
     public static class NoteValueExtensions
     {
         /// <summary>
-        /// Returns source note value duration.  For example, 0.25 will
-        /// be returned for a quater note, 1.0 will be returned for a
-        /// whole note, etc.
+        /// Returns source note value duration.  For example, 0.25 will be returned for
+        /// a quater note, 1.0 will be returned for a whole note, etc.
         /// </summary>
         /// <param name="source">Source note value.</param>
         /// <returns>Duration of note value.</returns>
         public static double Duration(this NoteValue source)
         {
-            return Duration((int)source);
+            return Duration((int)source, 0);
         }
         
         /// <summary>
-        /// Returns source note value duration.  For example, 0.25 will
-        /// be returned for a crotchet note, 1.0 will be returned for a
-        /// semibreve note, etc.
+        /// Returns source note value duration.  For example, 0.25 will be returned for
+        /// a crotchet note, 1.0 will be returned for a semibreve note, etc.
         /// </summary>
         /// <param name="source">Source note value.</param>
         /// <returns>Duration of note value.</returns>
         public static double Duration(this NoteValueBritish source)
         {
-            return Duration((int)source);
+            return Duration((int)source, 0);
+        }
+
+        /// <summary>
+        /// Returns source note value duration.  For example, 0.25 will be returned for
+        /// a quater note, 1.0 will be returned for a whole note, etc.
+        /// </summary>
+        /// <param name="source">Source note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
+        /// <returns>Duration of note value.</returns>
+        public static double Duration(this NoteValue source, int dots)
+        {
+            return Duration((int)source, dots);
+        }
+
+        /// <summary>
+        /// Returns source note value duration.  For example, 0.25 will be returned for
+        /// a crotchet note, 1.0 will be returned for a semibreve note, etc.
+        /// </summary>
+        /// <param name="source">Source note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
+        /// <returns>Duration of note value.</returns>
+        public static double Duration(this NoteValueBritish source, int dots)
+        {
+            return Duration((int)source, dots);
         }
 
         /// <summary>
         /// Returns source note value duration in terms of given reference note value.
-        /// For example, if measure is 3/4 then reference is quarter notes and returned
+        /// For example, if measure size is 3/4 then reference is quarter notes and returned
         /// value will be equivalent number of quarter notes for given source note.
         /// </summary>
         /// <param name="source">Source note value.</param>
@@ -200,32 +222,66 @@ namespace System.Media.Music
         /// <returns>Duration of note value in terms of specified reference note value.</returns>
         public static double Duration(this NoteValue source, NoteValue reference)
         {
-            return Duration((int)source, (int)reference);
+            return Duration((int)source, (int)reference, 0);
         }
 
         /// <summary>
         /// Returns source note value duration in terms of given reference note value.
-        /// For example, if measure is 3/4 then reference is quarter notes and returned
-        /// value will be equivalent number of quarter notes for given source note
+        /// For example, if measure size is 3/4 then reference is quarter notes and returned
+        /// value will be equivalent number of quarter notes for given source note.
         /// </summary>
         /// <param name="source">Source note value.</param>
         /// <param name="reference">Reference note value.</param>
         /// <returns>Duration of note value in terms of specified reference note value.</returns>
         public static double Duration(this NoteValueBritish source, NoteValueBritish reference)
         {
-            return Duration((int)source, (int)reference);
+            return Duration((int)source, (int)reference, 0);
+        }
+
+        /// <summary>
+        /// Returns source note value duration in terms of given reference note value.
+        /// For example, if measure size is 3/4 then reference is quarter notes and returned
+        /// value will be equivalent number of quarter notes for given source note.
+        /// </summary>
+        /// <param name="source">Source note value.</param>
+        /// <param name="reference">Reference note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
+        /// <returns>Duration of note value in terms of specified reference note value.</returns>
+        public static double Duration(this NoteValue source, NoteValue reference, int dots)
+        {
+            return Duration((int)source, (int)reference, dots);
+        }
+
+        /// <summary>
+        /// Returns source note value duration in terms of given reference note value.
+        /// For example, if measure size is 3/4 then reference is quarter notes and returned
+        /// value will be equivalent number of quarter notes for given source note.
+        /// </summary>
+        /// <param name="source">Source note value.</param>
+        /// <param name="reference">Reference note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
+        /// <returns>Duration of note value in terms of specified reference note value.</returns>
+        public static double Duration(this NoteValueBritish source, NoteValueBritish reference, int dots)
+        {
+            return Duration((int)source, (int)reference, dots);
         }
 
         // Relative duration of given note r
-        private static double Duration(int r)
+        private static double Duration(int r, int dots)
         {
-            return Math.Pow(2, 2 - r);
+            return DotLength(Math.Pow(2, 2 - r), dots);
         }
 
         // Relative duration of given note i, in terms of r
-        private static double Duration(int i, int r)
+        private static double Duration(int i, int r, int dots)
         {
-            return Math.Pow(2, 2 * (r - 1) - i) * Duration(r);
+            return DotLength(Math.Pow(2, 2 * (r - 1) - i) * Duration(r, 0), dots);
+        }
+
+        private static double DotLength(double duration, int dots)
+        {
+            if (dots > 0) return  2 * duration - (duration / Math.Pow(2, dots));
+            return duration;
         }
     }
 }

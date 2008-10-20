@@ -29,6 +29,7 @@
 \**************************************************************************/
 
 using System;
+using System.Media.Music;
 
 namespace System.Media.Sound
 {
@@ -101,9 +102,9 @@ namespace System.Media.Sound
 
         public DTMF(double lowFrequency, double highFrequency, double duration)
         {
-            this.LowFrequency = lowFrequency;
-            this.HighFrequency = highFrequency;
-            this.Duration = duration;
+            LowFrequency = lowFrequency;
+            HighFrequency = highFrequency;
+            Duration = duration;
         }
 
         #endregion
@@ -207,9 +208,13 @@ namespace System.Media.Sound
         /// <param name="tones">Dual-tone multi-frequencies to generate.</param>
         /// <param name="volume">Volume of generated dual-tones as a percentage (0 to 1).</param>
         /// <param name="repeatCount">Number of times to repeat each tone.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Value must be expressed as a fractional percentage between zero and one.</exception>
         /// <exception cref="InvalidOperationException"><see cref="DTMF"/> only generated for <see cref="WaveFile"/> with a sample rate of 8, 16, 24, 32 or 64 bits per sample.</exception>
         public static void Generate(WaveFile destination, DTMF[] tones, double volume, int repeatCount)
         {
+            if (volume < 0.0D || volume > 1.0D)
+                throw new ArgumentOutOfRangeException("volume", "Value must be expressed as a fractional percentage between zero and one.");
+
             short bitsPerSample = destination.BitsPerSample;
             double sampleRate = destination.SampleRate;
             double amplitude, sample;

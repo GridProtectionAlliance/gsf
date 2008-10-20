@@ -116,10 +116,11 @@ namespace System.Media.Music
         /// then each quarter-note would last a half-second.
         /// </summary>
         /// <param name="source">Source note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
         /// <returns>Actual duration of note value in seconds.</returns>
-        public double CalculateNoteValueTime(NoteValue source)
+        public double CalculateNoteValueTime(NoteValue source, int dots)
         {
-            return m_totalNoteValues / 60.0D * source.Duration(this.NoteValue);
+            return m_totalNoteValues / 60.0D * source.Duration(this.NoteValue, dots);
         }
 
         /// <summary>
@@ -128,10 +129,11 @@ namespace System.Media.Music
         /// then each crotchet would last a half-second.
         /// </summary>
         /// <param name="source">Source note value.</param>
+        /// <param name="dots">Total dotted note length extensions to apply.</param>
         /// <returns>Actual duration of note value in seconds.</returns>
-        public double CalculateNoteValueTime(NoteValueBritish source)
+        public double CalculateNoteValueTime(NoteValueBritish source, int dots)
         {
-            return m_totalNoteValues / 60.0D * source.Duration(this.NoteValueBritish);
+            return m_totalNoteValues / 60.0D * source.Duration(this.NoteValueBritish, dots);
         }
 
         #endregion
