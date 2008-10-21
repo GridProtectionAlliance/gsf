@@ -150,6 +150,11 @@ namespace System
             {
                 #region [ Bit Cases (0 - 31) ]
 
+                // Just assuming that switching on bit index and returning
+                // constant will be faster than Math.Pow call with cast:
+                //
+                //  return (int)Math.Pow(2, int);
+                //
                 case 00: return Bit0;
                 case 01: return Bit1;
                 case 02: return Bit2;
