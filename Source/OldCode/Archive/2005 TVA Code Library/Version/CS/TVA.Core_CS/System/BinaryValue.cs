@@ -1,5 +1,5 @@
 ﻿/**************************************************************************\
-   Copyright (c) 2008, James Ritchie Carroll
+   Copyright (c) 2008 - Gbtc, James Ritchie Carroll
    All rights reserved.
   
    Redistribution and use in source and binary forms, with or without
