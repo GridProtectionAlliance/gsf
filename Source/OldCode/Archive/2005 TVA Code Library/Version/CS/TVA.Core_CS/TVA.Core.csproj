@@ -341,6 +341,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="System\Media\Music\Modern musical symbols.mht" />
     <None Include="System\Media\Wavefile Information\Waveform Audio Format.ppt" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

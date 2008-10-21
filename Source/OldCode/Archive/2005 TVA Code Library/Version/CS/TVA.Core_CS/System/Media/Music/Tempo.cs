@@ -47,6 +47,7 @@ namespace System.Media.Music
         // Fields
         private int m_totalNoteValues;
         private int m_noteValue;
+        private double m_referenceTime;
 
         #endregion
 
@@ -68,6 +69,10 @@ namespace System.Media.Music
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Total number of reference note values that occur in one minute - thus defining
+        /// the tempo for a score.
+        /// </summary>
         public int TotalNoteValues
         {
             get
@@ -77,6 +82,7 @@ namespace System.Media.Music
             set
             {
                 m_totalNoteValues = value;
+                CalculateReferenceTime();
             }
         }
 
@@ -90,6 +96,7 @@ namespace System.Media.Music
             set
             {
                 m_noteValue = (int)value;
+                CalculateReferenceTime();
             }
         }
 
@@ -103,6 +110,20 @@ namespace System.Media.Music
             set
             {
                 m_noteValue = (int)value;
+                CalculateReferenceTime();
+            }
+        }
+
+        /// <summary>
+        /// Total time, in seconds, for a single reference note value.  For example, if tempo
+        /// is M.M. 120 quarter-notes per minute, then time is referenced in quarter-notes and
+        /// this function would return 0.5 seconds.
+        /// </summary>
+        public double ReferenceTime
+        {
+            get
+            {
+                return m_referenceTime;
             }
         }
 
@@ -120,7 +141,7 @@ namespace System.Media.Music
         /// <returns>Actual duration of note value in seconds.</returns>
         public double CalculateNoteValueTime(NoteValue source, int dots)
         {
-            return m_totalNoteValues / 60.0D * source.Duration(this.NoteValue, dots);
+            return m_referenceTime * source.Duration(this.NoteValue, dots);
         }
 
         /// <summary>
@@ -133,7 +154,12 @@ namespace System.Media.Music
         /// <returns>Actual duration of note value in seconds.</returns>
         public double CalculateNoteValueTime(NoteValueBritish source, int dots)
         {
-            return m_totalNoteValues / 60.0D * source.Duration(this.NoteValueBritish, dots);
+            return m_referenceTime * source.Duration(this.NoteValueBritish, dots);
+        }
+
+        private void CalculateReferenceTime()
+        {
+            m_referenceTime = m_totalNoteValues / 60.0D * this.NoteValue.Duration();
         }
 
         #endregion
