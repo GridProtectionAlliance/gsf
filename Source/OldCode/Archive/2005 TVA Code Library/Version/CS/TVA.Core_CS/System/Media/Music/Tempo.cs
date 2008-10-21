@@ -57,12 +57,14 @@ namespace System.Media.Music
         {
             m_totalNoteValues = totalNoteValues;
             m_noteValue = (int)noteValue;
+            CalculateReferenceTime();
         }
 
         public Tempo(int totalNoteValues, NoteValueBritish noteValue)
         {
             m_totalNoteValues = totalNoteValues;
             m_noteValue = (int)noteValue;
+            CalculateReferenceTime();
         }
 
         #endregion
