@@ -742,6 +742,7 @@ namespace TVA.ErrorManagement
             // Exit the current application if specified.
             if (exitApplication)
             {
+                ErrorLog.Flush();
                 switch (ApplicationType)
                 {
                     // In windows environment we can simply call Environment.Exit() to exit the application. This
@@ -781,12 +782,11 @@ namespace TVA.ErrorManagement
         {
             if (!m_initialized)
             {
-                LoadSettings();                                 // Load settings from the config file.
-                Register();                                     // Register the logger for unhandled exceptions.
-                m_errorLog.Name = GetDefaultLogFileName();      // Assign a default filename for the error log.
-                m_errorLog.EndInit();                           // Initialize the log file. // TODO: Remove this!
-                m_errorLog.Open();                              // Open the log file.
-                m_initialized = true;                           // Initialize only once.
+                LoadSettings();                                     // Load settings from the config file.
+                Register();                                         // Register the logger for unhandled exceptions.
+                m_errorLog.FileName = GetDefaultLogFileName();      // Assign a default filename for the error log.
+                m_errorLog.Open();                                  // Open the log file.
+                m_initialized = true;                               // Initialize only once.
             }
         }
 

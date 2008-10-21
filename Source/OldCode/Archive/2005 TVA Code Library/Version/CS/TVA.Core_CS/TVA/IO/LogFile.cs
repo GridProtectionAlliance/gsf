@@ -17,6 +17,8 @@
 //       instead of DesignMode property as the former is more accurate than the latter
 //  09/19/2008 - James R Carroll
 //       Converted to C#.
+//  10/21/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -29,118 +31,90 @@ using System.Text;
 using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
-using TVA.Services;
 
 namespace TVA.IO
 {
     #region [ Enumerations ]
 
     /// <summary>
-    /// Specifies the operation to be performed on the log file when it is full.
+    /// Specifies the operation to be performed on the <see cref="LogFile"/> when it is full.
     /// </summary>
     public enum LogFileFullOperation
     {
         /// <summary>
-        /// Truncates the existing entries in the log file to make space for new entries.
+        /// Truncates the existing entries in the <see cref="LogFile"/> to make space for new entries.
         /// </summary>
         Truncate,
         /// <summary>
-        /// Rolls over to a new log file, and keeps the full log file for reference.
+        /// Rolls over to a new <see cref="LogFile"/>, and keeps the full <see cref="LogFile"/> for reference.
         /// </summary>
         Rollover
     }
 
     #endregion
 
+    /// <summary>
+    /// Represents a file that can be used for logging messages in real-time.
+    /// </summary>
     [ToolboxBitmap(typeof(LogFile))]
-    public partial class LogFile : Component, IServiceComponent, IPersistSettings, ISupportInitialize
-    {       
+    public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings, IStatusProvider
+    {
         #region [ Members ]
 
         // Constants
 
         /// <summary>
-        /// The minimum size for a log file.
+        /// The minimum size for a <see cref="LogFile"/>.
         /// </summary>
-        public const int MinimumFileSize = 1;
+        public const int MinFileSize = 1;
 
         /// <summary>
-        /// The maximum size for a log file.
+        /// The maximum size for a <see cref="LogFile"/>.
         /// </summary>
-        public const int MaximumFileSize = 10;
+        public const int MaxFileSize = 10;
 
         /// <summary>
-        /// Default value for Name property.
+        /// Default value for the <see cref="FileName"/> property.
         /// </summary>
-        public const string DefaultName = "LogFile.txt";
+        public const string DefaultFileName = "LogFile.txt";
 
         /// <summary>
-        /// Default value for Size property.
+        /// Default value for the <see cref="FileSize"/> property.
         /// </summary>
-        public const int DefaultSize = 3;
+        public const int DefaultFileSize = 3;
 
         /// <summary>
-        /// Default value for AutoOpen property.
-        /// </summary>
-        public const bool DefaultAutoOpen = false;
-
-        /// <summary>
-        /// Default value for FileFullOperation property.
+        /// Default value for the <see cref="FileFullOperation"/> property.
         /// </summary>
         public const LogFileFullOperation DefaultFileFullOperation = LogFileFullOperation.Truncate;
 
         /// <summary>
-        /// Default value for PersistSettings property.
+        /// Default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
 
         /// <summary>
-        /// Default value for SettingsCategoryName property.
+        /// Default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
-        public const string DefaultSettingsCategoryName = "LogFile";
+        public const string DefaultSettingsCategory = "LogFile";
 
         // Events
 
         /// <summary>
-        /// Occurs when the log file is being opened.
+        /// Occurs when the <see cref="LogFile"/> is full.
         /// </summary>
-        [Description("Occurs when the log file is being opened.")]
-        public event EventHandler FileOpening;
-
-        /// <summary>
-        /// Occurs when the log file has been opened.
-        /// </summary>
-        [Description("Occurs when the log file has been opened.")]
-        public event EventHandler FileOpened;
-
-        /// <summary>
-        /// Occurs when the log file is being closed.
-        /// </summary>
-        [Description("Occurs when the log file is being closed.")]
-        public event EventHandler FileClosing;
-
-        /// <summary>
-        /// Occurs when the log file has been closed.
-        /// </summary>
-        [Description("Occurs when the log file has been closed.")]
-        public event EventHandler FileClosed;
-
-        /// <summary>
-        /// Occurs when the log file is full.
-        /// </summary>
-        [Description("Occurs when the log file is full.")]
+        [Description("Occurs when the LogFile is full.")]
         public event EventHandler FileFull;
 
         /// <summary>
-        /// Occurs when an exception is encountered while writing entries to the log file.
+        /// Occurs when an <see cref="Exception"/> is encountered while writing entries to the <see cref="LogFile"/>.
         /// </summary>
-        [Description("Occurs when an exception is encountered while writing entries to the log file.")]
+        [Description("Occurs when an Exception is encountered while writing entries to the LogFile.")]
         public event EventHandler<EventArgs<Exception>> LogException;
 
         // Fields
-        private string m_name;
-        private int m_size;
-        private bool m_autoOpen;
+        private string m_fileName;
+        private int m_fileSize;
         private LogFileFullOperation m_fileFullOperation;
         private bool m_persistSettings;
         private string m_settingsCategory;
@@ -148,28 +122,30 @@ namespace TVA.IO
         private ManualResetEvent m_operationWaitHandle;
         private ProcessQueue<string> m_logEntryQueue;
         private Encoding m_textEncoding;
-        private bool m_previouslyEnabled;
+        private bool m_enabled;
         private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogFile"/> class.
+        /// </summary>
         public LogFile()
         {
-            m_name = DefaultName;
-            m_size = DefaultSize;
-            m_autoOpen = DefaultAutoOpen;
+            m_fileName = DefaultFileName;
+            m_fileSize = DefaultFileSize;
             m_fileFullOperation = DefaultFileFullOperation;
             m_persistSettings = DefaultPersistSettings;
-            m_settingsCategory = DefaultSettingsCategoryName;
-
-            m_operationWaitHandle = new ManualResetEvent(true);
-
-            m_logEntryQueue = ProcessQueue<string>.CreateSynchronousQueue(WriteLogEntries);
-            m_logEntryQueue.ProcessException += m_logEntryQueue_ProcessException;
-
+            m_settingsCategory = DefaultSettingsCategory;
             m_textEncoding = Encoding.Default;
+            m_operationWaitHandle = new ManualResetEvent(true);
+            m_logEntryQueue = ProcessQueue<string>.CreateSynchronousQueue(WriteLogEntries);
+
+            this.FileFull += LogFile_FileFull;
+            m_logEntryQueue.ProcessException += m_logEntryQueue_ProcessException;
         }
 
         #endregion
@@ -177,78 +153,60 @@ namespace TVA.IO
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the name of the log file, including the file extension.
+        /// Gets or sets the name of the <see cref="LogFile"/>, including the file extension.
         /// </summary>
-        /// <returns>The name of the log file, including the file extension.</returns>
-        [Category("Settings"), DefaultValue(DefaultName), Description("The name of the log file, including the file extension.")]
-        public string Name
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Settings"),
+        DefaultValue(DefaultFileName),
+        Description("Name of the LogFile, including the file extension.")]
+        public string FileName
         {
             get
             {
-                return m_name;
+                return m_fileName;
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
+                m_fileName = value;
+                if (IsOpen)
                 {
-                    m_name = value;
-                    if (IsOpen)
-                    {
-                        Close();
-                        Open();
-                    }
-                }
-                else
-                {
-                    throw new ArgumentNullException("Name");
+                    Close();
+                    Open();
                 }
             }
         }
 
         /// <summary>
-        /// Gets or sets the size of the log file in MB.
+        /// Gets or sets the size of the <see cref="LogFile"/> in MB.
         /// </summary>
-        /// <returns>The size of the log file in MB.</returns>
-        [Category("Settings"), DefaultValue(DefaultSize), Description("The size of the log file in MB.")]
-        public int Size
+        ///<exception cref="ArgumentOutOfRangeException">The value being set outside the <see cref="MinFileSize"/> and <see cref="MaxFileSize"/> range.</exception>
+        [Category("Settings"),
+        DefaultValue(DefaultFileSize),
+        Description("Size of the LogFile in MB.")]
+        public int FileSize
         {
             get
             {
-                return m_size;
+                return m_fileSize;
             }
             set
             {
-                if (value >= MinimumFileSize && value <= MaximumFileSize)
-                    m_size = value;
-                else
-                    throw new ArgumentOutOfRangeException("Size", string.Format("Value must be between {0} and {1}", MinimumFileSize, MaximumFileSize));
+                if (value < MinFileSize || value > MaxFileSize)
+                    throw new ArgumentOutOfRangeException("FileSize", string.Format("Value must be between {0} and {1}.", MinFileSize, MaxFileSize));
+
+                m_fileSize = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the log file is to be opened automatically after the
-        /// component has finished initializing.
+        /// Gets or sets the type of operation to be performed when the <see cref="LogFile"/> is full.
         /// </summary>
-        /// <returns>True, if the log file is to be opened after the component has finished initializing; otherwise,
-        /// false.</returns>
-        [Category("Behavior"), DefaultValue(DefaultAutoOpen), Description("Indicates whether the log file is to be opened automatically after the component has finished initializing.")]
-        public bool AutoOpen
-        {
-            get
-            {
-                return m_autoOpen;
-            }
-            set
-            {
-                m_autoOpen = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the type of operation to be performed when the log file is full.
-        /// </summary>
-        /// <returns>One of the TVA.IO.LogFileFullOperation values.</returns>
-        [Category("Behavior"), DefaultValue(DefaultFileFullOperation), Description("The type of operation to be performed when the log file is full.")]
+        [Category("Behavior"),
+        DefaultValue(DefaultFileFullOperation),
+        Description("Type of operation to be performed when the LogFile is full.")]
         public LogFileFullOperation FileFullOperation
         {
             get
@@ -262,11 +220,12 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the component settings are to be persisted to the config
-        /// file.
+        /// Gets or sets a boolean value that indicates whether the settings of <see cref="LogFile"/> object are 
+        /// to be saved to the config file.
         /// </summary>
-        /// <returns>True, if the component settings are to be persisted to the config file; otherwise, false.</returns>
-        [Category("Persistance"), DefaultValue(DefaultPersistSettings), Description("Indicates whether the component settings are to be persisted to the config file.")]
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of LogFile object are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -280,10 +239,13 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets or sets the category name under which the component settings are to be saved in the config file.
+        /// Gets or sets the category under which the settings of <see cref="LogFile"/> object are to be saved
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <returns>The category name under which the component settings are to be saved in the config file.</returns>
-        [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName), Description("The category name under which the component settings are to be saved in the config file.")]
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of LogFile object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -292,32 +254,18 @@ namespace TVA.IO
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
             }
         }
 
         /// <summary>
-        /// Gets a boolean value indicating whether the log file is open.
+        /// Gets or sets the <see cref="Encoding"/> to be used to encode the messages being logged.
         /// </summary>
-        /// <returns>True, if the log file is open; otherwise, false.</returns>
-        [Browsable(false)]
-        public bool IsOpen
-        {
-            get
-            {
-                return (m_fileStream != null);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the encoding to be used to encode text data being exported.
-        /// </summary>
-        /// <value>The encoding to be used to encode text data being exported.</value>
-        /// <returns>The encoding to be used to encode text data being exported.</returns>
-        [Browsable(false)]
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
             get
@@ -334,9 +282,53 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets the current descriptive status of the log file.
+        /// Gets or sets a boolean value that indicates whether the <see cref="LogFile"/> object is currently enabled.
         /// </summary>
-        /// <returns>The current status of the log file.</returns>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_logEntryQueue.Enabled;
+            }
+            set
+            {
+                m_logEntryQueue.Enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether the <see cref="LogFile"/> is open.
+        /// </summary>
+        [Browsable(false)]
+        public bool IsOpen
+        {
+            get
+            {
+                return (m_fileStream != null);
+            }
+        }
+
+        /// <summary>
+        /// Gets the unique identifier of the <see cref="LogFile"/> object.
+        /// </summary>
+        [Browsable(false)]
+        public string Name
+        {
+            get
+            {
+                return (string.Format("{0}_{1}", this.GetType().Name, FilePath.NoFileExtension(m_fileName)));
+            }
+        }
+
+        /// <summary>
+        /// Gets the current descriptive status of the <see cref="LogFile"/> object.
+        /// </summary>
         [Browsable(false)]
         public string Status
         {
@@ -348,7 +340,7 @@ namespace TVA.IO
                 status.Append(m_settingsCategory);
                 status.AppendLine();
                 status.Append("       Maximum export size: ");
-                status.Append(m_size.ToString());
+                status.Append(m_fileSize.ToString());
                 status.Append(" MB");
                 status.AppendLine();
                 status.Append("       File full operation: ");
@@ -367,156 +359,107 @@ namespace TVA.IO
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="LogFile"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_logEntryQueue != null)
-                        {
-                            // Flush any unwritten log records
-                            Close(true);
-                            m_logEntryQueue.Dispose();
-                        }
-                        m_logEntryQueue = null;
-
-                        if (m_fileStream != null)
-                        {
-                            m_fileStream.Dispose();
-                        }
-                        m_fileStream = null;
-
-                        if (m_operationWaitHandle != null)
-                        {
-                            m_operationWaitHandle.Close();
-                        }
-                        m_operationWaitHandle = null;
-
-                        SaveSettings(); // Saves settings to the config file.
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        /// <summary>
-        /// Opens the log file if it is closed.
+        /// Opens the <see cref="LogFile"/> for use if it is closed.
         /// </summary>
         public void Open()
         {
             if (!IsOpen)
             {
-                if (FileOpening != null)
-                    FileOpening(this, EventArgs.Empty);
+                // Initialize if uninitialized.
+                Initialize();
 
-                // Gets the absolute file path if a relative path is specified.
-                m_name = FilePath.AbsolutePath(m_name);
-                
-                // Creates the folder in which the log file will reside it, if it does not exist.
-                if (!Directory.Exists(FilePath.JustPath(m_name)))
-                {
-                    Directory.CreateDirectory(FilePath.JustPath(m_name));
-                }
-                // Opens the log file (if it exists) or creates it (if it does not exist).
-                m_fileStream = new FileStream(m_name, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+                // Get the absolute file path if a relative path is specified.
+                m_fileName = FilePath.AbsolutePath(m_fileName);
 
+                // Create the folder in which the log file will reside it, if it does not exist.
+                if (!Directory.Exists(FilePath.JustPath(m_fileName)))
+                    Directory.CreateDirectory(FilePath.JustPath(m_fileName));
+
+                // Open the log file (if it exists) or creates it (if it does not exist).
+                m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
                 // Scrolls to the end of the file so that existing data is not overwritten.
                 m_fileStream.Seek(0, SeekOrigin.End);
 
                 // If this is a new log file, set its creation date to current date. This is done to prevent historic
                 // log files (when FileFullOperation = Rollover) from having the same start time in their filename.
                 if (m_fileStream.Length == 0)
-                    (new FileInfo(m_name)).CreationTime = DateTime.Now;
+                    (new FileInfo(m_fileName)).CreationTime = DateTime.Now;
 
-                // Starts the queue to which log entries are going to be added.
+                // Start the queue to which log entries are going to be added.
                 m_logEntryQueue.Start();
-
-                if (FileOpened != null)
-                    FileOpened(this, EventArgs.Empty);
             }
         }
 
         /// <summary>
-        /// Closes the log file if it is open.
+        /// Closes the <see cref="LogFile"/> if it is open.
         /// </summary>
+        /// <remarks>
+        /// Forces queued log entries to be flushed to the <see cref="LogFile"/>.
+        /// </remarks>
         public void Close()
         {
             Close(true);
         }
 
         /// <summary>
-        /// Closes the log file if it is open.
+        /// Closes the <see cref="LogFile"/> if it is open.
         /// </summary>
-        /// <param name="flushQueuedEntries">True, if queued log entries are to be written to the log file; otherwise,
-        /// false.</param>
+        /// <param name="flushQueuedEntries">true, if queued log entries are to be written to the <see cref="LogFile"/>; otherwise, false.</param>
         public void Close(bool flushQueuedEntries)
         {
             if (IsOpen)
             {
-                if (FileClosing != null)
-                    FileClosing(this, EventArgs.Empty);
-
                 if (flushQueuedEntries)
-                {
                     // Writes all queued log entries to the file.
-                    m_logEntryQueue.Flush();
-                }
+                    Flush();
                 else
-                {
                     // Stops processing the queued log entries.
                     m_logEntryQueue.Stop();
-                }
 
                 if (m_fileStream != null)
                 {
                     // Closes the log file.
-                    m_fileStream.Dispose();
+                    m_fileStream.Close();
                     m_fileStream = null;
                 }
-
-                if (FileClosed != null)
-                    FileClosed(this, EventArgs.Empty);
             }
         }
 
         /// <summary>
-        /// Queues the text for writing to the log file.
+        /// Forces queued log entries to be written to the <see cref="LogFile"/>.
         /// </summary>
-        /// <param name="text">The text to be written to the log file.</param>
+        public void Flush()
+        {
+            if (IsOpen)
+                m_logEntryQueue.Flush();
+        }
+
+        /// <summary>
+        /// Queues the text for writing to the <see cref="LogFile"/>.
+        /// </summary>
+        /// <param name="text">The text to be written to the <see cref="LogFile"/>.</param>
         public void Write(string text)
         {
-            // Yields to the "file full operation" to complete, if in progress.
+            // Yield to the "file full operation" to complete, if in progress.
             m_operationWaitHandle.WaitOne();
 
             if (IsOpen)
-            {
-                // Queues the text for writing to the log file.
+                // Queue the text for writing to the log file.
                 m_logEntryQueue.Add(text);
-            }
             else
-            {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_name));
-            }
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
         }
 
         /// <summary>
-        /// Queues the text for writing to the log file.
+        /// Queues the text for writing to the <see cref="LogFile"/>.
         /// </summary>
         /// <param name="text">The text to be written to the log file.</param>
-        /// <remarks>A "newline" character will automatically be appended to the text.</remarks>
+        /// <remarks>
+        /// In addition to the specified text, a "newline" character will be appended to the text.
+        /// </remarks>
         public void WriteLine(string text)
         {
-            Write(text + Environment.NewLine);
+            Write(text + "\r\n");
         }
 
         /// <summary>
@@ -524,94 +467,105 @@ namespace TVA.IO
         /// </summary>
         /// <param name="text">The text to be written to the log file.</param>
         /// <remarks>
-        /// <para>A timestamp will automatically be preprended to the text.</para>
-        /// <para>A "newline" character will automatically be appended to the text.</para>
+        /// In addition to the specified text, a timestamp will be prepended, and a "newline" character will appended to the text.
         /// </remarks>
         public void WriteTimestampedLine(string text)
         {
-            Write("[" + DateTime.Now.ToString() + "] " + text + Environment.NewLine);
+            Write("[" + DateTime.Now.ToString() + "] " + text + "\r\n");
         }
 
         /// <summary>
-        /// Loads the component settings from the config file, if present.
+        /// Initializes the <see cref="LogFile"/> object.
         /// </summary>
-        public void LoadSettings()
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="LogFile"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
         {
-            try
+            if (!m_initialized)
             {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                if (settings.Count > 0)
-                {
-                    Name = settings["Name"].ValueAs(m_name);
-                    Size = settings["Size"].ValueAs(m_size);
-                    AutoOpen = settings["AutoOpen"].ValueAs(m_autoOpen);
-                    FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
-                }
-            }
-            catch
-            {
-                // Exceptions will occur if the settings are not present in the config file.
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
             }
         }
 
         /// <summary>
-        /// Saves the component settings to the config file.
-        /// </summary>
+        /// Saves settings for the <see cref="LogFile"/> object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    CategorizedSettingsElement setting;
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
 
-                    settings.Clear();
-                    
-                    setting = settings["Name", true];
-                    setting.Value = m_name;
-                    setting.Description = "Name of the log file including its path.";
-
-                    setting = settings["Size", true];
-                    setting.Value = m_size.ToString();
-                    setting.Description = "Maximum size of the log file in MB.";
-
-                    setting = settings["AutoOpen", true];
-                    setting.Value = m_autoOpen.ToString();
-                    setting.Description = "True if the log file is to be open automatically after initialization is complete; otherwise False.";
-
-                    setting = settings["FileFullOperation", true];
-                    setting.Value = m_fileFullOperation.ToString();
-                    setting.Description = "Operation (Truncate; Rollover) that is to be performed on the file when it is full.";
-
-                    ConfigurationFile.Current.Save();
-                }
-                catch
-                {
-                    // Exceptions may occur if the settings cannot be saved to the config file.
-                }
-            }
-        }
-
-        public void BeginInit()
-        {
-            // No prerequisites before the component is initialized.
-        }
-
-        public void EndInit()
-        {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-            {
-                LoadSettings();         // Loads settings from the config file.
-                if (m_autoOpen) Open(); // Opens the file automatically, if specified.
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["FileName", true].Update(m_fileName, "Name of the log file including its path.");
+                settings["FileSize", true].Update(m_fileSize, "Maximum size of the log file in MB.");
+                settings["FileFullOperation", true].Update(m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+                config.Save();
             }
         }
 
         /// <summary>
-        /// Reads and returns the text from the log file.
+        /// Loads saved settings for the <see cref="LogFile"/> object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                FileName = settings["FileName", true].ValueAs(m_fileName);
+                FileSize = settings["FileSize", true].ValueAs(m_fileSize);
+                FileFullOperation = settings["FileFullOperation", true].ValueAs(m_fileFullOperation);
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="LogFile"/> object properties are initialized.
         /// </summary>
-        /// <returns>The text read from the log file.</returns>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="LogFile"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            // Nothing needs to be done before component is initialized.
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="LogFile"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="LogFile"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                Initialize();
+            }
+        }
+
+        /// <summary>
+        /// Reads and returns the text from the <see cref="LogFile"/>.
+        /// </summary>
+        /// <returns>The text read from the <see cref="LogFile"/>.</returns>
         public string ReadText()
         {
             // Yields to the "file full operation" to complete, if in progress.
@@ -632,24 +586,77 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_name));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
             }
         }
 
         /// <summary>
-        /// Reads text from the log file and returns a list of lines created by seperating the text by the "newline"
+        /// Reads text from the <see cref="LogFile"/> and returns a list of lines created by seperating the text by the "newline"
         /// characters if and where present.
         /// </summary>
-        /// <returns>A list of lines from the text read from the log file.</returns>
+        /// <returns>A list of lines from the text read from the <see cref="LogFile"/>.</returns>
         public List<string> ReadLines()
         {
             return new List<string>(ReadText().Split(new string[] { Environment.NewLine }, StringSplitOptions.None));
         }
 
+        /// <summary>
+        /// Raises the <see cref="FileFull"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected void OnFileFull(EventArgs e)
+        {
+            if (FileFull != null)
+                FileFull(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="LogException"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected void OnLogException(EventArgs<Exception> e)
+        {
+            if (LogException != null)
+                LogException(this, e);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="LogFile"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings();             // Saves settings to the config file.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_fileStream != null)
+                            m_fileStream.Dispose();
+
+                        if (m_logEntryQueue != null)
+                            m_logEntryQueue.Dispose();
+
+                        if (m_operationWaitHandle != null)
+                            m_operationWaitHandle.Close();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
         private void WriteLogEntries(string[] items)
         {
             long currentFileSize = 0;
-            long maximumFileSize = (long)(m_size * 1048576);
+            long maximumFileSize = (long)(m_fileSize * 1048576);
 
             lock (m_fileStream)
             {
@@ -669,7 +676,6 @@ namespace TVA.IO
                         lock (m_fileStream)
                         {
                             m_fileStream.Write(buffer, 0, buffer.Length);
-                            m_fileStream.Flush();
                         }
 
                         currentFileSize += buffer.Length;
@@ -684,8 +690,7 @@ namespace TVA.IO
                         }
 
                         // Truncates file or roll over to new file.
-                        if (FileFull != null)
-                            FileFull(this, EventArgs.Empty);
+                        OnFileFull(EventArgs.Empty);
 
                         return;
                     }
@@ -705,7 +710,7 @@ namespace TVA.IO
                     try
                     {
                         Close(false);
-                        File.Delete(m_name);
+                        File.Delete(m_fileName);
                     }
                     finally
                     {
@@ -713,15 +718,15 @@ namespace TVA.IO
                     }
                     break;
                 case LogFileFullOperation.Rollover:
-                    string historyFileName = FilePath.JustPath(m_name) + FilePath.NoFileExtension(m_name) + "_" + 
-                        File.GetCreationTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
-                        File.GetLastWriteTime(m_name).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.JustFileExtension(m_name);
+                    string historyFileName = FilePath.JustPath(m_fileName) + FilePath.NoFileExtension(m_fileName) + "_" +
+                        File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
+                        File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.JustFileExtension(m_fileName);
 
                     // Rolls over to a new log file, and keeps the current file for history.
                     try
                     {
                         Close(false);
-                        File.Move(m_name, historyFileName);
+                        File.Move(m_fileName, historyFileName);
                     }
                     catch
                     {
@@ -740,30 +745,7 @@ namespace TVA.IO
 
         private void m_logEntryQueue_ProcessException(Exception ex)
         {
-            if (LogException != null)
-                LogException(this, new EventArgs<Exception>(ex));
-        }
-
-        public virtual void ProcessStateChanged(string processName, ProcessState newState)
-        {
-            // This component is not abstractly associated with any particular service process...
-        }
-
-        public virtual void ServiceStateChanged(ServiceState newState)
-        {
-            switch (newState)
-            {
-                case ServiceState.Paused:
-                    m_previouslyEnabled = m_logEntryQueue.Enabled;
-                    m_logEntryQueue.Enabled = false;
-                    break;
-                case ServiceState.Resumed:
-                    m_logEntryQueue.Enabled = m_previouslyEnabled;
-                    break;
-                case ServiceState.Shutdown:
-                    Dispose();
-                    break;
-            }
+            OnLogException(new EventArgs<Exception>(ex));
         }
 
         #endregion

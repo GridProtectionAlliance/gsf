@@ -179,7 +179,7 @@ namespace TVA.Services
 			// Components
 			m_statusLog = new LogFile();
 			m_statusLog.LogException += m_statusLog_LogException;
-			m_statusLog.Name = "StatusLog.txt";
+			m_statusLog.FileName = "StatusLog.txt";
 			m_statusLog.PersistSettings = true;
 			m_statusLog.SettingsCategory = "StatusLog";
 
