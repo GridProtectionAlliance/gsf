@@ -56,6 +56,27 @@ namespace TVA.IO
     /// <summary>
     /// Represents a file that can be used for logging messages in real-time.
     /// </summary>
+    /// <example>
+    /// This example shows how to use <see cref="LogFile"/> for logging messages:
+    /// <code>
+    /// using System;
+    /// using TVA.IO;
+    ///
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         LogFile log = new LogFile();
+    ///         log.Open();                             // Open the log file.
+    ///         log.WriteTimestampedLine("Test entry"); // Write message to the log file.
+    ///         log.Flush();                            // Flush message to the log file.
+    ///         log.Close();                            // Close the log file.
+    ///
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     [ToolboxBitmap(typeof(LogFile))]
     public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings, IStatusProvider
     {
@@ -122,7 +143,6 @@ namespace TVA.IO
         private ManualResetEvent m_operationWaitHandle;
         private ProcessQueue<string> m_logEntryQueue;
         private Encoding m_textEncoding;
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
