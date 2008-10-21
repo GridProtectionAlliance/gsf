@@ -342,12 +342,12 @@ namespace TVA.IO
         {
             get
             {
-                return (string.Format("{0}_{1}", this.GetType().Name, FilePath.NoFileExtension(m_fileName)));
+                return string.Format("{0}_{1}", this.GetType().Name, FilePath.NoFileExtension(m_fileName));
             }
         }
 
         /// <summary>
-        /// Gets the current descriptive status of the <see cref="LogFile"/> object.
+        /// Gets the descriptive status of the <see cref="LogFile"/> object.
         /// </summary>
         [Browsable(false)]
         public string Status
@@ -355,7 +355,6 @@ namespace TVA.IO
             get
             {
                 StringBuilder status = new StringBuilder();
-
                 status.Append("     Configuration section: ");
                 status.Append(m_settingsCategory);
                 status.AppendLine();
