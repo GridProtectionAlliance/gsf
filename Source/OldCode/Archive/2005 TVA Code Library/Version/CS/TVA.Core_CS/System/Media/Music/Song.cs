@@ -46,6 +46,7 @@ namespace System.Media.Music
         // Fields
         private MeasureSize m_measureSize;
         private TimbreFunction m_timbre;
+        private DampingFunction m_damping;
         private Tempo m_tempo;
         private List<Note> m_noteQueue;
         private double m_dynamic;
@@ -66,6 +67,7 @@ namespace System.Media.Music
             m_tempo = new Tempo(120, NoteValue.Quarter);
             m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
             m_timbre = Note.BasicNote;
+            m_damping = Note.NaturalDamping;
             m_noteQueue = new List<Note>();
         }
 
@@ -84,6 +86,7 @@ namespace System.Media.Music
             m_tempo = new Tempo(120, NoteValue.Quarter);
             m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
             m_timbre = Note.BasicNote;
+            m_damping = Note.NaturalDamping;
             m_noteQueue = new List<Note>();
         }
 
@@ -123,7 +126,7 @@ namespace System.Media.Music
 
         /// <summary>
         /// Gets or sets the default tibre function used to synthesize the sounds
-        /// of the added notes (i.e., the instrument), this timbre function will be
+        /// of the added notes (i.e., the instrument). This timbre function will be
         /// used if no other function is specified when adding notes.
         /// </summary>
         public TimbreFunction Timbre
@@ -135,6 +138,23 @@ namespace System.Media.Music
             set
             {
                 m_timbre = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default damping function used to lower the sound volume
+        /// of the added notes over time. This damping function will be used if no
+        /// other function is specified when adding notes.
+        /// </summary>
+        public DampingFunction Damping
+        {
+            get
+            {
+                return m_damping;
+            }
+            set
+            {
+                m_damping = value;
             }
         }
 
@@ -226,12 +246,12 @@ namespace System.Media.Music
             {
                 note.CalculateNoteValueTime(m_tempo);
                 note.StartTime = m_currentSample / samplesPerSecond;
-                note.EndTime = note.StartTime + note.NoteValueTime;
+                note.EndTime = note.StartTime + note.NoteValueTime - (1 / samplesPerSecond);
             }
 
             // Assign sample period to note with shortest duration - all other notes
             // will remain in queue until they have completed their run
-            samplePeriod = m_currentSample + (long)(notes.Min(note => note.NoteValueTime) * samplesPerSecond);
+            samplePeriod = (long)(notes.Min(note => note.NoteValueTime) * samplesPerSecond);
 
             // Add notes to note queue
             m_noteQueue.AddRange(notes);
@@ -248,15 +268,18 @@ namespace System.Media.Music
         /// </remarks>
         public void Finish()
         {
-            double samplesPerSecond = SampleRate;
-            long samplePeriod;
+            if (m_noteQueue.Count > 0)
+            {
+                double samplesPerSecond = SampleRate;
+                long samplePeriod;
 
-            // Assign sample period to note with longest duration - this makes sure all remaining
-            // queued notes will complete their run
-            samplePeriod = m_currentSample + (long)(m_noteQueue.Max(note => note.NoteValueTime) * samplesPerSecond);
+                // Assign sample period to note with longest duration - this makes sure all remaining
+                // queued notes will complete their run
+                samplePeriod = (long)(m_noteQueue.Max(note => note.NoteValueTime) * samplesPerSecond);
 
-            // Add queued notes to song for given sample period
-            AddQueuedNotesToSong(samplePeriod);
+                // Add queued notes to song for given sample period
+                AddQueuedNotesToSong(samplePeriod);
+            }
         }
 
         /// <summary>
@@ -327,14 +350,16 @@ namespace System.Media.Music
         {
             List<int> completedNotes = new List<int>();
             LittleBinaryValue[] sampleBlock;
+            TimbreFunction timbre;
+            DampingFunction damping;
             double samplesPerSecond = SampleRate;
             double startTime = m_currentSample / samplesPerSecond;
-            double sampleValue, songAmplitude, noteAmplitude, time;
+            double sampleValue, amplitude, songAmplitude, time;
             Note note;
 
             songAmplitude = CalculateAmplitude(m_dynamic);
 
-            for (long sample = m_currentSample; sample < samplePeriod; sample++)
+            for (long sample = m_currentSample; sample < m_currentSample + samplePeriod; sample++)
             {
                 // Compute time index in seconds of the current sample
                 time = sample / samplesPerSecond;
@@ -350,17 +375,17 @@ namespace System.Media.Music
 
                         if (time < note.EndTime)
                         {
-                            // Calculate note dynamic
-                            if (note.Dynamic == Dynamic.Undefined)
-                                noteAmplitude = songAmplitude;
-                            else
-                                noteAmplitude = CalculateAmplitude(note.CustomDynamic);
+                            // Get note dynamic
+                            amplitude = (note.Dynamic == Dynamic.Undefined ? songAmplitude : CalculateAmplitude(note.CustomDynamic));
 
-                            // Calculate note timbre
-                            if (note.Timbre == null)
-                                sampleValue += m_timbre(note.Frequency, time) * noteAmplitude;
-                            else
-                                sampleValue += note.Timbre(note.Frequency, time) * noteAmplitude;
+                            // Get timbre function
+                            timbre = (note.Timbre == null ? m_timbre : timbre = note.Timbre);
+
+                            // Get damping function
+                            damping = (note.Damping == null ?  m_damping : note.Damping);
+
+                            // Generate note at given time
+                            sampleValue += timbre(note.Frequency, time) * (amplitude * damping(time - note.StartTime, note.NoteValueTime));
                         }
                         else
                         {
@@ -402,7 +427,7 @@ namespace System.Media.Music
                 AddBlock(sampleBlock);
             }
 
-            m_currentSample = samplePeriod;
+            m_currentSample += samplePeriod;
 
             // Remove completed notes from queue - removal is in reverse sorted
             // order to preserve indices

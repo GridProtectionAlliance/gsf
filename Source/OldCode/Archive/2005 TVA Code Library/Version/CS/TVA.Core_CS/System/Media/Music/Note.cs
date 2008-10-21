@@ -46,9 +46,10 @@ namespace System.Media.Music
     /// Provides a function signature for methods that damp an amplitude representing a
     /// lowering of the acoustic pressure over time.
     /// </summary>
-    /// <param name="time">Time in seconds.</param>
+    /// <param name="time">Time in seconds (0 to <paramref name="length"/> - 1).</param>
+    /// <param name="length">Total length, in seconds, over which to perform damping.</param>
     /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
-    public delegate double DampingFunction(double time);
+    public delegate double DampingFunction(double time, double length);
 
     /// <summary>
     /// Defines fundamental musical note frequencies and methods to create them.
@@ -222,6 +223,7 @@ namespace System.Media.Music
 
         // Fields
         private TimbreFunction m_timbre;
+        private DampingFunction m_damping;
         private double m_frequency;
         private double m_noteValueTime;
         private double m_startTime;
@@ -259,7 +261,6 @@ namespace System.Media.Music
         public Note()
         {
             m_dynamic = -1.0D;
-            m_timbre = null;
         }
 
         #endregion
@@ -339,7 +340,7 @@ namespace System.Media.Music
 
         /// <summary>
         /// Gets or sets the individual tibre function used to synthesize the sounds
-        /// for this note (i.e., the instrument), if this timbre function is not defined,
+        /// for this note (i.e., the instrument). If this timbre function is not defined,
         /// the timbre of the song will be used for the note.
         /// </summary>
         /// <remarks>
@@ -354,6 +355,23 @@ namespace System.Media.Music
             set
             {
                 m_timbre = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the individual damping function used to lower the sound volume
+        /// for this note over time. If this damping function is not defined, the
+        /// damping algorithm of the song will be used for the note.
+        /// </summary>
+        public DampingFunction Damping
+        {
+            get
+            {
+                return m_damping;
+            }
+            set
+            {
+                m_damping = value;
             }
         }
 
@@ -526,13 +544,13 @@ namespace System.Media.Music
             return m_noteID;
         }
 
-        /// <summary>Returns True if the frequency of this note equals the frequency of the specified other note.</summary>
+        /// <summary>Returns True if the frequency and value of this note equals the frequency and value of the specified other note.</summary>
         public bool Equals(Note other)
         {
             return (CompareTo(other) == 0);
         }
 
-        /// <summary>Returns True if the frequency of this note equals the frequency of the specified other note.</summary>
+        /// <summary>Returns True if the frequency and value of this note equals the frequency and value of the specified other note.</summary>
         public override bool Equals(object obj)
         {
             Note other = obj as Note;
@@ -540,13 +558,18 @@ namespace System.Media.Music
             throw new ArgumentException("Object is not an Note", "obj");
         }
 
-        /// <summary>Notes are compared by frequency.</summary>
+        /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>
         public int CompareTo(Note other)
         {
-            return m_frequency.CompareTo(other.Frequency);
+            int result = m_frequency.CompareTo(other.Frequency);
+
+            if (result == 0)
+                result = Duration.CompareTo(other.Duration);
+
+            return result;
         }
 
-        /// <summary>Notes are compared by frequency.</summary>
+        /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>
         public int CompareTo(object obj)
         {
             Note other = obj as Note;
@@ -556,7 +579,7 @@ namespace System.Media.Music
 
         public override int GetHashCode()
         {
-            return m_frequency.GetHashCode();
+            return (Frequency * Duration).GetHashCode();
         }
 
         #endregion
@@ -741,6 +764,21 @@ namespace System.Media.Music
             return noteID.ToUpper();
         }
 
+        /// <summary>
+        /// Computes the angular frequency for the given time.
+        /// </summary>
+        /// <param name="frequency">Frequency in Hz.</param>
+        /// <param name="time">Time in seconds.</param>
+        /// <returns>The computed angular frequency in radians per second at given time.</returns>
+        public static double AngularFrequency(double frequency, double time)
+        {
+            // 2 PI f t
+            //      f = Frequency (Hz)
+            //      t = period    (Seconds)
+
+            return (2 * Math.PI * frequency) * time;
+        }
+
         // Timbre functions
 
         /// <summary>
@@ -802,34 +840,32 @@ namespace System.Media.Music
             return r1;
         }
 
-        /// <summary>
-        /// Computes the angular frequency for the given time.
-        /// </summary>
-        /// <param name="frequency">Frequency in Hz.</param>
-        /// <param name="time">Time in seconds.</param>
-        /// <returns>The computed angular frequency in radians per second at given time.</returns>
-        public static double AngularFrequency(double frequency, double time)
-        {
-            // 2 PI f t
-            //      f = Frequency (Hz)
-            //      t = period    (Seconds)
-
-            return (2 * Math.PI * frequency) * time;
-        }
-
         // Damping functions
 
         /// <summary>
         /// Produces a damping signature that represents no damping over time.
         /// </summary>
         /// <param name="time">Time in seconds.</param>
+        /// <param name="length">Total length, in seconds, over which to perform damping.</param>
         /// <returns>Returns a scalar of 1.0 regardless to time.</returns>
         /// <remarks>
         /// Zero damped sounds would be produced by synthetic sources such as an electronic keyboard.
         /// </remarks>
-        public static double ZeroDamping(double time)
+        public static double ZeroDamping(double time, double length)
         {
             return 1.0D;
+        }
+
+        /// <summary>
+        /// Produces a natural damping curve similar to that of a piano - slowly damping over
+        /// time until the key is released at which point the string is quickly damped.
+        /// </summary>
+        /// <param name="time">Time in seconds (0 to <paramref name="length"/> - 1).</param>
+        /// <param name="length">Total length, in seconds, over which to perform damping.</param>
+        /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
+        public static double NaturalDamping(double time, double length)
+        {
+            return Math.Log10(length - time) / Math.Log10(length);
         }
 
         #endregion
