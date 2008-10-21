@@ -49,9 +49,7 @@ namespace System.Media.Music
         private Tempo m_tempo;
         private List<Note> m_noteQueue;
         private double m_dynamic;
-        private int m_beat;
-        private long m_totalBeats;
-        //private long m_time;
+        private long m_currentSample;
 
         #endregion
 
@@ -210,90 +208,55 @@ namespace System.Media.Music
             }
         }
 
-        /// <summary>
-        /// Returns the index of the current beat (0 to Measure.Beats - 1) within the current measure.
-        /// </summary>
-        public int Beat
-        {
-            get
-            {
-                return m_beat;
-            }
-        }
-
-        /// <summary>
-        /// Returns the index of the current measure.
-        /// </summary>
-        /// <remarks>
-        /// This is calculated based on the total number of beats added so far, note that
-        /// if the beats per measure is changed - the offset of the measure will change
-        /// based on this value.
-        /// </remarks>
-        public long MeasureIndex
-        {
-            get
-            {
-                return (long)Math.Truncate(m_totalBeats / (double)m_measureSize.Beats);
-            }
-        }
-
-        /// <summary>
-        /// Returns the total number of beats added to the song so far.
-        /// </summary>
-        public long TotalBeats
-        {
-            get
-            {
-                return m_totalBeats;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Add a series of notes, all to be played at the specified beat in the current measure.
+        /// Add a series of notes to the song.
         /// </summary>
         /// <param name="notes">Notes to add.</param>
-        /// <remarks>
-        /// Beat within the measure will be automatically advanced - you should add all needed
-        /// notes at the current beat during this call.
-        /// </remarks>
         public void AddNotes(params Note[] notes)
         {
-            // Increment beat, start new measure if needed
-            if (++m_beat == m_measureSize.Beats)
-                m_beat = 0;
+            double samplesPerSecond = SampleRate;
+            long samplePeriod;
 
-            // Track total number of beats processed so far
-            m_totalBeats++;
-
-            // Because of the way the note values are enumerated, the note value with
-            // the smallest index will actually be the one with the longest length
-            NoteValue maxLength = notes.Min(note => note.NoteValue);
-
+            // Calculate note value times for each note to be added            
             foreach (Note note in notes)
             {
-                // Validate note length for remaining time in measure - dotted notes are allowed
-                // to cross measures, so only the root note value is validated
-                m_measureSize.ValidateNoteValueAtBeat(note.NoteValue, m_beat);
-
-                // Calculate note value times for each note to be added
                 note.CalculateNoteValueTime(m_tempo);
-
-                // Note the beat at which this note was added
-                note.Beat = m_beat;
+                note.StartTime = m_currentSample / samplesPerSecond;
+                note.EndTime = note.StartTime + note.NoteValueTime;
             }
+
+            // Assign sample period to note with shortest duration - all other notes
+            // will remain in queue until they have completed their run
+            samplePeriod = m_currentSample + (long)(notes.Min(note => note.NoteValueTime) * samplesPerSecond);
 
             // Add notes to note queue
             m_noteQueue.AddRange(notes);
 
-            // Create a loop over all notes for this beat
-            for (int x = 0; x < m_noteQueue.Count; x++)
-            {
-                
-            }
+            // Add queued notes to song for given sample period
+            AddQueuedNotesToSong(samplePeriod);
+        }
+
+        /// <summary>
+        /// Called when there are no more notes to add.
+        /// </summary>
+        /// <remarks>
+        /// This flushes the remaining queued notes into the song allowing them to run their remaining time.
+        /// </remarks>
+        public void Finish()
+        {
+            double samplesPerSecond = SampleRate;
+            long samplePeriod;
+
+            // Assign sample period to note with longest duration - this makes sure all remaining
+            // queued notes will complete their run
+            samplePeriod = m_currentSample + (long)(m_noteQueue.Max(note => note.NoteValueTime) * samplesPerSecond);
+
+            // Add queued notes to song for given sample period
+            AddQueuedNotesToSong(samplePeriod);
         }
 
         /// <summary>
@@ -358,6 +321,118 @@ namespace System.Media.Music
         public void SetDiminuendoDynamic(int totalBeats, Dynamic endDynamic)
         {
             // TODO: implement diminuendo dynamic
+        }
+
+        private void AddQueuedNotesToSong(long samplePeriod)
+        {
+            List<int> completedNotes = new List<int>();
+            LittleBinaryValue[] sampleBlock;
+            double samplesPerSecond = SampleRate;
+            double startTime = m_currentSample / samplesPerSecond;
+            double sampleValue, songAmplitude, noteAmplitude, time;
+            Note note;
+
+            songAmplitude = CalculateAmplitude(m_dynamic);
+
+            for (long sample = m_currentSample; sample < samplePeriod; sample++)
+            {
+                // Compute time index in seconds of the current sample
+                time = sample / samplesPerSecond;
+
+                // Create summation of all notes at given time
+                sampleValue = 0.0D;
+
+                for (int index = 0; index < m_noteQueue.Count; index++)
+                {
+                    if (!completedNotes.Contains(index))
+                    {
+                        note = m_noteQueue[index];
+
+                        if (time < note.EndTime)
+                        {
+                            // Calculate note dynamic
+                            if (note.Dynamic == Dynamic.Undefined)
+                                noteAmplitude = songAmplitude;
+                            else
+                                noteAmplitude = CalculateAmplitude(note.CustomDynamic);
+
+                            // Calculate note timbre
+                            if (note.Timbre == null)
+                                sampleValue += m_timbre(note.Frequency, time) * noteAmplitude;
+                            else
+                                sampleValue += note.Timbre(note.Frequency, time) * noteAmplitude;
+                        }
+                        else
+                        {
+                            completedNotes.Add(index);
+                        }
+                    }
+                }
+
+                // Create a new sample block for wave file
+                sampleBlock = new LittleBinaryValue[Channels];
+
+                // Iterate through each channel in WaveFile
+                for (int z = 0; z < Channels; z++)
+                {
+                    // Cast sample value to appropriate data type based on bit size
+                    switch (BitsPerSample)
+                    {
+                        case 8: // Bytes are unsigned and need 128 byte offset
+                            sampleBlock[z] = (Byte)(sampleValue + 128);
+                            break;
+                        case 16:
+                            sampleBlock[z] = (Int16)sampleValue;
+                            break;
+                        case 24:
+                            sampleBlock[z] = (Int24)sampleValue;
+                            break;
+                        case 32:
+                            sampleBlock[z] = (Int32)sampleValue;
+                            break;
+                        case 64:
+                            sampleBlock[z] = (Int64)sampleValue;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                // Add sample block to WaveFile
+                AddBlock(sampleBlock);
+            }
+
+            m_currentSample = samplePeriod;
+
+            // Remove completed notes from queue - removal is in reverse sorted
+            // order to preserve indices
+            completedNotes.Sort();
+            completedNotes.Reverse();
+
+            for (int x = 0; x < completedNotes.Count; x++)
+            {
+                m_noteQueue.RemoveAt(completedNotes[x]);
+            }
+        }
+
+        private double CalculateAmplitude(double dynamic)
+        {
+            // Calculate sample amplitude factor for given bit size
+            switch (BitsPerSample)
+            {
+                case 8:
+                    return SByte.MaxValue * dynamic;
+                case 16:
+                    return Int16.MaxValue * dynamic;
+                case 24:
+                    return Int24.MaxValue * dynamic;
+                case 32:
+                    return Int32.MaxValue * dynamic;
+                case 64:
+                    return Int64.MaxValue * dynamic;
+                default:
+                    throw new InvalidOperationException(string.Format("Cannot calculate amplitude for song defined at {0} bits per sample - must be 8, 16, 24, 32 or 64", BitsPerSample));
+            }            
         }
 
         #endregion

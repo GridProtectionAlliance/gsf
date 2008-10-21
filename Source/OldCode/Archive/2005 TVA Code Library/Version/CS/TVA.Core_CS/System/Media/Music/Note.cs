@@ -221,14 +221,15 @@ namespace System.Media.Music
         public const string MiddleC = "C4";
 
         // Fields
+        private TimbreFunction m_timbre;
         private double m_frequency;
+        private double m_noteValueTime;
+        private double m_startTime;
+        private double m_endTime;
+        private double m_dynamic;
         private string m_noteID;
         private int m_noteValue;
         private int m_dots;
-        private double m_noteValueTime;
-        private double m_dynamic;
-        private TimbreFunction m_timbre;
-        private int m_beat;
 
         #endregion
 
@@ -434,6 +435,18 @@ namespace System.Media.Music
         }
 
         /// <summary>
+        /// Returns the relative note duration.
+        /// </summary>
+        /// <returns>Relative note duration.</returns>
+        public double Duration
+        {
+            get
+            {
+                return NoteValue.Duration(m_dots);
+            }
+        }
+
+        /// <summary>
         /// Gets cached note value time calculated from a call to <see cref="CalculateNoteValueTime"/>.
         /// </summary>
         public double NoteValueTime
@@ -444,21 +457,29 @@ namespace System.Media.Music
             }
         }
 
-        /// <summary>
-        /// Gets or sets reference beat at which note is played.
-        /// </summary>
-        /// <remarks>
-        /// This is used to mark the beat at which a note was adding when notes to a song.
-        /// </remarks>
-        public int Beat
+        /// <summary>Gets or sets start time index for this note.</summary>
+        public double StartTime
         {
             get
             {
-                return m_beat;
+                return m_startTime;
             }
             set
             {
-                m_beat = value;
+                m_startTime = value;
+            }
+        }
+
+        /// <summary>Gets or sets end time index for this note.</summary>
+        public double EndTime
+        {
+            get
+            {
+                return m_endTime;
+            }
+            set
+            {
+                m_endTime = value;
             }
         }
 
