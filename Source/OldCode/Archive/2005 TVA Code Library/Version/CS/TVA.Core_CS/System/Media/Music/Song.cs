@@ -67,10 +67,9 @@ namespace System.Media.Music
             m_measureSize = new MeasureSize(3, NoteValue.Quarter);
             m_tempo = new Tempo(240, NoteValue.Quarter);
             m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
-            m_timbre = Note.BasicNote;
-            m_damping = Note.NaturalDamping;
+            m_timbre = Music.Timbre.BasicNote;
+            m_damping = Music.Damping.Natural;
             m_noteQueue = new List<Note>();
-            m_interNoteDelay = 0.01D;
         }
 
         /// <summary>
@@ -87,10 +86,9 @@ namespace System.Media.Music
             m_measureSize = new MeasureSize(3, NoteValue.Quarter);
             m_tempo = new Tempo(240, NoteValue.Quarter);
             m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
-            m_timbre = Note.BasicNote;
-            m_damping = Note.NaturalDamping;
+            m_timbre = Music.Timbre.BasicNote;
+            m_damping = Music.Damping.Natural;
             m_noteQueue = new List<Note>();
-            m_interNoteDelay = 0.01D;
         }
 
         #endregion
@@ -231,7 +229,7 @@ namespace System.Media.Music
             }
         }
 
-        /// <summary>Defines the rest time, in seconds, to pause between notes.</summary>
+        /// <summary>Injects specified rest time, in seconds, between notes.</summary>
         public double InterNoteDelay
         {
             get

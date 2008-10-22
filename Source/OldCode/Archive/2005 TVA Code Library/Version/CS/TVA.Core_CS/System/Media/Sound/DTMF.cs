@@ -164,7 +164,7 @@ namespace System.Media.Sound
         /// </remarks>
         public static double ComputeFrequencies(DTMF tone, double time)
         {
-            return Note.PureTone(tone.LowFrequency, time) + Note.PureTone(tone.HighFrequency, time);
+            return Timbre.PureTone(tone.LowFrequency, time) + Timbre.PureTone(tone.HighFrequency, time);
         }
 
         /// <summary>

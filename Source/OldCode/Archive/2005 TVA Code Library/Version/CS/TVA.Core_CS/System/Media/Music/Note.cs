@@ -34,24 +34,6 @@ using System.Reflection;
 namespace System.Media.Music
 {
     /// <summary>
-    /// Provides a function signature for methods that produce an amplitude representing the
-    /// acoustic pressure of a represented musical timbre for the given time.
-    /// </summary>
-    /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
-    /// <param name="time">Time in seconds.</param>
-    /// <returns>The amplitude of the represented musical timbre at the given time.</returns>
-    public delegate double TimbreFunction(double frequency, double time);
-
-    /// <summary>
-    /// Provides a function signature for methods that damp an amplitude representing a
-    /// lowering of the acoustic pressure over time.
-    /// </summary>
-    /// <param name="sample">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
-    /// <param name="samplePeriod">Total period, in whole samples per second (i.e., time * SamplesPerSecond), over which to perform damping.</param>
-    /// <returns>Scaling factor used to damp an amplitude at the given sample index.</returns>
-    public delegate double DampingFunction(long sample, long samplePeriod);
-
-    /// <summary>
     /// Defines fundamental musical note frequencies and methods to create them.
     /// </summary>
     /// <example>
@@ -762,110 +744,6 @@ namespace System.Media.Music
                 throw new ArgumentException("Invalid note ID format - expected \"Note + Octave + S?\" (e.g., A2 or C5S)");
 
             return noteID.ToUpper();
-        }
-
-        /// <summary>
-        /// Computes the angular frequency for the given time.
-        /// </summary>
-        /// <param name="frequency">Frequency in Hz.</param>
-        /// <param name="time">Time in seconds.</param>
-        /// <returns>The computed angular frequency in radians per second at given time.</returns>
-        public static double AngularFrequency(double frequency, double time)
-        {
-            // 2 PI f t
-            //      f = Frequency (Hz)
-            //      t = period    (Seconds)
-
-            return (2 * Math.PI * frequency) * time;
-        }
-
-        // Timbre functions
-
-        /// <summary>
-        /// Generates a pure tone for the given frequency and time.
-        /// </summary>
-        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
-        /// <param name="time">Time in seconds.</param>
-        /// <returns>The amplitude for a pure tone at the given time.</returns>
-        /// <remarks>
-        /// This method computes an amplitude representing the acoustic pressure of a
-        /// pure tone of the given frequency for the given time.
-        /// </remarks>
-        public static double PureTone(double frequency, double time)
-        {
-            return Math.Sin(AngularFrequency(frequency, time));
-        }
-
-        /// <summary>
-        /// Generates a basic note for the given frequency and time.
-        /// </summary>
-        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
-        /// <param name="time">Time in seconds.</param>
-        /// <returns>The amplitude for a basic note at the given time.</returns>
-        /// <remarks>
-        /// This method computes an amplitude representing the acoustic pressure of a
-        /// basic note of the given frequency for the given time.
-        /// </remarks>
-        public static double BasicNote(double frequency, double time)
-        {
-            double wt, r1, r2;
-
-            wt = AngularFrequency(frequency, time);
-            r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt);
-            r2 = Math.Sin(wt);
-
-            return r1 + r2;
-        }
-
-        /// <summary>
-        /// Generates a simulated clarinet note for the given frequency and time.
-        /// </summary>
-        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
-        /// <param name="time">Time in seconds.</param>
-        /// <returns>The amplitude for a simulated clarinet note at the given time.</returns>
-        /// <remarks>
-        /// This method computes an amplitude representing the acoustic pressure of a
-        /// simulated clarinet note of the given frequency for the given time.
-        /// </remarks>
-        public static double SimulatedClarinet(double frequency, double time)
-        {
-            double wt, r1;
-
-            wt = AngularFrequency(frequency, time);
-
-            // Simulated Clarinet equation
-            // s(t) = sin(wt) + 0.75 *      sin(3 * wt) + 0.5 *      sin(5 * wt) + 0.14 *      sin(7 * wt) + 0.5 *      sin(9 * wt) + 0.12 *      sin(11 * wt) + 0.17 *      sin(13 * wt)
-            r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt) + 0.5 * Math.Sin(5 * wt) + 0.14 * Math.Sin(7 * wt) + 0.5 * Math.Sin(9 * wt) + 0.12 * Math.Sin(11 * wt) + 0.17 * Math.Sin(13 * wt);
-
-            return r1;
-        }
-
-        // Damping functions
-
-        /// <summary>
-        /// Produces a damping signature that represents no damping over time.
-        /// </summary>
-        /// <param name="sample">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
-        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., time * SamplesPerSecond), over which to perform damping.</param>
-        /// <returns>Returns a scalar of 1.0 regardless to time.</returns>
-        /// <remarks>
-        /// Zero damped sounds would be produced by synthetic sources such as an electronic keyboard.
-        /// </remarks>
-        public static double ZeroDamping(long sample, long samplePeriod)
-        {
-            return 1.0D;
-        }
-
-        /// <summary>
-        /// Produces a natural damping curve similar to that of a piano - slowly damping over
-        /// time until the key is released at which point the string is quickly damped.
-        /// </summary>
-        /// <param name="sample">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
-        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., time * SamplesPerSecond), over which to perform damping.</param>
-        /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
-        public static double NaturalDamping(long sample, long samplePeriod)
-        {
-            return Math.Log10(samplePeriod - sample) / Math.Log10(samplePeriod);
         }
 
         #endregion

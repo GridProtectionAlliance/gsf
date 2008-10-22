@@ -81,6 +81,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="System\Media\Music\Damping.cs" />
     <Compile Include="System\Media\Music\Dynamic.cs" />
     <Compile Include="System\Media\Music\MeasureSize.cs" />
     <Compile Include="System\Media\Music\Note.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="System\Media\Music\Phrase.cs" />
     <Compile Include="System\Media\Music\Song.cs" />
     <Compile Include="System\Media\Music\Tempo.cs" />
+    <Compile Include="System\Media\Music\Timbre.cs" />
     <Compile Include="System\Media\WaveFormatExtensible.cs" />
     <Compile Include="System\Media\Sound\DTMF.cs" />
     <Compile Include="System\Media\Sound\TouchTone.cs" />
