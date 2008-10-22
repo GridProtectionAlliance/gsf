@@ -21,11 +21,11 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Text;
-using System.Drawing;
 using System.Threading;
-using System.ComponentModel;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.Services;
@@ -37,6 +37,9 @@ namespace TVA.IO
     /// Handles exporting the same file to multiple destinations that are defined in the configuration file.
     /// Includes feature for network share authentication.
     /// </summary>
+    /// <remarks>
+    /// This class is useful for updating the same file on multiple servers (e.g., load balanced web server).
+    /// </remarks>
     /// <example>
     /// <code>
     /// string xmlData;
@@ -55,71 +58,72 @@ namespace TVA.IO
     /// exporter.ExportData(xmlData);
     /// </code>
     /// </example>
-    /// <remarks>
-    /// This class is useful for updating the same file on multiple servers (e.g., load balanced web server).
-    /// </remarks>
     [ToolboxBitmap(typeof(MultipleDestinationExporter))]
-    public class MultipleDestinationExporter : Component, IServiceComponent, IPersistSettings, ISupportInitialize
+    public class MultipleDestinationExporter : Component, ISupportLifecycle, ISupportInitialize, IStatusProvider, IPersistSettings
     {
         #region [ Members ]
 
         // Constants
 
         /// <summary>
-        /// Default value for ExportTimeout property.
+        /// Default value for the <see cref="ExportTimeout"/> property.
         /// </summary>
         public const int DefaultExportTimeout = Timeout.Infinite;
 
         /// <summary>
-        /// Default value for PersistSettings property.
+        /// Default value for the <see cref="PersistSettings"/> property.
         /// </summary>
-        public const bool DefaultPersistSettings = false;
+        public const bool DefaultPersistSettings = true;
 
         /// <summary>
-        /// Default value for SettingsCategoryName property.
+        /// Default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
-        public const string DefaultSettingsCategoryName = "ExportDestinations";
+        public const string DefaultSettingsCategory = "ExportDestinations";
 
         // Events
-        
+
         /// <summary>
-        /// Reports status information from exporter.
+        /// Occurs to report status information from exporter.
         /// </summary>
-        [Description("Reports status information from exporter.")]
+        [Description("Occurs to report status information from exporter.")]
         public event Action<string> StatusMessage;
 
         // Fields
-        private ExportDestination[] m_exportDestinations;
-        private object m_destinationLock;
-        private string m_settingsCategory;
+
         private int m_exportTimeout;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
         private long m_totalExports;
         private Encoding m_textEncoding;
         private ProcessQueue<byte[]> m_exportQueue;
-        private bool m_persistSettings;
-        private bool m_previouslyEnabled;
+        private object m_destinationLock;
+        private ExportDestination[] m_exportDestinations;
         private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MultipleDestinationExporter"/> class.
+        /// </summary>
         public MultipleDestinationExporter()
-            : this(DefaultSettingsCategoryName, DefaultExportTimeout)
+            : this(DefaultSettingsCategory, DefaultExportTimeout)
         {
         }
 
-        public MultipleDestinationExporter(string settingsCategoryName, int exportTimeout)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MultipleDestinationExporter"/> class.
+        /// </summary>
+        /// <param name="settingsCategory"></param>
+        /// <param name="exportTimeout">The total allowed time in milliseconds for all exports to execute.</param>
+        public MultipleDestinationExporter(string settingsCategory, int exportTimeout)
         {
-            m_settingsCategory = settingsCategoryName;
             m_exportTimeout = exportTimeout;
+            m_settingsCategory = settingsCategory;
+            m_persistSettings = DefaultPersistSettings;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
             m_destinationLock = new object();
-        }
-
-        ~MultipleDestinationExporter()
-        {
-            Dispose(false);
         }
 
         #endregion
@@ -127,13 +131,14 @@ namespace TVA.IO
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets total allowed time for all exports to execute in milliseconds.
+        /// Gets or sets the total allowed time in milliseconds for all exports to execute.
         /// </summary>
         /// <remarks>
         /// Set to Timeout.Infinite (-1) for no timeout.
         /// </remarks>
-        /// <returns>Total allowed time for all exports to execute in milliseconds.</returns>
-        [Category("Settings"), DefaultValue(DefaultExportTimeout), Description("Total allowed time for all exports to execute in milliseconds.")]
+        [Category("Settings"),
+        DefaultValue(DefaultExportTimeout),
+        Description("Total allowed time in milliseconds for all exports to execute.")]
         public int ExportTimeout
         {
             get
@@ -151,68 +156,52 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Currently defined export destinations
+        /// Gets or sets a boolean value that indicates whether the settings of <see cref="MultipleDestinationExporter"/> object are 
+        /// to be saved to the config file.
         /// </summary>
-        [Browsable(false)]
-        public ExportDestination[] ExportDestinations
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of MultipleDestinationExporter object are to be saved to the config file.")]
+        public bool PersistSettings
         {
             get
             {
-                return m_exportDestinations;
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
             }
         }
 
         /// <summary>
-        /// Total exports performed.
+        /// Gets or sets the category under which the settings of <see cref="MultipleDestinationExporter"/> object are to be saved
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        [Browsable(false)]
-        public long TotalExports
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of MultipleDestinationExporter object are to be saved to the config file if the PersistSettings property is set to true.")]
+        public string SettingsCategory
         {
             get
             {
-                return m_totalExports;
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
             }
         }
 
         /// <summary>
-        /// Component status.
+        /// Gets or sets the <see cref="Encoding"/> to be used to encode text data being exported.
         /// </summary>
-        [Browsable(false)]
-        public string Status
-        {
-            get
-			{
-				StringBuilder status = new StringBuilder();
-
-				status.Append("     Configuration section: ");
-				status.Append(m_settingsCategory);
-				status.AppendLine();
-				status.Append("       Export destinations: ");
-                lock (m_destinationLock)
-                {
-                    status.Append(m_exportDestinations.ToDelimitedString(','));
-                }
-				status.AppendLine();
-				status.Append(" Cumulative export timeout: ");
-				status.Append(m_exportTimeout == Timeout.Infinite ? "Infinite" : m_exportTimeout + " milliseconds");
-				status.AppendLine();
-				status.Append("      Total exports so far: ");
-				status.Append(m_totalExports);
-				status.AppendLine();
-
-				if (m_exportQueue != null)
-					status.Append(m_exportQueue.Status);
-
-                return status.ToString();
-			}
-        }
-
-        /// <summary>
-        /// Gets or sets the encoding to be used to encode text data being exported.
-        /// </summary>
-        /// <value>The encoding to be used to encode text data being exported.</value>
-        /// <returns>The encoding to be used to encode text data being exported.</returns>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
             get
@@ -233,7 +222,52 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Component name.
+        /// Gets or sets a boolean value that indicates whether the <see cref="MultipleDestinationExporter"/> object is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_exportQueue.Enabled;
+            }
+            set
+            {
+                m_exportQueue.Enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number exports performed successfully.
+        /// </summary>
+        [Browsable(false)]
+        public long TotalExports
+        {
+            get
+            {
+                return m_totalExports;
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of currently defined export destinations.
+        /// </summary>
+        [Browsable(false)]
+        public ExportDestination[] ExportDestinations
+        {
+            get
+            {
+                return m_exportDestinations;
+            }
+        }
+
+        /// <summary>
+        /// Gets the unique identifier of the <see cref="MultipleDestinationExporter"/> object.
         /// </summary>
         [Browsable(false)]
         public string Name
@@ -246,40 +280,35 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the component settings are to be persisted to the config
-        /// file.
+        /// Gets the descriptive status of the <see cref="MultipleDestinationExporter"/> object.
         /// </summary>
-        /// <returns>True, if the component settings are to be persisted to the config file; otherwise, false.</returns>
-        [Category("Persistance"), DefaultValue(DefaultPersistSettings), Description("Indicates whether the component settings are to be persisted to the config file.")]
-        public bool PersistSettings
+        [Browsable(false)]
+        public string Status
         {
             get
             {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
+                StringBuilder status = new StringBuilder();
 
-        /// <summary>
-        /// Gets or sets the category name under which the component settings are to be saved in the config file.
-        /// </summary>
-        /// <returns>The category name under which the component settings are to be saved in the config file.</returns>
-        [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName), Description("The category name under which the component settings are to be saved in the config file.")]
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
+                status.Append("     Configuration section: ");
+                status.Append(m_settingsCategory);
+                status.AppendLine();
+                status.Append("       Export destinations: ");
+                lock (m_destinationLock)
+                {
+                    status.Append(m_exportDestinations.ToDelimitedString(','));
+                }
+                status.AppendLine();
+                status.Append(" Cumulative export timeout: ");
+                status.Append(m_exportTimeout == Timeout.Infinite ? "Infinite" : m_exportTimeout + " milliseconds");
+                status.AppendLine();
+                status.Append("      Total exports so far: ");
+                status.Append(m_totalExports);
+                status.AppendLine();
+
+                if (m_exportQueue != null)
+                    status.Append(m_exportQueue.Status);
+
+                return status.ToString();
             }
         }
 
@@ -308,42 +337,6 @@ namespace TVA.IO
                     base.Dispose(disposing);    // Call base class Dispose().
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
-            }
-        }
-
-        // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
-        private void Shutdown()
-        {
-            if (m_exportQueue != null)
-            {
-                m_exportQueue.ProcessException -= m_exportQueue_ProcessException;
-                m_exportQueue.Dispose();
-            }
-            m_exportQueue = null;
-
-            lock (m_destinationLock)
-            {
-                // We'll be nice and disconnect network shares when this class is disposed...
-                if (m_exportDestinations != null)
-                {
-                    for (int x = 0; x < m_exportDestinations.Length; x++)
-                    {
-                        if (m_exportDestinations[x].ConnectToShare)
-                        {
-                            try
-                            {
-                                FilePath.DisconnectFromNetworkShare(m_exportDestinations[x].Share);
-                            }
-                            catch (Exception ex)
-                            {
-                                // Something unexpected happened during attempt to disconnect from network share - so we'll report it...
-                                UpdateStatus(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message));
-                            }
-                        }
-                    }
-                }
-
-                m_exportDestinations = null;
             }
         }
 
@@ -378,6 +371,137 @@ namespace TVA.IO
 #else
             ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations);
 #endif
+        }
+
+        /// <summary>
+        /// Start multiple file export.
+        /// </summary>
+        /// <param name="fileData">Text based data to export to each destination.</param>
+        public void ExportData(string fileData)
+        {
+            // Queue data for export - multiple exports may take some time, so we do this on another thread...
+            if (m_exportQueue != null)
+                m_exportQueue.Add(m_textEncoding.GetBytes(fileData));
+        }
+
+        /// <summary>
+        /// Start multiple file export.
+        /// </summary>
+        /// <param name="fileData">Binary data to export to each destination.</param>
+        public void ExportData(byte[] fileData)
+        {
+            // Queue data for export - multiple exports may take some time, so we do this on another thread...
+            if (m_exportQueue != null)
+                m_exportQueue.Add(fileData);
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="MultipleDestinationExporter"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="MultipleDestinationExporter"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            // Nothing needs to be done before component is initialized.
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="MultipleDestinationExporter"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="MultipleDestinationExporter"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                Initialize();
+            }
+        }
+
+        /// <summary>
+        /// Saves settings for the <see cref="MultipleDestinationExporter"/> object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                lock (m_destinationLock)
+                {
+                    settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
+
+                    if ((m_exportDestinations != null) && m_exportDestinations.Length > 0)
+                    {
+                        settings["ExportCount", true].Update(m_exportDestinations.Length, "Total number of export files to produce");
+                        for (int x = 0; x < m_exportDestinations.Length; x++)
+                        {
+                            settings[string.Format("ExportDestination{0}", x + 1), true].Update(m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
+                            settings[string.Format("ExportDestination{0}.ConnectToShare", x + 1), true].Update(m_exportDestinations[x].ConnectToShare, "Set to True to attempt authentication to network share.");
+                            settings[string.Format("ExportDestination{0}.Domain", x + 1), true].Update(m_exportDestinations[x].Domain, "Domain used for authentication to network share (computer name for local accounts).");
+                            settings[string.Format("ExportDestination{0}.UserName", x + 1), true].Update(m_exportDestinations[x].UserName, "User name used for authentication to network share.");
+                            settings[string.Format("ExportDestination{0}.Password", x + 1), true].Update(m_exportDestinations[x].Password, "Encrypted password used for authentication to network share.", true);
+                            settings[string.Format("ExportDestination{0}.FileName", x + 1), true].Update(m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
+                        }
+                    }
+                }
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings for the <see cref="MultipleDestinationExporter"/> object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                string entryRoot;
+                ExportDestination destination;
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
+                m_exportTimeout = settings["ExportTimeout", true].ValueAs(m_exportTimeout);
+                m_exportDestinations = new ExportDestination[settings["ExportCount", true].ValueAsInt32()];
+                for (int x = 0; x < m_exportDestinations.Length; x++)
+                {
+                    entryRoot = string.Format("ExportDestination{0}", x + 1);
+
+                    // Load export destination from configuration entries
+                    destination.DestinationFile = settings[entryRoot, true].ValueAsString() + settings[string.Format("{0}.FileName", entryRoot), true].ValueAsString();
+                    destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot), true].ValueAsBoolean();
+                    destination.Domain = settings[string.Format("{0}.Domain", entryRoot), true].ValueAsString();
+                    destination.UserName = settings[string.Format("{0}.UserName", entryRoot), true].ValueAsString();
+                    destination.Password = settings[string.Format("{0}.Password", entryRoot), true].ValueAsString();
+
+                    // Save new export destination
+                    m_exportDestinations[x] = destination;
+                }
+            }
+        }
+
+        protected void OnStatusMessage(string status)
+        {
+            if (StatusMessage != null)
+                StatusMessage(status);
         }
 
         private void Initialize(object state)
@@ -420,16 +544,16 @@ namespace TVA.IO
                     // Attempt connection to external network share
                     try
                     {
-                        UpdateStatus(string.Format("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share));
+                        OnStatusMessage(string.Format("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share));
 
                         FilePath.ConnectToNetworkShare(destinations[x].Share, destinations[x].UserName, destinations[x].Password, destinations[x].Domain);
 
-                        UpdateStatus(string.Format("Network share authentication to {0} succeeded.", destinations[x].Share));
+                        OnStatusMessage(string.Format("Network share authentication to {0} succeeded.", destinations[x].Share));
                     }
                     catch (Exception ex)
                     {
                         // Something unexpected happened during attempt to connect to network share - so we'll report it...
-                        UpdateStatus(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message));
+                        OnStatusMessage(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message));
                     }
                 }
             }
@@ -438,26 +562,40 @@ namespace TVA.IO
             m_exportQueue.Start();
         }
 
-        /// <summary>
-        /// Start multiple file export.
-        /// </summary>
-        /// <param name="fileData">Text based data to export to each destination.</param>
-        public void ExportData(string fileData)
+        // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
+        private void Shutdown()
         {
-            // Queue data for export - multiple exports may take some time, so we do this on another thread...
             if (m_exportQueue != null)
-                m_exportQueue.Add(m_textEncoding.GetBytes(fileData));
-        }
+            {
+                m_exportQueue.ProcessException -= m_exportQueue_ProcessException;
+                m_exportQueue.Dispose();
+            }
+            m_exportQueue = null;
 
-        /// <summary>
-        /// Start multiple file export.
-        /// </summary>
-        /// <param name="fileData">Binary data to export to each destination.</param>
-        public void ExportData(byte[] fileData)
-        {
-            // Queue data for export - multiple exports may take some time, so we do this on another thread...
-            if (m_exportQueue != null)
-                m_exportQueue.Add(fileData);
+            lock (m_destinationLock)
+            {
+                // We'll be nice and disconnect network shares when this class is disposed...
+                if (m_exportDestinations != null)
+                {
+                    for (int x = 0; x < m_exportDestinations.Length; x++)
+                    {
+                        if (m_exportDestinations[x].ConnectToShare)
+                        {
+                            try
+                            {
+                                FilePath.DisconnectFromNetworkShare(m_exportDestinations[x].Share);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Something unexpected happened during attempt to disconnect from network share - so we'll report it...
+                                OnStatusMessage(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message));
+                            }
+                        }
+                    }
+                }
+
+                m_exportDestinations = null;
+            }
         }
 
         private void WriteExportFiles(byte[] fileData)
@@ -519,164 +657,15 @@ namespace TVA.IO
                 {
                     // Something unexpected happened during export - we'll report it but keep going, could be
                     // that export destination was offline (not uncommon when system is being rebooted, etc.)
-                    UpdateStatus(string.Format("Exception encountered during export for {0}: {1}", destinations[x].DestinationFile, ex.Message));
+                    OnStatusMessage(string.Format("Exception encountered during export for {0}: {1}", destinations[x].DestinationFile, ex.Message));
                 }
             }
-        }
-
-        private void UpdateStatus(string status)
-        {
-            if (StatusMessage != null)
-                StatusMessage(status);
         }
 
         private void m_exportQueue_ProcessException(Exception ex)
         {
             // Something unexpected happened during export
-            UpdateStatus("Export exception: " + ex.Message);
-        }
-
-        public virtual void ProcessStateChanged(string processName, ProcessState newState)
-        {
-            // This component is not abstractly associated with any particular service process...
-        }
-
-        public virtual void ServiceStateChanged(Services.ServiceState newState)
-        {
-            switch (newState)
-            {
-                case ServiceState.Paused:
-                    m_previouslyEnabled = m_exportQueue.Enabled;
-                    m_exportQueue.Enabled = false;
-                    break;
-                case ServiceState.Resumed:
-                    m_exportQueue.Enabled = m_previouslyEnabled;
-                    break;
-                case ServiceState.Shutdown:
-                    Dispose();
-                    break;
-            }
-        }
-
-        public void BeginInit()
-        {
-            // No prerequisites before the component is initialized.
-        }
-
-        public void EndInit()
-        {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-            {
-                Initialize(); // Loads settings and initializes export
-            }
-        }
-
-        /// <summary>
-        /// Loads the component settings from the config file, if present.
-        /// </summary>
-        public void LoadSettings()
-        {
-            try
-            {
-                lock (m_destinationLock)
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                    // We make sure at least a default set of configuration exists before we start load cycle
-                    settings.Add("ExportTimeout", DefaultExportTimeout, "Total allowed time for all exports to execute in milliseconds.");
-
-                    if ((m_exportDestinations != null) && m_exportDestinations.Length > 0)
-                    {
-                        // Make sure the default configuration variables exist
-                        settings.Add("ExportCount", m_exportDestinations.Length.ToString(), "Total number of export files to produce");
-
-                        for (int x = 0; x < m_exportDestinations.Length; x++)
-                        {
-                            settings.Add(string.Format("ExportDestination{0}", x + 1), m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
-                            settings.Add(string.Format("ExportDestination{0}.ConnectToShare", x + 1), m_exportDestinations[x].ConnectToShare.ToString(), "Set to True to attempt authentication to network share.", false);
-                            settings.Add(string.Format("ExportDestination{0}.Domain", x + 1), m_exportDestinations[x].Domain, "Domain used for authentication to network share (computer name for local accounts).", false);
-                            settings.Add(string.Format("ExportDestination{0}.UserName", x + 1), m_exportDestinations[x].UserName, "User name used for authentication to network share.");
-                            settings.Add(string.Format("ExportDestination{0}.Password", x + 1), m_exportDestinations[x].Password, "Encrypted password used for authentication to network share.", true);
-                            settings.Add(string.Format("ExportDestination{0}.FileName", x + 1), m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
-                        }
-                    }
-
-                    // Save updates to config file, if any
-                    ConfigurationFile.Current.Save();
-
-                    // Load export destinations
-                    if (settings.Count > 0)
-                    {
-                        string entryRoot;
-                        ExportDestination destination;
-                        int exportCount = int.Parse(settings["ExportCount"].Value);
-
-                        m_exportTimeout = settings["ExportTimeout"].ValueAs(m_exportTimeout);
-                        m_exportDestinations = new ExportDestination[exportCount];
-
-                        for (int x = 0; x < exportCount; x++)
-                        {
-                            entryRoot = string.Format("ExportDestination{0}", x + 1);
-
-                            // Load export destination from configuration entries
-                            destination.DestinationFile = settings[entryRoot].Value + settings[string.Format("{0}.FileName", entryRoot)].Value;
-                            destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot)].Value.ParseBoolean();
-                            destination.Domain = settings[string.Format("{0}.Domain", entryRoot)].Value;
-                            destination.UserName = settings[string.Format("{0}.UserName", entryRoot)].Value;
-                            destination.Password = settings[string.Format("{0}.Password", entryRoot)].Value;
-
-                            // Save new export destination
-                            m_exportDestinations[x] = destination;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Exceptions will occur if the settings are not present in the config file.
-            }
-        }
-
-        /// <summary>
-        /// Saves the component settings to the config file.
-        /// </summary>
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                try
-                {
-                    lock (m_destinationLock)
-                    {
-                        CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                        settings["ExportTimeout"].Value = m_exportTimeout.ToString();
-
-                        if (m_exportDestinations != null && m_exportDestinations.Length > 0)
-                        {
-                            // Save current export destinations
-                            settings["ExportCount"].Value = m_exportDestinations.Length.ToString();
-
-                            for (int x = 0; x < m_exportDestinations.Length; x++)
-                            {
-                                settings[string.Format("ExportDestination{0}", x + 1)].Value = m_exportDestinations[x].Share;
-                                settings[string.Format("ExportDestination{0}.ConnectToShare", x + 1)].Value = m_exportDestinations[x].ConnectToShare.ToString();
-                                settings[string.Format("ExportDestination{0}.Domain", x + 1)].Value = m_exportDestinations[x].Domain;
-                                settings[string.Format("ExportDestination{0}.UserName", x + 1)].Value = m_exportDestinations[x].UserName;
-                                settings[string.Format("ExportDestination{0}.Password", x + 1)].Value = m_exportDestinations[x].Password;
-                                settings[string.Format("ExportDestination{0}.FileName", x + 1)].Value = m_exportDestinations[x].FileName;
-                            }
-                        }
-
-                        // Save updates to config file, if any
-                        ConfigurationFile.Current.Save();
-                    }
-                }
-                catch
-                {
-                    // Exceptions may occur if the settings cannot be saved to the config file.
-                }
-            }
+            OnStatusMessage("Export exception: " + ex.Message);
         }
 
         #endregion
