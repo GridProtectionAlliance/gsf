@@ -249,12 +249,12 @@ namespace System.Media.Music
         #region [ Methods ]
 
         /// <summary>
-        /// Add a predefined passage of notes to the song.
+        /// Add a predefined phrase of notes to the song.
         /// </summary>
-        /// <param name="passage">Passage to add.</param>
-        public void AddPassage(Passage passage)
+        /// <param name="phrase">Phrase to add.</param>
+        public void AddPhrase(Phrase phrase)
         {
-            foreach (Note[] notes in passage.Notes)
+            foreach (Note[] notes in phrase.Notes)
             {
                 AddNotes(notes);
             }

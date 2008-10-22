@@ -35,9 +35,9 @@ namespace System.Media.Music
 {
     /// <summary>
     /// Defines a repeatable series of notes that can be added to a song over and over,
-    /// for example, the passage defining the chorus.
+    /// for example, the phrase of music defining the chorus.
     /// </summary>
-	public class Passage
+	public class Phrase
 	{
         #region [ Members ]
 
@@ -48,7 +48,7 @@ namespace System.Media.Music
 
         #region [ Constructors ]
 
-        public Passage()
+        public Phrase()
         {
             m_notes = new List<Note[]>();
         }
@@ -58,7 +58,7 @@ namespace System.Media.Music
         #region [ Properties ]
 
         /// <summary>
-        /// Series of notes that define the passage.
+        /// Series of notes that define the phrase.
         /// </summary>
         public List<Note[]> Notes
         {
@@ -73,7 +73,7 @@ namespace System.Media.Music
         #region [ Methods ]
 
         /// <summary>
-        /// Add a series of notes to the passage.
+        /// Add a series of notes to the phrase.
         /// </summary>
         /// <param name="notes">Notes to add.</param>
         public void AddNotes(params Note[] notes)
