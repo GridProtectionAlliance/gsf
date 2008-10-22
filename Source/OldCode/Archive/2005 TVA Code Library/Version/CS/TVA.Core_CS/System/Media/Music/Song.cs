@@ -381,6 +381,7 @@ namespace System.Media.Music
             DampingFunction damping;
             double samplesPerSecond = SampleRate;
             double sample, dynamic, time;
+            int notesInSample;
             Note note;
 
             for (long sampleIndex = m_currentSample; sampleIndex < m_currentSample + samplePeriod + (long)(m_interNoteDelay * samplesPerSecond); sampleIndex++)
@@ -390,6 +391,7 @@ namespace System.Media.Music
 
                 // Create summation of all notes at given time
                 sample = 0.0D;
+                notesInSample = 0;
 
                 for (int index = 0; index < m_noteQueue.Count; index++)
                 {
@@ -409,12 +411,8 @@ namespace System.Media.Music
                             damping = (note.Damping == null ?  m_damping : note.Damping);
 
                             // Generate note at given time
-                            double timbreResult = timbre(note.Frequency, time);
-                            double dampingRatio = damping(sampleIndex - m_currentSample, samplePeriod);
-
-                            sample += timbreResult * (dynamic * dampingRatio);
-                            
-                            System.Diagnostics.Debug.WriteLine(string.Format("Timbre = {0}, Damping ratio = {1}", timbreResult, dampingRatio));
+                            sample += dynamic * (timbre(note.Frequency, time) * damping(sampleIndex - m_currentSample, samplePeriod));
+                            notesInSample++;
                         }
                         else
                         {
@@ -423,7 +421,7 @@ namespace System.Media.Music
                     }
                 }
 
-                AddSample(sample * AmplitudeScalar);
+                AddSample((sample / notesInSample) * AmplitudeScalar);
             }
 
             m_currentSample += samplePeriod;
