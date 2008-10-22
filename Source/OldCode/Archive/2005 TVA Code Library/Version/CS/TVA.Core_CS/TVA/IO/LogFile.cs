@@ -623,7 +623,7 @@ namespace TVA.IO
         /// Raises the <see cref="FileFull"/> event.
         /// </summary>
         /// <param name="e">Event data.</param>
-        protected void OnFileFull(EventArgs e)
+        protected virtual void OnFileFull(EventArgs e)
         {
             if (FileFull != null)
                 FileFull(this, e);
@@ -633,7 +633,7 @@ namespace TVA.IO
         /// Raises the <see cref="LogException"/> event.
         /// </summary>
         /// <param name="e">Event data.</param>
-        protected void OnLogException(EventArgs<Exception> e)
+        protected virtual void OnLogException(EventArgs<Exception> e)
         {
             if (LogException != null)
                 LogException(this, e);
