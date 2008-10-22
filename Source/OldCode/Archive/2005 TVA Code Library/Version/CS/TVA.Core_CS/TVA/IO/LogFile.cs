@@ -78,7 +78,7 @@ namespace TVA.IO
     /// </code>
     /// </example>
     [ToolboxBitmap(typeof(LogFile))]
-    public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings, IStatusProvider
+    public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IStatusProvider, IPersistSettings
     {
         #region [ Members ]
 
