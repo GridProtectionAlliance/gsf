@@ -39,6 +39,124 @@ namespace System.Media.Music
     /// Allows creation of a synthesized musical score storing the resultant song in an
     /// in-memory wave file for play back or saving music to disk.
     /// </summary>
+    /// <example>
+    /// This example generates a familiar tune, plays the song and saves it to disk:
+    /// <code>
+    /// using System;
+    /// using System.Media;
+    /// using System.Media.Music;
+    ///
+    /// static class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         // Create a new song with the basic settings: 3/4 measure size, a tempo of 240 quarter-notes
+    ///         // per minute, mezzo-forte prevailing dynamic level, basic note timbre and standard CD-quality
+    ///         // settings for the underlying sound file
+    ///         Song song = new Song();
+    ///         Phrase phrase = new Phrase();
+    ///
+    ///         Console.WriteLine("Generating song...");
+    ///
+    ///         // Define the repeating phrase of the song
+    ///         phrase.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.C3, NoteValue = NoteValue.Whole }
+    ///         );       
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Half });
+    ///
+    ///         phrase.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Half });
+    ///
+    ///         phrase.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.C3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         phrase.AddNotes(new Note { Frequency = Note.D4, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.G3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
+    ///
+    ///         phrase.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Whole },
+    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///
+    ///         phrase.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.D3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
+    ///
+    ///         phrase.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///
+    ///         song.AddPhrase(phrase);
+    ///
+    ///         song.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.F3S, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         song.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///
+    ///         song.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.A3, NoteValue = NoteValue.Half },
+    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         song.AddNotes(new Note { Frequency = Note.D4, NoteValue = NoteValue.Half });
+    ///
+    ///         song.AddPhrase(phrase);
+    ///
+    ///         song.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.D4, NoteValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole },
+    ///             new Note { Frequency = Note.F3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///         song.AddNotes(new Note { Frequency = Note.D4, NoteValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
+    ///
+    ///         song.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole },
+    ///             new Note { Frequency = Note.E3, NoteValue = NoteValue.Whole }
+    ///         );
+    ///
+    ///         song.Finish();
+    ///
+    ///         Console.WriteLine("Saving song to disk...");
+    ///         song.Save("JingleBells.wav");
+    ///
+    ///         Console.WriteLine("Playing song...");
+    ///         song.Play();
+    /// 
+    ///         Console.ReadKey();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class Song : WaveFile
     {
         #region [ Members ]
