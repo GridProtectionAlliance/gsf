@@ -85,18 +85,18 @@ namespace System.Media.Music
         /// <param name="time">Time in seconds.</param>
         /// <returns>The amplitude for a basic note at the given time.</returns>
         /// <remarks>
+        /// <para>
         /// This method computes an amplitude representing the acoustic pressure of a
         /// basic note of the given frequency for the given time.
+        /// </para>
+        /// <para>
+        /// </para>
+        /// This timbre algorithm combines both the simulated clarinet and odd harmonic series
+        /// algoriths to produce a pleasant sounding note.
         /// </remarks>
         public static double BasicNote(double frequency, double time)
         {
-            double wt, r1, r2;
-
-            wt = AngularFrequency(frequency, time);
-            r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt);
-            r2 = Math.Sin(wt);
-
-            return (r1 + r2) / 2;
+            return (Timbre.SimulatedClarinet(frequency, time) + Timbre.OddHarmonicSeries(frequency, time)) / 2;
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace System.Media.Music
         /// <remarks>
         /// This method computes an amplitude representing the acoustic pressure of a second-order
         /// square wave harmonic series (i.e., Sin(f) + Sin(3f)/3) of the given frequency for the
-        /// given time to simulate an organ.
+        /// given time to simulate an organ sound.
         /// </remarks>
         public static double SimulatedOrgan(double frequency, double time)
         {
@@ -147,7 +147,7 @@ namespace System.Media.Music
         /// <remarks>
         /// This method computes an amplitude representing the acoustic pressure of an
         /// odd harmonic series of the given frequency for the given time.
-        /// 1×f, 3×f, 5×f, etc.
+        /// Algorithm: Sin(f) + Sin(3f)/3 + Sin(5f)/5, etc.
         /// </remarks>
         public static double OddHarmonicSeries(double frequency, double time)
         {
@@ -163,7 +163,7 @@ namespace System.Media.Music
         /// <remarks>
         /// This method computes an amplitude representing the acoustic pressure of an
         /// even harmonic series of the given frequency for the given time.
-        /// 2×f, 4×f, 6×f, etc.
+        /// Algorithm: Sin(2f) + Sin(4f)/3 + Sin(6f)/5, etc.
         /// </remarks>
         public static double EvenHarmonicSeries(double frequency, double time)
         {
