@@ -161,7 +161,7 @@ namespace System.Media.Music
 
         private void CalculateReferenceTime()
         {
-            m_referenceTime = m_totalNoteValues / 60.0D * this.NoteValue.Duration();
+            m_referenceTime = 60.0D / m_totalNoteValues;
         }
 
         #endregion

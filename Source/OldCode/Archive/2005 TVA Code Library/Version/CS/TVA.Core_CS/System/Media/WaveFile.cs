@@ -475,6 +475,30 @@ namespace System.Media
             }
         }
 
+        /// <summary>Returns the amplitude scalar for the given bits per sample of the WaveFile.</summary>
+        public double AmplitudeScalar
+        {
+            get
+            {
+                // Return amplitude factor for given bit size
+                switch (BitsPerSample)
+                {
+                    case 8:
+                        return SByte.MaxValue;
+                    case 16:
+                        return Int16.MaxValue;
+                    case 24:
+                        return Int24.MaxValue;
+                    case 32:
+                        return Int32.MaxValue;
+                    case 64:
+                        return Int64.MaxValue;
+                    default:
+                        throw new InvalidOperationException(string.Format("Cannot get \"AmplitudeScalar\" for {0} bits per sample - must be 8, 16, 24, 32 or 64", BitsPerSample));
+                }
+            }
+        }
+
         public byte[] ExtraParameters
         {
             get
@@ -525,6 +549,52 @@ namespace System.Media
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Add the sample to the wave file.
+        /// </summary>
+        /// <param name="sample">Sample to add to the wave file.</param>
+        /// <remarks>
+        /// Sample is applied to all channels and cast to the appropriate size.  Sample
+        /// should be scaled by <see cref="AmplitudeScalar"/> to make sure sample will
+        /// fit into <see cref="BitsPerSample"/> defined by wave file.
+        /// </remarks>
+        public void AddSample(double sample)
+        {
+            LittleBinaryValue[] samples;
+            
+            // Create a new sample block for wave file
+            samples = new LittleBinaryValue[m_waveFormat.Channels];
+
+            // Iterate through each channel in WaveFile
+            for (int x = 0; x < m_waveFormat.Channels; x++)
+            {
+                // Cast sample value to appropriate data type based on bit size
+                switch (m_waveFormat.BitsPerSample)
+                {
+                    case 8: // Bytes are unsigned and need 128 byte offset
+                        samples[x] = (Byte)(sample + 128);
+                        break;
+                    case 16:
+                        samples[x] = (Int16)sample;
+                        break;
+                    case 24:
+                        samples[x] = (Int24)sample;
+                        break;
+                    case 32:
+                        samples[x] = (Int32)sample;
+                        break;
+                    case 64:
+                        samples[x] = (Int64)sample;
+                        break;
+                    default:
+                        throw new InvalidOperationException(string.Format("Cannot use \"AddSample\" for {0} bits per sample - must be 8, 16, 24, 32 or 64.", BitsPerSample));
+                }
+            }
+
+            // Add sample block to WaveFile
+            AddBlock(samples);
+        }
 
         /// <summary>
         /// Adds a block of samples to the wave file.

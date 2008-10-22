@@ -85,6 +85,7 @@
     <Compile Include="System\Media\Music\MeasureSize.cs" />
     <Compile Include="System\Media\Music\Note.cs" />
     <Compile Include="System\Media\Music\NoteValues.cs" />
+    <Compile Include="System\Media\Music\Passage.cs" />
     <Compile Include="System\Media\Music\Song.cs" />
     <Compile Include="System\Media\Music\Tempo.cs" />
     <Compile Include="System\Media\WaveFormatExtensible.cs" />

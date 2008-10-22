@@ -217,30 +217,7 @@ namespace System.Media.Sound
 
             short bitsPerSample = destination.BitsPerSample;
             double sampleRate = destination.SampleRate;
-            double amplitude, sample;
-            LittleBinaryValue[] samples;
-
-            // Calculate sample amplitude factor for given bit size
-            switch (bitsPerSample)
-            {
-                case 8:
-                    amplitude = SByte.MaxValue * volume;
-                    break;
-                case 16:
-                    amplitude = Int16.MaxValue * volume;
-                    break;
-                case 24:
-                    amplitude = Int24.MaxValue * volume;
-                    break;
-                case 32:
-                    amplitude = Int32.MaxValue * volume;
-                    break;
-                case 64:
-                    amplitude = Int64.MaxValue * volume;
-                    break;
-                default:
-                    throw new InvalidOperationException(string.Format("Cannot generate DTMF for {0} bits per sample - must be 8, 16, 24, 32 or 64", bitsPerSample));
-            }
+            double amplitude = destination.AmplitudeScalar * volume;
 
             // Iterate through each repeat count
             for (int x = 0; x < repeatCount; x++)
@@ -251,40 +228,8 @@ namespace System.Media.Sound
                     // Iterate through each sample for total DTMF duration
                     for (int y = 0; y < tone.Duration * sampleRate; y++)
                     {
-                        // Compute frequencies of DTMF at given time
-                        sample = DTMF.ComputeFrequencies(tone, y / sampleRate) * amplitude;
-
-                        // Create a new sample block
-                        samples = new LittleBinaryValue[destination.Channels];
-
-                        // Iterate through each channel in WaveFile
-                        for (int z = 0; z < destination.Channels; z++)
-                        {
-                            // Cast sample to appropriate data type based on bit size
-                            switch (bitsPerSample)
-                            {
-                                case 8: // Bytes are unsigned and need 128 byte offset
-                                    samples[z] = (Byte)(sample + 128);
-                                    break;
-                                case 16:
-                                    samples[z] = (Int16)sample;
-                                    break;
-                                case 24:
-                                    samples[z] = (Int24)sample;
-                                    break;
-                                case 32:
-                                    samples[z] = (Int32)sample;
-                                    break;
-                                case 64:
-                                    samples[z] = (Int64)sample;
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-
-                        // Add sample block to WaveFile
-                        destination.AddBlock(samples);
+                        // Compute frequencies of DTMF at given time and add to wave file
+                        destination.AddSample(DTMF.ComputeFrequencies(tone, y / sampleRate) * amplitude);
                     }
                 }
             }

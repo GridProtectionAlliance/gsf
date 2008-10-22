@@ -50,6 +50,7 @@ namespace System.Media.Music
         private Tempo m_tempo;
         private List<Note> m_noteQueue;
         private double m_dynamic;
+        private double m_interNoteDelay;
         private long m_currentSample;
 
         #endregion
@@ -57,22 +58,23 @@ namespace System.Media.Music
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new song with a 3/4 measure size, a tempo of 120 quarter-notes per minute,
+        /// Creates a new song with a 3/4 measure size, a tempo of 240 quarter-notes per minute,
         /// mezzo-forte prevailing dynamic level, using a basic note timbre and standard CD-quality
         /// settings for the underlying sound file.
         /// </summary>
         public Song()
         {
             m_measureSize = new MeasureSize(3, NoteValue.Quarter);
-            m_tempo = new Tempo(120, NoteValue.Quarter);
+            m_tempo = new Tempo(240, NoteValue.Quarter);
             m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
             m_timbre = Note.BasicNote;
             m_damping = Note.NaturalDamping;
             m_noteQueue = new List<Note>();
+            m_interNoteDelay = 0.01D;
         }
 
         /// <summary>
-        /// Creates a new song with a 3/4 measure size, a tempo of 120 quarter-notes per minute,
+        /// Creates a new song with a 3/4 measure size, a tempo of 240 quarter-notes per minute,
         /// mezzo-forte prevailing dynamic level, using a basic note timbre and the specified
         /// audio format settings.
         /// </summary>
@@ -83,11 +85,12 @@ namespace System.Media.Music
             : base(sampleRate, bitsPerSample, channels)
         {
             m_measureSize = new MeasureSize(3, NoteValue.Quarter);
-            m_tempo = new Tempo(120, NoteValue.Quarter);
+            m_tempo = new Tempo(240, NoteValue.Quarter);
             m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
             m_timbre = Note.BasicNote;
             m_damping = Note.NaturalDamping;
             m_noteQueue = new List<Note>();
+            m_interNoteDelay = 0.01D;
         }
 
         #endregion
@@ -228,9 +231,34 @@ namespace System.Media.Music
             }
         }
 
+        /// <summary>Defines the rest time, in seconds, to pause between notes.</summary>
+        public double InterNoteDelay
+        {
+            get
+            {
+                return m_interNoteDelay;
+            }
+            set
+            {
+                m_interNoteDelay = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Add a predefined passage of notes to the song.
+        /// </summary>
+        /// <param name="passage">Passage to add.</param>
+        public void AddPassage(Passage passage)
+        {
+            foreach (Note[] notes in passage.Notes)
+            {
+                AddNotes(notes);
+            }
+        }
 
         /// <summary>
         /// Add a series of notes to the song.
@@ -349,23 +377,19 @@ namespace System.Media.Music
         private void AddQueuedNotesToSong(long samplePeriod)
         {
             List<int> completedNotes = new List<int>();
-            LittleBinaryValue[] sampleBlock;
             TimbreFunction timbre;
             DampingFunction damping;
             double samplesPerSecond = SampleRate;
-            double startTime = m_currentSample / samplesPerSecond;
-            double sampleValue, amplitude, songAmplitude, time;
+            double sample, dynamic, time;
             Note note;
 
-            songAmplitude = CalculateAmplitude(m_dynamic);
-
-            for (long sample = m_currentSample; sample < m_currentSample + samplePeriod; sample++)
+            for (long sampleIndex = m_currentSample; sampleIndex < m_currentSample + samplePeriod + (long)(m_interNoteDelay * samplesPerSecond); sampleIndex++)
             {
                 // Compute time index in seconds of the current sample
-                time = sample / samplesPerSecond;
+                time = sampleIndex / samplesPerSecond;
 
                 // Create summation of all notes at given time
-                sampleValue = 0.0D;
+                sample = 0.0D;
 
                 for (int index = 0; index < m_noteQueue.Count; index++)
                 {
@@ -376,7 +400,7 @@ namespace System.Media.Music
                         if (time < note.EndTime)
                         {
                             // Get note dynamic
-                            amplitude = (note.Dynamic == Dynamic.Undefined ? songAmplitude : CalculateAmplitude(note.CustomDynamic));
+                            dynamic = (note.Dynamic == Dynamic.Undefined ? m_dynamic : note.CustomDynamic);
 
                             // Get timbre function
                             timbre = (note.Timbre == null ? m_timbre : timbre = note.Timbre);
@@ -385,7 +409,7 @@ namespace System.Media.Music
                             damping = (note.Damping == null ?  m_damping : note.Damping);
 
                             // Generate note at given time
-                            sampleValue += timbre(note.Frequency, time) * (amplitude * damping(time - note.StartTime, note.NoteValueTime));
+                            sample += timbre(note.Frequency, time) * (dynamic * damping(sampleIndex - m_currentSample, samplePeriod));
                         }
                         else
                         {
@@ -394,37 +418,7 @@ namespace System.Media.Music
                     }
                 }
 
-                // Create a new sample block for wave file
-                sampleBlock = new LittleBinaryValue[Channels];
-
-                // Iterate through each channel in WaveFile
-                for (int z = 0; z < Channels; z++)
-                {
-                    // Cast sample value to appropriate data type based on bit size
-                    switch (BitsPerSample)
-                    {
-                        case 8: // Bytes are unsigned and need 128 byte offset
-                            sampleBlock[z] = (Byte)(sampleValue + 128);
-                            break;
-                        case 16:
-                            sampleBlock[z] = (Int16)sampleValue;
-                            break;
-                        case 24:
-                            sampleBlock[z] = (Int24)sampleValue;
-                            break;
-                        case 32:
-                            sampleBlock[z] = (Int32)sampleValue;
-                            break;
-                        case 64:
-                            sampleBlock[z] = (Int64)sampleValue;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                // Add sample block to WaveFile
-                AddBlock(sampleBlock);
+                AddSample(sample * AmplitudeScalar);
             }
 
             m_currentSample += samplePeriod;
@@ -438,26 +432,6 @@ namespace System.Media.Music
             {
                 m_noteQueue.RemoveAt(completedNotes[x]);
             }
-        }
-
-        private double CalculateAmplitude(double dynamic)
-        {
-            // Calculate sample amplitude factor for given bit size
-            switch (BitsPerSample)
-            {
-                case 8:
-                    return SByte.MaxValue * dynamic;
-                case 16:
-                    return Int16.MaxValue * dynamic;
-                case 24:
-                    return Int24.MaxValue * dynamic;
-                case 32:
-                    return Int32.MaxValue * dynamic;
-                case 64:
-                    return Int64.MaxValue * dynamic;
-                default:
-                    throw new InvalidOperationException(string.Format("Cannot calculate amplitude for song defined at {0} bits per sample - must be 8, 16, 24, 32 or 64", BitsPerSample));
-            }            
         }
 
         #endregion

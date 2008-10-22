@@ -46,10 +46,10 @@ namespace System.Media.Music
     /// Provides a function signature for methods that damp an amplitude representing a
     /// lowering of the acoustic pressure over time.
     /// </summary>
-    /// <param name="time">Time in seconds (0 to <paramref name="length"/> - 1).</param>
-    /// <param name="length">Total length, in seconds, over which to perform damping.</param>
-    /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
-    public delegate double DampingFunction(double time, double length);
+    /// <param name="sample">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
+    /// <param name="samplePeriod">Total period, in whole samples per second (i.e., time * SamplesPerSecond), over which to perform damping.</param>
+    /// <returns>Scaling factor used to damp an amplitude at the given sample index.</returns>
+    public delegate double DampingFunction(long sample, long samplePeriod);
 
     /// <summary>
     /// Defines fundamental musical note frequencies and methods to create them.
@@ -845,13 +845,13 @@ namespace System.Media.Music
         /// <summary>
         /// Produces a damping signature that represents no damping over time.
         /// </summary>
-        /// <param name="time">Time in seconds.</param>
-        /// <param name="length">Total length, in seconds, over which to perform damping.</param>
+        /// <param name="sample">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
+        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., time * SamplesPerSecond), over which to perform damping.</param>
         /// <returns>Returns a scalar of 1.0 regardless to time.</returns>
         /// <remarks>
         /// Zero damped sounds would be produced by synthetic sources such as an electronic keyboard.
         /// </remarks>
-        public static double ZeroDamping(double time, double length)
+        public static double ZeroDamping(long sample, long samplePeriod)
         {
             return 1.0D;
         }
@@ -860,12 +860,12 @@ namespace System.Media.Music
         /// Produces a natural damping curve similar to that of a piano - slowly damping over
         /// time until the key is released at which point the string is quickly damped.
         /// </summary>
-        /// <param name="time">Time in seconds (0 to <paramref name="length"/> - 1).</param>
-        /// <param name="length">Total length, in seconds, over which to perform damping.</param>
+        /// <param name="sample">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
+        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., time * SamplesPerSecond), over which to perform damping.</param>
         /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
-        public static double NaturalDamping(double time, double length)
+        public static double NaturalDamping(long sample, long samplePeriod)
         {
-            return Math.Log10(length - time) / Math.Log10(length);
+            return Math.Log10(samplePeriod - sample) / Math.Log10(samplePeriod);
         }
 
         #endregion
