@@ -49,7 +49,7 @@
     <OutputPath>..\..\Build\Output\Debug\</OutputPath>
     <DocumentationFile>TVA.Core.xml</DocumentationFile>
     <NOWARN>1591</NOWARN>
-    <DefineConstants>ThreadTracking</DefineConstants>
+    <DefineConstants>DEBUG;ThreadTracking</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

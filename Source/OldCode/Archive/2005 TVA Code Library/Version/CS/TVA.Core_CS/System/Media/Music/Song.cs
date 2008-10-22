@@ -409,7 +409,12 @@ namespace System.Media.Music
                             damping = (note.Damping == null ?  m_damping : note.Damping);
 
                             // Generate note at given time
-                            sample += timbre(note.Frequency, time) * (dynamic * damping(sampleIndex - m_currentSample, samplePeriod));
+                            double timbreResult = timbre(note.Frequency, time);
+                            double dampingRatio = damping(sampleIndex - m_currentSample, samplePeriod);
+
+                            sample += timbreResult * (dynamic * dampingRatio);
+                            
+                            System.Diagnostics.Debug.WriteLine(string.Format("Timbre = {0}, Damping ratio = {1}", timbreResult, dampingRatio));
                         }
                         else
                         {

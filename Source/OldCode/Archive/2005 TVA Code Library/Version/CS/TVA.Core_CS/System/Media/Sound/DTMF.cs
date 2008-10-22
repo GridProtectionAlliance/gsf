@@ -215,7 +215,6 @@ namespace System.Media.Sound
             if (volume < 0.0D || volume > 1.0D)
                 throw new ArgumentOutOfRangeException("volume", "Value must be expressed as a fractional percentage between zero and one.");
 
-            short bitsPerSample = destination.BitsPerSample;
             double sampleRate = destination.SampleRate;
             double amplitude = destination.AmplitudeScalar * volume;
 

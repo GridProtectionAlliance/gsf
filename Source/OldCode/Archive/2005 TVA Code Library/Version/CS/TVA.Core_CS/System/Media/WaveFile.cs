@@ -108,7 +108,7 @@ namespace System.Media
     /// Common WAVE audio encoding formats.
     /// </summary>
     /// <remarks>
-    /// Microsoft defines 133 different audio encoding formats for WAVE files.
+    /// Microsoft defines more than 130 different audio encoding formats for WAVE files.
     /// </remarks>
     [CLSCompliant(false)]
     public enum WaveFormat : ushort
@@ -140,6 +140,10 @@ namespace System.Media
         /// <summary>ISO MPEG-Layer 3 audio format.</summary>
         MpegLayer3 = 0x55,
         /// <summary>Use WAVEFORMATEXTENSIBLE structure.</summary>
+        /// <remarks>
+        /// This wave file format is used to identify multiple channels in the wave file for spatial positioning
+        /// of speakers, see <see cref="System.Media.WaveFormatExtensible"/> for more details.
+        /// </remarks>
         WaveFormatExtensible = 0xFFFE
 
         #region [ Other Wave Formats ]
@@ -475,7 +479,14 @@ namespace System.Media
             }
         }
 
-        /// <summary>Returns the amplitude scalar for the given bits per sample of the WaveFile.</summary>
+        /// <summary>
+        /// Returns the amplitude scalar for the given bits per sample of the WaveFile (i.e., maximum value
+        /// for given <see cref="BitsPerSample"/>).
+        /// </summary>
+        /// <remarks>
+        /// This defines a scaling factor (essentially a maximum value) used for integer based wave file
+        /// formats.  Floating point wave file formats do not need such scaling.
+        /// </remarks>
         public double AmplitudeScalar
         {
             get
@@ -555,49 +566,67 @@ namespace System.Media
         /// </summary>
         /// <param name="sample">Sample to add to the wave file.</param>
         /// <remarks>
-        /// Sample is applied to all channels and cast to the appropriate size.  Sample
-        /// should be scaled by <see cref="AmplitudeScalar"/> to make sure sample will
+        /// Sample is applied to all channels and cast to the appropriate size.  Sample should be scaled
+        /// by <see cref="AmplitudeScalar"/> for integer based wave file formats to make sure sample will
         /// fit into <see cref="BitsPerSample"/> defined by wave file.
         /// </remarks>
         public void AddSample(double sample)
         {
-            LittleBinaryValue[] samples;
+            LittleBinaryValue[] binaryValues;
             
             // Create a new sample block for wave file
-            samples = new LittleBinaryValue[m_waveFormat.Channels];
+            binaryValues = new LittleBinaryValue[m_waveFormat.Channels];
 
             // Iterate through each channel in WaveFile
             for (int x = 0; x < m_waveFormat.Channels; x++)
             {
                 // Cast sample value to appropriate data type based on bit size
-                switch (m_waveFormat.BitsPerSample)
-                {
-                    case 8: // Bytes are unsigned and need 128 byte offset
-                        samples[x] = (Byte)(sample + 128);
-                        break;
-                    case 16:
-                        samples[x] = (Int16)sample;
-                        break;
-                    case 24:
-                        samples[x] = (Int24)sample;
-                        break;
-                    case 32:
-                        samples[x] = (Int32)sample;
-                        break;
-                    case 64:
-                        samples[x] = (Int64)sample;
-                        break;
-                    default:
-                        throw new InvalidOperationException(string.Format("Cannot use \"AddSample\" for {0} bits per sample - must be 8, 16, 24, 32 or 64.", BitsPerSample));
-                }
+                binaryValues[x] = CastSample(sample);
             }
 
             // Add sample block to WaveFile
-            AddBlock(samples);
+            AddBlock(binaryValues);
         }
 
         /// <summary>
-        /// Adds a block of samples to the wave file.
+        /// Adds a series of samples, one per channel, to the wave file.
+        /// </summary>
+        /// <param name="samples">Samples to add to the wave file.</param>
+        /// <remarks>
+        /// <para>
+        /// You need to pass in one sample for each defined channel (e.g., if wave is configured for stereo
+        /// you will need to pass in two parameters).
+        /// </para>
+        /// Each sample will be cast to the appropriate size.  Sample should be scaled by <see cref="AmplitudeScalar"/>
+        /// for integer based wave file formats to make sure sample will fit into <see cref="BitsPerSample"/> defined
+        /// by wave file.
+        /// </remarks>
+        public void AddSamples(params double[] samples)
+        {
+            // Validate number of samples
+            if (samples.Length != m_waveFormat.Channels)
+                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel.");
+
+            LittleBinaryValue[] binaryValues;
+
+            // Create a new sample block for wave file
+            binaryValues = new LittleBinaryValue[samples.Length];
+
+            // Iterate through each channel in WaveFile
+            for (int x = 0; x < samples.Length; x++)
+            {
+                // Cast sample value to appropriate data type based on bit size
+                binaryValues[x] = CastSample(samples[x]);
+            }
+
+            // Add sample block to WaveFile
+            AddBlock(binaryValues);
+        }
+
+        /// <summary>
+        /// Adds a block of samples in native format to the wave file (e.g., if <see cref="BitsPerSample"/> = 16,
+        /// parameters need to be Int16 values). Note that <see cref="LittleBinaryValue"/> parameter type is
+        /// implicitly castable to common native types, including floating points.
         /// </summary>
         /// <param name="samples">Samples to add to the wave file.</param>
         /// <remarks>
@@ -653,6 +682,26 @@ namespace System.Media
         public void Reverse()
         {
             m_waveData.SampleBlocks.Reverse();
+        }
+
+        private LittleBinaryValue CastSample(double sample)
+        {
+            // Cast sample value to appropriate data type based on bit size
+            switch (m_waveFormat.BitsPerSample)
+            {
+                case 8: // Bytes are unsigned and need 128 byte offset
+                    return (LittleBinaryValue)(Byte)(sample + 128);
+                case 16:
+                    return (LittleBinaryValue)(Int16)sample;
+                case 24:
+                    return (LittleBinaryValue)(Int24)sample;
+                case 32:
+                    return (LittleBinaryValue)(Int32)sample;
+                case 64:
+                    return (LittleBinaryValue)(Int64)sample;
+                default:
+                    throw new InvalidOperationException(string.Format("Cannot cast sample \'{0}\' into {1}-bits.", sample, BitsPerSample));
+            }
         }
         
         #endregion
