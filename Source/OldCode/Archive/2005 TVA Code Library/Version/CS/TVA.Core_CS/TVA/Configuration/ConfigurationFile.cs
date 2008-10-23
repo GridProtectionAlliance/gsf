@@ -27,6 +27,7 @@
 
 using System;
 using System.Configuration;
+using System.IO;
 using System.Text;
 using System.Web.Configuration;
 using System.Xml;
@@ -270,7 +271,7 @@ namespace TVA.Configuration
 
             if (configFilePath != null)
             {
-                if (configFilePath == "" || TVA.IO.FilePath.JustFileExtension(configFilePath) == ".config")
+                if (configFilePath == "" || Path.GetExtension(configFilePath) == ".config")
                 {
                     // PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     // to the method call for getting the Configuration object. The previous method (String.TrimEnd())
