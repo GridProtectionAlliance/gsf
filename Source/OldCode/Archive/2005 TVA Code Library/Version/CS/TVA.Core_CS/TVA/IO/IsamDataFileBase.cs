@@ -92,7 +92,7 @@ namespace TVA.IO
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    if (string.Compare(FilePath.JustFileExtension(value), Extension, true) == 0)
+                    if (string.Compare(Path.GetExtension(value), Extension, true) == 0)
                     {
                         m_name = value;
 
@@ -318,8 +318,8 @@ namespace TVA.IO
 
                 m_name = FilePath.AbsolutePath(m_name);
 
-                if (!Directory.Exists(FilePath.JustPath(m_name)))
-                    Directory.CreateDirectory(FilePath.JustPath(m_name));
+                if (!Directory.Exists(Path.GetDirectoryName(m_name)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(m_name));
 
                 if (File.Exists(m_name))
                 {
@@ -343,8 +343,8 @@ namespace TVA.IO
                 if (m_reloadOnModify)
                 {
                     // Watches for any modifications made to the file.
-                    FileSystemWatcher.Path = FilePath.JustPath(m_name);
-                    FileSystemWatcher.Filter = FilePath.JustFileName(m_name);
+                    FileSystemWatcher.Path = Path.GetDirectoryName(m_name);
+                    FileSystemWatcher.Filter = Path.GetFileName(m_name);
                     FileSystemWatcher.EnableRaisingEvents = true;
                 }
 
