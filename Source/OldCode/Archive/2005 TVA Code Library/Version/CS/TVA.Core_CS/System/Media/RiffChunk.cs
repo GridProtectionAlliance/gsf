@@ -175,6 +175,17 @@ namespace System.Media
 
         #endregion
 
+        #region [ Methods ]
+
+        public RiffChunk Clone()
+        {
+            RiffChunk riffChunk = new RiffChunk(m_typeID);
+            riffChunk.ChunkSize = m_chunkSize;
+            return riffChunk;
+        }
+
+        #endregion
+
         #region [ Static ]
 
         // Static Methods

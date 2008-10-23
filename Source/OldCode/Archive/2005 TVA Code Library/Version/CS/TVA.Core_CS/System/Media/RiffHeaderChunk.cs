@@ -130,5 +130,14 @@ namespace System.Media
         }
 
         #endregion
+
+        #region [ Methods ]
+
+        public new RiffHeaderChunk Clone()
+        {
+            return new RiffHeaderChunk(m_format);
+        }
+
+        #endregion
     }
 }

@@ -156,15 +156,16 @@ namespace System.Media.Sound
         /// Computes a dual-tone multi-frequency sound for the given <see cref="DTMF"/> information and time.
         /// </summary>
         /// <param name="tone">Instance of the <see cref="DTMF"/> specifying the duration as well as the low and high frequencies of the dual-tone.</param>
-        /// <param name="time">Time in seconds.</param>
+        /// <param name="sampleIndex">Sample index (represents time anywhere from zero to full length of tone).</param>
+        /// <param name="sampleRate">Number of samples per second.</param>
         /// <returns>The amplitude for the dual-tone at the given time.</returns>
         /// <remarks>
         /// This method computes an amplitude representing the acoustic pressure of a
         /// <see cref="DTMF"/> of the given frequency for the given time.
         /// </remarks>
-        public static double ComputeFrequencies(DTMF tone, double time)
+        public static double ComputeFrequencies(DTMF tone, long sampleIndex, int sampleRate)
         {
-            return Timbre.PureTone(tone.LowFrequency, time) + Timbre.PureTone(tone.HighFrequency, time);
+            return (Timbre.PureTone(tone.LowFrequency, sampleIndex, 0, sampleRate) + Timbre.PureTone(tone.HighFrequency, sampleIndex, 0, sampleRate)) / 2;
         }
 
         /// <summary>
@@ -215,7 +216,6 @@ namespace System.Media.Sound
             if (volume < 0.0D || volume > 1.0D)
                 throw new ArgumentOutOfRangeException("volume", "Value must be expressed as a fractional percentage between zero and one.");
 
-            double sampleRate = destination.SampleRate;
             double amplitude = destination.AmplitudeScalar * volume;
 
             // Iterate through each repeat count
@@ -225,10 +225,10 @@ namespace System.Media.Sound
                 foreach (DTMF tone in tones)
                 {
                     // Iterate through each sample for total DTMF duration
-                    for (int y = 0; y < tone.Duration * sampleRate; y++)
+                    for (long y = 0; y < tone.Duration * destination.SampleRate; y++)
                     {
                         // Compute frequencies of DTMF at given time and add to wave file
-                        destination.AddSample(DTMF.ComputeFrequencies(tone, y / sampleRate) * amplitude);
+                        destination.AddSample(DTMF.ComputeFrequencies(tone, y, destination.SampleRate) * amplitude);
                     }
                 }
             }

@@ -29,10 +29,11 @@
 \**************************************************************************/
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 
 namespace System.Media
 {
@@ -566,26 +567,32 @@ namespace System.Media
         /// </summary>
         /// <param name="sample">Sample to add to the wave file.</param>
         /// <remarks>
+        /// <para>
         /// Sample is applied to all channels and cast to the appropriate size.  Sample should be scaled
         /// by <see cref="AmplitudeScalar"/> for integer based wave file formats to make sure sample will
         /// fit into <see cref="BitsPerSample"/> defined by wave file.
+        /// </para>
+        /// <para>
+        /// If you have samples to apply to individual channels (e.g., for a stereo format), use the
+        /// <see cref="AddSamples"/> method instead.
+        /// </para>
         /// </remarks>
         public void AddSample(double sample)
         {
             LittleBinaryValue[] binaryValues;
-            
+
             // Create a new sample block for wave file
             binaryValues = new LittleBinaryValue[m_waveFormat.Channels];
 
-            // Iterate through each channel in WaveFile
+            // Iterate through each channel in WaveFile applying same value to each channel
             for (int x = 0; x < m_waveFormat.Channels; x++)
             {
                 // Cast sample value to appropriate data type based on bit size
-                binaryValues[x] = CastSample(sample);
+                binaryValues[x] = m_waveFormat.CastSample(sample);
             }
 
             // Add sample block to WaveFile
-            AddBlock(binaryValues);
+            AddSampleBlock(binaryValues);
         }
 
         /// <summary>
@@ -597,8 +604,8 @@ namespace System.Media
         /// You need to pass in one sample for each defined channel (e.g., if wave is configured for stereo
         /// you will need to pass in two parameters).
         /// </para>
-        /// Each sample will be cast to the appropriate size.  Sample should be scaled by <see cref="AmplitudeScalar"/>
-        /// for integer based wave file formats to make sure sample will fit into <see cref="BitsPerSample"/> defined
+        /// Each sample will be cast to the appropriate size.  Samples should be scaled by <see cref="AmplitudeScalar"/>
+        /// for integer based wave file formats to make sure samples will fit into <see cref="BitsPerSample"/> defined
         /// by wave file.
         /// </remarks>
         public void AddSamples(params double[] samples)
@@ -612,15 +619,15 @@ namespace System.Media
             // Create a new sample block for wave file
             binaryValues = new LittleBinaryValue[samples.Length];
 
-            // Iterate through each channel in WaveFile
+            // Iterate through each channel in provided data samples
             for (int x = 0; x < samples.Length; x++)
             {
                 // Cast sample value to appropriate data type based on bit size
-                binaryValues[x] = CastSample(samples[x]);
+                binaryValues[x] = m_waveFormat.CastSample(samples[x]);
             }
 
             // Add sample block to WaveFile
-            AddBlock(binaryValues);
+            AddSampleBlock(binaryValues);
         }
 
         /// <summary>
@@ -634,10 +641,10 @@ namespace System.Media
         /// You need to pass in one sample for each defined channel (e.g., if wave is configured for stereo
         /// you will need to pass in two parameters).
         /// </para>
-        /// You should only add values that match the wave file's bits-per-sample (e.g., if wave file is
+        /// You should only add values that match the wave file's <see cref="BitsPerSample"/> (e.g., if wave file is
         /// configured for 16-bits only pass in Int16 values, casting if necessary).
         /// </remarks>
-        public void AddBlock(params LittleBinaryValue[] samples)
+        public void AddSampleBlock(params LittleBinaryValue[] samples)
         {
             // Validate number of samples
             if (samples.Length != m_waveFormat.Channels)
@@ -660,7 +667,7 @@ namespace System.Media
             MemoryStream stream = new MemoryStream();
             SoundPlayer player = new SoundPlayer(stream);
             Save(stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            stream.Position = 0;
             player.Play();
         }
 
@@ -678,32 +685,55 @@ namespace System.Media
             destination.Write(m_waveFormat.BinaryImage, 0, m_waveFormat.BinaryLength);
             destination.Write(m_waveData.BinaryImage, 0, m_waveData.BinaryLength);
         }
-        
+
         public void Reverse()
         {
             m_waveData.SampleBlocks.Reverse();
         }
 
-        private LittleBinaryValue CastSample(double sample)
+        /// <summary>
+        /// Creates a deeply cloned copy of the wave file.
+        /// </summary>
+        /// <returns></returns>
+        public WaveFile Clone()
         {
-            // Cast sample value to appropriate data type based on bit size
-            switch (m_waveFormat.BitsPerSample)
-            {
-                case 8: // Bytes are unsigned and need 128 byte offset
-                    return (LittleBinaryValue)(Byte)(sample + 128);
-                case 16:
-                    return (LittleBinaryValue)(Int16)sample;
-                case 24:
-                    return (LittleBinaryValue)(Int24)sample;
-                case 32:
-                    return (LittleBinaryValue)(Int32)sample;
-                case 64:
-                    return (LittleBinaryValue)(Int64)sample;
-                default:
-                    throw new InvalidOperationException(string.Format("Cannot cast sample \'{0}\' into {1}-bits.", sample, BitsPerSample));
-            }
+            RiffHeaderChunk waveHeader = m_waveHeader.Clone();
+            WaveFormatChunk waveFormat = m_waveFormat.Clone();
+            WaveDataChunk waveData = m_waveData.Clone();
+
+            // Make sure new data chunk references new wave format
+            waveData.WaveFormat = waveFormat;
+
+            return new WaveFile(waveHeader, waveFormat, waveData);
         }
-        
+
+        /// <summary>
+        /// Determines sample data type code based on defined <see cref="BitsPerSample"/>
+        /// and <see cref="AudioFormat"/>.
+        /// </summary>
+        /// <returns>
+        /// Sample type code based on  defined <see cref="BitsPerSample"/> and
+        /// <see cref="AudioFormat"/>.
+        /// </returns>
+        public TypeCode GetSampleTypeCode()
+        {
+            return m_waveFormat.GetSampleTypeCode();
+        }
+
+        /// <summary>
+        /// Casts sample value to its equivalent native type based on defined <see cref="BitsPerSample"/>
+        /// and <see cref="AudioFormat"/>.
+        /// </summary>
+        /// <param name="sample">Sample value.</param>
+        /// <returns>
+        /// Sample value cast to its equivalent native type based on defined <see cref="BitsPerSample"/>
+        /// and <see cref="AudioFormat"/>.
+        /// </returns>
+        public LittleBinaryValue CastSample(double sample)
+        {
+            return m_waveFormat.CastSample(sample);
+        }
+
         #endregion
 
         #region [ Static ]
@@ -714,6 +744,16 @@ namespace System.Media
         public static WaveFile Load(string waveFileName)
         {
             FileStream source = File.Open(waveFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            WaveFile waveFile = WaveFile.Load(source);
+            source.Close();
+            return waveFile;
+        }
+
+        /// <summary>Creates a new in-memory wave loaded from an existing wave audio stream.</summary>
+        /// <param name="source">Stream of WAV formatted audio data to load.</param>
+        /// <returns>In-memory representation of wave file.</returns>
+        public static WaveFile Load(Stream source)
+        {
             RiffChunk riffChunk;
             RiffHeaderChunk waveHeader = null;
             WaveFormatChunk waveFormat = null;
@@ -746,6 +786,241 @@ namespace System.Media
             }
 
             return new WaveFile(waveHeader, waveFormat, waveData);
+        }
+
+        /// <summary>
+        /// Combines wave files together, all starting at the same time, into a single file.
+        /// This has the effect of playing two sound tracks simultaneously.
+        /// </summary>
+        /// <param name="waveFiles">Wave files to combine</param>
+        /// <returns>Combined wave files.</returns>
+        /// <remarks>
+        /// <para>
+        /// This overload "equalizes" the volume of each source wave file.  To specify a desired volume for
+        /// each combined wave file use the <see cref="Combine(WaveFile[], double[])"/> overload that takes
+        /// a series of volumes as a parameter.
+        /// </para>
+        /// <para>
+        /// Resulting sounds will overlap; no truncation is performed. Final wave file length will equal length of
+        /// longest source file.
+        /// </para>
+        /// <para>
+        /// Combining sounds files with non-PCM based audio formats will have unexpected results.
+        /// </para>
+        /// </remarks>
+        public static WaveFile Combine(params WaveFile[] waveFiles)
+        {
+            double[] volumes = new double[waveFiles.Length];
+
+            for (int x = 0; x < volumes.Length; x++)
+            {
+                volumes[x] = 1.0D / waveFiles.Length;
+            }
+
+            return Combine(waveFiles, volumes);
+        }
+
+        /// <summary>
+        /// Combines wave files together, all starting at the same time, into a single file.
+        /// This has the effect of playing two sound tracks simultaneously.
+        /// </summary>
+        /// <param name="waveFiles">Wave files to combine</param>
+        /// <param name="volumes">Volume for each wave file (0.0 to 1.0)</param>
+        /// <returns>Combined wave files.</returns>
+        /// <remarks>
+        /// <para>
+        /// Cumulatively, volumes cannot exceed 1.0 - these volumes represent a fractional percentage
+        /// of volume to be applied to each wave file.
+        /// </para>
+        /// <para>
+        /// Resulting sounds will overlap; no truncation is performed. Final wave file length will equal length of
+        /// longest source file.
+        /// </para>
+        /// <para>
+        /// Combining sounds files with non-PCM based audio formats will have unexpected results.
+        /// </para>
+        /// </remarks>
+        public static WaveFile Combine(WaveFile[] waveFiles, double[] volumes)
+        {
+            if (waveFiles.Length > 1)
+            {
+                // Validate volumes
+                if (volumes.Length != waveFiles.Length)
+                    throw new ArgumentOutOfRangeException("volumes", "There must be one volume per each wave file.");
+
+                double total = 0.0D;
+
+                for (int x = 0; x < volumes.Length; x++)
+                {
+                    total += volumes[x];
+                }
+
+                if (total > 1.0D)
+                    throw new ArgumentOutOfRangeException("volumes", "Cumulatively, volumes cannot exceed 1.0.");
+
+                // Deep clone first wave file - this will become the base of the new combined wave file
+                WaveFile next, source = waveFiles[0].Clone();
+                int maxLength, nextLength, sourceLength = source.SampleBlocks.Count;
+
+                // Validate compatibility of wave files to be combined
+                for (int x = 1; x < waveFiles.Length; x++)
+                {
+                    next = waveFiles[x];
+
+                    if (source.AudioFormat != next.AudioFormat ||
+                        source.SampleRate != next.SampleRate ||
+                        source.BitsPerSample != next.BitsPerSample ||
+                        source.Channels != next.Channels)
+                        throw new ArgumentException("All wave files to be combined must have the same audio format, sample rate, bits per sample and number of channels.");
+                }
+
+                // Apply volume adjustment to source file
+                for (int x = 0; x < sourceLength; x++)
+                {
+                    for (int y = 0; y < source.Channels; y++)
+                    {
+                        // Apply volume adjustment to source
+                        source.SampleBlocks[x][y] = CombineBinarySamples(source.BitsPerSample, 0, source.SampleBlocks[x][y], volumes[0]);
+                    }
+                }
+
+                // Combine subsequent wave files
+                for (int x = 1; x < waveFiles.Length; x++)
+                {
+                    next = waveFiles[x];
+                    nextLength = next.SampleBlocks.Count;
+                    maxLength = sourceLength > nextLength ? sourceLength : nextLength;
+
+                    for (int y = 0; y < maxLength; y++)
+                    {
+                        if (y < sourceLength && y < nextLength)
+                        {
+                            for (int z = 0; z < source.Channels; z++)
+                            {
+                                // Combine each data channel from the source and current wave files
+                                source.SampleBlocks[y][z] = CombineBinarySamples(source.BitsPerSample, source.SampleBlocks[y][z], next.SampleBlocks[y][z], volumes[x]);
+                            }
+                        }
+                        else
+                        {
+                            // Extend source if necessary - note that extended samples still need to be equalized
+                            if (nextLength > sourceLength)
+                            {
+                                LittleBinaryValue[] samples = new LittleBinaryValue[source.Channels];
+
+                                for (int z = 0; z < source.Channels; z++)
+                                {
+                                    // Combine extended samples with "0" from source to maintain amplitude equalization
+                                    samples[z] = CombineBinarySamples(source.BitsPerSample, 0, next.SampleBlocks[y][z], volumes[x]);
+                                }
+
+                                source.SampleBlocks.Add(samples);
+                            }
+                            else
+                                break;
+                        }
+                    }
+                }
+
+                return source;
+            }
+            else
+                throw new ArgumentException("You must provide at least two wave files to combine.", "waveFiles");
+        }
+
+        /// <summary>
+        /// Appends wave files together, one after another, into a single file.
+        /// </summary>
+        /// <param name="waveFiles">Wave files to append</param>
+        /// <returns>Combined wave files.</returns>
+        /// <remarks>Each resulting wave file is appending behind the next.</remarks>
+        public static WaveFile Append(params WaveFile[] waveFiles)
+        {
+            if (waveFiles.Length > 1)
+            {
+                // Deep clone first wave file - this will become the base of the new combined wave file
+                WaveFile next, source = waveFiles[0].Clone();
+
+                // Validate compatibility of wave files to be combined
+                for (int x = 1; x < waveFiles.Length; x++)
+                {
+                    next = waveFiles[x];
+
+                    if (source.AudioFormat != next.AudioFormat ||
+                        source.SampleRate != next.SampleRate ||
+                        source.BitsPerSample != next.BitsPerSample ||
+                        source.Channels != next.Channels)
+                        throw new ArgumentException("All wave files to be appended together must have the same audio format, sample rate, bits per sample and number of channels.");
+                }
+
+                // Combine subsequent wave files
+                for (int x = 1; x < waveFiles.Length; x++)
+                {
+                    next = waveFiles[x];
+
+                    for (int y = 0; y < next.SampleBlocks.Count; y++)
+                    {
+                        // Extend source with next wave file's data
+                        source.SampleBlocks.Add(CloneSampleBlock(next.SampleBlocks[y]));
+                    }
+                }
+
+                return source;
+            }
+            else
+                throw new ArgumentException("You must provide at least two wave files to append together.", "waveFiles");
+        }
+
+        /// <summary>
+        /// Performs a deep clone of all the channel samples in a sample block.
+        /// </summary>
+        /// <param name="samples">Sample block to clone.</param>
+        /// <returns>A deep clone of all the channel samples in a sample block.</returns>
+        public static LittleBinaryValue[] CloneSampleBlock(LittleBinaryValue[] samples)
+        {
+            LittleBinaryValue[] clonedSamples = new LittleBinaryValue[samples.Length];
+            byte[] copiedBytes;
+
+            // Perform a deep clone of source samples
+            for (int x = 0; x < samples.Length; x++)
+            {
+                copiedBytes = new byte[samples[x].Buffer.Length];
+                Buffer.BlockCopy(samples[x].Buffer, 0, copiedBytes, 0, copiedBytes.Length);
+                clonedSamples[x] = new LittleBinaryValue(samples[x].TypeCode, copiedBytes);
+            }
+
+            return clonedSamples;
+        }
+
+        // Data type independent binary sample combination
+        private static LittleBinaryValue CombineBinarySamples(int bitsPerSample, LittleBinaryValue value1, LittleBinaryValue value2, double value2Volume)
+        {
+            // Algorithm:
+            //      1) Convert value into double data type to prevent arithmetic overflow. Note that you
+            //         cannot directly cast to a double as there are only enough bytes in the binary
+            //         value to cast it to its native data type.
+            //      2) Add both data samples together, appling volume adjustment to second value to make
+            //         sure values get desired amplitude weight so as to not adversely affect the volume
+            //         of the resultant sample.
+            //      3) Convert arithmetic result back to proper data type for wave file and return.
+
+            LittleBinaryValue result;
+
+            // Must handle 24-bit as a special case since there is no 24-bit type code in .NET
+            if (bitsPerSample == 24)
+            {
+                result =
+                    (double)(Int24)value1 +
+                    (double)(Int24)value2 * value2Volume;
+            }
+            else
+            {
+                result =
+                    (double)value1.ConvertToType(TypeCode.Double) +
+                    (double)value2.ConvertToType(TypeCode.Double) * value2Volume;
+            }
+            
+            return result.ConvertToType(value1.TypeCode);
         }
 
         #endregion

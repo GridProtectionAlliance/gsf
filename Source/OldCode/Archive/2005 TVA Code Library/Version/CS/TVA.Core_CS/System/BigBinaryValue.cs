@@ -48,16 +48,271 @@ namespace System
         /// <paramref name="length"/> is less than 0 -or-
         /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
         /// </exception>
+        /// <remarks>This constructor assumes a type code of Empty to represent "undefined".</remarks>
         public BigBinaryValue(byte[] buffer, int startIndex, int length)
-            : base(buffer, startIndex, length)
+            : this(TypeCode.Empty, buffer, startIndex, length)
         {
         }
 
         /// <summary>Creates a new big-endian ordered binary value from the given byte array.</summary>
         /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
+        /// <remarks>This constructor assumes a type code of Empty to represent "undefined".</remarks>
         public BigBinaryValue(byte[] buffer)
-            : base(buffer, 0, buffer.Length)
+            : base(TypeCode.Empty, buffer, 0, buffer.Length)
         {
+        }
+
+        /// <summary>Creates a new big-endian ordered binary value from the given byte array.</summary>
+        /// <param name="typeCode">The type code of the native value that the binary value represents.</param>
+        /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
+        /// <param name="startIndex">The offset in the buffer where the data starts.</param>
+        /// <param name="length">The number of data bytes that make up the binary value.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of the <paramref name="buffer"/> -or-
+        /// <paramref name="length"/> is less than 0 -or-
+        /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
+        /// </exception>
+        public BigBinaryValue(TypeCode typeCode, byte[] buffer, int startIndex, int length)
+            : base(typeCode, buffer, startIndex, length)
+        {
+        }
+
+        /// <summary>Creates a new big-endian ordered binary value from the given byte array.</summary>
+        /// <param name="typeCode">The type code of the native value that the binary value represents.</param>
+        /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
+        public BigBinaryValue(TypeCode typeCode, byte[] buffer)
+            : base(typeCode, buffer, 0, buffer.Length)
+        {
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public BigBinaryValue ConvertToType(TypeCode typeCode)
+        {
+            switch (m_typeCode)
+            {
+                case TypeCode.Byte:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return ToByte();
+                        case TypeCode.Double:
+                            return (Double)ToByte();
+                        case TypeCode.Int16:
+                            return (Int16)ToByte();
+                        case TypeCode.Int32:
+                            return (Int32)ToByte();
+                        case TypeCode.Int64:
+                            return (Int64)ToByte();
+                        case TypeCode.Single:
+                            return (Single)ToByte();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToByte();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToByte();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToByte();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.Int16:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToInt16();
+                        case TypeCode.Double:
+                            return (Double)ToInt16();
+                        case TypeCode.Int16:
+                            return ToInt16();
+                        case TypeCode.Int32:
+                            return (Int32)ToInt16();
+                        case TypeCode.Single:
+                            return (Single)ToInt16();
+                        case TypeCode.Int64:
+                            return (Int64)ToInt16();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToInt16();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToInt16();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToInt16();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.Int32:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToInt32();
+                        case TypeCode.Double:
+                            return (Double)ToInt32();
+                        case TypeCode.Int16:
+                            return (Int16)ToInt32();
+                        case TypeCode.Int32:
+                            return ToInt32();
+                        case TypeCode.Int64:
+                            return (Int64)ToInt32();
+                        case TypeCode.Single:
+                            return (Single)ToInt32();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToInt32();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToInt32();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToInt32();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.Int64:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToInt64();
+                        case TypeCode.Double:
+                            return (Double)ToInt64();
+                        case TypeCode.Int16:
+                            return (Int16)ToInt64();
+                        case TypeCode.Int32:
+                            return (Int32)ToInt64();
+                        case TypeCode.Single:
+                            return (Single)ToInt64();
+                        case TypeCode.Int64:
+                            return ToInt64();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToInt64();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToInt64();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToInt64();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.Single:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToSingle();
+                        case TypeCode.Double:
+                            return (Double)ToSingle();
+                        case TypeCode.Int16:
+                            return (Int16)ToSingle();
+                        case TypeCode.Int32:
+                            return (Int32)ToSingle();
+                        case TypeCode.Int64:
+                            return (Int64)ToSingle();
+                        case TypeCode.Single:
+                            return ToSingle();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToSingle();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToSingle();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToSingle();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.Double:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToDouble();
+                        case TypeCode.Double:
+                            return ToDouble();
+                        case TypeCode.Int16:
+                            return (Int16)ToDouble();
+                        case TypeCode.Int32:
+                            return (Int32)ToDouble();
+                        case TypeCode.Int64:
+                            return (Int64)ToDouble();
+                        case TypeCode.Single:
+                            return (Single)ToDouble();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToDouble();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToDouble();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToDouble();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.UInt16:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToUInt16();
+                        case TypeCode.Double:
+                            return (Double)ToUInt16();
+                        case TypeCode.Int16:
+                            return (Int16)ToUInt16();
+                        case TypeCode.Int32:
+                            return (Int32)ToUInt16();
+                        case TypeCode.Int64:
+                            return (Int64)ToUInt16();
+                        case TypeCode.Single:
+                            return (Single)ToUInt16();
+                        case TypeCode.UInt16:
+                            return ToUInt16();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToUInt16();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToUInt16();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.UInt32:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToUInt32();
+                        case TypeCode.Double:
+                            return (Double)ToUInt32();
+                        case TypeCode.Int16:
+                            return (Int16)ToUInt32();
+                        case TypeCode.Int32:
+                            return (Int32)ToUInt32();
+                        case TypeCode.Int64:
+                            return (Int64)ToUInt32();
+                        case TypeCode.Single:
+                            return (Single)ToUInt32();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToUInt32();
+                        case TypeCode.UInt32:
+                            return ToUInt32();
+                        case TypeCode.UInt64:
+                            return (UInt64)ToUInt32();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                case TypeCode.UInt64:
+                    switch (typeCode)
+                    {
+                        case TypeCode.Byte:
+                            return (Byte)ToUInt64();
+                        case TypeCode.Double:
+                            return (Double)ToUInt64();
+                        case TypeCode.Int16:
+                            return (Int16)ToUInt64();
+                        case TypeCode.Int32:
+                            return (Int32)ToUInt64();
+                        case TypeCode.Int64:
+                            return (Int64)ToUInt64();
+                        case TypeCode.Single:
+                            return (Single)ToUInt64();
+                        case TypeCode.UInt16:
+                            return (UInt16)ToUInt64();
+                        case TypeCode.UInt32:
+                            return (UInt32)ToUInt64();
+                        case TypeCode.UInt64:
+                            return ToUInt64();
+                        default:
+                            throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
+                    }
+                default:
+                    throw new InvalidOperationException("Unable to convert binary value from " + m_typeCode);
+            }
         }
 
         #endregion
@@ -71,7 +326,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Byte value)
         {
-            return new BigBinaryValue(new byte[] { value });
+            return new BigBinaryValue(TypeCode.Byte, new byte[] { value });
         }
 
         public static implicit operator Int16(BigBinaryValue value)
@@ -81,7 +336,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Int16 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         [CLSCompliant(false)]
@@ -93,7 +348,7 @@ namespace System
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt16 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         public static implicit operator Int24(BigBinaryValue value)
@@ -103,7 +358,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Int24 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         [CLSCompliant(false)]
@@ -115,7 +370,7 @@ namespace System
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt24 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         public static implicit operator Int32(BigBinaryValue value)
@@ -125,7 +380,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Int32 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         [CLSCompliant(false)]
@@ -137,7 +392,7 @@ namespace System
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt32 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         public static implicit operator Int64(BigBinaryValue value)
@@ -147,7 +402,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Int64 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         [CLSCompliant(false)]
@@ -159,7 +414,7 @@ namespace System
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt64 value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         public static implicit operator Single(BigBinaryValue value)
@@ -169,7 +424,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Single value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         public static implicit operator Double(BigBinaryValue value)
@@ -179,7 +434,7 @@ namespace System
 
         public static implicit operator BigBinaryValue(Double value)
         {
-            return new BigBinaryValue(m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
         }
 
         #endregion

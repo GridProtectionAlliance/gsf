@@ -40,6 +40,41 @@ namespace System.Media.Music
     /// in-memory wave file for play back or saving music to disk.
     /// </summary>
     /// <example>
+    /// This example generates a chord:
+    /// <code>
+    /// using System;
+    /// using System.Media;
+    /// using System.Media.Music;
+    ///
+    /// static class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         Song song = new Song();
+    ///
+    ///         Console.WriteLine("Generating chord...");
+    ///
+    ///         song.AddNotes
+    ///         (
+    ///             new Note { Frequency = Note.C4, NoteValue = NoteValue.Longa },
+    ///             new Note { Frequency = Note.E4, NoteValue = NoteValue.Longa },
+    ///             new Note { Frequency = Note.G4, NoteValue = NoteValue.Longa }
+    ///         );
+    ///
+    ///         song.Finish();
+    ///
+    ///         Console.WriteLine("Saving chord to disk...");
+    ///         song.Save("MajorTriad.wav");
+    ///
+    ///         Console.WriteLine("Playing chord...");
+    ///         song.Play();
+    ///
+    ///         Console.ReadKey();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
     /// This example generates a familiar tune, plays the song and saves it to disk:
     /// <code>
     /// using System;
@@ -385,12 +420,16 @@ namespace System.Media.Music
             double samplesPerSecond = SampleRate;
             long samplePeriod;
 
-            // Calculate note value times for each note to be added            
+            // Calculate value time, start and end time indicies for each note to be added
             foreach (Note note in notes)
             {
+                // Calculate note value time given current tempo
                 note.CalculateNoteValueTime(m_tempo);
-                note.StartTime = m_currentSample / samplesPerSecond;
-                note.EndTime = note.StartTime + note.NoteValueTime - (1 / samplesPerSecond);
+
+                // Assign relative note durations in terms of sample rate
+                note.SamplePeriod = (long)(note.NoteValueTime * samplesPerSecond);
+                note.StartTimeIndex = m_currentSample;
+                note.EndTimeIndex = note.StartTimeIndex + note.SamplePeriod - 1;
             }
 
             // Assign sample period to note with shortest duration - all other notes
@@ -495,16 +534,12 @@ namespace System.Media.Music
             List<int> completedNotes = new List<int>();
             TimbreFunction timbre;
             DampingFunction damping;
-            double samplesPerSecond = SampleRate;
-            double sample, dynamic, time;
+            double sample, dynamic;
             int notesInSample;
             Note note;
 
-            for (long sampleIndex = m_currentSample; sampleIndex < m_currentSample + samplePeriod + (long)(m_interNoteDelay * samplesPerSecond); sampleIndex++)
+            for (long sampleIndex = m_currentSample; sampleIndex < m_currentSample + samplePeriod + (long)(m_interNoteDelay * SampleRate); sampleIndex++)
             {
-                // Compute time index in seconds of the current sample
-                time = sampleIndex / samplesPerSecond;
-
                 // Create summation of all notes at given time
                 sample = 0.0D;
                 notesInSample = 0;
@@ -515,7 +550,7 @@ namespace System.Media.Music
                     {
                         note = m_noteQueue[index];
 
-                        if (time < note.EndTime)
+                        if (sampleIndex < note.EndTimeIndex)
                         {
                             // Get note dynamic
                             dynamic = (note.Dynamic == Dynamic.Undefined ? m_dynamic : note.CustomDynamic);
@@ -527,7 +562,7 @@ namespace System.Media.Music
                             damping = (note.Damping == null ?  m_damping : note.Damping);
 
                             // Generate note at given time
-                            sample += dynamic * (timbre(note.Frequency, time) * damping(sampleIndex - m_currentSample, samplePeriod));
+                            sample += dynamic * (timbre(note.Frequency, sampleIndex, note.SamplePeriod, SampleRate) * damping(sampleIndex - m_currentSample, note.SamplePeriod, SampleRate));
                             notesInSample++;
                         }
                         else
@@ -537,6 +572,8 @@ namespace System.Media.Music
                     }
                 }
 
+                // Make sure all notes in sample get equal amplitude weight so as to
+                // not adversely affect the volume of the sample
                 AddSample((sample / notesInSample) * AmplitudeScalar);
             }
 

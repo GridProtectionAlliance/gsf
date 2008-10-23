@@ -30,6 +30,7 @@
 
 using System;
 using System.Reflection;
+using System.ComponentModel;
 
 namespace System.Media.Music
 {
@@ -208,8 +209,9 @@ namespace System.Media.Music
         private DampingFunction m_damping;
         private double m_frequency;
         private double m_noteValueTime;
-        private double m_startTime;
-        private double m_endTime;
+        private long m_startTimeIndex;
+        private long m_endTimeIndex;
+        private long m_samplePeriod;
         private double m_dynamic;
         private string m_noteID;
         private int m_noteValue;
@@ -447,7 +449,7 @@ namespace System.Media.Music
         }
 
         /// <summary>
-        /// Gets cached note value time calculated from a call to <see cref="CalculateNoteValueTime"/>.
+        /// Gets cached note value time, in seconds, calculated from a call to <see cref="CalculateNoteValueTime"/>.
         /// </summary>
         public double NoteValueTime
         {
@@ -458,28 +460,47 @@ namespace System.Media.Music
         }
 
         /// <summary>Gets or sets start time index for this note.</summary>
-        public double StartTime
+        /// <remarks>This is typically assigned and used by host <see cref="Song"/></remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public long StartTimeIndex
         {
             get
             {
-                return m_startTime;
+                return m_startTimeIndex;
             }
             set
             {
-                m_startTime = value;
+                m_startTimeIndex = value;
             }
         }
 
         /// <summary>Gets or sets end time index for this note.</summary>
-        public double EndTime
+        /// <remarks>This is typically assigned and used by host <see cref="Song"/></remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public long EndTimeIndex
         {
             get
             {
-                return m_endTime;
+                return m_endTimeIndex;
             }
             set
             {
-                m_endTime = value;
+                m_endTimeIndex = value;
+            }
+        }
+
+        /// <summary>Gets or sets the sample period for this note.</summary>
+        /// <remarks>This is typically assigned and used by host <see cref="Song"/></remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public long SamplePeriod
+        {
+            get
+            {
+                return m_samplePeriod;
+            }
+            set
+            {
+                m_samplePeriod = value;
             }
         }
 
@@ -503,6 +524,9 @@ namespace System.Media.Music
             return m_noteValueTime;
         }
         
+        /// <summary>
+        /// Returns a string representation for the note.
+        /// </summary>
         public override string ToString()
         {
             if (m_noteID == null && m_frequency > 0.0D)

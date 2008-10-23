@@ -39,6 +39,7 @@ namespace System
         #region [ Members ]
 
         // Fields
+        protected TypeCode m_typeCode;
         protected byte[] m_buffer;
 
         #endregion
@@ -46,6 +47,7 @@ namespace System
         #region [ Constructors ]
 
         /// <summary>Creates a new binary value from the given byte array.</summary>
+        /// <param name="typeCode">The type code of the native value that the binary value represents.</param>
         /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
         /// <param name="startIndex">The offset in the buffer where the data starts.</param>
         /// <param name="length">The number of data bytes that make up the binary value.</param>
@@ -55,7 +57,7 @@ namespace System
         /// <paramref name="length"/> is less than 0 -or-
         /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
         /// </exception>
-        protected BinaryValueBase(byte[] buffer, int startIndex, int length)
+        protected BinaryValueBase(TypeCode typeCode, byte[] buffer, int startIndex, int length)
         {
             if (buffer == null)
                 throw new ArgumentNullException("buffer");
@@ -72,6 +74,7 @@ namespace System
             if (startIndex + length > buffer.Length)
                 throw new ArgumentOutOfRangeException("length", "exceeds buffer size");
 
+            m_typeCode = typeCode;
             m_buffer = new byte[length];
 
             // Extract specified region of source buffer as desired representation of binary value
@@ -81,6 +84,18 @@ namespace System
         #endregion
 
         #region [ Properties ]
+
+        public TypeCode TypeCode
+        {
+            get
+            {
+                return m_typeCode;
+            }
+            set
+            {
+                m_typeCode = value;
+            }
+        }
 
         public byte[] Buffer
         {

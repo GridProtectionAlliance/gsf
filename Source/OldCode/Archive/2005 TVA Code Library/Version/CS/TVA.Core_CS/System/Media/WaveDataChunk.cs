@@ -74,18 +74,19 @@ namespace System.Media
             int sampleSize = waveFormat.BitsPerSample / 8;
             byte[] buffer = new byte[blockSize];
             int channels = waveFormat.Channels;
+            TypeCode sampleTypeCode = m_waveFormat.GetSampleTypeCode();
             LittleBinaryValue[] sampleBlock;
 
             int bytesRead = source.Read(buffer, 0, blockSize);
 
             while (bytesRead == blockSize)
             {
-                // Create a new sample block, one binary sample value for each channel
+                // Create a new sample block, one little-endian formatted binary sample value for each channel
                 sampleBlock = new LittleBinaryValue[channels];
 
                 for (int x = 0; x < channels; x++)
                 {
-                    sampleBlock[x] = new LittleBinaryValue(buffer, x * sampleSize, sampleSize);
+                    sampleBlock[x] = new LittleBinaryValue(sampleTypeCode, buffer, x * sampleSize, sampleSize);
                 }
 
                 m_sampleBlocks.Add(sampleBlock);
@@ -97,6 +98,18 @@ namespace System.Media
         #endregion
 
         #region [ Properties ]
+
+        public WaveFormatChunk WaveFormat
+        {
+            get
+            {
+                return m_waveFormat;
+            }
+            set
+            {
+                m_waveFormat = value;
+            }
+        }
 
         public List<LittleBinaryValue[]> SampleBlocks
         {
@@ -150,6 +163,23 @@ namespace System.Media
             {
                 return base.BinaryLength + ChunkSize;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public new WaveDataChunk Clone()
+        {
+            WaveDataChunk waveDataChunk = new WaveDataChunk(m_waveFormat);
+    
+            // Deep clone sample blocks
+            foreach (LittleBinaryValue[] samples in m_sampleBlocks)
+            {
+                waveDataChunk.SampleBlocks.Add(WaveFile.CloneSampleBlock(samples));
+            }
+    
+            return waveDataChunk;
         }
 
         #endregion

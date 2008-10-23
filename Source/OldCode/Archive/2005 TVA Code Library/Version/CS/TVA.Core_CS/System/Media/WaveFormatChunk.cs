@@ -123,10 +123,16 @@ namespace System.Media
         {
             get
             {
+                // Trust the read size over the typical constants if available
+                int chunkSize = base.ChunkSize;
+
+                if (chunkSize == 0)
+                    chunkSize = 16;
+
                 if (m_extraParametersSize > 0)
-                    return 18 + m_extraParametersSize;
+                    return chunkSize + 2 + m_extraParametersSize;
                 else
-                    return 16;
+                    return chunkSize;
             }
             set
             {
@@ -208,6 +214,18 @@ namespace System.Media
                 UpdateByteRate();
             }
         }
+        
+        public int ByteRate
+        {
+            get
+            {
+                return m_byteRate;
+            }
+            set
+            {
+                m_byteRate = value;
+            }
+        }
 
         public short BlockAlignment
         {
@@ -263,6 +281,85 @@ namespace System.Media
         #endregion
 
         #region [ Methods ]
+
+        public new WaveFormatChunk Clone()
+        {
+            WaveFormatChunk waveFormatChunk = new WaveFormatChunk(m_sampleRate, m_bitsPerSample, m_channels, m_audioFormat);
+            waveFormatChunk.ExtraParameters = m_extraParameters;
+            return waveFormatChunk;
+        }
+
+        /// <summary>
+        /// Determines sample data type code based on defined <see cref="BitsPerSample"/>
+        /// and <see cref="AudioFormat"/>.
+        /// </summary>
+        /// <returns>
+        /// Sample type code based on  defined <see cref="BitsPerSample"/> and
+        /// <see cref="AudioFormat"/>.
+        /// </returns>
+        public TypeCode GetSampleTypeCode()
+        {
+            // Determine sample data type based on bit size and audio format
+            switch (m_bitsPerSample)
+            {
+                case 8:
+                    return TypeCode.Byte;
+                case 16:
+                    return TypeCode.Int16;
+                case 24:
+                    // .NET does not define an Int24 type code and since an Int24 will
+                    // fit inside an Int32, the Int32 type code is returned.
+                    return TypeCode.Int32;
+                case 32:
+                    if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
+                        return TypeCode.Single;
+                    else
+                        return TypeCode.Int32;
+                case 64:
+                    if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
+                        return TypeCode.Double;
+                    else
+                        return TypeCode.Int64;
+                default:
+                    // Unable to determine proper type code, consumer may be using a special data format...
+                    return TypeCode.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Casts sample value to its equivalent native type based on defined <see cref="BitsPerSample"/>
+        /// and <see cref="AudioFormat"/>.
+        /// </summary>
+        /// <param name="sample">Sample value.</param>
+        /// <returns>
+        /// Sample value cast to its equivalent native type based on defined <see cref="BitsPerSample"/>
+        /// and <see cref="AudioFormat"/>.
+        /// </returns>
+        public LittleBinaryValue CastSample(double sample)
+        {
+            // Cast sample value to appropriate data type based on bit size
+            switch (m_bitsPerSample)
+            {
+                case 8: // Bytes are unsigned and need 128 byte offset
+                    return (Byte)(sample + 128);
+                case 16:
+                    return (Int16)sample;
+                case 24:
+                    return (Int24)sample;
+                case 32:
+                    if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
+                        return (Single)sample;
+                    else
+                        return (Int32)sample;
+                case 64:
+                    if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
+                        return (Double)sample;
+                    else
+                        return (Int64)sample;
+                default:
+                    throw new InvalidOperationException(string.Format("Cannot cast sample \'{0}\' into {1}-bits.", sample, BitsPerSample));
+            }
+        }
 
         private void UpdateByteRate()
         {
