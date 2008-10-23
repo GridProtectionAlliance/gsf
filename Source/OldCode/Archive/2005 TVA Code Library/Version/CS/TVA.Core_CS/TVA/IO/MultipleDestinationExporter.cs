@@ -17,6 +17,8 @@
 //       Added more descriptive status messages to provide more detailed user feedback.
 //  09/19/2008 - James R Carroll
 //       Converted to C#.
+//  10/22/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -28,34 +30,84 @@ using System.Text;
 using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
-using TVA.Services;
 using TVA.Threading;
 
 namespace TVA.IO
 {
     /// <summary>
-    /// Handles exporting the same file to multiple destinations that are defined in the configuration file.
-    /// Includes feature for network share authentication.
+    /// Handles the exporting of a file to multiple destinations that are defined in the config file.
     /// </summary>
     /// <remarks>
     /// This class is useful for updating the same file on multiple servers (e.g., load balanced web server).
     /// </remarks>
+    /// <seealso cref="ExportDestination"/>
     /// <example>
     /// <code>
-    /// string xmlData;
-    /// MultipleDestinationExporter exporter = new MultipleDestinationExporter();
-    /// ExportDestination[] defaultDestinations = new ExportDestination[]
+    /// using System;
+    /// using TVA.IO;
+    ///
+    /// class Program
     /// {
-    ///     new ExportDestination("\\\\server1\\share\\exportFile.xml", true, "domain", "user1", "password1"),
-    ///     new ExportDestination("\\\\server2\\share\\exportFile.xml", true, "domain", "user2", "password2")
-    /// };
+    ///     static MultipleDestinationExporter m_exporter;
     ///
-    /// // Provide a default set of export destinations to exporter - note that
-    /// // actual exports will always be based on entries in configuration file
-    /// exporter.Initialize(defaultDestinations);
+    ///     static void Main(string[] args)
+    ///     {
+    ///         m_exporter = new MultipleDestinationExporter();
+    ///         m_exporter.Initialized += m_exporter_Initialized;
+    ///         ExportDestination[] defaultDestinations = new ExportDestination[] 
+    ///         {
+    ///             new ExportDestination(@"c:\File1.txt", false, "domain", "user1", "password1"), 
+    ///             new ExportDestination(@"c:\File2.txt", false, "domain", "user2", "password2")
+    ///         };
+    ///         // Initialize with the destinations where data is to be exported.
+    ///         m_exporter.Initialize(defaultDestinations);
     ///
-    /// // Export data to all defined locations...
-    /// exporter.ExportData(xmlData);
+    ///         Console.ReadLine();
+    ///     }
+    ///
+    ///     static void m_exporter_Initialized(object sender, EventArgs e)
+    ///     {
+    ///         // Export data to all defined locations after initialization.
+    ///         m_exporter.ExportData("TEST DATA");
+    ///     }
+    /// }
+    /// </code>
+    /// 
+    /// <code>
+    /// <![CDATA[
+    /// <exportDestinations>
+    ///   <add name="ExportTimeout" value="-1" description="Total allowed time for all exports to execute in milliseconds."
+    ///     encrypted="false" />
+    ///   <add name="ExportCount" value="2" description="Total number of export files to produce."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination1" value="\\server1\share\" description="Root path for export destination. Use UNC path (\\server\share) with no trailing slash for network shares."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination1.ConnectToShare" value="True" description="Set to True to attempt authentication to network share."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination1.Domain" value="domain" description="Domain used for authentication to network share (computer name for local accounts)."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination1.UserName" value="user1" description="User name used for authentication to network share."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination1.Password" value="l2qlAwAPihJjoThH+G53BUxzYsIkTE2yNBHLtd1WA3hysDhwDB82ouJb9n35QtG8"
+    ///     description="Encrypted password used for authentication to network share."
+    ///     encrypted="true" />
+    ///   <add name="ExportDestination1.FileName" value="exportFile.xml" description="Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\path\filename.txt)."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination2" value="\\server2\share\" description="Root path for export destination. Use UNC path (\\server\share) with no trailing slash for network shares."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination2.ConnectToShare" value="True" description="Set to True to attempt authentication to network share."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination2.Domain" value="domain" description="Domain used for authentication to network share (computer name for local accounts)."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination2.UserName" value="user2" description="User name used for authentication to network share."
+    ///     encrypted="false" />
+    ///   <add name="ExportDestination2.Password" value="l2qlAwAPihJjoThH+G53BYT6BXHQr13D6Asdibl0rDmlrgRXvJmCwcP8uvkFRHr9"
+    ///     description="Encrypted password used for authentication to network share."
+    ///     encrypted="true" />
+    ///   <add name="ExportDestination2.FileName" value="exportFile.xml" description="Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\path\filename.txt)."
+    ///     encrypted="false" />
+    /// </exportDestinations>
+    /// ]]>
     /// </code>
     /// </example>
     [ToolboxBitmap(typeof(MultipleDestinationExporter))]
@@ -83,9 +135,15 @@ namespace TVA.IO
         // Events
 
         /// <summary>
-        /// Occurs to report status information from exporter.
+        /// Occurs when the <see cref="MultipleDestinationExporter"/> object has been initialized.
         /// </summary>
-        [Description("Occurs to report status information from exporter.")]
+        [Description("Occurs when the MultipleDestinationExporter object has been initialized.")]
+        public event EventHandler Initialized;
+
+        /// <summary>
+        /// Occurs when status information for the <see cref="MultipleDestinationExporter"/> object is being reported.
+        /// </summary>
+        [Description("Occurs when status information for the MultipleDestinationExporter object is being reported.")]
         public event Action<string> StatusMessage;
 
         // Fields
@@ -95,9 +153,9 @@ namespace TVA.IO
         private string m_settingsCategory;
         private long m_totalExports;
         private Encoding m_textEncoding;
-        private ProcessQueue<byte[]> m_exportQueue;
-        private object m_destinationLock;
         private ExportDestination[] m_exportDestinations;
+        private object m_destinationLock;
+        private ProcessQueue<byte[]> m_exportQueue;
         private bool m_disposed;
 
         #endregion
@@ -115,7 +173,7 @@ namespace TVA.IO
         /// <summary>
         /// Initializes a new instance of the <see cref="MultipleDestinationExporter"/> class.
         /// </summary>
-        /// <param name="settingsCategory"></param>
+        /// <param name="settingsCategory">The config file settings category under which the export destinations are defined.</param>
         /// <param name="exportTimeout">The total allowed time in milliseconds for all exports to execute.</param>
         public MultipleDestinationExporter(string settingsCategory, int exportTimeout)
         {
@@ -124,6 +182,10 @@ namespace TVA.IO
             m_persistSettings = DefaultPersistSettings;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
             m_destinationLock = new object();
+
+            // Set up a synchronous process queue to handle exports that will limit total export time to export interval
+            m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
+            m_exportQueue.ProcessException += m_exportQueue_ProcessException;
         }
 
         #endregion
@@ -149,9 +211,7 @@ namespace TVA.IO
             {
                 m_exportTimeout = value;
                 if (m_exportQueue != null)
-                {
                     m_exportQueue.ProcessTimeout = value;
-                }
             }
         }
 
@@ -255,7 +315,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets a list of currently defined export destinations.
+        /// Gets a list of currently defined <see cref="ExportDestination"/>.
         /// </summary>
         [Browsable(false)]
         public ExportDestination[] ExportDestinations
@@ -326,9 +386,11 @@ namespace TVA.IO
             {
                 try
                 {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings();
                     if (disposing)
                     {
-                        // This method handles all needed dispoable operations
+                        // This will be done only when the object is disposed by calling Dispose().
                         Shutdown();
                     }
                 }
@@ -341,7 +403,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Initializes (or reinitializes) exporter from configuration settings.
+        /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
         /// </summary>
         /// <remarks>
         /// If not being used as a component (i.e., user creates their own instance of this class), this method
@@ -350,11 +412,12 @@ namespace TVA.IO
         /// </remarks>
         public void Initialize()
         {
-            Initialize(null);
+            // We provide a simple default set of export destinations since no others are specified.
+            Initialize(new ExportDestination[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") });
         }
 
         /// <summary>
-        /// Initializes (or reinitializes) exporter from configuration settings.
+        /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
         /// </summary>
         /// <param name="defaultDestinations">Provides a default set of export destinations if none exist in configuration settings.</param>
         /// <remarks>
@@ -439,22 +502,19 @@ namespace TVA.IO
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
+                settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
                 lock (m_destinationLock)
                 {
-                    settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
-
-                    if ((m_exportDestinations != null) && m_exportDestinations.Length > 0)
+                    settings["ExportCount", true].Update(m_exportDestinations.Length, "Total number of export files to produce.");
+                    for (int x = 0; x < m_exportDestinations.Length; x++)
                     {
-                        settings["ExportCount", true].Update(m_exportDestinations.Length, "Total number of export files to produce");
-                        for (int x = 0; x < m_exportDestinations.Length; x++)
-                        {
-                            settings[string.Format("ExportDestination{0}", x + 1), true].Update(m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
-                            settings[string.Format("ExportDestination{0}.ConnectToShare", x + 1), true].Update(m_exportDestinations[x].ConnectToShare, "Set to True to attempt authentication to network share.");
-                            settings[string.Format("ExportDestination{0}.Domain", x + 1), true].Update(m_exportDestinations[x].Domain, "Domain used for authentication to network share (computer name for local accounts).");
-                            settings[string.Format("ExportDestination{0}.UserName", x + 1), true].Update(m_exportDestinations[x].UserName, "User name used for authentication to network share.");
-                            settings[string.Format("ExportDestination{0}.Password", x + 1), true].Update(m_exportDestinations[x].Password, "Encrypted password used for authentication to network share.", true);
-                            settings[string.Format("ExportDestination{0}.FileName", x + 1), true].Update(m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
-                        }
+                        settings[string.Format("ExportDestination{0}", x + 1), true].Update(m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
+                        settings[string.Format("ExportDestination{0}.ConnectToShare", x + 1), true].Update(m_exportDestinations[x].ConnectToShare, "Set to True to attempt authentication to network share.");
+                        settings[string.Format("ExportDestination{0}.Domain", x + 1), true].Update(m_exportDestinations[x].Domain, "Domain used for authentication to network share (computer name for local accounts).");
+                        settings[string.Format("ExportDestination{0}.UserName", x + 1), true].Update(m_exportDestinations[x].UserName, "User name used for authentication to network share.");
+                        settings[string.Format("ExportDestination{0}.Password", x + 1), true].Update(m_exportDestinations[x].Password, "Encrypted password used for authentication to network share.", true);
+                        settings[string.Format("ExportDestination{0}.FileName", x + 1), true].Update(m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
                     }
                 }
                 config.Save();
@@ -474,30 +534,49 @@ namespace TVA.IO
                     throw new InvalidOperationException("SettingsCategory property has not been set.");
 
                 // Load settings from the specified category.
-                string entryRoot;
-                ExportDestination destination;
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
+                if (settings.Count == 0) return;    // Don't proceed if export destination are not in config file.
+
+                string entryRoot;
+                ExportDestination destination;
                 m_exportTimeout = settings["ExportTimeout", true].ValueAs(m_exportTimeout);
                 m_exportDestinations = new ExportDestination[settings["ExportCount", true].ValueAsInt32()];
-                for (int x = 0; x < m_exportDestinations.Length; x++)
+                lock (m_destinationLock)
                 {
-                    entryRoot = string.Format("ExportDestination{0}", x + 1);
+                    for (int x = 0; x < m_exportDestinations.Length; x++)
+                    {
+                        entryRoot = string.Format("ExportDestination{0}", x + 1);
 
-                    // Load export destination from configuration entries
-                    destination.DestinationFile = settings[entryRoot, true].ValueAsString() + settings[string.Format("{0}.FileName", entryRoot), true].ValueAsString();
-                    destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot), true].ValueAsBoolean();
-                    destination.Domain = settings[string.Format("{0}.Domain", entryRoot), true].ValueAsString();
-                    destination.UserName = settings[string.Format("{0}.UserName", entryRoot), true].ValueAsString();
-                    destination.Password = settings[string.Format("{0}.Password", entryRoot), true].ValueAsString();
+                        // Load export destination from configuration entries
+                        destination.DestinationFile = settings[entryRoot, true].ValueAsString() + settings[string.Format("{0}.FileName", entryRoot), true].ValueAsString();
+                        destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot), true].ValueAsBoolean();
+                        destination.Domain = settings[string.Format("{0}.Domain", entryRoot), true].ValueAsString();
+                        destination.UserName = settings[string.Format("{0}.UserName", entryRoot), true].ValueAsString();
+                        destination.Password = settings[string.Format("{0}.Password", entryRoot), true].ValueAsString();
 
-                    // Save new export destination
-                    m_exportDestinations[x] = destination;
+                        // Save new export destination
+                        m_exportDestinations[x] = destination;
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Raises the <see cref="Initialized"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnInitialized(EventArgs e)
+        {
+            if (Initialized != null)
+                Initialized(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event.
+        /// </summary>
+        /// <param name="status">Event data.</param>
         protected void OnStatusMessage(string status)
         {
             if (StatusMessage != null)
@@ -509,27 +588,14 @@ namespace TVA.IO
             // In case we are reinitializing class, we shutdown any prior queue operations and close any existing network connections...
             Shutdown();
 
-            // Set up a synchronous process queue to handle exports that will limit total export time to export interval
-            m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
-            m_exportQueue.ProcessException += m_exportQueue_ProcessException;
-
+            // Retrieve any specified default export destinations
             lock (m_destinationLock)
             {
-                // Retrieve any specified default export destinations
-                m_exportDestinations = (ExportDestination[])state;
-
-                // We provide a simple default set of export destinations as a configuration file
-                // example if no others are specified
-                if (m_exportDestinations == null)
-                    m_exportDestinations = new ExportDestination[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") };
+                m_exportDestinations = state as ExportDestination[];
             }
+            LoadSettings(); // Load export destinations from the config file.
 
-            // Load export settings (this loads a new set of destinations in m_exportDestinations)
-            LoadSettings();
-
-            // Connect to network shares if necessary
             ExportDestination[] destinations;
-
             lock (m_destinationLock)
             {
                 // Cache a local copy of export destinations to reduce lock time,
@@ -539,6 +605,7 @@ namespace TVA.IO
 
             for (int x = 0; x < destinations.Length; x++)
             {
+                // Connect to network shares if necessary
                 if (destinations[x].ConnectToShare)
                 {
                     // Attempt connection to external network share
@@ -558,8 +625,8 @@ namespace TVA.IO
                 }
             }
 
-            // Start export queue
-            m_exportQueue.Start();
+            m_exportQueue.Start();          // Start export queue.
+            OnInitialized(EventArgs.Empty); // Notify that initialization is complete.
         }
 
         // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
@@ -567,16 +634,15 @@ namespace TVA.IO
         {
             if (m_exportQueue != null)
             {
-                m_exportQueue.ProcessException -= m_exportQueue_ProcessException;
-                m_exportQueue.Dispose();
+                m_exportQueue.Stop();
+                m_exportQueue.Clear();
             }
-            m_exportQueue = null;
 
-            lock (m_destinationLock)
+            if (m_exportDestinations != null)
             {
-                // We'll be nice and disconnect network shares when this class is disposed...
-                if (m_exportDestinations != null)
+                lock (m_destinationLock)
                 {
+                    // We'll be nice and disconnect network shares when this class is disposed...
                     for (int x = 0; x < m_exportDestinations.Length; x++)
                     {
                         if (m_exportDestinations[x].ConnectToShare)
@@ -593,15 +659,12 @@ namespace TVA.IO
                         }
                     }
                 }
-
-                m_exportDestinations = null;
             }
         }
 
         private void WriteExportFiles(byte[] fileData)
         {
             string filename;
-            FileStream exportFile;
             ExportDestination[] destinations;
 
             lock (m_destinationLock)
@@ -619,39 +682,15 @@ namespace TVA.IO
                     //  Get next export file name
                     filename = destinations[x].DestinationFile;
 
-                    try
-                    {
-                        // We'll wait on file lock for up to one second - then give up with IO exception
-                        FilePath.WaitForWriteLock(filename, 1);
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        // This exception is normal, we'll just rethrow this back up the try stack
-                        throw;
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        // This would be an expected exception, nothing to do - even if we checked for
-                        // this before we called the wait function, another process could have deleted
-                        // the file before we attempt a file lock...
-                    }
+                    if (File.Exists(filename))
+                        FilePath.WaitForWriteLock(filename, 1); // Wait for a lock on the file.
 
-                    // Create a new export file
-                    exportFile = File.Create(filename);
-
-                    // Export file data
-                    exportFile.Write(fileData, 0, fileData.Length);
-
-                    // Close stream
-                    exportFile.Close();
-
-                    // Track successful exports
-                    m_totalExports++;
+                    File.WriteAllBytes(filename, fileData);     // Export data to the file.
+                    m_totalExports++;                           // Track successful exports.
                 }
                 catch (ThreadAbortException)
                 {
-                    // This exception is normal, we'll just rethrow this back up the try stack
-                    throw;
+                    throw;  // This exception is normal, we'll just rethrow this back up the try stack
                 }
                 catch (Exception ex)
                 {
