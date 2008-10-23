@@ -636,7 +636,7 @@ namespace TVA.ErrorManagement
                 {
                     case ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
-                        return FilePath.NoFileExtension(AppDomain.CurrentDomain.FriendlyName);
+                        return Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
                     case ApplicationType.Web:
                         return HttpContext.Current.Request.ApplicationPath.Replace("/", "");
                     default:
