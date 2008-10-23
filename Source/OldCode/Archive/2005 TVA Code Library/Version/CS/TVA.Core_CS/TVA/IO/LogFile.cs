@@ -342,7 +342,7 @@ namespace TVA.IO
         {
             get
             {
-                return string.Format("{0}_{1}", this.GetType().Name, FilePath.NoFileExtension(m_fileName));
+                return string.Format("{0}_{1}", this.GetType().Name, Path.GetFileNameWithoutExtension(m_fileName));
             }
         }
 
@@ -391,8 +391,8 @@ namespace TVA.IO
                 m_fileName = FilePath.AbsolutePath(m_fileName);
 
                 // Create the folder in which the log file will reside it, if it does not exist.
-                if (!Directory.Exists(FilePath.JustPath(m_fileName)))
-                    Directory.CreateDirectory(FilePath.JustPath(m_fileName));
+                if (!Directory.Exists(Path.GetDirectoryName(m_fileName)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(m_fileName));
 
                 // Open the log file (if it exists) or creates it (if it does not exist).
                 m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -737,15 +737,17 @@ namespace TVA.IO
                     }
                     break;
                 case LogFileFullOperation.Rollover:
-                    string historyFileName = FilePath.JustPath(m_fileName) + FilePath.NoFileExtension(m_fileName) + "_" +
-                        File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
-                        File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.JustFileExtension(m_fileName);
+                    string fileDir = Path.GetDirectoryName(m_fileName);
+                    string fileName = Path.GetFileNameWithoutExtension(m_fileName) + "_" + 
+                                      File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" + 
+                                      File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + 
+                                      Path.GetExtension(m_fileName);
 
                     // Rolls over to a new log file, and keeps the current file for history.
                     try
                     {
                         Close(false);
-                        File.Move(m_fileName, historyFileName);
+                        File.Move(m_fileName, Path.Combine(fileDir, fileName));
                     }
                     catch
                     {
