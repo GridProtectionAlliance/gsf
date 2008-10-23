@@ -61,7 +61,7 @@ namespace TVA.ErrorManagement
     ///
     /// class Program
     /// {
-    ///     private static ErrorLogger m_logger;
+    ///     static ErrorLogger m_logger;
     ///
     ///     static Program()
     ///     {
