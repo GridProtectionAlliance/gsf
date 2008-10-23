@@ -42,6 +42,7 @@ namespace TVA.IO
     /// </remarks>
     /// <seealso cref="ExportDestination"/>
     /// <example>
+    /// This example shows the use <see cref="MultipleDestinationExporter"/> for exporting data to multiple locations:
     /// <code>
     /// using System;
     /// using TVA.IO;
@@ -56,8 +57,8 @@ namespace TVA.IO
     ///         m_exporter.Initialized += m_exporter_Initialized;
     ///         ExportDestination[] defaultDestinations = new ExportDestination[] 
     ///         {
-    ///             new ExportDestination(@"c:\File1.txt", false, "domain", "user1", "password1"), 
-    ///             new ExportDestination(@"c:\File2.txt", false, "domain", "user2", "password2")
+    ///             new ExportDestination(@"\\server1\share\exportFile.txt", false, "domain", "user1", "password1"), 
+    ///             new ExportDestination(@"\\server2\share\exportFile.txt", false, "domain", "user2", "password2")
     ///         };
     ///         // Initialize with the destinations where data is to be exported.
     ///         m_exporter.Initialize(defaultDestinations);
@@ -72,7 +73,8 @@ namespace TVA.IO
     ///     }
     /// }
     /// </code>
-    /// 
+    /// This example shows the config file entry that can be used to specify the <see cref="ExportDestination"/> 
+    /// used by the <see cref="MultipleDestinationExporter"/> when exporting data:
     /// <code>
     /// <![CDATA[
     /// <exportDestinations>
@@ -91,7 +93,7 @@ namespace TVA.IO
     ///   <add name="ExportDestination1.Password" value="l2qlAwAPihJjoThH+G53BUxzYsIkTE2yNBHLtd1WA3hysDhwDB82ouJb9n35QtG8"
     ///     description="Encrypted password used for authentication to network share."
     ///     encrypted="true" />
-    ///   <add name="ExportDestination1.FileName" value="exportFile.xml" description="Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\path\filename.txt)."
+    ///   <add name="ExportDestination1.FileName" value="exportFile.txt" description="Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\path\filename.txt)."
     ///     encrypted="false" />
     ///   <add name="ExportDestination2" value="\\server2\share\" description="Root path for export destination. Use UNC path (\\server\share) with no trailing slash for network shares."
     ///     encrypted="false" />
@@ -104,7 +106,7 @@ namespace TVA.IO
     ///   <add name="ExportDestination2.Password" value="l2qlAwAPihJjoThH+G53BYT6BXHQr13D6Asdibl0rDmlrgRXvJmCwcP8uvkFRHr9"
     ///     description="Encrypted password used for authentication to network share."
     ///     encrypted="true" />
-    ///   <add name="ExportDestination2.FileName" value="exportFile.xml" description="Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\path\filename.txt)."
+    ///   <add name="ExportDestination2.FileName" value="exportFile.txt" description="Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\path\filename.txt)."
     ///     encrypted="false" />
     /// </exportDestinations>
     /// ]]>

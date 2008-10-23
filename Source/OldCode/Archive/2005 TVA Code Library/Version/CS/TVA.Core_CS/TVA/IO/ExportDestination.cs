@@ -14,6 +14,8 @@
 //       Initial version of source generated
 //  09/19/2008 - James R Carroll
 //       Converted to C#.
+//  10/23/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -22,8 +24,9 @@ using System.IO;
 namespace TVA.IO
 {
     /// <summary>
-    /// Export destination.
+    /// Represents a destination location when exporting data using <see cref="MultipleDestinationExporter"/>.
     /// </summary>
+    /// <seealso cref="MultipleDestinationExporter"/>
     public struct ExportDestination
     {
         /// <summary>
