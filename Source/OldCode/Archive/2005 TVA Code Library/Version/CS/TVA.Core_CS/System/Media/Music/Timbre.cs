@@ -187,18 +187,21 @@ namespace System.Media.Music
         // Computes a basic harmonic series
         private static double ComputeHarmonicSeries(double frequency, long sampleIndex, double sampleRate, int offset, int order)
         {
-            double wt, r1 = 0.0D;
+            double wt, r1 = 0.0D, total = 0.0D;
+            int divisor;
 
             wt = AngularFrequency(frequency, sampleIndex, sampleRate);
 
             // Generate harmonic series
             for (int x = offset; x <= order; x += 2)
             {
+                divisor = (x - offset + 1);
                 r1 += Math.Sin(x * wt) / (x - offset + 1);
+                total += divisor;
             }
 
             // Evenly distribute the series between 0 and 1
-            return r1 / (int)((order - offset + 2) / 2);
+            return r1 / total;
         }
     }
 }

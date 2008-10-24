@@ -73,6 +73,18 @@ namespace System.Media.Music
         #region [ Methods ]
 
         /// <summary>
+        /// Add another predefined phrase of notes to this phrase.
+        /// </summary>
+        /// <param name="phrase">Phrase to add.</param>
+        public void AddPhrase(Phrase phrase)
+        {
+            foreach (Note[] notes in phrase.Notes)
+            {
+                AddNotes(notes);
+            }
+        }
+
+        /// <summary>
         /// Add a series of notes to the phrase.
         /// </summary>
         /// <param name="notes">Notes to add.</param>
