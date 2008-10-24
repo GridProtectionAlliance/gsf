@@ -1344,12 +1344,12 @@ namespace TVA.ErrorManagement
 
         private string GetDefaultLogFileName()
         {
-            return FilePath.AbsolutePath(ApplicationName + ".ErrorLog.txt");
+            return FilePath.GetAbsolutePath(ApplicationName + ".ErrorLog.txt");
         }
 
         private string GetScreenshotFileName()
         {
-            return FilePath.AbsolutePath(ApplicationName + ".ErrorState.png");
+            return FilePath.GetAbsolutePath(ApplicationName + ".ErrorState.png");
         }
 
         private void ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)

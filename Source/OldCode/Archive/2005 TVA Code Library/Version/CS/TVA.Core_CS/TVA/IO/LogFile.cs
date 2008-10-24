@@ -388,7 +388,7 @@ namespace TVA.IO
                 Initialize();
 
                 // Get the absolute file path if a relative path is specified.
-                m_fileName = FilePath.AbsolutePath(m_fileName);
+                m_fileName = FilePath.GetAbsolutePath(m_fileName);
 
                 // Create the folder in which the log file will reside it, if it does not exist.
                 if (!Directory.Exists(Path.GetDirectoryName(m_fileName)))

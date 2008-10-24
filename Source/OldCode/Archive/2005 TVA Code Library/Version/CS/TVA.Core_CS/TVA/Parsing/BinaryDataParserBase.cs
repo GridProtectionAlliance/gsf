@@ -214,7 +214,7 @@ namespace TVA.Parsing
         {
             Assembly asm = null;
             ConstructorInfo typeCtor = null;
-            string dllDirectory = FilePath.AbsolutePath("");
+            string dllDirectory = FilePath.GetAbsolutePath("");
             AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("InMemory"), AssemblyBuilderAccess.Run);
             ModuleBuilder modBuilder = asmBuilder.DefineDynamicModule("Helper");
             TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");

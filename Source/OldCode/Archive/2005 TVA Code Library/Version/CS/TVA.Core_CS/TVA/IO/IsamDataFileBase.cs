@@ -316,7 +316,7 @@ namespace TVA.IO
                 if (FileOpening != null)
                     FileOpening(this, EventArgs.Empty);
 
-                m_name = FilePath.AbsolutePath(m_name);
+                m_name = FilePath.GetAbsolutePath(m_name);
 
                 if (!Directory.Exists(Path.GetDirectoryName(m_name)))
                     Directory.CreateDirectory(Path.GetDirectoryName(m_name));

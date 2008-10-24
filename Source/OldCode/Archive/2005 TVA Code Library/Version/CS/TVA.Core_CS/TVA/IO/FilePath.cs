@@ -18,6 +18,8 @@
 //       Edited code comments.
 //  09/19/2008 - James R Carroll
 //       Converted to C#.
+//  10/24/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -33,10 +35,14 @@ using TVA.Reflection;
 namespace TVA.IO
 {
     /// <summary>
-    /// File/Path Manipulation Functions.
+    /// Contains File and Path manipulation methods.
     /// </summary>
     public static class FilePath
     {
+        #region [ Members ]
+
+        // Nested Types
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct NETRESOURCE
         {
@@ -50,17 +56,55 @@ namespace TVA.IO
             public string lpProvider;
         }
 
+        // Constants
+
+        private const int RESOURCETYPE_DISK = 0x1;
+
+        // Delegates
+
         [DllImport("mpr.dll", EntryPoint = "WNetAddConnection2W", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int WNetAddConnection2(ref NETRESOURCE lpNetResource, string lpPassword, string lpUsername, int dwFlags);
 
         [DllImport("mpr.dll", EntryPoint = "WNetCancelConnection2W", ExactSpelling = true, CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int WNetCancelConnection2(string lpName, int dwFlags, bool fForce);
 
-        private const int RESOURCETYPE_DISK = 0x1;
+        // Fields
 
         private static string m_fileNameCharPattern;
 
-        /// <summary>Connects to a network share with the specified user's credentials.</summary>
+        #endregion
+        
+        #region [ Constructor ]
+
+        static FilePath()
+        {
+            StringBuilder pattern = new StringBuilder();
+
+            // Defines a regular expression pattern for a valid file name character. We do this by
+            // allowing any characters except those that would not be valid as part of a filename.
+            // This essentially builds the "?" wildcard pattern match.
+            pattern.Append("[^");
+            pattern.Append(Path.DirectorySeparatorChar.EncodeRegexChar());
+            pattern.Append(Path.AltDirectorySeparatorChar.EncodeRegexChar());
+            pattern.Append(Path.PathSeparator.EncodeRegexChar());
+            pattern.Append(Path.VolumeSeparatorChar.EncodeRegexChar());
+
+            foreach (char c in Path.GetInvalidPathChars())
+            {
+                pattern.Append(c.EncodeRegexChar());
+            }
+
+            pattern.Append("]");
+            m_fileNameCharPattern = pattern.ToString();
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Connects to a network share with the specified user's credentials.
+        /// </summary>
         /// <param name="sharename">UNC share name to connect to.</param>
         /// <param name="username">Username to use for connection.</param>
         /// <param name="password">Password to use for connection.</param>
@@ -81,16 +125,20 @@ namespace TVA.IO
                 throw new InvalidOperationException("Failed to connect to network share \"" + sharename + "\" as user " + username + ". " + WindowsApi.GetErrorMessage(result));
         }
 
-        /// <summary>Disconnects the specified network share.</summary>
+        /// <summary>
+        /// Disconnects the specified network share.
+        /// </summary>
         /// <param name="sharename">UNC share name to disconnect from.</param>
         public static void DisconnectFromNetworkShare(string sharename)
         {
             DisconnectFromNetworkShare(sharename, true);
         }
 
-        /// <summary>Disconnects the specified network share.</summary>
+        /// <summary>
+        /// Disconnects the specified network share.
+        /// </summary>
         /// <param name="sharename">UNC share name to disconnect from.</param>
-        /// <param name="force">Set to True to force a disconnect.</param>
+        /// <param name="force">true to force a disconnect; otherwise false.</param>
         public static void DisconnectFromNetworkShare(string sharename, bool force)
         {
             int result = WNetCancelConnection2(sharename, 0, force);
@@ -98,7 +146,13 @@ namespace TVA.IO
                 throw new InvalidOperationException("Failed to disconnect from network share \"" + sharename + "\".  " + WindowsApi.GetErrorMessage(result));
         }
 
-        /// <summary>Returns True if the specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).</summary>
+        /// <summary>
+        /// Determines whether the specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
+        /// </summary>
+        /// <param name="fileSpecs">The file specs used for matching the specified file name.</param>
+        /// <param name="fileName">The file name to be tested against the specified file specs for a match.</param>
+        /// <param name="ignoreCase">true to specify a case-insensitive match; otherwise false.</param>
+        /// <returns>true if the specified file name matches any of the given file specs; otherwise false.</returns>
         public static bool IsFilePatternMatch(string[] fileSpecs, string fileName, bool ignoreCase)
         {
             bool found = false;
@@ -115,48 +169,32 @@ namespace TVA.IO
             return found;
         }
 
-        /// <summary>Returns True if the specified file name matches given file spec (wildcards are defined as '*' or '?' characters).</summary>
+        /// <summary>
+        /// Determines whether the specified file name matches the given file spec (wildcards are defined as '*' or '?' characters).
+        /// </summary>
+        /// <param name="fileSpec">The file spec used for matching the specified file name.</param>
+        /// <param name="fileName">The file name to be tested against the specified file spec for a match.</param>
+        /// <param name="ignoreCase">true to specify a case-insensitive match; otherwise false.</param>
+        /// <returns>true if the specified file name matches the given file spec; otherwise false.</returns>
         public static bool IsFilePatternMatch(string fileSpec, string fileName, bool ignoreCase)
         {
             return (new Regex(GetFilePatternRegularExpression(fileSpec), (ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))).IsMatch(fileName);
         }
 
-        /// <summary>Returns a regular expression that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters).</summary>
-        public static string GetFilePatternRegularExpression(string fileSpec)
-		{
-			if (m_fileNameCharPattern == null)
-			{
-				StringBuilder pattern = new StringBuilder();
+        /// <summary>
+        /// Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
+        /// </summary>
+        /// <param name="path">The path for which a list of files is to be returned.</param>
+        /// <returns>A list of files for the given path.</returns>
+        public static string[] GetFileList(string path)
+        {
+            return Directory.GetFiles(Path.GetDirectoryName(path), Path.GetFileName(path));
+        }
 
-				// Defines a regular expression pattern for a valid file name character. We do this by
-				// allowing any characters except those that would not be valid as part of a filename.
-				// This essentially builds the "?" wildcard pattern match.
-				pattern.Append("[^");
-                pattern.Append(Path.DirectorySeparatorChar.EncodeRegexChar());
-                pattern.Append(Path.AltDirectorySeparatorChar.EncodeRegexChar());
-                pattern.Append(Path.PathSeparator.EncodeRegexChar());
-                pattern.Append(Path.VolumeSeparatorChar.EncodeRegexChar());
-				
-				foreach (char c in Path.GetInvalidPathChars())
-				{
-                    pattern.Append(c.EncodeRegexChar());
-				}
-				
-				pattern.Append("]");
-				m_fileNameCharPattern = pattern.ToString();
-			}
-			
-			// Replaces wildcard file patterns with their equivalent regular expression.
-			fileSpec = fileSpec.Replace("\\", "\\u005C"); // Backslash in Regex means special sequence. Here, we really want a backslash.
-			fileSpec = fileSpec.Replace(".", "\\u002E"); // Dot in Regex means any character. Here, we really want a dot.
-			fileSpec = fileSpec.Replace("", m_fileNameCharPattern);
-			fileSpec = fileSpec.Replace("*", "(" + m_fileNameCharPattern + ")*");
-			
-			return "^" + fileSpec + "$";
-		}
-
-        /// <summary>Gets the size of the specified file.</summary>
-        /// <param name="fileName">Name of file whose size is to be returned.</param>
+        /// <summary>
+        /// Gets the size of the specified file.
+        /// </summary>
+        /// <param name="fileName">Name of file whose size is to be retrieved.</param>
         /// <returns>The size of the specified file.</returns>
         public static long GetFileLength(string fileName)
         {
@@ -170,122 +208,48 @@ namespace TVA.IO
             }
         }
 
-        /// <summary>Gets a unique temporary file name with path.</summary>
-        public static string GetTempFile()
+        /// <summary>
+        /// Gets a regular expression pattern that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters).
+        /// </summary>
+        /// <param name="fileSpec">The file spec for which the regular expression pattern if to be generated.</param>
+        /// <returns>Regular expression pattern that simulates wildcard matching for filenames.</returns>
+        public static string GetFilePatternRegularExpression(string fileSpec)
         {
-            return GetTempFile(true, true, "tmp");
-        }
+            // Replaces wildcard file patterns with their equivalent regular expression.
+            fileSpec = fileSpec.Replace("\\", "\\u005C"); // Backslash in Regex means special sequence. Here, we really want a backslash.
+            fileSpec = fileSpec.Replace(".", "\\u002E"); // Dot in Regex means any character. Here, we really want a dot.
+            fileSpec = fileSpec.Replace("?", m_fileNameCharPattern);
+            fileSpec = fileSpec.Replace("*", "(" + m_fileNameCharPattern + ")*");
 
-        /// <summary>Gets a unique temporary file name with path. If UseTempPath is false, application path is used for temp file.</summary>
-        public static string GetTempFile(bool useTempPath, bool createZeroLengthFile, string fileExtension)
-        {
-            if (useTempPath && createZeroLengthFile)
-            {
-                string tempFileName = GetTempFilePath() + GetTempFileName(fileExtension);
-
-                FileStream tempFile = File.Create(tempFileName);
-                tempFile.Close();
-
-                return tempFileName;
-            }
-            else if (useTempPath)
-            {
-                return GetTempFilePath() + GetTempFileName(fileExtension);
-            }
-            else if (createZeroLengthFile)
-            {
-                string tempFileName = GetApplicationPath() + GetTempFileName(fileExtension);
-
-                FileStream tempFile = File.Create(tempFileName);
-                tempFile.Close();
-
-                return tempFileName;
-            }
-            else
-            {
-                return GetApplicationPath() + GetTempFileName(fileExtension);
-            }
-        }
-
-        /// <summary>Gets a file name (with .tmp extension), guaranteed to be unique, with no path.</summary>
-        public static string GetTempFileName()
-        {
-            return GetTempFileName("tmp");
-        }
-
-        /// <summary>Gets a file name, guaranteed to be unique, with no path.</summary>
-        /// <param name="fileExtension">The extension of the temporary file.</param>
-        /// <returns>The file name, guaranteed to be unique, with no path.</returns>
-        /// <remarks>Use GetTempFile to return unique file name with path.</remarks>
-        public static string GetTempFileName(string fileExtension)
-        {
-            if (fileExtension.Substring(0, 1) == ".")
-                fileExtension = fileExtension.Substring(1);
-
-            return Guid.NewGuid().ToString() + "." + fileExtension;
-        }
-
-        /// <summary>Gets the temporary file path, suffixed with standard directory separator.</summary>
-        /// <returns>The temporary file path.</returns>
-        public static string GetTempFilePath()
-        {
-            return AddPathSuffix(Path.GetTempPath());
-        }
-
-        /// <summary>Gets the path of the executing assembly, suffixed with standard directory separator.</summary>
-        /// <returns>The path of the executing assembly.</returns>
-        public static string GetApplicationPath()
-        {
-            return JustPath(AssemblyInfo.EntryAssembly.Location.Trim());
-        }
-
-        /// <summary>Returns just the drive letter (or UNC (\\server\share\) from a path), suffixed with standard directory separator.</summary>
-        public static string JustDrive(string filePath)
-        {
-            if (string.IsNullOrEmpty(filePath))
-                return Path.DirectorySeparatorChar.ToString();
-            else
-                return AddPathSuffix(Path.GetPathRoot(filePath));
-        }
-
-        /// <summary>Returns just the file name from a path.</summary>
-        public static string JustFileName(string filePath)
-        {
-            if (string.IsNullOrEmpty(filePath))
-                return "";
-            else
-                return Path.GetFileName(filePath);
-        }
-
-        /// <summary>Returns last directory name from a path (e.g., would return sub2 from c:\windows\sub2\filename.ext).</summary>
-        public static string LastDirectoryName(string filePath)
-        {
-            char[] dirChars = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
-            char[] dirVolChars = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, Path.VolumeSeparatorChar};
-
-            filePath = JustPath(filePath);
-
-            while (filePath.Substring(filePath.Length - 1, 1).IndexOfAny(dirChars) > -1)
-            {
-                filePath = filePath.Substring(0, filePath.Length - 1);
-            }
-
-            while (filePath.IndexOfAny(dirVolChars) > -1)
-            {
-                filePath = filePath.Substring(filePath.Length - filePath.Length - 1, filePath.Length - 1);
-            }
-
-            return filePath;
+            return "^" + fileSpec + "$";
         }
 
         /// <summary>
-        /// Returns the absolute path for the specified file name.
+        /// Gets the last directory name from a file path.
         /// </summary>
+        /// <param name="filePath">The file path from where the last directory name is to be retrieved.</param>
+        /// <returns>The last directory name from a file path.</returns>
         /// <remarks>
-        /// This function will prefix the the application's root path to the given file name, note
-        /// that this will also work for Web applications.
+        /// <see cref="GetLastDirectoryName(string)"/> would return sub2 from c:\windows\sub2\filename.ext.
         /// </remarks>
-        public static string AbsolutePath(string filePath)
+        public static string GetLastDirectoryName(string filePath)
+        {
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                return new DirectoryInfo(Path.GetDirectoryName(filePath)).Name;
+            }
+            else
+            {
+                throw new ArgumentNullException("filePath");
+            }
+        }
+
+        /// <summary>
+        /// Gets the absolute file path for the specified file name or relative file path.
+        /// </summary>
+        /// <param name="filePath">File name or relative file path.</param>
+        /// <returns>Absolute file path for the specified file name or relative file path.</returns>
+        public static string GetAbsolutePath(string filePath)
         {
             if (!Path.IsPathRooted(filePath))
             {
@@ -296,8 +260,9 @@ namespace TVA.IO
                     case ApplicationType.Web:
                         filePath = System.Web.HttpContext.Current.Request.MapPath("~/") + filePath;
                         break;
-                    default:
-                        filePath = JustPath(AssemblyInfo.EntryAssembly.Location) + filePath;
+                    case ApplicationType.WindowsCui:
+                    case ApplicationType.WindowsGui:
+                        filePath = Path.Combine(Path.GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
                         break;
                 }
             }
@@ -305,34 +270,11 @@ namespace TVA.IO
             return filePath;
         }
 
-        /// <summary>Returns just the path, without a filename from a path, suffixed with standard directory separator.</summary>
-        public static string JustPath(string filePath)
-        {
-            if (string.IsNullOrEmpty(filePath))
-                return Path.DirectorySeparatorChar.ToString();
-            else
-                return Path.GetDirectoryName(filePath) + Path.DirectorySeparatorChar;
-        }
-
-        /// <summary>Returns just the file extension from a path, keeping the extension "dot".</summary>
-        public static string JustFileExtension(string filePath)
-        {
-            if (string.IsNullOrEmpty(filePath))
-                return "";
-            else
-                return Path.GetExtension(filePath);
-        }
-
-        /// <summary>Returns just the file name, with no extension, from a path.</summary>
-        public static string NoFileExtension(string filePath)
-        {
-            if (string.IsNullOrEmpty(filePath))
-                return "";
-            else
-                return Path.GetFileNameWithoutExtension(filePath);
-        }
-
-        /// <summary>Makes sure path is suffixed with standard directory separator.</summary>
+        /// <summary>
+        /// Makes sure path is suffixed with standard <see cref="Path.DirectorySeparatorChar"/>.
+        /// </summary>
+        /// <param name="filePath">The file path to be suffixed.</param>
+        /// <returns>Suffixed path.</returns>
         public static string AddPathSuffix(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
@@ -350,7 +292,11 @@ namespace TVA.IO
             return filePath;
         }
 
-        /// <summary>Makes sure path is not suffixed with any directory separator.</summary>
+        /// <summary>
+        /// Makes sure path is not suffixed with <see cref="Path.DirectorySeparatorChar"/> or <see cref="Path.AltDirectorySeparatorChar"/>.
+        /// </summary>
+        /// <param name="filePath">The file path to be unsuffixed.</param>
+        /// <returns>Unsuffixed path.</returns>
         public static string RemovePathSuffix(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
@@ -373,9 +319,11 @@ namespace TVA.IO
             return filePath;
         }
 
-        /// <summary>Remove any path root present in the path.</summary>
-        /// <returns>The path with the root removed if it was present; path otherwise.</returns>
-        /// <remarks>Unlike the <see cref="System.IO.Path"/> class the path isnt otherwise checked for validity.</remarks>
+        /// <summary>
+        /// Remove any path root present in the path.
+        /// </summary>
+        /// <param name="filePath">The file path whose root is to be removed.</param>
+        /// <returns>The path with the root removed if it was present.</returns>
         public static string DropPathRoot(string filePath)
         {
             string result = filePath;
@@ -423,10 +371,15 @@ namespace TVA.IO
             return result;
         }
 
-        /// <summary>Returns a file name, for display purposes, of the specified length using "..." to indicate a longer name.</summary>
+        /// <summary>
+        /// Returns a file name, for display purposes, of the specified length using "..." to indicate a longer name.
+        /// </summary>
+        /// <param name="fileName">The file path to be trimmed.</param>
+        /// <param name="length">The maximum length of the trimmed file path.</param>
+        /// <returns>Trimmed file path.</returns>
         /// <remarks>
-        /// <para>Minimum value for the <paramref name="length" /> parameter is 12.</para>
-        /// <para>12 will be used for any value specified as less than 12.</para>
+        /// Minimum value for the <paramref name="length" /> parameter is 12. 12 will be used for any value 
+        /// specified as less than 12.
         /// </remarks>
         public static string TrimFileName(string fileName, int length)
         {
@@ -439,22 +392,22 @@ namespace TVA.IO
 
             if (fileName.Length > length)
             {
-                string justName = JustFileName(fileName);
+                string justName = Path.GetFileName(fileName);
 
                 if (justName.Length == fileName.Length)
                 {
                     // This is just a file name. Make sure extension shows.
-                    string justExtension = JustFileExtension(fileName);
-                    string trimName = NoFileExtension(fileName);
+                    string justExtension = Path.GetExtension(fileName);
+                    string trimName = Path.GetFileNameWithoutExtension(fileName);
 
                     if (trimName.Length > 8)
                     {
                         if (justExtension.Length > length - 8)
                             justExtension = justExtension.Substring(0, length - 8);
-                        
+
                         double offset = (length - justExtension.Length - 3) / 2.0D;
-                        
-                        return trimName.Substring(0, (int)(System.Math.Ceiling(offset))) + "..." + 
+
+                        return trimName.Substring(0, (int)(System.Math.Ceiling(offset))) + "..." +
                             trimName.Substring((int)Math.Round(trimName.Length - Math.Floor(offset) + 1.0D)) + justExtension;
                     }
                     else
@@ -471,7 +424,7 @@ namespace TVA.IO
                 else
                 {
                     // File name contains path. Trims path before file name.
-                    string justFilePath = JustPath(fileName);
+                    string justFilePath = AddPathSuffix(Path.GetDirectoryName(fileName));
                     int offset = length - justName.Length - 4;
 
                     if (justFilePath.Length > offset && offset > 0)
@@ -492,25 +445,20 @@ namespace TVA.IO
             }
         }
 
-        /// <summary>Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").</summary>
-        /// <param name="path">The path for which a list of files is to be returned.</param>
-        /// <returns>A list of files for the given path.</returns>
-        public static string[] GetFileList(string path)
-        {
-            return Directory.GetFiles(JustPath(path), JustFileName(path));
-        }
-
-        /// <summary>Waits for the default duration (5 seconds) for read access on a file.</summary>
+        /// <summary>
+        /// Waits for the default duration (5 seconds) for read access on a file.
+        /// </summary>
         /// <param name="fileName">The name of the file to wait for to obtain read access.</param>
         public static void WaitForReadLock(string fileName)
         {
             WaitForReadLock(fileName, 5);
         }
 
-        /// <summary>Waits for read access on a file for the specified number of seconds.</summary>
+        /// <summary>
+        /// Waits for read access on a file for the specified number of seconds.
+        /// </summary>
         /// <param name="fileName">The name of the file to wait for to obtain read access.</param>
-        /// <param name="secondsToWait">The time to wait for in seconds to obtain read access on a file.</param>
-        /// <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
+        /// <param name="secondsToWait">The time to wait for in seconds to obtain read access on a file. Set to zero to wait infinitely.</param>
         public static void WaitForReadLock(string fileName, double secondsToWait)
         {
             if (!File.Exists(fileName))
@@ -556,17 +504,20 @@ namespace TVA.IO
             }
         }
 
-        /// <summary>Waits for the default duration (5 seconds) for write access on a file.</summary>
+        /// <summary>
+        /// Waits for the default duration (5 seconds) for write access on a file.
+        /// </summary>
         /// <param name="fileName">The name of the file to wait for to obtain write access.</param>
         public static void WaitForWriteLock(string fileName)
         {
             WaitForWriteLock(fileName, 5);
         }
 
-        /// <summary>Waits for write access on a file for the specified number of seconds.</summary>
+        /// <summary>
+        /// Waits for write access on a file for the specified number of seconds.
+        /// </summary>
         /// <param name="fileName">The name of the file to wait for to obtain write access.</param>
-        /// <param name="secondsToWait">The time to wait for in seconds to obtain write access on a file.</param>
-        /// <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
+        /// <param name="secondsToWait">The time to wait for in seconds to obtain write access on a file. Set to zero to wait infinitely.</param>
         public static void WaitForWriteLock(string fileName, double secondsToWait)
         {
             if (!File.Exists(fileName))
@@ -613,17 +564,20 @@ namespace TVA.IO
             }
         }
 
-        /// <summary>Waits for the default duration (5 seconds) for a file to exist.</summary>
+        /// <summary>
+        /// Waits for the default duration (5 seconds) for a file to exist.
+        /// </summary>
         /// <param name="fileName">The name of the file to wait for until it is created.</param>
         public static void WaitTillExists(string fileName)
         {
             WaitTillExists(fileName, 5);
         }
 
-        /// <summary>Waits for a file to exist for the specified number of seconds.</summary>
+        /// <summary>
+        /// Waits for a file to exist for the specified number of seconds.
+        /// </summary>
         /// <param name="fileName">The name of the file to wait for until it is created.</param>
-        /// <param name="secondsToWait">The time to wait for in seconds for the file to be created.</param>
-        /// <remarks>Set secondsToWait to zero to wait infinitely.</remarks>
+        /// <param name="secondsToWait">The time to wait for in seconds for the file to be created. Set to zero to wait infinitely.</param>
         public static void WaitTillExists(string fileName, double secondsToWait)
         {
             // Keeps waiting for a file to be created.
@@ -641,5 +595,7 @@ namespace TVA.IO
                 Thread.Sleep(250);
             }
         }
+
+        #endregion
     }
 }
