@@ -47,49 +47,41 @@ namespace System.Media.Music
     /// static class Program
     /// {
     ///     static void Main()
-    ///     {
-    ///         WaveFile waveFile = new WaveFile(SampleRate.Hz8000, BitsPerSample.Bits16, DataChannels.Mono);
-    ///         TimbreFunction timbre = Note.BasicNote;             // Set the musical timbre
-    ///         double amplitude = 0.25D * short.MaxValue;          // Set volume to 25% of maximum
-    ///         double seconds = 6.0D;                              // Set length of wave file in seconds
-    ///         double samplesPerSecond = waveFile.SampleRate;      // Gets the defined sample rate
-    ///         double samplePeriod = seconds * samplesPerSecond;   // Compute total sample period
-    ///         int totalNotes = 15;                                // Total notes to traverse
-    ///         string noteID = Note.MiddleC;                       // Start note at middle C
-    ///         double frequency = Note.GetNoteFrequency(noteID);   // Get frequency for middle C
-    ///         double time;                                        // Time index
-    ///         bool reverse = false;                               // Traverse notes in reverse order
+    ///      {
+    ///          WaveFile waveFile = new WaveFile();
+    ///          long samplePeriod = 6 * waveFile.SampleRate;   // Compute total sample period
+    ///          int totalNotes = 15;                           // Total notes to traverse
+    ///          string noteID = Note.MiddleC;                  // Start note at middle C
+    ///          double frequency = Note.GetFrequency(noteID);  // Get frequency for middle C
+    ///          bool reverse = false;                          // Traverse notes in reverse order
     ///
-    ///         for (int sample = 0; sample <![CDATA[<]]> samplePeriod; sample++)
-    ///         {
-    ///             // Change notes at even intervals within the sample period
-    ///             if (sample > 0 <![CDATA[&&]]> (sample % (samplePeriod / totalNotes)) == 0)
-    ///             {
-    ///                 if (reverse)
-    ///                 {
-    ///                     noteID = Note.GetPreviousNoteID(noteID, false);
-    ///                     frequency = Note.GetNoteFrequency(noteID);
-    ///                 }
-    ///                 else
-    ///                 {
-    ///                     noteID = Note.GetNextNoteID(noteID, false);
-    ///                     frequency = Note.GetNoteFrequency(noteID);
-    ///                 }
+    ///          for (int sample = 0; sample <![CDATA[<]]> samplePeriod; sample++)
+    ///          {
+    ///              // Change notes at even intervals within the sample period
+    ///              if (sample > 0 <![CDATA[&&]]> (sample % (samplePeriod / totalNotes)) == 0)
+    ///              {
+    ///                  if (reverse)
+    ///                  {
+    ///                      noteID = Note.GetPreviousID(noteID, false);
+    ///                      frequency = Note.GetFrequency(noteID);
+    ///                  }
+    ///                  else
+    ///                  {
+    ///                      noteID = Note.GetNextID(noteID, false);
+    ///                      frequency = Note.GetFrequency(noteID);
+    ///                  }
     ///
-    ///                 // Go back down the scale after C5
-    ///                 if (noteID == "C5")
-    ///                     reverse = true;
-    ///             }
+    ///                  // Go back down the scale after C5
+    ///                  if (noteID == "C5")
+    ///                      reverse = true;
+    ///              }
     ///
-    ///             // Compute time index of the current sample
-    ///             time = sample / samplesPerSecond;
+    ///              waveFile.AddSample(Timbre.BasicNote(frequency, sample, samplePeriod, waveFile.SampleRate) * 4500);
+    ///          }
     ///
-    ///             waveFile.AddBlock((short)(timbre(frequency, time) * amplitude));
-    ///         }
-    ///
-    ///         waveFile.Play();
-    ///         Console.ReadKey();
-    ///     }
+    ///          waveFile.Play();
+    ///          Console.ReadKey();
+    ///      }
     /// }
     /// </code>
     /// </example>
@@ -205,17 +197,17 @@ namespace System.Media.Music
         public const string MiddleC = "C4";
 
         // Fields
-        private TimbreFunction m_timbre;
-        private DampingFunction m_damping;
+        private string m_ID;
         private double m_frequency;
-        private double m_noteValueTime;
+        private double m_value;
+        private double m_valueTime;
+        private int m_dots;
         private long m_startTimeIndex;
         private long m_endTimeIndex;
         private long m_samplePeriod;
+        private TimbreFunction m_timbre;
+        private DampingFunction m_damping;
         private double m_dynamic;
-        private string m_noteID;
-        private int m_noteValue;
-        private int m_dots;
 
         #endregion
 
@@ -261,7 +253,7 @@ namespace System.Media.Music
             set
             {
                 if (m_frequency != value)
-                    m_noteID = null;
+                    m_ID = null;
 
                 m_frequency = value;
             }
@@ -270,7 +262,7 @@ namespace System.Media.Music
         /// <summary>Gets or sets note ID of the note.</summary>
         /// <exception cref="ArgumentNullException">noteID is null.</exception>
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public string NoteID
+        public string ID
         {
             get
             {
@@ -278,38 +270,63 @@ namespace System.Media.Music
             }
             set
             {
-                m_frequency = GetNoteFrequency(value);
-                m_noteID = value;
+                m_frequency = GetFrequency(value);
+                m_ID = value;
+            }
+        }
+
+        /// <summary>Get or sets the relative note value representing the length of the note.</summary>
+        public double Value
+        {
+            get
+            {
+                return m_value;
+            }
+            set
+            {
+                m_value = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cached note value time, in seconds, calculated from a call to <see cref="CalculateValueTime"/>.
+        /// </summary>
+        public double ValueTime
+        {
+            get
+            {
+                return m_valueTime;
             }
         }
 
         /// <summary>Get or sets the note value, expressed in American form, representing the length of the note.</summary>
-        public NoteValue NoteValue
+        public NoteValue NamedValue
         {
             get
             {
-                return (NoteValue)m_noteValue;
+                return (NoteValue)Note.NamedValueIndex(m_value);
             }
             set
             {
-                m_noteValue = (int)value;
+                m_value = value.Duration((m_dots));
             }
         }
 
         /// <summary>Get or sets the note value, expressed in British form, representing the length of the note.</summary>
-        public NoteValueBritish NoteValueBritish
+        public NoteValueBritish NamedValueBritish
         {
             get
             {
-                return (NoteValueBritish)m_noteValue;
+                return (NoteValueBritish)Note.NamedValueIndex(m_value);
             }
             set
             {
-                m_noteValue = (int)value;
+                m_value = value.Duration((m_dots));
             }
         }
 
         /// <summary>Gets or sets the total dotted note length extensions that apply to this note.</summary>
+        /// <remarks>This is only used in conjunction with the named note values.</remarks>
         public int Dots
         {
             get
@@ -319,6 +336,7 @@ namespace System.Media.Music
             set
             {
                 m_dots = value;
+                m_value = NamedValue.Duration((m_dots));
             }
         }
 
@@ -360,50 +378,50 @@ namespace System.Media.Music
         }
 
         /// <summary>
-        /// Gets or sets the dynamic (i.e., volume) for this note.  If the dynamic
+        /// Gets or sets the named dynamic (i.e., volume) for this note.  If the dynamic
         /// is undefined, the dynamic of the song will be used.
         /// </summary>
         /// <remarks>
         /// Set this value to undefined to use the current dynamic of the song.
         /// </remarks>
-        public Dynamic Dynamic
+        public Dynamic NamedDynamic
         {
             get
             {
                 if (m_dynamic == -1.0D)
-                    return Dynamic.Undefined;
+                    return Music.Dynamic.Undefined;
 
                 // Dynamic can be custom, so return closest match...
                 int dynamic = (int)m_dynamic * 100;
 
-                if (dynamic <= (int)Dynamic.Pianissimo)
+                if (dynamic <= (int)Music.Dynamic.Pianissimo)
                 {
-                    return Dynamic.Pianissimo;
+                    return Music.Dynamic.Pianissimo;
                 }
-                else if (dynamic <= (int)Dynamic.Piano)
+                else if (dynamic <= (int)Music.Dynamic.Piano)
                 {
-                    return Dynamic.Piano;
+                    return Music.Dynamic.Piano;
                 }
-                else if (dynamic <= (int)Dynamic.MezzoPiano)
+                else if (dynamic <= (int)Music.Dynamic.MezzoPiano)
                 {
-                    return Dynamic.MezzoPiano;
+                    return Music.Dynamic.MezzoPiano;
                 }
-                else if (dynamic <= (int)Dynamic.MezzoForte)
+                else if (dynamic <= (int)Music.Dynamic.MezzoForte)
                 {
-                    return Dynamic.MezzoForte;
+                    return Music.Dynamic.MezzoForte;
                 }
-                else if (dynamic <= (int)Dynamic.Forte)
+                else if (dynamic <= (int)Music.Dynamic.Forte)
                 {
-                    return Dynamic.Forte;
+                    return Music.Dynamic.Forte;
                 }
                 else
                 {
-                    return Dynamic.Fortissimo;
+                    return Music.Dynamic.Fortissimo;
                 }
             }
             set
             {
-                if (value == Dynamic.Undefined)
+                if (value == Music.Dynamic.Undefined)
                     m_dynamic = -1.0D;
                 else
                     m_dynamic = (double)value / 100.0D;
@@ -411,9 +429,9 @@ namespace System.Media.Music
         }
 
         /// <summary>
-        /// Gets or sets a custom dynamic (i.e., volume) expressed as percentage
-        /// in the range of 0 to 1 for this note.   If the dynamic is set to -1,
-        /// the dynamic of the song will be used.
+        /// Gets or sets the dynamic (i.e., volume) expressed as percentage in
+        /// the range of 0 to 1 for this note. If the dynamic is set to -1, the
+        /// dynamic of the song will be used.
         /// </summary>
         /// <remarks>
         /// Set this value to -1 to use the current dynamic of the song.
@@ -421,7 +439,7 @@ namespace System.Media.Music
         /// <exception cref="ArgumentOutOfRangeException">
         /// Value must be expressed as a fractional percentage between zero and one.
         /// </exception>
-        public double CustomDynamic
+        public double Dynamic
         {
             get
             {
@@ -430,32 +448,9 @@ namespace System.Media.Music
             set
             {
                 if (value != -1.0D && (value < 0.0D || value > 1.0D))
-                    throw new ArgumentOutOfRangeException("CustomDynamic", "Value must be expressed as a fractional percentage between zero and one.");
+                    throw new ArgumentOutOfRangeException("Dynamic", "Value must be expressed as a fractional percentage between zero and one.");
 
                 m_dynamic = value;
-            }
-        }
-
-        /// <summary>
-        /// Returns the relative note duration.
-        /// </summary>
-        /// <returns>Relative note duration.</returns>
-        public double Duration
-        {
-            get
-            {
-                return NoteValue.Duration(m_dots);
-            }
-        }
-
-        /// <summary>
-        /// Gets cached note value time, in seconds, calculated from a call to <see cref="CalculateNoteValueTime"/>.
-        /// </summary>
-        public double NoteValueTime
-        {
-            get
-            {
-                return m_noteValueTime;
             }
         }
 
@@ -516,12 +511,12 @@ namespace System.Media.Music
         /// <param name="tempo">Tempo used to calculate note value time.</param>
         /// <returns>Calculated note value time.</returns>
         /// <remarks>
-        /// Calculated value is cached and available from <see cref="NoteValueTime"/> property.
+        /// Calculated value is cached and available from <see cref="ValueTime"/> property.
         /// </remarks>
-        public double CalculateNoteValueTime(Tempo tempo)
+        public double CalculateValueTime(Tempo tempo)
         {
-            m_noteValueTime = tempo.CalculateNoteValueTime((NoteValue)m_noteValue, m_dots);
-            return m_noteValueTime;
+            m_valueTime = tempo.CalculateNoteValueTime(m_value);
+            return m_valueTime;
         }
         
         /// <summary>
@@ -529,25 +524,25 @@ namespace System.Media.Music
         /// </summary>
         public override string ToString()
         {
-            if (m_noteID == null && m_frequency > 0.0D)
+            if (m_ID == null && m_frequency > 0.0D)
             {
                 // Attempt to look up note ID
                 foreach (FieldInfo field in typeof(Note).GetFields())
                 {
                     if (m_frequency == (double)field.GetRawConstantValue())
                     {
-                        m_noteID = field.Name;
+                        m_ID = field.Name;
                         break;
                     }
                 }
 
                 // If no note ID was found for given frequency, just assign the
                 // frequency as the note ID
-                if (m_noteID == null)
-                    m_noteID = m_frequency.ToString();
+                if (m_ID == null)
+                    m_ID = m_frequency.ToString();
             }
 
-            return m_noteID;
+            return m_ID;
         }
 
         /// <summary>Returns True if the frequency and value of this note equals the frequency and value of the specified other note.</summary>
@@ -570,7 +565,7 @@ namespace System.Media.Music
             int result = m_frequency.CompareTo(other.Frequency);
 
             if (result == 0)
-                result = Duration.CompareTo(other.Duration);
+                result = Value.CompareTo(other.Value);
 
             return result;
         }
@@ -585,7 +580,7 @@ namespace System.Media.Music
 
         public override int GetHashCode()
         {
-            return (Frequency * Duration).GetHashCode();
+            return (Frequency * Value).GetHashCode();
         }
 
         #endregion
@@ -629,16 +624,27 @@ namespace System.Media.Music
         // Static Methods
 
         /// <summary>
+        /// Returns closest note value index (for <see cref="NoteValue"/> or <see cref="NoteValueBritish"/>)
+        /// given the relative duration of a note.
+        /// </summary>
+        /// <param name="value">Relative duration of the note.</param>
+        /// <returns>Closest note value enumeration index given the relative duration of a note.</returns>
+        public static int NamedValueIndex(double value)
+        {
+            return 2 - (int)Math.Log(value, 2);
+        }
+
+        /// <summary>
         /// Gets the specified note frequency.
         /// </summary>
         /// <param name="noteID">ID of the note to retrieve - expected format is "Note + Octave + S?" (e.g., A2 or C5S)</param>
         /// <returns>The specified note.</returns>
         /// <exception cref="ArgumentNullException">noteID is null.</exception>
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public static double GetNoteFrequency(string noteID)
+        public static double GetFrequency(string noteID)
         {
-            noteID = ValidateNoteID(noteID);
-            return GetNoteFrequency(noteID[0], int.Parse(noteID[1].ToString()), noteID.Length > 2 && noteID[2] == 'S' ? true : false);
+            noteID = ValidateID(noteID);
+            return GetFrequency(noteID[0], int.Parse(noteID[1].ToString()), noteID.Length > 2 && noteID[2] == 'S' ? true : false);
         }
 
         /// <summary>
@@ -650,7 +656,7 @@ namespace System.Media.Music
         /// <returns>The specified note.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Notes must be A - G, octaves must be 0 - 8, first note is C0, last note is D8S.</exception>
         /// <exception cref="ArgumentException">Sharps are not defined for notes 'B' and 'E'.</exception>
-        public static double GetNoteFrequency(char note, int octave, bool sharp)
+        public static double GetFrequency(char note, int octave, bool sharp)
         {
             if (note < 'A' || note > 'G')
                 throw new ArgumentOutOfRangeException("note", "Note must be A - G");
@@ -675,9 +681,9 @@ namespace System.Media.Music
         /// <returns>The next note ID that is after the specified note ID.</returns>
         /// <exception cref="ArgumentNullException">noteID is null.</exception>
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public static string GetNextNoteID(string noteID, bool includeSharps)
+        public static string GetNextID(string noteID, bool includeSharps)
         {
-            noteID = ValidateNoteID(noteID);
+            noteID = ValidateID(noteID);
 
             char note = noteID[0];
             int octave = int.Parse(noteID[1].ToString());
@@ -714,9 +720,9 @@ namespace System.Media.Music
         /// <returns>The previous note ID that is before the specified note ID.</returns>
         /// <exception cref="ArgumentNullException">noteID is null.</exception>
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
-        public static string GetPreviousNoteID(string noteID, bool includeSharps)
+        public static string GetPreviousID(string noteID, bool includeSharps)
         {
-            noteID = ValidateNoteID(noteID);
+            noteID = ValidateID(noteID);
 
             char note = noteID[0];
             int octave = int.Parse(noteID[1].ToString());
@@ -759,7 +765,7 @@ namespace System.Media.Music
             return string.Format("{0}{1}{2}", note, octave, sharp ? "S" : "");
         }
 
-        private static string ValidateNoteID(string noteID)
+        private static string ValidateID(string noteID)
         {
             if (noteID == null)
                 throw new ArgumentNullException("noteID");

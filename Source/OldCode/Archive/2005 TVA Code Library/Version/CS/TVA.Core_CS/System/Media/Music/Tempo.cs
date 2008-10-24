@@ -46,25 +46,32 @@ namespace System.Media.Music
 
         // Fields
         private int m_totalNoteValues;
-        private int m_noteValue;
-        private double m_referenceTime;
+        private double m_noteValue;
+        private double m_noteValueTime;
 
         #endregion
 
         #region [ Constructors ]
 
+        public Tempo(int totalNoteValues, double noteValue)
+        {
+            m_totalNoteValues = totalNoteValues;
+            m_noteValue = noteValue;
+            CalculateNoteValueTime();
+        }
+
         public Tempo(int totalNoteValues, NoteValue noteValue)
         {
             m_totalNoteValues = totalNoteValues;
-            m_noteValue = (int)noteValue;
-            CalculateReferenceTime();
+            m_noteValue = noteValue.Duration();
+            CalculateNoteValueTime();
         }
 
         public Tempo(int totalNoteValues, NoteValueBritish noteValue)
         {
             m_totalNoteValues = totalNoteValues;
-            m_noteValue = (int)noteValue;
-            CalculateReferenceTime();
+            m_noteValue = noteValue.Duration();
+            CalculateNoteValueTime();
         }
 
         #endregion
@@ -84,48 +91,63 @@ namespace System.Media.Music
             set
             {
                 m_totalNoteValues = value;
-                CalculateReferenceTime();
-            }
-        }
-
-        /// <summary>Get or sets the note value, expressed in American form, representing the length of the note.</summary>
-        public NoteValue NoteValue
-        {
-            get
-            {
-                return (NoteValue)m_noteValue;
-            }
-            set
-            {
-                m_noteValue = (int)value;
-                CalculateReferenceTime();
-            }
-        }
-
-        /// <summary>Get or sets the note value, expressed in British form, representing the length of the note.</summary>
-        public NoteValueBritish NoteValueBritish
-        {
-            get
-            {
-                return (NoteValueBritish)m_noteValue;
-            }
-            set
-            {
-                m_noteValue = (int)value;
-                CalculateReferenceTime();
+                CalculateNoteValueTime();
             }
         }
 
         /// <summary>
-        /// Total time, in seconds, for a single reference note value.  For example, if tempo
-        /// is M.M. 120 quarter-notes per minute, then time is referenced in quarter-notes and
-        /// this function would return 0.5 seconds.
+        /// Returns relative value for reference note value.  For example, if tempo is
+        /// M.M. 120 quarter-notes per minute, then time is referenced in quarter-notes
+        /// and this function would return 0.25.
         /// </summary>
-        public double ReferenceTime
+        public double NoteValue
         {
             get
             {
-                return m_referenceTime;
+                return m_noteValue;
+            }
+            set
+            {
+                m_noteValue = value;
+            }
+        }
+
+        /// <summary>
+        /// Total time, in seconds, for reference note value.  For example, if tempo is
+        /// M.M. 120 quarter-notes per minute, then time is referenced in quarter-notes
+        /// and this function would return 0.5 seconds.
+        /// </summary>
+        public double NoteValueTime
+        {
+            get
+            {
+                return m_noteValueTime;
+            }
+        }
+
+        /// <summary>Get or sets the note value, expressed in American form, representing the length of the note.</summary>
+        public NoteValue NamedNoteValue
+        {
+            get
+            {
+                return (NoteValue)Note.NamedValueIndex(m_noteValue);
+            }
+            set
+            {
+                m_noteValue = value.Duration();
+            }
+        }
+
+        /// <summary>Get or sets the note value, expressed in British form, representing the length of the note.</summary>
+        public NoteValueBritish NamedNoteValueBritish
+        {
+            get
+            {
+                return (NoteValueBritish)Note.NamedValueIndex(m_noteValue);
+            }
+            set
+            {
+                m_noteValue = value.Duration();
             }
         }
 
@@ -138,12 +160,24 @@ namespace System.Media.Music
         /// source note value will last. For example, if tempo is M.M. 120 quarter-notes per minute,
         /// then each quarter-note would last a half-second.
         /// </summary>
+        /// <param name="value">Relative value of note.</param>
+        /// <returns>Actual duration of note value in seconds.</returns>
+        public double CalculateNoteValueTime(double value)
+        {
+            return m_noteValueTime * (value / m_noteValue);
+        }
+
+        /// <summary>
+        /// Calculates the actual time duration, in seconds, for the given tempo that the specified
+        /// source note value will last. For example, if tempo is M.M. 120 quarter-notes per minute,
+        /// then each quarter-note would last a half-second.
+        /// </summary>
         /// <param name="source">Source note value.</param>
         /// <param name="dots">Total dotted note length extensions to apply.</param>
         /// <returns>Actual duration of note value in seconds.</returns>
         public double CalculateNoteValueTime(NoteValue source, int dots)
         {
-            return m_referenceTime * source.Duration(this.NoteValue, dots);
+            return m_noteValueTime * source.Duration(this.NamedNoteValue, dots);
         }
 
         /// <summary>
@@ -156,12 +190,12 @@ namespace System.Media.Music
         /// <returns>Actual duration of note value in seconds.</returns>
         public double CalculateNoteValueTime(NoteValueBritish source, int dots)
         {
-            return m_referenceTime * source.Duration(this.NoteValueBritish, dots);
+            return m_noteValueTime * source.Duration(this.NamedNoteValueBritish, dots);
         }
 
-        private void CalculateReferenceTime()
+        private void CalculateNoteValueTime()
         {
-            m_referenceTime = 60.0D / m_totalNoteValues;
+            m_noteValueTime = 60.0D / m_totalNoteValues;
         }
 
         #endregion

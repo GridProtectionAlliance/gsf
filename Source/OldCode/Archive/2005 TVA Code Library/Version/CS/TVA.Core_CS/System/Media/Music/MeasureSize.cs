@@ -42,8 +42,7 @@ namespace System.Media.Music
 
         // Fields
         private int m_beats;
-        private int m_noteValue;
-        private double m_duration;
+        private double m_noteValue;
 
         #endregion
 
@@ -52,11 +51,19 @@ namespace System.Media.Music
         /// <summary>
         /// Creates a new musical measure defined as the number of beats per note value.
         /// </summary>
+        public MeasureSize(int beats, double noteValue)
+        {
+            m_beats = beats;
+            m_noteValue = noteValue;
+        }
+
+        /// <summary>
+        /// Creates a new musical measure defined as the number of beats per note value.
+        /// </summary>
         public MeasureSize(int beats, NoteValue noteValue)
         {
             m_beats = beats;
-            m_noteValue = (int)noteValue;
-            m_duration = noteValue.Duration();
+            m_noteValue = noteValue.Duration();
         }
 
         /// <summary>
@@ -65,8 +72,7 @@ namespace System.Media.Music
         public MeasureSize(int beats, NoteValueBritish noteValue)
         {
             m_beats = beats;
-            m_noteValue = (int)noteValue;
-            m_duration = noteValue.Duration();
+            m_noteValue = noteValue.Duration();
         }
 
         #endregion
@@ -89,32 +95,47 @@ namespace System.Media.Music
         }
 
         /// <summary>
-        /// Get or sets the note value, expressed in American form, representing the basic pulse of the music.
+        /// Get or sets the relative note value representing the basic pulse of the music.
         /// </summary>
-        public NoteValue NoteValue
+        public double NoteValue
         {
             get
             {
-                return (NoteValue)m_noteValue;
+                return m_noteValue;
             }
             set
             {
-                m_noteValue = (int)value;
+                m_noteValue = value;
+            }
+        }
+
+        /// <summary>
+        /// Get or sets the note value, expressed in American form, representing the basic pulse of the music.
+        /// </summary>
+        public NoteValue NamedNoteValue
+        {
+            get
+            {
+                return (NoteValue)Note.NamedValueIndex(m_noteValue);
+            }
+            set
+            {
+                m_noteValue = value.Duration();
             }
         }
 
         /// <summary>
         /// Get or sets the note value, expressed in British form, representing the basic pulse of the music.
         /// </summary>
-        public NoteValueBritish NoteValueBritish
+        public NoteValueBritish NamedNoteValueBritish
         {
             get
             {
-                return (NoteValueBritish)m_noteValue;
+                return (NoteValueBritish)Note.NamedValueIndex(m_noteValue);
             }
             set
             {
-                m_noteValue = (int)value;
+                m_noteValue = value.Duration();
             }
         }
 
@@ -122,23 +143,23 @@ namespace System.Media.Music
 
         #region [ Methods ]
 
-        public void ValidateNoteValueAtBeat(NoteValue noteValue, int beat)
-        {
-            ValidateNoteValueAtBeat(noteValue.Duration(), beat);
-        }
-
-        public void ValidateNoteValueAtBeat(NoteValueBritish noteValue, int beat)
-        {
-            ValidateNoteValueAtBeat(noteValue.Duration(), beat);
-        }
-
-        private void ValidateNoteValueAtBeat(double duration, int beat)
+        public void ValidateNoteValueAtBeat(double noteValue, int beat)
         {
             if (beat < 0 || beat > m_beats - 1)
                 throw new ArgumentOutOfRangeException("beats", "Beat must range from 0 to Measure.Beats - 1");
 
-            if (duration > (m_beats - beat) * m_duration)
+            if (noteValue > (m_beats - beat) * m_noteValue)
                 throw new ArgumentOutOfRangeException("noteValue", "NoteValue is too large to fit within remaining measure");
+        }
+
+        public void ValidateNoteValueAtBeat(NoteValue noteValue, int beat, int dots)
+        {
+            ValidateNoteValueAtBeat(noteValue.Duration(dots), beat);
+        }
+
+        public void ValidateNoteValueAtBeat(NoteValueBritish noteValue, int beat, int dots)
+        {
+            ValidateNoteValueAtBeat(noteValue.Duration(dots), beat);
         }
 
         #endregion

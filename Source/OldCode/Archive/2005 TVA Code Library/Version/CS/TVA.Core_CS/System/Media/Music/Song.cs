@@ -50,15 +50,15 @@ namespace System.Media.Music
     /// {
     ///     static void Main()
     ///     {
-    ///         Song song = new Song();
+    ///         Song song = new Song { Damping = Damping.Linear };
     ///
     ///         Console.WriteLine("Generating chord...");
     ///
     ///         song.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.C4, NoteValue = NoteValue.Longa },
-    ///             new Note { Frequency = Note.E4, NoteValue = NoteValue.Longa },
-    ///             new Note { Frequency = Note.G4, NoteValue = NoteValue.Longa }
+    ///             new Note { Frequency = Note.C4, Value = 6 },
+    ///             new Note { Frequency = Note.E4, Value = 6 },
+    ///             new Note { Frequency = Note.G4, Value = 6 }
     ///         );
     ///
     ///         song.Finish();
@@ -77,116 +77,181 @@ namespace System.Media.Music
     /// <example>
     /// This example generates a familiar tune, plays the song and saves it to disk:
     /// <code>
+    /// // Add reference to System.Speech
     /// using System;
+    /// using System.IO;
     /// using System.Media;
     /// using System.Media.Music;
+    /// using System.Speech;
+    /// using System.Speech.Synthesis;
+    /// using System.Speech.AudioFormat;
     ///
     /// static class Program
     /// {
     ///     static void Main()
     ///     {
-    ///         // Create a new song with the basic settings: 3/4 measure size, a tempo of 240 quarter-notes
-    ///         // per minute, mezzo-forte prevailing dynamic level, basic note timbre and standard CD-quality
-    ///         // settings for the underlying sound file
+    ///         Console.WriteLine("Synthesizing speech...");
+    ///
+    ///         SpeechSynthesizer synthesizer = new SpeechSynthesizer();
+    ///         MemoryStream speechStream = new MemoryStream();
+    ///         PromptBuilder songText = new PromptBuilder();
+    ///
+    ///         synthesizer.SelectVoice("Microsoft Sam");
+    ///         synthesizer.Rate = 5; // Range = -10 to +10
+    ///         synthesizer.SetOutputToWaveStream(speechStream);
+    ///
+    ///         songText.AppendText("Jin - gull bells!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(3000000));
+    ///         songText.AppendText("Jin - gull bells!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(3000000));
+    ///         songText.AppendText("Jin - gull - all, theuh - way!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(12000000));
+    ///         songText.AppendText("Oh - what - fun!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(1000000));
+    ///         songText.AppendText("It - is!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("To - ride!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("a - one - horse!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("Open!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("Sleigh!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(1000000));
+    ///         songText.AppendText("A!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(2500000));
+    ///         songText.AppendText("Jin - gull bells!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(3000000));
+    ///         songText.AppendText("Jin - gull bells!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(3000000));
+    ///         songText.AppendText("Jin - gull - all, theuh - way!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(12000000));
+    ///         songText.AppendText("Oh - what - fun!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(1000000));
+    ///         songText.AppendText("It - is!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("To - ride!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("a - one - horse!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("Open!", PromptEmphasis.Strong);
+    ///         songText.AppendBreak(new TimeSpan(500000));
+    ///         songText.AppendText("Sleigh.", PromptEmphasis.Reduced);
+    ///
+    ///         synthesizer.Speak(songText);
+    ///         speechStream.Position = 0;
+    ///         WaveFile speech = WaveFile.Load(speechStream);
+    ///
+    ///         Console.WriteLine("Synthesizing song...");
+    ///
     ///         Song song = new Song();
     ///         Phrase phrase = new Phrase();
     ///
-    ///         Console.WriteLine("Generating song...");
+    ///         // Slow the song down to help with speech synchronization
+    ///         song.Tempo = new Tempo(160, NoteValue.Quarter);
+    ///
+    ///         // Make sure audio specifications for song and speech match
+    ///         song.SampleRate = speech.SampleRate;
+    ///         song.BitsPerSample = speech.BitsPerSample;
+    ///         song.Channels = speech.Channels;
     ///
     ///         // Define the repeating phrase of the song
     ///         phrase.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.C3, NoteValue = NoteValue.Whole }
-    ///         );       
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Half });
+    ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.C3, NamedValue = NoteValue.Whole }
+    ///         );
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Half });
     ///
     ///         phrase.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Half });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Half });
     ///
     ///         phrase.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.C3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.C3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.D4, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.G3, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.G3, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
     ///
     ///         phrase.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Whole },
-    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
-    ///         );
+    ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Whole },
+    ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
+    ///        );
     ///
     ///         phrase.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.D3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.D3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
     ///
     ///         phrase.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
     ///
     ///         song.AddPhrase(phrase);
     ///
     ///         song.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.F3S, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.F3S, NamedValue = NoteValue.Whole }
     ///         );
-    ///         song.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.B3, NoteValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
     ///
     ///         song.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.A3, NoteValue = NoteValue.Half },
-    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.A3, NamedValue = NoteValue.Half },
+    ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         song.AddNotes(new Note { Frequency = Note.D4, NoteValue = NoteValue.Half });
+    ///         song.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Half });
     ///
     ///         song.AddPhrase(phrase);
     ///
     ///         song.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.D4, NoteValue = NoteValue.Quarter },
-    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole },
-    ///             new Note { Frequency = Note.F3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter },
+    ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole },
+    ///             new Note { Frequency = Note.F3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         song.AddNotes(new Note { Frequency = Note.D4, NoteValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.A3, NoteValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    ///         song.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
     ///
     ///         song.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.G3, NoteValue = NoteValue.Whole },
-    ///             new Note { Frequency = Note.E3, NoteValue = NoteValue.Whole }
+    ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole },
+    ///             new Note { Frequency = Note.E3, NamedValue = NoteValue.Whole }
     ///         );
     ///
     ///         song.Finish();
     ///
+    ///         Console.WriteLine("Combining speech with song...");
+    ///         WaveFile combined = WaveFile.Combine(speech, song);
+    ///
     ///         Console.WriteLine("Saving song to disk...");
-    ///         song.Save("JingleBells.wav");
+    ///         combined.Save("JingleBells.wav");
     ///
     ///         Console.WriteLine("Playing song...");
-    ///         song.Play();
-    /// 
+    ///         combined.Play();
+    ///
     ///         Console.ReadKey();
     ///     }
     /// }
@@ -219,7 +284,7 @@ namespace System.Media.Music
         {
             m_measureSize = new MeasureSize(3, NoteValue.Quarter);
             m_tempo = new Tempo(240, NoteValue.Quarter);
-            m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
+            m_dynamic = (double)Music.Dynamic.MezzoForte / 100.0D;
             m_timbre = Music.Timbre.BasicNote;
             m_damping = Music.Damping.Natural;
             m_noteQueue = new List<Note>();
@@ -238,7 +303,7 @@ namespace System.Media.Music
         {
             m_measureSize = new MeasureSize(3, NoteValue.Quarter);
             m_tempo = new Tempo(240, NoteValue.Quarter);
-            m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
+            m_dynamic = (double)Music.Dynamic.MezzoForte / 100.0D;
             m_timbre = Music.Timbre.BasicNote;
             m_damping = Music.Damping.Natural;
             m_noteQueue = new List<Note>();
@@ -279,6 +344,17 @@ namespace System.Media.Music
         }
 
         /// <summary>
+        /// Returns the time for a single beat.
+        /// </summary>
+        public double BeatTime
+        {
+            get
+            {
+                return m_tempo.CalculateNoteValueTime(m_measureSize.NamedNoteValue, 0);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the default tibre function used to synthesize the sounds
         /// of the added notes (i.e., the instrument). This timbre function will be
         /// used if no other function is specified when adding notes.
@@ -313,45 +389,45 @@ namespace System.Media.Music
         }
 
         /// <summary>
-        /// Gets or sets the prevailing dynamic (i.e., volume) for the song.  Individual notes
+        /// Gets or sets the prevailing named dynamic (i.e., volume) for the song.  Individual notes
         /// can choose to override this dynamic.
         /// </summary>
-        public Dynamic Dynamic
+        public Dynamic NamedDynamic
         {
             get
             {
                 // Dynamic can be custom, so return closest match...
                 int dynamic = (int)m_dynamic * 100;
 
-                if (dynamic <= (int)Dynamic.Pianissimo)
+                if (dynamic <= (int)Music.Dynamic.Pianissimo)
                 {
-                    return Dynamic.Pianissimo;
+                    return Music.Dynamic.Pianissimo;
                 }
-                else if (dynamic <= (int)Dynamic.Piano)
+                else if (dynamic <= (int)Music.Dynamic.Piano)
                 {
-                    return Dynamic.Piano;
+                    return Music.Dynamic.Piano;
                 }
-                else if (dynamic <= (int)Dynamic.MezzoPiano)
+                else if (dynamic <= (int)Music.Dynamic.MezzoPiano)
                 {
-                    return Dynamic.MezzoPiano;
+                    return Music.Dynamic.MezzoPiano;
                 }
-                else if (dynamic <= (int)Dynamic.MezzoForte)
+                else if (dynamic <= (int)Music.Dynamic.MezzoForte)
                 {
-                    return Dynamic.MezzoForte;
+                    return Music.Dynamic.MezzoForte;
                 }
-                else if (dynamic <= (int)Dynamic.Forte)
+                else if (dynamic <= (int)Music.Dynamic.Forte)
                 {
-                    return Dynamic.Forte;
+                    return Music.Dynamic.Forte;
                 }
                 else
                 {
-                    return Dynamic.Fortissimo;
+                    return Music.Dynamic.Fortissimo;
                 }
             }
             set
             {
-                if (value == Dynamic.Undefined)
-                    value = Dynamic.MezzoForte;
+                if (value == Music.Dynamic.Undefined)
+                    value = Music.Dynamic.MezzoForte;
 
                 m_dynamic = (double)value / 100.0D;
             }
@@ -364,7 +440,7 @@ namespace System.Media.Music
         /// <exception cref="ArgumentOutOfRangeException">
         /// Value must be expressed as a fractional percentage between zero and one.
         /// </exception>
-        public double CustomDynamic
+        public double Dynamic
         {
             get
             {
@@ -373,10 +449,10 @@ namespace System.Media.Music
             set
             {
                 if (value != -1.0D && (value < 0.0D || value > 1.0D))
-                    throw new ArgumentOutOfRangeException("CustomDynamic", "Value must be expressed as a fractional percentage between zero and one.");
+                    throw new ArgumentOutOfRangeException("Dynamic", "Value must be expressed as a fractional percentage between zero and one.");
 
                 if (value == -1.0D)
-                    m_dynamic = (double)Dynamic.MezzoForte / 100.0D;
+                    m_dynamic = (double)Music.Dynamic.MezzoForte / 100.0D;
                 else
                     m_dynamic = value;
             }
@@ -424,17 +500,17 @@ namespace System.Media.Music
             foreach (Note note in notes)
             {
                 // Calculate note value time given current tempo
-                note.CalculateNoteValueTime(m_tempo);
+                note.CalculateValueTime(m_tempo);
 
                 // Assign relative note durations in terms of sample rate
-                note.SamplePeriod = (long)(note.NoteValueTime * samplesPerSecond);
+                note.SamplePeriod = (long)(note.ValueTime * samplesPerSecond);
                 note.StartTimeIndex = m_currentSample;
                 note.EndTimeIndex = note.StartTimeIndex + note.SamplePeriod - 1;
             }
 
             // Assign sample period to note with shortest duration - all other notes
             // will remain in queue until they have completed their run
-            samplePeriod = (long)(notes.Min(note => note.NoteValueTime) * samplesPerSecond);
+            samplePeriod = (long)(notes.Min(note => note.ValueTime) * samplesPerSecond);
 
             // Add notes to note queue
             m_noteQueue.AddRange(notes);
@@ -458,7 +534,7 @@ namespace System.Media.Music
 
                 // Assign sample period to note with longest duration - this makes sure all remaining
                 // queued notes will complete their run
-                samplePeriod = (long)(m_noteQueue.Max(note => note.NoteValueTime) * samplesPerSecond);
+                samplePeriod = (long)(m_noteQueue.Max(note => note.ValueTime) * samplesPerSecond);
 
                 // Add queued notes to song for given sample period
                 AddQueuedNotesToSong(samplePeriod);
@@ -469,9 +545,18 @@ namespace System.Media.Music
         /// Add a rest for the given length for the current beat.
         /// </summary>
         /// <param name="restLength">Duration of wait specified as a note value.</param>
+        public void AddRest(double restLength)
+        {
+            AddNotes(new Note { Value = restLength });
+        }
+
+        /// <summary>
+        /// Add a rest for the given length for the current beat.
+        /// </summary>
+        /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(NoteValue restLength)
         {
-            AddNotes(new Note { NoteValue = restLength });
+            AddNotes(new Note { NamedValue = restLength });
         }
 
         /// <summary>
@@ -480,7 +565,7 @@ namespace System.Media.Music
         /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(NoteValueBritish restLength)
         {
-            AddNotes(new Note { NoteValueBritish = restLength });
+            AddNotes(new Note { NamedValueBritish = restLength });
         }
 
         /// <summary>
@@ -490,7 +575,7 @@ namespace System.Media.Music
         /// <param name="dots">Total dotted note length extensions to apply.</param>
         public void AddRest(NoteValue restLength, int dots)
         {
-            AddNotes(new Note { NoteValue = restLength, Dots = dots });
+            AddNotes(new Note { NamedValue = restLength, Dots = dots });
         }
 
         /// <summary>
@@ -500,7 +585,7 @@ namespace System.Media.Music
         /// <param name="dots">Total dotted note length extensions to apply.</param>
         public void AddRest(NoteValueBritish restLength, int dots)
         {
-            AddNotes(new Note { NoteValueBritish = restLength, Dots = dots });
+            AddNotes(new Note { NamedValueBritish = restLength, Dots = dots });
         }
 
         /// <summary>
@@ -553,7 +638,7 @@ namespace System.Media.Music
                         if (sampleIndex < note.EndTimeIndex)
                         {
                             // Get note dynamic
-                            dynamic = (note.Dynamic == Dynamic.Undefined ? m_dynamic : note.CustomDynamic);
+                            dynamic = (note.Dynamic == -1.0D ? m_dynamic : note.Dynamic);
 
                             // Get timbre function
                             timbre = (note.Timbre == null ? m_timbre : timbre = note.Timbre);
