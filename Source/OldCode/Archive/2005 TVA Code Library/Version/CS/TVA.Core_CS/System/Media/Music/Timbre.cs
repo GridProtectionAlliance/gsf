@@ -40,7 +40,7 @@ namespace System.Media.Music
     /// <param name="sampleIndex">Sample index (represents time anywhere from zero to full length of song).</param>
     /// <param name="samplePeriod">If useful, total period for note in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>) over which to compute timbre.</param>
     /// <param name="sampleRate">Number of samples per second.</param>
-    /// <returns>The amplitude of the represented musical timbre at the given time.</returns>
+    /// <returns>The amplitude of the represented musical timbre (a value between zero and 1) at the given time.</returns>
     public delegate double TimbreFunction(double frequency, long sampleIndex, long samplePeriod, int sampleRate);
 
     /// <summary>
@@ -96,12 +96,13 @@ namespace System.Media.Music
         /// </para>
         /// <para>
         /// </para>
-        /// This timbre algorithm combines both the simulated clarinet and odd harmonic series
+        /// This timbre algorithm combines the simulated clarinet and the odd harmonic series
         /// algoriths to produce a pleasant sounding note.
         /// </remarks>
         public static double BasicNote(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
         {
-            return (Timbre.SimulatedClarinet(frequency, sampleIndex, samplePeriod, sampleRate) + Timbre.OddHarmonicSeries(frequency, sampleIndex, samplePeriod, sampleRate)) / 2;
+            return (Timbre.SimulatedClarinet(frequency, sampleIndex, samplePeriod, sampleRate) +
+                    Timbre.OddHarmonicSeries(frequency, sampleIndex, samplePeriod, sampleRate)) / 2.0D;
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace System.Media.Music
 
             // Simulated Clarinet equation - see http://www.phy.mtu.edu/~suits/clarinet.html
             // s(t) = sin(wt) + 0.75 *      sin(3 * wt) + 0.5 *      sin(5 * wt) + 0.14 *      sin(7 * wt) + 0.5 *      sin(9 * wt) + 0.12 *      sin(11 * wt) + 0.17 *      sin(13 * wt)
-            r1 = Math.Sin(wt) + 0.75 * Math.Sin(3 * wt) + 0.5 * Math.Sin(5 * wt) + 0.14 * Math.Sin(7 * wt) + 0.5 * Math.Sin(9 * wt) + 0.12 * Math.Sin(11 * wt) + 0.17 * Math.Sin(13 * wt);
+            r1 = (Math.Sin(wt) + 0.75 * Math.Sin(3 * wt) + 0.5 * Math.Sin(5 * wt) + 0.14 * Math.Sin(7 * wt) + 0.5 * Math.Sin(9 * wt) + 0.12 * Math.Sin(11 * wt) + 0.17 * Math.Sin(13 * wt)) / 3.18D;
 
             return r1;
         }
@@ -139,8 +140,8 @@ namespace System.Media.Music
         /// <returns>The amplitude for a simulated clarinet note at the given time.</returns>
         /// <remarks>
         /// This method computes an amplitude representing the acoustic pressure of a second-order
-        /// square wave harmonic series (i.e., Sin(f) + Sin(3f)/3) of the given frequency for the
-        /// given time to simulate an organ sound.
+        /// harmonic series approaching a square wave (i.e., Sin(f) + Sin(3f)/3) of the given
+        /// frequency for the given time to simulate an organ sound.
         /// </remarks>
         public static double SimulatedOrgan(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
         {
@@ -180,7 +181,7 @@ namespace System.Media.Music
         /// </remarks>
         public static double EvenHarmonicSeries(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
         {
-            return ComputeHarmonicSeries(frequency, sampleIndex, sampleRate, 2, 25);
+            return ComputeHarmonicSeries(frequency, sampleIndex, sampleRate, 2, 26);
         }
 
         // Computes a basic harmonic series
@@ -196,7 +197,8 @@ namespace System.Media.Music
                 r1 += Math.Sin(x * wt) / (x - offset + 1);
             }
 
-            return r1;
+            // Evenly distribute the series between 0 and 1
+            return r1 / (int)((order - offset + 2) / 2);
         }
     }
 }

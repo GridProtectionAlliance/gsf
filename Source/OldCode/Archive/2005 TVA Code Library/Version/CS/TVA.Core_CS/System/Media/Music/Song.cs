@@ -40,7 +40,7 @@ namespace System.Media.Music
     /// in-memory wave file for play back or saving music to disk.
     /// </summary>
     /// <example>
-    /// This example generates a chord:
+    /// This example generates a multi-instrument chord:
     /// <code>
     /// using System;
     /// using System.Media;
@@ -52,13 +52,19 @@ namespace System.Media.Music
     ///     {
     ///         Song song = new Song { Damping = Damping.Linear };
     ///
-    ///         Console.WriteLine("Generating chord...");
+    ///         Console.WriteLine("Generating multi-instrument chord...");
     ///
     ///         song.AddNotes
     ///         (
-    ///             new Note { Frequency = Note.C4, Value = 6 },
-    ///             new Note { Frequency = Note.E4, Value = 6 },
-    ///             new Note { Frequency = Note.G4, Value = 6 }
+    ///             new Note { Frequency = Note.C4, Value = 4, Timbre = Timbre.EvenHarmonicSeries },
+    ///             new Note { Frequency = Note.C4, Value = 4, Timbre = Timbre.SimulatedClarinet },
+    ///             new Note { Frequency = Note.C4, Value = 4, Timbre = Timbre.SimulatedOrgan },
+    ///             new Note { Frequency = Note.E4, Value = 4, Timbre = Timbre.EvenHarmonicSeries },
+    ///             new Note { Frequency = Note.E4, Value = 4, Timbre = Timbre.SimulatedClarinet },
+    ///             new Note { Frequency = Note.E4, Value = 4, Timbre = Timbre.SimulatedOrgan },
+    ///             new Note { Frequency = Note.G4, Value = 4, Timbre = Timbre.EvenHarmonicSeries },
+    ///             new Note { Frequency = Note.G4, Value = 4, Timbre = Timbre.SimulatedClarinet },
+    ///             new Note { Frequency = Note.G4, Value = 4, Timbre = Timbre.SimulatedOrgan }
     ///         );
     ///
     ///         song.Finish();
@@ -620,46 +626,46 @@ namespace System.Media.Music
             TimbreFunction timbre;
             DampingFunction damping;
             double sample, dynamic;
-            int notesInSample;
             Note note;
+            int x;
 
             for (long sampleIndex = m_currentSample; sampleIndex < m_currentSample + samplePeriod + (long)(m_interNoteDelay * SampleRate); sampleIndex++)
             {
                 // Create summation of all notes at given time
                 sample = 0.0D;
-                notesInSample = 0;
 
-                for (int index = 0; index < m_noteQueue.Count; index++)
+                for (x = 0; x < m_noteQueue.Count; x++)
                 {
-                    if (!completedNotes.Contains(index))
+                    if (!completedNotes.Contains(x))
                     {
-                        note = m_noteQueue[index];
+                        note = m_noteQueue[x];
 
                         if (sampleIndex < note.EndTimeIndex)
                         {
-                            // Get note dynamic
-                            dynamic = (note.Dynamic == -1.0D ? m_dynamic : note.Dynamic);
-
                             // Get timbre function
                             timbre = (note.Timbre == null ? m_timbre : timbre = note.Timbre);
 
                             // Get damping function
                             damping = (note.Damping == null ?  m_damping : note.Damping);
 
+                            // Get note dynamic
+                            dynamic = (note.Dynamic == -1.0D ? m_dynamic : note.Dynamic);
+
                             // Generate note at given time
-                            sample += dynamic * (timbre(note.Frequency, sampleIndex, note.SamplePeriod, SampleRate) * damping(sampleIndex - m_currentSample, note.SamplePeriod, SampleRate));
-                            notesInSample++;
+                            sample +=
+                                timbre(note.Frequency, sampleIndex, note.SamplePeriod, SampleRate) *
+                                damping(sampleIndex - m_currentSample, note.SamplePeriod, SampleRate) *
+                                dynamic;
                         }
                         else
                         {
-                            completedNotes.Add(index);
+                            completedNotes.Add(x);
                         }
                     }
                 }
 
-                // Make sure all notes in sample get equal amplitude weight so as to
-                // not adversely affect the volume of the sample
-                AddSample((sample / notesInSample) * AmplitudeScalar);
+                // Adjust sample amplitude so as to not adversely affect the volume of the song
+                AddSample(sample % 1.0D * AmplitudeScalar);
             }
 
             m_currentSample += samplePeriod;
@@ -669,7 +675,7 @@ namespace System.Media.Music
             completedNotes.Sort();
             completedNotes.Reverse();
 
-            for (int x = 0; x < completedNotes.Count; x++)
+            for (x = 0; x < completedNotes.Count; x++)
             {
                 m_noteQueue.RemoveAt(completedNotes[x]);
             }
