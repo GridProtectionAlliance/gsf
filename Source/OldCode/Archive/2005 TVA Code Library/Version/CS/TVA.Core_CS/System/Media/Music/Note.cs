@@ -308,7 +308,7 @@ namespace System.Media.Music
             }
             set
             {
-                m_value = value.Duration((m_dots));
+                m_value = value.Duration(m_dots);
             }
         }
 
@@ -321,7 +321,7 @@ namespace System.Media.Music
             }
             set
             {
-                m_value = value.Duration((m_dots));
+                m_value = value.Duration(m_dots);
             }
         }
 
@@ -336,7 +336,7 @@ namespace System.Media.Music
             set
             {
                 m_dots = value;
-                m_value = NamedValue.Duration((m_dots));
+                m_value = NamedValue.Duration(m_dots);
             }
         }
 
@@ -565,7 +565,7 @@ namespace System.Media.Music
             int result = m_frequency.CompareTo(other.Frequency);
 
             if (result == 0)
-                result = Value.CompareTo(other.Value);
+                result = m_value.CompareTo(other.Value);
 
             return result;
         }
@@ -621,6 +621,16 @@ namespace System.Media.Music
 
         #region [ Static ]
 
+        // Static Fields
+        static private int m_lastNamedValueIndex;
+
+        // Static Constructor
+        static Note()
+        {
+            // Compute last index of note value enumeration
+            m_lastNamedValueIndex = Enum.GetValues(typeof(NoteValue)).Length - 1;
+        }
+
         // Static Methods
 
         /// <summary>
@@ -631,7 +641,15 @@ namespace System.Media.Music
         /// <returns>Closest note value enumeration index given the relative duration of a note.</returns>
         public static int NamedValueIndex(double value)
         {
-            return 2 - (int)Math.Log(value, 2);
+            int result = 2 - (int)Math.Log(value, 2);
+
+            if (result < 0)
+                return 0;
+            
+            if (result > m_lastNamedValueIndex)
+                return m_lastNamedValueIndex;
+
+            return result;
         }
 
         /// <summary>
