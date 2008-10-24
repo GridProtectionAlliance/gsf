@@ -40,7 +40,7 @@ namespace System.Media.Music
     /// <param name="sampleIndex">Sample index (represents time anywhere from zero to full length of song).</param>
     /// <param name="samplePeriod">If useful, total period for note in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>) over which to compute timbre.</param>
     /// <param name="sampleRate">Number of samples per second.</param>
-    /// <returns>The amplitude of the represented musical timbre (a value between zero and 1) at the given time.</returns>
+    /// <returns>The amplitude of the represented musical timbre (a value between zero and one) at the given time.</returns>
     public delegate double TimbreFunction(double frequency, long sampleIndex, long samplePeriod, int sampleRate);
 
     /// <summary>
@@ -196,7 +196,7 @@ namespace System.Media.Music
             for (int x = offset; x <= order; x += 2)
             {
                 divisor = (x - offset + 1);
-                r1 += Math.Sin(x * wt) / (x - offset + 1);
+                r1 += Math.Sin(x * wt) / divisor;
                 total += divisor;
             }
 

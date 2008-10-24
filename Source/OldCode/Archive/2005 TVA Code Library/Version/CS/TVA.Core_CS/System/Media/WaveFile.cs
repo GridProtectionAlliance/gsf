@@ -1009,9 +1009,10 @@ namespace System.Media
             // Must handle 24-bit as a special case since there is no 24-bit type code in .NET
             if (bitsPerSample == 24)
             {
-                result =
-                    (double)(Int24)value1 +
-                    (double)(Int24)value2 * value2Volume;
+                Int24 _value1 = value1;
+                Int24 _value2 = value1;
+
+                result = (double)_value1 + (double)_value2 * value2Volume;
             }
             else
             {
