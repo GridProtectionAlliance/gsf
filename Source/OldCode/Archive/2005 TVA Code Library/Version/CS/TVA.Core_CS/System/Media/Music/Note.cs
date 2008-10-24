@@ -221,17 +221,19 @@ namespace System.Media.Music
         /// Default note will be rest (zero frequency), quarter note.
         /// </para>
         /// <para>
-        /// It is expected that <see cref="Note"/> objects will be constructed using
-        /// object intializers.
+        /// It is expected that <see cref="Note"/> objects will be constructed using object intializers.
         /// </para>
         /// </remarks>
         /// <example>
         /// <code>
         /// // Create a 3/8th length , middle C note
-        /// Note note1 = new Note { Frequency = Note.C4, NoteValue = NoteValue.Quarter, Dots = 1 };
+        /// Note note1 = new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter, Dots = 1 };
         /// 
         /// // Create a 1/8th length, E above middle C note
-        /// Note note2 = new Note { NoteID = "E4", NoteValueBritish = NoteValueBritish.Quaver };
+        /// Note note2 = new Note { ID = "E4", NamedValueBritish = NoteValueBritish.Quaver };
+        /// 
+        /// // Create a whole length, F# above middle C note, "p" soft dynamic
+        /// Note note2 = new Note { Frequency = F4S, Value = 1.0, NamedDynamic = Dynamic.Piano };
         /// </code>
         /// </example>
         public Note()

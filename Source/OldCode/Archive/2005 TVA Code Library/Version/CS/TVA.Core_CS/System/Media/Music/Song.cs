@@ -91,21 +91,65 @@ namespace System.Media.Music
     /// using System.Speech;
     /// using System.Speech.Synthesis;
     /// using System.Speech.AudioFormat;
-    ///
+    /// 
     /// static class Program
     /// {
     ///     static void Main()
     ///     {
     ///         Console.WriteLine("Synthesizing speech...");
-    ///
+    ///         WaveFile speech = CreateSynthesizedVoiceOver();
+    /// 
+    ///         Console.WriteLine("Synthesizing song at tempo for use with speech...");
+    /// 
+    ///         // Define all the notes of jingle bells as a single phrase of music
+    ///         Phrase score = CreateJingleBellsScore();
+    /// 
+    ///         // Create one song at a slower tempo to help with speech synchronization
+    ///         Song speechTempSong = new Song { Tempo = new Tempo(160, NoteValue.Quarter) };
+    /// 
+    ///         // Make sure audio specifications for song and speech match
+    ///         speechTempSong.SampleRate = speech.SampleRate;
+    ///         speechTempSong.BitsPerSample = speech.BitsPerSample;
+    ///         speechTempSong.Channels = speech.Channels;
+    /// 
+    ///         // Add all the notes to the song
+    ///         speechTempSong.AddPhrase(score);
+    ///         speechTempSong.Finish();
+    /// 
+    ///         Console.WriteLine("Synthesizing song by itself at normal tempo...");
+    /// 
+    ///         // Create one song at a slower tempo to help with speech synchronization
+    ///         Song normalTempoSong = new Song();
+    /// 
+    ///         // Add all the notes to the song
+    ///         normalTempoSong.AddPhrase(score);
+    ///         normalTempoSong.Finish();
+    /// 
+    ///         Console.WriteLine("Saving normal tempo song to disk as \"JingleBells.wav\"...");
+    ///         normalTempoSong.Save("JingleBells.wav");
+    /// 
+    ///         Console.WriteLine("Combining speech with song...");
+    ///         WaveFile combined = WaveFile.Combine(speech, speechTempSong);
+    /// 
+    ///         Console.WriteLine("Saving combined work to disk as \"SingingComputer.wav\"...");
+    ///         combined.Save("SingingComputer.wav");
+    /// 
+    ///         Console.WriteLine("Playing combined work...");
+    ///         combined.Play();
+    /// 
+    ///         Console.ReadKey();
+    ///     }
+    /// 
+    ///     private static WaveFile CreateSynthesizedVoiceOver()
+    ///     {
     ///         SpeechSynthesizer synthesizer = new SpeechSynthesizer();
     ///         MemoryStream speechStream = new MemoryStream();
     ///         PromptBuilder songText = new PromptBuilder();
-    ///
+    /// 
     ///         synthesizer.SelectVoice("Microsoft Sam");
     ///         synthesizer.Rate = 5; // Range = -10 to +10
     ///         synthesizer.SetOutputToWaveStream(speechStream);
-    ///
+    /// 
     ///         songText.AppendText("Jin - gull bells!", PromptEmphasis.Strong);
     ///         songText.AppendBreak(new TimeSpan(3000000));
     ///         songText.AppendText("Jin - gull bells!", PromptEmphasis.Strong);
@@ -143,122 +187,104 @@ namespace System.Media.Music
     ///         songText.AppendText("Open!", PromptEmphasis.Strong);
     ///         songText.AppendBreak(new TimeSpan(500000));
     ///         songText.AppendText("Sleigh.", PromptEmphasis.Reduced);
-    ///
+    /// 
     ///         synthesizer.Speak(songText);
     ///         speechStream.Position = 0;
-    ///         WaveFile speech = WaveFile.Load(speechStream);
-    ///
-    ///         Console.WriteLine("Synthesizing song...");
-    ///
-    ///         Song song = new Song();
-    ///         Phrase phrase = new Phrase();
-    ///
-    ///         // Slow the song down to help with speech synchronization
-    ///         song.Tempo = new Tempo(160, NoteValue.Quarter);
-    ///
-    ///         // Make sure audio specifications for song and speech match
-    ///         song.SampleRate = speech.SampleRate;
-    ///         song.BitsPerSample = speech.BitsPerSample;
-    ///         song.Channels = speech.Channels;
-    ///
+    ///         return WaveFile.Load(speechStream);
+    ///     }
+    /// 
+    ///     private static Phrase CreateJingleBellsScore()
+    ///     {
+    ///         Phrase score = new Phrase();
+    ///         Phrase passage = new Phrase();
+    /// 
     ///         // Define the repeating phrase of the song
-    ///         phrase.AddNotes
+    ///         passage.AddNotes
     ///         (
     ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.C3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Half });
-    ///
-    ///         phrase.AddNotes
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Half });
+    /// 
+    ///         passage.AddNotes
     ///         (
     ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Half });
-    ///
-    ///         phrase.AddNotes
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Half });
+    /// 
+    ///         passage.AddNotes
     ///         (
     ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.C3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.G3, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
-    ///
-    ///         phrase.AddNotes
+    ///         passage.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.G3, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
+    /// 
+    ///         passage.AddNotes
     ///         (
     ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Whole },
     ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
-    ///        );
-    ///
-    ///         phrase.AddNotes
+    ///         );
+    /// 
+    ///         passage.AddNotes
     ///         (
     ///             new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.D3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
-    ///
-    ///         phrase.AddNotes
+    ///         passage.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    /// 
+    ///         passage.AddNotes
     ///         (
     ///             new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
-    ///         phrase.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
-    ///
-    ///         song.AddPhrase(phrase);
-    ///
-    ///         song.AddNotes
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    ///         passage.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    /// 
+    ///         score.AddPhrase(passage);
+    /// 
+    ///         score.AddNotes
     ///         (
     ///             new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.F3S, NamedValue = NoteValue.Whole }
     ///         );
-    ///         song.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
-    ///
-    ///         song.AddNotes
+    ///         score.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
+    ///         score.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
+    ///         score.AddNotes(new Note { Frequency = Note.B3, NamedValue = NoteValue.Quarter });
+    /// 
+    ///         score.AddNotes
     ///         (
     ///             new Note { Frequency = Note.A3, NamedValue = NoteValue.Half },
     ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         song.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Half });
-    ///
-    ///         song.AddPhrase(phrase);
-    ///
-    ///         song.AddNotes
+    ///         score.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Half });
+    /// 
+    ///         score.AddPhrase(passage);
+    /// 
+    ///         score.AddNotes
     ///         (
     ///             new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter },
     ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole },
     ///             new Note { Frequency = Note.F3, NamedValue = NoteValue.Whole }
     ///         );
-    ///         song.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
-    ///         song.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
-    ///
-    ///         song.AddNotes
+    ///         score.AddNotes(new Note { Frequency = Note.D4, NamedValue = NoteValue.Quarter });
+    ///         score.AddNotes(new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter });
+    ///         score.AddNotes(new Note { Frequency = Note.A3, NamedValue = NoteValue.Quarter });
+    /// 
+    ///         score.AddNotes
     ///         (
     ///             new Note { Frequency = Note.G3, NamedValue = NoteValue.Whole },
     ///             new Note { Frequency = Note.E3, NamedValue = NoteValue.Whole }
     ///         );
-    ///
-    ///         song.Finish();
-    ///
-    ///         Console.WriteLine("Combining speech with song...");
-    ///         WaveFile combined = WaveFile.Combine(speech, song);
-    ///
-    ///         Console.WriteLine("Saving song to disk...");
-    ///         combined.Save("JingleBells.wav");
-    ///
-    ///         Console.WriteLine("Playing song...");
-    ///         combined.Play();
-    ///
-    ///         Console.ReadKey();
+    /// 
+    ///         return score;
     ///     }
     /// }
     /// </code>
