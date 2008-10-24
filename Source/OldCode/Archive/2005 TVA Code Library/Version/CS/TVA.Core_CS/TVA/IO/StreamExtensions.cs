@@ -12,19 +12,27 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/19/2008 - James R Carroll
 //       Generated original version of source code.
+//  10/24/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
 using System.IO;
 
-namespace TVA
+namespace TVA.IO
 {
-    /// <summary>Defines extension functions related to stream manipulation.</summary>
+    /// <summary>
+    /// Defines extension functions related to <see cref="Stream"/> manipulation.
+    /// </summary>
     public static class StreamExtensions
     {
         private const int BufferSize = 32768;
 
-        /// <summary>Copies input stream onto output stream.</summary>
+        /// <summary>
+        /// Copies input <see cref="Stream"/> onto output <see cref="Stream"/>.
+        /// </summary>
+        /// <param name="source">The input <see cref="Stream"/>.</param>
+        /// <param name="destination">The output <see cref="Stream"/>.</param>
         public static void CopyStream(this Stream source, Stream destination)
         {
             byte[] buffer = new byte[BufferSize];
@@ -37,8 +45,11 @@ namespace TVA
             }
         }
 
-        /// <summary>Reads entire stream contents, and returns byte array of data.</summary>
-        /// <remarks>Note: You should only use this on streams where you know the data size is small.</remarks>
+        /// <summary>
+        /// Reads entire <see cref="Stream"/> contents, and returns <see cref="byte"/> array of data.
+        /// </summary>
+        /// <param name="source">The <see cref="Stream"/> to be converted to <see cref="byte"/> array.</param>
+        /// <returns>An array of <see cref="byte"/>.</returns>
         public static byte[] ReadStream(this Stream source)
         {
             MemoryStream outStream = new MemoryStream();
@@ -47,6 +58,5 @@ namespace TVA
 
             return outStream.ToArray();
         }
-
     }
 }
