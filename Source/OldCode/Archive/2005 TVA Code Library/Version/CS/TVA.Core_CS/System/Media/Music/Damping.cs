@@ -73,7 +73,7 @@ namespace System.Media.Music
         /// </remarks>
         public static double Natural(long sampleIndex, long samplePeriod, int sampleRate)
         {
-            return (Logarithmic(sampleIndex, samplePeriod, sampleRate) + 0.5 * Linear(sampleIndex, samplePeriod, sampleRate)) / 1.5;
+            return (Logarithmic(sampleIndex, samplePeriod, sampleRate) + 0.5D * Linear(sampleIndex, samplePeriod, sampleRate)) / 1.5D;
         }
         /// <summary>
         /// Produces a logarithmic damping curve - slowly damping with a sharp end from 1 to 0 over the <paramref name="samplePeriod"/>.
