@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4B228C40-17E8-4751-B580-D5E052A5A53E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>System</RootNamespace>
+    <AssemblyName>PCS.System</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Build\Output\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Build\Output\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BigBinaryValue.cs" />
+    <Compile Include="BinaryValue.cs" />
+    <Compile Include="BinaryValueBase.cs" />
+    <Compile Include="Bit.cs" />
+    <Compile Include="BitwiseCast.cs" />
+    <Compile Include="EndianOrder.cs" />
+    <Compile Include="Int24.cs" />
+    <Compile Include="LittleBinaryValue.cs" />
+    <Compile Include="Media\Music\Damping.cs" />
+    <Compile Include="Media\Music\Dynamic.cs" />
+    <Compile Include="Media\Music\MeasureSize.cs" />
+    <Compile Include="Media\Music\Note.cs" />
+    <Compile Include="Media\Music\NoteValues.cs" />
+    <Compile Include="Media\Music\Phrase.cs" />
+    <Compile Include="Media\Music\Song.cs" />
+    <Compile Include="Media\Music\Tempo.cs" />
+    <Compile Include="Media\Music\Timbre.cs" />
+    <Compile Include="Media\RiffChunk.cs" />
+    <Compile Include="Media\RiffHeaderChunk.cs" />
+    <Compile Include="Media\Sound\DTMF.cs" />
+    <Compile Include="Media\Sound\TouchTone.cs" />
+    <Compile Include="Media\WaveDataChunk.cs" />
+    <Compile Include="Media\WaveFile.cs" />
+    <Compile Include="Media\WaveFormatChunk.cs" />
+    <Compile Include="Media\WaveFormatExtensible.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UInt24.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Media\Music\Modern musical symbols.mht" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Media\Wavefile Information\IFF.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Media\Wavefile Information\JingleBells.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Media\Wavefile Information\Longitudinal Wave.mov" />
+    <None Include="Media\Wavefile Information\Waveform Audio Format.ppt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="!CopyrightNotice.txt" />
+    <Content Include="!System Namespace Rules.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
