@@ -115,15 +115,15 @@ namespace PCS.IO
 
         // Fields
         private string m_fileName;
+        private int m_autoSaveInterval;
+        private int m_minimumRecordCount;
         private bool m_loadOnOpen;
         private bool m_saveOnClose;
         private bool m_reloadOnModify;
-        private int m_autoSaveInterval;
-        private int m_minimumRecordCount;
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private FileStream m_fileStream;
         private List<T> m_fileRecords;
+        private FileStream m_fileStream;
         private ManualResetEvent m_loadWaitHandle;
         private ManualResetEvent m_saveWaitHandle;
         private System.Timers.Timer m_autoSaveTimer;
@@ -133,21 +133,26 @@ namespace PCS.IO
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IsamDataFileBase{T}"/> class.
+        /// </summary>
         public IsamDataFileBase()
         {
-            m_fileName = this.GetType().Name + Extension;
-            m_minimumRecordCount = 0;
-            m_loadOnOpen = true;
-            m_reloadOnModify = true;
-            m_autoSaveInterval = -1;
-            m_settingsCategory = this.GetType().Name;
+            m_fileName = DefaultFileName;
+            m_autoSaveInterval = DefaultAutoSaveInterval;
+            m_minimumRecordCount = DefaultMinimumRecordCount;
+            m_loadOnOpen = DefaultLoadOnOpen;
+            m_saveOnClose = DefaultSaveOnClose;
+            m_reloadOnModify = DefaultReloadOnModify;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
+            m_loadWaitHandle = new ManualResetEvent(true);
+            m_saveWaitHandle = new ManualResetEvent(true);
 
             m_autoSaveTimer = new System.Timers.Timer();
             m_autoSaveTimer.Elapsed += m_autoSaveTimer_Elapsed;
-
-            m_loadWaitHandle = new ManualResetEvent(true);
-            m_saveWaitHandle = new ManualResetEvent(true);
             m_fileSystemWatcher = new FileSystemWatcher();
+            m_fileSystemWatcher.Changed += FileSystemWatcher_Changed;
         }
 
         #endregion
@@ -155,14 +160,14 @@ namespace PCS.IO
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the name of the ISAM file.
+        /// Gets or sets the name of the file.
         /// </summary>
         /// <remarks>
         /// Changing the <see cref="FileName"/> when the file is open will cause the file to be re-opend.
         /// </remarks>
-        [Category("Settings"), 
+        [Category("Settings"),
         DefaultValue(DefaultFileName),
-        Description("Name of the ISAM file.")]
+        Description("Name of the file.")]
         public string FileName
         {
             get
@@ -186,7 +191,12 @@ namespace PCS.IO
             }
         }
 
-        [Category("Settings")]
+        /// <summary>
+        /// Gets or sets the interval in milliseconds at which the records in memory are to be persisted to disk.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultAutoSaveInterval),
+        Description("Interval in milliseconds at which the records in memory are to be persisted to disk.")]
         public int AutoSaveInterval
         {
             get
@@ -199,7 +209,12 @@ namespace PCS.IO
             }
         }
 
-        [Category("Settings")]
+        /// <summary>
+        /// Gets or sets the minimum number of records that the file will have when it is opened.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultMinimumRecordCount),
+        Description("Minimum number of records that the file will have when it is opened.")]
         public int MinimumRecordCount
         {
             get
@@ -212,7 +227,12 @@ namespace PCS.IO
             }
         }
 
-        [Category("Behavior")]
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the records are to be loaded in memory when the file is opened.
+        /// </summary>
+        [Category("Behavior"), 
+        DefaultValue(DefaultLoadOnOpen),
+        Description("Indicates whether the records are to be loaded in memory when the file is opened.")]
         public bool LoadOnOpen
         {
             get
@@ -225,20 +245,12 @@ namespace PCS.IO
             }
         }
 
-        [Category("Behavior")]
-        public bool ReloadOnModify
-        {
-            get
-            {
-                return m_reloadOnModify;
-            }
-            set
-            {
-                m_reloadOnModify = value;
-            }
-        }
-
-        [Category("Behavior")]
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether records in memory are to be persisted to disk when file is closed.
+        /// </summary>
+        [Category("Behavior"), 
+        DefaultValue(DefaultSaveOnClose), 
+        Description("Indicates whether records in memory are to be persisted to disk when file is closed.")]
         public bool SaveOnClose
         {
             get
@@ -251,6 +263,30 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether records are to be re-loaded in memory when the file is modified.
+        /// </summary>
+        [Category("Behavior"), 
+        DefaultValue(DefaultReloadOnModify), 
+        Description("Indicates whether records are to be re-loaded in memory when the file is modified.")]
+        public bool ReloadOnModify
+        {
+            get
+            {
+                return m_reloadOnModify;
+            }
+            set
+            {
+                m_reloadOnModify = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the settings of the file are to be saved to the config file.
+        /// </summary>
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of the file are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -263,6 +299,14 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Gets or sets the category under which the settings of the file are to be savedto the config file if the 
+        /// <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of the file are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -271,13 +315,16 @@ namespace PCS.IO
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value that indicates whether the file is open.
+        /// </summary>
         [Browsable(false)]
         public bool IsOpen
         {
@@ -287,6 +334,9 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value that indicates whether the file data on disk is corrupt.
+        /// </summary>
         [Browsable(false)]
         public bool IsCorrupt
         {
@@ -310,21 +360,9 @@ namespace PCS.IO
             }
         }
 
-        [Browsable(false)]
-        public bool IsSynchronized
-        {
-            get
-            {
-                return (RecordsInMemory == RecordsOnDisk);
-            }
-        }
-
         /// <summary>
-        ///
+        /// Gets the approximate memory consumption of the file.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks>In KB.</remarks>
         [Browsable(false)]
         public long MemoryUsage
         {
@@ -334,6 +372,9 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Gets the number of records of the file on the disk.
+        /// </summary>
         [Browsable(false)]
         public int RecordsOnDisk
         {
@@ -357,6 +398,9 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Gets the number of records of the file loaded in memory.
+        /// </summary>
         [Browsable(false)]
         public int RecordsInMemory
         {
@@ -386,6 +430,9 @@ namespace PCS.IO
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Opens the file.
+        /// </summary>
         public void Open()
         {
             if (!IsOpen)
@@ -431,6 +478,9 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Closes the file.
+        /// </summary>
         public void Close()
         {
             if (IsOpen)
@@ -505,6 +555,9 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Saves records to disk if they are loaded in memory.
+        /// </summary>
         public void Save()
         {
             if (IsOpen)

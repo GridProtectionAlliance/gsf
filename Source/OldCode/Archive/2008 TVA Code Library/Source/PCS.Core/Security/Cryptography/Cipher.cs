@@ -32,7 +32,6 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.VisualBasic;
-using PCS.Interop;
 
 namespace PCS.Security.Cryptography
 {
