@@ -692,9 +692,9 @@ namespace System.Media
         }
 
         /// <summary>
-        /// Creates a deeply cloned copy of the wave file.
+        /// Creates a deeply cloned copy of the <see cref="WaveFile"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A deeply cloned copy of the <see cref="WaveFile"/>.</returns>
         public WaveFile Clone()
         {
             RiffHeaderChunk waveHeader = m_waveHeader.Clone();

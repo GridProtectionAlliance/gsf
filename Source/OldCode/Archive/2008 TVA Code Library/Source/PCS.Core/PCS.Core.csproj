@@ -277,7 +277,6 @@
     <Compile Include="Windows\Forms\FormExtensions.cs" />
     <Compile Include="Windows\Forms\ScreenArea.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
-    <Compile Include="ByteEncoding.cs" />
     <Compile Include="Configuration\IPersistSettings.cs" />
     <Compile Include="ObjectState.cs" />
     <Compile Include="ProcessProgress.cs" />

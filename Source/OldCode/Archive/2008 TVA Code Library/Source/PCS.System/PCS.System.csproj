@@ -48,6 +48,7 @@
     <Compile Include="BinaryValueBase.cs" />
     <Compile Include="Bit.cs" />
     <Compile Include="BitwiseCast.cs" />
+    <Compile Include="ByteEncoding.cs" />
     <Compile Include="EndianOrder.cs" />
     <Compile Include="Int24.cs" />
     <Compile Include="LittleBinaryValue.cs" />

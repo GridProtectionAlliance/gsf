@@ -94,6 +94,11 @@ namespace System.Media
         {
         }
 
+        /// <summary>
+        /// Constructor for derived classes used to initialize and validate  <see cref="RiffChunk"/> properties.
+        /// </summary>
+        /// <param name="preRead">Pre-parsed <see cref="RiffChunk"/> header.</param>
+        /// <param name="typeID">Expected type ID.</param>
         protected RiffChunk(RiffChunk preRead, string typeID)
         {
             if (typeID != preRead.TypeID)
@@ -103,6 +108,10 @@ namespace System.Media
             m_chunkSize = preRead.ChunkSize;
         }
 
+        /// <summary>
+        /// Constructs a new <see cref="RiffChunk"/> for the given <paramref name="typeID"/>.
+        /// </summary>
+        /// <param name="typeID">Expected type ID.</param>
         public RiffChunk(string typeID)
         {
             m_typeID = typeID;
@@ -177,6 +186,10 @@ namespace System.Media
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Creates a copy of the <see cref="RiffChunk"/>.
+        /// </summary>
+        /// <returns>A new copy of the <see cref="RiffChunk"/>.</returns>
         public RiffChunk Clone()
         {
             RiffChunk riffChunk = new RiffChunk(m_typeID);
@@ -189,6 +202,13 @@ namespace System.Media
         #region [ Static ]
 
         // Static Methods
+
+        /// <summary>
+        /// Attempts to read the next RIFF chunk from the <paramref name="source"/> stream.
+        /// </summary>
+        /// <param name="source">Source stream for next RIFF chunk.</param>
+        /// <returns>Next RIFF chunk read from the <paramref name="source"/> stream.</returns>
+        /// <exception cref="InvalidOperationException">RIFF chunk too small, media file corrupted.</exception>
         public static RiffChunk ReadNext(Stream source)
         {
             RiffChunk riffChunk = new RiffChunk();

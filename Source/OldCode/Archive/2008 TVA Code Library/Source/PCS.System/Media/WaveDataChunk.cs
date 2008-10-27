@@ -60,7 +60,7 @@ namespace System.Media
         }
 
         /// <summary>Reads a new WAVE format section from the specified stream.</summary>
-        /// <param name="preRead">Pre-parsed RIFF chunk header.</param>
+        /// <param name="preRead">Pre-parsed <see cref="RiffChunk"/> header.</param>
         /// <param name="source">Source stream to read data from.</param>
         /// <param name="waveFormat">Format of the data section to be parsed.</param>
         /// <exception cref="InvalidOperationException">WAVE format or extra parameters section too small, wave file corrupted.</exception>

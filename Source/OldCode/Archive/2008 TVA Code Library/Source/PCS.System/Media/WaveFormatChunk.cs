@@ -41,6 +41,10 @@ namespace System.Media
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// RIFF type ID for wave format chunk (i.e., "fmt ").
+        /// </summary>
         public const string RiffTypeID = "fmt ";
 
         // Fields
@@ -57,6 +61,14 @@ namespace System.Media
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new <see cref="WaveFormatChunk"/> using the specified audio parameters.
+        /// </summary>
+        /// <param name="sampleRate">Sample rate for the <see cref="WaveFormatChunk"/>.</param>
+        /// <param name="bitsPerSample">Bits per sample for the <see cref="WaveFormatChunk"/>.</param>
+        /// <param name="channels">Audio channels for the <see cref="WaveFormatChunk"/>.</param>
+        /// <param name="audioFormat">Audio format for the <see cref="WaveFormatChunk"/>.</param>
+        /// <exception cref="InvalidDataException">Invalid bit rate specified - wave file bit rates must be a multiple of 8.</exception>
         [CLSCompliant(false)]
         public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
             : base(RiffTypeID)
@@ -73,10 +85,11 @@ namespace System.Media
             UpdateBlockAlignment();
         }
 
-        /// <summary>Reads a new WAVE format section from the specified stream.</summary>
-        /// <param name="preRead">Pre-parsed RIFF chunk header.</param>
+        /// <summary>Reads a new <see cref="WaveFormatChunk"/> from the specified stream.</summary>
+        /// <param name="preRead">Pre-parsed <see cref="RiffChunk"/> header.</param>
         /// <param name="source">Source stream to read data from.</param>
         /// <exception cref="InvalidOperationException">WAVE format or extra parameters section too small, wave file corrupted.</exception>
+        /// <exception cref="InvalidDataException">Invalid bit rate encountered - wave file bit rates must be a multiple of 8.</exception>
         public WaveFormatChunk(RiffChunk preRead, Stream source)
             : base(preRead, RiffTypeID)
         {
@@ -282,6 +295,10 @@ namespace System.Media
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Creates a copy of the <see cref="WaveFormatChunk"/>.
+        /// </summary>
+        /// <returns>A new copy of the <see cref="WaveFormatChunk"/>.</returns>
         public new WaveFormatChunk Clone()
         {
             WaveFormatChunk waveFormatChunk = new WaveFormatChunk(m_sampleRate, m_bitsPerSample, m_channels, m_audioFormat);

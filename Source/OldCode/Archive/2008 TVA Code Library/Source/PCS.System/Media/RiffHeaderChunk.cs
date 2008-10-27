@@ -58,7 +58,7 @@ namespace System.Media
         }
 
         /// <summary>Reads a new RIFF header from the specified stream.</summary>
-        /// <param name="preRead">Pre-parsed RIFF chunk header.</param>
+        /// <param name="preRead">Pre-parsed <see cref="RiffChunk"/> header.</param>
         /// <param name="source">Source stream to read data from.</param>
         /// <param name="format">Expected RIFF media format (e.g., "WAVE").</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> cannot be null.</exception>
