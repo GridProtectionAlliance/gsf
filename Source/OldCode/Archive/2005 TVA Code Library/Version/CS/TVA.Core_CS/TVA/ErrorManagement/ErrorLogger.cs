@@ -109,67 +109,67 @@ namespace TVA.ErrorManagement
         #region [ Members ]
 
         /// <summary>
-        /// Default value for the <see cref="LogToUI"/> property.
+        /// Specifies the default value for the <see cref="LogToUI"/> property.
         /// </summary>
         public const bool DefaultLogToUI = false;
 
         /// <summary>
-        /// Default value for the <see cref="LogToFile"/> property.
+        /// Specifies the default value for the <see cref="LogToFile"/> property.
         /// </summary>
         public const bool DefaultLogToFile = true;
 
         /// <summary>
-        /// Default value for the <see cref="LogToEmail"/> property.
+        /// Specifies the default value for the <see cref="LogToEmail"/> property.
         /// </summary>
         public const bool DefaultLogToEmail = false;
 
         /// <summary>
-        /// Default value for the <see cref="LogToEventLog"/> property.
+        /// Specifies the default value for the <see cref="LogToEventLog"/> property.
         /// </summary>
         public const bool DefaultLogToEventLog = true;
 
         /// <summary>
-        /// Default value for the <see cref="LogToScreenshot"/> property.
+        /// Specifies the default value for the <see cref="LogToScreenshot"/> property.
         /// </summary>
         public const bool DefaultLogToScreenshot = false;
 
         /// <summary>
-        /// Default value for the <see cref="SmtpServer"/> property.
+        /// Specifies the default value for the <see cref="SmtpServer"/> property.
         /// </summary>
         public const string DefaultSmtpServer = Mail.DefaultSmtpServer;
 
         /// <summary>
-        /// Default value for the <see cref="ContactName"/> property.
+        /// Specifies the default value for the <see cref="ContactName"/> property.
         /// </summary>
         public const string DefaultContactName = "";
 
         /// <summary>
-        /// Default value for the <see cref="ContactEmail"/> property.
+        /// Specifies the default value for the <see cref="ContactEmail"/> property.
         /// </summary>
         public const string DefaultContactEmail = "";
 
         /// <summary>
-        /// Default value for the <see cref="ContactPhone"/> property.
+        /// Specifies the default value for the <see cref="ContactPhone"/> property.
         /// </summary>
         public const string DefaultContactPhone = "";
 
         /// <summary>
-        /// Default value for the <see cref="PersistSettings"/> property.
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
 
         /// <summary>
-        /// Default value for the <see cref="SettingsCategory"/> property.
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "ErrorLogger";
 
         /// <summary>
-        /// Default value for the <see cref="HandleUnhandledException"/> property.
+        /// Specifies the default value for the <see cref="HandleUnhandledException"/> property.
         /// </summary>
         public const bool DefaultHandleUnhandledException = true;
 
         /// <summary>
-        /// Default value for the <see cref="ExitOnUnhandledException"/> property.
+        /// Specifies the default value for the <see cref="ExitOnUnhandledException"/> property.
         /// </summary>
         public const bool DefaultExitOnUnhandledException = false;
 

@@ -120,17 +120,17 @@ namespace TVA.IO
         // Constants
 
         /// <summary>
-        /// Default value for the <see cref="ExportTimeout"/> property.
+        /// Specifies the default value for the <see cref="ExportTimeout"/> property.
         /// </summary>
         public const int DefaultExportTimeout = Timeout.Infinite;
 
         /// <summary>
-        /// Default value for the <see cref="PersistSettings"/> property.
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = true;
 
         /// <summary>
-        /// Default value for the <see cref="SettingsCategory"/> property.
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "ExportDestinations";
 

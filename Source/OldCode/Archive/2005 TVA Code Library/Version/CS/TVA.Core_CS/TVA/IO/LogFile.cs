@@ -85,37 +85,37 @@ namespace TVA.IO
         // Constants
 
         /// <summary>
-        /// The minimum size for a <see cref="LogFile"/>.
+        /// Specifies the minimum size for a <see cref="LogFile"/>.
         /// </summary>
         public const int MinFileSize = 1;
 
         /// <summary>
-        /// The maximum size for a <see cref="LogFile"/>.
+        /// Specifies the maximum size for a <see cref="LogFile"/>.
         /// </summary>
         public const int MaxFileSize = 10;
 
         /// <summary>
-        /// Default value for the <see cref="FileName"/> property.
+        /// Specifies the default value for the <see cref="FileName"/> property.
         /// </summary>
         public const string DefaultFileName = "LogFile.txt";
 
         /// <summary>
-        /// Default value for the <see cref="FileSize"/> property.
+        /// Specifies the default value for the <see cref="FileSize"/> property.
         /// </summary>
         public const int DefaultFileSize = 3;
 
         /// <summary>
-        /// Default value for the <see cref="FileFullOperation"/> property.
+        /// Specifies the default value for the <see cref="FileFullOperation"/> property.
         /// </summary>
         public const LogFileFullOperation DefaultFileFullOperation = LogFileFullOperation.Truncate;
 
         /// <summary>
-        /// Default value for the <see cref="PersistSettings"/> property.
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
 
         /// <summary>
-        /// Default value for the <see cref="SettingsCategory"/> property.
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "LogFile";
 

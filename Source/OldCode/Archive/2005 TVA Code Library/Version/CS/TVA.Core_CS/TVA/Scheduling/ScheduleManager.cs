@@ -107,17 +107,17 @@ namespace TVA.Scheduling
         // Constants
 
         /// <summary>
-        /// Default value for Enabled property.
+        /// Specifies the default value for Enabled property.
         /// </summary>
         public const bool DefaultEnabled = true;
 
         /// <summary>
-        /// Default value for PersistSettings property.
+        /// Specifies the default value for PersistSettings property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
 
         /// <summary>
-        /// Default value for SettingsCategoryName property.
+        /// Specifies the default value for SettingsCategoryName property.
         /// </summary>
         public const string DefaultSettingsCategoryName = "ScheduleManager";
 
