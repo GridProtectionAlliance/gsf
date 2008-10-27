@@ -47,7 +47,8 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\..\Build\Output\Debug\</OutputPath>
     <DocumentationFile>PCS.Core.xml</DocumentationFile>
-    <NOWARN>1591</NOWARN>
+    <NOWARN>
+    </NOWARN>
     <DefineConstants>DEBUG;ThreadTracking</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
