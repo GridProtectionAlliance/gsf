@@ -40,8 +40,26 @@ namespace System.Media
     #region [ Enumerations ]
 
     /// <summary>
-    /// Typical samples rates supported by PCM wave files.
+    /// Typical samples rates supported by wave files.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Quantization of the analog waveform, or signal, is a real-time process operating over a continuous
+    /// time-period which produces a “stream” of digital values. In order for the process to work you must
+    /// define the rate at which new digital values are measured, or sampled, from the analog signal. The
+    /// rate at which new values are measured is called the “sampling rate” (a.k.a., the sampling frequency).
+    /// </para>
+    /// <para>
+    /// Audio based Compact Discs use a sampling rate of 44,100 Hz; this means the the Nyquist frequency is
+    /// 22,050 Hz (i.e., the upper bound on the highest frequency that the digital data can clearly represent
+    /// without aliasing). This sample rate selection was no accident as the range of hearing for a healthy
+    /// young person is approximately 20 to 20,000 Hz.
+    /// </para>
+    /// <para>
+    /// In plain English, higher sampling rates will equate to higher quality sound reproduction but anything
+    /// above 44,100 Hz will not be perceived as better quality by normal human beings.
+    /// </para>
+    /// </remarks>
     public enum SampleRate
     {
         /// <summary>8000 samples per second</summary>
@@ -66,8 +84,38 @@ namespace System.Media
     }
 
     /// <summary>
-    /// Typical bit sizes supported by PCM wave files.
+    /// Typical bit sizes supported by wave files.
     /// </summary>
+    /// <remarks>
+    /// Strictly speaking, “bits-per-sample” describes this describes the total number of bits
+    /// used to encode the amplitude (or volume) of a sampled signal.  The following table
+    /// describes a few typical bit ranges and their possible resolution:
+    /// <list type="table">
+    /// <listheader>
+    ///     <term>Bit range</term>
+    ///     <description>Resolution</description>
+    /// </listheader>
+    /// <item>
+    ///     <term>8-bits (1 Byte)</term>
+    ///     <description>0 to 255</description>
+    /// </item>
+    /// <item>
+    ///     <term>16-bits (2 Bytes)</term>
+    ///     <description>-32,768 to 32,767</description>
+    /// </item>
+    /// <item>
+    ///     <term>24-bits (3 Bytes)</term>
+    ///     <description>-8,388,608 to 8,388,607</description>
+    /// </item>
+    /// <item>
+    ///     <term>32-bits (4 Bytes)</term>
+    ///     <description>-2,147,483,648 to 2,147,483,647</description>
+    /// </item>
+    /// </list>
+    /// The net result is that more bits you use, the more resolution you can achieve in
+    /// amplitude; hence “more bits = better sound quality” however you have to compromise
+    /// for technical constraints because “more bits = more required space”.
+    /// </remarks>
     public enum BitsPerSample : short
     {
         /// <summary>8-bits per sample</summary>
@@ -82,7 +130,7 @@ namespace System.Media
     }
 
     /// <summary>
-    /// Typical number of data channels used by PCM wave files.
+    /// Typical number of data channels used by wave files.
     /// </summary>
     /// <remarks>
     /// These are some common number of data channels, but wave files can support any number of data channels.
@@ -109,7 +157,17 @@ namespace System.Media
     /// Common WAVE audio encoding formats.
     /// </summary>
     /// <remarks>
-    /// Microsoft defines more than 130 different audio encoding formats for WAVE files.
+    /// <para>
+    /// Microsoft defines more than 130 different audio encoding formats for WAVE files.  Only the
+    /// more common formats are defined here.
+    /// </para>
+    /// <para>
+    /// Note that PCM (i.e., Pulse Code Modulation) is a universal audio encoding format.  It is a
+    /// very common method of storing and transmitting uncompressed digital audio. Since it is a
+    /// generic format, it can be read by most any audio application similar to the way a plain text
+    /// file can be read by any word-processing program. PCM is used by Audio CDs and digital audio
+    /// tapes (DATs). PCM is also a very common format for AIFF and WAV files.
+    /// </para>
     /// </remarks>
     [CLSCompliant(false)]
     public enum WaveFormat : ushort
@@ -117,12 +175,6 @@ namespace System.Media
         /// <summary>Wave format type is undefined.</summary>
         Unknown = 0x0,
         /// <summary>Standard pulse-code modulation audio format</summary>
-        /// <remarks>
-        /// PCM (Pulse Code Modulation) is a common method of storing and transmitting uncompressed digital audio.
-        /// Since it is a generic format, it can be read by most audio applications—similar to the way a plain text
-        /// file can be read by any word-processing program. PCM is used by Audio CDs and digital audio tapes (DATs).
-        /// PCM is also a very common format for AIFF and WAV files.
-        /// </remarks>
         PCM = 0x1,
         /// <summary>Adpative differential pulse-code modulation encoding algorithm</summary>
         ADPCM = 0x2,
@@ -419,6 +471,13 @@ namespace System.Media
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets audio format used by the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// PCM = 1 (i.e., linear quantization), values other than 1 typically indicate some form of compression.
+        /// See <see cref="WaveFormat"/> enumeration for more details.
+        /// </remarks>
         [CLSCompliant(false)]
         public ushort AudioFormat
         {
@@ -432,6 +491,13 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets number of audio channels in the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property defines the number of channels (e.g., mono = 1, stereo = 2, etc.) defined
+        /// in each sample block. See <see cref="DataChannels"/> enumeration for more details.
+        /// </remarks>
         public short Channels
         {
             get
@@ -444,6 +510,13 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the sample rate (i.e., the number of samples per second) defined in the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property defines the number of samples per second defined in each second of data in
+        /// the <see cref="WaveFile"/>.  See <see cref="System.Media.SampleRate"/> enumeraion for more details.
+        /// </remarks>
         public int SampleRate
         {
             get
@@ -456,6 +529,47 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the byte rate used for buffer estimation.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is not usually changed.  It will be automatically calculated for new wave files.
+        /// </para>
+        /// <para>
+        /// This is typically just the arithmetic result of:
+        /// <see cref="SampleRate"/> * <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
+        /// However, this value can be changed as needed to accomodate better buffer estimations during
+        /// data read cycle.
+        /// </para>
+        /// </remarks>
+        public int ByteRate
+        {
+            get
+            {
+                return m_waveFormat.ByteRate;
+            }
+            set
+            {
+                m_waveFormat.ByteRate = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the block size of a complete sample of data (i.e., samples for all channels of data at
+        /// one instant in time).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is not usually changed.  It will be automatically calculated for new wave files.
+        /// </para>
+        /// <para>
+        /// This is typically just the arithmetic result of:
+        /// <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
+        /// However, this value can be changed as needed to accomodate even block-alignment of non-standard
+        /// <see cref="BitsPerSample"/> values.
+        /// </para>
+        /// </remarks>
         public short BlockAlignment
         {
             get
@@ -468,6 +582,14 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets number of bits-per-sample in the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property defines the number of bits-per-sample (e.g., 8, 16, 24, 32, etc.) used
+        /// by each sample in a block of samples - effectively the data sample size. See
+        /// <see cref="System.Media.BitsPerSample"/> enumeration for more details.
+        /// </remarks>
         public short BitsPerSample
         {
             get
@@ -511,6 +633,23 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets the size of the <see cref="ExtraParameters"/> buffer, if defined.
+        /// </summary>
+        public short ExtraParametersSize
+        {
+            get
+            {
+                return m_waveFormat.ExtraParametersSize;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets any extra parameters defined in the format header of the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// See the <see cref="WaveFormatExtensible"/> class for an example of usage of this property.
+        /// </remarks>
         public byte[] ExtraParameters
         {
             get
@@ -523,6 +662,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Accesses each individual block of sample data indexed by time.
+        /// </summary>
         public List<LittleBinaryValue[]> SampleBlocks
         {
             get
@@ -531,6 +673,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="RiffHeaderChunk"/> of this <see cref="WaveFile"/>.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public RiffHeaderChunk HeaderChunk
         {
@@ -540,6 +685,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="WaveFormatChunk"/> of this <see cref="WaveFile"/>.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public WaveFormatChunk FormatChunk
         {
@@ -549,6 +697,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="WaveDataChunk"/> of this <see cref="WaveFile"/>.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public WaveDataChunk DataChunk
         {

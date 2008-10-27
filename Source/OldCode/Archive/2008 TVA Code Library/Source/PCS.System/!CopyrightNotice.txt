@@ -1,13 +1,11 @@
-/*******************************************************************************************************\
-  
+
   Copyright Notice:
   
-  The majority of this code, so noted in the header by BSD free software license (example below),
-  was developed by James Ritchie Carroll on his own time outside of PCS.  This work is intended
-  for open-source publication in the public domain and was included in the PCS code library for
-  convienience and non-restrictive use inside PCS.
-
-\*******************************************************************************************************/
+  The code in this project, so noted in the header by the BSD free software
+  license (example below), was developed by James Ritchie Carroll on his own
+  time outside of TVA.  This work is available via open-source distribution,
+  http://www.codeproject.com, in the public domain and was included in the
+  PCS code library for convienience and non-restrictive use inside TVA.
 
 /**************************************************************************\
    Copyright (c) 2008 - Gbtc, James Ritchie Carroll

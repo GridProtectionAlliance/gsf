@@ -142,7 +142,7 @@ namespace System.Media
             }
         }
 
-        /// <summary>Size of RIFF chunk.</summary>
+        /// <summary>Size of <see cref="RiffChunk"/>.</summary>
         public virtual int ChunkSize
         {
             get
@@ -156,7 +156,7 @@ namespace System.Media
         }
 
         /// <summary>
-        /// Returns a binary representation of this RIFF chunk.
+        /// Returns a binary representation of this <see cref="RiffChunk"/>.
         /// </summary>
         public virtual byte[] BinaryImage
         {
@@ -172,7 +172,7 @@ namespace System.Media
         }
 
         /// <summary>
-        /// Gets the length of a RIFF chunk consisting of type ID and chunk size (i.e., 8 bytes).
+        /// Gets the length of a <see cref="RiffChunk"/> consisting of type ID and chunk size (i.e., 8 bytes).
         /// </summary>
         public int BinaryLength
         {

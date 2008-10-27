@@ -132,6 +132,7 @@ namespace System.Media
 
         #region [ Properties ]
 
+        /// <summary>Size of <see cref="WaveFormatChunk"/>.</summary>
         public override int ChunkSize
         {
             get
@@ -153,6 +154,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Returns a binary representation of this <see cref="WaveFormatChunk"/>.
+        /// </summary>
         public override byte[] BinaryImage
         {
             get
@@ -180,6 +184,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets the length of <see cref="WaveFormatChunk"/>.
+        /// </summary>
         public new int BinaryLength
         {
             get
@@ -188,6 +195,13 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets audio format used by the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// PCM = 1 (i.e., linear quantization), values other than 1 typically indicate some form of compression.
+        /// See <see cref="WaveFormat"/> enumeration for more details.
+        /// </remarks>
         [CLSCompliant(false)]
         public ushort AudioFormat
         {
@@ -201,6 +215,13 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets number of audio channels in the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property defines the number of channels (e.g., mono = 1, stereo = 2, etc.) defined
+        /// in each sample block. See <see cref="DataChannels"/> enumeration for more details.
+        /// </remarks>
         public short Channels
         {
             get
@@ -215,6 +236,13 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the sample rate (i.e., the number of samples per second) defined in the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property defines the number of samples per second defined in each second of data in
+        /// the <see cref="WaveFile"/>.  See <see cref="System.Media.SampleRate"/> enumeraion for more details.
+        /// </remarks>
         public int SampleRate
         {
             get
@@ -227,7 +255,21 @@ namespace System.Media
                 UpdateByteRate();
             }
         }
-        
+
+        /// <summary>
+        /// Gets or sets the byte rate used for buffer estimation.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is not usually changed.  It will be automatically calculated for new wave files.
+        /// </para>
+        /// <para>
+        /// This is typically just the arithmetic result of:
+        /// <see cref="SampleRate"/> * <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
+        /// However, this value can be changed as needed to accomodate better buffer estimations during
+        /// data read cycle.
+        /// </para>
+        /// </remarks>
         public int ByteRate
         {
             get
@@ -240,6 +282,21 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets the block size of a complete sample of data (i.e., samples for all channels of data at
+        /// one instant in time).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is not usually changed.  It will be automatically calculated for new wave files.
+        /// </para>
+        /// <para>
+        /// This is typically just the arithmetic result of:
+        /// <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
+        /// However, this value can be changed as needed to accomodate even block-alignment of non-standard
+        /// <see cref="BitsPerSample"/> values.
+        /// </para>
+        /// </remarks>
         public short BlockAlignment
         {
             get
@@ -252,6 +309,15 @@ namespace System.Media
             }
         }
 
+
+        /// <summary>
+        /// Gets or sets number of bits-per-sample in the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property defines the number of bits-per-sample (e.g., 8, 16, 24, 32, etc.) used
+        /// by each sample in a block of samples - effectively the data sample size. See
+        /// <see cref="System.Media.BitsPerSample"/> enumeration for more details.
+        /// </remarks>
         public short BitsPerSample
         {
             get
@@ -266,6 +332,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets the size of the <see cref="ExtraParameters"/> buffer, if defined.
+        /// </summary>
         public short ExtraParametersSize
         {
             get
@@ -274,6 +343,12 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets or sets any extra parameters defined in the format header of the <see cref="WaveFile"/>.
+        /// </summary>
+        /// <remarks>
+        /// See the <see cref="WaveFormatExtensible"/> class for an example of usage of this property.
+        /// </remarks>
         public byte[] ExtraParameters
         {
             get

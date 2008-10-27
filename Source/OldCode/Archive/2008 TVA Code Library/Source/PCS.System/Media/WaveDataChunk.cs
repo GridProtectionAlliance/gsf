@@ -169,6 +169,10 @@ namespace System.Media
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Creates a deeply cloned copy of the <see cref="WaveDataChunk"/>.
+        /// </summary>
+        /// <returns>A deeply cloned copy of the <see cref="WaveDataChunk"/>.</returns>
         public new WaveDataChunk Clone()
         {
             WaveDataChunk waveDataChunk = new WaveDataChunk(m_waveFormat);

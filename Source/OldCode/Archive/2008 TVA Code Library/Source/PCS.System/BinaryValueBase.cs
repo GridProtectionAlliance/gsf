@@ -39,7 +39,15 @@ namespace System
         #region [ Members ]
 
         // Fields
+
+        /// <summary>
+        /// <see cref="TypeCode"/> that this binary data sample represents.
+        /// </summary>
         protected TypeCode m_typeCode;
+
+        /// <summary>
+        /// Binary representation of this data sample.
+        /// </summary>
         protected byte[] m_buffer;
 
         #endregion
@@ -85,6 +93,9 @@ namespace System
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets <see cref="TypeCode"/> that this binary data sample represents.
+        /// </summary>
         public TypeCode TypeCode
         {
             get
@@ -97,6 +108,9 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Gets or sets the binary representation of this data sample.
+        /// </summary>
         public byte[] Buffer
         {
             get
