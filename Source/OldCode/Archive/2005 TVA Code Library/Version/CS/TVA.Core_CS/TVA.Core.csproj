@@ -93,6 +93,9 @@
     <Compile Include="System\Media\WaveFormatExtensible.cs" />
     <Compile Include="System\Media\Sound\DTMF.cs" />
     <Compile Include="System\Media\Sound\TouchTone.cs" />
+    <Compile Include="TVA\IO\IsamDataFileBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TVA\ISupportLifecycle.cs" />
     <Compile Include="System\BigBinaryValue.cs" />
     <Compile Include="System\BinaryValueBase.cs" />
@@ -220,12 +223,6 @@
     <Compile Include="TVA\Drawing\BitmapExtensions.cs" />
     <Compile Include="TVA\Interop\VBArrayDescriptor.cs" />
     <Compile Include="TVA\IO\ExportDestination.cs" />
-    <Compile Include="TVA\IO\IsamDataFileBase.Designer.cs">
-      <DependentUpon>IsamDataFileBase.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TVA\IO\IsamDataFileBase.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="TVA\IO\LogFile.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -320,10 +317,6 @@
   <ItemGroup>
     <EmbeddedResource Include="TVA\ErrorManagement\ErrorDialog.resx">
       <DependentUpon>ErrorDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="TVA\IO\IsamDataFileBase.resx">
-      <DependentUpon>IsamDataFileBase.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
