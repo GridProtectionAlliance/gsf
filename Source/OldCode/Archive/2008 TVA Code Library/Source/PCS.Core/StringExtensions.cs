@@ -153,6 +153,7 @@ namespace PCS
         /// Only one level of nesting is supported.
         /// </para>
         /// </remarks>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value)
         {
             return value.ParseKeyValuePairs(';', '=');
