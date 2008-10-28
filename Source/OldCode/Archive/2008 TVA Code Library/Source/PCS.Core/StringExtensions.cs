@@ -193,9 +193,9 @@ namespace PCS
         /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
         /// string).</param>
         /// <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string).</param>
-        /// <param name="valueStartDelimeter">Optional character that marks the start of a value such that value could contain other
+        /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
         /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
-        /// <param name="valueEndDelimeter">Optional character that marks the end of a value such that value could contain other
+        /// <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
         /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
         /// <returns>Dictionary of key/value pairs.</returns>
         /// <remarks>
@@ -211,17 +211,17 @@ namespace PCS
         /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
         /// <exception cref="FormatException">Only one level of tagged value expressions are allowed -or-
         /// encountered <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
-        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter, char valueStartDelimeter, char valueEndDelimeter)
+        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter, char startValueDelimeter, char endValueDelimeter)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
 
             if (parameterDelimeter == keyValueDelimeter || 
-                parameterDelimeter == valueStartDelimeter || 
-                parameterDelimeter == valueEndDelimeter ||
-                keyValueDelimeter == valueStartDelimeter || 
-                keyValueDelimeter == valueEndDelimeter ||
-                valueStartDelimeter == valueEndDelimeter)
+                parameterDelimeter == startValueDelimeter || 
+                parameterDelimeter == endValueDelimeter ||
+                keyValueDelimeter == startValueDelimeter || 
+                keyValueDelimeter == endValueDelimeter ||
+                startValueDelimeter == endValueDelimeter)
                     throw new ArgumentException("All delimeters must be unique.");
 
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
@@ -241,7 +241,7 @@ namespace PCS
             {
                 character = value[x];
 
-                if (character == valueStartDelimeter)
+                if (character == startValueDelimeter)
                 {
                     if (!valueEscaped)
                     {
@@ -254,7 +254,7 @@ namespace PCS
                     }
                 }
 
-                if (character == valueEndDelimeter)
+                if (character == endValueDelimeter)
                 {
                     if (valueEscaped)
                     {
@@ -263,7 +263,7 @@ namespace PCS
                     }
                     else
                     {
-                        throw new FormatException(string.Format("Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'.", valueEndDelimeter, valueStartDelimeter));
+                        throw new FormatException(string.Format("Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'.", endValueDelimeter, startValueDelimeter));
                     }
                 }
 
