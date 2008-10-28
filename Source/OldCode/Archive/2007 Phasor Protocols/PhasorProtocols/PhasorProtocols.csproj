@@ -242,6 +242,7 @@
     <Compile Include="PhasorDefinitionCollection.cs" />
     <Compile Include="PhasorValueBase.cs" />
     <Compile Include="PhasorValueCollection.cs" />
+    <Compile Include="TEMP - StringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Relationship Diagrams\Analog Definition Relationships.cd">
