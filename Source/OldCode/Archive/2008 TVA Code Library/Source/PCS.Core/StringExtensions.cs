@@ -283,7 +283,7 @@ namespace PCS
                 }
             }
 
-            // Parses out connect string parameters
+            // Parse out key/value pairs
             foreach (string parameter in escapedValue.ToString().Split(parameterDelimeter))
             {
                 // Parse out parameter's key/value elements
