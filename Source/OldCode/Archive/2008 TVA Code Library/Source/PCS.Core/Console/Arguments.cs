@@ -147,7 +147,10 @@ namespace PCS.Console
             //   -param1=value1 --param2 /param3:"Test-:-work"
             //   /param4=happy -param5 '--=nice=--'
             string[] args = ParseCommand(m_commandLine);
-            if (skipFirstArgument && args.Length > 0) args = args.Copy(1, args.Length - 1);
+
+            if (skipFirstArgument && args.Length > 0)
+                args = args.Copy(1, args.Length - 1);
+
             foreach (string arg in args)
             {
                 // Found just a parameter in last pass...
@@ -157,6 +160,7 @@ namespace PCS.Console
                     if (!m_arguments.ContainsKey(parameter))
                         m_arguments.Add(parameter, null);
                 }
+
                 parameter = null;
 
                 if (!string.IsNullOrEmpty(arg))
@@ -366,7 +370,7 @@ namespace PCS.Console
                 command = command.Replace("\\\"", encodedQuote);
 
                 // Combines any quoted strings into a single arg by encoding embedded spaces.
-                for (int x = 0; x <= command.Length - 1; x++)
+                for (int x = 0; x < command.Length; x++)
                 {
                     currentCharacter = command[x];
 
