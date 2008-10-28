@@ -161,8 +161,8 @@ namespace PCS
             return value.ParseKeyValuePairs(';', '=');
         }
 
-        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple pairs separated
-        /// by a semi-colon.</summary>
+        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
+        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.</summary>
         /// <param name="value">Key pair string to parse.</param>
         /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
         /// string).</param>
@@ -187,8 +187,8 @@ namespace PCS
             return value.ParseKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
         }
 
-        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple pairs separated
-        /// by a semi-colon.</summary>
+        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
+        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.</summary>
         /// <param name="value">Key pair string to parse.</param>
         /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
         /// string).</param>
