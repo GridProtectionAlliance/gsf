@@ -175,6 +175,8 @@ namespace PCS
         /// Only one level of nesting is supported.
         /// </para>
         /// </remarks>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter)
         {
             return value.ParseKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
