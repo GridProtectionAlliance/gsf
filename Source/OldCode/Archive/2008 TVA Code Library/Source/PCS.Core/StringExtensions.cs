@@ -203,8 +203,8 @@ namespace PCS
         /// Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
         /// </para>
         /// <para>
-        /// If value includes start delimeter, it must include end delimeter - otherwise results will be unexpected. Only one level
-        /// of start/end delimeter nesting is supported.
+        /// If value includes <paramref name="startValueDelimeter"/>, it must include <paramref name="endValueDelimeter"/>
+        /// otherwise results will be unexpected. Only one level of start/end value delimeter nesting is supported.
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
