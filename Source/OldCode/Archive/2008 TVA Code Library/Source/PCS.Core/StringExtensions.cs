@@ -237,7 +237,7 @@ namespace PCS
             //          "normalKVP=-1; nestedKVP={p1=true; p2=false}")
             //      would be encoded as:
             //          "normalKVP=-1; nestedKVP=p1\\u003dtrue\\u003b p2\\u003dfalse")
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 character = value[x];
 
