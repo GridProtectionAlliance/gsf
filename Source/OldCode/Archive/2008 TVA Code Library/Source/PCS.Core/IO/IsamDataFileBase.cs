@@ -17,6 +17,8 @@
 //       instead of DesignMode property as the former is more accurate than the latter
 //  09/19/2008 - James R Carroll
 //       Converted to C#.
+//  10/28/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -30,7 +32,14 @@ using PCS.Parsing;
 
 namespace PCS.IO
 {
-    public abstract class IsamDataFileBase<T> : Component where T : IBinaryDataProvider
+    /// <summary>
+    /// An abstract class that represents an ISAM (Indexed Sequential Access Method) file.
+    /// </summary>
+    /// <typeparam name="T"><see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the <see cref="IBinaryDataProvider"/> interface.</typeparam>
+    /// <remarks>
+    /// For more information on ISAM files see http://en.wikipedia.org/wiki/ISAM.
+    /// </remarks>
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryDataProvider
     {
         #region [ Members ]
 
@@ -47,6 +56,16 @@ namespace PCS.IO
         public const string DefaultFileName = "IsamDataFile" + Extension;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="AutoSaveInterval"/> property.
+        /// </summary>
+        public const int DefaultAutoSaveInterval = -1;
+
+        /// <summary>
+        /// Specifes the default value for the <see cref="MinimumRecordCount"/> property.
+        /// </summary>
+        public const int DefaultMinimumRecordCount = 0;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="LoadOnOpen"/> property.
         /// </summary>
         public const bool DefaultLoadOnOpen = true;
@@ -60,16 +79,6 @@ namespace PCS.IO
         /// Specifies the default value for the <see cref="ReloadOnModify"/> property.
         /// </summary>
         public const bool DefaultReloadOnModify = true;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="AutoSaveInterval"/> property.
-        /// </summary>
-        public const int DefaultAutoSaveInterval = -1;
-
-        /// <summary>
-        /// Specifes the default value for the <see cref="MinimumRecordCount"/> property.
-        /// </summary>
-        public const int DefaultMinimumRecordCount = 0;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -128,6 +137,9 @@ namespace PCS.IO
         private ManualResetEvent m_saveWaitHandle;
         private System.Timers.Timer m_autoSaveTimer;
         private FileSystemWatcher m_fileSystemWatcher;
+        private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
@@ -192,11 +204,15 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets or sets the interval in milliseconds at which the records in memory are to be persisted to disk.
+        /// Gets or sets the interval in milliseconds at which the records loaded in memory are to be persisted to disk.
         /// </summary>
+        /// <remarks>
+        /// <see cref="AutoSaveInterval"/> will be effective only if records have been loaded in memory either manually 
+        /// by calling the <see cref="Load()"/> method or automatically by settings <see cref="LoadOnOpen"/> to true.
+        /// </remarks>
         [Category("Settings"),
         DefaultValue(DefaultAutoSaveInterval),
-        Description("Interval in milliseconds at which the records in memory are to be persisted to disk.")]
+        Description("Interval in milliseconds at which the records loaded in memory are to be persisted to disk.")]
         public int AutoSaveInterval
         {
             get
@@ -228,11 +244,12 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the records are to be loaded in memory when the file is opened.
+        /// Gets or sets a boolean value that indicates whether records are to be loaded automatically in memory when 
+        /// the file is opened.
         /// </summary>
-        [Category("Behavior"), 
+        [Category("Behavior"),
         DefaultValue(DefaultLoadOnOpen),
-        Description("Indicates whether the records are to be loaded in memory when the file is opened.")]
+        Description("Indicates whether records are to be loaded automatically in memory when the file is opened.")]
         public bool LoadOnOpen
         {
             get
@@ -246,11 +263,16 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether records in memory are to be persisted to disk when file is closed.
+        /// Gets or sets a boolean value that indicates whether records loaded in memory are to be persisted to disk 
+        /// when the file is closed.
         /// </summary>
-        [Category("Behavior"), 
-        DefaultValue(DefaultSaveOnClose), 
-        Description("Indicates whether records in memory are to be persisted to disk when file is closed.")]
+        /// <remarks>
+        /// <see cref="SaveOnClose"/> will be effective only if records have been loaded in memory either manually 
+        /// by calling the <see cref="Load()"/> method or automatically by settings <see cref="LoadOnOpen"/> to true.
+        /// </remarks>
+        [Category("Behavior"),
+        DefaultValue(DefaultSaveOnClose),
+        Description("Indicates whether records loaded in memory are to be persisted to disk when the file is closed.")]
         public bool SaveOnClose
         {
             get
@@ -264,11 +286,16 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether records are to be re-loaded in memory when the file is modified.
+        /// Gets or sets a boolean value that indicates whether records loaded in memory are to be re-loaded when the 
+        /// file is modified on disk.
         /// </summary>
-        [Category("Behavior"), 
-        DefaultValue(DefaultReloadOnModify), 
-        Description("Indicates whether records are to be re-loaded in memory when the file is modified.")]
+        /// <remarks>
+        /// <see cref="ReloadOnModify"/> will be effective only if records have been loaded in memory either manually 
+        /// by calling the <see cref="Load()"/> method or automatically by settings <see cref="LoadOnOpen"/> to true.
+        /// </remarks>
+        [Category("Behavior"),
+        DefaultValue(DefaultReloadOnModify),
+        Description("Indicates whether records loaded in memory are to be re-loaded when the file is modified on disk.")]
         public bool ReloadOnModify
         {
             get
@@ -282,11 +309,11 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the settings of the file are to be saved to the config file.
+        /// Gets or sets a boolean value that indicates whether the file settings are to be saved to the config file.
         /// </summary>
         [Category("Persistance"),
         DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the settings of the file are to be saved to the config file.")]
+        Description("Indicates whether the file settings are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -300,13 +327,13 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets or sets the category under which the settings of the file are to be savedto the config file if the 
+        /// Gets or sets the category under which the file settings are to be saved to the config file if the 
         /// <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the settings of the file are to be saved to the config file if the PersistSettings property is set to true.")]
+        Description("Category under which the file settings are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -319,6 +346,27 @@ namespace PCS.IO
                     throw (new ArgumentNullException());
 
                 m_settingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the file is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
             }
         }
 
@@ -361,8 +409,11 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets the approximate memory consumption of the file.
+        /// Gets the approximate memory consumption (in KB) of the file.
         /// </summary>
+        /// <remarks>
+        /// <see cref="MemoryUsage"/> will be zero (0) unless records are loaded in memory.
+        /// </remarks>
         [Browsable(false)]
         public long MemoryUsage
         {
@@ -373,7 +424,7 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets the number of records of the file on the disk.
+        /// Gets the number of file records on the disk.
         /// </summary>
         [Browsable(false)]
         public int RecordsOnDisk
@@ -399,7 +450,7 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets the number of records of the file loaded in memory.
+        /// Gets the number of file records loaded in memory.
         /// </summary>
         [Browsable(false)]
         public int RecordsInMemory
@@ -420,6 +471,9 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// When overridden in a derived class, gets the size of a record (in bytes).
+        /// </summary>
         [Browsable(false)]
         public abstract int RecordSize
         {
@@ -437,22 +491,17 @@ namespace PCS.IO
         {
             if (!IsOpen)
             {
+                // Make the file path absolute if it is relative.
                 m_fileName = FilePath.GetAbsolutePath(m_fileName);
 
+                // Create the file directory if it does not exist.
                 if (!Directory.Exists(Path.GetDirectoryName(m_fileName)))
                     Directory.CreateDirectory(Path.GetDirectoryName(m_fileName));
 
-                if (File.Exists(m_fileName))
-                {
-                    // Opens existing file.
-                    m_fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-                }
-                else
-                {
-                    // Creates file.
-                    m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                }
+                // Open if file exists, or create it if it doesn't.
+                m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
+                // Load records into memory if specified to do so.
                 if (m_loadOnOpen) Load();
 
                 // Makes sure that we have the minimum number of records specified.
@@ -463,7 +512,7 @@ namespace PCS.IO
 
                 if (m_reloadOnModify)
                 {
-                    // Watches for any modifications made to the file.
+                    // Watch for any modifications made to the file on disk.
                     m_fileSystemWatcher.Path = Path.GetDirectoryName(m_fileName);
                     m_fileSystemWatcher.Filter = Path.GetFileName(m_fileName);
                     m_fileSystemWatcher.EnableRaisingEvents = true;
@@ -471,7 +520,7 @@ namespace PCS.IO
 
                 if (m_autoSaveInterval > 0)
                 {
-                    // Starts the timer for saving data automatically.
+                    // Start timer for saving records loaded in memory automatically.
                     m_autoSaveTimer.Interval = m_autoSaveInterval;
                     m_autoSaveTimer.Start();
                 }
@@ -485,16 +534,16 @@ namespace PCS.IO
         {
             if (IsOpen)
             {
-                // Stops the timers if they are ticking.
+                // Stop the timer if it is ticking.
                 m_autoSaveTimer.Stop();
 
-                // Stops monitoring for changes to the file.
+                // Stop monitoring for changes to the file.
                 m_fileSystemWatcher.EnableRaisingEvents = false;
 
-                // Saves records back to the file if specified.
+                // Save records back to the file if specified.
                 if (m_saveOnClose) Save();
 
-                // Releases all of the used resources.
+                // Close the file stream used for file I/O.
                 if (m_fileStream != null)
                 {
                     lock (m_fileStream)
@@ -502,9 +551,9 @@ namespace PCS.IO
                         m_fileStream.Dispose();
                     }
                 }
-
                 m_fileStream = null;
 
+                // Clear the records loaded in memory.
                 if (m_fileRecords != null)
                 {
                     lock (m_fileRecords)
@@ -512,11 +561,13 @@ namespace PCS.IO
                         m_fileRecords.Clear();
                     }
                 }
-
                 m_fileRecords = null;
             }
         }
 
+        /// <summary>
+        /// Loads records from disk into memory.
+        /// </summary>
         public void Load()
         {
             if (IsOpen)
@@ -556,7 +607,22 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Saves records to disk if they are loaded in memory.
+        /// Initializes the file.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the file is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Saves records loaded in memory to disk.
         /// </summary>
         public void Save()
         {
@@ -580,14 +646,6 @@ namespace PCS.IO
                         {
                             WriteToDisk(m_fileRecords);
                         }
-
-                        if (RecordsInMemory < RecordsOnDisk)
-                        {
-                            lock (m_fileStream)
-                            {
-                                m_fileStream.SetLength(RecordsInMemory * RecordSize);
-                            }
-                        }
                     }
 
                     OnDataSaved(EventArgs.Empty);
@@ -603,83 +661,89 @@ namespace PCS.IO
             }
         }
 
-        public void LoadSettings()
-        {
-            try
-            {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                if (settings.Count > 0)
-                {
-                    FileName = settings["Name"].ValueAs(m_fileName);
-                    LoadOnOpen = settings["LoadOnOpen"].ValueAs(m_loadOnOpen);
-                    ReloadOnModify = settings["ReloadOnModify"].ValueAs(m_reloadOnModify);
-                    SaveOnClose = settings["SaveOnClose"].ValueAs(m_saveOnClose);
-                    AutoSaveInterval = settings["AutoSaveInterval"].ValueAs(m_autoSaveInterval);
-                    MinimumRecordCount = settings["MinimumRecordCount"].ValueAs(m_minimumRecordCount);
-                }
-            }
-            catch
-            {
-                // Exceptions will occur if the settings are not present in the config file.
-            }
-        }
-
+        /// <summary>
+        /// Saves settings of the file to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    CategorizedSettingsElement setting;
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
 
-                    settings.Clear();
-
-                    setting = settings["Name", true];
-                    setting.Value = m_fileName;
-                    setting.Description = "Name of the file including its path.";
-
-                    setting = settings["LoadOnOpen", true];
-                    setting.Value = m_loadOnOpen.ToString();
-                    setting.Description = "True if file is to be loaded when opened; otherwise False.";
-
-                    setting = settings["ReloadOnModify", true];
-                    setting.Value = m_reloadOnModify.ToString();
-                    setting.Description = "True if file is to be re-loaded when modified; otherwise False.";
-
-                    setting = settings["SaveOnClose", true];
-                    setting.Value = m_saveOnClose.ToString();
-                    setting.Description = "True if file is to be saved when closed; otherwise False.";
-
-                    setting = settings["AutoSaveInterval", true];
-                    setting.Value = m_autoSaveInterval.ToString();
-                    setting.Description = "Interval in milliseconds at which the file is to be saved automatically. A value of -1 indicates that automatic saving is disabled.";
-
-                    setting = settings["MinimumRecordCount", true];
-                    setting.Value = m_minimumRecordCount.ToString();
-                    setting.Description = "Minimum number of records that the file must have.";
-
-                    ConfigurationFile.Current.Save();
-                }
-                catch
-                {
-                    // Exceptions may occur if the settings cannot be saved to the config file.
-                }
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["FileName", true].Update(m_fileName, "Name of the file including its path.");
+                settings["AutoSaveInterval", true].Update(m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
+                settings["MinimumRecordCount", true].Update(m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
+                settings["LoadOnOpen", true].Update(m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
+                settings["SaveOnClose", true].Update(m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
+                settings["ReloadOnModify", true].Update(m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
+                config.Save();
             }
         }
 
+        /// <summary>
+        /// Loads saved settings of the file from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                FileName = settings["FileName", true].ValueAs(m_fileName);
+                AutoSaveInterval = settings["AutoSaveInterval", true].ValueAs(m_autoSaveInterval);
+                MinimumRecordCount = settings["MinimumRecordCount", true].ValueAs(m_minimumRecordCount);
+                LoadOnOpen = settings["LoadOnOpen", true].ValueAs(m_loadOnOpen);
+                SaveOnClose = settings["SaveOnClose", true].ValueAs(m_saveOnClose);
+                ReloadOnModify = settings["ReloadOnModify", true].ValueAs(m_reloadOnModify);
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the file properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the file is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            // No prerequisites before the component is initialized.
+            // Nothing needs to be done before component is initialized.
         }
 
+        /// <summary>
+        /// Performs necessary operations after the file properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the file is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-                LoadSettings(); // Loads settings from the config file.
+            if (!DesignMode)
+            {
+                Initialize();
+            }
         }
 
+        /// <summary>
+        /// Writes specified records to disk if records were not loaded in memory otherwise updates the records in memory.
+        /// </summary>
+        /// <param name="records">Records to be written.</param>
+        /// <remarks>
+        /// This operation will causes existing records to be deleted and replaced with the ones specified.
+        /// </remarks>
         public virtual void Write(List<T> records)
         {
             if (IsOpen)
@@ -703,6 +767,11 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Writes specified record to disk if records were not loaded in memory otherwise updates the record in memory.
+        /// </summary>
+        /// <param name="recordID">ID of the record to be written.</param>
+        /// <param name="record">Record to be written.</param>
         public virtual void Write(int recordID, T record)
         {
             if (IsOpen)
@@ -755,6 +824,10 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Reads file records from disk if records were not loaded in memory otherwise returns the records in memory.
+        /// </summary>
+        /// <returns>Records of the file.</returns>
         public virtual List<T> Read()
         {
             if (IsOpen)
@@ -783,6 +856,11 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Reads specified file record from disk if records were not loaded in memory otherwise returns the record in memory.
+        /// </summary>
+        /// <param name="recordID">ID of the record to be read.</param>
+        /// <returns>Record with the specified ID if it exists; otherwise null.</returns>
         public virtual T Read(int recordID)
         {
             if (IsOpen)
@@ -815,93 +893,144 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// When overridden in a derived class, return a new empty record.
+        /// </summary>
+        /// <param name="id">ID of the new record.</param>
+        /// <returns>New empty record.</returns>
         public abstract T NewRecord(int id);
 
+        /// <summary>
+        /// When overridden in a derived class, return a new record from the provided binary data.
+        /// </summary>
+        /// <param name="id">ID of the new record.</param>
+        /// <param name="binaryImage">Binary data to be used for creating the new record.</param>
+        /// <returns>New record.</returns>
         public abstract T NewRecord(int id, byte[] binaryImage);
 
+        /// <summary>
+        /// Raises the <see cref="FileModified"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
         protected virtual void OnFileModified(EventArgs e)
         {
             if (FileModified != null)
                 FileModified(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="DataLoading"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
         protected virtual void OnDataLoading(EventArgs e)
         {
             if (DataLoading != null)
                 DataLoading(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="DataLoaded"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
         protected virtual void OnDataLoaded(EventArgs e)
         {
             if (DataLoaded != null)
                 DataLoaded(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="DataSaving"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
         protected virtual void OnDataSaving(EventArgs e)
         {
             if (DataSaving != null)
                 DataSaving(this, e);
         }
 
+        /// <summary>
+        /// Raises the <see cref="DataSaved"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
         protected virtual void OnDataSaved(EventArgs e)
         {
             if (DataSaved != null)
                 DataSaved(this, e);
         }
 
-        //protected override void Dispose(bool disposing)
-        //{
-        //    try
-        //    {
-        //        if (disposing)
-        //        {
-        //            Close();        // Closes the file.
-        //            SaveSettings(); // Saves settings to the config file.
+        /// <summary>
+        /// Releases the unmanaged resources used by the file and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings();
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_loadWaitHandle != null) 
+                            m_loadWaitHandle.Close();
 
-        //            if (FileSystemWatcher != null)
-        //            {
-        //                FileSystemWatcher.Changed -= FileSystemWatcher_Changed;
-        //                FileSystemWatcher.Dispose();
-        //            }
-        //            FileSystemWatcher = null;
+                        if (m_saveWaitHandle != null) 
+                            m_saveWaitHandle.Close();
 
-        //            if (m_loadWaitHandle != null) m_loadWaitHandle.Close();
-        //            m_loadWaitHandle = null;
+                        if (m_autoSaveTimer != null)
+                            m_autoSaveTimer.Dispose();
 
-        //            if (m_saveWaitHandle != null) m_saveWaitHandle.Close();
-        //            m_saveWaitHandle = null;
+                        if (m_fileSystemWatcher != null)
+                            m_fileSystemWatcher.Dispose();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
-        //            if (m_autoSaveTimer != null) m_autoSaveTimer.Dispose();
-        //            m_autoSaveTimer = null;
-
-        //            if (components != null)
-        //                components.Dispose();
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        base.Dispose(disposing);
-        //    }
-        //}
-
+        /// <summary>
+        /// Writes records to disk.
+        /// </summary>
+        /// <param name="records">Records to be written to disk.</param>
         private void WriteToDisk(List<T> records)
         {
+            // Write all records to disk.
             for (int i = 1; i <= records.Count; i++)
             {
                 WriteToDisk(i, records[i - 1]);
             }
+
+            // Discard previously existing records that were not written.
+            lock (m_fileStream)
+            {
+                m_fileStream.SetLength(records.Count * RecordSize);
+            }
         }
 
+        /// <summary>
+        /// Writes single record to disk.
+        /// </summary>
+        /// <param name="recordID">ID of the record to be written to disk.</param>
+        /// <param name="record">Record to be written to disk.</param>
         private void WriteToDisk(int recordID, T record)
         {
             lock (m_fileStream)
             {
                 m_fileStream.Seek((recordID - 1) * record.BinaryLength, SeekOrigin.Begin);
                 m_fileStream.Write(record.BinaryImage, 0, record.BinaryLength);
-                m_fileStream.Flush();
             }
         }
 
+        /// <summary>
+        /// Reads all records from disk.
+        /// </summary>
+        /// <returns>Records from disk.</returns>
         private List<T> ReadFromDisk()
         {
             List<T> records = new List<T>();
@@ -915,6 +1044,11 @@ namespace PCS.IO
             return records;
         }
 
+        /// <summary>
+        /// Read single record from disk.
+        /// </summary>
+        /// <param name="recordID">ID of the record to be read.</param>
+        /// <returns>Record from the disk.</returns>
         private T ReadFromDisk(int recordID)
         {
             byte[] binaryImage = new byte[RecordSize];
@@ -930,15 +1064,15 @@ namespace PCS.IO
 
         private void m_autoSaveTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            // Automatically save records to the file if the file is open.
-            if (IsOpen) Save();
+            // Automatically save records to disk if loaded in memory.
+            if ((m_fileRecords != null) && IsOpen) Save();
         }
 
         private void FileSystemWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
             OnFileModified(EventArgs.Empty);
 
-            // Reload the file when it is modified externally, but only if it has been loaded once.
+            // Reload records if they have been loaded in memory and reloading is enabled.
             if ((m_fileRecords != null) && m_reloadOnModify) Load();
         }
 
