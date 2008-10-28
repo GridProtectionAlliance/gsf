@@ -204,7 +204,7 @@ namespace PCS
         /// </para>
         /// <para>
         /// If value includes start delimeter, it must include end delimeter - otherwise results will be unexpected. Only one level
-        /// of start / end delimeter nesting is supported.
+        /// of start/end delimeter nesting is supported.
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
