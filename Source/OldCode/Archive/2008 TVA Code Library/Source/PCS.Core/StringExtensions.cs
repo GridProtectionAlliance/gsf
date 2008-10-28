@@ -155,7 +155,7 @@ namespace PCS
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="FormatException">Only one level of tagged value expressions are allowed -or-
-        /// encountered end value delimeter '{' before start value delimeter '}'.</exception>
+        /// encountered end value delimeter '}' before start value delimeter '{'.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value)
         {
             return value.ParseKeyValuePairs(';', '=');
@@ -181,7 +181,7 @@ namespace PCS
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
         /// <exception cref="FormatException">Only one level of tagged value expressions are allowed -or-
-        /// encountered end value delimeter '{' before start value delimeter '}'.</exception>
+        /// encountered end value delimeter '}' before start value delimeter '{'.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter)
         {
             return value.ParseKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
