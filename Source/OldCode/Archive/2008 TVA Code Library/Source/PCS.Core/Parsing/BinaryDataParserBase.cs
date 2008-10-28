@@ -32,7 +32,6 @@ using PCS.IO;
 
 namespace PCS.Parsing
 {
-    [DefaultEvent("DataParsed")]
     public abstract class BinaryDataParserBase<TIdentifier, TOutput> : Component, IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
     {
         #region [ Members ]
@@ -212,7 +211,6 @@ namespace PCS.Parsing
         /// </summary>
         public void Start()
         {
-            Assembly asm = null;
             ConstructorInfo typeCtor = null;
             string dllDirectory = FilePath.GetAbsolutePath("");
             AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("InMemory"), AssemblyBuilderAccess.Run);
@@ -220,68 +218,47 @@ namespace PCS.Parsing
             TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
             List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
 
-            if (Common.GetApplicationType() == ApplicationType.Web)
+            foreach (Type asmType in typeof(TOutput).GetRelatedTypes())
             {
-                // In case of a web application, we need to look in the bin directory for DLLs.
-                dllDirectory = FilePath.AddPathSuffix(dllDirectory + "bin");
-            }
-
-            // Process all assemblies in the application bin directory.
-            foreach (string dll in Directory.GetFiles(dllDirectory, "*.dll"))
-            {
-                try
+                typeCtor = asmType.GetConstructor(Type.EmptyTypes);
+                if (typeCtor != null)
                 {
-                    // Load the assembly in the curent app domain.
-                    asm = Assembly.LoadFrom(dll);
+                    // The type meets the following criteria:
+                    // - has a default public constructor
+                    // - is not abstract and can be instantiated.
+                    // - root type is same as the type specified for the output
 
-                    // Process all of the public types in the assembly.
-                    foreach (Type asmType in asm.GetExportedTypes())
+                    TypeInfo outputType = new TypeInfo();
+                    outputType.RuntimeType = asmType;
+
+                    // We employ 2 of the best peforming ways of instantiating objects using reflection.
+                    // See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
+                    if (m_optimizeParsing)
                     {
-                        typeCtor = asmType.GetConstructor(Type.EmptyTypes);
-                        if ((typeCtor != null) && !asmType.IsAbstract && asmType.GetRootType() == typeof(TOutput))
-                        {
-                            // The type meets the following criteria:
-                            // - has a default public constructor
-                            // - is not abstract and can be instantiated.
-                            // - root type is same as the type specified for the output
-
-                            TypeInfo outputType = new TypeInfo();
-                            outputType.RuntimeType = asmType;
-
-                            // We employ 2 of the best peforming ways of instantiating objects using reflection.
-                            // See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
-                            if (m_optimizeParsing)
-                            {
-                                // Invokation approach: Reflection.Emit + Delegate
-                                // This is hands-down that most fastest way of instantiating objects using reflection.
-                                MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public | MethodAttributes.Static, asmType, Type.EmptyTypes);
-                                ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
-                                ilGen.Emit(OpCodes.Nop);
-                                ilGen.Emit(OpCodes.Newobj, typeCtor);
-                                ilGen.Emit(OpCodes.Ret);
-                            }
-                            else
-                            {
-                                // Invokation approach: DynamicMethod + Delegate
-                                // This method is very fast compared to rest of the approaches, but not as fast as the one above.
-                                DynamicMethod dynamicTypeCtor = new DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, true);
-                                ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
-                                ilGen.Emit(OpCodes.Nop);
-                                ilGen.Emit(OpCodes.Newobj, typeCtor);
-                                ilGen.Emit(OpCodes.Ret);
-
-                                // Create a delegate to the constructor that'll be called to create a new instance of the type.
-                                outputType.CreateNew = (DefaultConstructor)(dynamicTypeCtor.CreateDelegate(typeof(DefaultConstructor)));
-                            }
-
-                            // We'll hold all of the matching types in this list temporarily until their IDs are determined.
-                            outputTypes.Add(outputType);
-                        }
+                        // Invokation approach: Reflection.Emit + Delegate
+                        // This is hands-down that most fastest way of instantiating objects using reflection.
+                        MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public | MethodAttributes.Static, asmType, Type.EmptyTypes);
+                        ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+                        ilGen.Emit(OpCodes.Nop);
+                        ilGen.Emit(OpCodes.Newobj, typeCtor);
+                        ilGen.Emit(OpCodes.Ret);
                     }
-                }
-                catch
-                {
-                    // Absorb any exception we might encounter while loading an assembly or processing it.
+                    else
+                    {
+                        // Invokation approach: DynamicMethod + Delegate
+                        // This method is very fast compared to rest of the approaches, but not as fast as the one above.
+                        DynamicMethod dynamicTypeCtor = new DynamicMethod("DefaultConstructor", asmType, Type.EmptyTypes, asmType.Module, true);
+                        ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+                        ilGen.Emit(OpCodes.Nop);
+                        ilGen.Emit(OpCodes.Newobj, typeCtor);
+                        ilGen.Emit(OpCodes.Ret);
+
+                        // Create a delegate to the constructor that'll be called to create a new instance of the type.
+                        outputType.CreateNew = (DefaultConstructor)(dynamicTypeCtor.CreateDelegate(typeof(DefaultConstructor)));
+                    }
+
+                    // We'll hold all of the matching types in this list temporarily until their IDs are determined.
+                    outputTypes.Add(outputType);
                 }
             }
 

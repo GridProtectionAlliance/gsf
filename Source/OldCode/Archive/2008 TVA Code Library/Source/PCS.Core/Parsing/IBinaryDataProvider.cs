@@ -11,23 +11,35 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  03/01/2007 - Pinal C. Patel
-//       Original version of source code generated
+//       Original version of source code generated.
 //  09/10/2008 - J. Ritchie Carroll
-//      Converted to C#
+//      Converted to C#.
+//  10/28/2008 - Pinal C. Patel
+//      Edited code comments.
 //
 //*******************************************************************************************************
 
-
 namespace PCS.Parsing
 {
-    /// <summary>This interface allows any data structure to provide a binary representation of itself.</summary>
+    /// <summary>
+    /// Specifies that this <see cref="System.Type"/> can provide a binary image of the object.
+    /// </summary>
     public interface IBinaryDataProvider
     {
+        /// <summary>
+        /// Gets the binary image of the object.
+        /// </summary>
         byte[] BinaryImage
         {
             get;
         }
 
+        /// <summary>
+        /// Gets the length of the binary image.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BinaryLength"/> should typically be a constant value but does not have to be.
+        /// </remarks>
         int BinaryLength
         {
             get;
