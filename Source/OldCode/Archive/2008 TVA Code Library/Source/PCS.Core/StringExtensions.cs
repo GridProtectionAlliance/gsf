@@ -154,6 +154,8 @@ namespace PCS
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="FormatException">Only one level of tagged value expressions are allowed -or-
+        /// encountered end value delimeter '{' before start value delimeter '}'.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value)
         {
             return value.ParseKeyValuePairs(';', '=');
@@ -178,6 +180,8 @@ namespace PCS
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
+        /// <exception cref="FormatException">Only one level of tagged value expressions are allowed -or-
+        /// encountered end value delimeter '{' before start value delimeter '}'.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter)
         {
             return value.ParseKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
@@ -195,10 +199,18 @@ namespace PCS
         /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
         /// <returns>Dictionary of key/value pairs.</returns>
         /// <remarks>
+        /// <para>
         /// Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
+        /// </para>
+        /// <para>
+        /// If value includes start delimeter, it must include end delimeter - otherwise results will be unexpected. Only one level
+        /// of start / end delimeter nesting is supported.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
+        /// <exception cref="FormatException">Only one level of tagged value expressions are allowed -or-
+        /// encountered <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter, char valueStartDelimeter, char valueEndDelimeter)
         {
             if (value == null)
@@ -229,16 +241,30 @@ namespace PCS
             {
                 character = value[x];
 
-                if (character == valueStartDelimeter && !valueEscaped)
+                if (character == valueStartDelimeter)
                 {
-                    valueEscaped = true;
-                    continue;   // Don't add tag start delimeter to final value
+                    if (!valueEscaped)
+                    {
+                        valueEscaped = true;
+                        continue;   // Don't add tag start delimeter to final value
+                    }
+                    else
+                    {
+                        throw new FormatException("Only one level of tagged value expressions are allowed.");
+                    }
                 }
 
-                if (character == valueEndDelimeter && valueEscaped)
+                if (character == valueEndDelimeter)
                 {
-                    valueEscaped = false;
-                    continue;   // Don't add tag stop delimeter to final value
+                    if (valueEscaped)
+                    {
+                        valueEscaped = false;
+                        continue;   // Don't add tag stop delimeter to final value
+                    }
+                    else
+                    {
+                        throw new FormatException(string.Format("Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'.", valueEndDelimeter, valueStartDelimeter));
+                    }
                 }
 
                 if (valueEscaped)
