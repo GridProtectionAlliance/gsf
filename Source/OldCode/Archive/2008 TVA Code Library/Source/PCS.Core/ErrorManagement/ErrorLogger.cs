@@ -28,7 +28,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -636,7 +635,7 @@ namespace PCS.ErrorManagement
                 {
                     case ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
-                        return Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+                        return FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
                     case ApplicationType.Web:
                         return HttpContext.Current.Request.ApplicationPath.Replace("/", "");
                     default:
@@ -1572,7 +1571,7 @@ namespace PCS.ErrorManagement
 
                 if (!string.IsNullOrEmpty(codeFileName))
                 {
-                    trace.Append(Path.GetFileName(codeFileName));
+                    trace.Append(FilePath.GetFileName(codeFileName));
                     trace.AppendFormat(": Ln {0:#0000}", stackFrame.GetFileLineNumber());
                     trace.AppendFormat(", Col {0:#00}", stackFrame.GetFileColumnNumber());
                     // If IL is available, append IL location info.
@@ -1586,7 +1585,7 @@ namespace PCS.ErrorManagement
                     ApplicationType appType = Common.GetApplicationType();
                     if (appType == ApplicationType.WindowsCui || appType == ApplicationType.WindowsGui)
                     {
-                        trace.Append(Path.GetFileName(Assembly.GetEntryAssembly().CodeBase));
+                        trace.Append(FilePath.GetFileName(Assembly.GetEntryAssembly().CodeBase));
                     }
                     else
                     {

@@ -491,12 +491,15 @@ namespace PCS.IO
         {
             if (!IsOpen)
             {
+                // Initialize if uninitialized.
+                Initialize();
+
                 // Make the file path absolute if it is relative.
                 m_fileName = FilePath.GetAbsolutePath(m_fileName);
 
                 // Create the file directory if it does not exist.
-                if (!Directory.Exists(Path.GetDirectoryName(m_fileName)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(m_fileName));
+                if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
+                    Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
                 // Open if file exists, or create it if it doesn't.
                 m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -513,8 +516,8 @@ namespace PCS.IO
                 if (m_reloadOnModify)
                 {
                     // Watch for any modifications made to the file on disk.
-                    m_fileSystemWatcher.Path = Path.GetDirectoryName(m_fileName);
-                    m_fileSystemWatcher.Filter = Path.GetFileName(m_fileName);
+                    m_fileSystemWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                    m_fileSystemWatcher.Filter = FilePath.GetFileName(m_fileName);
                     m_fileSystemWatcher.EnableRaisingEvents = true;
                 }
 

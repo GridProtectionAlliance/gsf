@@ -218,7 +218,7 @@ namespace PCS.Parsing
             TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
             List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
 
-            foreach (Type asmType in typeof(TOutput).GetRelatedTypes())
+            foreach (Type asmType in typeof(TOutput).LoadImplementations())
             {
                 typeCtor = asmType.GetConstructor(Type.EmptyTypes);
                 if (typeCtor != null)

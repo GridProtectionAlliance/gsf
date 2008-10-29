@@ -18,10 +18,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
 using System.Collections.Generic;
-using PCS.IO;
+using System.IO;
 using System.Reflection;
+using PCS.IO;
 
 namespace PCS
 {
@@ -30,6 +30,20 @@ namespace PCS
     /// </summary>
     public static class TypeExtensions
     {
+
+        /// <summary>
+        /// Gets the root type in the inheritace hierarchy from which the specified type inherits.
+        /// </summary>
+        /// <param name="type">The System.Type whose root type is to be found.</param>
+        /// <returns>The root type in the inheritance hierarchy from which the specified type inherits.</returns>
+        /// <remarks>Unless input type is System.Object, the returned type will never be System.Object, even though all types ultimately inherit from it.</remarks>
+        public static Type GetRootType(this Type type)
+        {
+            // Recurse through types until you reach a base type of "System.Object"
+            if (type.BaseType != typeof(object)) return GetRootType(type.BaseType);
+            return type;
+        }
+
         /// <summary>
         /// Gets a list of publicly visible types from assemblies in the application directory that are related to the 
         /// specified type either by inheritance of the type (if the type is a class) or implementation of the type 
@@ -38,9 +52,9 @@ namespace PCS
         /// <param name="type">The type being tested.</param>
         /// <returns>List of matching types.</returns>
         /// <remarks><see cref="GetTypes(Type)"/> will exclude abstract types (types that cannot be instantiated).</remarks>
-        public static List<Type> GetRelatedTypes(this Type type)
+        public static List<Type> LoadImplementations(this Type type)
         {
-            return GetRelatedTypes(type, true);
+            return LoadImplementations(type, true);
         }
 
         /// <summary>
@@ -51,28 +65,48 @@ namespace PCS
         /// <param name="type">The type being tested.</param>
         /// <param name="excludeAbsractTypes">true if abstract types are not to be included; otherwise false.</param>
         /// <returns></returns>
-        public static List<Type> GetRelatedTypes(this Type type, bool excludeAbsractTypes)
+        public static List<Type> LoadImplementations(this Type type, bool excludeAbsractTypes)
+        {
+            return LoadImplementations(type, string.Empty, excludeAbsractTypes);
+        }
+
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory)
+        {
+            return LoadImplementations(type, binariesDirectory, true);
+        }
+
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbsractTypes)
         {
             Assembly asm = null;
             List<Type> types = new List<Type>();
-            string binDirectory = FilePath.GetAbsolutePath("");
 
-            if (Common.GetApplicationType() == ApplicationType.Web)
+            if (string.IsNullOrEmpty(binariesDirectory))
             {
-                // In case of a web application, we look in bin directory for assemblies.
-                binDirectory = Path.Combine(binDirectory, "bin");
+                switch (Common.GetApplicationType())
+                {
+                    // The binaries directory is not specified.
+                    case ApplicationType.WindowsGui:
+                    case ApplicationType.WindowsCui:
+                        // Use application install directory for windows applications.
+                        binariesDirectory = FilePath.GetAbsolutePath("");
+                        break;
+                    case ApplicationType.Web:
+                        // Use the bin directory for web applications.
+                        binariesDirectory = FilePath.GetAbsolutePath("bin");
+                        break;
+                }
             }
 
-            // Loop through all files in the application directory.
-            foreach (string bin in Directory.GetFiles(binDirectory))
+            // Loop through all files in the binaries directory.
+            foreach (string bin in Directory.GetFiles(binariesDirectory))
             {
                 // Only process DLLs and EXEs.
-                if (!(string.Compare(Path.GetExtension(bin), ".dll", true) == 0 || 
-                      string.Compare(Path.GetExtension(bin), ".exe", true) == 0))
+                if (!(string.Compare(FilePath.GetExtension(bin), ".dll", true) == 0 ||
+                      string.Compare(FilePath.GetExtension(bin), ".exe", true) == 0))
                 {
                     continue;
                 }
-                    
+
                 try
                 {
                     // Load the assembly in the curent app domain.
@@ -82,7 +116,7 @@ namespace PCS
                     foreach (Type asmType in asm.GetExportedTypes())
                     {
                         if (!excludeAbsractTypes || !asmType.IsAbstract)
-                        { 
+                        {
                             // Either the current type is not abstract or it's OK to include abstract types.
                             if (type.IsClass && asmType.IsSubclassOf(type))
                             {

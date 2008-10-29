@@ -342,7 +342,7 @@ namespace PCS.IO
         {
             get
             {
-                return string.Format("{0}_{1}", this.GetType().Name, Path.GetFileNameWithoutExtension(m_fileName));
+                return string.Format("{0}_{1}", this.GetType().Name, FilePath.GetFileNameWithoutExtension(m_fileName));
             }
         }
 
@@ -391,8 +391,8 @@ namespace PCS.IO
                 m_fileName = FilePath.GetAbsolutePath(m_fileName);
 
                 // Create the folder in which the log file will reside it, if it does not exist.
-                if (!Directory.Exists(Path.GetDirectoryName(m_fileName)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(m_fileName));
+                if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
+                    Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
                 // Open the log file (if it exists) or creates it (if it does not exist).
                 m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -737,11 +737,11 @@ namespace PCS.IO
                     }
                     break;
                 case LogFileFullOperation.Rollover:
-                    string fileDir = Path.GetDirectoryName(m_fileName);
-                    string fileName = Path.GetFileNameWithoutExtension(m_fileName) + "_" + 
+                    string fileDir = FilePath.GetDirectoryName(m_fileName);
+                    string fileName = FilePath.GetFileNameWithoutExtension(m_fileName) + "_" + 
                                       File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" + 
                                       File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + 
-                                      Path.GetExtension(m_fileName);
+                                      FilePath.GetExtension(m_fileName);
 
                     // Rolls over to a new log file, and keeps the current file for history.
                     try

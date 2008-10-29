@@ -27,10 +27,10 @@
 
 using System;
 using System.Configuration;
-using System.IO;
 using System.Text;
 using System.Web.Configuration;
 using System.Xml;
+using PCS.IO;
 using PCS.Xml;
 
 namespace PCS.Configuration
@@ -212,10 +212,10 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Gets the physical path of the config file represented by this <see cref="ConfigurationFile"/> object.
+        /// Gets the name and path of the config file represented by this <see cref="ConfigurationFile"/> object.
         /// </summary>
-        /// <returns>Physical path of the config file.</returns>
-        public string FilePath
+        /// <returns>Name and path of the config file.</returns>
+        public string FileName
         {
             get
             {
@@ -271,7 +271,7 @@ namespace PCS.Configuration
 
             if (configFilePath != null)
             {
-                if (configFilePath == "" || Path.GetExtension(configFilePath) == ".config")
+                if (configFilePath == "" || FilePath.GetExtension(configFilePath) == ".config")
                 {
                     // PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     // to the method call for getting the Configuration object. The previous method (String.TrimEnd())

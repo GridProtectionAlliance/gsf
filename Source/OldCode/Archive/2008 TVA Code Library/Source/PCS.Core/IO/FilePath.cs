@@ -182,13 +182,33 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
+        /// Gets the file name and extension from the specified file path.
         /// </summary>
-        /// <param name="path">The path for which a list of files is to be returned.</param>
-        /// <returns>A list of files for the given path.</returns>
-        public static string[] GetFileList(string path)
+        /// <param name="filePath">The file path from which the file name and extension is to be obtained.</param>
+        /// <returns>File name and extension.</returns>
+        public static string GetFileName(string filePath)
         {
-            return Directory.GetFiles(Path.GetDirectoryName(path), Path.GetFileName(path));
+            return Path.GetFileName(RemovePathSuffix(filePath));
+        }
+
+        /// <summary>
+        /// Gets the extension from the specified file path.
+        /// </summary>
+        /// <param name="filePath">The file path from which the extension is to be obtained.</param>
+        /// <returns>File extension.</returns>
+        public static string GetExtension(string filePath)
+        {
+            return Path.GetExtension(RemovePathSuffix(filePath));
+        }
+
+        /// <summary>
+        /// Gets the file name without extension from the specified file path.
+        /// </summary>
+        /// <param name="filePath">The file path from which the file name is to be obtained.</param>
+        /// <returns>File name without the extension.</returns>
+        public static string GetFileNameWithoutExtension(string filePath)
+        {
+            return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
         }
 
         /// <summary>
@@ -209,6 +229,16 @@ namespace PCS.IO
         }
 
         /// <summary>
+        /// Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
+        /// </summary>
+        /// <param name="path">The path for which a list of files is to be returned.</param>
+        /// <returns>A list of files for the given path.</returns>
+        public static string[] GetFileList(string path)
+        {
+            return Directory.GetFiles(FilePath.GetDirectoryName(path), FilePath.GetFileName(path));
+        }
+
+        /// <summary>
         /// Gets a regular expression pattern that simulates wildcard matching for filenames (wildcards are defined as '*' or '?' characters).
         /// </summary>
         /// <param name="fileSpec">The file spec for which the regular expression pattern if to be generated.</param>
@@ -225,6 +255,16 @@ namespace PCS.IO
         }
 
         /// <summary>
+        /// Gets the directory information from the specified file path.
+        /// </summary>
+        /// <param name="filePath">The file path from which the directory information is to be obtained.</param>
+        /// <returns>Directory information.</returns>
+        public static string GetDirectoryName(string filePath)
+        {
+            return AddPathSuffix(Path.GetDirectoryName(RemovePathSuffix(filePath)));
+        }
+
+        /// <summary>
         /// Gets the last directory name from a file path.
         /// </summary>
         /// <param name="filePath">The file path from where the last directory name is to be retrieved.</param>
@@ -236,7 +276,7 @@ namespace PCS.IO
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                return new DirectoryInfo(Path.GetDirectoryName(filePath)).Name;
+                return new DirectoryInfo(FilePath.GetDirectoryName(filePath)).Name;
             }
             else
             {
@@ -262,7 +302,7 @@ namespace PCS.IO
                         break;
                     case ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
-                        filePath = Path.Combine(Path.GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
+                        filePath = Path.Combine(FilePath.GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
                         break;
                 }
             }
@@ -392,13 +432,13 @@ namespace PCS.IO
 
             if (fileName.Length > length)
             {
-                string justName = Path.GetFileName(fileName);
+                string justName = FilePath.GetFileName(fileName);
 
                 if (justName.Length == fileName.Length)
                 {
                     // This is just a file name. Make sure extension shows.
-                    string justExtension = Path.GetExtension(fileName);
-                    string trimName = Path.GetFileNameWithoutExtension(fileName);
+                    string justExtension = FilePath.GetExtension(fileName);
+                    string trimName = FilePath.GetFileNameWithoutExtension(fileName);
 
                     if (trimName.Length > 8)
                     {
@@ -424,7 +464,7 @@ namespace PCS.IO
                 else
                 {
                     // File name contains path. Trims path before file name.
-                    string justFilePath = AddPathSuffix(Path.GetDirectoryName(fileName));
+                    string justFilePath = FilePath.GetDirectoryName(fileName);
                     int offset = length - justName.Length - 4;
 
                     if (justFilePath.Length > offset && offset > 0)

@@ -29,6 +29,7 @@ using System.IO;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
+using PCS.IO;
 
 namespace PCS.Reflection
 {
@@ -534,7 +535,7 @@ namespace PCS.Reflection
                 foreach (string name in Assembly.GetEntryAssembly().GetManifestResourceNames())
                 {
                     // Sees if the embedded resource name matches the assembly it is trying to load.
-                    if (string.Compare(Path.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, true) == 0)
+                    if (string.Compare(FilePath.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, true) == 0)
                     {
                         // If so, loads embedded resource assembly into a binary buffer.
                         System.IO.Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);
