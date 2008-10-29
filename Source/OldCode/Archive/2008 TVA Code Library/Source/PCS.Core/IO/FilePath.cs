@@ -73,7 +73,7 @@ namespace PCS.IO
         private static string m_fileNameCharPattern;
 
         #endregion
-        
+
         #region [ Constructor ]
 
         static FilePath()
@@ -182,13 +182,26 @@ namespace PCS.IO
         }
 
         /// <summary>
+        /// Determines whether the specified file path contains a file name.
+        /// </summary>
+        /// <param name="filePath">The file path to be tested.</param>
+        /// <returns>true if the file path contains a file name; otherwise false.</returns>
+        public static bool FilePathHasFileName(string filePath)
+        {
+            return Path.GetFileName(RemovePathSuffix(filePath)).Contains(".");
+        }
+
+        /// <summary>
         /// Gets the file name and extension from the specified file path.
         /// </summary>
         /// <param name="filePath">The file path from which the file name and extension is to be obtained.</param>
-        /// <returns>File name and extension.</returns>
+        /// <returns>File name and extension if the file path has it; otherwise empty string.</returns>
         public static string GetFileName(string filePath)
         {
-            return Path.GetFileName(RemovePathSuffix(filePath));
+            if (!FilePathHasFileName(filePath))
+                return string.Empty;
+            else
+                return Path.GetFileName(RemovePathSuffix(filePath));
         }
 
         /// <summary>
@@ -205,10 +218,13 @@ namespace PCS.IO
         /// Gets the file name without extension from the specified file path.
         /// </summary>
         /// <param name="filePath">The file path from which the file name is to be obtained.</param>
-        /// <returns>File name without the extension.</returns>
+        /// <returns>File name without the extension if the file path has it; otherwise empty string.</returns>
         public static string GetFileNameWithoutExtension(string filePath)
         {
-            return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
+            if (!FilePathHasFileName(filePath))
+                return string.Empty;
+            else
+                return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
         }
 
         /// <summary>
@@ -229,13 +245,32 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*").
+        /// Gets a list of files under the specified path. Search wildcard pattern (c:\Data\*.dat) can be used for 
+        /// including only the files matching the pattern or path wildcard pattern (c:\Data\*\*.dat) to indicate the 
+        /// inclusion of files under all subdirectories in the list.
         /// </summary>
         /// <param name="path">The path for which a list of files is to be returned.</param>
-        /// <returns>A list of files for the given path.</returns>
+        /// <returns>A list of files under the given path.</returns>
         public static string[] GetFileList(string path)
         {
-            return Directory.GetFiles(FilePath.GetDirectoryName(path), FilePath.GetFileName(path));
+            string directory = GetDirectoryName(path);
+            string filePattern = GetFileName(path);
+            SearchOption options = SearchOption.TopDirectoryOnly;
+
+            if (string.IsNullOrEmpty(filePattern))
+            {
+                // No wildcard pattern was specified, so get a listing of all files.
+                filePattern = "*.*";
+            }
+
+            if (GetLastDirectoryName(directory) == "*")
+            {
+                // Path wildcard pattern is used to specify the option to include subdirectories.
+                options = SearchOption.AllDirectories;
+                directory = directory.Remove(directory.LastIndexOf("*"));
+            }
+
+            return Directory.GetFiles(directory, filePattern, options);
         }
 
         /// <summary>
@@ -261,7 +296,10 @@ namespace PCS.IO
         /// <returns>Directory information.</returns>
         public static string GetDirectoryName(string filePath)
         {
-            return AddPathSuffix(Path.GetDirectoryName(RemovePathSuffix(filePath)));
+            if (!FilePathHasFileName(filePath))
+                return AddPathSuffix(filePath);
+            else
+                return AddPathSuffix(Path.GetDirectoryName(RemovePathSuffix(filePath)));
         }
 
         /// <summary>
@@ -276,7 +314,18 @@ namespace PCS.IO
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                return new DirectoryInfo(FilePath.GetDirectoryName(filePath)).Name;
+                int index;
+                char[] dirVolChars = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, Path.VolumeSeparatorChar };
+
+                // Remove file name and trailing directory seperator character from the file path.
+                filePath = RemovePathSuffix(GetDirectoryName(filePath));
+                // Keep going through the file path until all directory seperator characters are removed.
+                while ((index = filePath.IndexOfAny(dirVolChars)) > -1)
+                {
+                    filePath = filePath.Substring(index + 1);
+                }
+
+                return filePath;
             }
             else
             {
@@ -302,7 +351,7 @@ namespace PCS.IO
                         break;
                     case ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
-                        filePath = Path.Combine(FilePath.GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
+                        filePath = Path.Combine(GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
                         break;
                 }
             }
@@ -432,13 +481,13 @@ namespace PCS.IO
 
             if (fileName.Length > length)
             {
-                string justName = FilePath.GetFileName(fileName);
+                string justName = GetFileName(fileName);
 
                 if (justName.Length == fileName.Length)
                 {
                     // This is just a file name. Make sure extension shows.
-                    string justExtension = FilePath.GetExtension(fileName);
-                    string trimName = FilePath.GetFileNameWithoutExtension(fileName);
+                    string justExtension = GetExtension(fileName);
+                    string trimName = GetFileNameWithoutExtension(fileName);
 
                     if (trimName.Length > 8)
                     {
@@ -464,7 +513,7 @@ namespace PCS.IO
                 else
                 {
                     // File name contains path. Trims path before file name.
-                    string justFilePath = FilePath.GetDirectoryName(fileName);
+                    string justFilePath = GetDirectoryName(fileName);
                     int offset = length - justName.Length - 4;
 
                     if (justFilePath.Length > offset && offset > 0)

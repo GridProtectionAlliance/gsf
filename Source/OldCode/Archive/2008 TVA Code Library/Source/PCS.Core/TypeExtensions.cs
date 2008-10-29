@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using PCS.IO;
 
@@ -30,13 +29,15 @@ namespace PCS
     /// </summary>
     public static class TypeExtensions
     {
-
         /// <summary>
         /// Gets the root type in the inheritace hierarchy from which the specified type inherits.
         /// </summary>
-        /// <param name="type">The System.Type whose root type is to be found.</param>
+        /// <param name="type">The <see cref="Type"/> whose root type is to be found.</param>
         /// <returns>The root type in the inheritance hierarchy from which the specified type inherits.</returns>
-        /// <remarks>Unless input type is System.Object, the returned type will never be System.Object, even though all types ultimately inherit from it.</remarks>
+        /// <remarks>
+        /// Unless input type is <see cref="Object"/>, the returned type will never be <see cref="Object"/>, 
+        /// even though all types ultimately inherit from it.
+        /// </remarks>
         public static Type GetRootType(this Type type)
         {
             // Recurse through types until you reach a base type of "System.Object"
@@ -45,36 +46,48 @@ namespace PCS
         }
 
         /// <summary>
-        /// Gets a list of publicly visible types from assemblies in the application directory that are related to the 
-        /// specified type either by inheritance of the type (if the type is a class) or implementation of the type 
-        /// (if the type is an interface).
+        /// Loads public types from assemblies in the application binaries directory that implement the specified 
+        /// <paramref name="type"/> either through class inheritance or interface implementation.
         /// </summary>
-        /// <param name="type">The type being tested.</param>
-        /// <returns>List of matching types.</returns>
-        /// <remarks><see cref="GetTypes(Type)"/> will exclude abstract types (types that cannot be instantiated).</remarks>
+        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
+        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
         public static List<Type> LoadImplementations(this Type type)
         {
             return LoadImplementations(type, true);
         }
 
         /// <summary>
-        /// Gets a list of publicly visible types from assemblies in the application directory that are related to the 
-        /// specified type either by inheritance of the type (if the type is a class) or implementation of the type 
-        /// (if the type is an interface).
+        /// Loads public types from assemblies in the application binaries directory that implement the specified 
+        /// <paramref name="type"/> either through class inheritance or interface implementation.
         /// </summary>
-        /// <param name="type">The type being tested.</param>
-        /// <param name="excludeAbsractTypes">true if abstract types are not to be included; otherwise false.</param>
-        /// <returns></returns>
+        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
+        /// <param name="excludeAbsractTypes">true to exclude public types that are abstract; otherwise false.</param>
+        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
         public static List<Type> LoadImplementations(this Type type, bool excludeAbsractTypes)
         {
             return LoadImplementations(type, string.Empty, excludeAbsractTypes);
         }
 
+        /// <summary>
+        /// Loads public types from assemblies in the specified <paramref name="binariesDirectory"/> that implement 
+        /// the specified <paramref name="type"/> either through class inheritance or interface implementation.
+        /// </summary>
+        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
+        /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
+        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
         public static List<Type> LoadImplementations(this Type type, string binariesDirectory)
         {
             return LoadImplementations(type, binariesDirectory, true);
         }
 
+        /// <summary>
+        /// Loads public types from assemblies in the specified <paramref name="binariesDirectory"/> that implement 
+        /// the specified <paramref name="type"/> either through class inheritance or interface implementation.
+        /// </summary>
+        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
+        /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
+        /// <param name="excludeAbsractTypes">true to exclude public types that are abstract; otherwise false.</param>
+        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
         public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbsractTypes)
         {
             Assembly asm = null;
@@ -98,7 +111,7 @@ namespace PCS
             }
 
             // Loop through all files in the binaries directory.
-            foreach (string bin in Directory.GetFiles(binariesDirectory))
+            foreach (string bin in FilePath.GetFileList(binariesDirectory))
             {
                 // Only process DLLs and EXEs.
                 if (!(string.Compare(FilePath.GetExtension(bin), ".dll", true) == 0 ||
