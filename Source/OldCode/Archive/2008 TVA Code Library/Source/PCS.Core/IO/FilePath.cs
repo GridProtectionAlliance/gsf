@@ -258,7 +258,7 @@ namespace PCS.IO
                 {
                     // Prepends the application's root to the file path.
                     case ApplicationType.Web:
-                        filePath = System.Web.HttpContext.Current.Request.MapPath("~/") + filePath;
+                        filePath = Path.Combine(System.Web.HttpContext.Current.Request.MapPath("~/"), filePath);
                         break;
                     case ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
