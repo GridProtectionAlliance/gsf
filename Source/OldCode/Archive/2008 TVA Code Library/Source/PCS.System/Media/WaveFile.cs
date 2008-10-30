@@ -999,14 +999,7 @@ namespace System.Media
                 if (volumes.Length != waveFiles.Length)
                     throw new ArgumentOutOfRangeException("volumes", "There must be one volume per each wave file.");
 
-                double total = 0.0D;
-
-                for (int x = 0; x < volumes.Length; x++)
-                {
-                    total += volumes[x];
-                }
-
-                if (total > 1.0D)
+                if (volumes.Sum() > 1.0D)
                     throw new ArgumentOutOfRangeException("volumes", "Cumulatively, volumes cannot exceed 1.0.");
 
                 // Deep clone first wave file - this will become the base of the new combined wave file
