@@ -103,15 +103,14 @@ namespace PCS
         /// This function properly casts the return array based on the the type specification helping when Option Strict is
         /// enabled.
         /// </para>
-        /// <para>
-        /// Examples:
-        /// <code>
+        /// <para>It is expected that this function will only be used in Visual Basic.NET.</para>
+        /// </remarks>
+        /// <example>
+        /// <code language="VB">
         ///     Dim buffer As Byte() = CreateArray(Of Byte)(12)
         ///     Dim matrix As Integer()() = CreateArray(Of Integer())(10)
         /// </code>
-        /// </para>
-        /// <para>It is expected that this function will only be used in Visual Basic.NET.</para>
-        /// </remarks>
+        /// </example>
         public static T[] CreateArray<T>(int length)
         {
             // The following provides better performance than "Return New T(length) {}".
@@ -124,15 +123,14 @@ namespace PCS
         /// <param name="initialValue">Value used to initialize all array elements.</param>
         /// <typeparam name="T">Return type for new array.</typeparam>
         /// <remarks>
-        /// <para>
-        /// Examples:
-        /// <code>
+        /// It is expected that this function will only be used in Visual Basic.NET.
+        /// </remarks>
+        /// <example>
+        /// <code language="VB">
         ///     Dim elements As Integer() = CreateArray(12, -1)
         ///     Dim names As String() = CreateArray(100, "undefined")
         /// </code>
-        /// </para>
-        /// <para>It is expected that this function will only be used in Visual Basic.NET.</para>
-        /// </remarks>
+        /// </example>
         public static T[] CreateArray<T>(int length, T initialValue)
         {
             T[] typedArray = CreateArray<T>(length);
