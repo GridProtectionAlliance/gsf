@@ -87,8 +87,8 @@ namespace System.Media
     /// Typical bit sizes supported by wave files.
     /// </summary>
     /// <remarks>
-    /// Strictly speaking, “bits-per-sample” describes this describes the total number of bits
-    /// used to encode the amplitude (or volume) of a sampled signal.  The following table
+    /// Strictly speaking, “bits-per-sample” describes the total number of bits used
+    /// to encode the amplitude (or volume) of a sampled signal.  The following table
     /// describes a few typical bit ranges and their possible resolution:
     /// <list type="table">
     /// <listheader>
