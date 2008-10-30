@@ -22,7 +22,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualBasic.CompilerServices;
 using PCS.Collections;
 using PCS.Reflection;
 
@@ -245,21 +244,9 @@ namespace PCS
         }
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
-        public static object Min(params object[] itemList)
-        {
-            return itemList.Min<object>(CompareObjects);
-        }
-
-        /// <summary>Returns the smallest item from a list of parameters.</summary>
         public static T Min<T>(params T[] itemList)
         {
             return itemList.Min<T>();
-        }
-
-        /// <summary>Returns the largest item from a list of parameters.</summary>
-        public static object Max(params object[] itemList)
-        {
-            return itemList.Max<object>(CompareObjects);
         }
 
         /// <summary>Returns the largest item from a list of parameters.</summary>
@@ -268,18 +255,32 @@ namespace PCS
             return itemList.Max<T>();
         }
 
-        /// <summary>Compares two elements of any type.</summary>
-        public static int CompareObjects(object x, object y)
-        {
-            // Just using Visual Basic runtime to compare two objects of unknown types - this can be a very
-            // complex process and the VB runtime library is distributed with .NET anyway, so why not use it:
-
-            // Note that comparison is based on VB object comparison rules:
-            // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
-            return (Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : (Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
-        }
-
         #region [ Old Code ]
+
+        //using Microsoft.VisualBasic.CompilerServices;
+
+        ///// <summary>Returns the smallest item from a list of parameters.</summary>
+        //public static object Min(params object[] itemList)
+        //{
+        //    return itemList.Min<object>(CompareObjects);
+        //}
+
+        ///// <summary>Returns the largest item from a list of parameters.</summary>
+        //public static object Max(params object[] itemList)
+        //{
+        //    return itemList.Max<object>(CompareObjects);
+        //}
+
+        ///// <summary>Compares two elements of any type.</summary>
+        //public static int CompareObjects(object x, object y)
+        //{
+        //    // Just using Visual Basic runtime to compare two objects of unknown types - this can be a very
+        //    // complex process and the VB runtime library is distributed with .NET anyway, so why not use it:
+
+        //    // Note that comparison is based on VB object comparison rules:
+        //    // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
+        //    return (Operators.ConditionalCompareObjectLess(x, y, false) ? -1 : (Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
+        //}
 
         // This function is probably not that useful
 
