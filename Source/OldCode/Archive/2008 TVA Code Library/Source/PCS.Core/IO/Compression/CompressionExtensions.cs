@@ -102,7 +102,7 @@ namespace PCS.IO.Compression
             if (strength == CompressionStrength.MultiPass && destinationLength < length && compressionDepth < 256)
 	        {
 		        // See if another pass would help the compression...
-                byte[] testBuffer = Compress(outBuffer, 0, outBuffer.Length, strength, compressionDepth + 1);
+                byte[] testBuffer = outBuffer.Compress(0, outBuffer.Length, strength, compressionDepth + 1);
 
 		        if (testBuffer.Length < outBuffer.Length)
 			        return testBuffer;
@@ -122,7 +122,7 @@ namespace PCS.IO.Compression
         public static MemoryStream Compress(this Stream source, CompressionStrength strength)
         {
 	        MemoryStream destination = new MemoryStream();
-	        Compress(source, destination, strength, null);
+	        source.Compress(destination, strength, null);
 	        return destination;
         }
 
@@ -166,7 +166,7 @@ namespace PCS.IO.Compression
 	        {
 		        // Compress buffer - note that we are only going to compress used part of buffer,
 		        // we don't want any left over garbage to end up in compressed stream...
-			    outBuffer = Compress(inBuffer, 0, read, strength);
+			    outBuffer = inBuffer.Compress(0, read, strength);
 
 		        // The output stream is hopefully smaller than the input stream, so we prepend the final size of
 		        // each compressed buffer into the destination output stream so that we can safely uncompress
@@ -208,7 +208,7 @@ namespace PCS.IO.Compression
 	        // When user requests muli-pass compression, there may be multiple compression passes on a buffer,
 	        // so we cycle through the needed uncompressions to get back to the original data
 	        if (source[0] > 0)
-                return Decompress(destination, uncompressedSize);
+                return destination.Decompress(uncompressedSize);
 	        else
                 return destination;
         }
@@ -222,7 +222,7 @@ namespace PCS.IO.Compression
         public static MemoryStream Decompress(this Stream source)
         {
 	        MemoryStream destination = new MemoryStream();
-	        Decompress(source, destination, null);
+	        source.Decompress(destination, null);
 	        return destination;
         }
 
@@ -279,7 +279,7 @@ namespace PCS.IO.Compression
 				        if (read > 0)
 				        {
 					        // Uncompress buffer
-					        outBuffer = Decompress(inBuffer, BufferSize);
+					        outBuffer = inBuffer.Decompress(BufferSize);
 					        destination.Write(outBuffer, 0, outBuffer.Length);
 				        }
 
