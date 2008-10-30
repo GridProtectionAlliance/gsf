@@ -424,7 +424,7 @@ namespace PCS.IO
         /// <param name="defaultDestinations">Provides a default set of export destinations if none exist in configuration settings.</param>
         /// <remarks>
         /// If not being used as a component (i.e., user creates their own instance of this class), this method
-        /// must be called in order to initialize exports.  Event if used as a component this method can be
+        /// must be called in order to initialize exports.  Even if used as a component this method can be
         /// called at anytime to reintialize the exports with new configuration information.
         /// </remarks>
         public void Initialize(ExportDestination[] defaultDestinations)
