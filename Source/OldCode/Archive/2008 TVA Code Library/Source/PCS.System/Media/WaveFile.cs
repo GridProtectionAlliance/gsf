@@ -614,7 +614,7 @@ namespace System.Media
         {
             get
             {
-                // Return amplitude factor for given bit size - we leave about 20% of maximum volume
+                // Return amplitude factor for given bit size
                 switch (BitsPerSample)
                 {
                     case 8:
