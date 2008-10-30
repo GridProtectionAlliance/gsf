@@ -286,11 +286,7 @@ namespace PCS.IO
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="MultipleDestinationExporter"/> object is currently enabled.
         /// </summary>
-        /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
-        /// </remarks>
         [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
