@@ -647,6 +647,10 @@ namespace PhasorProtocols
             m_frameRate = 0.0D;
             m_byteRate = 0.0D;
 
+            // TODO: Remove this code after all code is using new PCS library - old ParseKeyValuePair function
+            // in TVA communications library won't be too happy with nested connection strings:
+            string originalConnectionString = m_connectionString;
+
             try
             {
                 // Instantiate protocol specific frame parser
@@ -732,19 +736,16 @@ namespace PhasorProtocols
 
                     // Verify user did not attempt to setup command channel as a TCP server
                     if (commandSettings.ContainsKey("islistener") && commandSettings["islistener"].ParseBoolean())
-                        throw new InvalidOperationException("Command channel cannot be setup as a TCP server.");
+                        throw new ArgumentException("Command channel cannot be setup as a TCP server.", "ConnectionString");
+
+                    // Validate command channel transport protocol selection
+                    TransportProtocol transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), commandSettings["protocol"]);
+
+                    if (transportProtocol != TransportProtocol.Tcp && transportProtocol != TransportProtocol.Serial && transportProtocol != TransportProtocol.File)
+                        throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File", "ConnectionString");
 
                     // Instantiate command channel based on defined transport layer
                     m_commandChannel = TVA.Communication.Common.CreateCommunicationClient(connectionString);
-
-                    // Validate command channel transport protocol selection
-                    if (m_commandChannel.Protocol != TransportProtocol.Tcp && 
-                        m_commandChannel.Protocol != TransportProtocol.Serial && 
-                        m_commandChannel.Protocol != TransportProtocol.File)
-                    {
-                        m_commandChannel = null;
-                        throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File", "ConnectionString");
-                    }
 
                     // Setup event handlers
                     m_commandChannel.Connected += m_commandChannel_Connected;
@@ -759,6 +760,16 @@ namespace PhasorProtocols
                     m_commandChannel.Handshake = false;
                     m_commandChannel.Connect();
                     m_clientConnectionAttempts = 0;
+
+                    // TODO: Remove this code after all code is using new PCS library - old ParseKeyValuePair function
+                    // in TVA communications library won't be too happy with nested connection strings:
+                    settings.Remove("commandchannel");
+                    m_connectionString = "";
+
+                    foreach (KeyValuePair<string,string> setting in settings)
+                    {
+                        m_connectionString += (m_connectionString.Length > 0 ? "; " : "") + setting.Key + "=" + setting.Value;
+                    }
                 }
 
                 // Handle primary data connection, this *must* be defined...
@@ -808,6 +819,12 @@ namespace PhasorProtocols
             {
                 Stop();
                 throw;
+            }
+            finally
+            {
+                // TODO: Remove this code after all code is using new PCS library - old ParseKeyValuePair function
+                // in TVA communications library won't be too happy with nested connection strings:
+                m_connectionString = originalConnectionString;
             }
         }
 
@@ -1001,16 +1018,22 @@ namespace PhasorProtocols
                 // IEEE protocols using TCP or Serial connection support device commands
                 if (m_transportProtocol == TransportProtocol.Tcp || m_transportProtocol == TransportProtocol.Serial)
                     return true;
-
-                // IEEE protocols "can" use UDP connection to support devices commands, but only
-                // when remote device acts as a UDP listener (i.e., a "server" connection) -or-
-                // when a command channel has been established...
-                if (m_transportProtocol == TransportProtocol.Udp)
+                
+                if (!string.IsNullOrEmpty(m_connectionString))
                 {
-                    if (!string.IsNullOrEmpty(m_connectionString))
+                    Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+
+                    // A defined command channel inherently means commands are supported
+                    if (settings.ContainsKey("commandchannel"))
                     {
-                        Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-                        return (settings.ContainsKey("server") || settings.ContainsKey("commandchannel"));
+                        return true;
+                    }
+                    else if (m_transportProtocol == TransportProtocol.Udp)
+                    {
+                        // IEEE protocols "can" use UDP connection to support devices commands, but only
+                        // when remote device acts as a UDP listener (i.e., a "server" connection)
+                        if (!string.IsNullOrEmpty(m_connectionString))
+                            return settings.ContainsKey("server");
                     }
                 }
             }
