@@ -39,7 +39,168 @@ namespace PCS.IO
     /// <remarks>
     /// For more information on ISAM files see http://en.wikipedia.org/wiki/ISAM.
     /// </remarks>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryDataProvider
+    /// <example>
+    /// This example shows a sample implementation of <see cref="IsamDataFileBase{T}"/>:
+    /// <code>
+    /// using System;
+    /// using System.Text;
+    /// using PCS;
+    /// using PCS.IO;
+    /// using PCS.Parsing;
+    /// 
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Create a few test records.
+    ///         TestIsamFileRecord r1 = new TestIsamFileRecord(1);
+    ///         r1.Name = "TestRecord1";
+    ///         r1.Value = double.MinValue;
+    ///         r1.Description = "Test record with minimum double value";
+    ///         TestIsamFileRecord r2 = new TestIsamFileRecord(2);
+    ///         r2.Name = "TestRecord2";
+    ///         r2.Value = double.MaxValue;
+    ///         r2.Description = "Test record with maximum double value";
+    /// 
+    ///         // Open ISAM file.
+    ///         TestIsamFile testFile = new TestIsamFile();
+    ///         testFile.FileName = "TestIsamFile.dat";
+    ///         testFile.Open();
+    /// 
+    ///         // Write test records.
+    ///         testFile.Write(r1.ID, r1);
+    ///         testFile.Write(r2.ID, r2);
+    /// 
+    ///         // Read test records.
+    ///         Console.WriteLine(testFile.Read(1));
+    ///         Console.WriteLine(testFile.Read(2));
+    /// 
+    ///         // Close ISAM file.
+    ///         testFile.Close();
+    /// 
+    ///         Console.ReadLine();
+    ///     }
+    /// }
+    /// 
+    /// class TestIsamFile : IsamDataFileBase{TestIsamFileRecord}
+    /// {
+    ///     /// <summary>
+    ///     /// Size of a single file record.
+    ///     /// </summary>
+    ///     protected override int GetRecordSize()
+    ///     {
+    ///         return TestIsamFileRecord.RecordLength;
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Creates a new empty file record.
+    ///     /// </summary>
+    ///     protected override TestIsamFileRecord CreateNewRecord(int id)
+    ///     {
+    ///         return new TestIsamFileRecord(id);
+    ///     }
+    /// }
+    /// 
+    /// class TestIsamFileRecord : IBinaryDataProvider, IBinaryDataConsumer
+    /// {
+    ///     private int m_id;
+    ///     private string m_name;                  // 20  * 1 =  20
+    ///     private double m_value;                 // 1   * 8 =   8
+    ///     private string m_description;           // 100 * 1 = 100
+    ///     public const int RecordLength = 128;    // Total   = 128
+    /// 
+    ///     public TestIsamFileRecord(int recordID)
+    ///     {
+    ///         m_id = recordID;
+    ///         Name = string.Empty;
+    ///         Value = double.NaN;
+    ///         Description = string.Empty;
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// ID of the record.
+    ///     /// </summary>
+    ///     public int ID
+    ///     {
+    ///         get { return m_id; }
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Name of the record.
+    ///     /// </summary>
+    ///     public string Name
+    ///     {
+    ///         get { return m_name; }
+    ///         set { m_name = value.TruncateRight(20).PadRight(20); }
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Value of the record.
+    ///     /// </summary>
+    ///     public double Value
+    ///     {
+    ///         get { return m_value; }
+    ///         set { m_value = value; }
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Description of the record.
+    ///     /// </summary>
+    ///     public string Description
+    ///     {
+    ///         get { return m_description; }
+    ///         set { m_description = value.TruncateRight(100).PadRight(100); }
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Serialized record length.
+    ///     /// </summary>
+    ///     public int BinaryLength
+    ///     {
+    ///         get { return RecordLength; }
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Serialized record data.
+    ///     /// </summary>
+    ///     public byte[] BinaryImage
+    ///     {
+    ///         get
+    ///         {
+    ///             // Serialize TestIsamFileRecord into byte array.
+    ///             byte[] image = new byte[BinaryLength];
+    ///             Buffer.BlockCopy(Encoding.ASCII.GetBytes(Name), 0, image, 0, 20);
+    ///             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, image, 20, 8);
+    ///             Buffer.BlockCopy(Encoding.ASCII.GetBytes(Description), 0, image, 28, 100);
+    /// 
+    ///             return image;
+    ///         }
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// Deserializes the record.
+    ///     /// </summary>
+    ///     public int Initialize(byte[] binaryImage, int startIndex)
+    ///     {
+    ///         // Deserialize byte array into TestIsamFileRecord.
+    ///         Name = Encoding.ASCII.GetString(binaryImage, startIndex, 20);
+    ///         Value = BitConverter.ToDouble(binaryImage, startIndex + 20);
+    ///         Description = Encoding.ASCII.GetString(binaryImage, startIndex + 28, 100);
+    /// 
+    ///         return RecordLength;
+    ///     }
+    /// 
+    ///     /// <summary>
+    ///     /// String representation of the record.
+    ///     /// </summary>
+    ///     public override string ToString()
+    ///     {
+    ///         return string.Format("Name: {0}, Value: {1}, Description: {2}", Name, Value, Description);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryDataProvider, IBinaryDataConsumer
     {
         #region [ Members ]
 
@@ -68,7 +229,7 @@ namespace PCS.IO
         /// <summary>
         /// Specifies the default value for the <see cref="LoadOnOpen"/> property.
         /// </summary>
-        public const bool DefaultLoadOnOpen = true;
+        public const bool DefaultLoadOnOpen = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="SaveOnClose"/> property.
@@ -78,7 +239,7 @@ namespace PCS.IO
         /// <summary>
         /// Specifies the default value for the <see cref="ReloadOnModify"/> property.
         /// </summary>
-        public const bool DefaultReloadOnModify = true;
+        public const bool DefaultReloadOnModify = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -132,6 +293,7 @@ namespace PCS.IO
         private bool m_persistSettings;
         private string m_settingsCategory;
         private List<T> m_fileRecords;
+        private byte[] m_recordBuffer;
         private FileStream m_fileStream;
         private ManualResetEvent m_loadWaitHandle;
         private ManualResetEvent m_saveWaitHandle;
@@ -399,7 +561,7 @@ namespace PCS.IO
                         fileLength = m_fileStream.Length;
                     }
 
-                    return (fileLength % RecordSize != 0);
+                    return (fileLength % m_recordBuffer.Length != 0);
                 }
                 else
                 {
@@ -419,7 +581,7 @@ namespace PCS.IO
         {
             get
             {
-                return RecordsInMemory * RecordSize / 1024;
+                return RecordsInMemory * m_recordBuffer.Length / 1024;
             }
         }
 
@@ -440,7 +602,7 @@ namespace PCS.IO
                         fileLength = m_fileStream.Length;
                     }
 
-                    return Convert.ToInt32(fileLength / RecordSize);
+                    return Convert.ToInt32(fileLength / m_recordBuffer.Length);
                 }
                 else
                 {
@@ -471,14 +633,14 @@ namespace PCS.IO
             }
         }
 
-        /// <summary>
-        /// When overridden in a derived class, gets the size of a record (in bytes).
-        /// </summary>
-        [Browsable(false)]
-        public abstract int RecordSize
-        {
-            get;
-        }
+        ///// <summary>
+        ///// When overridden in a derived class, gets the size of a record (in bytes).
+        ///// </summary>
+        //[Browsable(false)]
+        //public abstract int RecordSize
+        //{
+        //    get;
+        //}
 
         #endregion
 
@@ -510,7 +672,7 @@ namespace PCS.IO
                 // Makes sure that we have the minimum number of records specified.
                 for (int i = RecordsOnDisk + 1; i <= m_minimumRecordCount; i++)
                 {
-                    Write(i, NewRecord(i));
+                    Write(i, CreateNewRecord(i));
                 }
 
                 if (m_reloadOnModify)
@@ -619,8 +781,9 @@ namespace PCS.IO
         {
             if (!m_initialized)
             {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
+                LoadSettings();                             // Load settings from the config file.
+                m_recordBuffer = new byte[GetRecordSize()]; // Create buffer for reading records.
+                m_initialized = true;                       // Initialize only once.
             }
         }
 
@@ -797,7 +960,7 @@ namespace PCS.IO
                             {
                                 for (int i = lastRecordID + 1; i <= recordID - 1; i++)
                                 {
-                                    Write(i, NewRecord(i));
+                                    Write(i, CreateNewRecord(i));
                                 }
                             }
 
@@ -897,19 +1060,17 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// When overridden in a derived class, return a new empty record.
+        /// When overridden in a derived class, gets the size of a record (in bytes).
+        /// </summary>
+        /// <returns>Size of a record in bytes.</returns>
+        protected abstract int GetRecordSize();
+
+        /// <summary>
+        /// When overridden in a derived class, returns a new empty record.
         /// </summary>
         /// <param name="id">ID of the new record.</param>
         /// <returns>New empty record.</returns>
-        public abstract T NewRecord(int id);
-
-        /// <summary>
-        /// When overridden in a derived class, return a new record from the provided binary data.
-        /// </summary>
-        /// <param name="id">ID of the new record.</param>
-        /// <param name="binaryImage">Binary data to be used for creating the new record.</param>
-        /// <returns>New record.</returns>
-        public abstract T NewRecord(int id, byte[] binaryImage);
+        protected abstract T CreateNewRecord(int id);
 
         /// <summary>
         /// Raises the <see cref="FileModified"/> event.
@@ -1012,7 +1173,7 @@ namespace PCS.IO
             // Discard previously existing records that were not written.
             lock (m_fileStream)
             {
-                m_fileStream.SetLength(records.Count * RecordSize);
+                m_fileStream.SetLength(records.Count * m_recordBuffer.Length);
             }
         }
 
@@ -1054,15 +1215,16 @@ namespace PCS.IO
         /// <returns>Record from the disk.</returns>
         private T ReadFromDisk(int recordID)
         {
-            byte[] binaryImage = new byte[RecordSize];
-
             lock (m_fileStream)
             {
-                m_fileStream.Seek((recordID - 1) * RecordSize, SeekOrigin.Begin);
-                m_fileStream.Read(binaryImage, 0, binaryImage.Length);
+                m_fileStream.Seek((recordID - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
+                m_fileStream.Read(m_recordBuffer, 0, m_recordBuffer.Length);
             }
 
-            return NewRecord(recordID, binaryImage);
+            T newRecord = CreateNewRecord(recordID);
+            newRecord.Initialize(m_recordBuffer, 0);
+
+            return newRecord;
         }
 
         private void m_autoSaveTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
