@@ -82,7 +82,7 @@ namespace PCS.IO
     ///     }
     /// }
     /// 
-    /// class TestIsamFile : IsamDataFileBase<![CDATA[<]]>TestIsamFileRecord}<![CDATA[>]]>
+    /// class TestIsamFile : IsamDataFileBase<![CDATA[<]]>TestIsamFileRecord<![CDATA[>]]>
     /// {
     ///     /// <summary>
     ///     /// Size of a single file record.
