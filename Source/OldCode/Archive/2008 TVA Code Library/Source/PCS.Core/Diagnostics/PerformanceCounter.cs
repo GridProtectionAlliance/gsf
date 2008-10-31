@@ -233,12 +233,14 @@ namespace PCS.Diagnostics
         /// <summary>
         /// Gets a list of sampled values from the <see cref="BaseCounter"/>
         /// </summary>
-        public float[] Samples
+        /// <remarks>
+        /// Thread safety note: Obtain a lock on <see cref="Samples"/> before accessing it.
+        /// </remarks>
+        public List<float> Samples
         {
             get
             {
-                // Return an array instead of the backing list to prevent modification.
-                return m_samples.ToArray();
+                return m_samples;
             }
         }
 

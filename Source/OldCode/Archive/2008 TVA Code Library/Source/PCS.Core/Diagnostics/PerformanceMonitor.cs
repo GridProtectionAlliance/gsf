@@ -203,15 +203,14 @@ namespace PCS.Diagnostics
         /// <summary>
         /// Gets a list of <see cref="PerformanceCounter"/> objects monitored by the <see cref="PerformanceMonitor"/> object.
         /// </summary>
-        public PerformanceCounter[] Counters
+        /// <remarks>
+        /// Thread safety note: Obtain a lock on <see cref="Counters"/> before accessing it.
+        /// </remarks>
+        public List<PerformanceCounter> Counters
         {
             get 
             {
-                lock (m_counters)
-                {
-                    // Return an array instead of the backing list to prevent it from being updated directly.
-                    return m_counters.ToArray();
-                }
+                return m_counters;
             }
         }
 
