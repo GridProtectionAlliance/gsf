@@ -932,6 +932,8 @@ namespace System.Media
                         waveData = new WaveDataChunk(riffChunk, source, waveFormat);
                         break;
                     default:
+                        // Skip unidentified section
+                        source.Seek(riffChunk.ChunkSize, SeekOrigin.Current);
                         break;
                 }
             }

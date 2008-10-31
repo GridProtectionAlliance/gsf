@@ -96,13 +96,88 @@ namespace System.Media.Music
         /// </para>
         /// <para>
         /// </para>
-        /// This timbre algorithm combines the simulated clarinet and the odd harmonic series
+        /// This timbre algorithm combines the simulated piano and the odd harmonic series
         /// algoriths to produce a pleasant sounding note.
         /// </remarks>
         public static double BasicNote(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
         {
-            return (Timbre.SimulatedClarinet(frequency, sampleIndex, samplePeriod, sampleRate) +
+            return (Timbre.SimulatedPiano(frequency, sampleIndex, samplePeriod, sampleRate) +
                     Timbre.OddHarmonicSeries(frequency, sampleIndex, samplePeriod, sampleRate)) / 2.0D;
+        }
+
+        /// <summary>
+        /// Generates a simulated piano note for the given frequency and time.
+        /// </summary>
+        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
+        /// <param name="sampleIndex">Sample index (represents time anywhere from zero to full length of song).</param>
+        /// <param name="samplePeriod">If useful, total period for note in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>) over which to compute timbre.</param>
+        /// <param name="sampleRate">Number of samples per second.</param>
+        /// <returns>The amplitude for a simulated piano note at the given time.</returns>
+        /// <remarks>
+        /// This method computes an amplitude representing the acoustic pressure of a
+        /// simulated piano note of the given frequency for the given time.
+        /// </remarks>
+        public static double SimulatedPiano(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
+        {
+            return (
+                (70.2137233659572D * Math.Cos(AngularFrequency(frequency * 0.72337962962963D, sampleIndex, sampleRate) + 2.15595560508634D)) +
+                (32.6386857925095D * Math.Cos(AngularFrequency(frequency * 1.44675925925926D, sampleIndex, sampleRate) - 1.34187877930484D)) +
+                (6.46251265801616D * Math.Cos(AngularFrequency(frequency * 2.17013888888889D, sampleIndex, sampleRate) - 2.94209422121373D)) +
+                (12.7763287253431D * Math.Cos(AngularFrequency(frequency * 2.89351851851852D, sampleIndex, sampleRate) + 2.43247608525533D)) +
+                (26.8756025924165D * Math.Cos(AngularFrequency(frequency * 3.61689814814815D, sampleIndex, sampleRate) + 3.06242942291676D)) +
+                (16.7595425274989D * Math.Cos(AngularFrequency(frequency * 4.34027777777778D, sampleIndex, sampleRate) - 1.0881672416834D)) +
+                (8.61450310871165D * Math.Cos(AngularFrequency(frequency * 5.06365740740741D, sampleIndex, sampleRate) - 3.01123327342246D)) +
+                (6.76189590128027D * Math.Cos(AngularFrequency(frequency * 5.78703703703704D, sampleIndex, sampleRate) + 1.64626744449415D)) +
+                (4.11732226561935D * Math.Cos(AngularFrequency(frequency * 6.51041666666667D, sampleIndex, sampleRate) + 0.603920626612006D))) / 185.220116937353D;
+        }
+
+        /// <summary>
+        /// Generates a simulated guitar note for the given frequency and time.
+        /// </summary>
+        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
+        /// <param name="sampleIndex">Sample index (represents time anywhere from zero to full length of song).</param>
+        /// <param name="samplePeriod">If useful, total period for note in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>) over which to compute timbre.</param>
+        /// <param name="sampleRate">Number of samples per second.</param>
+        /// <returns>The amplitude for a simulated guitar note at the given time.</returns>
+        /// <remarks>
+        /// This method computes an amplitude representing the acoustic pressure of a
+        /// simulated guitar note of the given frequency for the given time.
+        /// </remarks>
+        public static double SimulatedGuitar(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
+        {
+            double scalar = 0.6535;
+
+            return (
+                (4992.08306927842D * Math.Cos(AngularFrequency(frequency * scalar * 1.04513052784467D, sampleIndex, sampleRate) - 2.15457792574594D)) +
+                (2863.27648044261D * Math.Cos(AngularFrequency(frequency * scalar * 2.3515436876505D, sampleIndex, sampleRate) + 0.574588814876299D)) +
+                (2884.59276926048D * Math.Cos(AngularFrequency(frequency * scalar * 3.39667421549516D, sampleIndex, sampleRate) - 1.87865666086637D)) +
+                (508.674162219158D * Math.Cos(AngularFrequency(frequency * scalar * 5.74821790314566D, sampleIndex, sampleRate) + 0.95341246662564D)) +
+                (256.23136163587D * Math.Cos(AngularFrequency(frequency * scalar * 9.40617475060199D, sampleIndex, sampleRate) + 2.11778291327275D)) +
+                (348.457894218248D * Math.Cos(AngularFrequency(frequency * scalar * 10.4513052784467D, sampleIndex, sampleRate) + 0.303677151680579D))) / 11853.3157370548D;
+
+        }
+
+        /// <summary>
+        /// Generates a simulated bass guitar note for the given frequency and time.
+        /// </summary>
+        /// <param name="frequency">Fundamental frequency of the desired note in Hz.</param>
+        /// <param name="sampleIndex">Sample index (represents time anywhere from zero to full length of song).</param>
+        /// <param name="samplePeriod">If useful, total period for note in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>) over which to compute timbre.</param>
+        /// <param name="sampleRate">Number of samples per second.</param>
+        /// <returns>The amplitude for a simulated bass guitar note at the given time.</returns>
+        /// <remarks>
+        /// This method computes an amplitude representing the acoustic pressure of a
+        /// simulated bass guitar note of the given frequency for the given time.
+        /// </remarks>
+        public static double SimulatedBassGuitar(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
+        {
+            return (
+                (16107.474214089D * Math.Cos(AngularFrequency(frequency * 0.485239173642166D, sampleIndex, sampleRate) + 0.878364865481147D)) +
+                (14087.0088730627D * Math.Cos(AngularFrequency(frequency * 0.970478347284333D, sampleIndex, sampleRate) - 2.98645760242543D)) +
+                (8735.01788701509D * Math.Cos(AngularFrequency(frequency * 1.4557175209265D, sampleIndex, sampleRate) - 0.395796372471435D)) +
+                (3973.79454412557D * Math.Cos(AngularFrequency(frequency * 1.94095669456867D, sampleIndex, sampleRate) + 2.23661099705174D)) +
+                (1102.84347421078D * Math.Cos(AngularFrequency(frequency * 2.42619586821083D, sampleIndex, sampleRate) - 1.38641414143595D)) +
+                (162.235485574335D * Math.Cos(AngularFrequency(frequency * 2.911435041853D, sampleIndex, sampleRate) - 0.458018924851457D))) / 44168.3744780774D;
         }
 
         /// <summary>

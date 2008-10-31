@@ -51,6 +51,6 @@ namespace System.Media.Music
         /// <summary>f - loud.</summary>
         Forte = 80,
         /// <summary>ff - very loud.</summary>
-        Fortissimo = 95
+        Fortissimo = 90
     }
 }
