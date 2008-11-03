@@ -139,7 +139,7 @@ namespace PCS.Services
             private set
             {
                 m_currentState = value;
-                m_serviceHelper.ProcessStateChanged(m_name, m_currentState);
+                m_serviceHelper.OnProcessStateChanged(m_name, m_currentState);
             }
         }
 

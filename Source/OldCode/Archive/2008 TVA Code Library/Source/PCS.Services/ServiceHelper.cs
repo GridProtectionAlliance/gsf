@@ -133,6 +133,11 @@ namespace PCS.Services
 		/// </summary>
 		public event EventHandler<EventArgs<IdentifiableItem<Guid, ClientRequest>>> ReceivedClientRequest;
 
+        /// <summary>
+        /// Occurs when the state of a defiend service process changes.
+        /// </summary>
+        public event Action<string, ProcessState> ProcessStateChanged;
+
         // Fields
 		private bool m_logStatusUpdates;
 		private bool m_monitorServiceHealth;
@@ -144,11 +149,12 @@ namespace PCS.Services
 		private Guid m_remoteCommandClientID;
 		private ServiceBase m_service;
 		private List<ServiceProcess> m_processes;
-		private List<IServiceComponent> m_serviceComponents;		
+        private List<ISupportLifecycle> m_serviceComponents;
 		private List<ClientInfo> m_connectedClients;
 		private List<ClientRequestInfo> m_clientRequestHistory;
 		private List<ClientRequestHandlerInfo> m_clientRequestHandlers;
-		private PerformanceMonitor m_performanceMonitor;
+        private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
+        private PerformanceMonitor m_performanceMonitor;
 		private Process m_remoteCommandProcess;
 		private ServerBase m_remotingServer;
 		private LogFile m_statusLog;
@@ -172,8 +178,9 @@ namespace PCS.Services
 			m_processes = new List<ServiceProcess>();
 			m_connectedClients = new List<ClientInfo>();
 			m_clientRequestHistory = new List<ClientRequestInfo>();
-			m_serviceComponents = new List<IServiceComponent>();
+			m_serviceComponents = new List<ISupportLifecycle>();
 			m_clientRequestHandlers = new List<ClientRequestHandlerInfo>();
+            m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
 			m_pursip = "s3cur3";
 
 			// Components
@@ -395,12 +402,12 @@ namespace PCS.Services
 		}
 		
 		/// <summary>
-		/// Gets a list of all the components that implement the PCS.Services.IServiceComponent interface.
+        /// Gets a list of all the components that implement the PCS.ISupportLifecycle interface assigned to the service.
 		/// </summary>
 		/// <value></value>
-		/// <returns>An instance of System.Collections.Generic.List(Of PCS.Services.IServiceComponent).</returns>
+		/// <returns>A reference to the list of all the components (i.e., those that support ISupportLifecycle) associated with this service.</returns>
 		[Browsable(false)]
-        public List<IServiceComponent> ServiceComponents
+        public List<ISupportLifecycle> ServiceComponents
 		{
 			get
 			{
@@ -480,14 +487,16 @@ namespace PCS.Services
                 status.AppendFormat("Status of components used by {0}:", Name);
                 status.AppendLine();
 
-                foreach (IServiceComponent serviceComponent in m_serviceComponents)
+                foreach (ISupportLifecycle serviceComponent in m_serviceComponents)
                 {
-                    if (serviceComponent != null)
+                    IStatusProvider statusProvider = serviceComponent as IStatusProvider;
+
+                    if (statusProvider != null)
                     {
                         status.AppendLine();
-                        status.AppendFormat("Status of {0}:", serviceComponent.Name);
+                        status.AppendFormat("Status of {0}:", statusProvider.Name);
                         status.AppendLine();
-                        status.Append(serviceComponent.Status);
+                        status.Append(statusProvider.Status);
                     }
                 }
 
@@ -675,11 +684,11 @@ namespace PCS.Services
                 if (m_logStatusUpdates)
                     m_statusLog.Open();
 
-                // Notify all service components of service started
-                foreach (IServiceComponent component in m_serviceComponents)
+                // Initialize all service components when service has started
+                foreach (ISupportLifecycle component in m_serviceComponents)
                 {
                     if (component != null)
-                        component.ServiceStateChanged(ServiceState.Started);
+                        component.Initialize();
                 }
 
                 // Notify all remote clients that might possibly be connected at of service start (not likely)
@@ -715,17 +724,6 @@ namespace PCS.Services
                     process.Abort();
             }
 
-            // Notify all service components of service stopping
-            foreach (IServiceComponent component in m_serviceComponents)
-            {
-                if (component != null)
-                    component.ServiceStateChanged(ServiceState.Stopped);
-            }
-
-            // Close the status log, if open
-            if (m_statusLog.IsOpen)
-                m_statusLog.Close();
-
             // Set flag to prevent status updates from being posted from other threads, at this point this might cause exceptions.
             m_suppressUpdates = true;
 
@@ -747,11 +745,17 @@ namespace PCS.Services
             // Notify all remote clients of service pause
             SendServiceStateChangedResponse(ServiceState.Paused);
 
-            // Notify all service components of service pausing
-            foreach (IServiceComponent component in m_serviceComponents)
+            // Track all enabled states at time of pause
+            m_componentEnabledStates.Clear();
+
+            // Disable all service components when service is pausing
+            foreach (ISupportLifecycle component in m_serviceComponents)
             {
                 if (component != null)
-                    component.ServiceStateChanged(ServiceState.Paused);
+                {
+                    m_componentEnabledStates.Add(component, component.Enabled);
+                    component.Enabled = false;
+                }
             }
 
             // Notify service event consumers that service has been paused
@@ -765,15 +769,21 @@ namespace PCS.Services
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public void OnResume()
         {
+            bool state;
+
             // Notify service event consumers of pending service resume
             if (ServiceResuming != null)
                 ServiceResuming(this, EventArgs.Empty);
 
-            // Notify all service components of service resuming
-            foreach (IServiceComponent component in m_serviceComponents)
+            // Re-enable all service components when service is resuming
+            foreach (ISupportLifecycle component in m_serviceComponents)
             {
                 if (component != null)
-                    component.ServiceStateChanged(ServiceState.Resumed);
+                {
+                    // Restore previous "enabled" state
+                    if (m_componentEnabledStates.TryGetValue(component, out state))
+                        component.Enabled = state;
+                }
             }
 
             // Notify all remote clients of service resume
@@ -800,12 +810,11 @@ namespace PCS.Services
                     process.Abort();
             }
 
-            // Notify all service components of service shutdown - typically components
-            // self-dispose when this message is received
-            foreach (IServiceComponent component in m_serviceComponents)
+            // Dispose of all service components when service is shutting down
+            foreach (ISupportLifecycle component in m_serviceComponents)
             {
                 if (component != null)
-                    component.ServiceStateChanged(ServiceState.Shutdown);
+                    component.Dispose();
             }
 
             // Notify service event consumers that service has shutdown
@@ -818,14 +827,11 @@ namespace PCS.Services
         /// </summary>
         /// <param name="processName">Name of the process whose state changed.</param>
         /// <param name="processState">New state of the process.</param>
-        public void ProcessStateChanged(string processName, ProcessState processState)
+        public void OnProcessStateChanged(string processName, ProcessState processState)
         {
-            // Notify all service components of change in process state
-            foreach (IServiceComponent component in m_serviceComponents)
-            {
-                if (component != null)
-                    component.ProcessStateChanged(processName, processState);
-            }
+            // Notify all service event consumer of change in process state
+            if (ProcessStateChanged != null)
+                ProcessStateChanged(processName, processState);
 
             // Notify all remote clients of change in process state
             SendProcessStateChangedResponse(processName, processState);
@@ -1744,13 +1750,17 @@ namespace PCS.Services
                         if (settingsTarget != null)
                         {
                             // Check service components
-                            foreach (IServiceComponent component in m_serviceComponents)
+                            foreach (ISupportLifecycle component in m_serviceComponents)
                             {
                                 IPersistSettings reloadableComponent = component as IPersistSettings;
                                 if (reloadableComponent != null && reloadableComponent.SettingsCategory == categoryName)
                                 {
                                     reloadableComponent.LoadSettings();
-                                    settingsTarget = component.Name;
+
+                                    IStatusProvider statusProvider = component as IStatusProvider;
+                                    if (statusProvider != null)
+                                        settingsTarget = statusProvider.Name;
+
                                     break;
                                 }
                             }
