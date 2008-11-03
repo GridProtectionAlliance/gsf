@@ -86,7 +86,7 @@ namespace PCS.Services
 		/// <summary>
 		/// Occurs when the service is starting.
 		/// </summary>
-		public event EventHandler<EventArgs<object>> ServiceStarting;
+        public event EventHandler<EventArgs<string[]>> ServiceStarting;
 		
 		/// <summary>
 		/// Occurs when the service has started.
@@ -136,7 +136,7 @@ namespace PCS.Services
         /// <summary>
         /// Occurs when the state of a defiend service process changes.
         /// </summary>
-        public event Action<string, ProcessState> ProcessStateChanged;
+        public event EventHandler<EventArgs<string, ProcessState>> ProcessStateChanged;
 
         // Fields
 		private bool m_logStatusUpdates;
@@ -641,7 +641,7 @@ namespace PCS.Services
             {
                 // Notify service event consumers of pending service start
                 if (ServiceStarting != null)
-                    ServiceStarting(this, new EventArgs<object>(args));
+                    ServiceStarting(this, new EventArgs<string[]>(args));
 
                 m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", ShowClients));
                 m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", ShowSettings));
@@ -831,7 +831,7 @@ namespace PCS.Services
         {
             // Notify all service event consumer of change in process state
             if (ProcessStateChanged != null)
-                ProcessStateChanged(processName, processState);
+                ProcessStateChanged(this, new EventArgs<string, ProcessState>(processName, processState));
 
             // Notify all remote clients of change in process state
             SendProcessStateChangedResponse(processName, processState);
