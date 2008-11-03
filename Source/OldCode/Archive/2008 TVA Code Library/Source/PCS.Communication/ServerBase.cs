@@ -120,7 +120,7 @@ namespace PCS.Communication
         private bool m_disposed;
         private long m_startTime;
         private long m_stopTime;
-        private bool m_previouslyEnabled;
+        private bool m_initialized;
 
         // We expose these two members to derived classes for their own internal use
         protected Action<byte[], int, int> m_receiveRawDataFunction;
@@ -156,11 +156,8 @@ namespace PCS.Communication
 		}
 
         /// <summary>
-        /// Releases unmanaged resources before an instance of the <see cref="ServerBase" /> class is reclaimed by garbage collection.
+        /// Releases the unmanaged resources before the <see cref="ServerBase"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        /// <remarks>
-        /// This method releases unmanaged resources by calling the virtual <see cref="Dispose(bool)" /> method, passing in <strong>false</strong>.
-        /// </remarks>
         ~ServerBase()
         {
             Dispose(false);
@@ -660,6 +657,22 @@ namespace PCS.Communication
         }
 
         /// <summary>
+        /// Initializes the <see cref="ServerBase"/> object.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="ServerBase"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
         /// Sends data to the specified client.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
@@ -831,28 +844,6 @@ namespace PCS.Communication
         /// <param name="clientID">ID of the client to be disconnected.</param>
         public abstract void DisconnectOne(Guid clientID);
 
-        public virtual void ProcessStateChanged(string processName, ProcessState newState)
-        {
-            // This component is not abstractly associated with any particular service process...
-        }
-
-        public virtual void ServiceStateChanged(ServiceState newState)
-        {
-            switch (newState)
-            {
-                case ServiceState.Paused:
-                    m_previouslyEnabled = m_enabled;
-                    Enabled = false;
-                    break;
-                case ServiceState.Resumed:
-                    Enabled = m_previouslyEnabled;
-                    break;
-                case ServiceState.Shutdown:
-                    Dispose();
-                    break;
-            }
-        }
-
         public virtual void LoadSettings()
         {
             try
@@ -934,11 +925,25 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Performs necessary operations before the <see cref="ServerBase"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ServerBase"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
         public void BeginInit()
         {
             // We don't need to do anything before the component is initialized.
         }
 
+        /// <summary>
+        /// Performs necessary operations after the <see cref="ServerBase"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ServerBase"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
         public void EndInit()
         {
             if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
@@ -1130,7 +1135,7 @@ namespace PCS.Communication
         /// <remarks>
         /// Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
         /// </remarks>
-        public static IServer CreateCommunicationServer(string configurationString)
+        public static IServer Create(string configurationString)
         {
             Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();
             IServer server = null;

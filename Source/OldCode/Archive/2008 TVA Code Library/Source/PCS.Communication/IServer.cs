@@ -28,7 +28,7 @@ using PCS.Security.Cryptography;
 
 namespace PCS.Communication
 {
-	public interface IServer : IServiceComponent
+	public interface IServer : ISupportLifecycle, IStatusProvider
 	{	
 		/// <summary>
 		/// Occurs when the server is started.
@@ -122,13 +122,6 @@ namespace PCS.Communication
 		/// <value></value>
 		/// <returns>The compression level to be used for compressing the data exchanged between the server and clients.</returns>
 		CompressionStrength Compression{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets a boolean value indicating whether the server is enabled.
-		/// </summary>
-		/// <value></value>
-		/// <returns>True if the server is enabled; otherwise False.</returns>
-		bool Enabled{ get; set; }
 		
 		/// <summary>
 		/// Gets or sets the encoding to be used for the text sent to the connected clients.

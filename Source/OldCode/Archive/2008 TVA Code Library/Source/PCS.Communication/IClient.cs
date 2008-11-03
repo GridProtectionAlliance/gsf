@@ -31,7 +31,7 @@ using PCS.Security.Cryptography;
 
 namespace PCS.Communication
 {
-	public interface IClient : IServiceComponent
+    public interface IClient : ISupportLifecycle
 	{		
 		/// <summary>
 		/// Occurs when the client is trying to connect to the server.
@@ -148,13 +148,6 @@ namespace PCS.Communication
 		/// <value></value>
 		/// <returns>The compression level to be used for compressing the data exchanged between the client and server.</returns>
 		CompressionStrength Compression{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets a boolean value indicating whether the client is enabled.
-		/// </summary>
-		/// <value></value>
-		/// <returns>True if the client is enabled; otherwise False.</returns>
-		bool Enabled{ get; set; }
 		
 		/// <summary>
 		/// Gets or sets the encoding to be used for the text sent to the server.
