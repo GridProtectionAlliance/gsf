@@ -48,7 +48,7 @@ namespace PCS.Identity
     /// A class that can be used to retrieve information about a domain user from Active Directory.
     /// </summary>
     /// <remarks>
-    /// For more information on active directory properties see http://msdn.microsoft.com/en-us/library/ms677980.aspx.
+    /// See <a href="http://msdn.microsoft.com/en-us/library/ms677980.aspx" target="_blank">http://msdn.microsoft.com/en-us/library/ms677980.aspx</a> for more information on active directory properties.
     /// </remarks>
     /// <example>
     /// This example shows how to retrieve user information from Active Directory:

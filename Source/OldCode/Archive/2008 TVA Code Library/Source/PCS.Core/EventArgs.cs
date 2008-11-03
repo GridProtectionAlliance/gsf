@@ -40,8 +40,8 @@ namespace PCS
         /// Initializes a new instance of the <see cref="EventArgs{T}"/> class.
         /// </summary>
         public EventArgs()
+            : this(default(T))
         {
-            Argument = default(T);
         }
 
         /// <summary>
@@ -75,9 +75,8 @@ namespace PCS
         /// Initializes a new instance of the <see cref="EventArgs{T1,T2}"/> class.
         /// </summary>
         public EventArgs()
+            : this(default(T1), default(T2))
         {
-            Argument1 = default(T1);
-            Argument2 = default(T2);
         }
 
         /// <summary>
@@ -119,10 +118,8 @@ namespace PCS
         /// Initializes a new instance of the <see cref="EventArgs{T1,T2,T3}"/> class.
         /// </summary>
         public EventArgs()
+            : this(default(T1), default(T2), default(T3))
         {
-            Argument1 = default(T1);
-            Argument2 = default(T2);
-            Argument3 = default(T3);
         }
 
         /// <summary>
@@ -172,11 +169,8 @@ namespace PCS
         /// Initializes a new instance of the <see cref="EventArgs{T1,T2,T3,T4}"/> class.
         /// </summary>
         public EventArgs()
+            : this(default(T1), default(T2), default(T3), default(T4))
         {
-            Argument1 = default(T1);
-            Argument2 = default(T2);
-            Argument3 = default(T3);
-            Argument4 = default(T4);
         }
 
         /// <summary>

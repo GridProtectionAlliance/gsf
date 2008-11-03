@@ -37,7 +37,7 @@ namespace PCS.IO
     /// </summary>
     /// <typeparam name="T"><see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the <see cref="IBinaryDataProvider"/> interface.</typeparam>
     /// <remarks>
-    /// For more information on ISAM files see http://en.wikipedia.org/wiki/ISAM.
+    /// See <a href="http://en.wikipedia.org/wiki/ISAM" target="_blank">http://en.wikipedia.org/wiki/ISAM</a> for more information on ISAM files .
     /// </remarks>
     /// <example>
     /// This example shows a sample implementation of <see cref="IsamDataFileBase{T}"/>:
