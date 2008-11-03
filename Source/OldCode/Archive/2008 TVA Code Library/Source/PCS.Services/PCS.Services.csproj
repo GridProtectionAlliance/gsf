@@ -80,8 +80,8 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded Resources\ClientHelper.bmp" />
-    <EmbeddedResource Include="Embedded Resources\ServiceHelper.bmp" />
+    <EmbeddedResource Include="ClientHelper.bmp" />
+    <EmbeddedResource Include="ServiceHelper.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PCS.Communication\PCS.Communication.csproj">
