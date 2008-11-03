@@ -100,7 +100,7 @@ namespace PCS.Scheduling
     /// </para>
     /// </remarks>
     [ToolboxBitmap(typeof(ScheduleManager)), DefaultEvent("ScheduleDue")]
-    public partial class ScheduleManager : Component, IServiceComponent, IPersistSettings, ISupportInitialize
+    public partial class ScheduleManager : Component, ISupportLifecycle, IStatusProvider, IPersistSettings, ISupportInitialize
     {
         #region [ Members ]
 
@@ -158,7 +158,6 @@ namespace PCS.Scheduling
         private List<Schedule> m_schedules;
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private bool m_previouslyEnabled;
         private System.Timers.Timer m_timer;
 #if ThreadTracking
         private ManagedThread m_startTimerThread;
@@ -166,6 +165,7 @@ namespace PCS.Scheduling
         private Thread m_startTimerThread;
 #endif
         private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
@@ -179,6 +179,14 @@ namespace PCS.Scheduling
             m_schedules = new List<Schedule>();
             m_timer = new System.Timers.Timer(60000);
             m_timer.Elapsed += m_timer_Elapsed;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="ScheduleManager"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~ScheduleManager()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -199,9 +207,8 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the schedule manager is enabled.
+        /// Gets or sets a boolean value that indicates whether the <see cref="ScheduleManager"/> object is currently enabled.
         /// </summary>
-        /// <value></value>
         /// <returns>True if the schedule manager is enabled; otherwise False.</returns>
         [Category("Behavior"), DefaultValue(DefaultEnabled)]
         public bool Enabled
@@ -274,7 +281,7 @@ namespace PCS.Scheduling
         {
             get
             {
-                return this.GetType().Name;
+                return m_settingsCategory;
             }
         }
 
@@ -337,6 +344,22 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
+        /// Initializes the <see cref="ScheduleManager"/> object.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="ScheduleManager"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
         /// Gets the schedule with the specified schedule name.
         /// </summary>
         /// <param name="scheduleName">Name of the schedule that is to be found.</param>
@@ -363,7 +386,6 @@ namespace PCS.Scheduling
         /// </summary>
         public void Start()
         {
-
             if (m_enabled && !m_timer.Enabled)
             {
 #if ThreadTracking
@@ -374,7 +396,6 @@ namespace PCS.Scheduling
 #endif
                 m_startTimerThread.Start();
             }
-
         }
 
         /// <summary>
@@ -412,29 +433,6 @@ namespace PCS.Scheduling
                     if (schedule.IsDue())
                         OnScheduleDue(this, new ScheduleEventArgs(schedule)); // Event raised asynchronously.
                 }
-            }
-        }
-
-        public void ProcessStateChanged(string processName, ProcessState newState)
-        {
-        }
-
-        public void ServiceStateChanged(ServiceState newState)
-        {
-            switch (newState)
-            {
-                case ServiceState.Paused:
-                    m_previouslyEnabled = Enabled;
-                    Enabled = false;
-                    break;
-                case ServiceState.Resumed:
-                    Enabled = m_previouslyEnabled;
-                    break;
-                case ServiceState.Shutdown:
-                    Dispose();
-                    break;
-                default:
-                    break;
             }
         }
 
@@ -496,15 +494,33 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Performs necessary operations before the <see cref="ScheduleManager"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ScheduleManager"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            // We don't need to do anything before the component is initialized.
+            // Nothing needs to be done before component is initialized.
         }
 
+        /// <summary>
+        /// Performs necessary operations after the <see cref="ScheduleManager"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ScheduleManager"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
             if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-                LoadSettings(); // Load settings from the config file.
+            {
+                Initialize();
+            }
         }
 
         protected void OnScheduleDue(object sender, ScheduleEventArgs e)
