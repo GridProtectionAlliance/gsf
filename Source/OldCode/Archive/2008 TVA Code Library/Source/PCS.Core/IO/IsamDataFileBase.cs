@@ -633,15 +633,6 @@ namespace PCS.IO
             }
         }
 
-        ///// <summary>
-        ///// When overridden in a derived class, gets the size of a record (in bytes).
-        ///// </summary>
-        //[Browsable(false)]
-        //public abstract int RecordSize
-        //{
-        //    get;
-        //}
-
         #endregion
 
         #region [ Methods ]
@@ -1060,19 +1051,6 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// When overridden in a derived class, gets the size of a record (in bytes).
-        /// </summary>
-        /// <returns>Size of a record in bytes.</returns>
-        protected abstract int GetRecordSize();
-
-        /// <summary>
-        /// When overridden in a derived class, returns a new empty record.
-        /// </summary>
-        /// <param name="id">ID of the new record.</param>
-        /// <returns>New empty record.</returns>
-        protected abstract T CreateNewRecord(int id);
-
-        /// <summary>
         /// Raises the <see cref="FileModified"/> event.
         /// </summary>
         /// <param name="e">Event data.</param>
@@ -1157,6 +1135,19 @@ namespace PCS.IO
                 }
             }
         }
+
+        /// <summary>
+        /// When overridden in a derived class, gets the size of a record (in bytes).
+        /// </summary>
+        /// <returns>Size of a record in bytes.</returns>
+        protected abstract int GetRecordSize();
+
+        /// <summary>
+        /// When overridden in a derived class, returns a new empty record.
+        /// </summary>
+        /// <param name="id">ID of the new record.</param>
+        /// <returns>New empty record.</returns>
+        protected abstract T CreateNewRecord(int id);
 
         /// <summary>
         /// Writes records to disk.
