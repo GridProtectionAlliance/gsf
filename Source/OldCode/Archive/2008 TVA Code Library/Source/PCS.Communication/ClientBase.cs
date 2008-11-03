@@ -992,7 +992,7 @@ namespace PCS.Communication
         {
             if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
             {
-                LoadSettings(); // Load settings from the config file.
+                Initialize();
             }
         }
 
