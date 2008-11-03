@@ -10,8 +10,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/25/2008 - Pinal C Patel
+//  09/25/2008 - Pinal C. Patel
 //       Generated original version of source code.
+//  09/25/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -21,6 +23,10 @@ using System.Windows.Forms;
 
 namespace PCS.ErrorManagement
 {
+    /// <summary>
+    /// Represents a dialog box that can be used to display detailed exception inmormation.
+    /// </summary>
+    /// <seealso cref="ErrorLogger"/>
     public partial class ErrorDialog : Form
     {
         #region [ Members ]
