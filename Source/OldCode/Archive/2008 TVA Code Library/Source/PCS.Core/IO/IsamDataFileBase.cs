@@ -602,7 +602,7 @@ namespace PCS.IO
                         fileLength = m_fileStream.Length;
                     }
 
-                    return Convert.ToInt32(fileLength / m_recordBuffer.Length);
+                    return (int)(fileLength / (long)m_recordBuffer.Length);
                 }
                 else
                 {

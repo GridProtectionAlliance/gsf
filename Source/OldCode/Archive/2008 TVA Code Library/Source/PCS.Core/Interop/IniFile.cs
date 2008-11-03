@@ -134,7 +134,7 @@ namespace PCS.Interop
                 {
                     while (startIndex < readLength)
                     {
-                        nullIndex = Array.IndexOf(buffer, Convert.ToByte(0), startIndex);
+                        nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
 
                         if (nullIndex > -1)
                         {

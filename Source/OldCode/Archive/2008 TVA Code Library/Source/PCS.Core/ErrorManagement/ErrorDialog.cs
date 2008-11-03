@@ -115,7 +115,7 @@ namespace PCS.ErrorManagement
                 g = Graphics.FromHwnd(ctl.Handle);
                 SizeF objSizeF = g.MeasureString(ctl.Text, ctl.Font, new SizeF(ctl.Width, ctl.Height));
                 g.Dispose();
-                ctl.Height = Convert.ToInt32(objSizeF.Height) + 5;
+                ctl.Height = (int)objSizeF.Height + 5;
             }
             catch (System.Security.SecurityException)
             {
