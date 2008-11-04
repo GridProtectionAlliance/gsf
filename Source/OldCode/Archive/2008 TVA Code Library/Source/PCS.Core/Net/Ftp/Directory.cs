@@ -24,6 +24,9 @@ using System.Text.RegularExpressions;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Represents a FTP directory.
+    /// </summary>
     public class Directory : IFile, IComparable<Directory>
     {
         #region [ Members ]
@@ -40,8 +43,16 @@ namespace PCS.Net.Ftp
         }
 
         // Events
+
+        /// <summary>
+        /// Raised when new directory line is scanned.
+        /// </summary>
         public event Action<string> DirectoryListLineScan;
-        public event Action<ExceptionBase> DirectoryScanException;
+
+        /// <summary>
+        /// Raised when there is an exception scanning a directory.
+        /// </summary>
+        public event Action<FtpExceptionBase> DirectoryScanException;
 
         // Fields
         private SessionConnected m_session;
@@ -109,6 +120,9 @@ namespace PCS.Net.Ftp
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets FTP case sensitivity of directory names.
+        /// </summary>
         public bool CaseInsensitive
         {
             get
@@ -122,6 +136,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Name of directory.
+        /// </summary>
         public string Name
         {
             get
@@ -130,6 +147,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Full path of directory.
+        /// </summary>
         public string FullPath
         {
             get
@@ -138,6 +158,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns false for directory entries.
+        /// </summary>
         public bool IsFile
         {
             get
@@ -146,6 +169,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true for directory entries.
+        /// </summary>
         public bool IsDirectory
         {
             get
@@ -154,6 +180,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets size of directory.
+        /// </summary>
         public long Size
         {
             get
@@ -166,6 +195,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets permission of directory.
+        /// </summary>
         public string Permission
         {
             get
@@ -178,6 +210,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets timestamp of directory.
+        /// </summary>
         public DateTime TimeStamp
         {
             get
@@ -190,6 +225,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets parent directory of directory.
+        /// </summary>
         public Directory Parent
         {
             get
@@ -236,6 +274,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets sub directories of directory.
+        /// </summary>
         public Dictionary<string, Directory>.ValueCollection SubDirectories
         {
             get
@@ -245,6 +286,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets files of directory.
+        /// </summary>
         public Dictionary<string, File>.ValueCollection Files
         {
             get
@@ -266,6 +310,11 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Finds matching file name in directory.
+        /// </summary>
+        /// <param name="fileName">Filename to find in directory.</param>
+        /// <returns>File reference, if found, otherwise null if file is not found.</returns>
         public File FindFile(string fileName)
         {
             InitHashtable();
@@ -278,6 +327,11 @@ namespace PCS.Net.Ftp
                 return null;
         }
 
+        /// <summary>
+        /// Finds matching subdirectory name in directory.
+        /// </summary>
+        /// <param name="fileName">Subdirectory name to find in directory.</param>
+        /// <returns>Subdirectory reference, if found, otherwise null if subdirectory is not found.</returns>
         public Directory FindSubDirectory(string dirName)
         {
             InitHashtable();
@@ -290,11 +344,20 @@ namespace PCS.Net.Ftp
                 return null;
         }
 
+        /// <summary>
+        /// Uploads local file to directory.
+        /// </summary>
+        /// <param name="localFile">Local file to upload.</param>
         public void PutFile(string localFile)
         {
             PutFile(localFile, null);
         }
 
+        /// <summary>
+        /// Uploads local file to directory using alternate name.
+        /// </summary>
+        /// <param name="localFile">Local file to upload.</param>
+        /// <param name="remoteFile">Remote filename to use for upload.</param>
         public void PutFile(string localFile, string remoteFile)
         {
             CheckSessionCurrentDirectory();
@@ -309,11 +372,20 @@ namespace PCS.Net.Ftp
             transfer.StartTransfer();
         }
 
+        /// <summary>
+        /// Downloads remote file from directory.
+        /// </summary>
+        /// <param name="remoteFile">Remote filename to download.</param>
         public void GetFile(string remoteFile)
         {
             GetFile(remoteFile, remoteFile);
         }
 
+        /// <summary>
+        /// Downloads remote file from directory using alternate local filename.
+        /// </summary>
+        /// <param name="localFile">Local filename to use for download.</param>
+        /// <param name="remoteFile">Remote filename to download.</param>
         public void GetFile(string localFile, string remoteFile)
         {
             InitHashtable();
@@ -327,15 +399,24 @@ namespace PCS.Net.Ftp
             }
             else
             {
-                throw new FileNotFoundException(remoteFile);
+                throw new FtpFileNotFoundException(remoteFile);
             }
         }
 
+        /// <summary>
+        /// Starts asynchrnonous local file upload to directory.
+        /// </summary>
+        /// <param name="localFile">Local file to upload.</param>
         public void BeginPutFile(string localFile)
         {
             BeginPutFile(localFile, null);
         }
 
+        /// <summary>
+        /// Starts asynchrnonous local file upload to directory using alternate name.
+        /// </summary>
+        /// <param name="localFile">Local file to upload.</param>
+        /// <param name="remoteFile">Remote filename to use for upload.</param>
         public void BeginPutFile(string localFile, string remoteFile)
         {
             CheckSessionCurrentDirectory();
@@ -350,11 +431,20 @@ namespace PCS.Net.Ftp
             transfer.StartAsyncTransfer();
         }
 
+        /// <summary>
+        /// Starts asynchronous remote file download from directory.
+        /// </summary>
+        /// <param name="remoteFile">Remote filename to download.</param>
         public void BeginGetFile(string remoteFile)
         {
             BeginGetFile(remoteFile, remoteFile);
         }
 
+        /// <summary>
+        /// Starts asynchronous remote file download from directory using alternate local filename.
+        /// </summary>
+        /// <param name="localFile">Local filename to use for download.</param>
+        /// <param name="remoteFile">Remote filename to download.</param>
         public void BeginGetFile(string localFile, string remoteFile)
         {
             InitHashtable();
@@ -368,10 +458,14 @@ namespace PCS.Net.Ftp
             }
             else
             {
-                throw new FileNotFoundException(remoteFile);
+                throw new FtpFileNotFoundException(remoteFile);
             }
         }
 
+        /// <summary>
+        /// Removes file from directory.
+        /// </summary>
+        /// <param name="fileName">Remote filename to remove.</param>
         public void RemoveFile(string fileName)
         {
             CheckSessionCurrentDirectory();
@@ -381,6 +475,10 @@ namespace PCS.Net.Ftp
             m_files.Remove(fileName);
         }
 
+        /// <summary>
+        /// Removes subdirectory from directory.
+        /// </summary>
+        /// <param name="dirName">Subdirectory name to remove.</param>
         public void RemoveSubDir(string dirName)
         {
             CheckSessionCurrentDirectory();
@@ -390,6 +488,11 @@ namespace PCS.Net.Ftp
             m_subDirectories.Remove(dirName);
         }
 
+        /// <summary>
+        /// Creates a new zero-length remote file in directory.
+        /// </summary>
+        /// <param name="newFileName">New remote file name.</param>
+        /// <returns>File reference to new zero-length remote file.</returns>
         public File CreateFile(string newFileName)
         {
             DataStream stream = CreateFileStream(newFileName);
@@ -399,6 +502,11 @@ namespace PCS.Net.Ftp
             return m_files[newFileName];
         }
 
+        /// <summary>
+        /// Creates a new data stream for remote file in directory.
+        /// </summary>
+        /// <param name="newFileName">New remote file name.</param>
+        /// <returns>Output data stream for new remote file.</returns>
         public OutputDataStream CreateFileStream(string newFileName)
         {
             InitHashtable();
@@ -422,6 +530,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Refreshes directory listing.
+        /// </summary>
         public void Refresh()
         {
             ClearItems();
@@ -466,7 +577,7 @@ namespace PCS.Net.Ftp
                             m_files.Add(info.Name, new File(this, info));
                     }
                 }
-                catch (ExceptionBase ex)
+                catch (FtpExceptionBase ex)
                 {
                     if (DirectoryScanException != null)
                         DirectoryScanException(ex);
@@ -586,6 +697,9 @@ namespace PCS.Net.Ftp
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
         }
 
+        /// <summary>
+        /// Compares on directory or file to another.
+        /// </summary>
         public int CompareTo(object obj)
         {
             IFile file = obj as IFile;

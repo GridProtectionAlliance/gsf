@@ -19,26 +19,32 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    public abstract class ExceptionBase : Exception
+    /// <summary>
+    /// FTP exception base class.
+    /// </summary>
+    public abstract class FtpExceptionBase : Exception
     {
         private Response m_ftpResponse = null;
 
-        internal ExceptionBase(string message)
+        internal FtpExceptionBase(string message)
             : base(message)
         {
         }
 
-        internal ExceptionBase(string message, ExceptionBase inner)
+        internal FtpExceptionBase(string message, FtpExceptionBase inner)
             : base(message, inner)
         {
         }
 
-        internal ExceptionBase(string message, Response ftpResponse)
+        internal FtpExceptionBase(string message, Response ftpResponse)
             : base(message)
         {
             m_ftpResponse = ftpResponse;
         }
 
+        /// <summary>
+        /// Response message related to exception, if any.
+        /// </summary>
         public string ResponseMessage
         {
             get
@@ -51,76 +57,100 @@ namespace PCS.Net.Ftp
         }
     }
 
-    public class InvalidResponseException : ExceptionBase
+    /// <summary>
+    /// Invalid FTP response exception.
+    /// </summary>
+    public class FtpInvalidResponseException : FtpExceptionBase
     {
-        internal InvalidResponseException(string message, Response ftpResponse)
+        internal FtpInvalidResponseException(string message, Response ftpResponse)
             : base(message, ftpResponse)
         {
         }
     }
 
-    public class AuthenticationException : ExceptionBase
+    /// <summary>
+    /// FTP authentication exception.
+    /// </summary>
+    public class FtpAuthenticationException : FtpExceptionBase
     {
-        internal AuthenticationException(string message, Response ftpResponse)
+        internal FtpAuthenticationException(string message, Response ftpResponse)
             : base(message, ftpResponse)
         {
         }
     }
 
-    public class FileNotFoundException : ExceptionBase
+    /// <summary>
+    /// FTP file not found exception.
+    /// </summary>
+    public class FtpFileNotFoundException : FtpExceptionBase
     {
-        internal FileNotFoundException(string remoteFile)
+        internal FtpFileNotFoundException(string remoteFile)
             : base("Remote file (" + remoteFile + ") not found.  Try refreshing the directory.")
         {
         }
     }
 
-    public class ServerDownException : ExceptionBase
+    /// <summary>
+    /// FTP server down exception.
+    /// </summary>
+    public class FtpServerDownException : FtpExceptionBase
     {
-        internal ServerDownException(Response ftpResponse)
+        internal FtpServerDownException(Response ftpResponse)
             : this("FTP service was down.", ftpResponse)
         {
         }
 
-        internal ServerDownException(string message, Response ftpResponse)
+        internal FtpServerDownException(string message, Response ftpResponse)
             : base(message, ftpResponse)
         {
         }
     }
 
-    public class CommandException : ExceptionBase
+    /// <summary>
+    /// FTP command exception.
+    /// </summary>
+    public class FtpCommandException : FtpExceptionBase
     {
 
-        internal CommandException(string message, Response ftpResponse)
+        internal FtpCommandException(string message, Response ftpResponse)
             : base(message, ftpResponse)
         {
         }
     }
 
-    public class DataTransferException : ExceptionBase
+    /// <summary>
+    /// FTP data transfer exception.
+    /// </summary>
+    public class FtpDataTransferException : FtpExceptionBase
     {
-        internal DataTransferException()
+        internal FtpDataTransferException()
             : base("Data transfer error: previous transfer not finished.")
         {
         }
 
-        internal DataTransferException(string message, Response ftpResponse)
+        internal FtpDataTransferException(string message, Response ftpResponse)
             : base(message, ftpResponse)
         {
         }
     }
 
-    public class UserAbortException : ExceptionBase
+    /// <summary>
+    /// FTP user abort exception.
+    /// </summary>
+    public class FtpUserAbortException : FtpExceptionBase
     {
-        internal UserAbortException()
+        internal FtpUserAbortException()
             : base("File Transfer aborted by user.")
         {
         }
     }
 
-    public class ResumeNotSupportedException : ExceptionBase
+    /// <summary>
+    /// FTP resume not supported exception.
+    /// </summary>
+    public class FtpResumeNotSupportedException : FtpExceptionBase
     {
-        internal ResumeNotSupportedException(Response ftpResponse)
+        internal FtpResumeNotSupportedException(Response ftpResponse)
             : base("Data transfer error: server does not support resuming.", ftpResponse)
         {
         }

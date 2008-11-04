@@ -152,7 +152,7 @@ namespace PCS.Net.Ftp
                 m_transferResult = new AsyncResult("Success.", AsyncResult.Complete);
                 m_session.Host.OnFileTransferNotification(m_transferResult);
             }
-            catch (ExceptionBase e)
+            catch (FtpExceptionBase e)
             {
                 m_transferResult = new AsyncResult("Transfer fail: " + e.Message, AsyncResult.Fail);
                 m_session.Host.OnFileTransferNotification(m_transferResult);
@@ -220,7 +220,7 @@ namespace PCS.Net.Ftp
             if (responseCode == Response.RequestFileActionComplete)
                 return;
 
-            throw new DataTransferException("Failed to transfer file.", m_session.ControlChannel.LastResponse);
+            throw new FtpDataTransferException("Failed to transfer file.", m_session.ControlChannel.LastResponse);
         }
 
         private void RemoteToLocal(Stream remote, Stream local)

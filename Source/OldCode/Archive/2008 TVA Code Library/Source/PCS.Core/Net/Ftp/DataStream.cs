@@ -20,6 +20,9 @@ using System.Net.Sockets;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// FTP data stream.
+    /// </summary>
     public class DataStream : Stream
     {
         #region [ Members ]
@@ -64,6 +67,12 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the current stream supports reading.
+        /// </summary>
+        /// <returns>
+        /// true if the stream supports reading; otherwise, false.
+        /// </returns>
         public override bool CanRead
         {
             get
@@ -72,6 +81,12 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the current stream supports seeking.
+        /// </summary>
+        /// <returns>
+        /// true if the stream supports seeking; otherwise, false.
+        /// </returns>
         public override bool CanSeek
         {
             get
@@ -80,6 +95,12 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the current stream supports writing.
+        /// </summary>
+        /// <returns>
+        /// true if the stream supports writing; otherwise, false.
+        /// </returns>
         public override bool CanWrite
         {
             get
@@ -88,6 +109,14 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets the length in bytes of the stream.
+        /// </summary>
+        /// <returns>
+        /// A long value representing the length of the stream in bytes.
+        /// </returns>
+        /// <exception cref="System.NotSupportedException">Stream does not support seeking.</exception>
+        /// <exception cref="System.ObjectDisposedException">Methods were called after the stream was closed.</exception>
         public override long Length
         {
             get
@@ -96,6 +125,15 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the position within the current stream.
+        /// </summary>
+        /// <returns>
+        /// The current position within the stream.
+        /// </returns>
+        /// <exception cref="System.IO.IOException">An I/O error occurs.</exception>
+        /// <exception cref="System.NotSupportedException">Stream does not support seeking.</exception>
+        /// <exception cref="System.ObjectDisposedException">Methods were called after the stream was closed.</exception>
         public override long Position
         {
             get
@@ -112,6 +150,9 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Closes the FTP stream and releases any resources associated with the stream.
+        /// </summary>
         public override void Close()
         {
             if (!IsClosed)
@@ -134,16 +175,53 @@ namespace PCS.Net.Ftp
             m_tcpClient = null;
         }
 
+        /// <summary>
+        /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+        /// </summary>
+        /// <exception cref="System.IO.IOException">An I/O error occurs.</exception>
         public override void Flush()
         {
             m_stream.Flush();
         }
 
+        /// <summary>
+        /// Sets the position within the current stream.
+        /// </summary>
+        /// <param name="offset">A byte offset relative to the origin parameter.</param>
+        /// <param name="origin">
+        /// A value of type <see cref="System.IO.SeekOrigin"/> indicating the reference
+        /// point used to obtain the new position.
+        /// </param>
+        /// <returns>The new position within the current stream.</returns>
+        /// <exception cref="System.IO.IOException">An I/O error occurs.</exception>
+        /// <exception cref="System.NotSupportedException">Stream does not support seeking.</exception>
+        /// <exception cref="System.ObjectDisposedException">Methods were called after the stream was closed.</exception>
         public override long Seek(long offset, SeekOrigin origin)
         {
             return m_stream.Seek(offset, origin);
         }
 
+        /// <summary>
+        /// Reads a sequence of bytes from the current stream and advances the
+        /// position within the stream by the number of bytes read.
+        /// </summary>
+        /// <param name="buffer">
+        /// An array of bytes. When this method returns, the <paramref name="buffer"/>
+        /// contains the specified byte array with the values between
+        /// <paramref name="offset"/> and (<paramref name="offset"/> + <paramref name="count"/> - 1)
+        /// replaced by the bytes read from the current source.</param>
+        /// <param name="offset">
+        /// The zero-based byte offset in <paramref name="buffer"/> at which to begin
+        /// storing the data read from the current stream.
+        /// </param>
+        /// <param name="count">
+        /// The maximum number of bytes to be read from the current stream.
+        /// </param>
+        /// <returns>
+        /// The total number of bytes read into the <paramref name="buffer"/>. This can be less than the 
+        /// number of bytes requested if that many bytes are not currently available, or zero (0) if the
+        /// end of the stream has been reached.
+        /// </returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
             try
@@ -153,10 +231,26 @@ namespace PCS.Net.Ftp
             finally
             {
                 if (m_userAbort)
-                    throw new UserAbortException();
+                    throw new FtpUserAbortException();
             }
         }
 
+        /// <summary>
+        /// When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position
+        /// within this stream by the number of bytes written.
+        /// </summary>
+        /// <param name="buffer">
+        /// An array of bytes. When this method returns, the <paramref name="buffer"/>
+        /// contains the specified byte array with the values between
+        /// <paramref name="offset"/> and (<paramref name="offset"/> + <paramref name="count"/> - 1)
+        /// replaced by the bytes read from the current source.</param>
+        /// <param name="offset">
+        /// The zero-based byte offset in <paramref name="buffer"/> at which to begin
+        /// storing the data read from the current stream.
+        /// </param>
+        /// <param name="count">
+        /// The maximum number of bytes to be read from the current stream.
+        /// </param>
         public override void Write(byte[] buffer, int offset, int count)
         {
             try
@@ -166,10 +260,17 @@ namespace PCS.Net.Ftp
             finally
             {
                 if (m_userAbort)
-                    throw new UserAbortException();
+                    throw new FtpUserAbortException();
             }
         }
 
+        /// <summary>
+        /// Reads a byte from the stream and advances the position within the stream
+        /// by one byte, or returns -1 if at the end of the stream.
+        /// </summary>
+        /// <returns>
+        /// The unsigned byte cast to an Int32, or -1 if at the end of the stream.
+        /// </returns>
         public override int ReadByte()
         {
             try
@@ -179,10 +280,15 @@ namespace PCS.Net.Ftp
             finally
             {
                 if (m_userAbort)
-                    throw new UserAbortException();
+                    throw new FtpUserAbortException();
             }
         }
 
+        /// <summary>
+        /// Writes a byte to the current position in the stream and advances the position
+        /// within the stream by one byte.
+        /// </summary>
+        /// <param name="b">The byte to write to the stream.</param>
         public override void WriteByte(byte b)
         {
             try
@@ -192,10 +298,14 @@ namespace PCS.Net.Ftp
             finally
             {
                 if (m_userAbort)
-                    throw new UserAbortException();
+                    throw new FtpUserAbortException();
             }
         }
 
+        /// <summary>
+        /// Sets the length of the current stream.
+        /// </summary>
+        /// <param name="len">The desired length of the current stream in bytes.</param>
         public override void SetLength(long len)
         {
             m_stream.SetLength(len);

@@ -171,7 +171,7 @@ namespace PCS.Net.Ftp
             lock (this)
             {
                 if (m_dataStream != null)
-                    throw new DataTransferException();
+                    throw new FtpDataTransferException();
 
                 m_dataStream = stream;
             }

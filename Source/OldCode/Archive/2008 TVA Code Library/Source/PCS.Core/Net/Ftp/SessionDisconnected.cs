@@ -124,7 +124,7 @@ namespace PCS.Net.Ftp
                     ctrl.Command("PASS " + Password);
 
                 if (ctrl.LastResponse.Code != Response.UserLoggedIn)
-                    throw new AuthenticationException("Failed to login.", ctrl.LastResponse);
+                    throw new FtpAuthenticationException("Failed to login.", ctrl.LastResponse);
 
                 m_host.State = new SessionConnected(m_host, ctrl, m_caseInsensitive);
                 ((SessionConnected)m_host.State).InitRootDirectory();

@@ -275,7 +275,7 @@ namespace PCS.Net.Ftp
                 m_restartTimer.Interval = 1800000;
                 m_restartTimer.Enabled = true;
             }
-            catch (ExceptionBase ex)
+            catch (FtpExceptionBase ex)
             {
                 // If this fails, we'll try again in a moment.  The FTP server may be down...
                 if (Status != null)
@@ -344,7 +344,7 @@ namespace PCS.Net.Ftp
                 // Refresh the file listing for the current directory
                 m_session.CurrentDirectory.Refresh();
             }
-            catch (ExceptionBase ex)
+            catch (FtpExceptionBase ex)
             {
                 RestartConnectCycle();
 

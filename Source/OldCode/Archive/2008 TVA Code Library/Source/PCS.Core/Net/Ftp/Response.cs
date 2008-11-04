@@ -65,7 +65,7 @@ namespace PCS.Net.Ftp
                 }
                 catch
                 {
-                    throw new InvalidResponseException("Invalid response", this);
+                    throw new FtpInvalidResponseException("Invalid response", this);
                 }
 
                 m_responses.Enqueue(response);
@@ -73,7 +73,7 @@ namespace PCS.Net.Ftp
             while (response.Length >= 4 && response[3] == '-');
 
             if (m_code == ServiceUnavailable)
-                throw new ServerDownException(this);
+                throw new FtpServerDownException(this);
         }
 
         #endregion

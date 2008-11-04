@@ -19,6 +19,9 @@ using System.Collections;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Asynchronous transfer result.
+    /// </summary>
     public class AsyncResult
     {
         #region [ Members ]
@@ -59,6 +62,9 @@ namespace PCS.Net.Ftp
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Returns true if asynchronous transfer completed successfully.
+        /// </summary>
         public bool IsSuccess
         {
             get
@@ -67,6 +73,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true if asynchronous transfer failed.
+        /// </summary>
         public bool IsFailed
         {
             get
@@ -75,6 +84,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true if asynchronous transfer was aborted.
+        /// </summary>
         public bool IsAborted
         {
             get
@@ -83,6 +95,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets response code from asynchronous transfer.
+        /// </summary>
         public int ResponseCode
         {
             get
@@ -91,6 +106,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets any message associated with asynchronous transfer.
+        /// </summary>
         public string Message
         {
             get
