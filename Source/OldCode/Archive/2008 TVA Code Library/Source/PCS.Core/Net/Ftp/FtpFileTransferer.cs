@@ -249,6 +249,7 @@ namespace PCS.Net.Ftp
             long onePercentage;
             long bytesReadFromLastProgressEvent;
             byte[] buffer = new byte[4 * 1024 + 1];
+            ProcessProgress<long> progress = new ProcessProgress<long>("FTP " + m_transferDirection + " File Transfer", "Transfering file \"" + m_remoteFile + "\"...", m_totalBytes, 0);
 
             onePercentage = m_totalBytes / 100;
             bytesReadFromLastProgressEvent = 0;
@@ -262,7 +263,8 @@ namespace PCS.Net.Ftp
                 if (bytesReadFromLastProgressEvent > onePercentage)
                 {
                     m_transferedPercentage = (int)(((float)m_totalBytesTransfered) / ((float)m_totalBytes) * 100);
-                    m_session.Host.OnFileTransferProgress(m_totalBytes, m_totalBytesTransfered, m_transferDirection);
+                    progress.Complete = m_totalBytesTransfered;
+                    m_session.Host.OnFileTransferProgress(progress, m_transferDirection);
                     bytesReadFromLastProgressEvent = 0;
                 }
 

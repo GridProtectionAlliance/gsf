@@ -190,7 +190,7 @@ namespace PCS.Security.Cryptography
         /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
         public static void Encrypt(this Stream source, Stream destination, byte[] key, byte[] IV, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            ProcessProgress<long>.Handler progress = null;
+            ProcessProgressHandler<long> progress = null;
             byte[] inBuffer = new byte[BufferSize];
             byte[] outBuffer, lengthBuffer;
             long total = 0;
@@ -211,7 +211,7 @@ namespace PCS.Security.Cryptography
                 }
 
                 // Create a new progress handler to track encryption progress
-                progress = new ProcessProgress<long>.Handler(progressHandler, "Encrypt", length);
+                progress = new ProcessProgressHandler<long>(progressHandler, "Encrypt", length);
                 progress.Complete = 0;
             }
 
@@ -420,7 +420,7 @@ namespace PCS.Security.Cryptography
         /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
         public static void Decrypt(this Stream source, Stream destination, byte[] key, byte[] IV, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            ProcessProgress<long>.Handler progress = null;
+            ProcessProgressHandler<long> progress = null;
             byte[] inBuffer, outBuffer;
             byte[] lengthBuffer = BitConverter.GetBytes(0);
             long total = 0;
@@ -441,7 +441,7 @@ namespace PCS.Security.Cryptography
                 }
 
                 // Create a new progress handler to track decryption progress
-                progress = new ProcessProgress<long>.Handler(progressHandler, "Decrypt", length);
+                progress = new ProcessProgressHandler<long>(progressHandler, "Decrypt", length);
                 progress.Complete = 0;
             }
 

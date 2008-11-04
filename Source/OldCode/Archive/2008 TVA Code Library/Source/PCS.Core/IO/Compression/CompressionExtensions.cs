@@ -129,7 +129,7 @@ namespace PCS.IO.Compression
         /// <summary>Compress a stream onto given output stream using specified compression strength.</summary>
         public static void Compress(this Stream source, Stream destination, CompressionStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            ProcessProgress<long>.Handler progress = null;
+            ProcessProgressHandler<long> progress = null;
             byte[] inBuffer = new byte[BufferSize];
 	        byte[] outBuffer;
 	        byte[] lengthBuffer;
@@ -150,7 +150,7 @@ namespace PCS.IO.Compression
 		        }
 
                 // Create a new progress handler to track compression progress
-                progress = new ProcessProgress<long>.Handler(progressHandler, "Compress", length);
+                progress = new ProcessProgressHandler<long>(progressHandler, "Compress", length);
                 progress.Complete = 0;
             }
 
@@ -229,7 +229,7 @@ namespace PCS.IO.Compression
         /// <summary>Uncompress a stream onto given output stream.</summary>
         public static void Decompress(this Stream source, Stream destination, Action<ProcessProgress<long>> progressHandler)
         {
-            ProcessProgress<long>.Handler progress = null;
+            ProcessProgressHandler<long> progress = null;
             byte[] inBuffer;
 	        byte[] outBuffer;
 	        byte[] lengthBuffer = BitConverter.GetBytes((int)0);
@@ -250,7 +250,7 @@ namespace PCS.IO.Compression
 		        }
 
                 // Create a new progress handler to track compression progress
-                progress = new ProcessProgress<long>.Handler(progressHandler, "Uncompress", length);
+                progress = new ProcessProgressHandler<long>(progressHandler, "Uncompress", length);
                 progress.Complete = 0;
             }
 

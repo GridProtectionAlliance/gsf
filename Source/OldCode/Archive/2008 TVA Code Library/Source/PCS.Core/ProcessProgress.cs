@@ -25,105 +25,16 @@ using System;
 namespace PCS
 {
     /// <summary>
-    /// Generic process progress class.
+    /// Represents current process progress for an operation.
     /// </summary>
     /// <remarks>
     /// Used to track total progress of an identified operation.
     /// </remarks>
-    /// <typeparam name="TUnit">Unit of progress used (double, int, etc.)</typeparam>
+    /// <typeparam name="TUnit">Unit of progress used (long, double, int, etc.)</typeparam>
     [Serializable()]
     public class ProcessProgress<TUnit> where TUnit : struct
     {
         #region [ Members ]
-
-        // Nested Types
-        public class Handler
-        {
-            #region [ Members ]
-
-            // Fields
-            Action<ProcessProgress<TUnit>> m_progressHandler;
-            ProcessProgress<TUnit> m_progressInstance;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            public Handler(Action<ProcessProgress<TUnit>> progressHandler, string processName)
-            {
-                m_progressHandler = progressHandler;
-                m_progressInstance = new ProcessProgress<TUnit>(processName);
-            }
-
-            public Handler(Action<ProcessProgress<TUnit>> progressHandler, string processName, TUnit total)
-                : this(progressHandler, processName)
-            {
-                m_progressInstance.Total = total;
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            public ProcessProgress<TUnit> ProcessProgress
-            {
-                get
-                {
-                    return m_progressInstance;
-                }
-            }
-
-            public Action<ProcessProgress<TUnit>> ProgressHandler
-            {
-                get
-                {
-                    return m_progressHandler;
-                }
-                set
-                {
-                    m_progressHandler = value;
-                }
-            }
-
-            public TUnit Complete
-            {
-                get
-                {
-                    return m_progressInstance.Complete;
-                }
-                set
-                {
-                    UpdateProgress(value);
-                }
-            }
-
-            public TUnit Total
-            {
-                get
-                {
-                    return m_progressInstance.Total;
-                }
-                set
-                {
-                    m_progressInstance.Total = value;
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            public void UpdateProgress(TUnit completed)
-            {
-                // Update bytes completed
-                m_progressInstance.Complete = completed;
-
-                // Call user function
-                m_progressHandler(m_progressInstance);
-            }
-
-            #endregion
-        }
 
         // Fields
         private string m_processName;
@@ -135,15 +46,37 @@ namespace PCS
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new instance of the <see cref="ProcessProgress{TUnit}"/> class using specified process name.
+        /// </summary>
+        /// <param name="processName">Name of process for which progress is being monitored.</param>
         public ProcessProgress(string processName)
         {
             m_processName = processName;
+        }
+
+        /// <summary>
+        /// Constructs a new instance of the <see cref="ProcessProgress{TUnit}"/> class using specified parameters.
+        /// </summary>
+        /// <param name="processName">Name of process for which progress is being monitored.</param>
+        /// <param name="processMessage">Current processing message, if any.</param>
+        /// <param name="total">Total number of units to be processed.</param>
+        /// <param name="complete">Number of units completed processing so far.</param>
+        public ProcessProgress(string processName, string processMessage, TUnit total, TUnit complete)
+        {
+            m_processName = processName;
+            m_progressMessage = processMessage;
+            m_total = total;
+            m_complete = complete;
         }
 
         #endregion
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets name of process for which progress is being monitored.
+        /// </summary>
         public string ProcessName
         {
             get
@@ -156,6 +89,9 @@ namespace PCS
             }
         }
 
+        /// <summary>
+        /// Gets or sets current progress message (e.g., current file being copied, etc.)
+        /// </summary>
         public string ProgressMessage
         {
             get
@@ -168,6 +104,9 @@ namespace PCS
             }
         }
 
+        /// <summary>
+        /// Gets or sets total number of units to be processed.
+        /// </summary>
         public TUnit Total
         {
             get
@@ -180,6 +119,9 @@ namespace PCS
             }
         }
 
+        /// <summary>
+        /// Gets or sets number of units completed processing so far.
+        /// </summary>
         public TUnit Complete
         {
             get

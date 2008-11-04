@@ -72,11 +72,10 @@ namespace PCS.Net.Ftp
         /// Raised as file transfer is progressing.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument1"/> is total bytes to be transferred,
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument2"/> is total bytes transferred so far, 
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
+        /// <see cref="PCS.EventArgs{T1,T2}.Argument1"/> is current file transfer progress,
+        /// <see cref="PCS.EventArgs{T1,T2}.Argument2"/> is file transfer direction.
         /// </remarks>
-        public event EventHandler<EventArgs<long, long, TransferDirection>> FileTransferProgress;
+        public event EventHandler<EventArgs<ProcessProgress<long>, TransferDirection>> FileTransferProgress;
         
         /// <summary>
         /// Raised when ansynchronous file transfer process has completed (success or failure).
@@ -353,16 +352,16 @@ namespace PCS.Net.Ftp
                 EndFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFilename, remoteFilename, transferDirection));
         }
 
-        internal void OnFileTransferProgress(long TotalBytes, long TotalBytesTransfered, TransferDirection TransferDirection)
+        internal void OnFileTransferProgress(ProcessProgress<long> fileTransferProgress, TransferDirection transferDirection)
         {
             if (FileTransferProgress != null)
-                FileTransferProgress(this, new EventArgs<long,long,TransferDirection>(TotalBytes, TotalBytesTransfered, TransferDirection));
+                FileTransferProgress(this, new EventArgs<ProcessProgress<long>,TransferDirection>(fileTransferProgress, transferDirection));
         }
 
-        internal void OnFileTransferNotification(FtpAsyncResult TransferResult)
+        internal void OnFileTransferNotification(FtpAsyncResult transferResult)
         {
             if (FileTransferNotification != null)
-                FileTransferNotification(this, new EventArgs<FtpAsyncResult>(TransferResult));
+                FileTransferNotification(this, new EventArgs<FtpAsyncResult>(transferResult));
         }
 
         #endregion

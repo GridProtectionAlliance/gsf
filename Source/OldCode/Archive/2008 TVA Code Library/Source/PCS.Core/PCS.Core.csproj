@@ -179,6 +179,7 @@
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
+    <Compile Include="ProcessProgressHandler.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />
     <Compile Include="IO\StreamExtensions.cs" />
