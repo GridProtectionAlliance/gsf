@@ -31,7 +31,7 @@ namespace PCS.Net.Ftp
 
     #endregion
 
-    internal class FileTransferer
+    internal class FtpFileTransferer
     {
         #region [ Members ]
 
@@ -57,7 +57,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal FileTransferer(FtpDirectory transferStarter, string localFile, string remoteFile, long totalBytes, TransferDirection dir)
+        internal FtpFileTransferer(FtpDirectory transferStarter, string localFile, string remoteFile, long totalBytes, TransferDirection dir)
         {
             m_transferStarter = transferStarter;
             m_transferDirection = dir;

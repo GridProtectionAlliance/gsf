@@ -367,7 +367,7 @@ namespace PCS.Net.Ftp
             if (remoteFile == null)
                 remoteFile = fi.Name;
 
-            FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
+            FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
 
             transfer.StartTransfer();
         }
@@ -394,7 +394,7 @@ namespace PCS.Net.Ftp
 
             if (m_files.TryGetValue(remoteFile, out file))
             {
-                FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
+                FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
                 transfer.StartTransfer();
             }
             else
@@ -426,7 +426,7 @@ namespace PCS.Net.Ftp
             if (remoteFile == null)
                 remoteFile = fi.Name;
 
-            FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
+            FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
 
             transfer.StartAsyncTransfer();
         }
@@ -453,7 +453,7 @@ namespace PCS.Net.Ftp
 
             if (m_files.TryGetValue(remoteFile, out file))
             {
-                FileTransferer transfer = new FileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
+                FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
                 transfer.StartAsyncTransfer();
             }
             else
