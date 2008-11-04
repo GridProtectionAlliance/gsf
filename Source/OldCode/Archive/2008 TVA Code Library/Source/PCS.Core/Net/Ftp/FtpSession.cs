@@ -162,7 +162,7 @@ namespace PCS.Net.Ftp
 
             if (directoryPath.Length > 0)
             {
-                m_currentState.CurrentDirectory = new FtpDirectory((SessionConnected)m_currentState, CaseInsensitive, directoryPath);
+                m_currentState.CurrentDirectory = new FtpDirectory((FtpSessionConnected)m_currentState, CaseInsensitive, directoryPath);
                 m_currentState.CurrentDirectory.Refresh();
             }
         }
@@ -181,7 +181,7 @@ namespace PCS.Net.Ftp
         {
             get
             {
-                return (m_currentState is SessionConnected);
+                return (m_currentState is FtpSessionConnected);
             }
         }
 

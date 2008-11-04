@@ -29,7 +29,7 @@ namespace PCS.Net.Ftp
 
         // Fields
         private FtpControlChannel m_ctrl;
-        private SessionConnected m_session;
+        private FtpSessionConnected m_session;
         private TcpClient m_tcpClient;
         private Stream m_stream;
         private bool m_userAbort;

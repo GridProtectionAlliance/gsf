@@ -55,7 +55,7 @@ namespace PCS.Net.Ftp
 
         // Fields
         private FtpSession m_sessionHost;
-        private SessionConnected m_session;
+        private FtpSessionConnected m_session;
         private System.Net.Sockets.TcpClient m_connection;
         private string m_server;
         private int m_port;
@@ -123,7 +123,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal SessionConnected Session
+        internal FtpSessionConnected Session
         {
             get
             {

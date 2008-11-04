@@ -158,7 +158,7 @@ namespace PCS.Net.Ftp
         {
             m_parent.CheckSessionCurrentDirectory();
 
-            SessionConnected Session = m_parent.Session;
+            FtpSessionConnected Session = m_parent.Session;
 
             if (offset != 0)
                 Session.ControlChannel.REST(offset);

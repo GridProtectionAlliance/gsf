@@ -55,7 +55,7 @@ namespace PCS.Net.Ftp
         public event Action<FtpExceptionBase> DirectoryScanException;
 
         // Fields
-        private SessionConnected m_session;
+        private FtpSessionConnected m_session;
         private FtpDirectory m_parent;
         private string m_name;
         private string m_fullPath;
@@ -70,7 +70,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal FtpDirectory(SessionConnected s, bool caseInsensitive, string fullPath)
+        internal FtpDirectory(FtpSessionConnected s, bool caseInsensitive, string fullPath)
         {
             m_session = s;
             m_parent = null;
@@ -91,7 +91,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal FtpDirectory(SessionConnected s, FtpDirectory parent, bool caseInsensitive, ItemInfo info)
+        internal FtpDirectory(FtpSessionConnected s, FtpDirectory parent, bool caseInsensitive, ItemInfo info)
         {
             m_session = s;
             m_parent = parent;
@@ -298,7 +298,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal SessionConnected Session
+        internal FtpSessionConnected Session
         {
             get
             {

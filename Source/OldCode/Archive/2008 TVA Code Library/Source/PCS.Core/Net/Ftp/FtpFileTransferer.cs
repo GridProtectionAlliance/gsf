@@ -43,7 +43,7 @@ namespace PCS.Net.Ftp
         private StreamCopyDelegate m_streamCopyRoutine;
         private FileCommandDelegate m_ftpFileCommandRoutine;
         private FtpDirectory m_transferStarter;
-        private SessionConnected m_session;
+        private FtpSessionConnected m_session;
         private string m_localFile;
         private string m_remoteFile;
         private long m_totalBytes;

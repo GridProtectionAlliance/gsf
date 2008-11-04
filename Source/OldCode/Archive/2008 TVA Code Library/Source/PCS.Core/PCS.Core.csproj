@@ -220,7 +220,7 @@
     <Compile Include="Net\Ftp\FtpSession.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Net\Ftp\SessionConnected.cs" />
+    <Compile Include="Net\Ftp\FtpSessionConnected.cs" />
     <Compile Include="Net\Ftp\SessionDisconnected.cs" />
     <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Reflection\ReflectionExtensions.cs" />
