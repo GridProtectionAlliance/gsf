@@ -38,6 +38,9 @@ namespace PCS.ErrorManagement
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorDialog"/> class.
+        /// </summary>
         public ErrorDialog()
         {
             InitializeComponent();
