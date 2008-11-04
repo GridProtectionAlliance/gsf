@@ -26,7 +26,7 @@ namespace PCS.Net.Ftp
 
         // Fields
         private Session m_host;
-        private ControlChannel m_ctrlChannel;
+        private FtpControlChannel m_ctrlChannel;
         private Directory m_root;
         private Directory m_current;
         private DataStream m_dataStream;
@@ -36,7 +36,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal SessionConnected(Session h, ControlChannel ctrl, bool caseInsensitive)
+        internal SessionConnected(Session h, FtpControlChannel ctrl, bool caseInsensitive)
         {
             m_host = h;
             m_ctrlChannel = ctrl;
@@ -110,7 +110,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public ControlChannel ControlChannel
+        public FtpControlChannel ControlChannel
         {
             get
             {

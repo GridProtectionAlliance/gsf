@@ -168,7 +168,7 @@ namespace PCS.Net.Ftp
         }
 
         [Browsable(false)]
-        public ControlChannel ControlChannel
+        public FtpControlChannel ControlChannel
         {
             get
             {

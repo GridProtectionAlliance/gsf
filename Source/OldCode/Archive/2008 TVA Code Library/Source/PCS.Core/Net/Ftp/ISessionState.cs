@@ -28,7 +28,7 @@ namespace PCS.Net.Ftp
 
         Directory RootDirectory { get; }
 
-        ControlChannel ControlChannel { get; }
+        FtpControlChannel ControlChannel { get; }
 
         bool IsBusy { get; }
 

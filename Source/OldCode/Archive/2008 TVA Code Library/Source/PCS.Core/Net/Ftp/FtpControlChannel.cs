@@ -49,7 +49,7 @@ namespace PCS.Net.Ftp
     /// <summary>
     /// FTP control channel.
     /// </summary>
-    public class ControlChannel
+    public class FtpControlChannel
     {
         #region [ Members ]
 
@@ -66,7 +66,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal ControlChannel(Session host)
+        internal FtpControlChannel(Session host)
         {
             m_connection = new TcpClient();
             m_server = "localhost";
@@ -75,7 +75,7 @@ namespace PCS.Net.Ftp
             m_currentTransferMode = TransferMode.Unknown;
         }
 
-        ~ControlChannel()
+        ~FtpControlChannel()
         {
             if (m_connection != null)
                 m_connection.Close();

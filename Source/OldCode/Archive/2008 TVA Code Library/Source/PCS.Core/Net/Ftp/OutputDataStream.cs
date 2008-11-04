@@ -22,7 +22,7 @@ namespace PCS.Net.Ftp
 {
     public class OutputDataStream : DataStream
     {
-        internal OutputDataStream(ControlChannel ctrl, TcpClient client)
+        internal OutputDataStream(FtpControlChannel ctrl, TcpClient client)
             : base(ctrl, client)
         {
         }

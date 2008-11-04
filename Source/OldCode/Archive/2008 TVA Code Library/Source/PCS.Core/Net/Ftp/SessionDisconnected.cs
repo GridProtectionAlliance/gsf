@@ -80,7 +80,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public ControlChannel ControlChannel
+        public FtpControlChannel ControlChannel
         {
             get
             {
@@ -110,7 +110,7 @@ namespace PCS.Net.Ftp
 
         public void Connect(string UserName, string Password)
         {
-            ControlChannel ctrl = new ControlChannel(m_host);
+            FtpControlChannel ctrl = new FtpControlChannel(m_host);
 
             ctrl.Server = m_server;
             ctrl.Port = m_port;

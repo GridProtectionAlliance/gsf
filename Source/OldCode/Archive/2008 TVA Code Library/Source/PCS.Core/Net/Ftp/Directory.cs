@@ -495,7 +495,7 @@ namespace PCS.Net.Ftp
         /// <returns>File reference to new zero-length remote file.</returns>
         public File CreateFile(string newFileName)
         {
-            DataStream stream = CreateFileStream(newFileName);
+            FtpDataStream stream = CreateFileStream(newFileName);
 
             stream.Close();
 
@@ -511,7 +511,7 @@ namespace PCS.Net.Ftp
         {
             InitHashtable();
 
-            DataStream stream = m_session.ControlChannel.GetPassiveDataStream(TransferDirection.Upload);
+            FtpDataStream stream = m_session.ControlChannel.GetPassiveDataStream(TransferDirection.Upload);
 
             try
             {
