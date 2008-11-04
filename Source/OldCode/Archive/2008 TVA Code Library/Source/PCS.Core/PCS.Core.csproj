@@ -130,7 +130,7 @@
     <EmbeddedResource Include="IO\MultipleDestinationExporter.bmp" />
     <EmbeddedResource Include="Scheduling\ScheduleManager.bmp" />
     <EmbeddedResource Include="Net\Ftp\Session.bmp" />
-    <EmbeddedResource Include="Net\Ftp\FileWatcher.bmp" />
+    <EmbeddedResource Include="Net\Ftp\FtpFileWatcher.bmp" />
     <EmbeddedResource Include="IO\LogFile.bmp" />
     <EmbeddedResource Include="ErrorManagement\ErrorLogger.bmp" />
     <Compile Include="IO\Compression\CompressionExceptionBase.cs" />
@@ -212,8 +212,8 @@
     <Compile Include="Net\Ftp\FtpDirectory.cs" />
     <Compile Include="Net\Ftp\FtpExceptions.cs" />
     <Compile Include="Net\Ftp\FtpFile.cs" />
-    <Compile Include="Net\Ftp\FileTransferer.cs" />
-    <Compile Include="Net\Ftp\FileWatcher.cs">
+    <Compile Include="Net\Ftp\FtpFileTransferer.cs" />
+    <Compile Include="Net\Ftp\FtpFileWatcher.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Net\Ftp\Response.cs" />

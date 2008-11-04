@@ -29,8 +29,8 @@ namespace PCS.Net.Ftp
     /// <remarks>
     /// Monitors for file changes over an FTP session.
     /// </remarks>
-    [ToolboxBitmap(typeof(FileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded"), Description("Monitors for file changes over an FTP session")]
-    public class FileWatcher : Component
+    [ToolboxBitmap(typeof(FtpFileWatcher)), DefaultProperty("Server"), DefaultEvent("FileAdded"), Description("Monitors for file changes over an FTP session")]
+    public class FtpFileWatcher : Component
     {
         #region [ Members ]
 
@@ -58,7 +58,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        public FileWatcher()
+        public FtpFileWatcher()
         {
             m_enabled = true;
             m_notifyOnComplete = true;
@@ -84,14 +84,14 @@ namespace PCS.Net.Ftp
             m_restartTimer.Enabled = false;
         }
 
-        public FileWatcher(bool caseInsensitive, bool notifyOnComplete)
+        public FtpFileWatcher(bool caseInsensitive, bool notifyOnComplete)
             : this()
         {
             m_session.CaseInsensitive = caseInsensitive;
             m_notifyOnComplete = notifyOnComplete;
         }
 
-        ~FileWatcher()
+        ~FtpFileWatcher()
         {
             Dispose(false);
         }
