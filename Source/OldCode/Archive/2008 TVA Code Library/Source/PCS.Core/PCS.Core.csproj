@@ -216,7 +216,7 @@
     <Compile Include="Net\Ftp\FtpFileWatcher.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Net\Ftp\Response.cs" />
+    <Compile Include="Net\Ftp\FtpResponse.cs" />
     <Compile Include="Net\Ftp\Session.cs">
       <SubType>Component</SubType>
     </Compile>

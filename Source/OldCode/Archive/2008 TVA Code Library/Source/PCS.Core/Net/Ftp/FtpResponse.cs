@@ -22,7 +22,7 @@ using System.Text;
 
 namespace PCS.Net.Ftp
 {
-    public class Response
+    public class FtpResponse
     {
         #region [ Members ]
 
@@ -48,7 +48,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal Response(NetworkStream stream)
+        internal FtpResponse(NetworkStream stream)
         {
             string response;
 

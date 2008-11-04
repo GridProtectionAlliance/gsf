@@ -120,10 +120,10 @@ namespace PCS.Net.Ftp
             {
                 ctrl.Command("USER " + UserName);
 
-                if (ctrl.LastResponse.Code == Response.UserAcceptedWaitingPass)
+                if (ctrl.LastResponse.Code == FtpResponse.UserAcceptedWaitingPass)
                     ctrl.Command("PASS " + Password);
 
-                if (ctrl.LastResponse.Code != Response.UserLoggedIn)
+                if (ctrl.LastResponse.Code != FtpResponse.UserLoggedIn)
                     throw new FtpAuthenticationException("Failed to login.", ctrl.LastResponse);
 
                 m_host.State = new SessionConnected(m_host, ctrl, m_caseInsensitive);

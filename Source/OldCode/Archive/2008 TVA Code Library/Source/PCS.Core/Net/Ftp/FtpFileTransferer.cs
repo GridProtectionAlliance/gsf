@@ -214,10 +214,10 @@ namespace PCS.Net.Ftp
         {
             int responseCode = m_session.ControlChannel.LastResponse.Code;
 
-            if (responseCode == Response.ClosingDataChannel)
+            if (responseCode == FtpResponse.ClosingDataChannel)
                 return;
 
-            if (responseCode == Response.RequestFileActionComplete)
+            if (responseCode == FtpResponse.RequestFileActionComplete)
                 return;
 
             throw new FtpDataTransferException("Failed to transfer file.", m_session.ControlChannel.LastResponse);

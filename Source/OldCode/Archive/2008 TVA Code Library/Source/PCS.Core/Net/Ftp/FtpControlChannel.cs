@@ -60,7 +60,7 @@ namespace PCS.Net.Ftp
         private string m_server;
         private int m_port;
         private TransferMode m_currentTransferMode;
-        private Response m_lastResponse;
+        private FtpResponse m_lastResponse;
 
         #endregion
 
@@ -115,7 +115,7 @@ namespace PCS.Net.Ftp
         /// <summary>
         /// Last response from control channel.
         /// </summary>
-        public Response LastResponse
+        public FtpResponse LastResponse
         {
             get
             {
@@ -145,9 +145,9 @@ namespace PCS.Net.Ftp
 
             try
             {
-                m_lastResponse = new Response(m_connection.GetStream());
+                m_lastResponse = new FtpResponse(m_connection.GetStream());
 
-                if (m_lastResponse.Code != Response.ServiceReady)
+                if (m_lastResponse.Code != FtpResponse.ServiceReady)
                     throw new FtpServerDownException("FTP service unavailable.", m_lastResponse);
             }
             catch
@@ -193,7 +193,7 @@ namespace PCS.Net.Ftp
         {
             lock (this)
             {
-                m_lastResponse = new Response(m_connection.GetStream());
+                m_lastResponse = new FtpResponse(m_connection.GetStream());
             }
 
             foreach (string s in m_lastResponse.Respones)
@@ -206,7 +206,7 @@ namespace PCS.Net.Ftp
         {
             Command("REST " + offset);
 
-            if (m_lastResponse.Code != Response.RequestFileActionPending)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionPending)
                 throw new FtpResumeNotSupportedException(m_lastResponse);
         }
 
@@ -215,7 +215,7 @@ namespace PCS.Net.Ftp
             Type(TransferMode.Binary);
             Command("STOR " + name);
 
-            if (m_lastResponse.Code != Response.DataChannelOpenedTransferStart && m_lastResponse.Code != Response.FileOkBeginOpenDataChannel)
+            if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
                 throw new FtpCommandException("Failed to send file " + name + ".", m_lastResponse);
         }
 
@@ -224,7 +224,7 @@ namespace PCS.Net.Ftp
             Type(TransferMode.Binary);
             Command("RETR " + name);
 
-            if (m_lastResponse.Code != Response.DataChannelOpenedTransferStart && m_lastResponse.Code != Response.FileOkBeginOpenDataChannel)
+            if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
                 throw new FtpCommandException("Failed to retrieve file " + name + ".", m_lastResponse);
         }
 
@@ -232,7 +232,7 @@ namespace PCS.Net.Ftp
         {
             Command("DELE " + fileName);
 
-            if (m_lastResponse.Code != Response.RequestFileActionComplete) // 250)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete) // 250)
                 throw new FtpCommandException("Failed to delete file " + fileName + ".", m_lastResponse);
         }
 
@@ -240,7 +240,7 @@ namespace PCS.Net.Ftp
         {
             Command("RMD " + dirName);
 
-            if (m_lastResponse.Code != Response.RequestFileActionComplete) // 250)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete) // 250)
                 throw new FtpCommandException("Failed to remove subdirectory " + dirName + ".", m_lastResponse);
         }
 
@@ -259,7 +259,7 @@ namespace PCS.Net.Ftp
         {
             Command("CDUP");
 
-            if (m_lastResponse.Code != Response.RequestFileActionComplete)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete)
                 throw new FtpCommandException("Cannot move to parent directory (CDUP).", m_lastResponse);
         }
 
@@ -267,7 +267,7 @@ namespace PCS.Net.Ftp
         {
             Command("CWD " + path);
 
-            if (m_lastResponse.Code != Response.RequestFileActionComplete && m_lastResponse.Code != Response.ClosingDataChannel)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete && m_lastResponse.Code != FtpResponse.ClosingDataChannel)
                 throw new FtpCommandException("Cannot change directory to " + path + ".", m_lastResponse);
         }
 
@@ -293,11 +293,11 @@ namespace PCS.Net.Ftp
         {
             Command("RNFR " + oldName);
 
-            if (m_lastResponse.Code != Response.RequestFileActionPending)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionPending)
                 throw new FtpCommandException("Failed to rename file from " + oldName + " to " + newName + ".", m_lastResponse);
 
             Command("RNTO " + newName);
-            if (m_lastResponse.Code != Response.RequestFileActionComplete)
+            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete)
                 throw new FtpCommandException("Failed to rename file from " + oldName + " to " + newName + ".", m_lastResponse);
         }
 
@@ -313,7 +313,7 @@ namespace PCS.Net.Ftp
 
                 Command("LIST");
 
-                if (m_lastResponse.Code != Response.DataChannelOpenedTransferStart && m_lastResponse.Code != Response.FileOkBeginOpenDataChannel)
+                if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
                     throw new FtpCommandException(errorMsgListing, m_lastResponse);
 
                 StreamReader lineReader = new StreamReader(dataStream, System.Text.Encoding.Default);
@@ -327,7 +327,7 @@ namespace PCS.Net.Ftp
 
                 lineReader.Close();
 
-                if (m_lastResponse.Code != Response.ClosingDataChannel)
+                if (m_lastResponse.Code != FtpResponse.ClosingDataChannel)
                     throw new FtpCommandException(errorMsgListing, m_lastResponse);
 
                 return lineQueue;
@@ -376,7 +376,7 @@ namespace PCS.Net.Ftp
         {
             Command("PASV");
 
-            if (m_lastResponse.Code == Response.EnterPassiveMode)
+            if (m_lastResponse.Code == FtpResponse.EnterPassiveMode)
             {
                 string[] numbers = m_regularExpression.Match(m_lastResponse.Message).Groups[2].Value.Split(',');
                 return int.Parse(numbers[4]) * 256 + int.Parse(numbers[5]);

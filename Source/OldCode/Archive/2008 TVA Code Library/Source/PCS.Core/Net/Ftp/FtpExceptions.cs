@@ -24,7 +24,7 @@ namespace PCS.Net.Ftp
     /// </summary>
     public abstract class FtpExceptionBase : Exception
     {
-        private Response m_ftpResponse = null;
+        private FtpResponse m_ftpResponse = null;
 
         internal FtpExceptionBase(string message)
             : base(message)
@@ -36,7 +36,7 @@ namespace PCS.Net.Ftp
         {
         }
 
-        internal FtpExceptionBase(string message, Response ftpResponse)
+        internal FtpExceptionBase(string message, FtpResponse ftpResponse)
             : base(message)
         {
             m_ftpResponse = ftpResponse;
@@ -62,7 +62,7 @@ namespace PCS.Net.Ftp
     /// </summary>
     public class FtpInvalidResponseException : FtpExceptionBase
     {
-        internal FtpInvalidResponseException(string message, Response ftpResponse)
+        internal FtpInvalidResponseException(string message, FtpResponse ftpResponse)
             : base(message, ftpResponse)
         {
         }
@@ -73,7 +73,7 @@ namespace PCS.Net.Ftp
     /// </summary>
     public class FtpAuthenticationException : FtpExceptionBase
     {
-        internal FtpAuthenticationException(string message, Response ftpResponse)
+        internal FtpAuthenticationException(string message, FtpResponse ftpResponse)
             : base(message, ftpResponse)
         {
         }
@@ -95,12 +95,12 @@ namespace PCS.Net.Ftp
     /// </summary>
     public class FtpServerDownException : FtpExceptionBase
     {
-        internal FtpServerDownException(Response ftpResponse)
+        internal FtpServerDownException(FtpResponse ftpResponse)
             : this("FTP service was down.", ftpResponse)
         {
         }
 
-        internal FtpServerDownException(string message, Response ftpResponse)
+        internal FtpServerDownException(string message, FtpResponse ftpResponse)
             : base(message, ftpResponse)
         {
         }
@@ -112,7 +112,7 @@ namespace PCS.Net.Ftp
     public class FtpCommandException : FtpExceptionBase
     {
 
-        internal FtpCommandException(string message, Response ftpResponse)
+        internal FtpCommandException(string message, FtpResponse ftpResponse)
             : base(message, ftpResponse)
         {
         }
@@ -128,7 +128,7 @@ namespace PCS.Net.Ftp
         {
         }
 
-        internal FtpDataTransferException(string message, Response ftpResponse)
+        internal FtpDataTransferException(string message, FtpResponse ftpResponse)
             : base(message, ftpResponse)
         {
         }
@@ -150,7 +150,7 @@ namespace PCS.Net.Ftp
     /// </summary>
     public class FtpResumeNotSupportedException : FtpExceptionBase
     {
-        internal FtpResumeNotSupportedException(Response ftpResponse)
+        internal FtpResumeNotSupportedException(FtpResponse ftpResponse)
             : base("Data transfer error: server does not support resuming.", ftpResponse)
         {
         }
