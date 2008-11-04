@@ -162,7 +162,7 @@ namespace PCS.Net.Ftp
         internal void StartTransfer()
         {
             FileStream localStream = null;
-            DataStream remoteStream = null;
+            FtpDataStream remoteStream = null;
 
             try
             {

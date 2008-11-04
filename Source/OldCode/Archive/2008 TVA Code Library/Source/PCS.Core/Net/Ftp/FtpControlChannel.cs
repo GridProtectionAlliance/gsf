@@ -308,7 +308,7 @@ namespace PCS.Net.Ftp
             try
             {
                 Type(TransferMode.Ascii);
-                DataStream dataStream = GetPassiveDataStream();
+                FtpDataStream dataStream = GetPassiveDataStream();
                 Queue lineQueue = new Queue();
 
                 Command("LIST");
@@ -342,12 +342,12 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal DataStream GetPassiveDataStream()
+        internal FtpDataStream GetPassiveDataStream()
         {
             return GetPassiveDataStream(TransferDirection.Download);
         }
 
-        internal DataStream GetPassiveDataStream(TransferDirection direction)
+        internal FtpDataStream GetPassiveDataStream(TransferDirection direction)
         {
             TcpClient client = new TcpClient();
             int port = 0;

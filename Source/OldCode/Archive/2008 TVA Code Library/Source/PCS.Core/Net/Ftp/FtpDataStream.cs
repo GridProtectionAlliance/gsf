@@ -23,7 +23,7 @@ namespace PCS.Net.Ftp
     /// <summary>
     /// FTP data stream.
     /// </summary>
-    public class DataStream : Stream
+    public class FtpDataStream : Stream
     {
         #region [ Members ]
 
@@ -38,7 +38,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal DataStream(FtpControlChannel ctrl, TcpClient client)
+        internal FtpDataStream(FtpControlChannel ctrl, TcpClient client)
         {
             m_session = ctrl.Session;
             m_ctrl = ctrl;

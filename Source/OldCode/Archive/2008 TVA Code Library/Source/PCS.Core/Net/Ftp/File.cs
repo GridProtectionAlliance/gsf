@@ -154,7 +154,7 @@ namespace PCS.Net.Ftp
             return ((OutputDataStream)(GetStream(offset, TransferDirection.Upload)));
         }
 
-        private DataStream GetStream(long offset, TransferDirection dir)
+        private FtpDataStream GetStream(long offset, TransferDirection dir)
         {
             m_parent.CheckSessionCurrentDirectory();
 
@@ -163,7 +163,7 @@ namespace PCS.Net.Ftp
             if (offset != 0)
                 Session.ControlChannel.REST(offset);
 
-            DataStream stream = Session.ControlChannel.GetPassiveDataStream(dir);
+            FtpDataStream stream = Session.ControlChannel.GetPassiveDataStream(dir);
 
             try
             {

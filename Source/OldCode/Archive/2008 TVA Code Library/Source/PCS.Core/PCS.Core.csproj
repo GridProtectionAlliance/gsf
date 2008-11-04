@@ -208,7 +208,7 @@
     <Compile Include="PrecisionTimer.cs" />
     <Compile Include="Net\Ftp\FtpAsyncResult.cs" />
     <Compile Include="Net\Ftp\FtpControlChannel.cs" />
-    <Compile Include="Net\Ftp\DataStream.cs" />
+    <Compile Include="Net\Ftp\FtpDataStream.cs" />
     <Compile Include="Net\Ftp\Directory.cs" />
     <Compile Include="Net\Ftp\Exception.cs" />
     <Compile Include="Net\Ftp\File.cs" />

@@ -29,7 +29,7 @@ namespace PCS.Net.Ftp
         private FtpControlChannel m_ctrlChannel;
         private Directory m_root;
         private Directory m_current;
-        private DataStream m_dataStream;
+        private FtpDataStream m_dataStream;
         private bool m_caseInsensitive;
 
         #endregion
@@ -134,7 +134,7 @@ namespace PCS.Net.Ftp
         {
             // Save a copy of m_dataStream since it will be set
             // to null when DataStream call EndDataTransfer
-            DataStream tempDataStream = m_dataStream;
+            FtpDataStream tempDataStream = m_dataStream;
 
             if (!(tempDataStream == null))
             {
@@ -166,7 +166,7 @@ namespace PCS.Net.Ftp
             throw new InvalidOperationException();
         }
 
-        internal void BeginDataTransfer(DataStream stream)
+        internal void BeginDataTransfer(FtpDataStream stream)
         {
             lock (this)
             {
