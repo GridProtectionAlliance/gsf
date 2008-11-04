@@ -18,7 +18,7 @@
 
 namespace PCS.Net.Ftp
 {
-    internal interface ISessionState
+    internal interface IFtpSessionState
     {
         string Server { get; set; }
 

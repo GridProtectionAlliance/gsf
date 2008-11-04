@@ -172,7 +172,7 @@
     <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFtpFile.cs" />
     <Compile Include="Net\Ftp\FtpInputDataStream.cs" />
-    <Compile Include="Net\Ftp\ISessionState.cs" />
+    <Compile Include="Net\Ftp\IFtpSessionState.cs" />
     <Compile Include="Net\Ftp\OutputDataStream.cs" />
     <Compile Include="Net\Ftp\TimeStampParser.cs" />
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
