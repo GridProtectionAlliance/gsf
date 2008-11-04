@@ -461,7 +461,7 @@ namespace PhasorProtocols
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public ICommunicationClient InternalCommunicationClient
         {
             get
@@ -470,7 +470,7 @@ namespace PhasorProtocols
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public ICommunicationServer InternalCommunicationServer
         {
             get
@@ -479,7 +479,7 @@ namespace PhasorProtocols
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public ICommunicationClient InternalCommandChannel
         {
             get
