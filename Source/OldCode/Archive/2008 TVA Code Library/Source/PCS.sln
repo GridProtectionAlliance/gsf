@@ -22,7 +22,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1668B671-34A2-499C-AB61-21E0E00CA138}"
 	ProjectSection(SolutionItems) = preProject
 		PCS.Logo.png = PCS.Logo.png
-		PCS.StrongName.snk = PCS.StrongName.snk
+		PCS.StrongNameKey.snk = PCS.StrongNameKey.snk
 	EndProjectSection
 EndProject
 Global
