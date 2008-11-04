@@ -46,7 +46,7 @@ namespace PCS.Scheduling
     /// </summary>
     /// <seealso cref="Schedule"/>
     /// <example>
-    /// This example shows how to use the <see cref="ScheduleManger"/> component:
+    /// This example shows how to use the <see cref="ScheduleManager"/> component:
     /// <code>
     /// using System;
     /// using PCS;
@@ -80,7 +80,7 @@ namespace PCS.Scheduling
     ///         Console.WriteLine("Scheduler is waiting to be started.");
     ///     }
     /// 
-    ///     static void scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
+    ///     static void scheduler_ScheduleDue(object sender, EventArgs<![CDATA[<]]>Schedule<![CDATA[>]]> e)
     ///     {
     ///         Console.WriteLine(string.Format("{0} schedule is due for processing.", e.Argument.Name));
     ///     }
