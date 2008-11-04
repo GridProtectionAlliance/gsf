@@ -90,6 +90,11 @@ namespace System
 
         #region [ Methods ]
 
+        public override string ToString()
+        {
+            return ((Double)ConvertToType(TypeCode.Double)).ToString();
+        }
+
         public BigBinaryValue ConvertToType(TypeCode typeCode)
         {
             switch (m_typeCode)

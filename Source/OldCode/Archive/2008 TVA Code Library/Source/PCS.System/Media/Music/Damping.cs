@@ -45,44 +45,48 @@ namespace System.Media.Music
     public static class Damping
 	{
         /// <summary>
-        /// Produces a damping signature that represents no damping over time.
-        /// </summary>
-        /// <param name="sampleIndex">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
-        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>), over which to perform damping.</param>
-        /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
-        /// <returns>Returns a scalar of 1.0 regardless to time.</returns>
-        /// <remarks>
-        /// Zero damped sounds would be produced by synthetic sources such as an electronic keyboard.
-        /// </remarks>
-        public static double Zero(long sampleIndex, long samplePeriod, int sampleRate)
-        {
-            return 1.0D;
-        }
-
-        /// <summary>
-        /// Produces a natural damping curve similar to that of a piano - slowly damping over
-        /// time until the key is released at which point the string is quickly damped.
+        /// Produces a natural damping curve very similar to that of a string based instrument - strong at
+        /// first and damping quickly over time from 1 to 0 over the <paramref name="samplePeriod"/>.
         /// </summary>
         /// <param name="sampleIndex">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
         /// <param name="samplePeriod">Total period, in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>), over which to perform damping.</param>
         /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
         /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
         /// <remarks>
-        /// This damping algorithm combines both the linear and logarithmic damping algoriths to
-        /// produce a more natural damping curve.
+        /// This damping algorithm combines both the logarithmic and linear damping algoriths to
+        /// produce a very natural damping curve.
         /// </remarks>
         public static double Natural(long sampleIndex, long samplePeriod, int sampleRate)
         {
-            return (Logarithmic(sampleIndex, samplePeriod, sampleRate) + 0.5D * Linear(sampleIndex, samplePeriod, sampleRate)) / 1.5D;
+            return (Logarithmic(sampleIndex, samplePeriod, sampleRate) + 0.25D * Linear(sampleIndex, samplePeriod, sampleRate)) / 1.25D;
         }
+
         /// <summary>
-        /// Produces a logarithmic damping curve - slowly damping with a sharp end from 1 to 0 over the <paramref name="samplePeriod"/>.
+        /// Produces a logarithmic damping curve - strong at first and damping quickly over time from 1 to 0 over the <paramref name="samplePeriod"/>.
         /// </summary>
         /// <param name="sampleIndex">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
         /// <param name="samplePeriod">Total period, in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>), over which to perform damping.</param>
         /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
         /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
+        /// <remarks>
+        /// This damping would be similar to that of a note produced by a string based instrument.
+        /// </remarks>
         public static double Logarithmic(long sampleIndex, long samplePeriod, int sampleRate)
+        {
+            return 1 - Math.Log10(sampleIndex + 1) / Math.Log10(samplePeriod);
+        }
+
+        /// <summary>
+        /// Produces an inverse logarithmic damping curve - slowly damping with a sharp end from 1 to 0 over the <paramref name="samplePeriod"/>.
+        /// </summary>
+        /// <param name="sampleIndex">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
+        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>), over which to perform damping.</param>
+        /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
+        /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
+        /// <remarks>
+        /// This damping would be similar to that of a note produced on an electronic keyboard or a breath based instrument.
+        /// </remarks>
+        public static double InverseLogarithmic(long sampleIndex, long samplePeriod, int sampleRate)
         {
             return Math.Log10(samplePeriod - sampleIndex) / Math.Log10(samplePeriod);
         }
@@ -110,6 +114,34 @@ namespace System.Media.Music
         public static double ReverseLinear(long sampleIndex, long samplePeriod, int sampleRate)
         {
             return sampleIndex * (1.0D / samplePeriod);
+        }
+
+        /// <summary>
+        /// Produces a sinusoidal damping curve oscillating from 1 to 0 to 1 over the <paramref name="samplePeriod"/>.
+        /// </summary>
+        /// <param name="sampleIndex">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
+        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>), over which to perform damping.</param>
+        /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
+        /// <returns>Scaling factor used to damp an amplitude at the given time.</returns>
+        /// <remarks>This is just used for an interesting note effect.</remarks>
+        public static double Sinusoidal(long sampleIndex, long samplePeriod, int sampleRate)
+        {
+            return Math.Sin(2.0D * Math.PI * (sampleIndex / (double)samplePeriod));
+        }
+
+        /// <summary>
+        /// Produces a damping signature that represents no damping over time.
+        /// </summary>
+        /// <param name="sampleIndex">Sample index (0 to <paramref name="samplePeriod"/> - 1).</param>
+        /// <param name="samplePeriod">Total period, in whole samples per second (i.e., seconds of time * <paramref name="sampleRate"/>), over which to perform damping.</param>
+        /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
+        /// <returns>Returns a scalar of 1.0 regardless to time.</returns>
+        /// <remarks>
+        /// Zero damped sounds would be produced by synthetic sources such as an electronic keyboard.
+        /// </remarks>
+        public static double Zero(long sampleIndex, long samplePeriod, int sampleRate)
+        {
+            return 1.0D;
         }
     }
 }
