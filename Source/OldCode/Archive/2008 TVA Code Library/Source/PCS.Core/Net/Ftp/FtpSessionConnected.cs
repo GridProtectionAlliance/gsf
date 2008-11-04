@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace PCS.Net.Ftp
 {
-    internal class SessionConnected : IFtpSessionState
+    internal class FtpSessionConnected : IFtpSessionState
     {
         #region [ Members ]
 
@@ -36,7 +36,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal SessionConnected(FtpSession h, FtpControlChannel ctrl, bool caseInsensitive)
+        internal FtpSessionConnected(FtpSession h, FtpControlChannel ctrl, bool caseInsensitive)
         {
             m_host = h;
             m_ctrlChannel = ctrl;
