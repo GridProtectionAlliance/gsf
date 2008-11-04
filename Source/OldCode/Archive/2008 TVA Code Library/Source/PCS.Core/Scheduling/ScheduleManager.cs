@@ -696,7 +696,7 @@ namespace PCS.Scheduling
                 }
                 else
                 {
-                    Thread.Sleep(250);
+                    Thread.Sleep(1000);
                 }
             }
         }
