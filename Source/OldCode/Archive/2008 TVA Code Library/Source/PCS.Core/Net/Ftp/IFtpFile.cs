@@ -19,7 +19,7 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    public interface IFile : IComparable, IComparable<IFile>
+    public interface IFtpFile : IComparable, IComparable<IFtpFile>
     {
         FtpDirectory Parent { get; }
 

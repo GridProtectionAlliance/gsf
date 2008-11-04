@@ -170,7 +170,7 @@
     <Compile Include="IO\Compression\Zip\ZipOutputStream.cs" />
     <Compile Include="IStatusProvider.cs" />
     <Compile Include="Milliseconds.cs" />
-    <Compile Include="Net\Ftp\IFile.cs" />
+    <Compile Include="Net\Ftp\IFtpFile.cs" />
     <Compile Include="Net\Ftp\InputDataStream.cs" />
     <Compile Include="Net\Ftp\ISessionState.cs" />
     <Compile Include="Net\Ftp\OutputDataStream.cs" />

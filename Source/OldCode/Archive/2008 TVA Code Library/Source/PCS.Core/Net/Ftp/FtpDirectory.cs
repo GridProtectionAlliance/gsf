@@ -27,7 +27,7 @@ namespace PCS.Net.Ftp
     /// <summary>
     /// Represents a FTP directory.
     /// </summary>
-    public class FtpDirectory : IFile, IComparable<FtpDirectory>
+    public class FtpDirectory : IFtpFile, IComparable<FtpDirectory>
     {
         #region [ Members ]
 
@@ -691,7 +691,7 @@ namespace PCS.Net.Ftp
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
         }
 
-        int IComparable<IFile>.CompareTo(IFile other)
+        int IComparable<IFtpFile>.CompareTo(IFtpFile other)
         {
             // Directories are sorted by name
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
@@ -702,7 +702,7 @@ namespace PCS.Net.Ftp
         /// </summary>
         public int CompareTo(object obj)
         {
-            IFile file = obj as IFile;
+            IFtpFile file = obj as IFtpFile;
 
             if (file != null)
                 return CompareTo(file);

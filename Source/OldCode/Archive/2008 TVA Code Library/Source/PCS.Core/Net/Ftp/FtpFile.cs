@@ -19,7 +19,7 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    public class FtpFile : IFile, IComparable<FtpFile>
+    public class FtpFile : IFtpFile, IComparable<FtpFile>
     {
         #region [ Members ]
 
@@ -187,7 +187,7 @@ namespace PCS.Net.Ftp
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
         }
 
-        int IComparable<IFile>.CompareTo(IFile other)
+        int IComparable<IFtpFile>.CompareTo(IFtpFile other)
         {
             // Files are sorted by name
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
@@ -195,7 +195,7 @@ namespace PCS.Net.Ftp
 
         public int CompareTo(object obj)
         {
-            IFile file = obj as IFile;
+            IFtpFile file = obj as IFtpFile;
 
             if (file != null)
                 return CompareTo(file);

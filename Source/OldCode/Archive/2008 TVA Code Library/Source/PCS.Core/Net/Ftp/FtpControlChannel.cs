@@ -358,7 +358,7 @@ namespace PCS.Net.Ftp
                 client.Connect(m_server, port);
 
                 if (direction == TransferDirection.Download)
-                    return new InputDataStream(this, client);
+                    return new FtpInputDataStream(this, client);
                 else
                     return new OutputDataStream(this, client);
             }
