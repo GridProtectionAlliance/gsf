@@ -35,8 +35,8 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Events
-        public event Action<File> FileAdded;
-        public event Action<File> FileDeleted;
+        public event Action<FtpFile> FileAdded;
+        public event Action<FtpFile> FileDeleted;
         public event Action<string> Status;
         public event Action<string> InternalSessionCommand;
         public event Action<string> InternalSessionResponse;
@@ -48,8 +48,8 @@ namespace PCS.Net.Ftp
         protected string m_watchDirectory;
         protected System.Timers.Timer m_watchTimer;
         protected System.Timers.Timer m_restartTimer;
-        protected List<File> m_currentFiles;
-        protected List<File> m_newFiles;
+        protected List<FtpFile> m_currentFiles;
+        protected List<FtpFile> m_newFiles;
         private bool m_enabled;
         private bool m_notifyOnComplete;
         private bool m_disposed;
@@ -62,8 +62,8 @@ namespace PCS.Net.Ftp
         {
             m_enabled = true;
             m_notifyOnComplete = true;
-            m_currentFiles = new List<File>();
-            m_newFiles = new List<File>();
+            m_currentFiles = new List<FtpFile>();
+            m_newFiles = new List<FtpFile>();
 
             m_session = new Session(false);
             m_session.CommandSent += Session_CommandSent;
@@ -356,13 +356,13 @@ namespace PCS.Net.Ftp
             {
                 if (m_session.IsConnected)
                 {
-                    File newFile;
-                    Dictionary<string, File>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
+                    FtpFile newFile;
+                    Dictionary<string, FtpFile>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
                     List<int> removedFiles = new List<int>();
                     int x, index;
 
                     // Check for new files
-                    foreach (File currentFile in m_session.CurrentDirectory.Files)
+                    foreach (FtpFile currentFile in m_session.CurrentDirectory.Files)
                     {
                         if (m_notifyOnComplete)
                         {

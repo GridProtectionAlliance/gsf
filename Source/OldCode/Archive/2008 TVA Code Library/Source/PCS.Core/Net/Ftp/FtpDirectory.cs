@@ -60,7 +60,7 @@ namespace PCS.Net.Ftp
         private string m_name;
         private string m_fullPath;
         private Dictionary<string, FtpDirectory> m_subDirectories;
-        private Dictionary<string, File> m_files;
+        private Dictionary<string, FtpFile> m_files;
         private bool m_caseInsensitive;
         private long m_size;
         private string m_permission;
@@ -289,7 +289,7 @@ namespace PCS.Net.Ftp
         /// <summary>
         /// Gets files of directory.
         /// </summary>
-        public Dictionary<string, File>.ValueCollection Files
+        public Dictionary<string, FtpFile>.ValueCollection Files
         {
             get
             {
@@ -315,11 +315,11 @@ namespace PCS.Net.Ftp
         /// </summary>
         /// <param name="fileName">Filename to find in directory.</param>
         /// <returns>File reference, if found, otherwise null if file is not found.</returns>
-        public File FindFile(string fileName)
+        public FtpFile FindFile(string fileName)
         {
             InitHashtable();
 
-            File file;
+            FtpFile file;
 
             if (m_files.TryGetValue(fileName, out file))
                 return file;
@@ -390,7 +390,7 @@ namespace PCS.Net.Ftp
         {
             InitHashtable();
 
-            File file;
+            FtpFile file;
 
             if (m_files.TryGetValue(remoteFile, out file))
             {
@@ -449,7 +449,7 @@ namespace PCS.Net.Ftp
         {
             InitHashtable();
 
-            File file;
+            FtpFile file;
 
             if (m_files.TryGetValue(remoteFile, out file))
             {
@@ -493,7 +493,7 @@ namespace PCS.Net.Ftp
         /// </summary>
         /// <param name="newFileName">New remote file name.</param>
         /// <returns>File reference to new zero-length remote file.</returns>
-        public File CreateFile(string newFileName)
+        public FtpFile CreateFile(string newFileName)
         {
             FtpDataStream stream = CreateFileStream(newFileName);
 
@@ -517,7 +517,7 @@ namespace PCS.Net.Ftp
             {
                 m_session.ControlChannel.STOR(newFileName);
 
-                File newFile = new File(this, newFileName);
+                FtpFile newFile = new FtpFile(this, newFileName);
 
                 m_files[newFileName] = newFile;
 
@@ -574,7 +574,7 @@ namespace PCS.Net.Ftp
                         if (info.IsDirectory)
                             m_subDirectories.Add(info.Name, new FtpDirectory(m_session, this, m_caseInsensitive, info));
                         else
-                            m_files.Add(info.Name, new File(this, info));
+                            m_files.Add(info.Name, new FtpFile(this, info));
                     }
                 }
                 catch (FtpExceptionBase ex)
@@ -603,9 +603,9 @@ namespace PCS.Net.Ftp
             if (m_files == null)
             {
                 if (m_caseInsensitive)
-                    m_files = new Dictionary<string, File>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
+                    m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
                 else
-                    m_files = new Dictionary<string, File>(StringComparer.CurrentCulture); // New Hashtable
+                    m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCulture); // New Hashtable
             }
 
             LoadDirectoryItems();

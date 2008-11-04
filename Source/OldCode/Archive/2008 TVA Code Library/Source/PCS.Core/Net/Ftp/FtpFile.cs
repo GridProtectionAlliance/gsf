@@ -19,7 +19,7 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    public class File : IFile, IComparable<File>
+    public class FtpFile : IFile, IComparable<FtpFile>
     {
         #region [ Members ]
 
@@ -34,7 +34,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal File(FtpDirectory parent, FtpDirectory.ItemInfo info)
+        internal FtpFile(FtpDirectory parent, FtpDirectory.ItemInfo info)
         {
             m_parent = parent;
             m_name = info.Name;
@@ -43,7 +43,7 @@ namespace PCS.Net.Ftp
             m_timestamp = info.TimeStamp.Value;
         }
 
-        internal File(FtpDirectory parent, string name)
+        internal FtpFile(FtpDirectory parent, string name)
         {
             m_parent = parent;
             m_name = name;
@@ -181,7 +181,7 @@ namespace PCS.Net.Ftp
             return stream;
         }
         
-        int IComparable<File>.CompareTo(File other)
+        int IComparable<FtpFile>.CompareTo(FtpFile other)
         {
             // Files are sorted by name
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);

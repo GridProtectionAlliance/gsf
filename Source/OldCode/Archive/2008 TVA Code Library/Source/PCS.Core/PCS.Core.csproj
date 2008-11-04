@@ -211,7 +211,7 @@
     <Compile Include="Net\Ftp\FtpDataStream.cs" />
     <Compile Include="Net\Ftp\FtpDirectory.cs" />
     <Compile Include="Net\Ftp\FtpExceptions.cs" />
-    <Compile Include="Net\Ftp\File.cs" />
+    <Compile Include="Net\Ftp\FtpFile.cs" />
     <Compile Include="Net\Ftp\FileTransferer.cs" />
     <Compile Include="Net\Ftp\FileWatcher.cs">
       <SubType>Component</SubType>
