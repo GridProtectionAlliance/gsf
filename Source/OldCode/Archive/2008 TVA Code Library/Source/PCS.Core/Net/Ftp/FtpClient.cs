@@ -41,8 +41,8 @@ namespace PCS.Net.Ftp
     /// <remarks>
     /// Creates a client connection to an FTP server for uploading or downloading files.
     /// </remarks>
-    [ToolboxBitmap(typeof(FtpSession)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress"), Description("Creates a client connection to an FTP server")]
-    public class FtpSession : Component
+    [ToolboxBitmap(typeof(FtpClient)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress"), Description("Creates a client connection to an FTP server")]
+    public class FtpClient : Component
     {
         #region [ Members ]
 
@@ -114,7 +114,7 @@ namespace PCS.Net.Ftp
         /// <summary>
         /// Constructs a new FTP session using the default settings.
         /// </summary>
-        public FtpSession()
+        public FtpClient()
             : this(false)
         {
         }
@@ -123,7 +123,7 @@ namespace PCS.Net.Ftp
         /// Constructs a new FTP session using the specified settings.
         /// </summary>
         /// <param name="caseInsensitive">Set to true to not be case sensitive with FTP file and directory names.</param>
-        public FtpSession(bool caseInsensitive)
+        public FtpClient(bool caseInsensitive)
         {
             m_caseInsensitive = caseInsensitive;
             m_waitLockTimeOut = 10;

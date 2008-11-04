@@ -24,7 +24,7 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private FtpSession m_host;
+        private FtpClient m_host;
         private string m_server;
         private int m_port;
         private bool m_caseInsensitive;
@@ -33,7 +33,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal FtpSessionDisconnected(FtpSession h, bool caseInsensitive)
+        internal FtpSessionDisconnected(FtpClient h, bool caseInsensitive)
         {
             m_port = 21;
             m_host = h;

@@ -77,7 +77,7 @@ namespace PCS.Net.Ftp
         public event EventHandler<EventArgs<string>> ResponseReceived;
 
         // Fields
-        private FtpSession m_session;
+        private FtpClient m_session;
         private string m_username;
         private string m_password;
         private string m_watchDirectory;
@@ -103,7 +103,7 @@ namespace PCS.Net.Ftp
             m_currentFiles = new List<FtpFile>();
             m_newFiles = new List<FtpFile>();
 
-            m_session = new FtpSession(false);
+            m_session = new FtpClient(false);
             m_session.CommandSent += OnCommandSent;
             m_session.ResponseReceived += OnResponseReceived;
 
@@ -390,13 +390,13 @@ namespace PCS.Net.Ftp
         /// Clones FTP session used by file watcher so it can be used for other purposes.
         /// </summary>
         /// <returns>New connected FTP session matching settings defined for FTP file watcher.</returns>
-        public virtual FtpSession CloneFtpSession()
+        public virtual FtpClient CloneFtpSession()
         {
             // This method is just for convenience.  We can't allow the end user to use the
             // actual internal directory for sending files or other work because it is
             // constantly being refreshed/used etc., so we instead create a new FTP Session
             // based on the current internal session and watch directory information
-            FtpSession newSession = new FtpSession(m_session.CaseInsensitive);
+            FtpClient newSession = new FtpClient(m_session.CaseInsensitive);
 
             newSession.Server = m_session.Server;
             newSession.Connect(m_username, m_password);

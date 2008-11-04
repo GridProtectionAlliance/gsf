@@ -25,7 +25,7 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private FtpSession m_host;
+        private FtpClient m_host;
         private FtpControlChannel m_ctrlChannel;
         private FtpDirectory m_root;
         private FtpDirectory m_current;
@@ -36,7 +36,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal FtpSessionConnected(FtpSession h, FtpControlChannel ctrl, bool caseInsensitive)
+        internal FtpSessionConnected(FtpClient h, FtpControlChannel ctrl, bool caseInsensitive)
         {
             m_host = h;
             m_ctrlChannel = ctrl;
@@ -102,7 +102,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal FtpSession Host
+        internal FtpClient Host
         {
             get
             {
