@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  Directory.cs
+//  FtpDirectory.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -121,8 +121,11 @@ namespace PCS.Net.Ftp
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets FTP case sensitivity of directory names.
+        /// Gets or sets FTP case sensitivity of file and directory names.
         /// </summary>
+        /// <remarks>
+        /// Set to true to not be case sensitive with FTP file and directory names.
+        /// </remarks>
         public bool CaseInsensitive
         {
             get
@@ -330,7 +333,7 @@ namespace PCS.Net.Ftp
         /// <summary>
         /// Finds matching subdirectory name in directory.
         /// </summary>
-        /// <param name="fileName">Subdirectory name to find in directory.</param>
+        /// <param name="dirName">Subdirectory name to find in directory.</param>
         /// <returns>Subdirectory reference, if found, otherwise null if subdirectory is not found.</returns>
         public FtpDirectory FindSubDirectory(string dirName)
         {
@@ -698,7 +701,7 @@ namespace PCS.Net.Ftp
         }
 
         /// <summary>
-        /// Compares on directory or file to another.
+        /// Compares directory or file to another.
         /// </summary>
         public int CompareTo(object obj)
         {

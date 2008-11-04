@@ -20,6 +20,9 @@ using System.Net.Sockets;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Defines a FTP data input stream for remote files.
+    /// </summary>
     public class FtpInputDataStream : FtpDataStream
     {
         internal FtpInputDataStream(FtpControlChannel ctrl, TcpClient client)
@@ -27,16 +30,27 @@ namespace PCS.Net.Ftp
         {
         }
 
+        /// <summary>
+        /// Cannot write to input stream, method is not supported.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Cannot write to input stream.</exception>
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Cannot write to input stream, method is not supported.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Cannot write to input stream.</exception>
         public override void WriteByte(byte b)
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Returns false, cannot write to input stream.
+        /// </summary>
         public override bool CanWrite
         {
             get

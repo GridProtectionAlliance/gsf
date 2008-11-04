@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  FileWatcher.cs
+//  FtpFileWatcher.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -35,21 +35,56 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Events
-        public event Action<FtpFile> FileAdded;
-        public event Action<FtpFile> FileDeleted;
-        public event Action<string> Status;
-        public event Action<string> InternalSessionCommand;
-        public event Action<string> InternalSessionResponse;
+
+        /// <summary>
+        /// Raised when new file is added to monitored FTP directory.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is reference to newly added file.
+        /// </remarks>
+        public event EventHandler<EventArgs<FtpFile>> FileAdded;
+
+        /// <summary>
+        /// Raised when file is deleted from monitored FTP directory.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is reference to file that was removed.
+        /// </remarks>
+        public event EventHandler<EventArgs<FtpFile>> FileDeleted;
+
+        /// <summary>
+        /// Status messages coming from FTP file watcher.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is status message from FTP file watcher.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> Status;
+
+        /// <summary>
+        /// Raised when FTP command has been sent.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is sent FTP command.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> CommandSent;
+
+        /// <summary>
+        /// Raised when FTP response has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is received FTP response.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> ResponseReceived;
 
         // Fields
-        protected FtpSession m_session;
-        protected string m_username;
-        protected string m_password;
-        protected string m_watchDirectory;
-        protected System.Timers.Timer m_watchTimer;
-        protected System.Timers.Timer m_restartTimer;
-        protected List<FtpFile> m_currentFiles;
-        protected List<FtpFile> m_newFiles;
+        private FtpSession m_session;
+        private string m_username;
+        private string m_password;
+        private string m_watchDirectory;
+        private System.Timers.Timer m_watchTimer;
+        private System.Timers.Timer m_restartTimer;
+        private List<FtpFile> m_currentFiles;
+        private List<FtpFile> m_newFiles;
         private bool m_enabled;
         private bool m_notifyOnComplete;
         private bool m_disposed;
@@ -58,6 +93,9 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new FTP file watcher using the default settings.
+        /// </summary>
         public FtpFileWatcher()
         {
             m_enabled = true;
@@ -66,8 +104,8 @@ namespace PCS.Net.Ftp
             m_newFiles = new List<FtpFile>();
 
             m_session = new FtpSession(false);
-            m_session.CommandSent += Session_CommandSent;
-            m_session.ResponseReceived += Session_ResponseReceived;
+            m_session.CommandSent += OnCommandSent;
+            m_session.ResponseReceived += OnResponseReceived;
 
             // Define a timer to watch for new files
             m_watchTimer = new System.Timers.Timer();
@@ -84,6 +122,11 @@ namespace PCS.Net.Ftp
             m_restartTimer.Enabled = false;
         }
 
+        /// <summary>
+        /// Constructs a new FTP file watcher using the specified settings.
+        /// </summary>
+        /// <param name="caseInsensitive">Set to true to not be case sensitive with FTP file and directory names.</param>
+        /// <param name="notifyOnComplete">Set to true to notify after file has completed uploading -or- set to false for immediate notification of new file.</param>
         public FtpFileWatcher(bool caseInsensitive, bool notifyOnComplete)
             : this()
         {
@@ -91,6 +134,9 @@ namespace PCS.Net.Ftp
             m_notifyOnComplete = notifyOnComplete;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="FtpFileWatcher"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~FtpFileWatcher()
         {
             Dispose(false);
@@ -100,6 +146,12 @@ namespace PCS.Net.Ftp
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets FTP server name (DNS name or IP) to watch.
+        /// </summary>
+        /// <remarks>
+        /// FTP server name should not be prefixed with FTP://.
+        /// </remarks>
         [Browsable(true), Category("Configuration"), Description("Specify FTP server name (do not prefix with ftp://).")]
         public virtual string Server
         {
@@ -113,7 +165,32 @@ namespace PCS.Net.Ftp
             }
         }
 
-        [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file names."), DefaultValue(false)]
+        /// <summary>
+        /// Gets or sets FTP server port to use, defaults to 21.
+        /// </summary>
+        /// <remarks>
+        /// This only needs to be changed if the FTP server is established on a non-standard port number.
+        /// </remarks>
+        [Browsable(true), Category("Configuration"), Description("Specify FTP server port, if needed."), DefaultValue(21)]
+        public int Port
+        {
+            get
+            {
+                return m_session.Port;
+            }
+            set
+            {
+                m_session.Port = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets FTP case sensitivity of file and directory names.
+        /// </summary>
+        /// <remarks>
+        /// Set to true to not be case sensitive with FTP file and directory names.
+        /// </remarks>
+        [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file and directory names."), DefaultValue(false)]
         public bool CaseInsensitive
         {
             get
@@ -126,6 +203,12 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets interval, in seconds, to scan for file changes on monitored FTP directory.
+        /// </summary>
+        /// <remarks>
+        /// Specify interval in seconds to poll FTP directory for file changes.
+        /// </remarks>
         [Browsable(true), Category("Configuration"), Description("Specify interval in seconds to poll FTP directory for file changes."), DefaultValue(5)]
         public virtual int WatchInterval
         {
@@ -141,6 +224,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of FTP directory name to monitor. Leave blank to monitor initial FTP session directory.
+        /// </summary>
         [Browsable(true), Category("Configuration"), Description("Specify FTP directory to monitor.  Leave blank to monitor initial FTP session directory."), DefaultValue("")]
         public virtual string Directory
         {
@@ -157,7 +243,7 @@ namespace PCS.Net.Ftp
         }
 
         /// <summary>
-        /// Sets flag for notification time: set to True to only notify when a file is finished uploading, set to False to get an immediate notification when a new file is detected.
+        /// Sets flag for notification time. Set to true to only notify when a file is finished uploading, set to False to get an immediate notification when a new file is detected.
         /// </summary>
         [Browsable(true), Category("Configuration"), Description("Set to True to only be notified of new FTP files when upload is complete.  This monitors file size changes at each WatchInterval."), DefaultValue(true)]
         public virtual bool NotifyOnComplete
@@ -173,6 +259,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets enabled state of the <see cref="FtpFileWatcher"/> object.
+        /// </summary>
         [Browsable(true), Category("Configuration"), Description("Determines if FTP file watcher is enabled."), DefaultValue(true)]
         public virtual bool Enabled
         {
@@ -187,6 +276,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true if FTP file watcher session is connected.
+        /// </summary>
         [Browsable(false)]
         public virtual bool IsConnected
         {
@@ -200,6 +292,10 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FtpFileWatcher"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
             try
@@ -212,8 +308,8 @@ namespace PCS.Net.Ftp
 
                         if (m_session != null)
                         {
-                            m_session.CommandSent -= Session_CommandSent;
-                            m_session.ResponseReceived -= Session_ResponseReceived;
+                            m_session.CommandSent -= OnCommandSent;
+                            m_session.ResponseReceived -= OnResponseReceived;
                             m_session.Dispose();
                         }
                         m_session = null;
@@ -242,6 +338,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Closes FTP session and clears resources used by the <see cref="FtpFileWatcher"/>.
+        /// </summary>
         public virtual void Close()
         {
             m_currentFiles.Clear();
@@ -251,6 +350,11 @@ namespace PCS.Net.Ftp
             CloseSession();
         }
 
+        /// <summary>
+        /// Connects to FTP server and enables file watching if <see cref="Enabled"/> is true.
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
         public virtual void Connect(string userName, string password)
         {
             if (!string.IsNullOrEmpty(userName))
@@ -264,8 +368,7 @@ namespace PCS.Net.Ftp
                 // Attempt to connect to FTP server
                 m_session.Connect(m_username, m_password);
 
-                if (Status != null)
-                    Status("[" + DateTime.Now + "] FTP file watcher connected to \"ftp://" + m_username + "@" + m_session.Server + "\"");
+                OnStatus("FTP file watcher connected to \"ftp://" + m_username + "@" + m_session.Server + "\"");
 
                 ConnectToWatchDirectory();
                 m_watchTimer.Enabled = m_enabled;
@@ -278,14 +381,16 @@ namespace PCS.Net.Ftp
             catch (FtpExceptionBase ex)
             {
                 // If this fails, we'll try again in a moment.  The FTP server may be down...
-                if (Status != null)
-                    Status("[" + DateTime.Now + "] FTP file watcher failed to connect to \"ftp://" + m_username + "@" + m_session.Server + "\" - trying again in 10 seconds..." + "\r\n" + "\t" + "Exception: " + ex.Message);
-
+                OnStatus("FTP file watcher failed to connect to \"ftp://" + m_username + "@" + m_session.Server + "\" - trying again in 10 seconds..." + "\r\n" + "\t" + "Exception: " + ex.Message);
                 RestartConnectCycle();
             }
         }
 
-        public virtual FtpSession NewDirectorySession()
+        /// <summary>
+        /// Clones FTP session used by file watcher so it can be used for other purposes.
+        /// </summary>
+        /// <returns>New connected FTP session matching settings defined for FTP file watcher.</returns>
+        public virtual FtpSession CloneFtpSession()
         {
             // This method is just for convenience.  We can't allow the end user to use the
             // actual internal directory for sending files or other work because it is
@@ -300,6 +405,9 @@ namespace PCS.Net.Ftp
             return newSession;
         }
 
+        /// <summary>
+        /// Resets and restarts FTP session used by FTP file watcher.
+        /// </summary>
         public virtual void Reset()
         {
             m_restartTimer.Enabled = false;
@@ -314,6 +422,61 @@ namespace PCS.Net.Ftp
                 RestartConnectCycle();
         }
 
+        /// <summary>
+        /// Raises <see cref="Status"/> event.
+        /// </summary>
+        protected void OnStatus(string status)
+        {
+            if (Status != null)
+                Status(this, new EventArgs<string>("[" + DateTime.Now + "] " + status));
+        }
+
+        /// <summary>
+        /// Raises <see cref="FileAdded"/> event.
+        /// </summary>
+        protected void OnFileAdded(FtpFile file)
+        {
+            if (FileAdded != null)
+                FileAdded(this, new EventArgs<FtpFile>(file));
+        }
+
+        /// <summary>
+        /// Raises <see cref="FileDeleted"/> event.
+        /// </summary>
+        protected void OnFileDeleted(FtpFile file)
+        {
+            if (FileDeleted != null)
+                FileDeleted(this, new EventArgs<FtpFile>(file));
+        }
+
+        /// <summary>
+        /// Raises <see cref="CommandSent"/> event.
+        /// </summary>
+        protected void OnCommandSent(string command)
+        {
+            if (CommandSent != null)
+                CommandSent(this, new EventArgs<string>(command));
+        }
+
+        private void OnCommandSent(object sender, EventArgs<string> e)
+        {
+            OnCommandSent(e.Argument);
+        }
+
+        /// <summary>
+        /// Raises <see cref="ResponseReceived"/> event.
+        /// </summary>
+        protected void OnResponseReceived(string response)
+        {
+            if (ResponseReceived != null)
+                ResponseReceived(this, new EventArgs<string>(response));
+        }
+
+        private void OnResponseReceived(object sender, EventArgs<string> e)
+        {
+            OnCommandSent(e.Argument);
+        }
+
         private void ConnectToWatchDirectory()
         {
             if (m_session.IsConnected)
@@ -321,15 +484,9 @@ namespace PCS.Net.Ftp
                 m_session.SetCurrentDirectory(m_watchDirectory);
 
                 if (m_watchDirectory.Length > 0)
-                {
-                    if (Status != null)
-                        Status("[" + DateTime.Now + "] FTP file watcher monitoring directory \"" + m_watchDirectory + "\"");
-                }
+                    OnStatus("FTP file watcher monitoring directory \"" + m_watchDirectory + "\"");
                 else
-                {
-                    if (Status != null)
-                        Status("[" + DateTime.Now + "] No FTP file watcher directory specified - monitoring initial folder");
-                }
+                    OnStatus("No FTP file watcher directory specified - monitoring initial folder");
             }
         }
 
@@ -347,9 +504,7 @@ namespace PCS.Net.Ftp
             catch (FtpExceptionBase ex)
             {
                 RestartConnectCycle();
-
-                if (Status != null)
-                    Status("[" + DateTime.Now + "] FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle." + "\r\n" + "\t" + "Exception: " + ex.Message);
+                OnStatus("FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle." + "\r\n" + "\t" + "Exception: " + ex.Message);
             }
 
             if (m_session != null)
@@ -380,9 +535,7 @@ namespace PCS.Net.Ftp
                                     m_currentFiles.Add(currentFile);
                                     m_currentFiles.Sort();
                                     m_newFiles.RemoveAt(index);
-
-                                    if (FileAdded != null)
-                                        FileAdded(currentFile);
+                                    OnFileAdded(currentFile);
                                 }
                                 else
                                 {
@@ -400,9 +553,7 @@ namespace PCS.Net.Ftp
                             // If user wants an immediate notification of new files, we'll give it to them...
                             m_currentFiles.Add(currentFile);
                             m_currentFiles.Sort();
-
-                            if (FileAdded != null)
-                                FileAdded(currentFile);
+                            OnFileAdded(currentFile);
                         }
                     }
 
@@ -412,8 +563,7 @@ namespace PCS.Net.Ftp
                         if (m_session.CurrentDirectory.FindFile(m_currentFiles[x].Name) == null)
                         {
                             removedFiles.Add(x);
-                            if (FileDeleted != null)
-                                FileDeleted(m_currentFiles[x]);
+                            OnFileDeleted(m_currentFiles[x]);
                         }
                     }
 
@@ -436,9 +586,7 @@ namespace PCS.Net.Ftp
                 else
                 {
                     RestartConnectCycle();
-
-                    if (Status != null)
-                        Status("[" + DateTime.Now + "] FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle.");
+                    OnStatus("FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle.");
                 }
             }
         }
@@ -469,18 +617,6 @@ namespace PCS.Net.Ftp
             // Try to reestablish connection
             m_watchTimer.Enabled = false;
             Connect(null, null);
-        }
-
-        private void Session_CommandSent(string Command)
-        {
-            if (InternalSessionCommand != null)
-                InternalSessionCommand(Command);
-        }
-
-        private void Session_ResponseReceived(string Response)
-        {
-            if (InternalSessionResponse != null)
-                InternalSessionResponse(Response);
         }
 
         #endregion

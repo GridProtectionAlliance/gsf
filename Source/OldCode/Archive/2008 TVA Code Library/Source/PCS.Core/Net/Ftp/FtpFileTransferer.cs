@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  FileTransferer.cs
+//  FtpFileTransferer.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -23,14 +23,24 @@ namespace PCS.Net.Ftp
 {
     #region [ Enumerations ]
 
+    /// <summary>
+    /// FTP file transfer direction enumeration.
+    /// </summary>
     public enum TransferDirection
     {
+        /// <summary>
+        /// FTP transfer direction set to upload.
+        /// </summary>
         Upload,
+        /// <summary>
+        /// FTP transfer direction set to download.
+        /// </summary>
         Download
     }
 
     #endregion
 
+    // Internal FTP file transfer class
     internal class FtpFileTransferer
     {
         #region [ Members ]

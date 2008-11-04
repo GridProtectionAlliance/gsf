@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  AsyncResult.cs
+//  FtpAsyncResult.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -27,8 +27,20 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Constants
+        
+        /// <summary>
+        /// FTP transfer result completed index.
+        /// </summary>
         public const int Complete = 0;
+        
+        /// <summary>
+        /// FTP transfer result failed index.
+        /// </summary>
         public const int Fail = 1;
+        
+        /// <summary>
+        /// FTP transfer result aborted index.
+        /// </summary>
         public const int Abort = 2;
 
         // Fields

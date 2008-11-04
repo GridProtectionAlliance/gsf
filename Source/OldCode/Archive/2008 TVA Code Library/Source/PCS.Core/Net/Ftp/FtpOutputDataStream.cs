@@ -20,6 +20,9 @@ using System.Net.Sockets;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Defines a FTP data output stream for remote files.
+    /// </summary>
     public class FtpOutputDataStream : FtpDataStream
     {
         internal FtpOutputDataStream(FtpControlChannel ctrl, TcpClient client)
@@ -27,16 +30,27 @@ namespace PCS.Net.Ftp
         {
         }
 
+        /// <summary>
+        /// Cannot read from output stream, method is not supported.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Cannot read from output stream.</exception>
         public override int Read(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Cannot read from output stream, method is not supported.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Cannot read from output stream.</exception>
         public override int ReadByte()
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Returns false, cannot read from output stream.
+        /// </summary>
         public override bool CanRead
         {
             get

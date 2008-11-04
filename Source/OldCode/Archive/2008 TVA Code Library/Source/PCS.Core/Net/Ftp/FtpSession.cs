@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  Session.cs
+//  FtpSession.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -30,31 +30,77 @@ using System.Drawing;
 // FTP session into a component that could be dragged onto a design surface, created an FTP FileWatcher
 // component and an FTP file system crawler based on this library - JRC
 
-// JRC 2008: Now we're back to C#, and I replaced the "Ftp" prefix to the classes for to satisfy uniqueness
-// in typename constraint coming from code analysis.
+// JRC 2008: Now we're back to C# and I replaced the "Ftp" prefix to the classes for to satisfy uniqueness
+// in type name constraint coming from code analysis.
 
 namespace PCS.Net.Ftp
 {
     /// <summary>
-    /// FTP Session
+    /// Represents a FTP session.
     /// </summary>
+    /// <remarks>
+    /// Creates a client connection to an FTP server for uploading or downloading files.
+    /// </remarks>
     [ToolboxBitmap(typeof(FtpSession)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress"), Description("Creates a client connection to an FTP server")]
     public class FtpSession : Component
     {
         #region [ Members ]
 
-        // Delegates
-        public delegate void BeginFileTransferEventHandler(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection);
-        public delegate void EndFileTransferEventHandler(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection);
-        public delegate void FileTransferProgressEventHandler(long TotalBytes, long TotalBytesTransfered, TransferDirection TransferDirection);
-
         // Events
-        public event BeginFileTransferEventHandler BeginFileTransfer;
-        public event EndFileTransferEventHandler EndFileTransfer;
-        public event FileTransferProgressEventHandler FileTransferProgress;
-        public event Action<FtpAsyncResult> FileTransferNotification;
-        public event Action<string> ResponseReceived;
-        public event Action<string> CommandSent;
+
+        /// <summary>
+        /// Raised when file transfer begins.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument1"/> is local filename,
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument2"/> is remote filename, 
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
+        /// </remarks>
+        public event EventHandler<EventArgs<string, string, TransferDirection>> BeginFileTransfer;
+        
+        /// <summary>
+        /// Raised when file transfer completes.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument1"/> is local filename,
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument2"/> is remote filename, 
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
+        /// </remarks>
+        public event EventHandler<EventArgs<string, string, TransferDirection>> EndFileTransfer;
+        
+        /// <summary>
+        /// Raised as file transfer is progressing.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument1"/> is total bytes to be transferred,
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument2"/> is total bytes transferred so far, 
+        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
+        /// </remarks>
+        public event EventHandler<EventArgs<long, long, TransferDirection>> FileTransferProgress;
+        
+        /// <summary>
+        /// Raised when ansynchronous file transfer process has completed (success or failure).
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is result of asynchronous FTP transfer process.
+        /// </remarks>
+        public event EventHandler<EventArgs<FtpAsyncResult>> FileTransferNotification;
+        
+        /// <summary>
+        /// Raised when FTP response has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is received FTP response.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> ResponseReceived;
+
+        /// <summary>
+        /// Raised when FTP command has been sent.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is sent FTP command.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> CommandSent;
 
         // Fields
         private bool m_caseInsensitive;
@@ -65,11 +111,18 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new FTP session using the default settings.
+        /// </summary>
         public FtpSession()
             : this(false)
         {
         }
 
+        /// <summary>
+        /// Constructs a new FTP session using the specified settings.
+        /// </summary>
+        /// <param name="caseInsensitive">Set to true to not be case sensitive with FTP file and directory names.</param>
         public FtpSession(bool caseInsensitive)
         {
             m_caseInsensitive = caseInsensitive;
@@ -81,6 +134,12 @@ namespace PCS.Net.Ftp
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets FTP server name (DNS name or IP).
+        /// </summary>
+        /// <remarks>
+        /// FTP server name should not be prefixed with FTP://.
+        /// </remarks>
         [Browsable(true), Category("Configuration"), Description("Specify FTP server name (do not prefix with FTP://).")]
         public string Server
         {
@@ -94,6 +153,12 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets FTP case sensitivity of file and directory names.
+        /// </summary>
+        /// <remarks>
+        /// Set to true to not be case sensitive with FTP file and directory names.
+        /// </remarks>
         [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file names."), DefaultValue(false)]
         public bool CaseInsensitive
         {
@@ -107,7 +172,13 @@ namespace PCS.Net.Ftp
             }
         }
 
-        [Browsable(true), Category("Configuration"), Description("Specify FTP server post if needed."), DefaultValue(21)]
+        /// <summary>
+        /// Gets or sets FTP server port to use, defaults to 21.
+        /// </summary>
+        /// <remarks>
+        /// This only needs to be changed if the FTP server is established on a non-standard port number.
+        /// </remarks>
+        [Browsable(true), Category("Configuration"), Description("Specify FTP server port, if needed."), DefaultValue(21)]
         public int Port
         {
             get
@@ -120,6 +191,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets current FTP session directory.
+        /// </summary>
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FtpDirectory CurrentDirectory
         {
@@ -133,6 +207,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets FTP session root directory entry.
+        /// </summary>
         [Browsable(false)]
         public FtpDirectory RootDirectory
         {
@@ -142,6 +219,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets maximum number of seconds to wait for read lock for files to be uploaded. Defaults to 10 seconds.
+        /// </summary>
         [Browsable(true), Category("Configuration"), Description("Specify the maximum number of seconds to wait for read lock for files to be uploaded."), DefaultValue(10)]
         public int WaitLockTimeout
         {
@@ -155,6 +235,10 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Changes the current FTP session directory to the specified path.
+        /// </summary>
+        /// <param name="directoryPath">New directory.</param>
         public void SetCurrentDirectory(string directoryPath)
         {
             if (!IsConnected)
@@ -167,6 +251,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets the current FTP control channel.
+        /// </summary>
         [Browsable(false)]
         public FtpControlChannel ControlChannel
         {
@@ -176,6 +263,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true if FTP session is currently connected.
+        /// </summary>
         [Browsable(false)]
         public bool IsConnected
         {
@@ -185,6 +275,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true if FTP session is currently busy.
+        /// </summary>
         [Browsable(false)]
         public bool IsBusy
         {
@@ -210,16 +303,27 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Aborts current file transfer.
+        /// </summary>
         public void AbortTransfer()
         {
             m_currentState.AbortTransfer();
         }
 
-        public void Connect(string UserName, string Password)
+        /// <summary>
+        /// Connects to FTP server using specified credentials.
+        /// </summary>
+        /// <param name="userName">User name used to authenticate to FTP server.</param>
+        /// <param name="password">Password used to authenticate to FTP server.</param>
+        public void Connect(string userName, string password)
         {
-            m_currentState.Connect(UserName, Password);
+            m_currentState.Connect(userName, password);
         }
 
+        /// <summary>
+        /// Closes current FTP session.
+        /// </summary>
         public void Close()
         {
             m_currentState.Close();
@@ -228,37 +332,37 @@ namespace PCS.Net.Ftp
         internal void OnResponseReceived(string response)
         {
             if (ResponseReceived != null)
-                ResponseReceived(response);
+                ResponseReceived(this, new EventArgs<string>(response));
         }
 
         internal void OnCommandSent(string command)
         {
             if (CommandSent != null)
-                CommandSent(command);
+                CommandSent(this, new EventArgs<string>(command));
         }
 
-        internal void OnBeginFileTransfer(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection)
+        internal void OnBeginFileTransfer(string localFilename, string remoteFilename, TransferDirection transferDirection)
         {
             if (BeginFileTransfer != null)
-                BeginFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
+                BeginFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFilename, remoteFilename, transferDirection));
         }
 
-        internal void OnEndFileTransfer(string LocalFileName, string RemoteFileName, TransferDirection TransferDirection)
+        internal void OnEndFileTransfer(string localFilename, string remoteFilename, TransferDirection transferDirection)
         {
             if (EndFileTransfer != null)
-                EndFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
+                EndFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFilename, remoteFilename, transferDirection));
         }
 
         internal void OnFileTransferProgress(long TotalBytes, long TotalBytesTransfered, TransferDirection TransferDirection)
         {
             if (FileTransferProgress != null)
-                FileTransferProgress(TotalBytes, TotalBytesTransfered, TransferDirection);
+                FileTransferProgress(this, new EventArgs<long,long,TransferDirection>(TotalBytes, TotalBytesTransfered, TransferDirection));
         }
 
         internal void OnFileTransferNotification(FtpAsyncResult TransferResult)
         {
             if (FileTransferNotification != null)
-                FileTransferNotification(TransferResult);
+                FileTransferNotification(this, new EventArgs<FtpAsyncResult>(TransferResult));
         }
 
         #endregion

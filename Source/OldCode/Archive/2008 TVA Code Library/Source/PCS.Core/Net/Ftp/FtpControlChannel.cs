@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  ControlChannel.cs
+//  FtpControlChannel.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -75,6 +75,9 @@ namespace PCS.Net.Ftp
             m_currentTransferMode = TransferMode.Unknown;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="FtpControlChannel"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~FtpControlChannel()
         {
             if (m_connection != null)

@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  File.cs
+//  FtpFile.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -19,6 +19,9 @@ using System;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Represents a FTP file.
+    /// </summary>
     public class FtpFile : IFtpFile, IComparable<FtpFile>
     {
         #region [ Members ]
@@ -53,6 +56,9 @@ namespace PCS.Net.Ftp
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Name of file.
+        /// </summary>
         public string Name
         {
             get
@@ -61,6 +67,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Full path of file.
+        /// </summary>
         public string FullPath
         {
             get
@@ -69,6 +78,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns true for file entries.
+        /// </summary>
         public bool IsFile
         {
             get
@@ -77,6 +89,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Returns false for directory entries.
+        /// </summary>
         public bool IsDirectory
         {
             get
@@ -85,6 +100,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets size of file.
+        /// </summary>
         public long Size
         {
             get
@@ -97,6 +115,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets permission of file.
+        /// </summary>
         public string Permission
         {
             get
@@ -109,6 +130,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets or sets timestamp of file.
+        /// </summary>
         public DateTime TimeStamp
         {
             get
@@ -121,6 +145,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets parent directory of file.
+        /// </summary>
         public FtpDirectory Parent
         {
             get
@@ -134,21 +161,39 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Gets FTP input stream for file.
+        /// </summary>
+        /// <returns>FTP input stream for file.</returns>
         public FtpInputDataStream GetInputStream()
         {
             return ((FtpInputDataStream)(GetStream(0, TransferDirection.Download)));
         }
 
+        /// <summary>
+        /// Gets FTP output stream for file.
+        /// </summary>
+        /// <returns>FTP output stream for file.</returns>
         public FtpOutputDataStream GetOutputStream()
         {
             return ((FtpOutputDataStream)(GetStream(0, TransferDirection.Upload)));
         }
 
+        /// <summary>
+        /// Gets FTP input stream for file at given offset.
+        /// </summary>
+        /// <param name="offset">Offset into stream to start.</param>
+        /// <returns>FTP input stream for file.</returns>
         public FtpInputDataStream GetInputStream(long offset)
         {
             return ((FtpInputDataStream)(GetStream(offset, TransferDirection.Download)));
         }
 
+        /// <summary>
+        /// Gets FTP output stream for file at given offset.
+        /// </summary>
+        /// <param name="offset">Offset into stream to start.</param>
+        /// <returns>FTP output stream for file.</returns>
         public FtpOutputDataStream GetOutputStream(long offset)
         {
             return ((FtpOutputDataStream)(GetStream(offset, TransferDirection.Upload)));
@@ -193,6 +238,9 @@ namespace PCS.Net.Ftp
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
         }
 
+        /// <summary>
+        /// Compares directory or file to another.
+        /// </summary>
         public int CompareTo(object obj)
         {
             IFtpFile file = obj as IFtpFile;

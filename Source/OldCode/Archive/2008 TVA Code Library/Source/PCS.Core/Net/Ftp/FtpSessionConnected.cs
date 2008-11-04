@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  SessionConnected.cs
+//  FtpSessionConnected.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -161,7 +161,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public void Connect(string UserName, string Password)
+        public void Connect(string userName, string password)
         {
             throw new InvalidOperationException();
         }

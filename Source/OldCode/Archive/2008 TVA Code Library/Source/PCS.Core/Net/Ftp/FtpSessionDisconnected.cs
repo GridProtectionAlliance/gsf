@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  SessionDisconnected.cs
+//  FtpSessionDisconnected.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -108,7 +108,7 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
-        public void Connect(string UserName, string Password)
+        public void Connect(string userName, string password)
         {
             FtpControlChannel ctrl = new FtpControlChannel(m_host);
 
@@ -118,10 +118,10 @@ namespace PCS.Net.Ftp
 
             try
             {
-                ctrl.Command("USER " + UserName);
+                ctrl.Command("USER " + userName);
 
                 if (ctrl.LastResponse.Code == FtpResponse.UserAcceptedWaitingPass)
-                    ctrl.Command("PASS " + Password);
+                    ctrl.Command("PASS " + password);
 
                 if (ctrl.LastResponse.Code != FtpResponse.UserLoggedIn)
                     throw new FtpAuthenticationException("Failed to login.", ctrl.LastResponse);

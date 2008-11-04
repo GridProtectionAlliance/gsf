@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  TimeStampParser.cs
+//  FtpTimeStampParser.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -45,10 +45,10 @@ namespace PCS.Net.Ftp
             Style = RawDataStyle.Undetermined;
         }
 
-        public FtpTimeStampParser(string RawValue, RawDataStyle Style)
+        public FtpTimeStampParser(string rawValue, RawDataStyle style)
         {
-            this.RawValue = RawValue;
-            this.Style = Style;
+            this.RawValue = rawValue;
+            this.Style = style;
         }
 
         #endregion

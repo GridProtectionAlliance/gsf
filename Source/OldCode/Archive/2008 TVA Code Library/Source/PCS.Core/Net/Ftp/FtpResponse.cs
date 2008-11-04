@@ -22,22 +22,73 @@ using System.Text;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Defines a FTP response.
+    /// </summary>
     public class FtpResponse
     {
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// FTP response code for invalid code.
+        /// </summary>
         public const int InvalidCode = -1;
+
+        /// <summary>
+        /// FTP response code for data channel opened, transfer start.
+        /// </summary>
         public const int DataChannelOpenedTransferStart = 125;
+
+        /// <summary>
+        /// FTP response code for file OK, begin open data channel.
+        /// </summary>
         public const int FileOkBeginOpenDataChannel = 150;
+
+        /// <summary>
+        /// FTP response code for service ready.
+        /// </summary>
         public const int ServiceReady = 220;
+
+        /// <summary>
+        /// FTP response code for closing data channel.
+        /// </summary>
         public const int ClosingDataChannel = 226;
+
+        /// <summary>
+        /// FTP response code for enter passive mode.
+        /// </summary>
         public const int EnterPassiveMode = 227;
+
+        /// <summary>
+        /// FTP response code for request file action complete.
+        /// </summary>
         public const int RequestFileActionComplete = 250;
+
+        /// <summary>
+        /// FTP response code for user logged in.
+        /// </summary>
         public const int UserLoggedIn = 230;
+
+        /// <summary>
+        /// FTP response code for user accepted waiting pass.
+        /// </summary>
         public const int UserAcceptedWaitingPass = 331;
+
+        /// <summary>
+        /// FTP response code for request file action pending.
+        /// </summary>
         public const int RequestFileActionPending = 350;
+
+        /// <summary>
+        /// FTP response code for service unavailable.
+        /// </summary>
         public const int ServiceUnavailable = 421;
+
+        /// <summary>
+        /// FTP response code for transfer aborted.
+        /// </summary>
         public const int TransferAborted = 426;
 
         // Fields
@@ -80,6 +131,9 @@ namespace PCS.Net.Ftp
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets FTP response message.
+        /// </summary>
         public string Message
         {
             get
@@ -88,6 +142,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets FTP response queue.
+        /// </summary>
         public Queue Respones
         {
             get
@@ -96,6 +153,9 @@ namespace PCS.Net.Ftp
             }
         }
 
+        /// <summary>
+        /// Gets FTP response code.
+        /// </summary>
         public int Code
         {
             get

@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  Exception.cs
+//  FtpExceptions.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008

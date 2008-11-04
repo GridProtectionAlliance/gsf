@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IFile.cs
+//  IFtpFile.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -19,22 +19,49 @@ using System;
 
 namespace PCS.Net.Ftp
 {
+    /// <summary>
+    /// Abstract representation of a FTP file or directory.
+    /// </summary>
     public interface IFtpFile : IComparable, IComparable<IFtpFile>
     {
+        /// <summary>
+        /// Gets parent directory of file or directory.
+        /// </summary>
         FtpDirectory Parent { get; }
 
+        /// <summary>
+        /// Gets name of file or directory.
+        /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// Gets full path of file or directory.
+        /// </summary>
         string FullPath { get; }
 
+        /// <summary>
+        /// Returns true if <see cref="IFtpFile"/> represents a file, otherwise false.
+        /// </summary>
         bool IsFile { get; }
 
+        /// <summary>
+        /// Returns true if <see cref="IFtpFile"/> represents a directory, otherwise false.
+        /// </summary>
         bool IsDirectory { get; }
-
+        
+        /// <summary>
+        /// Gets or sets size of file or directory.
+        /// </summary>
         long Size { get; set; }
 
+        /// <summary>
+        /// Gets or sets permission of file or directory.
+        /// </summary>
         string Permission { get; set; }
 
+        /// <summary>
+        /// Gets or sets timestamp of file or directory.
+        /// </summary>
         DateTime TimeStamp { get; set; }
     }
 }
