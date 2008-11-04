@@ -47,7 +47,9 @@
     <OutputPath>..\..\..\Build\Output\Debug\Tools\</OutputPath>
     <DocumentationFile>
     </DocumentationFile>
-    <NOWARN>1591</NOWARN>
+    <NOWARN>
+    </NOWARN>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -57,7 +59,9 @@
     <OutputPath>..\..\..\Build\Output\Release\Tools\</OutputPath>
     <DocumentationFile>
     </DocumentationFile>
-    <NOWARN>1591</NOWARN>
+    <NOWARN>
+    </NOWARN>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

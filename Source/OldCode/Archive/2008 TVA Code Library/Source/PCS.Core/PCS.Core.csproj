@@ -49,7 +49,7 @@
     <DocumentationFile>PCS.Core.xml</DocumentationFile>
     <NOWARN>
     </NOWARN>
-    <DefineConstants>DEBUG;ThreadTracking</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;ThreadTracking</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -58,8 +58,9 @@
     <Optimize>true</Optimize>
     <OutputPath>..\..\Build\Output\Release\</OutputPath>
     <DocumentationFile>PCS.Core.xml</DocumentationFile>
-    <NOWARN>1591</NOWARN>
-    <DefineConstants>ThreadTracking</DefineConstants>
+    <NOWARN>
+    </NOWARN>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />

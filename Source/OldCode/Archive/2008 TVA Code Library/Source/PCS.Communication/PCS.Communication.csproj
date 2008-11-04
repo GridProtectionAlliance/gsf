@@ -32,8 +32,9 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\..\Build\Output\Debug\</OutputPath>
     <DocumentationFile>PCS.Communication.xml</DocumentationFile>
-    <NOWARN>1591</NOWARN>
-    <DefineConstants>ThreadTracking</DefineConstants>
+    <NOWARN>
+    </NOWARN>
+    <DefineConstants>TRACE;DEBUG;ThreadTracking</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -42,8 +43,9 @@
     <Optimize>true</Optimize>
     <OutputPath>..\..\Build\Output\Release\</OutputPath>
     <DocumentationFile>PCS.Communication.xml</DocumentationFile>
-    <NOWARN>1591</NOWARN>
-    <DefineConstants>ThreadTracking</DefineConstants>
+    <NOWARN>
+    </NOWARN>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
