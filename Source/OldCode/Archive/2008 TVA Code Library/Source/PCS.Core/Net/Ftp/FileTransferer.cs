@@ -51,7 +51,7 @@ namespace PCS.Net.Ftp
         private int m_transferedPercentage;
         private TransferDirection m_transferDirection;
         private FileMode m_localFileOpenMode;
-        private AsyncResult m_transferResult;
+        private FtpAsyncResult m_transferResult;
 
         #endregion
 
@@ -124,7 +124,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public AsyncResult TransferResult
+        public FtpAsyncResult TransferResult
         {
             get
             {
@@ -149,12 +149,12 @@ namespace PCS.Net.Ftp
             try
             {
                 StartTransfer();
-                m_transferResult = new AsyncResult("Success.", AsyncResult.Complete);
+                m_transferResult = new FtpAsyncResult("Success.", FtpAsyncResult.Complete);
                 m_session.Host.OnFileTransferNotification(m_transferResult);
             }
             catch (FtpExceptionBase e)
             {
-                m_transferResult = new AsyncResult("Transfer fail: " + e.Message, AsyncResult.Fail);
+                m_transferResult = new FtpAsyncResult("Transfer fail: " + e.Message, FtpAsyncResult.Fail);
                 m_session.Host.OnFileTransferNotification(m_transferResult);
             }
         }

@@ -28,7 +28,7 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private ControlChannel m_ctrl;
+        private FtpControlChannel m_ctrl;
         private SessionConnected m_session;
         private TcpClient m_tcpClient;
         private Stream m_stream;
@@ -38,7 +38,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal DataStream(ControlChannel ctrl, TcpClient client)
+        internal DataStream(FtpControlChannel ctrl, TcpClient client)
         {
             m_session = ctrl.Session;
             m_ctrl = ctrl;
@@ -59,7 +59,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal ControlChannel ControlChannel
+        internal FtpControlChannel ControlChannel
         {
             get
             {

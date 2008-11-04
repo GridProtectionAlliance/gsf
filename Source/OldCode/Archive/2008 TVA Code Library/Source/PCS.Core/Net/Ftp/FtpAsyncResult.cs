@@ -22,7 +22,7 @@ namespace PCS.Net.Ftp
     /// <summary>
     /// Asynchronous transfer result.
     /// </summary>
-    public class AsyncResult
+    public class FtpAsyncResult
     {
         #region [ Members ]
 
@@ -40,17 +40,17 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal AsyncResult()
+        internal FtpAsyncResult()
             : this("Success.", Response.InvalidCode, Complete)
         {
         }
 
-        internal AsyncResult(string message, int result)
+        internal FtpAsyncResult(string message, int result)
             : this(message, Response.InvalidCode, result)
         {
         }
 
-        internal AsyncResult(string message, int ftpCode, int result)
+        internal FtpAsyncResult(string message, int ftpCode, int result)
         {
             m_result = new BitArray(3);
             m_message = message;

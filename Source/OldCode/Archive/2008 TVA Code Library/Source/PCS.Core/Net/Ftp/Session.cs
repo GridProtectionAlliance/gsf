@@ -52,7 +52,7 @@ namespace PCS.Net.Ftp
         public event BeginFileTransferEventHandler BeginFileTransfer;
         public event EndFileTransferEventHandler EndFileTransfer;
         public event FileTransferProgressEventHandler FileTransferProgress;
-        public event Action<AsyncResult> FileTransferNotification;
+        public event Action<FtpAsyncResult> FileTransferNotification;
         public event Action<string> ResponseReceived;
         public event Action<string> CommandSent;
 
@@ -255,7 +255,7 @@ namespace PCS.Net.Ftp
                 FileTransferProgress(TotalBytes, TotalBytesTransfered, TransferDirection);
         }
 
-        internal void OnFileTransferNotification(AsyncResult TransferResult)
+        internal void OnFileTransferNotification(FtpAsyncResult TransferResult)
         {
             if (FileTransferNotification != null)
                 FileTransferNotification(TransferResult);
