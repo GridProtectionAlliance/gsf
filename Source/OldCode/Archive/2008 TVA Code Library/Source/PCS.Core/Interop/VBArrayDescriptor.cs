@@ -11,9 +11,12 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  03/07/2007 - Pinal C. Patel
-//       Original version of source code generated
+//       Original version of source code generated.
+//       Generated original version of source code.
 //  09/10/2008 - J. Ritchie Carroll
-//      Converted to C#
+//       Converted to C#.
+//  11/04/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -23,11 +26,13 @@ using PCS.Parsing;
 
 namespace PCS.Interop
 {
-    /// <summary>Old Style Visual Basic Array Descriptor</summary>
+    /// <summary>
+    /// Old Style Visual Basic Array Descriptor
+    /// </summary>
     /// <remarks>
     /// This class is used to mimic the binary array descriptor used when an array is serialized
     /// into a file using older Visual Basic applications (VB 6 and prior), this way old VB apps
-    /// can still deserialize an array stored in a file written by a .NET application.
+    /// can still deserialize an array stored in a file written by a .NET application and vice versa.
     /// </remarks>
     public class VBArrayDescriptor : IBinaryDataProvider
     {
@@ -55,13 +60,18 @@ namespace PCS.Interop
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VBArrayDescriptor"/> class.
+        /// </summary>
+        /// <param name="arrayLengths">Length of array per dimension.</param>
+        /// <param name="arrayLowerBounds">Lower bound of array per dimension.</param>
         public VBArrayDescriptor(int[] arrayLengths, int[] arrayLowerBounds)
         {
             if (arrayLengths.Length == arrayLowerBounds.Length)
             {
                 m_arrayDimensionDescriptors = new List<DimensionDescriptor>();
 
-                for (int i = 0; i <= arrayLengths.Length - 1; i++)
+                for (int i = 0; i < arrayLengths.Length; i++)
                 {
                     m_arrayDimensionDescriptors.Add(new DimensionDescriptor(arrayLengths[i], arrayLowerBounds[i]));
                 }
@@ -76,6 +86,9 @@ namespace PCS.Interop
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets a serialized version of <see cref="VBArrayDescriptor"/>.
+        /// </summary>
         public byte[] BinaryImage
         {
             get
@@ -94,6 +107,9 @@ namespace PCS.Interop
             }
         }
 
+        /// <summary>
+        /// Gets the length of serialized <see cref="VBArrayDescriptor"/>.
+        /// </summary>
         public int BinaryLength
         {
             get
@@ -106,21 +122,43 @@ namespace PCS.Interop
 
         #region [ Static ]
 
+        /// <summary>
+        /// Returns a <see cref="VBArrayDescriptor"/> object for a one dimensional array with zero-based index.
+        /// </summary>
+        /// <param name="arrayLength">Length of the array.</param>
+        /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor ZeroBasedOneDimensionalArray(int arrayLength)
         {
             return new VBArrayDescriptor(new int[] { arrayLength }, new int[] { 0 });
         }
 
+        /// <summary>
+        /// Returns a <see cref="VBArrayDescriptor"/> object for a one dimensional array with one-based index.
+        /// </summary>
+        /// <param name="arrayLength">Length of the array.</param>
+        /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor OneBasedOneDimensionalArray(int arrayLength)
         {
             return new VBArrayDescriptor(new int[] { arrayLength }, new int[] { 1 });
         }
 
+        /// <summary>
+        /// Returns a <see cref="VBArrayDescriptor"/> object for a two dimensional array with zero-based index.
+        /// </summary>
+        /// <param name="dimensionOneLength">Length of array in dimension one.</param>
+        /// <param name="dimensionTwoLength">Length of array in dimension two.</param>
+        /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor ZeroBasedTwoDimensionalArray(int dimensionOneLength, int dimensionTwoLength)
         {
             return new VBArrayDescriptor(new int[] { dimensionOneLength, dimensionTwoLength }, new int[] { 0, 0 });
         }
 
+        /// <summary>
+        /// Returns a <see cref="VBArrayDescriptor"/> object for a two dimensional array with one-based index.
+        /// </summary>
+        /// <param name="dimensionOneLength">Length of array in dimension one.</param>
+        /// <param name="dimensionTwoLength">Length of array in dimension two.</param>
+        /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor OneBasedTwoDimensionalArray(int dimensionOneLength, int dimensionTwoLength)
         {
             return new VBArrayDescriptor(new int[] { dimensionOneLength, dimensionTwoLength }, new int[] { 1, 1 });
