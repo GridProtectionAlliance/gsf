@@ -22,36 +22,68 @@ using System.Text;
 
 namespace PCS.Scheduling
 {
-    #region [ Enumerations ]
-
-    /// <summary>Schedule part text syntax.</summary>
-    public enum SchedulePartTextSyntax
-    {
-        Any,
-        EveryN,
-        Range,
-        Specific
-    }
-
-    /// <summary>Date/time elements related to scheduling.</summary>
-    /// <remarks>This enumeration specifically corresponds to the UNIX crontab date/time elements.</remarks>
-    public enum DateTimePart
-    {
-        /// <summary>Minute part.</summary>
-        Minute,
-        /// <summary>Hour part.</summary>
-        Hour,
-        /// <summary>Day part.</summary>
-        Day,
-        /// <summary>Month part.</summary>
-        Month,
-        /// <summary>Day of week part.</summary>
-        DayOfWeek
-    }
-
-    #endregion
-
-    /// <summary>Defines a schedule using rules defined using UNIX crontab syntax.</summary>
+    /// <summary>
+    /// Represents a schedule defined using UNIX crontab syntax.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Operators:
+    /// </para>
+    /// <para>
+    /// There are several ways of specifying multiple date/time values in a field:
+    /// <list type="bullet">
+    /// <item>
+    ///     <description>
+    ///         The comma (',') operator specifies a list of values, for example: "1,3,4,7,8"
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <description>
+    ///         The dash ('-') operator specifies a range of values, for example: "1-6",
+    ///         which is equivalent to "1,2,3,4,5,6"
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <description>
+    ///         The asterisk ('*') operator specifies all possible values for a field.
+    ///         For example, an asterisk in the hour time field would be equivalent to
+    ///         'every hour' (subject to matching other specified fields).
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <description>
+    ///         The slash ('/') operator (called "step"), which can be used to skip a given
+    ///         number of values. For example, "*/3" in the hour time field is equivalent
+    ///         to "0,3,6,9,12,15,18,21". So "*" specifies 'every hour' but the "*/3" means
+    ///         only those hours divisible by 3.
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// Fields:
+    /// </para>
+    /// <para>
+    /// <code>
+    ///     +---------------- minute (0 - 59)
+    ///     |  +------------- hour (0 - 23)
+    ///     |  |  +---------- day of month (1 - 31)
+    ///     |  |  |  +------- month (1 - 12)
+    ///     |  |  |  |  +---- day of week (0 - 7) (Sunday=0 or 7)
+    ///     |  |  |  |  |
+    ///     *  *  *  *  *
+    /// </code>
+    /// </para>
+    /// <para>
+    /// Each of the patterns from the first five fields may be either * (an asterisk), which matches all legal values,
+    /// or a list of elements separated by commas. 
+    /// </para>
+    /// <para>
+    /// See <a href="http://en.wikipedia.org/wiki/Cron" target="_blank">http://en.wikipedia.org/wiki/Cron</a> for more information.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="SchedulePart"/>
+    /// <seealso cref="ScheduleManager"/>
     public class Schedule
     {
         #region [ Members ]
@@ -71,36 +103,31 @@ namespace PCS.Scheduling
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new schedule with the default rule of "* * * * *".
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
         /// </summary>
         /// <param name="name">Name of the schedule.</param>
+        /// <remarks>Default <see cref="Rule"/> of '* * * * *' is used.</remarks>
         public Schedule(string name)
             : this(name, "* * * * *")
         {
         }
 
         /// <summary>
-        /// Creates a new schedule using the specified rule.
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
         /// </summary>
         /// <param name="name">Name of the schedule.</param>
         /// <param name="rule">Rule formated in UNIX crontab syntax.</param>
-        /// <remarks>
-        /// See http://en.wikipedia.org/wiki/Cron for cron format.
-        /// </remarks>
         public Schedule(string name, string rule)
             : this(name, rule, "")
         {
         }
 
         /// <summary>
-        /// Creates a new schedule using the specified rule.
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
         /// </summary>
         /// <param name="name">Name of the schedule.</param>
         /// <param name="rule">Rule formated in UNIX crontab syntax.</param>
         /// <param name="description">Description of defined schedule.</param>
-        /// <remarks>
-        /// See http://en.wikipedia.org/wiki/Cron for cron format.
-        /// </remarks>
         public Schedule(string name, string rule, string description)
         {
             this.Name = name;
@@ -113,10 +140,9 @@ namespace PCS.Scheduling
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the schedule name.
+        /// Gets or sets the name of the <see cref="Schedule"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>The schedule name.</returns>
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
         public string Name
         {
             get
@@ -125,65 +151,61 @@ namespace PCS.Scheduling
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_name = value;
-                else
-                    throw new ArgumentNullException("Name");
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
+                m_name = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the schedule rule.
+        /// Gets or sets the rule of the <see cref="Schedule"/> defined in UNIX crontab syntax.
         /// </summary>
-        /// <value></value>
-        /// <returns>The schedule rule.</returns>
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        /// <exception cref="ArgumentException">The number of <see cref="SchedulePart"/> in the rule is not exactly 5.</exception>
         public string Rule
         {
             get
             {
-                return m_minutePart.Text + " " + m_hourPart.Text + " " + m_dayPart.Text + " " + m_monthPart.Text + " " + m_dayOfWeekPart.Text;
+                return m_minutePart.ValueText + " " + m_hourPart.ValueText + " " + m_dayPart.ValueText + " " + m_monthPart.ValueText + " " + m_dayOfWeekPart.ValueText;
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    string[] scheduleParts = value.RemoveDuplicateWhiteSpace().Split(' ');
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
 
-                    if (scheduleParts.Length == 5)
-                    {
-                        m_minutePart = new SchedulePart(scheduleParts[0], DateTimePart.Minute);
-                        m_hourPart = new SchedulePart(scheduleParts[1], DateTimePart.Hour);
-                        m_dayPart = new SchedulePart(scheduleParts[2], DateTimePart.Day);
-                        m_monthPart = new SchedulePart(scheduleParts[3], DateTimePart.Month);
-                        m_dayOfWeekPart = new SchedulePart(scheduleParts[4], DateTimePart.DayOfWeek);
+                string[] scheduleParts = value.RemoveDuplicateWhiteSpace().Split(' ');
 
-                        // Update the schedule description.
-                        StringBuilder description = new StringBuilder();
+                if (scheduleParts.Length != 5)
+                    throw new ArgumentException("Schedule rule must have exactly 5 parts (Example: * * * * *).");
 
-                        description.Append(m_minutePart.Description);
-                        description.Append(", ");
-                        description.Append(m_hourPart.Description);
-                        description.Append(", ");
-                        description.Append(m_dayPart.Description);
-                        description.Append(", ");
-                        description.Append(m_monthPart.Description);
-                        description.Append(", ");
-                        description.Append(m_dayOfWeekPart.Description);
+                m_minutePart = new SchedulePart(scheduleParts[0], DateTimePart.Minute);
+                m_hourPart = new SchedulePart(scheduleParts[1], DateTimePart.Hour);
+                m_dayPart = new SchedulePart(scheduleParts[2], DateTimePart.Day);
+                m_monthPart = new SchedulePart(scheduleParts[3], DateTimePart.Month);
+                m_dayOfWeekPart = new SchedulePart(scheduleParts[4], DateTimePart.DayOfWeek);
 
-                        m_description = description.ToString();
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Schedule rule must have exactly 5 parts (Example: * * * * *).");
-                    }
-                }
-                else
-                {
-                    throw new ArgumentNullException("Rule");
-                }
+                // Update the schedule description.
+                StringBuilder description = new StringBuilder();
+
+                description.Append(m_minutePart.Description);
+                description.Append(", ");
+                description.Append(m_hourPart.Description);
+                description.Append(", ");
+                description.Append(m_dayPart.Description);
+                description.Append(", ");
+                description.Append(m_monthPart.Description);
+                description.Append(", ");
+                description.Append(m_dayOfWeekPart.Description);
+
+                m_description = description.ToString();
             }
         }
 
+        /// <summary>
+        /// Gets or sets a description of the <see cref="Schedule"/>.
+        /// </summary>
+        /// <remarks>A default description is created automatically when the <see cref="Rule"/> is set.</remarks>
         public string Description
         {
             get
@@ -197,14 +219,9 @@ namespace PCS.Scheduling
             }
         }
 
-        public DateTime LastDueAt
-        {
-            get
-            {
-                return m_lastDueAt;
-            }
-        }
-
+        /// <summary>
+        /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents minute <see cref="DateTimePart"/>.
+        /// </summary>
         public SchedulePart MinutePart
         {
             get
@@ -213,6 +230,9 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents hour <see cref="DateTimePart"/>.
+        /// </summary>
         public SchedulePart HourPart
         {
             get
@@ -221,6 +241,9 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents day of month <see cref="DateTimePart"/>.
+        /// </summary>
         public SchedulePart DayPart
         {
             get
@@ -229,6 +252,9 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents month <see cref="DateTimePart"/>.
+        /// </summary>
         public SchedulePart MonthPart
         {
             get
@@ -237,6 +263,9 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents day of week <see cref="DateTimePart"/>.
+        /// </summary>
         public SchedulePart DaysOfWeekPart
         {
             get
@@ -246,10 +275,19 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets the current status of the schedule.
+        /// Gets the <see cref="DateTime"/> when the <see cref="Schedule"/> was last due.
         /// </summary>
-        /// <value></value>
-        /// <returns>The current status of the schedule.</returns>
+        public DateTime LastDueAt
+        {
+            get
+            {
+                return m_lastDueAt;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current status of the <see cref="Schedule"/>.
+        /// </summary>
         public string Status
         {
             get
@@ -275,9 +313,9 @@ namespace PCS.Scheduling
         #region [ Methods ]
 
         /// <summary>
-        /// Checks whether the schedule is due at the present system time.
+        /// Checks whether the <see cref="Schedule"/> is due at the present system time.
         /// </summary>
-        /// <returns>True if the schedule is due at the present system time; otherwise False.</returns>
+        /// <returns>true if the <see cref="Schedule"/> is due at the present system time; otherwise false.</returns>
         public bool IsDue()
         {
             DateTime currentDateTime = DateTime.Now;
@@ -297,21 +335,31 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="Schedule"/> is equal to the current <see cref="Schedule"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Schedule"/> to compare with the current <see cref="Schedule"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="Schedule"/> is equal to the current <see cref="Schedule"/>; otherwise false
+        /// </returns>
         public override bool Equals(object obj)
         {
             Schedule other = obj as Schedule;
 
-            if ((other != null) && other.Rule == this.Rule)
-                return true;
-            else
-                return false;
+            return other != null && 
+                   this.Name == other.Name && 
+                   this.Rule == other.Rule;
         }
 
+        /// <summary>
+        /// Gets a hash code for the <see cref="Schedule"/>.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return Rule.GetHashCode();
         }
 
         #endregion
-   }
+    }
 }

@@ -14,6 +14,8 @@
 //      Generated original version of source code.
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  11/03/2008 - Pinal C. Patel
+//      Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -23,27 +25,96 @@ using System.Text.RegularExpressions;
 
 namespace PCS.Scheduling
 {
-    /// <summary>Defines a schedule part.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Indicates the date/time element that a <see cref="SchedulePart"/> represents.
+    /// </summary>
+    /// <remarks>This enumeration specifically corresponds to the UNIX crontab date/time elements.</remarks>
+    public enum DateTimePart
+    {
+        /// <summary>
+        /// <see cref="SchedulePart"/> represents minutes. Legal values are 0 through 59.
+        /// </summary>
+        Minute,
+        /// <summary>
+        /// <see cref="SchedulePart"/> represents hours. Legal values are 0 through 23.
+        /// </summary>
+        Hour,
+        /// <summary>
+        /// <see cref="SchedulePart"/> represents day of month. Legal values are 1 through 31.
+        /// </summary>
+        Day,
+        /// <summary>
+        /// <see cref="SchedulePart"/> represents months. Legal values are 1 through 12.
+        /// </summary>
+        Month,
+        /// <summary>
+        /// <see cref="SchedulePart"/> represents day of week. Legal values are 0 through 7 where 0 is Sunday.
+        /// </summary>
+        DayOfWeek
+    }
+
+    /// <summary>
+    /// Indicates the syntax used in a <see cref="SchedulePart"/> for specifying its values.
+    /// </summary>
+    public enum SchedulePartTextSyntax
+    {
+        /// <summary>
+        /// Values for the <see cref="SchedulePart"/> were specified using the '*' text syntax. Included values are 
+        /// all legal values for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> represents.
+        /// </summary>
+        Any,
+        /// <summary>
+        /// Values for the <see cref="SchedulePart"/> were specified using the '*/n' text syntax. Included values are 
+        /// legal values for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> represents that are 
+        /// divisible by 'n'. 
+        /// </summary>
+        EveryN,
+        /// <summary>
+        /// Values for the <see cref="SchedulePart"/> were specified using the 'n1-nn' text syntax. Included values 
+        /// are legal values for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> represents that
+        /// are within the specified range.
+        /// </summary>
+        Range,
+        /// <summary>
+        /// Values for the <see cref="SchedulePart"/> were specified using the 'n1,n2,nn' text syntax. Included values 
+        /// are specific legal values for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> represents.
+        /// </summary>
+        Specific
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a part of the <see cref="Schedule"/>.
+    /// </summary>
+    /// <seealso cref="Schedule"/>
     public class SchedulePart
     {
         #region [ Members ]
 
         // Fields
-        private string m_text;
+        private string m_valueText;
         private DateTimePart m_dateTimePart;
-        private SchedulePartTextSyntax m_textSyntax;
+        private SchedulePartTextSyntax m_valueTextSyntax;
         private List<int> m_values;
 
         #endregion
 
         #region [ Constructors ]
 
-        public SchedulePart(string text, DateTimePart dateTimePart)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchedulePart"/> class.
+        /// </summary>
+        /// <param name="valueText">The text that specifies the values for the <see cref="SchedulePart"/> object.</param>
+        /// <param name="dateTimePart">The <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> object represents.</param>
+        public SchedulePart(string valueText, DateTimePart dateTimePart)
         {
-            if (ValidateAndPopulate(text, dateTimePart))
+            if (ValidateAndPopulate(valueText, dateTimePart))
             {
                 // The text provided for populating the values is valid according to the specified date-time part.
-                m_text = text;
+                m_valueText = valueText;
                 m_dateTimePart = dateTimePart;
             }
             else
@@ -57,23 +128,19 @@ namespace PCS.Scheduling
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the text used for populating the values of the schedule part.
+        /// Gets the text used to specify the values for the <see cref="SchedulePart"/> object.
         /// </summary>
-        /// <value></value>
-        /// <returns>The text used for populating the values of the schedule part.</returns>
-        public string Text
+        public string ValueText
         {
             get
             {
-                return m_text;
+                return m_valueText;
             }
         }
 
         /// <summary>
-        /// Gets the date-time part that the schedule part represents in a PCS.Scheduling.Schedule.
+        /// Gets the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> object represents.
         /// </summary>
-        /// <value></value>
-        /// <returns>The date-time part that the schedule part represents in a PCS.Scheduling.Schedule.</returns>
         public DateTimePart DateTimePart
         {
             get
@@ -83,38 +150,35 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets the syntax used in the text specified for populating the values of the schedule part.
+        /// Gets the <see cref="SchedulePartTextSyntax"/> used in the <see cref="ValueText"/> for specifying the 
+        /// values of the <see cref="SchedulePart"/> object.
         /// </summary>
-        /// <value></value>
-        /// <returns>The syntax used in the text specified for populating the values of the schedule part.</returns>
-        public SchedulePartTextSyntax TextSyntax
+        public SchedulePartTextSyntax ValueTextSyntax
         {
             get
             {
-                return m_textSyntax;
+                return m_valueTextSyntax;
             }
         }
 
         /// <summary>
-        /// Gets a meaningful description of the schedule part.
+        /// Gets a meaningful description of the <see cref="SchedulePart"/> object.
         /// </summary>
-        /// <value></value>
-        /// <returns>A meaningful description of the schedule part.</returns>
         public string Description
         {
             get
             {
-                switch (m_textSyntax)
+                switch (m_valueTextSyntax)
                 {
                     case SchedulePartTextSyntax.Any:
                         return "Any " + m_dateTimePart.ToString();
                     case SchedulePartTextSyntax.EveryN:
-                        return "Every " + m_text.Split('/')[1] + " " + m_dateTimePart.ToString();
+                        return "Every " + m_valueText.Split('/')[1] + " " + m_dateTimePart.ToString();
                     case SchedulePartTextSyntax.Range:
-                        string[] range = m_text.Split('-');
+                        string[] range = m_valueText.Split('-');
                         return m_dateTimePart.ToString() + " " + range[0] + " to " + range[1];
                     case SchedulePartTextSyntax.Specific:
-                        return m_dateTimePart.ToString() + " " + m_text;
+                        return m_dateTimePart.ToString() + " " + m_valueText;
                     default:
                         return "";
                 }
@@ -122,13 +186,8 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets a list of values that were populated from based on the specified text and date-time part that the
-        /// schedule part represents.
+        /// Gets the list of values for the <see cref="SchedulePart"/> object specified using <see cref="ValueText"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// A list of values that were populated from based on the specified text and date-time part that the
-        /// schedule part represents.</returns>
         public List<int> Values
         {
             get
@@ -141,6 +200,12 @@ namespace PCS.Scheduling
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Determines if the <see cref="Values"/> for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> 
+        /// object represents matches the specified <paramref name="dateTime"/>.
+        /// </summary>
+        /// <param name="dateTime">The <see cref="DateTime"/> against which the <see cref="Values"/> are to be matches.</param>
+        /// <returns>true if one of the <see cref="Values"/> matches the <paramref name="dateTime"/>; otherwise false.</returns>
         public bool Matches(DateTime dateTime)
         {
             switch (m_dateTimePart)
@@ -191,7 +256,7 @@ namespace PCS.Scheduling
             if (Regex.Match(schedulePart, "^(\\*){1}$").Success)
             {
                 // ^(\*){1}$             Matches: *
-                m_textSyntax = SchedulePartTextSyntax.Any;
+                m_valueTextSyntax = SchedulePartTextSyntax.Any;
                 PopulateValues(minValue, maxValue, 1);
 
                 return true;
@@ -202,7 +267,7 @@ namespace PCS.Scheduling
                 int interval = Convert.ToInt32(schedulePart.Split('/')[1]);
                 if (interval > 0 && interval >= minValue && interval <= maxValue)
                 {
-                    m_textSyntax = SchedulePartTextSyntax.EveryN;
+                    m_valueTextSyntax = SchedulePartTextSyntax.EveryN;
                     PopulateValues(minValue, maxValue, interval);
 
                     return true;
@@ -216,7 +281,7 @@ namespace PCS.Scheduling
                 int highRange = Convert.ToInt32(range[1]);
                 if (lowRange < highRange && lowRange >= minValue && highRange <= maxValue)
                 {
-                    m_textSyntax = SchedulePartTextSyntax.Range;
+                    m_valueTextSyntax = SchedulePartTextSyntax.Range;
                     PopulateValues(lowRange, highRange, 1);
 
                     return true;
@@ -225,7 +290,7 @@ namespace PCS.Scheduling
             else if (Regex.Match(schedulePart, "^((\\d+,?)+){1}$").Success)
             {
                 // ^((\d+,?)+){1}$       Matches: [any digit] AND [any digit], ..., [any digit]
-                m_textSyntax = SchedulePartTextSyntax.Specific;
+                m_valueTextSyntax = SchedulePartTextSyntax.Specific;
 
                 int value;
 

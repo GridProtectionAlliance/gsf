@@ -25,6 +25,8 @@
 //       the IDE of the component's consumer to crash in design-mode.
 //  09/19/2008 - James R Carroll
 //       Convert to C#.
+//  11/04/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -39,130 +41,116 @@ using PCS.Threading;
 
 namespace PCS.Scheduling
 {
-    /// <summary>Manages multiple schedules defined as scheduling objects.</summary>
-    /// <remarks>
-    /// <para>Note that schedules are based on UNIX crontab syntax.</para>
-    /// <para>
-    /// Operators:
-    /// </para>
-    /// <para>
-    /// There are several ways of specifying multiple date/time values in a field:
-    /// <list type="bullet">
-    /// <item>
-    ///     <description>
-    ///         The comma (',') operator specifies a list of values, for example: "1,3,4,7,8"
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <description>
-    ///         The dash ('-') operator specifies a range of values, for example: "1-6",
-    ///         which is equivalent to "1,2,3,4,5,6"
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <description>
-    ///         The asterisk ('*') operator specifies all possible values for a field.
-    ///         For example, an asterisk in the hour time field would be equivalent to
-    ///         'every hour' (subject to matching other specified fields).
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <description>
-    ///         The slash ('/') operator (called "step"), which can be used to skip a given
-    ///         number of values. For example, "*/3" in the hour time field is equivalent
-    ///         to "0,3,6,9,12,15,18,21". So "*" specifies 'every hour' but the "*/3" means
-    ///         only those hours divisible by 3.
-    ///     </description>
-    /// </item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// Fields:
-    /// </para>
-    /// <para>
+    /// <summary>
+    /// Monitors multiple <see cref="Schedule"/> at an interval of one minute to check if they are due.
+    /// </summary>
+    /// <seealso cref="Schedule"/>
+    /// <example>
+    /// This example shows how to use the <see cref="ScheduleManger"/> component:
     /// <code>
-    ///     +---------------- minute (0 - 59)
-    ///     |  +------------- hour (0 - 23)
-    ///     |  |  +---------- day of month (1 - 31)
-    ///     |  |  |  +------- month (1 - 12)
-    ///     |  |  |  |  +---- day of week (0 - 7) (Sunday=0 or 7)
-    ///     |  |  |  |  |
-    ///     *  *  *  *  *
+    /// using System;
+    /// using PCS;
+    /// using PCS.Scheduling;
+    /// 
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         ScheduleManager scheduler = new ScheduleManager();
+    ///         // Add event handlers.
+    ///         scheduler.Starting += scheduler_Starting;
+    ///         scheduler.Started += scheduler_Started;
+    ///         scheduler.ScheduleDue += scheduler_ScheduleDue;
+    ///         // Add test schedules.
+    ///         scheduler.AddSchedule("Run.Notepad", "* * * * *");
+    ///         scheduler.AddSchedule("Run.Explorer", "* * * * *");
+    ///         // Start the scheduler.
+    ///         scheduler.Start();
+    /// 
+    ///         Console.ReadLine();
+    ///     }
+    /// 
+    ///     static void scheduler_Started(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Scheduler has started successfully.");
+    ///     }
+    /// 
+    ///     static void scheduler_Starting(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Scheduler is waiting to be started.");
+    ///     }
+    /// 
+    ///     static void scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
+    ///     {
+    ///         Console.WriteLine(string.Format("{0} schedule is due for processing.", e.Argument.Name));
+    ///     }
+    /// }
     /// </code>
-    /// </para>
-    /// <para>
-    /// Each of the patterns from the first five fields may be either * (an asterisk), which matches all legal values,
-    /// or a list of elements separated by commas. 
-    /// </para>
-    /// <para>
-    /// See <a href="http://en.wikipedia.org/wiki/Cron" target="_blank">http://en.wikipedia.org/wiki/Cron</a> for more information.
-    /// </para>
-    /// </remarks>
-    [ToolboxBitmap(typeof(ScheduleManager)), DefaultEvent("ScheduleDue")]
-    public partial class ScheduleManager : Component, ISupportLifecycle, IStatusProvider, IPersistSettings, ISupportInitialize
+    /// </example>
+    [ToolboxBitmap(typeof(ScheduleManager))]
+    public class ScheduleManager : Component, ISupportLifecycle, ISupportInitialize, IStatusProvider, IPersistSettings
     {
         #region [ Members ]
 
         // Constants
 
         /// <summary>
-        /// Specifies the default value for Enabled property.
+        /// Specifies the default value for the <see cref="Enabled"/> property.
         /// </summary>
         public const bool DefaultEnabled = true;
 
         /// <summary>
-        /// Specifies the default value for PersistSettings property.
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
 
         /// <summary>
-        /// Specifies the default value for SettingsCategoryName property.
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
-        public const string DefaultSettingsCategoryName = "ScheduleManager";
+        public const string DefaultSettingsCategory = "ScheduleManager";
 
         // Events
 
         /// <summary>
-        /// Occurs while the schedule manager is waiting to start at top of the minute.
+        /// Occurs while the <see cref="ScheduleManager"/> is waiting to start at the top of the minute.
         /// </summary>
-        [Category("State")]
+        [Category("State"),
+        Description("Occurs while the ScheduleManager is waiting to start at the top of the minute.")]
         public event EventHandler Starting;
 
         /// <summary>
-        /// Occurs when the schedule manager has started.
+        /// Occurs when the <see cref="ScheduleManager"/> has started at the top of the minute.
         /// </summary>
-        [Category("State")]
+        [Category("State"),
+        Description("Occurs when the ScheduleManager has started at the top of the minute.")]
         public event EventHandler Started;
 
         /// <summary>
-        /// Occurs when the schedule manager has stopped.
+        /// Occurs when a <see cref="Schedule"/> is due according to the rule specified for it.
         /// </summary>
-        [Category("State")]
-        public event EventHandler Stopped;
+        /// <remarks><see cref="ScheduleDue"/> is an asynchronous event.</remarks>
+        [Category("Schedules"),
+        Description("Occurs when a Schedule is due according to the rule specified for it.")]
+        public event EventHandler<EventArgs<Schedule>> ScheduleDue;
 
         /// <summary>
-        /// Occurs when the a particular schedule is being checked to see if it is due.
+        /// Occurs when the a particular <see cref="Schedule"/> is being checked to see if it is due.
         /// </summary>
-        [Category("Schedules")]
-        public event EventHandler<ScheduleEventArgs> CheckingSchedule;
-
-        /// <summary>
-        /// Occurs when a schedule is due according to the rule specified for the schedule.
-        /// </summary>
-        [Category("Schedules")]
-        public event EventHandler<ScheduleEventArgs> ScheduleDue;
+        [Category("Schedules"),
+        Description("Occurs when the a particular Schedule is being checked to see if it is due.")]
+        public event EventHandler<EventArgs<Schedule>> ScheduleDueCheck;
 
         // Fields
-        private bool m_enabled;
-        private List<Schedule> m_schedules;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private List<Schedule> m_schedules;
         private System.Timers.Timer m_timer;
 #if ThreadTracking
         private ManagedThread m_startTimerThread;
 #else
         private Thread m_startTimerThread;
 #endif
+        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -170,11 +158,14 @@ namespace PCS.Scheduling
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScheduleManager"/> class.
+        /// </summary>
         public ScheduleManager()
         {
             m_enabled = DefaultEnabled;
             m_persistSettings = DefaultPersistSettings;
-            m_settingsCategory = DefaultSettingsCategoryName;
+            m_settingsCategory = DefaultSettingsCategory;
             m_schedules = new List<Schedule>();
             m_timer = new System.Timers.Timer(60000);
             m_timer.Elapsed += m_timer_Elapsed;
@@ -193,41 +184,12 @@ namespace PCS.Scheduling
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a list of all the schedules.
+        /// Gets or sets a boolean value that indicates whether the settings of <see cref="ScheduleManager"/> object are 
+        /// to be saved to the config file.
         /// </summary>
-        /// <value></value>
-        /// <returns>A list of the schedules.</returns>
-        public List<Schedule> Schedules
-        {
-            get
-            {
-                return m_schedules;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="ScheduleManager"/> object is currently enabled.
-        /// </summary>
-        /// <returns>True if the schedule manager is enabled; otherwise False.</returns>
-        [Category("Behavior"), DefaultValue(DefaultEnabled)]
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value indicating whether the component settings are to be persisted to the config file.
-        /// </summary>
-        /// <value></value>
-        /// <returns>True if the component settings are to be persisted to the config file; otherwise False.</returns>
-        [Category("Persistance"), DefaultValue(DefaultPersistSettings), Description("Indicates whether the component settings are to be persisted to the config file.")]
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of ScheduleManager object are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -241,11 +203,13 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets or sets the category name under which the component settings are to be saved in the config file.
+        /// Gets or sets the category under which the settings of <see cref="ScheduleManager"/> object are to be saved
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <value></value>
-        /// <returns>The category name under which the component settings are to be saved in the config file.</returns>
-        [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName), Description("The category name under which the component settings are to be saved in the config file.")]
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of ScheduleManager object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -254,18 +218,31 @@ namespace PCS.Scheduling
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
             }
         }
 
         /// <summary>
-        /// Gets a boolean value indicating whether the schedule manager is running.
+        /// Gets a list of all <see cref="Schedule"/> monitored by the <see cref="ScheduleManager"/> object.
         /// </summary>
-        /// <value></value>
-        /// <returns>True if the schedule manager is running; otherwise False.</returns>
+        /// <remarks>
+        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="ScheduleManager"/>, a lock must be 
+        /// obtained on <see cref="Schedules"/> before accessing it.
+        /// </remarks>
+        public List<Schedule> Schedules
+        {
+            get
+            {
+                return m_schedules;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether the <see cref="ScheduleManager"/> is running.
+        /// </summary>
         [Browsable(false)]
         public bool IsRunning
         {
@@ -275,6 +252,30 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="ScheduleManager"/> object is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the unique identifier of the <see cref="ScheduleManager"/> object.
+        /// </summary>
         [Browsable(false)]
         public string Name
         {
@@ -284,22 +285,26 @@ namespace PCS.Scheduling
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="ScheduleManager"/> object.
+        /// </summary>
         [Browsable(false)]
         public string Status
         {
             get
             {
                 StringBuilder status = new StringBuilder();
-
                 status.Append("        Number of schedules: ");
                 status.Append(m_schedules.Count);
                 status.AppendLine();
                 status.AppendLine();
-
-                foreach (Schedule schedule in m_schedules)
+                lock (m_schedules)
                 {
-                    status.Append(schedule.Status);
-                    status.AppendLine();
+                    foreach (Schedule schedule in m_schedules)
+                    {
+                        status.Append(schedule.Status);
+                        status.AppendLine();
+                    }
                 }
 
                 return status.ToString();
@@ -309,38 +314,6 @@ namespace PCS.Scheduling
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Releases the unmanaged resources used by an instance of the <see cref="ScheduleManager" /> class and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        Stop();         // Stop the schedule manager.
-                        SaveSettings(); // Saves settings to the config file.
-
-                        if (m_timer != null)
-                        {
-                            m_timer.Elapsed -= m_timer_Elapsed;
-                            m_timer.Dispose();
-                        }
-
-                        m_timer = null;
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
 
         /// <summary>
         /// Initializes the <see cref="ScheduleManager"/> object.
@@ -359,34 +332,16 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets the schedule with the specified schedule name.
-        /// </summary>
-        /// <param name="scheduleName">Name of the schedule that is to be found.</param>
-        /// <value></value>
-        /// <returns>The PCS.Scheduling.Schedule instance for the specified schedule name if found; otherwise Nothing.</returns>
-        public Schedule GetSchedule(string scheduleName)
-        {
-            Schedule match = null;
-
-            foreach (Schedule schedule in m_schedules)
-            {
-                if (string.Compare(schedule.Name, scheduleName, true) == 0)
-                {
-                    match = schedule;
-                    break;
-                }
-            }
-
-            return match;
-        }
-
-        /// <summary>
-        /// Starts the schedule manager asynchronously.
+        /// Starts the <see cref="ScheduleManager"/> asynchronously if not running.
         /// </summary>
         public void Start()
         {
-            if (m_enabled && !m_timer.Enabled)
+            if (m_startTimerThread == null && !m_timer.Enabled)
             {
+                // Initialize if uninitialized.
+                Initialize();
+
+                // Schedule manager is not running and no active attempt to start it is in progress.
 #if ThreadTracking
                 m_startTimerThread = new ManagedThread(StartTimer);
                 m_startTimerThread.Name = "PCS.Scheduling.ScheduleManager.StartTimer()";
@@ -398,59 +353,92 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Stops the schedule manager.
+        /// Stops the <see cref="ScheduleManager"/> if running.
         /// </summary>
         public void Stop()
         {
-            if (m_enabled)
+            if (m_timer.Enabled)
+                m_timer.Stop();
+
+            if (m_startTimerThread != null)
             {
-                if ((m_startTimerThread != null) && m_startTimerThread.IsAlive)
-                    m_startTimerThread.Abort();
-
-                if (m_timer.Enabled)
-                {
-                    m_timer.Stop();
-
-                    if (Stopped != null)
-                        Stopped(this, EventArgs.Empty);
-                }
+                m_startTimerThread.Abort();
+                m_startTimerThread = null;
             }
         }
 
         /// <summary>
-        /// Checks all of the schedules to determine if they are due.
+        /// Checks all of the <see cref="Schedules"/> to determine if they are due.
         /// </summary>
         public void CheckAllSchedules()
         {
-            if (m_enabled)
+            lock (m_schedules)
             {
                 foreach (Schedule schedule in m_schedules)
                 {
-                    if (CheckingSchedule != null)
-                        CheckingSchedule(this, new ScheduleEventArgs(schedule));
+                    OnScheduleDueCheck(new EventArgs<Schedule>(schedule));
 
+                    // Schedule is due so raise the event.
                     if (schedule.IsDue())
-                        OnScheduleDue(this, new ScheduleEventArgs(schedule)); // Event raised asynchronously.
+                        OnScheduleDue(new EventArgs<Schedule>(schedule));
                 }
             }
         }
 
         /// <summary>
-        /// Loads previously saved schedules from the config file.
-        /// </summary>
+        /// Saves settings for the <see cref="ScheduleManager"/> object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Clear();
+                lock (m_schedules)
+                {
+                    foreach (Schedule schedule in m_schedules)
+                    {
+                        settings[schedule.Name, true].Update(schedule.Rule, schedule.Description);
+                    }
+                }
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings for the <see cref="ScheduleManager"/> object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
         public void LoadSettings()
         {
-            try
+            if (m_persistSettings)
             {
-                foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[m_settingsCategory])
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                foreach (CategorizedSettingsElement setting in settings)
                 {
                     // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                    Schedule existingSchedule = GetSchedule(setting.Name);
+                    Schedule existingSchedule = FindSchedule(setting.Name);
 
                     if (existingSchedule == null)
                     {
                         // Schedule doesn't exist, so we'll add it.
-                        m_schedules.Add(new Schedule(setting.Name, setting.Value, setting.Description));
+                        lock (m_schedules)
+                        {
+                            m_schedules.Add(new Schedule(setting.Name, setting.Value, setting.Description));
+                        }
                     }
                     else
                     {
@@ -459,36 +447,6 @@ namespace PCS.Scheduling
                         existingSchedule.Rule = setting.Value;
                         existingSchedule.Description = setting.Description;
                     }
-                }
-            }
-            catch
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
-        /// <summary>
-        /// Saves all schedules to the config file.
-        /// </summary>
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                    settings.Clear();
-                    foreach (Schedule schedule in m_schedules)
-                    {
-                        settings.Add(schedule.Name, schedule.Rule, schedule.Description);
-                    }
-
-                    ConfigurationFile.Current.Save();
-                }
-                catch
-                {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
                 }
             }
         }
@@ -516,20 +474,206 @@ namespace PCS.Scheduling
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
+            if (!DesignMode)
             {
                 Initialize();
             }
         }
 
-        protected void OnScheduleDue(object sender, ScheduleEventArgs e)
+        /// <summary>
+        /// Attempts to add a new <see cref="Schedule"/>.
+        /// </summary>
+        /// <param name="scheduleName">Name of the new <see cref="Schedule"/>.</param>
+        /// <param name="scheduleRule">Rule of the new <see cref="Schedule"/>.</param>
+        /// <returns>true if a new <see cref="Schedule"/> was added or an existing one was updated; otherwise false.</returns>
+        public bool AddSchedule(string scheduleName, string scheduleRule)
+        {
+            return AddSchedule(scheduleName, scheduleRule, false);
+        }
+
+        /// <summary>
+        /// Attempts to add a new <see cref="Schedule"/>.
+        /// </summary>
+        /// <param name="scheduleName">Name of the new <see cref="Schedule"/>.</param>
+        /// <param name="scheduleRule">Rule of the new <see cref="Schedule"/>.</param>
+        /// <param name="updateExisting">true to update existing <see cref="Schedule"/> with the specified <paramref name="scheduleName"/>; otherwise false.</param>
+        /// <returns>true if a new <see cref="Schedule"/> was added or an existing one was updated; otherwise false.</returns>
+        public bool AddSchedule(string scheduleName, string scheduleRule, bool updateExisting)
+        {
+            return AddSchedule(scheduleName, scheduleRule, string.Empty, updateExisting);
+        }
+
+        /// <summary>
+        /// Attempts to add a new <see cref="Schedule"/>.
+        /// </summary>
+        /// <param name="scheduleName">Name of the new <see cref="Schedule"/>.</param>
+        /// <param name="scheduleRule">Rule of the new <see cref="Schedule"/>.</param>
+        /// <param name="scheduleDescription">Description of the new <see cref="Schedule"/>.</param>
+        /// <returns>true if a new <see cref="Schedule"/> was added; otherwise false.</returns>
+        public bool AddSchedule(string scheduleName, string scheduleRule, string scheduleDescription)
+        {
+            return AddSchedule(scheduleName, scheduleRule, scheduleDescription, false);
+        }
+
+        /// <summary>
+        /// Attempts to add a new <see cref="Schedule"/>.
+        /// </summary>
+        /// <param name="scheduleName">Name of the new <see cref="Schedule"/>.</param>
+        /// <param name="scheduleRule">Rule of the new <see cref="Schedule"/>.</param>
+        /// <param name="scheduleDescription">Description of the new <see cref="Schedule"/>.</param>
+        /// <param name="updateExisting">true to update existing <see cref="Schedule"/> with the specified <paramref name="scheduleName"/>; otherwise false.</param>
+        /// <returns>true if a new <see cref="Schedule"/> was added or an existing one was updated; otherwise false.</returns>
+        public bool AddSchedule(string scheduleName, string scheduleRule, string scheduleDescription, bool updateExisting)
+        {
+            Schedule existingSchedule = FindSchedule(scheduleName);
+            if (existingSchedule == null)
+            {
+                // Schedule doesn't exist, so we'll add it.
+                lock (m_schedules)
+                {
+                    m_schedules.Add(new Schedule(scheduleName, scheduleRule, scheduleDescription));
+                }
+                return true;
+            }
+            else
+            {
+                // Schedule exists, we'll update if specified.
+                if (updateExisting)
+                {
+                    // Update existing schedule.
+                    existingSchedule.Name = scheduleName;
+                    existingSchedule.Rule = scheduleRule;
+                    existingSchedule.Description = scheduleDescription;
+
+                    return true;
+                }
+                else
+                {
+                    // Leave existing schedule alone.
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Attempts to remove a <see cref="Schedule"/> with the specified name if one exists.
+        /// </summary>
+        /// <param name="scheduleName">Name of the <see cref="Schedule"/> to be removed.</param>
+        /// <returns>true if the <see cref="Schedule"/> was removed; otherwise false.</returns>
+        public bool RemoveSchedule(string scheduleName)
+        {
+            Schedule scheduleToRemove = FindSchedule(scheduleName);
+            if (scheduleToRemove != null)
+            {
+                // Schedule exists, so remove it.
+                lock (m_schedules)
+                {
+                    m_schedules.Remove(scheduleToRemove);
+                }
+                return true;
+            }
+            else
+            {
+                // Can't remove schedule, since it doesn't exist.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Searches for the <see cref="Schedule"/> with the specified name.
+        /// </summary>
+        /// <param name="scheduleName">Name of the <see cref="Schedule"/> to be obtained.</param>
+        /// <returns><see cref="Schedule"/> object if a match is found; otherwise null.</returns>
+        public Schedule FindSchedule(string scheduleName)
+        {
+            Schedule match = null;
+            lock (m_schedules)
+            {
+                foreach (Schedule schedule in m_schedules)
+                {
+                    if (string.Compare(schedule.Name, scheduleName, true) == 0)
+                    {
+                        match = schedule;
+                        break;
+                    }
+                }
+            }
+
+            return match;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Starting"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnStarting(EventArgs e)
+        {
+            if (Starting != null)
+                Starting(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Started"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnStarted(EventArgs e)
+        {           
+            if (Started != null)
+                Started(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ScheduleDue"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnScheduleDue(EventArgs<Schedule> e)
         {
             if (ScheduleDue != null)
             {
-                foreach (EventHandler<ScheduleEventArgs> handler in ScheduleDue.GetInvocationList())
+                foreach (EventHandler<EventArgs<Schedule>> handler in ScheduleDue.GetInvocationList())
                 {
                     // Asynchrnonously invoke handlers...
-                    handler.BeginInvoke(sender, e, null, null);
+                    handler.BeginInvoke(this, e, null, null);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ScheduleDueCheck"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnScheduleDueCheck(EventArgs<Schedule> e)
+        {
+            if (ScheduleDueCheck != null)
+                ScheduleDueCheck(this, e);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ScheduleManager"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings(); // Saves settings to the config file.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_timer != null)
+                            m_timer.Dispose();
+
+                        if (m_startTimerThread != null)
+                            m_startTimerThread.Abort();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
         }
@@ -538,19 +682,16 @@ namespace PCS.Scheduling
         {
             while (true)
             {
-                if (Starting != null)
-                    Starting(this, EventArgs.Empty);
+                OnStarting(EventArgs.Empty);
 
                 if (DateTime.Now.Second == 0)
                 {
                     // We'll start the timer that will check the schedules at top of the minute.
                     m_timer.Start();
-
-                    if (Started != null)
-                        Started(this, EventArgs.Empty);
-
+                    m_startTimerThread = null;
+                    OnStarted(EventArgs.Empty);
+                    
                     CheckAllSchedules();
-
                     break;
                 }
                 else
@@ -566,5 +707,5 @@ namespace PCS.Scheduling
         }
 
         #endregion
-   }
+    }
 }

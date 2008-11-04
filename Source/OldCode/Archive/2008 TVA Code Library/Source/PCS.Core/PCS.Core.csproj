@@ -225,7 +225,6 @@
     <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Reflection\ReflectionExtensions.cs" />
     <Compile Include="Scheduling\Schedule.cs" />
-    <Compile Include="Scheduling\ScheduleEventArgs.cs" />
     <Compile Include="Scheduling\ScheduleManager.cs">
       <SubType>Component</SubType>
     </Compile>
