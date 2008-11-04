@@ -19,7 +19,7 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    internal class TimeStampParser
+    internal class FtpTimeStampParser
     {
         #region [ Members ]
 
@@ -40,12 +40,12 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        public TimeStampParser()
+        public FtpTimeStampParser()
         {
             Style = RawDataStyle.Undetermined;
         }
 
-        public TimeStampParser(string RawValue, RawDataStyle Style)
+        public FtpTimeStampParser(string RawValue, RawDataStyle Style)
         {
             this.RawValue = RawValue;
             this.Style = Style;
