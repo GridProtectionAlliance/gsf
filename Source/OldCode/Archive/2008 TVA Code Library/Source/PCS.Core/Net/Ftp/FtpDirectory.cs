@@ -39,7 +39,7 @@ namespace PCS.Net.Ftp
             public string Permission;
             public bool IsDirectory;
             public long Size;
-            public TimeStampParser TimeStamp = new TimeStampParser();
+            public FtpTimeStampParser TimeStamp = new FtpTimeStampParser();
         }
 
         // Events
@@ -639,13 +639,13 @@ namespace PCS.Net.Ftp
             return true;
         }
 
-        private Match MatchingListLine(string line, ref TimeStampParser.RawDataStyle tsStyle)
+        private Match MatchingListLine(string line, ref FtpTimeStampParser.RawDataStyle tsStyle)
         {
             Match m = m_UnixListLineStyle1.Match(line);
 
             if (m.Success)
             {
-                tsStyle = TimeStampParser.RawDataStyle.UnixDate;
+                tsStyle = FtpTimeStampParser.RawDataStyle.UnixDate;
                 return m;
             }
 
@@ -653,7 +653,7 @@ namespace PCS.Net.Ftp
 
             if (m.Success)
             {
-                tsStyle = TimeStampParser.RawDataStyle.UnixDateTime;
+                tsStyle = FtpTimeStampParser.RawDataStyle.UnixDateTime;
                 return m;
             }
 
@@ -661,7 +661,7 @@ namespace PCS.Net.Ftp
 
             if (m.Success)
             {
-                tsStyle = TimeStampParser.RawDataStyle.UnixDate;
+                tsStyle = FtpTimeStampParser.RawDataStyle.UnixDate;
                 return m;
             }
 
@@ -669,7 +669,7 @@ namespace PCS.Net.Ftp
 
             if (m.Success)
             {
-                tsStyle = TimeStampParser.RawDataStyle.DosDateTime;
+                tsStyle = FtpTimeStampParser.RawDataStyle.DosDateTime;
                 return m;
             }
 
@@ -677,11 +677,11 @@ namespace PCS.Net.Ftp
 
             if (m.Success)
             {
-                tsStyle = TimeStampParser.RawDataStyle.UnixDateTime;
+                tsStyle = FtpTimeStampParser.RawDataStyle.UnixDateTime;
                 return m;
             }
 
-            tsStyle = TimeStampParser.RawDataStyle.Undetermined;
+            tsStyle = FtpTimeStampParser.RawDataStyle.Undetermined;
             return null;
         }
 

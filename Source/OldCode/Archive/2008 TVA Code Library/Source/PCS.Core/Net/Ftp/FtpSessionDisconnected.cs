@@ -19,7 +19,7 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    internal class SessionDisconnected : IFtpSessionState
+    internal class FtpSessionDisconnected : IFtpSessionState
     {
         #region [ Members ]
 
@@ -33,7 +33,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal SessionDisconnected(FtpSession h, bool caseInsensitive)
+        internal FtpSessionDisconnected(FtpSession h, bool caseInsensitive)
         {
             m_port = 21;
             m_host = h;
