@@ -234,7 +234,8 @@ namespace PCS.Diagnostics
         /// Gets a list of sampled values from the <see cref="BaseCounter"/>
         /// </summary>
         /// <remarks>
-        /// Thread safety note: Obtain a lock on <see cref="Samples"/> before accessing it.
+        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="PerformanceCounter"/>, a lock must be 
+        /// obtained on <see cref="Samples"/> before accessing it.
         /// </remarks>
         public List<float> Samples
         {

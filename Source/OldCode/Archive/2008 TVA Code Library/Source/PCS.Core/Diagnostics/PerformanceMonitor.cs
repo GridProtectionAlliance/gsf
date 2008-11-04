@@ -204,7 +204,8 @@ namespace PCS.Diagnostics
         /// Gets a list of <see cref="PerformanceCounter"/> objects monitored by the <see cref="PerformanceMonitor"/> object.
         /// </summary>
         /// <remarks>
-        /// Thread safety note: Obtain a lock on <see cref="Counters"/> before accessing it.
+        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="PerformanceMonitor"/>, a lock must be 
+        /// obtain on <see cref="Counters"/> before accessing it.
         /// </remarks>
         public List<PerformanceCounter> Counters
         {
