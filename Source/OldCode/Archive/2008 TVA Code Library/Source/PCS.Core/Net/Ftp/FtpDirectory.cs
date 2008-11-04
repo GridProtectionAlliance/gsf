@@ -507,7 +507,7 @@ namespace PCS.Net.Ftp
         /// </summary>
         /// <param name="newFileName">New remote file name.</param>
         /// <returns>Output data stream for new remote file.</returns>
-        public OutputDataStream CreateFileStream(string newFileName)
+        public FtpOutputDataStream CreateFileStream(string newFileName)
         {
             InitHashtable();
 
@@ -521,7 +521,7 @@ namespace PCS.Net.Ftp
 
                 m_files[newFileName] = newFile;
 
-                return ((OutputDataStream)stream);
+                return ((FtpOutputDataStream)stream);
             }
             catch
             {

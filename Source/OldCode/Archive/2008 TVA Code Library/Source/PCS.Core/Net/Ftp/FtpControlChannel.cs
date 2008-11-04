@@ -360,7 +360,7 @@ namespace PCS.Net.Ftp
                 if (direction == TransferDirection.Download)
                     return new FtpInputDataStream(this, client);
                 else
-                    return new OutputDataStream(this, client);
+                    return new FtpOutputDataStream(this, client);
             }
             catch (IOException ie)
             {

@@ -173,7 +173,7 @@
     <Compile Include="Net\Ftp\IFtpFile.cs" />
     <Compile Include="Net\Ftp\FtpInputDataStream.cs" />
     <Compile Include="Net\Ftp\IFtpSessionState.cs" />
-    <Compile Include="Net\Ftp\OutputDataStream.cs" />
+    <Compile Include="Net\Ftp\FtpOutputDataStream.cs" />
     <Compile Include="Net\Ftp\TimeStampParser.cs" />
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />

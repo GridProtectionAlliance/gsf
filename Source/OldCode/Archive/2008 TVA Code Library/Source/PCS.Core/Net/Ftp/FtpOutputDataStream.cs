@@ -20,9 +20,9 @@ using System.Net.Sockets;
 
 namespace PCS.Net.Ftp
 {
-    public class OutputDataStream : FtpDataStream
+    public class FtpOutputDataStream : FtpDataStream
     {
-        internal OutputDataStream(FtpControlChannel ctrl, TcpClient client)
+        internal FtpOutputDataStream(FtpControlChannel ctrl, TcpClient client)
             : base(ctrl, client)
         {
         }

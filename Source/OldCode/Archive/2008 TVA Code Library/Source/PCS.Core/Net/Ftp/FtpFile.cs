@@ -139,9 +139,9 @@ namespace PCS.Net.Ftp
             return ((FtpInputDataStream)(GetStream(0, TransferDirection.Download)));
         }
 
-        public OutputDataStream GetOutputStream()
+        public FtpOutputDataStream GetOutputStream()
         {
-            return ((OutputDataStream)(GetStream(0, TransferDirection.Upload)));
+            return ((FtpOutputDataStream)(GetStream(0, TransferDirection.Upload)));
         }
 
         public FtpInputDataStream GetInputStream(long offset)
@@ -149,9 +149,9 @@ namespace PCS.Net.Ftp
             return ((FtpInputDataStream)(GetStream(offset, TransferDirection.Download)));
         }
 
-        public OutputDataStream GetOutputStream(long offset)
+        public FtpOutputDataStream GetOutputStream(long offset)
         {
-            return ((OutputDataStream)(GetStream(offset, TransferDirection.Upload)));
+            return ((FtpOutputDataStream)(GetStream(offset, TransferDirection.Upload)));
         }
 
         private FtpDataStream GetStream(long offset, TransferDirection dir)

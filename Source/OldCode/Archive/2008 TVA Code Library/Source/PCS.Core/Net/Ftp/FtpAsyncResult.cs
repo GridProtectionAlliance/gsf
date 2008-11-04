@@ -41,12 +41,12 @@ namespace PCS.Net.Ftp
         #region [ Constructors ]
 
         internal FtpAsyncResult()
-            : this("Success.", Response.InvalidCode, Complete)
+            : this("Success.", FtpResponse.InvalidCode, Complete)
         {
         }
 
         internal FtpAsyncResult(string message, int result)
-            : this(message, Response.InvalidCode, result)
+            : this(message, FtpResponse.InvalidCode, result)
         {
         }
 
