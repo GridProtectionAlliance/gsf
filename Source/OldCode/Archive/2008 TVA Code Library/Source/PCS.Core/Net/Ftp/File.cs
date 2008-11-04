@@ -24,7 +24,7 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private Directory m_parent;
+        private FtpDirectory m_parent;
         private string m_name;
         private long m_size;
         private string m_permission;
@@ -34,7 +34,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal File(Directory parent, Directory.ItemInfo info)
+        internal File(FtpDirectory parent, FtpDirectory.ItemInfo info)
         {
             m_parent = parent;
             m_name = info.Name;
@@ -43,7 +43,7 @@ namespace PCS.Net.Ftp
             m_timestamp = info.TimeStamp.Value;
         }
 
-        internal File(Directory parent, string name)
+        internal File(FtpDirectory parent, string name)
         {
             m_parent = parent;
             m_name = name;
@@ -121,7 +121,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public Directory Parent
+        public FtpDirectory Parent
         {
             get
             {

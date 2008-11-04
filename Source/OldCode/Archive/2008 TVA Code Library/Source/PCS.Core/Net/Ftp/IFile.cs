@@ -21,7 +21,7 @@ namespace PCS.Net.Ftp
 {
     public interface IFile : IComparable, IComparable<IFile>
     {
-        Directory Parent { get; }
+        FtpDirectory Parent { get; }
 
         string Name { get; }
 

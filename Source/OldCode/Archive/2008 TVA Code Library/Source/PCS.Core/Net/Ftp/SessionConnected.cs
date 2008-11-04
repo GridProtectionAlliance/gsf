@@ -27,8 +27,8 @@ namespace PCS.Net.Ftp
         // Fields
         private Session m_host;
         private FtpControlChannel m_ctrlChannel;
-        private Directory m_root;
-        private Directory m_current;
+        private FtpDirectory m_root;
+        private FtpDirectory m_current;
         private FtpDataStream m_dataStream;
         private bool m_caseInsensitive;
 
@@ -72,7 +72,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public Directory RootDirectory
+        public FtpDirectory RootDirectory
         {
             get
             {
@@ -80,7 +80,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public Directory CurrentDirectory
+        public FtpDirectory CurrentDirectory
         {
             get
             {
@@ -124,7 +124,7 @@ namespace PCS.Net.Ftp
 
         internal void InitRootDirectory()
         {
-            m_root = new Directory(this, m_caseInsensitive, m_ctrlChannel.PWD());
+            m_root = new FtpDirectory(this, m_caseInsensitive, m_ctrlChannel.PWD());
             m_current = m_root;
         }
 

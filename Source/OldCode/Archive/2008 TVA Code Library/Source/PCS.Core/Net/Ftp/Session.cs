@@ -121,7 +121,7 @@ namespace PCS.Net.Ftp
         }
 
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Directory CurrentDirectory
+        public FtpDirectory CurrentDirectory
         {
             get
             {
@@ -134,7 +134,7 @@ namespace PCS.Net.Ftp
         }
 
         [Browsable(false)]
-        public Directory RootDirectory
+        public FtpDirectory RootDirectory
         {
             get
             {
@@ -162,7 +162,7 @@ namespace PCS.Net.Ftp
 
             if (directoryPath.Length > 0)
             {
-                m_currentState.CurrentDirectory = new Directory((SessionConnected)m_currentState, CaseInsensitive, directoryPath);
+                m_currentState.CurrentDirectory = new FtpDirectory((SessionConnected)m_currentState, CaseInsensitive, directoryPath);
                 m_currentState.CurrentDirectory.Refresh();
             }
         }

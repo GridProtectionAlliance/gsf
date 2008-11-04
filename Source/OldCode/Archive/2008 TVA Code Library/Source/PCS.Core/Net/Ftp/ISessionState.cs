@@ -24,9 +24,9 @@ namespace PCS.Net.Ftp
 
         int Port { get; set; }
 
-        Directory CurrentDirectory { get; set; }
+        FtpDirectory CurrentDirectory { get; set; }
 
-        Directory RootDirectory { get; }
+        FtpDirectory RootDirectory { get; }
 
         FtpControlChannel ControlChannel { get; }
 

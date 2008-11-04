@@ -42,7 +42,7 @@ namespace PCS.Net.Ftp
         // Fields
         private StreamCopyDelegate m_streamCopyRoutine;
         private FileCommandDelegate m_ftpFileCommandRoutine;
-        private Directory m_transferStarter;
+        private FtpDirectory m_transferStarter;
         private SessionConnected m_session;
         private string m_localFile;
         private string m_remoteFile;
@@ -57,7 +57,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal FileTransferer(Directory transferStarter, string localFile, string remoteFile, long totalBytes, TransferDirection dir)
+        internal FileTransferer(FtpDirectory transferStarter, string localFile, string remoteFile, long totalBytes, TransferDirection dir)
         {
             m_transferStarter = transferStarter;
             m_transferDirection = dir;

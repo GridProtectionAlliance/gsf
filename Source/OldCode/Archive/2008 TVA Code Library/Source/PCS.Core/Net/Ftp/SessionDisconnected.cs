@@ -68,7 +68,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public Directory CurrentDirectory
+        public FtpDirectory CurrentDirectory
         {
             get
             {
@@ -96,7 +96,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public Directory RootDirectory
+        public FtpDirectory RootDirectory
         {
             get
             {

@@ -27,7 +27,7 @@ namespace PCS.Net.Ftp
     /// <summary>
     /// Represents a FTP directory.
     /// </summary>
-    public class Directory : IFile, IComparable<Directory>
+    public class FtpDirectory : IFile, IComparable<FtpDirectory>
     {
         #region [ Members ]
 
@@ -56,10 +56,10 @@ namespace PCS.Net.Ftp
 
         // Fields
         private SessionConnected m_session;
-        private Directory m_parent;
+        private FtpDirectory m_parent;
         private string m_name;
         private string m_fullPath;
-        private Dictionary<string, Directory> m_subDirectories;
+        private Dictionary<string, FtpDirectory> m_subDirectories;
         private Dictionary<string, File> m_files;
         private bool m_caseInsensitive;
         private long m_size;
@@ -70,7 +70,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal Directory(SessionConnected s, bool caseInsensitive, string fullPath)
+        internal FtpDirectory(SessionConnected s, bool caseInsensitive, string fullPath)
         {
             m_session = s;
             m_parent = null;
@@ -91,7 +91,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal Directory(SessionConnected s, Directory parent, bool caseInsensitive, ItemInfo info)
+        internal FtpDirectory(SessionConnected s, FtpDirectory parent, bool caseInsensitive, ItemInfo info)
         {
             m_session = s;
             m_parent = parent;
@@ -228,7 +228,7 @@ namespace PCS.Net.Ftp
         /// <summary>
         /// Gets parent directory of directory.
         /// </summary>
-        public Directory Parent
+        public FtpDirectory Parent
         {
             get
             {
@@ -262,7 +262,7 @@ namespace PCS.Net.Ftp
                         }
                     }
 
-                    Directory parentDir = new Directory(m_session, m_caseInsensitive, parentPath.ToString());
+                    FtpDirectory parentDir = new FtpDirectory(m_session, m_caseInsensitive, parentPath.ToString());
 
                     if (string.Compare(parentDir.m_fullPath, m_session.RootDirectory.m_fullPath, m_caseInsensitive) == 0)
                         m_parent = m_session.RootDirectory;
@@ -277,7 +277,7 @@ namespace PCS.Net.Ftp
         /// <summary>
         /// Gets sub directories of directory.
         /// </summary>
-        public Dictionary<string, Directory>.ValueCollection SubDirectories
+        public Dictionary<string, FtpDirectory>.ValueCollection SubDirectories
         {
             get
             {
@@ -332,11 +332,11 @@ namespace PCS.Net.Ftp
         /// </summary>
         /// <param name="fileName">Subdirectory name to find in directory.</param>
         /// <returns>Subdirectory reference, if found, otherwise null if subdirectory is not found.</returns>
-        public Directory FindSubDirectory(string dirName)
+        public FtpDirectory FindSubDirectory(string dirName)
         {
             InitHashtable();
 
-            Directory directory;
+            FtpDirectory directory;
 
             if (m_subDirectories.TryGetValue(dirName, out directory))
                 return directory;
@@ -572,7 +572,7 @@ namespace PCS.Net.Ftp
                     if (ParseListLine(line, info))
                     {
                         if (info.IsDirectory)
-                            m_subDirectories.Add(info.Name, new Directory(m_session, this, m_caseInsensitive, info));
+                            m_subDirectories.Add(info.Name, new FtpDirectory(m_session, this, m_caseInsensitive, info));
                         else
                             m_files.Add(info.Name, new File(this, info));
                     }
@@ -595,9 +595,9 @@ namespace PCS.Net.Ftp
             if (m_subDirectories == null)
             {
                 if (m_caseInsensitive)
-                    m_subDirectories = new Dictionary<string, Directory>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveComparer.Default)
+                    m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveComparer.Default)
                 else
-                    m_subDirectories = new Dictionary<string, Directory>(StringComparer.CurrentCulture); // New Hashtable
+                    m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCulture); // New Hashtable
             }
 
             if (m_files == null)
@@ -685,7 +685,7 @@ namespace PCS.Net.Ftp
             return null;
         }
 
-        int IComparable<Directory>.CompareTo(Directory other)
+        int IComparable<FtpDirectory>.CompareTo(FtpDirectory other)
         {
             // Directories are sorted by name
             return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
