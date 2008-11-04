@@ -54,7 +54,7 @@ namespace PCS.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private Session m_sessionHost;
+        private FtpSession m_sessionHost;
         private SessionConnected m_session;
         private System.Net.Sockets.TcpClient m_connection;
         private string m_server;
@@ -66,7 +66,7 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        internal FtpControlChannel(Session host)
+        internal FtpControlChannel(FtpSession host)
         {
             m_connection = new TcpClient();
             m_server = "localhost";

@@ -38,8 +38,8 @@ namespace PCS.Net.Ftp
     /// <summary>
     /// FTP Session
     /// </summary>
-    [ToolboxBitmap(typeof(Session)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress"), Description("Creates a client connection to an FTP server")]
-    public class Session : Component
+    [ToolboxBitmap(typeof(FtpSession)), DefaultProperty("Server"), DefaultEvent("FileTransferProgress"), Description("Creates a client connection to an FTP server")]
+    public class FtpSession : Component
     {
         #region [ Members ]
 
@@ -65,12 +65,12 @@ namespace PCS.Net.Ftp
 
         #region [ Constructors ]
 
-        public Session()
+        public FtpSession()
             : this(false)
         {
         }
 
-        public Session(bool caseInsensitive)
+        public FtpSession(bool caseInsensitive)
         {
             m_caseInsensitive = caseInsensitive;
             m_waitLockTimeOut = 10;

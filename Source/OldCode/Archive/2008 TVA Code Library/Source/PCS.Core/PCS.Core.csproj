@@ -129,7 +129,7 @@
     <Content Include="IO\Compression\!CopyrightNotice.txt" />
     <EmbeddedResource Include="IO\MultipleDestinationExporter.bmp" />
     <EmbeddedResource Include="Scheduling\ScheduleManager.bmp" />
-    <EmbeddedResource Include="Net\Ftp\Session.bmp" />
+    <EmbeddedResource Include="Net\Ftp\FtpSession.bmp" />
     <EmbeddedResource Include="Net\Ftp\FtpFileWatcher.bmp" />
     <EmbeddedResource Include="IO\LogFile.bmp" />
     <EmbeddedResource Include="ErrorManagement\ErrorLogger.bmp" />
@@ -217,7 +217,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Net\Ftp\FtpResponse.cs" />
-    <Compile Include="Net\Ftp\Session.cs">
+    <Compile Include="Net\Ftp\FtpSession.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Net\Ftp\SessionConnected.cs" />

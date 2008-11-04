@@ -42,7 +42,7 @@ namespace PCS.Net.Ftp
         public event Action<string> InternalSessionResponse;
 
         // Fields
-        protected Session m_session;
+        protected FtpSession m_session;
         protected string m_username;
         protected string m_password;
         protected string m_watchDirectory;
@@ -65,7 +65,7 @@ namespace PCS.Net.Ftp
             m_currentFiles = new List<FtpFile>();
             m_newFiles = new List<FtpFile>();
 
-            m_session = new Session(false);
+            m_session = new FtpSession(false);
             m_session.CommandSent += Session_CommandSent;
             m_session.ResponseReceived += Session_ResponseReceived;
 
@@ -285,13 +285,13 @@ namespace PCS.Net.Ftp
             }
         }
 
-        public virtual Session NewDirectorySession()
+        public virtual FtpSession NewDirectorySession()
         {
             // This method is just for convenience.  We can't allow the end user to use the
             // actual internal directory for sending files or other work because it is
             // constantly being refreshed/used etc., so we instead create a new FTP Session
             // based on the current internal session and watch directory information
-            Session newSession = new Session(m_session.CaseInsensitive);
+            FtpSession newSession = new FtpSession(m_session.CaseInsensitive);
 
             newSession.Server = m_session.Server;
             newSession.Connect(m_username, m_password);
