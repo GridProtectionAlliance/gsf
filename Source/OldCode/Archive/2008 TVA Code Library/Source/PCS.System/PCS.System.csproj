@@ -73,9 +73,6 @@
     <Compile Include="UInt24.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Media\Music\Modern musical symbols.mht" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Media\Wavefile Information\IFF.txt" />
   </ItemGroup>
   <ItemGroup>
