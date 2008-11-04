@@ -95,7 +95,14 @@ namespace PCS.Windows.Forms
             #endregion
         }
 
+        /// <summary>
+        /// Config file category under which the window size information will be saved.
+        /// </summary>
         public const string LastWindowSizeSettingsCategory = "LastWindowSize";
+
+        /// <summary>
+        /// Config file category under which the window location information will be saved.
+        /// </summary>
         public const string LastWindowLocationSettingsCategory = "LastWindowLocation";
 
         /// <summary>
