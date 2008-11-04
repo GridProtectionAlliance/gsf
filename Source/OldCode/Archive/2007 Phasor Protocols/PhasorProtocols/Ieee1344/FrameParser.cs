@@ -159,7 +159,7 @@ namespace PhasorProtocols
                                     }
                                     catch
                                     {
-                                        // If CRC check or other exception occurs, we cancel frame cumulation process
+                                        // If CRC check fails or other exception occurs, we cancel frame cumulation process
                                         m_configurationFrameCollection = null;
                                         throw;
                                     }
@@ -188,7 +188,7 @@ namespace PhasorProtocols
                                     }
                                     catch
                                     {
-                                        // If CRC check or other exception occurs, we cancel frame cumulation process
+                                        // If CRC check fails or other exception occurs, we cancel frame cumulation process
                                         m_headerFrameCollection = null;
                                         throw;
                                     }

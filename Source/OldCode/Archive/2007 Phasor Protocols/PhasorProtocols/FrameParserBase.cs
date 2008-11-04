@@ -86,6 +86,13 @@ namespace PhasorProtocols
             {
                 return m_enabled;
             }
+            set
+            {
+                if (value && !m_enabled)
+                    Start();
+                else if (!value && m_enabled)
+                    Stop();
+            }
         }
 
         public virtual bool ExecuteParseOnSeparateThread

@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using PCS;
 
 namespace PhasorProtocols
 {
@@ -27,6 +28,8 @@ namespace PhasorProtocols
     public delegate void ReceivedUndeterminedFrameEventHandler(IChannelFrame frame);
     public delegate void ConfigurationChangedEventHandler();
     public delegate void DataStreamExceptionEventHandler(Exception ex);
+
+    // TODO: Implement the following: ISupportLifecycle, IStatusProvider
 
     /// <summary>This interface represents the protocol independent representation of a frame parser.</summary>
     public interface IFrameParser : IDisposable
@@ -47,6 +50,7 @@ namespace PhasorProtocols
         bool Enabled
         {
             get;
+            set;
         }
 
         bool ExecuteParseOnSeparateThread

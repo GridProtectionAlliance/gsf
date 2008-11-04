@@ -432,6 +432,13 @@ namespace PhasorProtocols
             {
                 return m_enabled;
             }
+            set
+            {
+                if (value && !m_enabled)
+                    Start();
+                else if (!value && m_enabled)
+                    Stop();
+            }
         }
 
         public int QueuedBuffers
@@ -469,6 +476,15 @@ namespace PhasorProtocols
             get
             {
                 return m_communicationServer;
+            }
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public ICommunicationClient InternalCommandChannel
+        {
+            get
+            {
+                return m_commandChannel;
             }
         }
 
@@ -635,7 +651,7 @@ namespace PhasorProtocols
 
         public void Start()
         {
-            // Stop parser if is already running - thus calling start after already started will have the affect
+            // Stop parser if is already running - thus calling start after already started will have the effect
             // of "restarting" the parsing engine...
             Stop();
 
@@ -739,7 +755,7 @@ namespace PhasorProtocols
                         throw new ArgumentException("Command channel cannot be setup as a TCP server.", "ConnectionString");
 
                     // Validate command channel transport protocol selection
-                    TransportProtocol transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), commandSettings["protocol"]);
+                    TransportProtocol transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), commandSettings["protocol"], true);
 
                     if (transportProtocol != TransportProtocol.Tcp && transportProtocol != TransportProtocol.Serial && transportProtocol != TransportProtocol.File)
                         throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File", "ConnectionString");

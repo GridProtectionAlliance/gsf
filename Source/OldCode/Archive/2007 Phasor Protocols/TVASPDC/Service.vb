@@ -62,7 +62,7 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
-        Dim _forceBuildNumInc As Integer = 8
+        Dim _forceBuildNumInc As Integer = 9
 
         ' Make sure default service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
@@ -111,6 +111,7 @@ Public Class Service
                 .Name = "SystemLog.txt"
                 .PersistSettings = True
             End With
+            .ExitOnUnhandledException = False
         End With
 
         ' TODO: Add a "reauthenticate" for the multiple-destination exporter...
