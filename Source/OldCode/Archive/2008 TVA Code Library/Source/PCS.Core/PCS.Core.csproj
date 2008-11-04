@@ -221,7 +221,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Net\Ftp\FtpSessionConnected.cs" />
-    <Compile Include="Net\Ftp\SessionDisconnected.cs" />
+    <Compile Include="Net\Ftp\FtpSessionDisconnected.cs" />
     <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Reflection\ReflectionExtensions.cs" />
     <Compile Include="Scheduling\Schedule.cs" />

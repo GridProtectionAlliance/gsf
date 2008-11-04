@@ -74,7 +74,7 @@ namespace PCS.Net.Ftp
         {
             m_caseInsensitive = caseInsensitive;
             m_waitLockTimeOut = 10;
-            m_currentState = new SessionDisconnected(this, m_caseInsensitive);
+            m_currentState = new FtpSessionDisconnected(this, m_caseInsensitive);
         }
 
         #endregion

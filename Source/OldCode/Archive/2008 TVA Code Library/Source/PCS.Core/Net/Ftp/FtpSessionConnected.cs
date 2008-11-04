@@ -147,7 +147,7 @@ namespace PCS.Net.Ftp
 
         public void Close()
         {
-            m_host.State = new SessionDisconnected(m_host, m_caseInsensitive);
+            m_host.State = new FtpSessionDisconnected(m_host, m_caseInsensitive);
             m_host.Server = m_ctrlChannel.Server;
             m_host.Port = m_ctrlChannel.Port;
 
