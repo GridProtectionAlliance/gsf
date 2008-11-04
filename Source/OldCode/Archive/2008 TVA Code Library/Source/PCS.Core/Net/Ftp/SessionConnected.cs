@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace PCS.Net.Ftp
 {
-    internal class SessionConnected : ISessionState
+    internal class SessionConnected : IFtpSessionState
     {
         #region [ Members ]
 

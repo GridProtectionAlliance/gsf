@@ -58,7 +58,7 @@ namespace PCS.Net.Ftp
 
         // Fields
         private bool m_caseInsensitive;
-        private ISessionState m_currentState;
+        private IFtpSessionState m_currentState;
         private int m_waitLockTimeOut;
 
         #endregion
@@ -194,7 +194,7 @@ namespace PCS.Net.Ftp
             }
         }
 
-        internal ISessionState State
+        internal IFtpSessionState State
         {
             get
             {

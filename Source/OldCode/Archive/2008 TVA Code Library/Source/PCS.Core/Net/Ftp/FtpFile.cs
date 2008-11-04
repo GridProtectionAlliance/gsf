@@ -134,9 +134,9 @@ namespace PCS.Net.Ftp
 
         #region [ Methods ]
 
-        public InputDataStream GetInputStream()
+        public FtpInputDataStream GetInputStream()
         {
-            return ((InputDataStream)(GetStream(0, TransferDirection.Download)));
+            return ((FtpInputDataStream)(GetStream(0, TransferDirection.Download)));
         }
 
         public OutputDataStream GetOutputStream()
@@ -144,9 +144,9 @@ namespace PCS.Net.Ftp
             return ((OutputDataStream)(GetStream(0, TransferDirection.Upload)));
         }
 
-        public InputDataStream GetInputStream(long offset)
+        public FtpInputDataStream GetInputStream(long offset)
         {
-            return ((InputDataStream)(GetStream(offset, TransferDirection.Download)));
+            return ((FtpInputDataStream)(GetStream(offset, TransferDirection.Download)));
         }
 
         public OutputDataStream GetOutputStream(long offset)

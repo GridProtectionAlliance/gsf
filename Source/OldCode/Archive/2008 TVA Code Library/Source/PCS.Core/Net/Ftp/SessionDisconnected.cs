@@ -19,7 +19,7 @@ using System;
 
 namespace PCS.Net.Ftp
 {
-    internal class SessionDisconnected : ISessionState
+    internal class SessionDisconnected : IFtpSessionState
     {
         #region [ Members ]
 
