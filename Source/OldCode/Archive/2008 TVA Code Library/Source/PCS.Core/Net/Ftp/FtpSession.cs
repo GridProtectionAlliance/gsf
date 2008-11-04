@@ -23,15 +23,15 @@ using System.Drawing;
 
 // This FTP library is based on a similar C# library found on "The Code Project" web site originally written by
 // Alex Kwok, the enhanced by Uwe Keim.  It was translated into VB with most of classes being renamed
-// (removed Ftp prefix) and the namespace was changed to PCS.Ftp. Many bug fixes, additions and modifications
+// (removed Ftp prefix) and the namespace was changed to TVA.Ftp. Many bug fixes, additions and modifications
 // have been made to this code as well as extensive testing.  Note worthy changes:  converted the C# delegates
 // to standard .NET events for ease of use, made the library work with IIS based FTP servers that were in Unix
 // mode, added detailed file system information for FTP files and directories (size, timestamp, etc), coverted
 // FTP session into a component that could be dragged onto a design surface, created an FTP FileWatcher
 // component and an FTP file system crawler based on this library - JRC
 
-// JRC 2008: Now we're back to C# - lol - wonder if the code is any worse for the wear?  Oh well, too
-// many bug fixes made to the code revert back to original code...
+// JRC 2008: Now we're back to C#, and I replaced the "Ftp" prefix to the classes for to satisfy uniqueness
+// in typename constraint coming from code analysis.
 
 namespace PCS.Net.Ftp
 {
