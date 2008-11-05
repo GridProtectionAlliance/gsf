@@ -1111,7 +1111,7 @@ namespace PCS.Services
         {
             ClientInfo client = Serialization.GetObject<ClientInfo>(e.Argument.Item);
             ClientRequest request = Serialization.GetObject<ClientRequest>(e.Argument.Item);
-            ClientInfo requestSender = GetConnectedClient(e.Argument.Source);
+            ClientInfo requestSender = GetConnectedClient(e.Argument.ID);
 
             if (client != null)
             {

@@ -14,39 +14,64 @@
 //      Generated original version of source code.
 //  09/08/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  11/05/2008 - Pinal C. Patel
+//      Edited code comments.
 //
 //*******************************************************************************************************
 
 
 namespace PCS
 {
-    /// <summary>Generic identifiable item class.</summary>
-    /// <remarks>This class is used to abstractly track items along with their source.</remarks>
-    /// <typeparam name="TIdentifier">Type of data item source.</typeparam>
-    /// <typeparam name="TItem">Type of data item.</typeparam>
-    public class IdentifiableItem<TIdentifier, TItem>
+    /// <summary>
+    /// A class that can be used to assign an identifier to an item for the purpose of identification.
+    /// </summary>
+    /// <typeparam name="TId">Type of the identifier to be used for identification.</typeparam>
+    /// <typeparam name="TItem">Type of the item that is to be made identifiable.</typeparam>
+    public class IdentifiableItem<TId, TItem>
     {
-        private TIdentifier m_source;
+        #region [ Members ]
+
+        // Fields
+        private TId m_id;
         private TItem m_item;
 
-        public IdentifiableItem(TIdentifier source, TItem item)
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IdentifiableItem{TId, TItem}"/> class.
+        /// </summary>
+        /// <param name="id">The identifier of the <paramref name="item"/>.</param>
+        /// <param name="item">The item being assigned the <paramref name="id"/> to make it identifiable.</param>
+        public IdentifiableItem(TId id, TItem item)
         {
-            m_source = source;
-            m_item = item;
+            this.ID = id;
+            this.Item = item;
         }
 
-        public TIdentifier Source
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the identifier of the <see cref="Item"/>.
+        /// </summary>
+        public TId ID
         {
             get
             {
-                return m_source;
+                return m_id;
             }
             set
             {
-                m_source = value;
+                m_id = value;
             }
         }
 
+        /// <summary>
+        /// Gets or sets the item being made identifiable by assigning it an <see cref="ID"/>.
+        /// </summary>
         public TItem Item
         {
             get
@@ -58,5 +83,7 @@ namespace PCS
                 m_item = value;
             }
         }
+
+        #endregion
     }
 }

@@ -339,7 +339,7 @@ namespace PCS.Parsing
                                 instance = outputType.CreateNew();
                                 cursor += instance.Initialize(item[i].Item, cursor); // Returns the number of bytes used.
                                 output.Add(instance);
-                                m_unparsedDataReuseCount[item[i].Source] = 0; // <- Necessary overhead :(
+                                m_unparsedDataReuseCount[item[i].ID] = 0; // <- Necessary overhead :(
                             }
                             catch
                             {
@@ -357,7 +357,7 @@ namespace PCS.Parsing
                                 // discard it.
                                 int reuseCount;
 
-                                m_unparsedDataReuseCount.TryGetValue(item[i].Source, out reuseCount);
+                                m_unparsedDataReuseCount.TryGetValue(item[i].ID, out reuseCount);
 
                                 if (reuseCount < m_unparsedDataReuseLimit)
                                 {
@@ -374,7 +374,7 @@ namespace PCS.Parsing
                                         // image that is from the same source as this data image.
                                         for (int k = i + 1; k <= item.Length - 1; k++)
                                         {
-                                            if (item[k].Source.Equals(item[i].Source))
+                                            if (item[k].ID.Equals(item[i].ID))
                                             {
                                                 // We found a data image from the same source so we'll merge the unparsed
                                                 // data with the data in that data image and hopefully now we'll be able
@@ -397,11 +397,11 @@ namespace PCS.Parsing
                                         // so we'll just insert this data in the queue, so by the time this data is
                                         // processed in the next batch, we might have data from the same source that we
                                         // might be able to combine and use.
-                                        m_dataQueue.Insert(0, new IdentifiableItem<Guid, byte[]>(item[i].Source, unusedData));
+                                        m_dataQueue.Insert(0, new IdentifiableItem<Guid, byte[]>(item[i].ID, unusedData));
                                     }
 
                                     reuseCount++;
-                                    m_unparsedDataReuseCount[item[i].Source] = reuseCount;
+                                    m_unparsedDataReuseCount[item[i].ID] = reuseCount;
                                     cursor = item[i].Item.Length; // Move on to the next data image.
                                     if (UnparsedDataReused != null)
                                         UnparsedDataReused(this, new EventArgs<TIdentifier>(typeID));
@@ -410,7 +410,7 @@ namespace PCS.Parsing
                                 {
                                     cursor = item[i].Item.Length; // Move on to the next data image.
 
-                                    m_unparsedDataReuseCount[item[i].Source] = 0;
+                                    m_unparsedDataReuseCount[item[i].ID] = 0;
                                     if (UnparsedDataDiscarded != null)
                                         UnparsedDataDiscarded(this, new EventArgs<TIdentifier>(typeID));
                                 }
@@ -429,7 +429,7 @@ namespace PCS.Parsing
                     }
 
                     if (DataParsed != null)
-                        DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].Source, output)));
+                        DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].ID, output)));
                 }
             }
         }
