@@ -453,7 +453,7 @@ namespace PCS.Parsing
         {
             if (!DesignMode)
             {
-                
+                Initialize();
             }
         }
 
