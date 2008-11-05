@@ -30,26 +30,31 @@ using System.Runtime.Serialization;
 
 namespace PCS
 {
-    /// <summary>Standard Unix Timetag</summary>
+    /// <summary>Represents a standard Unix timetag.</summary>
     public class UnixTimeTag : TimeTagBase
     {
         // Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
         // date to get the offset in ticks for later conversion.
         private static long m_unixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
 
+        /// <summary>
+        /// Creates a new <see cref="UnixTimeTag"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected UnixTimeTag(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
 
-        /// <summary>Creates new Unix timetag, given number of seconds since 1/1/1970.</summary>
+        /// <summary>Creates a new <see cref="UnixTimeTag"/>, given number of seconds since 1/1/1970.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1970.</param>
         public UnixTimeTag(double seconds)
             : base(m_unixDateOffsetTicks, seconds)
         {
         }
 
-        /// <summary>Creates new Unix timetag, given standard .NET DateTime.</summary>
+        /// <summary>Creates a new <see cref="UnixTimeTag"/>, given standard .NET <see cref="DateTime"/>.</summary>
         /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1970).</param>
         public UnixTimeTag(DateTime timestamp)
             : base(m_unixDateOffsetTicks, timestamp)

@@ -40,6 +40,11 @@ namespace PCS
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="TimeTagBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected TimeTagBase(SerializationInfo info, StreamingContext context)
         {
             // Deserializes time tag
@@ -47,7 +52,7 @@ namespace PCS
             m_seconds = info.GetDouble("seconds");
         }
 
-        /// <summary>Creates new time tag, given number base time (in ticks) and seconds since base time.</summary>
+        /// <summary>Creates a new <see cref="TimeTagBase"/>, given number base time (in ticks) and seconds since base time.</summary>
         /// <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
         /// <param name="seconds">Number of seconds since base time.</param>
         protected TimeTagBase(long baseDateOffsetTicks, double seconds)
@@ -56,7 +61,7 @@ namespace PCS
             Value = seconds;
         }
 
-        /// <summary>Creates new time tag, given standard .NET DateTime.</summary>
+        /// <summary>Creates a new <see cref="TimeTagBase"/>, given standard .NET DateTime.</summary>
         /// <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
         /// <param name="timestamp">.NET DateTime used to create time tag from.</param>
         protected TimeTagBase(long baseDateOffsetTicks, DateTime timestamp)
@@ -97,7 +102,7 @@ namespace PCS
 
         #region [ Methods ]
 
-        /// <summary>Returns standard .NET DateTime representation for time tag.</summary>
+        /// <summary>Returns standard .NET <see cref="DateTime"/> representation for time tag.</summary>
         public virtual DateTime ToDateTime()
         {
             // Converts m_seconds to 100-nanosecond ticks and add the base time offset.
@@ -112,46 +117,84 @@ namespace PCS
             return ToDateTime().ToString("yyyy-MM-dd HH:mm:ss.fff");
         }
 
-        /// <summary>Compares this time tag to another one.</summary>
+        /// <summary>
+        /// Compares the <see cref="TimeTagBase"/> with another <see cref="TimeTagBase"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="TimeTagBase"/> to compare with the current <see cref="TimeTagBase"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(TimeTagBase other)
         {
             // Since compared time tags may not have the same base time, we compare using .NET date time.
             return CompareTo(other.ToDateTime());
         }
 
-        /// <summary>Compares this time tag to a DateTime.</summary>
+        /// <summary>
+        /// Compares the <see cref="TimeTagBase"/> with a <see cref="DateTime"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="DateTime"/> to compare with the current <see cref="TimeTagBase"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(DateTime other)
         {
             return ToDateTime().CompareTo(other);
         }
 
+        /// <summary>
+        /// Compares the <see cref="TimeTagBase"/> with the specified <see cref="Object"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="TimeTagBase"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="TimeTagBase"/> or a <see cref="DateTime"/>.</exception>
         public virtual int CompareTo(object obj)
         {
             TimeTagBase timetag = obj as TimeTagBase;
-
             if (timetag != null) return CompareTo(timetag);
-
             if (obj is DateTime) return CompareTo((DateTime)obj);
-
             throw new ArgumentException("TimeTag can only be compared with other TimeTags or DateTimes...");
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="TimeTagBase"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="TimeTagBase"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="Object"/> is equal to the current <see cref="TimeTagBase"/>;
+        /// otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="TimeTagBase"/>.</exception>
         public override bool Equals(object obj)
         {
             return (CompareTo(obj) == 0);
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="TimeTagBase"/> is equal to the current <see cref="TimeTagBase"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="TimeTagBase"/> to compare with the current <see cref="TimeTagBase"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="TimeTagBase"/> is equal to the current <see cref="TimeTagBase"/>;
+        /// otherwise, false.
+        /// </returns>
         public bool Equals(TimeTagBase other)
         {
             return (CompareTo(other) == 0);
         }
 
+        /// <summary>
+        /// Serves as a hash function for the current <see cref="TimeTagBase"/>.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="TimeTagBase"/>.</returns>
+        /// <remarks>Hash code based on number of seconds timetag represents.</remarks>
         public override int GetHashCode()
         {
             return (int)(m_seconds * 1000);
         }
 
-        public virtual void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serializes time tag.
             info.AddValue("baseDateOffsetTicks", m_baseDateOffsetTicks);

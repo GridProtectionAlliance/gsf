@@ -35,19 +35,24 @@ namespace PCS
         // date to get offset in ticks for later conversion.
         private static long m_ntpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
 
+        /// <summary>
+        /// Creates a new <see cref="NtpTimeTag"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected NtpTimeTag(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
 
-        /// <summary>Creates new NTP timetag, given number of seconds since 1/1/1900.</summary>
+        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
         public NtpTimeTag(double seconds)
             : base(m_ntpDateOffsetTicks, seconds)
         {
         }
 
-        /// <summary>Creates new NTP timetag, given standard .NET DateTime.</summary>
+        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given standard .NET <see cref="DateTime"/>.</summary>
         /// <param name="timestamp">.NET DateTime to create Unix timetag from (minimum valid date is 1/1/1900).</param>
         public NtpTimeTag(DateTime timestamp)
             : base(m_ntpDateOffsetTicks, timestamp)
