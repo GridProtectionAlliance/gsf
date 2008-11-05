@@ -28,13 +28,20 @@ namespace PCS.NumericalAnalysis
     {
         #region [ Members ]
 
-        // Delegates
-        public delegate void StatusEventHandler(string message);
-        public delegate void RecalculatedEventHandler();
-
         // Events
-        public event StatusEventHandler Status;
-        public event RecalculatedEventHandler Recalculated;
+
+        /// <summary>
+        /// Raised when new status messages come from the <see cref="RealTimeSlope"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PCS.EventArgs{T}.Argument"/> is status message from the <see cref="RealTimeSlope"/>.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> Status;
+
+        /// <summary>
+        /// Raised when new real-time <see cref="Slope"/> has been calculated and is available.
+        /// </summary>
+        public event EventHandler Recalculated;
 
         // Fields
         private int m_regressionInterval;
@@ -128,6 +135,11 @@ namespace PCS.NumericalAnalysis
             }
         }
 
+        /// <summary>
+        /// Initializes real-time slope calculation.
+        /// </summary>
+        /// <param name="regressionInterval">Time span over which to calculate slope.</param>
+        /// <param name="estimatedRefreshInterval">Estimated data points per second.</param>
         public void Initialize(int regressionInterval, double estimatedRefreshInterval)
         {
             m_slopeRun = DateTime.Now;
@@ -181,7 +193,7 @@ namespace PCS.NumericalAnalysis
             catch (Exception ex)
             {
                 if (Status != null)
-                    Status("CurveFit failed: " + ex.Message);
+                    Status(this, new EventArgs<string>("CurveFit failed: " + ex.Message));
             }
             finally
             {
@@ -196,7 +208,7 @@ namespace PCS.NumericalAnalysis
 
             // Notifies consumer of new calculated slope.
             if (Recalculated != null)
-                Recalculated();
+                Recalculated(this, EventArgs.Empty);
         }
 
         #endregion

@@ -53,7 +53,7 @@ namespace PCS.Net.Ftp
         public event EventHandler<EventArgs<FtpFile>> FileDeleted;
 
         /// <summary>
-        /// Status messages coming from FTP file watcher.
+        /// Raised when new status messages come from the FTP file watcher.
         /// </summary>
         /// <remarks>
         /// <see cref="PCS.EventArgs{T}.Argument"/> is status message from FTP file watcher.
