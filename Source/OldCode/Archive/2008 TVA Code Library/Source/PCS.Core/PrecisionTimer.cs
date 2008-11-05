@@ -81,8 +81,8 @@ namespace PCS
         }
     }
 
-    /// <summary>High-resolution Timer and Timestamp Class</summary>
-    /// <remarks>Based on Windows multimedia timer.</remarks>
+    /// <summary>High-resolution Timer and Timestamp Class.</summary>
+    /// <remarks>Implementation based on Windows multimedia timer.</remarks>
     public class PrecisionTimer : IDisposable
     {
         #region [ Members ]
@@ -211,17 +211,12 @@ namespace PCS
             m_timeProc = TimerEventCallback;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="PrecisionTimer"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~PrecisionTimer()
         {
-            try
-            {
-                // Stop and destroy timer.
-                if (IsRunning)
-                    timeKillEvent(m_timerID);
-            }
-            finally
-            {
-            }
+            Dispose(false);
         }
 
         #endregion
@@ -352,19 +347,35 @@ namespace PCS
         #region [ Methods ]
 
         /// <summary>
-        /// Frees timer resources.
+        /// Releases all the resources used by the <see cref="PrecisionTimer"/> object.
         /// </summary>
         public void Dispose()
         {
-            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) below.
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PrecisionTimer"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed && IsRunning) Stop();
-            m_disposed = true;
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (IsRunning)
+                            Stop();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
         /// <summary>
