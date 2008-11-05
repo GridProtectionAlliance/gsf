@@ -35,7 +35,10 @@ namespace PCS.IO
     /// <summary>
     /// An abstract class that represents an ISAM (Indexed Sequential Access Method) file.
     /// </summary>
-    /// <typeparam name="T"><see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the <see cref="IBinaryDataProvider"/> interface.</typeparam>
+    /// <typeparam name="T">
+    /// <see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the 
+    /// <see cref="IBinaryDataProducer"/> and <see cref="IBinaryDataConsumer"/> interfaces.
+    /// </typeparam>
     /// <remarks>
     /// See <a href="http://en.wikipedia.org/wiki/ISAM" target="_blank">http://en.wikipedia.org/wiki/ISAM</a> for more information on ISAM files .
     /// </remarks>
@@ -101,7 +104,7 @@ namespace PCS.IO
     ///     }
     /// }
     /// 
-    /// class TestIsamFileRecord : IBinaryDataProvider, IBinaryDataConsumer
+    /// class TestIsamFileRecord : IBinaryDataProducer, IBinaryDataConsumer
     /// {
     ///     private int m_id;
     ///     private string m_name;                  // 20  * 1 =  20

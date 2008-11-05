@@ -36,6 +36,10 @@ namespace PCS.Parsing
         #region [ Members ]
 
         // Nested Types
+
+        /// <summary>
+        /// Container for Type information.
+        /// </summary>
         private class TypeInfo
         {
             public Type RuntimeType;
@@ -43,6 +47,9 @@ namespace PCS.Parsing
             public DefaultConstructor CreateNew;
         }
 
+        /// <summary>
+        /// Container for data to be parsed.
+        /// </summary>
         private class DataContainer
         {
             public byte[] Data;
@@ -51,12 +58,24 @@ namespace PCS.Parsing
 
         // Constants
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="OptimizeParsing"/> property.
+        /// </summary>
         public const bool DefaultOptimizeParsing = true;
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="DataAssemblyAttempts"/> property.
+        /// </summary>
         public const int DefaultDataAssemblyAttempts = 0;
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
+        /// </summary>
         public const bool DefaultPersistSettings = false;
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
+        /// </summary>
         public const string DefaultSettingsCategory = "BinaryDataParser";
 
         // Delegates
@@ -108,7 +127,7 @@ namespace PCS.Parsing
             m_unparsedDataReuseCount = new Dictionary<Guid, int>();
             m_dataQueue = ProcessQueue<IdentifiableItem<Guid, byte[]>>.CreateRealTimeQueue(ParseData);
         }
-
+        
         #endregion
 
         #region [ Properties ]
@@ -144,6 +163,33 @@ namespace PCS.Parsing
             set
             {
                 m_dataAssemblyAttempts = value;
+            }
+        }
+
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                    m_settingsCategory = value;
+                else
+                    throw new ArgumentNullException("SettingsCategoryName");
             }
         }
 
@@ -416,33 +462,6 @@ namespace PCS.Parsing
                     if (DataParsed != null)
                         DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutputType>>>(new IdentifiableItem<Guid, List<TOutputType>>(item[i].ID, output)));
                 }
-            }
-        }
-
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
             }
         }
 
