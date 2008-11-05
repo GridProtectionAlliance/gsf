@@ -25,7 +25,7 @@ using System.Data;
 
 namespace PCS.Measurements
 {
-    /// <summary>This class represents the absolute latest received measurement values</summary>
+    /// <summary>Represents the absolute latest measurement values received by a <see cref="ConcentratorBase"/> implementation.</summary>
     public class ImmediateMeasurements : IDisposable
     {
         #region [ Members ]
@@ -49,6 +49,9 @@ namespace PCS.Measurements
             m_taggedMeasurements = new Dictionary<string, List<MeasurementKey>>();
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="ImmediateMeasurements"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~ImmediateMeasurements()
         {
             Dispose(false);
@@ -58,7 +61,7 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
-        /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time</summary>
+        /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
         public double this[int measurementID, string source]
         {
             get
@@ -67,7 +70,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time</summary>
+        /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
         public double this[MeasurementKey key]
         {
             get
@@ -76,7 +79,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Returns key collection of measurement keys</summary>
+        /// <summary>Returns key collection of measurement keys.</summary>
         public Dictionary<MeasurementKey, TemporalMeasurement>.KeyCollection MeasurementKeys
         {
             get
@@ -85,7 +88,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Returns key collection for measurement tags</summary>
+        /// <summary>Returns key collection for measurement tags.</summary>
         public Dictionary<string, List<MeasurementKey>>.KeyCollection Tags
         {
             get
@@ -94,8 +97,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Returns the minimum value of all measurements</summary>
-        /// <remarks>This is only useful if all measurements represent the same type of measurement</remarks>
+        /// <summary>Returns the minimum value of all measurements.</summary>
+        /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
         public double Minimum
         {
             get
@@ -122,8 +125,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Returns the maximum value of all measurements</summary>
-        /// <remarks>This is only useful if all measurements represent the same type of measurement</remarks>
+        /// <summary>Returns the maximum value of all measurements.</summary>
+        /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
         public double Maximum
         {
             get
@@ -154,62 +157,73 @@ namespace PCS.Measurements
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Releases all the resources used by the <see cref="ImmediateMeasurements"/> object.
+        /// </summary>
         public void Dispose()
         {
-            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ImmediateMeasurements"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                if (disposing)
+                try
                 {
-                    if (m_parent != null)
+                    if (disposing)
                     {
-                        m_parent.LagTimeUpdated -= m_parent_LagTimeUpdated;
-                        m_parent.LeadTimeUpdated -= m_parent_LeadTimeUpdated;
-                    }
-                    m_parent = null;
+                        if (m_parent != null)
+                        {
+                            m_parent.LagTimeUpdated -= m_parent_LagTimeUpdated;
+                            m_parent.LeadTimeUpdated -= m_parent_LeadTimeUpdated;
+                        }
+                        m_parent = null;
 
-                    if (m_measurements != null)
-                    {
-                        m_measurements.Clear();
-                    }
-                    m_measurements = null;
+                        if (m_measurements != null)
+                        {
+                            m_measurements.Clear();
+                        }
+                        m_measurements = null;
 
-                    if (m_taggedMeasurements != null)
-                    {
-                        m_taggedMeasurements.Clear();
+                        if (m_taggedMeasurements != null)
+                        {
+                            m_taggedMeasurements.Clear();
+                        }
+                        m_taggedMeasurements = null;
                     }
-                    m_taggedMeasurements = null;
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
-
-            m_disposed = true;
         }
 
-        /// <summary>Returns measurement key list of specified tag, if it exists</summary>
+        /// <summary>Returns measurement key list of specified tag, if it exists.</summary>
         public List<MeasurementKey> TagMeasurementKeys(string tag)
         {
             return m_taggedMeasurements[tag];
         }
 
-        /// <summary>We only store a new measurement value that is newer than the cached value</summary>
+        /// <summary>We only store a new measurement value that is newer than the cached value.</summary>
         internal void UpdateMeasurementValue(IMeasurement newMeasurement)
         {
             Measurement(newMeasurement.Key).SetValue(newMeasurement.Ticks, newMeasurement.Value);
         }
 
-        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed</summary>
+        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         public TemporalMeasurement Measurement(int measurementID, string source)
         {
             return Measurement(new MeasurementKey(measurementID, source));
         }
 
-        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed</summary>
+        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         public TemporalMeasurement Measurement(MeasurementKey key)
         {
             lock (m_measurements)
@@ -227,8 +241,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Defines tagged measurements from a data table</summary>
-        /// <remarks>Expects tag field to be aliased as "Tag", measurement ID field to be aliased as "ID" and source field to be aliased as "Source"</remarks>
+        /// <summary>Defines tagged measurements from a data table.</summary>
+        /// <remarks>Expects tag field to be aliased as "Tag", measurement ID field to be aliased as "ID" and source field to be aliased as "Source".</remarks>
         public void DefineTaggedMeasurements(DataTable taggedMeasurements)
         {
             foreach (DataRow row in taggedMeasurements.Rows)
@@ -237,8 +251,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Associates a new measurement ID with a tag, creating the new tag if needed</summary>
-        /// <remarks>Allows you to define "grouped" points so you can aggregate certain measurements</remarks>
+        /// <summary>Associates a new measurement ID with a tag, creating the new tag if needed.</summary>
+        /// <remarks>Allows you to define "grouped" points so you can aggregate certain measurements.</remarks>
         public void AddTaggedMeasurement(string tag, MeasurementKey key)
         {
             // Check for new tag
@@ -255,8 +269,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Calculates an average of all measurements</summary>
-        /// <remarks>This is only useful if all measurements represent the same type of measurement</remarks>
+        /// <summary>Calculates an average of all measurements.</summary>
+        /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
         public double CalculateAverage(ref int count)
         {
             double measurement;
@@ -278,7 +292,7 @@ namespace PCS.Measurements
             return total / count;
         }
 
-        /// <summary>Calculates an average of all measurements associated with the specified tag</summary>
+        /// <summary>Calculates an average of all measurements associated with the specified tag.</summary>
         public double CalculateTagAverage(string tag, ref int count)
         {
             double measurement;
@@ -297,7 +311,7 @@ namespace PCS.Measurements
             return total / count;
         }
 
-        /// <summary>Returns the minimum value of all measurements associated with the specified tag</summary>
+        /// <summary>Returns the minimum value of all measurements associated with the specified tag.</summary>
         public double TagMinimum(string tag)
         {
             double minValue = double.MaxValue;
@@ -318,7 +332,7 @@ namespace PCS.Measurements
             return minValue;
         }
 
-        /// <summary>Returns the maximum value of all measurements associated with the specified tag</summary>
+        /// <summary>Returns the maximum value of all measurements associated with the specified tag.</summary>
         public double TagMaximum(string tag)
         {
             double maxValue = double.MinValue;
@@ -339,6 +353,7 @@ namespace PCS.Measurements
             return maxValue;
         }
 
+        // We dyanmically respond to real-time changes in lead or lag time...
         private void m_parent_LagTimeUpdated(double lagTime)
         {
             lock (m_measurements)

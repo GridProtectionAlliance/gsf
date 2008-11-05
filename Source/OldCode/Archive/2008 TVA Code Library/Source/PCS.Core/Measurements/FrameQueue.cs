@@ -28,6 +28,9 @@ using System.Collections.Generic;
 
 namespace PCS.Measurements
 {
+    /// <summary>
+    /// Represents a real-time queue of <see cref="IFrame"/> instances used by the <see cref="ConcentratorBase"/> class.
+    /// </summary>
     public class FrameQueue : IDisposable
     {            
         #region [ Members ]
@@ -55,6 +58,9 @@ namespace PCS.Measurements
             m_createNewFrameFunction = createNewFrameFunction;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="FrameQueue"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~FrameQueue()
         {
             Dispose(false);
@@ -64,6 +70,9 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets numbner of ticks per frame to be used by <see cref="FrameQueue"/>.
+        /// </summary>
         public decimal TicksPerFrame
         {
             get
@@ -77,10 +86,10 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Returns new create frame function delegate
+        /// Gets or sets the create frame function delegate used by <see cref="FrameQueue"/>.
         /// </summary>
         /// <remarks>
-        /// Function signature: IFrame CreateFrame(long ticks)
+        /// Function signature: <see cref="IFrame"/> CreateFrame(long ticks).
         /// </remarks>
         public Func<long, IFrame> CreateNewFrameFunction
         {
@@ -88,10 +97,14 @@ namespace PCS.Measurements
             {
                 return m_createNewFrameFunction;
             }
+            set
+            {
+                m_createNewFrameFunction = value;
+            }
         }
 
         /// <summary>
-        /// Returns the next frame in queue, if any
+        /// Returns the next <see cref="IFrame"/> in the <see cref="FrameQueue"/>, if any.
         /// </summary>
         public IFrame Head
         {
@@ -102,6 +115,9 @@ namespace PCS.Measurements
             }
         }
 
+        /// <summary>
+        /// Gets the last processed <see cref="IFrame"/> in the <see cref="FrameQueue"/>.
+        /// </summary>
         public IFrame Last
         {
             get
@@ -110,6 +126,9 @@ namespace PCS.Measurements
             }
         }
 
+        /// <summary>
+        /// Returns the total number of <see cref="IFrame"/>'s currently in the <see cref="FrameQueue"/>.
+        /// </summary>
         public int Count
         {
             get
@@ -122,36 +141,49 @@ namespace PCS.Measurements
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Releases all the resources used by the <see cref="FrameQueue"/> object.
+        /// </summary>
         public void Dispose()
         {
-            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FrameQueue"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
-                if (disposing)
+                try
                 {
-                    if (m_frameList != null)
-                        m_frameList.Clear();
+                    if (disposing)
+                    {
+                        if (m_frameList != null)
+                            m_frameList.Clear();
 
-                    m_frameList = null;
+                        m_frameList = null;
 
-                    if (m_frameHash != null)
-                        m_frameHash.Clear();
+                        if (m_frameHash != null)
+                            m_frameHash.Clear();
 
-                    m_frameHash = null;
-
-                    m_createNewFrameFunction = null;
+                        m_frameHash = null;
+                        m_createNewFrameFunction = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
-
-            m_disposed = true;
         }
 
+        /// <summary>
+        /// Clears the <see cref="FrameQueue"/>.
+        /// </summary>
         public void Clear()
         {
             lock (m_frameList)
@@ -164,6 +196,9 @@ namespace PCS.Measurements
             }
         }
 
+        /// <summary>
+        /// Removes current <see cref="Head"/> frame <see cref="FrameQueue"/> from the queue after it has been processed and assigns a new <see cref="Head"/>.
+        /// </summary>
         public void Pop()
         {
             // We track latest published ticks - don't want to allow slow moving measurements
@@ -189,6 +224,18 @@ namespace PCS.Measurements
             }
         }
 
+        /// <summary>
+        /// Gets <see cref="IFrame"/> from the queue with the specified timestamp, in ticks.  If no <see cref="IFrame"/> exists for
+        /// the specified timestamp, one will be created.
+        /// </summary>
+        /// <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="IFrame"/>.</param>
+        /// <remarks>
+        /// Ticks can be any point in time so long time requested is greater than time of last published frame; this queue
+        /// is used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null
+        /// will be returned. Note that frame returned will be "best-fit" for given timestamp based on the number of 
+        /// <see cref="ConcentratorBase.FramesPerSecond"/> of the parent <see cref="ConcentratorBase"/> implementation.
+        /// </remarks>
+        /// <returns>An existing or new <see cref="IFrame"/> from the queue for the specified timestamp.</returns>
         public IFrame GetFrame(long ticks)
         {
             // Calculate destination ticks for this frame

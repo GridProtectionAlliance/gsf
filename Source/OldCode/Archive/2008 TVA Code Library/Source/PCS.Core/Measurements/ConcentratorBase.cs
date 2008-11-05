@@ -43,7 +43,7 @@ using System.Threading;
 namespace PCS.Measurements
 {
     /// <summary>
-    /// Measurement concentrator base class
+    /// Measurement concentrator base class.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -239,8 +239,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the absolute latest received measurement values.</summary>
-        /// <remarks>Increases the required sorting time.</remarks>
+        /// <summary>Gets or sets flag to start tracking the absolute latest received measurement values.</summary>
+        /// <remarks>Enabling this option will slightly increase the required sorting time.</remarks>
         public bool TrackLatestMeasurements
         {
             get
@@ -253,7 +253,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the absolute latest received measurement values.</summary>
+        /// <summary>Gets reference to the collection of absolute latest received measurement values.</summary>
         public ImmediateMeasurements LatestMeasurements
         {
             get
@@ -286,7 +286,8 @@ namespace PCS.Measurements
                 if (m_frameQueue != null)
                     m_frameQueue.TicksPerFrame = m_ticksPerFrame;
 
-                var framePeriods = new int[m_framesPerSecond];
+                // Calculate new wait time periods for new number of frames per second
+                int[] framePeriods = new int[m_framesPerSecond];
 
                 for (int frameIndex = 0; frameIndex <= m_framesPerSecond - 1; frameIndex++)
                 {
@@ -355,8 +356,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Determines whether or not to allow incoming measurements with bad timestamps to be sorted
-        /// by arrival time.</summary>
+        /// <summary>Gets or sets flag that determines whether or not to allow incoming measurements with
+        /// bad timestamps to be sorted by arrival time.</summary>
         /// <remarks>
         /// Defaults to True, so that any incoming measurement with a bad timestamp quality
         /// will be sorted according to its arrival time. Setting the property to False will cause all
@@ -374,7 +375,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Determines whether or not to use the local clock time as real time.</summary>
+        /// <summary>Gets or sets flag that determines whether or not to use the local clock time as
+        /// real time.</summary>
         /// <remarks>
         /// Use your local system clock as real time only if the time is locally GPS-synchronized,
         /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
@@ -439,7 +441,7 @@ namespace PCS.Measurements
                     long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
                     long currentRealTimeTicks = m_realTimeTicks;
-                    double distance = (currentTimeTicks - currentRealTimeTicks) / Ticks.PerSecond;
+                    double distance = (currentTimeTicks - currentRealTimeTicks) / (double)Ticks.PerSecond;
 
                     if (distance > m_leadTime || distance < -m_leadTime)
                     {
@@ -521,7 +523,7 @@ namespace PCS.Measurements
         }
 
         /// <summary>Gets the average required frame publication time, in milliseconds.</summary>
-        /// <remarks>If user publication function exceeds available publishing time (1 / framesPerSecond), concentration will fall behind.</remarks>
+        /// <remarks>If user publication function consistently exceeds available publishing time (1 / framesPerSecond), concentration will fall behind.</remarks>
         public double AveratePublicationTimePerFrame
         {
             get
@@ -622,7 +624,7 @@ namespace PCS.Measurements
                 status.Append((m_missedSortsByTimeout / m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.Append(" Measurement time accuracy: ");
-                status.Append((1.0 - m_measurementsSortedByArrival / m_totalMeasurements).ToString("##0.0000%"));
+                status.Append((1.0D - m_measurementsSortedByArrival / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.Append("    Total published frames: ");
                 status.Append(m_publishedFrames);
@@ -715,16 +717,16 @@ namespace PCS.Measurements
 #endif
         }
 
-        /// <summary>Returns the deviation in seconds that the given number of ticks is from real time.</summary>
+        /// <summary>Returns the deviation, in seconds, that the given number of ticks is from real time.</summary>
         public double SecondsFromRealTime(long ticks)
         {
-            return (RealTimeTicks - ticks) / Ticks.PerSecond;
+            return (RealTimeTicks - ticks) / (double)Ticks.PerSecond;
         }
 
-        /// <summary>Returns the deviation in milliseconds that the given number of ticks is from real time.</summary>
+        /// <summary>Returns the deviation, in milliseconds, that the given number of ticks is from real time.</summary>
         public double MillisecondsFromRealTime(long ticks)
         {
-            return (RealTimeTicks - ticks) / Ticks.PerMillisecond;
+            return (RealTimeTicks - ticks) / (double)Ticks.PerMillisecond;
         }
 
         /// <summary>Places measurement data point in its proper row/cell position.</summary>
@@ -766,8 +768,6 @@ namespace PCS.Measurements
                 {
                     if (m_allowSortsByArrival)
                     {
-                        // TODO: Replacing the measurement's timestamp may not always be the desired option - create a property to make this optional
-
                         // Device reports measurement timestamp as bad. Since the measurement may have been
                         // delayed by prior concentration or long network distance, this function assumes
                         // that our local real time value is better than the device measurement, so we set
@@ -879,7 +879,7 @@ namespace PCS.Measurements
 #else
                             long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
-                            distance = (currentTimeTicks - ticks) / Ticks.PerSecond;
+                            distance = (currentTimeTicks - ticks) / (double)Ticks.PerSecond;
 
                             if (distance <= m_leadTime && distance >= -m_leadTime)
                             {
@@ -897,7 +897,7 @@ namespace PCS.Measurements
                             {
                                 // Measurement ticks were outside of time deviation tolerances so we'll also check to make
                                 // sure current real-time ticks are within these tolerances as well
-                                distance = (currentTimeTicks - m_realTimeTicks) / Ticks.PerSecond;
+                                distance = (currentTimeTicks - m_realTimeTicks) / (double)Ticks.PerSecond;
 
                                 if (distance > m_leadTime || distance < -m_leadTime)
                                 {
@@ -1163,7 +1163,7 @@ namespace PCS.Measurements
             int frameRate;
             int deficit;
 
-            frameRate = (int)(Math.Round(1000.0 / framesPerSecond));
+            frameRate = (int)(Math.Round(1000.0D / framesPerSecond));
             deficit = 1000 - frameRate * framesPerSecond;
 
             if (deficit == 0)
@@ -1182,7 +1182,7 @@ namespace PCS.Measurements
                 }
                 else
                 {
-                    double interval = framesPerSecond / Math.Abs(deficit);
+                    double interval = framesPerSecond / Math.Abs((double)deficit);
                     double pre_dis = mod_dis(frameIndex - 1, interval);
                     double cur_dis = mod_dis(frameIndex, interval);
                     double next_dis = mod_dis(frameIndex + 1, interval);

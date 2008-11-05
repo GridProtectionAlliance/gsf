@@ -48,11 +48,12 @@ namespace PCS.IO.Compression
     /// <summary>Defines extension functions related to compression.</summary>
     public static class CompressionExtensions
     {
+        /// <summary>Default compression buffer size.</summary>
         // A 256K buffer size produces very good compression, slightly better than WinZip (~2%) when using the
         // CompressFile function with CompressLevel.BestCompression.  To achieve best results zlib needs a
         // sizeable buffer to work with, however when these buffers are needed in the code they are created on
         // the garbage collected heap and used as briefly as possible.  Even so, you may want to reduce this
-        // buffer size if you intend on running this code on an embedded device...
+        // buffer size if you intend on running this code on an embedded device.
         public const int BufferSize = 262144;
 
         /// <summary>Needed version of this library to uncompress stream (1.0.0 stored as byte 100).</summary>

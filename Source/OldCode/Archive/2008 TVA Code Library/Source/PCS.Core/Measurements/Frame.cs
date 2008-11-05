@@ -22,7 +22,8 @@ using System.Collections.Generic;
 
 namespace PCS.Measurements
 {
-    /// <summary>Implementation of a basic frame</summary>
+    /// <summary>Implementation of a basic frame.</summary>
+    /// <remarks>A frame represents a collection of measurements at a given time.</remarks>
     public class Frame : IFrame
     {
         #region [ Members ]
@@ -40,6 +41,10 @@ namespace PCS.Measurements
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new <see cref="Frame"/> given the specified parameters.
+        /// </summary>
+        /// <param name="ticks">Timestamp, in ticks, for this frame.</param>
         public Frame(long ticks)
         {
             m_ticks = ticks;
@@ -47,6 +52,13 @@ namespace PCS.Measurements
             m_publishedMeasurements = -1;
         }
 
+        /// <summary>
+        /// Constructs a new <see cref="Frame"/> given the specified parameters.
+        /// </summary>
+        /// <param name="ticks">Timestamp, in ticks, for this frame.</param>
+        /// <param name="measurements">Initial set of measurements to load into the frame, if any.</param>
+        /// <param name="startSortTime">Time, in ticks, of when measurements began sorting into frame, if available.</param>
+        /// <param name="lastSortTime">Time, in ticks, of when last measurement was sorted into frame, if available.</param>
         public Frame(long ticks, Dictionary<MeasurementKey, IMeasurement> measurements, long startSortTime, long lastSortTime)
         {
             m_ticks = ticks;
@@ -60,7 +72,7 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
-        /// <summary>Keyed measurements in this frame</summary>
+        /// <summary>Keyed measurements in this frame.</summary>
         public IDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get
@@ -69,7 +81,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets published state of this frame</summary>
+        /// <summary>Gets or sets published state of this frame.</summary>
         public bool Published
         {
             get
@@ -82,8 +94,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets total number of measurements that have been published for this frame</summary>
-        /// <remarks>If this property has not been assigned a value, the property will return measurement count</remarks>
+        /// <summary>Gets or sets total number of measurements that have been published for this frame.</summary>
+        /// <remarks>If this property has not been assigned a value, the property will return measurement count.</remarks>
         public int PublishedMeasurements
         {
             get
@@ -99,8 +111,8 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Exact timestamp of the data represented in this frame</summary>
-        /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001</remarks>
+        /// <summary>Gets or sets exact timestamp, in ticks, of the data represented in this frame.</summary>
+        /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
         public long Ticks
         {
             get
@@ -113,7 +125,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Date representation of ticks of this frame</summary>
+        /// <summary>Gets the DateTime representation of ticks of this frame.</summary>
         public DateTime Timestamp
         {
             get
@@ -122,7 +134,7 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Last measurement that was sorted into this frame</summary>
+        /// <summary>Gets or sets reference to last measurement that was sorted into this frame.</summary>
         public IMeasurement LastSortedMeasurement
         {
             get
@@ -139,8 +151,8 @@ namespace PCS.Measurements
 
         #region [ Methods ]
 
-        /// <summary>Create a copy of this frame and its measurements</summary>
-        /// <remarks>This frame's measurement dictionary is synclocked during copy</remarks>
+        /// <summary>Create a copy of this frame and its measurements.</summary>
+        /// <remarks>This frame's measurement dictionary is synclocked during copy.</remarks>
         public Frame Clone()
         {
             lock (m_measurements)
@@ -149,13 +161,28 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Returns True if the timestamp of this frame equals the timestamp of the specified other frame</summary>
+        /// <summary>
+        /// Determines whether the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>;
+        /// otherwise, false.
+        /// </returns>
         public bool Equals(IFrame other)
         {
             return (CompareTo(other) == 0);
         }
 
-        /// <summary>Returns True if the timestamp of this frame equals the timestamp of the specified other frame</summary>
+        /// <summary>
+        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>;
+        /// otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
         public override bool Equals(object obj)
         {
             IFrame other = obj as IFrame;
@@ -163,13 +190,24 @@ namespace PCS.Measurements
             throw new ArgumentException("Object is not an IFrame");
         }
 
-        /// <summary>This implementation of a basic measurement compares itself by timestamp</summary>
+        /// <summary>
+        /// Compares the <see cref="Frame"/> with an <see cref="IFrame"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+        /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
         public int CompareTo(IFrame other)
         {
             return m_ticks.CompareTo(other.Ticks);
         }
 
-        /// <summary>This implementation of a basic frame compares itself by timestamp</summary>
+        /// <summary>
+        /// Compares the <see cref="Frame"/> with the specified <see cref="Object"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
+        /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
         public int CompareTo(object obj)
         {
             IFrame other = obj as IFrame;
@@ -177,6 +215,11 @@ namespace PCS.Measurements
             throw new ArgumentException("Frame can only be compared with other IFrames...");
         }
 
+        /// <summary>
+        /// Serves as a hash function for the current <see cref="Frame"/>.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="Frame"/>.</returns>
+        /// <remarks>Hash code based on timestamp of frame.</remarks>
         public override int GetHashCode()
         {
             return m_ticks.GetHashCode();
@@ -186,31 +229,49 @@ namespace PCS.Measurements
 
         #region [ Operators ]
 
+        /// <summary>
+        /// Compares two <see cref="Frame"/> timestamps for equality.
+        /// </summary>
         public static bool operator ==(Frame frame1, Frame frame2)
         {
             return frame1.Equals(frame2);
         }
 
+        /// <summary>
+        /// Compares two <see cref="Frame"/> timestamps for inequality.
+        /// </summary>
         public static bool operator !=(Frame frame1, Frame frame2)
         {
             return !frame1.Equals(frame2);
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Frame"/> timestamp is greater than right <see cref="Frame"/> timestamp.
+        /// </summary>
         public static bool operator >(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) > 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Frame"/> timestamp is greater than or equal to right <see cref="Frame"/> timestamp.
+        /// </summary>
         public static bool operator >=(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) >= 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Frame"/> timestamp is less than right <see cref="Frame"/> timestamp.
+        /// </summary>
         public static bool operator <(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) < 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Frame"/> timestamp is less than or equal to right <see cref="Frame"/> timestamp.
+        /// </summary>
         public static bool operator <=(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) <= 0;

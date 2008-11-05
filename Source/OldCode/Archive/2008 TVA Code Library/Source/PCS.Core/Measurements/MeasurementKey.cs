@@ -21,7 +21,7 @@ using System;
 
 namespace PCS.Measurements
 {
-    /// <summary>Defines a primary key for a measurement</summary>
+    /// <summary>Represents a primary key for a measurement.</summary>
     public struct MeasurementKey : IEquatable<MeasurementKey>, IComparable<MeasurementKey>, IComparable
     {
         #region [ Members ]
@@ -35,6 +35,11 @@ namespace PCS.Measurements
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new <see cref="MeasurementKey"/> given the specified parameters.
+        /// </summary>
+        /// <param name="id">Numeric ID of the measurement that this <see cref="MeasurementKey"/> represents.</param>
+        /// <param name="source">Source of the measurement that this <see cref="MeasurementKey"/> represents (e.g., name of archive).</param>
         public MeasurementKey(int id, string source)
         {
             if (string.IsNullOrEmpty(source))
@@ -51,6 +56,7 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
+        /// <summary>Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.</summary>
         public int ID
         {
             get
@@ -67,6 +73,8 @@ namespace PCS.Measurements
             }
         }
 
+        /// <summary>Gets or sets the source of this <see cref="MeasurementKey"/>.</summary>
+        /// <remarks>This value is typically used to track the archive name in which the measurement, that this <see cref="MeasurementKey"/> represents, is stored.</remarks>
         public string Source
         {
             get
@@ -87,21 +95,46 @@ namespace PCS.Measurements
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Returns a <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <returns>A <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.</returns>
         public override string ToString()
         {
             return string.Format("{0}:{1}", m_source, m_id);
         }
 
+        /// <summary>
+        /// Serves as a hash function for the current <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="MeasurementKey"/>.</returns>
         public override int GetHashCode()
         {
             return m_hashCode;
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="MeasurementKey"/> is equal to the current <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="MeasurementKey"/> to compare with the current <see cref="MeasurementKey"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="MeasurementKey"/> is equal to the current <see cref="MeasurementKey"/>;
+        /// otherwise, false.
+        /// </returns>
         public bool Equals(MeasurementKey other)
         {
             return (m_hashCode == other.GetHashCode());
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="MeasurementKey"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="Object"/> is equal to the current <see cref="MeasurementKey"/>;
+        /// otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not a <see cref="MeasurementKey"/>.</exception>
         public override bool Equals(object obj)
         {
             // Can't use cast "as" on a structure...
@@ -109,6 +142,11 @@ namespace PCS.Measurements
             throw new ArgumentException("Object is not a MeasurementKey");
         }
 
+        /// <summary>
+        /// Compares the <see cref="MeasurementKey"/> with another <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="MeasurementKey"/> to compare with the current <see cref="MeasurementKey"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(MeasurementKey other)
         {
             int sourceCompare = string.Compare(m_source, other.Source, true);
@@ -119,6 +157,12 @@ namespace PCS.Measurements
                 return sourceCompare;
         }
 
+        /// <summary>
+        /// Compares the <see cref="MeasurementKey"/> with the specified <see cref="Object"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="MeasurementKey"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not a <see cref="MeasurementKey"/>.</exception>
         public int CompareTo(object obj)
         {
             // Can't use cast "as" on a structure...
@@ -136,31 +180,49 @@ namespace PCS.Measurements
 
         #region [ Operators ]
 
+        /// <summary>
+        /// Compares two <see cref="MeasurementKey"/> values for equality.
+        /// </summary>
         public static bool operator ==(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.Equals(key2);
         }
 
+        /// <summary>
+        /// Compares two <see cref="MeasurementKey"/> values for inequality.
+        /// </summary>
         public static bool operator !=(MeasurementKey key1, MeasurementKey key2)
         {
             return !key1.Equals(key2);
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="MeasurementKey"/> value is greater than right <see cref="MeasurementKey"/> value.
+        /// </summary>
         public static bool operator >(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) > 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="MeasurementKey"/> value is greater than or equal to right <see cref="MeasurementKey"/> value.
+        /// </summary>
         public static bool operator >=(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) >= 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="MeasurementKey"/> value is less than right <see cref="MeasurementKey"/> value.
+        /// </summary>
         public static bool operator <(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) < 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="MeasurementKey"/> value is less than or equal to right <see cref="MeasurementKey"/> value.
+        /// </summary>
         public static bool operator <=(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) <= 0;
