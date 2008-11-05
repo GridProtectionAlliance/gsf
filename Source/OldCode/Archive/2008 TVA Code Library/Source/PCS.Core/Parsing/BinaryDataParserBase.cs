@@ -31,7 +31,13 @@ using PCS.IO;
 
 namespace PCS.Parsing
 {
-    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportInitialize , IPersistSettings where TOutputType : IBinaryDataConsumer, IIdentifiableType<TTypeIdentifier>
+    /// <summary>
+    /// An abstract class that can be used for parsing data from multiple sources appropriate output types.
+    /// </summary>
+    /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
+    /// <typeparam name="TTypeIdentifier">Type of identifier for the output types.</typeparam>
+    /// <typeparam name="TOutputType">Type of the output.</typeparam>
+    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportLifecycle, ISupportInitialize , IPersistSettings where TOutputType : IBinaryDataConsumer, IIdentifiableType<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -52,8 +58,14 @@ namespace PCS.Parsing
         /// </summary>
         private class DataContainer
         {
+            public DataContainer(TSourceIdentifier source, byte[] data)
+            {
+                this.Source = source;
+                this.Data = data;
+            }
+
             public byte[] Data;
-            public TSourceIdentifier DataSource;
+            public TSourceIdentifier Source;
         }
 
         // Constants
@@ -83,40 +95,59 @@ namespace PCS.Parsing
 
         // Events
 
-        /// <summary>
-        /// Occurs when a data image has been parsed.
-        /// </summary>
-        public event EventHandler<EventArgs<IdentifiableItem<Guid, List<TOutputType>>>> DataParsed;
 
         /// <summary>
-        /// Occurs when a matching output type is not found for parsing the data image.
+        /// Occurs when data image cannot be deserialized to the <see cref="Type"/> that the data image was for 
+        /// either because the data image was partial or corrupt.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1}.Argument"/> is the ID of the <see cref="Type"/> that the data image was for.
+        /// </remarks>
+        [Description("Occurs when data image cannot be deserialized to the Type that the data image was for either because the data image was partial or corrupt.")]
+        public event EventHandler<EventArgs<TTypeIdentifier>> DataDiscarded;
+
+        /// <summary>
+        /// Occurs when a data image is deserialized successfully to one or more object of the <see cref="Type"/> 
+        /// that the data image was for.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="EventArgs{T1, T2}.Argument1"/> is the ID of the source for the data image.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T1, T2}.Argument2"/> is a list of objects deserialized from the data image.
+        /// </para>
+        /// </remarks>
+        [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
+        public event EventHandler<EventArgs<TSourceIdentifier, List<TOutputType>>> DataParsed;
+
+        /// <summary>
+        /// Occurs when matching <see cref="Type"/> for deserializing the data image cound not be found.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1}.Argument"/> is the ID of the <see cref="Type"/> that the data image was for.
+        /// </remarks>
+        [Description("Occurs when matching Type for deserializing the data image cound not be found.")]
         public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
-
-        /// <summary>
-        /// Occurs when unparsed data is reused and not discarded.
-        /// </summary>
-        public event EventHandler<EventArgs<TTypeIdentifier>> UnparsedDataReused;
-
-        /// <summary>
-        /// Occurs when unparsed data is discarded and not re-used.
-        /// </summary>
-        public event EventHandler<EventArgs<TTypeIdentifier>> UnparsedDataDiscarded;
 
         // Fields
         private bool m_optimizeParsing;
         private int m_dataAssemblyAttempts;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private ProcessQueue<DataContainer> m_unparsedDataQueue;
         private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
-        private Dictionary<Guid, int> m_unparsedDataReuseCount;
-        private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
+        private Dictionary<TSourceIdentifier, int> m_assemblyAttemptTracker;
         private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BinaryDataParserBase{TSourceIdentifier, TTypeIdentifier, TOutputType}"/> class.
+        /// </summary>
         public BinaryDataParserBase()
         {
             m_optimizeParsing = DefaultOptimizeParsing;
@@ -124,8 +155,8 @@ namespace PCS.Parsing
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
-            m_unparsedDataReuseCount = new Dictionary<Guid, int>();
-            m_dataQueue = ProcessQueue<IdentifiableItem<Guid, byte[]>>.CreateRealTimeQueue(ParseData);
+            m_assemblyAttemptTracker = new Dictionary<TSourceIdentifier, int>();
+            m_unparsedDataQueue = ProcessQueue<DataContainer>.CreateRealTimeQueue(ParseData);
         }
         
         #endregion
@@ -133,10 +164,11 @@ namespace PCS.Parsing
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value indicating if parsing is to be done in an optimal mode.
+        /// Gets or sets a boolean value that indicates if data is to be parsed in an optimal mode.
         /// </summary>
-        /// <value></value>
-        /// <returns>True if parsing is to be done in an optimal mode; otherwise False.</returns>
+        [Category("Settings"),
+        DefaultValue(DefaultOptimizeParsing),
+        Description("Indicates whether the data is to be parsed in an optimal mode.")]
         public bool OptimizeParsing
         {
             get
@@ -150,10 +182,11 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets or sets the number of attempts to be made to parse the unparsed data by reusing it.
+        /// Gets or sets the number of attempts to be made for assembling partial data images before parsing it.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
+        [Category("Settings"),
+        DefaultValue(DefaultDataAssemblyAttempts),
+        Description("Number of attempts to be made for assembling partial data images before parsing it.")]
         public int DataAssemblyAttempts
         {
             get
@@ -166,6 +199,13 @@ namespace PCS.Parsing
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the settings of data parser object are 
+        /// to be saved to the config file.
+        /// </summary>
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of data parser object are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -178,6 +218,14 @@ namespace PCS.Parsing
             }
         }
 
+        /// <summary>
+        /// Gets or sets the category under which the settings of data parser object are to be saved
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of data parser object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -186,27 +234,31 @@ namespace PCS.Parsing
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
             }
         }
 
         /// <summary>
-        /// Gets the queue to which data to be parsed is to be added.
+        /// Gets or sets a boolean value that indicates whether the data parser object is currently enabled.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// The PCS.Collections.ProcessQueue(Of PCS.IdentifiableItem(Of Guid, Byte())) to which data to be parsed is
-        /// to be added.
-        /// </returns>
-        [Browsable(false)]
-        public ProcessQueue<IdentifiableItem<Guid, byte[]>> DataQueue
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
         {
             get
             {
-                return m_dataQueue;
+                return m_unparsedDataQueue.Enabled;
+            }
+            set
+            {
+                m_unparsedDataQueue.Enabled = value;
             }
         }
 
@@ -215,39 +267,12 @@ namespace PCS.Parsing
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="BinaryDataParserBase{TIdentifier, TOutput}"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_dataQueue != null)
-                        {
-                            m_dataQueue.Dispose();
-                        }
-                        m_dataQueue = null;
-
-                        SaveSettings(); // Saves settings to the config file.
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        /// <summary>
-        /// Starts the parser.
+        /// Starts the data parser.
         /// </summary>
         public void Start()
         {
+            Initialize();   // Initialize if uninitialized.
+
             ConstructorInfo typeCtor = null;
             string dllDirectory = FilePath.GetAbsolutePath("");
             AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("InMemory"), AssemblyBuilderAccess.Run);
@@ -324,21 +349,181 @@ namespace PCS.Parsing
                 }
             }
 
-            m_dataQueue.Start();
+            m_unparsedDataQueue.Start();
         }
 
         /// <summary>
-        /// Stops the parser.
+        /// Stops the data parser.
         /// </summary>
         public void Stop()
         {
-            m_dataQueue.Stop();     // Stop processing of queued data.
+            m_unparsedDataQueue.Stop();     // Stop processing of queued data.
             m_outputTypes.Clear();  // Clear the cached packet type available.
         }
 
-        public abstract TTypeIdentifier ExtractTypeID(byte[] binaryImage, int startIndex);
+        /// <summary>
+        /// Queues data for parsing.
+        /// </summary>
+        /// <param name="source">ID of the data source.</param>
+        /// <param name="data">Data to be parsed.</param>
+        public void Parse(TSourceIdentifier source, byte[] data)
+        { 
+            m_unparsedDataQueue.Add(new DataContainer(source,data));
+        }
 
-        private void ParseData(IdentifiableItem<Guid, byte[]>[] item)
+        /// <summary>
+        /// Initializes the data parser object.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the data parser 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Saves settings for the data parser object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["OptimizeParsing", true].Update(m_optimizeParsing, "True if data parsing is to be done in an optimal mode; otherwise False.");
+                settings["DataAssemblyAttempts", true].Update(m_dataAssemblyAttempts, "Number of attempts to be made for assembling partial data images before parsing it.");
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings for the data parser object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                OptimizeParsing = settings["OptimizeParsing", true].ValueAs(m_optimizeParsing);
+                DataAssemblyAttempts = settings["DataAssemblyAttempts", true].ValueAs(m_dataAssemblyAttempts);
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the data parser object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the data parser object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            // Nothing needs to be done before component is initialized.
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the data parser object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the data parser object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DataDiscarded"/>
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnDataDiscarded(EventArgs<TTypeIdentifier> e)
+        {
+            if (DataDiscarded != null)
+                DataDiscarded(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DataParsed"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnDataParsed(EventArgs<TSourceIdentifier, List<TOutputType>> e)
+        {
+            if (DataParsed != null)
+                DataParsed(this, e);
+        }
+
+
+        /// <summary>
+        /// Raises the <see cref="OutputTypeNotFound"/> event.
+        /// </summary>
+        /// <param name="e">Event data.</param>
+        protected virtual void OnOutputTypeNotFound(EventArgs<TTypeIdentifier> e)
+        {
+            if (OutputTypeNotFound != null)
+                OutputTypeNotFound(this, e);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the data parser object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings(); 
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_unparsedDataQueue != null)
+                            m_unparsedDataQueue.Dispose();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, gets ID of the <see cref="Type"/> the data image is for.
+        /// </summary>
+        /// <param name="binaryImage">The data image whose target type is to be determined.</param>
+        /// <param name="startIndex">The index in the data image from where the data is valid.</param>
+        /// <returns>ID of the <see cref="Type"/> the data image is for.</returns>
+        protected abstract TTypeIdentifier ExtractTypeID(byte[] binaryImage, int startIndex);
+
+        private void ParseData(DataContainer[] item)
         {
             int cursor;
             TOutputType instance;
@@ -349,7 +534,7 @@ namespace PCS.Parsing
             {
                 // We have defined the process queue that holds the data to be parsed of type "Many-at-Once", so we'll
                 // most likely get multiple data images that we must process and we'll do just that...!
-                if (item[i].Item != null && item[i].Item.Length > 0)
+                if (item[i].Data != null && item[i].Data.Length > 0)
                 {
                     // This data image is valid (i.e. has data in it), so we'll go on to process it. By "processing the
                     // data image" we mean that we'll take the data in the image and use it to initialize an appropriate
@@ -358,9 +543,9 @@ namespace PCS.Parsing
                     List<TOutputType> output = new List<TOutputType>();
 
                     cursor = 0;
-                    while (cursor < item[i].Item.Length)
+                    while (cursor < item[i].Data.Length)
                     {
-                        typeID = ExtractTypeID(item[i].Item, cursor); // <- Necessary overhead :(
+                        typeID = ExtractTypeID(item[i].Data, cursor); // <- Necessary overhead :(
 
                         if (m_outputTypes.TryGetValue(typeID, out outputType))
                         {
@@ -368,9 +553,9 @@ namespace PCS.Parsing
                             try
                             {
                                 instance = outputType.CreateNew();
-                                cursor += instance.Initialize(item[i].Item, cursor); // Returns the number of bytes used.
+                                cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
                                 output.Add(instance);
-                                m_unparsedDataReuseCount[item[i].ID] = 0; // <- Necessary overhead :(
+                                m_assemblyAttemptTracker[item[i].Source] = 0;       // <- Necessary overhead :(
                             }
                             catch
                             {
@@ -388,7 +573,7 @@ namespace PCS.Parsing
                                 // discard it.
                                 int reuseCount;
 
-                                m_unparsedDataReuseCount.TryGetValue(item[i].ID, out reuseCount);
+                                m_assemblyAttemptTracker.TryGetValue(item[i].Source, out reuseCount);
 
                                 if (reuseCount < m_dataAssemblyAttempts)
                                 {
@@ -396,8 +581,8 @@ namespace PCS.Parsing
                                     bool insertUnusedData = true;
 
                                     // First, we extract the unparsed data from the data image.
-                                    byte[] unusedData = new byte[item[i].Item.Length - cursor];
-                                    Array.Copy(item[i].Item, cursor, unusedData, 0, unusedData.Length);
+                                    byte[] unusedData = new byte[item[i].Data.Length - cursor];
+                                    Array.Copy(item[i].Data, cursor, unusedData, 0, unusedData.Length);
 
                                     if (i < (item.Length - 1))
                                     {
@@ -405,16 +590,16 @@ namespace PCS.Parsing
                                         // image that is from the same source as this data image.
                                         for (int k = i + 1; k <= item.Length - 1; k++)
                                         {
-                                            if (item[k].ID.Equals(item[i].ID))
+                                            if (item[k].Source.Equals(item[i].Source))
                                             {
                                                 // We found a data image from the same source so we'll merge the unparsed
                                                 // data with the data in that data image and hopefully now we'll be able
                                                 // to parse the combined data.
-                                                byte[] mergedImage = new byte[item[k].Item.Length + unusedData.Length];
+                                                byte[] mergedImage = new byte[item[k].Data.Length + unusedData.Length];
                                                 Array.Copy(unusedData, 0, mergedImage, 0, unusedData.Length);
-                                                Array.Copy(item[k].Item, 0, mergedImage, unusedData.Length, item[k].Item.Length);
+                                                Array.Copy(item[k].Data, 0, mergedImage, unusedData.Length, item[k].Data.Length);
 
-                                                item[k].Item = mergedImage;
+                                                item[k].Data = mergedImage;
 
                                                 insertUnusedData = false;
                                                 break;
@@ -428,22 +613,19 @@ namespace PCS.Parsing
                                         // so we'll just insert this data in the queue, so by the time this data is
                                         // processed in the next batch, we might have data from the same source that we
                                         // might be able to combine and use.
-                                        m_dataQueue.Insert(0, new IdentifiableItem<Guid, byte[]>(item[i].ID, unusedData));
+                                        m_unparsedDataQueue.Insert(0, new DataContainer(item[i].Source, unusedData));
                                     }
 
                                     reuseCount++;
-                                    m_unparsedDataReuseCount[item[i].ID] = reuseCount;
-                                    cursor = item[i].Item.Length; // Move on to the next data image.
-                                    if (UnparsedDataReused != null)
-                                        UnparsedDataReused(this, new EventArgs<TTypeIdentifier>(typeID));
+                                    m_assemblyAttemptTracker[item[i].Source] = reuseCount;
+                                    cursor = item[i].Data.Length; // Move on to the next data image.
                                 }
                                 else
                                 {
-                                    cursor = item[i].Item.Length; // Move on to the next data image.
+                                    cursor = item[i].Data.Length; // Move on to the next data image.
 
-                                    m_unparsedDataReuseCount[item[i].ID] = 0;
-                                    if (UnparsedDataDiscarded != null)
-                                        UnparsedDataDiscarded(this, new EventArgs<TTypeIdentifier>(typeID));
+                                    m_assemblyAttemptTracker[item[i].Source] = 0;
+                                    OnDataDiscarded(new EventArgs<TTypeIdentifier>(typeID));
                                 }
                             }
                         }
@@ -453,71 +635,14 @@ namespace PCS.Parsing
                             // to have to discard the remainder of the image because we will now know where the
                             // the next valid block of data is within the image.
 
-                            cursor = item[i].Item.Length; // Move on to the next data image.
-                            if (OutputTypeNotFound != null)
-                                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(typeID));
+                            cursor = item[i].Data.Length; // Move on to the next data image.
+                            OnOutputTypeNotFound(new EventArgs<TTypeIdentifier>(typeID));
                         }
                     }
 
-                    if (DataParsed != null)
-                        DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutputType>>>(new IdentifiableItem<Guid, List<TOutputType>>(item[i].ID, output)));
+                    OnDataParsed(new EventArgs<TSourceIdentifier, List<TOutputType>>(item[i].Source, output));
                 }
             }
-        }
-
-        public void LoadSettings()
-        {
-            try
-            {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                if (settings.Count > 0)
-                {
-                    OptimizeParsing = settings["OptimizeParsing"].ValueAs(m_optimizeParsing);
-                    DataAssemblyAttempts = settings["UnparsedDataReuseLimit"].ValueAs(m_dataAssemblyAttempts);
-                }
-            }
-            catch
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    CategorizedSettingsElement element;
-                    settings.Clear();
-
-                    element = settings["OptimizeParsing", true];
-                    element.Value = m_optimizeParsing.ToString();
-                    element.Description = "True if parsing is to be done in an optimal mode; otherwise False.";
-
-                    element = settings["UnparsedDataReuseLimit", true];
-                    element.Value = m_dataAssemblyAttempts.ToString();
-                    element.Description = "Number of times unparsed data can be reused before being discarded.";
-
-                    ConfigurationFile.Current.Save();
-                }
-                catch
-                {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
-                }
-            }
-        }
-
-        public void BeginInit()
-        {
-            // We don't need to do anything before the component is initialized.				
-        }
-
-        public void EndInit()
-        {
-            // Load settings from the config file.
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime) LoadSettings();
         }
 
         #endregion
