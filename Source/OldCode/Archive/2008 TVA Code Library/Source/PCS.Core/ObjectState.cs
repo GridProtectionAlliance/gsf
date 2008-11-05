@@ -14,6 +14,8 @@
 //      Generated original version of source code.
 //  09/09/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  11/05/2008 - Pinal C. Patel
+//      Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -21,33 +23,64 @@ using System;
 
 namespace PCS
 {
-    /// <summary>Generic object state class.</summary>
-    /// <remarks>Tracks current and previous states of a labeled object.</remarks>
-    /// <typeparam name="TState">Object state to track.</typeparam>
+    /// <summary>
+    /// A serializable class that can be used to track the current and previous state of an object.
+    /// </summary>
+    /// <typeparam name="TState">Type of the state to track.</typeparam>
     [Serializable()]
     public class ObjectState<TState>
     {
+        #region [ Members ]
+
+        // Fields
         private string m_objectName;
         private TState m_currentState;
         private TState m_previousState;
 
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectState{TState}"/> class.
+        /// </summary>
+        /// <param name="objectName">The text label for the object whose state is being tracked.</param>
         public ObjectState(string objectName)
             : this(objectName, default(TState))
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectState{TState}"/> class.
+        /// </summary>
+        /// <param name="objectName">The text label for the object whose state is being tracked.</param>
+        /// <param name="currentState">The current state of the object.</param>
         public ObjectState(string objectName, TState currentState)
-            : this(objectName, default(TState), currentState)
+            : this(objectName, currentState, default(TState))
         {
         }
 
-        public ObjectState(string objectName, TState previousState, TState currentState)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectState{TState}"/> class.
+        /// </summary>
+        /// <param name="objectName">The text label for the object whose state is being tracked.</param>
+        /// <param name="currentState">The current state of the object.</param>
+        /// <param name="previousState">The previous state of the object.</param>
+        public ObjectState(string objectName, TState currentState, TState previousState)
         {
-            m_objectName = objectName;
-            m_currentState = currentState;
-            m_previousState = previousState;
+            this.ObjectName = objectName;
+            this.CurrentState = currentState;
+            this.PreviousState = previousState;
         }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a text label for the object whose state is being tracked.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
         public string ObjectName
         {
             get
@@ -56,10 +89,16 @@ namespace PCS
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
                 m_objectName = value;
             }
         }
 
+        /// <summary>
+        /// Gets or sets the current state of the object.
+        /// </summary>
         public TState CurrentState
         {
             get
@@ -72,6 +111,9 @@ namespace PCS
             }
         }
 
+        /// <summary>
+        /// Gets or sets the previous state of the object.
+        /// </summary>
         public TState PreviousState
         {
             get
@@ -83,5 +125,7 @@ namespace PCS
                 m_previousState = value;
             }
         }
+
+        #endregion
     }
 }
