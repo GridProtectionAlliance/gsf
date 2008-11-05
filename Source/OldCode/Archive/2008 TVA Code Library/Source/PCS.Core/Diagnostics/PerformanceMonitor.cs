@@ -334,7 +334,7 @@ namespace PCS.Diagnostics
         {
             get
             {
-                return this.GetType().Name;
+                return string.Format("{0}.{1}", this.GetType().Name, m_processName);
             }
         }
 
