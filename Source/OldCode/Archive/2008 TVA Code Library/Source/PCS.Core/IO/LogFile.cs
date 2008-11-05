@@ -338,7 +338,7 @@ namespace PCS.IO
         {
             get
             {
-                return string.Format("{0}_{1}", this.GetType().Name, FilePath.GetFileNameWithoutExtension(m_fileName));
+                return m_settingsCategory;
             }
         }
 
