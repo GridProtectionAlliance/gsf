@@ -82,6 +82,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Parsing\IIdentifiableType.cs" />
     <Compile Include="IO\IsamDataFileBase.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -236,7 +237,7 @@
     </Compile>
     <Compile Include="EventArgs.cs" />
     <Compile Include="Parsing\IBinaryDataConsumer.cs" />
-    <Compile Include="Parsing\IBinaryDataProvider.cs" />
+    <Compile Include="Parsing\IBinaryDataProducer.cs" />
     <Compile Include="IdentifiableItem.cs" />
     <Compile Include="TimeTagBase.cs" />
     <Compile Include="Measurements\Frame.cs" />

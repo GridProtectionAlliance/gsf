@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using PCS.Collections;
@@ -32,50 +31,65 @@ using PCS.IO;
 
 namespace PCS.Parsing
 {
-    public abstract class BinaryDataParserBase<TIdentifier, TOutput> : Component, IPersistSettings, ISupportInitialize where TOutput : IBinaryDataConsumer
+    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportInitialize , IPersistSettings where TOutputType : IBinaryDataConsumer, IIdentifiableType<TTypeIdentifier>
     {
         #region [ Members ]
 
         // Nested Types
         private class TypeInfo
         {
-            public TIdentifier ID;
-            public DefaultConstructor CreateNew;
             public Type RuntimeType;
+            public TTypeIdentifier TypeID;
+            public DefaultConstructor CreateNew;
         }
 
+        private class DataContainer
+        {
+            public byte[] Data;
+            public TSourceIdentifier DataSource;
+        }
+
+        // Constants
+
+        public const bool DefaultOptimizeParsing = true;
+
+        public const int DefaultDataAssemblyAttempts = 0;
+
+        public const bool DefaultPersistSettings = false;
+
+        public const string DefaultSettingsCategory = "BinaryDataParser";
+
         // Delegates
-        private delegate TOutput DefaultConstructor();
+        private delegate TOutputType DefaultConstructor();
 
         // Events
 
         /// <summary>
         /// Occurs when a data image has been parsed.
         /// </summary>
-        public event EventHandler<EventArgs<IdentifiableItem<Guid, List<TOutput>>>> DataParsed;
+        public event EventHandler<EventArgs<IdentifiableItem<Guid, List<TOutputType>>>> DataParsed;
 
         /// <summary>
         /// Occurs when a matching output type is not found for parsing the data image.
         /// </summary>
-        public event EventHandler<EventArgs<TIdentifier>> OutputTypeNotFound;
+        public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
 
         /// <summary>
         /// Occurs when unparsed data is reused and not discarded.
         /// </summary>
-        public event EventHandler<EventArgs<TIdentifier>> UnparsedDataReused;
+        public event EventHandler<EventArgs<TTypeIdentifier>> UnparsedDataReused;
 
         /// <summary>
         /// Occurs when unparsed data is discarded and not re-used.
         /// </summary>
-        public event EventHandler<EventArgs<TIdentifier>> UnparsedDataDiscarded;
+        public event EventHandler<EventArgs<TTypeIdentifier>> UnparsedDataDiscarded;
 
         // Fields
-        private string m_idPropertyName;
         private bool m_optimizeParsing;
-        private int m_unparsedDataReuseLimit;
+        private int m_dataAssemblyAttempts;
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private Dictionary<TIdentifier, TypeInfo> m_outputTypes;
+        private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
         private Dictionary<Guid, int> m_unparsedDataReuseCount;
         private ProcessQueue<IdentifiableItem<Guid, byte[]>> m_dataQueue;
         private bool m_disposed;
@@ -86,10 +100,11 @@ namespace PCS.Parsing
 
         public BinaryDataParserBase()
         {
-            m_idPropertyName = "ClassID";
-            m_optimizeParsing = true;
-            m_settingsCategory = this.GetType().Name;
-            m_outputTypes = new Dictionary<TIdentifier, TypeInfo>();
+            m_optimizeParsing = DefaultOptimizeParsing;
+            m_dataAssemblyAttempts = DefaultDataAssemblyAttempts;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
+            m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
             m_unparsedDataReuseCount = new Dictionary<Guid, int>();
             m_dataQueue = ProcessQueue<IdentifiableItem<Guid, byte[]>>.CreateRealTimeQueue(ParseData);
         }
@@ -97,30 +112,6 @@ namespace PCS.Parsing
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the name of the property that identifies the output type.
-        /// </summary>
-        /// <value></value>
-        /// <returns>Name of the property that identifies the output type.</returns>
-        public string IDPropertyName
-        {
-            get
-            {
-                return m_idPropertyName;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    m_idPropertyName = value;
-                }
-                else
-                {
-                    throw new ArgumentNullException("IDPropertyName");
-                }
-            }
-        }
 
         /// <summary>
         /// Gets or sets a boolean value indicating if parsing is to be done in an optimal mode.
@@ -144,15 +135,15 @@ namespace PCS.Parsing
         /// </summary>
         /// <value></value>
         /// <returns></returns>
-        public int UnparsedDataReuseLimit
+        public int DataAssemblyAttempts
         {
             get
             {
-                return m_unparsedDataReuseLimit;
+                return m_dataAssemblyAttempts;
             }
             set
             {
-                m_unparsedDataReuseLimit = value;
+                m_dataAssemblyAttempts = value;
             }
         }
 
@@ -218,7 +209,7 @@ namespace PCS.Parsing
             TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
             List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
 
-            foreach (Type asmType in typeof(TOutput).LoadImplementations())
+            foreach (Type asmType in typeof(TOutputType).LoadImplementations())
             {
                 typeCtor = asmType.GetConstructor(Type.EmptyTypes);
                 if (typeCtor != null)
@@ -274,22 +265,16 @@ namespace PCS.Parsing
                 }
             }
 
-            PropertyInfo idProperty;
             foreach (TypeInfo outputType in outputTypes)
             {
                 // Now, we'll go though all of the output types we've found and instantiate an instance of each in order
                 // to get the identifier for each of the type. This will help lookup of the type to be used when parsing
                 // the data.
-                TOutput instance = outputType.CreateNew();
-                idProperty = outputType.RuntimeType.GetProperty(m_idPropertyName, typeof(TIdentifier));
-                if (idProperty != null)
+                TOutputType instance = outputType.CreateNew();
+                outputType.TypeID = instance.TypeID;
+                if (!m_outputTypes.ContainsKey(outputType.TypeID))
                 {
-                    // The output type does expose a property with the specified name and return type.
-                    outputType.ID = (TIdentifier)(idProperty.GetValue(instance, null));
-                    if (!m_outputTypes.ContainsKey(outputType.ID))
-                    {
-                        m_outputTypes.Add(outputType.ID, outputType);
-                    }
+                    m_outputTypes.Add(outputType.TypeID, outputType);
                 }
             }
 
@@ -305,13 +290,13 @@ namespace PCS.Parsing
             m_outputTypes.Clear();  // Clear the cached packet type available.
         }
 
-        public abstract TIdentifier GetTypeID(byte[] binaryImage, int startIndex);
+        public abstract TTypeIdentifier ExtractTypeID(byte[] binaryImage, int startIndex);
 
         private void ParseData(IdentifiableItem<Guid, byte[]>[] item)
         {
             int cursor;
-            TOutput instance;
-            TIdentifier typeID;
+            TOutputType instance;
+            TTypeIdentifier typeID;
             TypeInfo outputType;
 
             for (int i = 0; i <= item.Length - 1; i++)
@@ -324,12 +309,12 @@ namespace PCS.Parsing
                     // data image" we mean that we'll take the data in the image and use it to initialize an appropriate
                     // instance of a type that will represent the data, hence making the binary data more meaningful and
                     // useful.
-                    List<TOutput> output = new List<TOutput>();
+                    List<TOutputType> output = new List<TOutputType>();
 
                     cursor = 0;
                     while (cursor < item[i].Item.Length)
                     {
-                        typeID = GetTypeID(item[i].Item, cursor); // <- Necessary overhead :(
+                        typeID = ExtractTypeID(item[i].Item, cursor); // <- Necessary overhead :(
 
                         if (m_outputTypes.TryGetValue(typeID, out outputType))
                         {
@@ -359,7 +344,7 @@ namespace PCS.Parsing
 
                                 m_unparsedDataReuseCount.TryGetValue(item[i].ID, out reuseCount);
 
-                                if (reuseCount < m_unparsedDataReuseLimit)
+                                if (reuseCount < m_dataAssemblyAttempts)
                                 {
                                     // We can try to reuse the unparsed data make use of it.
                                     bool insertUnusedData = true;
@@ -404,7 +389,7 @@ namespace PCS.Parsing
                                     m_unparsedDataReuseCount[item[i].ID] = reuseCount;
                                     cursor = item[i].Item.Length; // Move on to the next data image.
                                     if (UnparsedDataReused != null)
-                                        UnparsedDataReused(this, new EventArgs<TIdentifier>(typeID));
+                                        UnparsedDataReused(this, new EventArgs<TTypeIdentifier>(typeID));
                                 }
                                 else
                                 {
@@ -412,7 +397,7 @@ namespace PCS.Parsing
 
                                     m_unparsedDataReuseCount[item[i].ID] = 0;
                                     if (UnparsedDataDiscarded != null)
-                                        UnparsedDataDiscarded(this, new EventArgs<TIdentifier>(typeID));
+                                        UnparsedDataDiscarded(this, new EventArgs<TTypeIdentifier>(typeID));
                                 }
                             }
                         }
@@ -424,12 +409,12 @@ namespace PCS.Parsing
 
                             cursor = item[i].Item.Length; // Move on to the next data image.
                             if (OutputTypeNotFound != null)
-                                OutputTypeNotFound(this, new EventArgs<TIdentifier>(typeID));
+                                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(typeID));
                         }
                     }
 
                     if (DataParsed != null)
-                        DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutput>>>(new IdentifiableItem<Guid, List<TOutput>>(item[i].ID, output)));
+                        DataParsed(this, new EventArgs<IdentifiableItem<Guid, List<TOutputType>>>(new IdentifiableItem<Guid, List<TOutputType>>(item[i].ID, output)));
                 }
             }
         }
@@ -468,9 +453,8 @@ namespace PCS.Parsing
                 CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
                 if (settings.Count > 0)
                 {
-                    IDPropertyName = settings["IDPropertyName"].ValueAs(m_idPropertyName);
                     OptimizeParsing = settings["OptimizeParsing"].ValueAs(m_optimizeParsing);
-                    UnparsedDataReuseLimit = settings["UnparsedDataReuseLimit"].ValueAs(m_unparsedDataReuseLimit);
+                    DataAssemblyAttempts = settings["UnparsedDataReuseLimit"].ValueAs(m_dataAssemblyAttempts);
                 }
             }
             catch
@@ -489,16 +473,12 @@ namespace PCS.Parsing
                     CategorizedSettingsElement element;
                     settings.Clear();
 
-                    element = settings["IDPropertyName", true];
-                    element.Value = m_idPropertyName;
-                    element.Description = "Name of the property that identifies the output type.";
-
                     element = settings["OptimizeParsing", true];
                     element.Value = m_optimizeParsing.ToString();
                     element.Description = "True if parsing is to be done in an optimal mode; otherwise False.";
 
                     element = settings["UnparsedDataReuseLimit", true];
-                    element.Value = m_unparsedDataReuseLimit.ToString();
+                    element.Value = m_dataAssemblyAttempts.ToString();
                     element.Description = "Number of times unparsed data can be reused before being discarded.";
 
                     ConfigurationFile.Current.Save();

@@ -200,7 +200,7 @@ namespace PCS.IO
     /// }
     /// </code>
     /// </example>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryDataProvider, IBinaryDataConsumer
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryDataProducer, IBinaryDataConsumer
     {
         #region [ Members ]
 

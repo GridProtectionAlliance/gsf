@@ -31,7 +31,7 @@ namespace PCS.Security
 	namespace Radius
 	{
 		
-		public class RadiusPacketAttribute : IBinaryDataProvider, IBinaryDataConsumer
+		public class RadiusPacketAttribute : IBinaryDataProducer, IBinaryDataConsumer
 		{
 			
 			
