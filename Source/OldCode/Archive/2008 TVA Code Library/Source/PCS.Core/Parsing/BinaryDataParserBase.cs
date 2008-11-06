@@ -17,6 +17,8 @@
 //      instead of DesignMode property as the former is more accurate than the latter
 //  09/11/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  11/05/2008 - Pinal C. Patel
+//      Edited code comments.
 //
 //*******************************************************************************************************
 
