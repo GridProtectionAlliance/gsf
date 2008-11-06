@@ -177,7 +177,7 @@ namespace PCS.Communication
 		/// <summary>
 		/// Stops the server.
 		/// </summary>
-		void @Stop();
+		void Stop();
 		
 		/// <summary>
 		/// Sends data to the specified client.
