@@ -19,6 +19,7 @@
 //
 //*******************************************************************************************************
 
+using System;
 using System.IO;
 
 namespace PCS.IO
@@ -35,25 +36,33 @@ namespace PCS.IO
         public string DestinationFile;
 
         /// <summary>
-        /// Determines whether or not to attempt network connection to share specified in DestinationFile.
+        /// Determines whether or not to attempt network connection to share specified in <see cref="ExportDestination.DestinationFile"/>.
         /// </summary>
         public bool ConnectToShare;
 
         /// <summary>
-        /// Domain used to authenticate network connection if ConnectToShare is True.
+        /// Domain used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
         /// </summary>
         public string Domain;
 
         /// <summary>
-        /// User name used to authenticate network connection if ConnectToShare is True.
+        /// User name used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
         /// </summary>
         public string UserName;
 
         /// <summary>
-        /// Password used to authenticate network connection if ConnectToShare is True.
+        /// Password used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
         /// </summary>
         public string Password;
 
+        /// <summary>
+        /// Constructs a new <see cref="ExportDestination"/> given the specified parameters.
+        /// </summary>
+        /// <param name="destinationFile">Path and file name of export destination.</param>
+        /// <param name="connectToShare">Determines whether or not to attempt network connection to share specified in <paramref name="destinationFile"/>.</param>
+        /// <param name="domain">Domain used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
+        /// <param name="userName">User name used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
+        /// <param name="password">Password used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
         public ExportDestination(string destinationFile, bool connectToShare, string domain, string userName, string password)
         {
             this.DestinationFile = destinationFile;
@@ -85,6 +94,10 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Returns a <see cref="String"/> that represents the current <see cref="ExportDestination"/>.
+        /// </summary>
+        /// <returns>A <see cref="String"/> that represents the current <see cref="ExportDestination"/>.</returns>
         public override string ToString()
         {
             return DestinationFile;
