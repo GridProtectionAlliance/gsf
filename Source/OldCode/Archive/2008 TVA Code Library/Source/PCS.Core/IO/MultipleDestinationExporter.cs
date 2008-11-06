@@ -500,7 +500,7 @@ namespace PCS.IO
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-
+                settings.Clear();
                 settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
                 lock (m_destinationLock)
                 {
