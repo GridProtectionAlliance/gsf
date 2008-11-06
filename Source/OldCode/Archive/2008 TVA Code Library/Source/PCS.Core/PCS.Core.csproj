@@ -250,9 +250,6 @@
     <Compile Include="Measurements\ImmediateMeasurements.cs" />
     <Compile Include="Threading\ManagedThreadPool.cs" />
     <Compile Include="Threading\ManagedThreads.cs" />
-    <Compile Include="Threading\QueueThread.cs" />
-    <Compile Include="Threading\RunThread.cs" />
-    <Compile Include="Threading\ThreadBase.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Data\DataExtensions.cs" />
     <Compile Include="Reflection\AssemblyInfo.cs" />
