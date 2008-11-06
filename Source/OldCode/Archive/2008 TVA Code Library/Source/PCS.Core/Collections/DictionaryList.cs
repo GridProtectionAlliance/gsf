@@ -75,6 +75,9 @@ namespace PCS.Collections
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
         public DictionaryList()
         {
             m_list = new SortedList<TKey, TValue>();
@@ -86,6 +89,9 @@ namespace PCS.Collections
 
         // Generic IList(Of KeyValuePair(Of TKey, TValue)) Properties
 
+        /// <summary>
+        /// Gets the number of elements contained in the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
         public int Count
         {
             get
@@ -94,6 +100,9 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the <see cref="DictionaryList{TKey,TValue}"/> is read-only.
+        /// </summary>
         public bool IsReadOnly
         {
             get
@@ -102,6 +111,11 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Gets or sets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get or set.</param>
+        /// <returns>The element at the specified index.</returns>
         public KeyValuePair<TKey, TValue> this[int index]
         {
             get
@@ -116,6 +130,11 @@ namespace PCS.Collections
 
         // Generic IDictionary(Of TKey, TValue) Properties
 
+        /// <summary>
+        /// Gets or sets the element with the specified key.
+        /// </summary>
+        /// <param name="key">The key of the element to get or set.</param>
+        /// <returns>The element with the specified key.</returns>
         public TValue this[TKey key]
         {
             get
@@ -128,6 +147,9 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Gets an <see cref="ICollection{T}"/> containing the keys of the <see cref="IDictionary{TKey,TValue}"/>.
+        /// </summary>
         public ICollection<TKey> Keys
         {
             get
@@ -136,6 +158,9 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Gets an <see cref="ICollection{T}"/> containing the values in the <see cref="IDictionary{TKey,TValue}"/>.
+        /// </summary>
         public ICollection<TValue> Values
         {
             get
@@ -150,21 +175,42 @@ namespace PCS.Collections
 
         // Generic IList(Of KeyValuePair(Of TKey, TValue)) Methods
 
+        /// <summary>
+        /// Adds an item to the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="item"></param>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
             m_list.Add(item.Key, item.Value);
         }
 
+        /// <summary>
+        /// Removes all items from the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
         public void Clear()
         {
             m_list.Clear();
         }
 
+        /// <summary>
+        /// Determines whether the <see cref="DictionaryList{TKey,TValue}"/> contains a specific value.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="DictionaryList{TKey,TValue}"/>.</param>
+        /// <returns>true if item is found in the <see cref="DictionaryList{TKey,TValue}"/>; otherwise, false</returns>
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             return m_list.ContainsKey(item.Key);
         }
 
+        /// <summary>
+        /// Copies the elements of the <see cref="DictionaryList{TKey,TValue}"/> to an <see cref="System.Array"/>, starting at a particular index.
+        /// </summary>
+        /// <param name="array">
+        /// The one-dimensional <see cref="System.Array"/> that is the destination of the elements 
+        /// copied from <see cref="DictionaryList{TKey,TValue}"/>. The array must 
+        /// have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             for (int x = 0; x <= m_list.Count - 1; x++)
@@ -173,21 +219,44 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="item">The object to remove from the <see cref="DictionaryList{TKey,TValue}"/>.</param>
+        /// <returns>
+        /// true if item was successfully removed from the <see cref="DictionaryList{TKey,TValue}"/>; 
+        /// otherwise, false. This method also returns false if item is not found in 
+        /// the original <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </returns>
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
             return m_list.Remove(item.Key);
         }
 
+        /// <summary>
+        /// Determines the index of a specific item in the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="DictionaryList{TKey,TValue}"/>.</param>
+        /// <returns>The index of item if found in the list; otherwise, -1.</returns>
         public int IndexOf(KeyValuePair<TKey, TValue> item)
         {
             return m_list.IndexOfKey(item.Key);
         }
 
+        /// <summary>
+        /// Removes the <see cref="DictionaryList{TKey,TValue}"/> item at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the item to remove.</param>
         public void RemoveAt(int index)
         {
             m_list.RemoveAt(index);
         }
 
+        /// <summary>
+        /// Inserts an item to the <see cref="DictionaryList{TKey,TValue}"/> at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index at which item should be inserted.</param>
+        /// <param name="item">The object to insert into the <see cref="DictionaryList{TKey,TValue}"/>.</param>
         public void Insert(int index, KeyValuePair<TKey, TValue> item)
         {
             // It does not matter where you try to insert the value, since it will be inserted into its sorted
@@ -195,6 +264,10 @@ namespace PCS.Collections
             m_list.Add(item.Key, item.Value);
         }
 
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>A <see cref="IEnumerator{T}"/> that can be used to iterate through the collection.</returns>
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             return m_list.GetEnumerator();
@@ -207,36 +280,78 @@ namespace PCS.Collections
 
         // Generic IDictionary(Of TKey, TValue) Methods
 
+        /// <summary>
+        /// Adds an element with the provided key and value to the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="key">The object to use as the key of the element to add.</param>
+        /// <param name="value">The object to use as the value of the element to add.</param>
         public void Add(TKey key, TValue value)
         {
             m_list.Add(key, value);
         }
 
+        /// <summary>
+        /// Determines whether the <see cref="DictionaryList{TKey,TValue}"/> contains an element with the specified key.
+        /// </summary>
+        /// <param name="key">The key to locate in the <see cref="DictionaryList{TKey,TValue}"/>.</param>
+        /// <returns>true if the <see cref="DictionaryList{TKey,TValue}"/> contains an element with the key; otherwise, false.</returns>
         public bool ContainsKey(TKey key)
         {
             return m_list.ContainsKey(key);
         }
 
+        /// <summary>
+        /// Determines whether the <see cref="DictionaryList{TKey,TValue}"/> contains a specific value.
+        /// </summary>
+        /// <param name="value">The value to locate in the <see cref="DictionaryList{TKey,TValue}"/>. The value can be null for reference types.</param>
+        /// <returns>true if the <see cref="DictionaryList{TKey,TValue}"/> contains an element with the specified value; otherwise, false.</returns>
         public bool ContainsValue(TValue value)
         {
             return m_list.ContainsValue(value);
         }
 
+        /// <summary>
+        /// Searches for the specified key and returns the zero-based index within the entire <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="key">The key to locate in the <see cref="DictionaryList{TKey,TValue}"/>.</param>
+        /// <returns>The zero-based index of key within the entire <see cref="DictionaryList{TKey,TValue}"/>, if found; otherwise, -1.</returns>
         public int IndexOfKey(TKey key)
         {
             return m_list.IndexOfKey(key);
         }
 
+        /// <summary>
+        /// Searches for the specified value and returns the zero-based index of the first occurrence within the entire <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="value">The value to locate in the <see cref="DictionaryList{TKey,TValue}"/>. The value can be null for reference types.</param>
+        /// <returns>The zero-based index of the first occurrence of value within the entire <see cref="DictionaryList{TKey,TValue}"/>, if found; otherwise, -1.</returns>
         public int IndexOfValue(TValue value)
         {
             return m_list.IndexOfValue(value);
         }
 
+        /// <summary>
+        /// Removes the element with the specified key from the <see cref="DictionaryList{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="key">The key of the element to remove.</param>
+        /// <returns>
+        /// true if the element is successfully removed; otherwise, false. This method also returns false if key
+        /// was not found in the original <see cref="DictionaryList{TKey,TValue}"/>.</returns>
         public bool Remove(TKey key)
         {
             return m_list.Remove(key);
         }
 
+        /// <summary>
+        /// Gets the value associated with the specified key.
+        /// </summary>
+        /// <param name="key">The key whose value to get.</param>
+        /// <param name="value">
+        /// When this method returns, the value associated with the specified key, if 
+        /// the key is found; otherwise, the default value for the type of the value
+        /// parameter. This parameter is passed uninitialized.</param>
+        /// <returns>
+        /// true if the <see cref="DictionaryList{TKey,TValue}"/> contains an element with the specified key; otherwise, false.</returns>
         public bool TryGetValue(TKey key, out TValue value)
         {
             return m_list.TryGetValue(key, out value);
