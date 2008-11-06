@@ -157,7 +157,6 @@ namespace PCS.IO
         private long m_totalExports;
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
-        private object m_destinationLock;
         private ProcessQueue<byte[]> m_exportQueue;
         private bool m_disposed;
 
@@ -185,7 +184,6 @@ namespace PCS.IO
             m_persistSettings = DefaultPersistSettings;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
             m_exportDestinations = new List<ExportDestination>();
-            m_destinationLock = new object();
 
             // Set up a synchronous process queue to handle exports that will limit total export time to export interval
             m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
@@ -359,7 +357,7 @@ namespace PCS.IO
                 status.Append(m_settingsCategory);
                 status.AppendLine();
                 status.Append("       Export destinations: ");
-                lock (m_destinationLock)
+                lock (m_exportDestinations)
                 {
                     status.Append(m_exportDestinations.ToDelimitedString(','));
                 }
@@ -510,7 +508,7 @@ namespace PCS.IO
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Clear();
                 settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
-                lock (m_destinationLock)
+                lock (m_exportDestinations)
                 {
                     settings["ExportCount", true].Update(m_exportDestinations.Count, "Total number of export files to produce.");
                     for (int x = 0; x < m_exportDestinations.Count; x++)
@@ -553,7 +551,7 @@ namespace PCS.IO
                 count = settings["ExportCount", true].ValueAsInt32();
                 m_exportDestinations = new List<ExportDestination>(count);
 
-                lock (m_destinationLock)
+                lock (m_exportDestinations)
                 {
                     for (int x = 0; x < count; x++)
                     {
@@ -600,14 +598,14 @@ namespace PCS.IO
             Shutdown();
 
             // Retrieve any specified default export destinations
-            lock (m_destinationLock)
+            lock (m_exportDestinations)
             {
                 m_exportDestinations = state as List<ExportDestination>;
             }
             LoadSettings(); // Load export destinations from the config file.
 
             List<ExportDestination> destinations;
-            lock (m_destinationLock)
+            lock (m_exportDestinations)
             {
                 // Cache a local copy of export destinations to reduce lock time,
                 // network share authentication may take some time
@@ -651,7 +649,7 @@ namespace PCS.IO
 
             if (m_exportDestinations != null)
             {
-                lock (m_destinationLock)
+                lock (m_exportDestinations)
                 {
                     // We'll be nice and disconnect network shares when this class is disposed...
                     for (int x = 0; x < m_exportDestinations.Count; x++)
@@ -678,7 +676,7 @@ namespace PCS.IO
             string filename;
             List<ExportDestination> destinations;
 
-            lock (m_destinationLock)
+            lock (m_exportDestinations)
             {
                 // Cache a local copy of export destinations to reduce lock time,
                 // exports may take some time
