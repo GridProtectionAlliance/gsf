@@ -352,6 +352,15 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
+        /// Gets a hash code for the <see cref="Schedule"/>.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return Rule.GetHashCode();
+        }
+
+        /// <summary>
         /// Determines whether the specified <see cref="Schedule"/> is equal to the current <see cref="Schedule"/>.
         /// </summary>
         /// <param name="obj">The <see cref="Schedule"/> to compare with the current <see cref="Schedule"/>.</param>
@@ -368,14 +377,14 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Gets a hash code for the <see cref="Schedule"/>.
+        /// Gets the string representation of <see cref="Schedule"/>.
         /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode()
+        /// <returns>String representation of <see cref="Schedule"/>.</returns>
+        public override string ToString()
         {
-            return Rule.GetHashCode();
+            return m_name;
         }
-
+       
         #endregion
 
         #region [ Static ]
