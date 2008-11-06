@@ -37,6 +37,8 @@
 //       Implemented standard IDisposable pattern.
 //  09/11/2008 - J. Ritchie Carroll
 //      Converted to C#
+//  11/06/2008 - J. Ritchie Carroll
+//      Added CurrentStatistics property to return run-time statistics as a group.
 //
 //*******************************************************************************************************
 
