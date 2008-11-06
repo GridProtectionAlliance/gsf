@@ -82,6 +82,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\ProcessQueueStatistics.cs" />
     <Compile Include="Parsing\IIdentifiableType.cs" />
     <Compile Include="IO\IsamDataFileBase.cs">
       <SubType>Component</SubType>

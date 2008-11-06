@@ -53,7 +53,6 @@ namespace PCS.Measurements
         /// <param name="timestamp">Timestamp of the <see cref="TemporalMeasurement"/>.</param>
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
-        /// <remarks>
         public TemporalMeasurement(int id, string source, double value, DateTime timestamp, double lagTime, double leadTime)
             : this(id, source, value, timestamp.Ticks, lagTime, leadTime)
         {
@@ -206,7 +205,7 @@ namespace PCS.Measurements
         /// <para>Operation will only store a value that is newer than the cached value.</para>
         /// </remarks>
         /// <param name="timestamp">New timestamp for <see cref="TemporalMeasurement"/>.</param>
-        /// <param name="value">New value for <see cref="TemporalMeasurement"/>, only stored if <paramref name="timestamp"/> is newer than current <see cref="Timestamp"/>.</param>
+        /// <param name="value">New value for <see cref="TemporalMeasurement"/>, only stored if <paramref name="timestamp"/> is newer than current <see cref="Measurement.Timestamp"/>.</param>
         public void SetValue(DateTime timestamp, double value)
         {
             SetValue(timestamp.Ticks, value);

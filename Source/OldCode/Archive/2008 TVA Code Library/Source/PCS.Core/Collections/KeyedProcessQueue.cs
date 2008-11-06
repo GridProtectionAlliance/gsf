@@ -33,23 +33,26 @@ namespace PCS.Collections
     /// <typeparam name="TValue">Type of values to process.</typeparam>
     /// <remarks>
     /// <para>This class acts as a strongly-typed sorted dictionary of objects to be processed.</para>
-    /// <para>Consumers are expected to create new instances of this class through the static construction functions
-    /// (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
-    /// <para>Note that the queue will not start processing until the Start method is called.</para>
-    /// <para>Because this queue represents a dictionary style collection, all keys must be unique.</para>
     /// <para>
-    /// Be aware that this class is based on a DictionaryList (i.e., a SortedList that implements IList), and
-    /// since items in this kind of list are automatically sorted, items will be processed in "sorted" order
-    /// regardless of the order in which they are added to the list.
+    /// Consumers are expected to create new instances of this class through the static construction functions (e.g., 
+    /// <see cref="KeyedProcessQueue{TKey,TValue}.CreateAsynchronousQueue(ProcessItemFunctionSignature)"/>, 
+    /// <see cref="KeyedProcessQueue{TKey,TValue}.CreateSynchronousQueue(ProcessItemFunctionSignature)"/>, etc.)
+    /// </para>
+    /// <para>Note that the <see cref="KeyedProcessQueue{TKey,TValue}"/> will not start processing until the Start method is called.</para>
+    /// <para>Because this <see cref="KeyedProcessQueue{TKey,TValue}"/> represents a dictionary style collection, all keys must be unique.</para>
+    /// <para>
+    /// Be aware that this class is based on a <see cref="DictionaryList{TKey,TValue}"/> (i.e., a <see cref="SortedList{TKey,TValue}"/>
+    /// that implements <see cref="IList{T}"/>), and since items in this kind of list are automatically sorted, items will be processed
+    /// in "sorted" order regardless of the order in which they are added to the list.
     /// </para>
     /// <para>
-    /// Important note about using an "Integer" as the key for this class: because the queue base class must
+    /// Important note about using an "Integer" as the key for this class: because the <see cref="KeyedProcessQueue{TKey,TValue}"/> base class must
     /// implement IList, a normal dictionary cannot be used for the base class. IDictionary implementations
     /// do not normally implement the IList interface because of ambiguity that is caused when implementing
     /// an integer key. For example, if you implement this class with a key of type "Integer," you will not
-    /// be able to access items in the queue by index without "casting" the queue as IList. This is because
-    /// the Item property in both the IDictionary and IList would have the same parameters (see the
-    /// DictionaryList class for more details.).
+    /// be able to access items in the <see cref="KeyedProcessQueue{TKey,TValue}"/> by index without "casting" the 
+    /// <see cref="KeyedProcessQueue{TKey,TValue}"/> as IList. This is because the Item property in both the IDictionary and IList would
+    /// have the same parameters (see the <see cref="DictionaryList{TKey,TValue}"/> class for more details.).
     /// </para>
     /// </remarks>
     public class KeyedProcessQueue<TKey, TValue> : ProcessQueue<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
@@ -64,9 +67,9 @@ namespace PCS.Collections
         /// <param name="key">key to be processed.</param>
         /// <param name="value">value to be processed.</param>
         /// <remarks>
-        /// <para>Required unless ProcessItemsFunction is implemented.</para>
-        /// <para>Used when creating a queue to process one item at a time.</para>
-        /// <para>Asynchronous queues will process individual items on multiple threads</para>
+        /// <para>Required unless <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemsFunction"/> is implemented.</para>
+        /// <para>Used when creating a <see cref="KeyedProcessQueue{TKey,TValue}"/> to process one item at a time.</para>
+        /// <para>Asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> will process individual items on multiple threads</para>
         /// </remarks>
         public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
 
@@ -79,12 +82,12 @@ namespace PCS.Collections
         /// <remarks>
         /// <para>Implementation of this function is optional. It will be assumed that an item can be processed if this
         /// function is not defined</para>
-        /// <para>Items must eventually get to a state where they can be processed or they will remain in the queue
+        /// <para>Items must eventually get to a state where they can be processed or they will remain in the <see cref="KeyedProcessQueue{TKey,TValue}"/>
         /// indefinitely.</para>
         /// <para>
-        /// Note that when this function is implemented and ProcessingStyle = ManyAtOnce (i.e., ProcessItemsFunction is
-        /// defined), then each item presented for processing must evaluate as "CanProcessItem = True" before any items
-        /// are processed.
+        /// Note that when this function is implemented and <see cref="QueueProcessingStyle"/> = ManyAtOnce (i.e., 
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemsFunction"/> is defined), then each item presented
+        /// for processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
         public new delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
@@ -135,9 +138,9 @@ namespace PCS.Collections
         /// Gets or sets the user function used to process items in the list one at a time.
         /// </summary>
         /// <remarks>
-        /// <para>This function and ProcessItemsFunction cannot be defined at the same time.</para>
-        /// <para>A queue must be defined to process either a single item at a time or many items at once.</para>
-        /// <para>Implementation of this function makes ProcessingStyle = OneAtATime.</para>
+        /// <para>This function and <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemFunction"/> cannot be defined at the same time.</para>
+        /// <para>A <see cref="KeyedProcessQueue{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
+        /// <para>Implementation of this function makes <see cref="QueueProcessingStyle"/> = OneAtATime.</para>
         /// </remarks>
         public virtual new ProcessItemFunctionSignature ProcessItemFunction
         {
@@ -161,9 +164,9 @@ namespace PCS.Collections
         /// Gets or sets the user function used to process multiple items in the list at once.
         /// </summary>
         /// <remarks>
-        /// <para>This function and ProcessItemFunction cannot be defined at the same time.</para>
-        /// <para>A queue must be defined to process either a single item at a time or many items at once.</para>
-        /// <para>Implementation of this function makes ProcessingStyle = ManyAtOnce.</para>
+        /// <para>This function and <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemFunction"/> cannot be defined at the same time.</para>
+        /// <para>A <see cref="KeyedProcessQueue{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
+        /// <para>Implementation of this function makes <see cref="QueueProcessingStyle"/> = ManyAtOnce.</para>
         /// </remarks>
         public override ProcessItemsFunctionSignature ProcessItemsFunction
         {
@@ -243,8 +246,8 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Gets an ICollection containing the keys of the queue.</summary>
-        /// <returns>An ICollection containing the keys of the queue.</returns>
+        /// <summary>Gets an ICollection containing the keys of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
+        /// <returns>An ICollection containing the keys of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
         public ICollection<TKey> Keys
         {
             get
@@ -253,8 +256,8 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Gets an ICollection containing the values of the queue.</summary>
-        /// <returns>An ICollection containing the values of the queue.</returns>
+        /// <summary>Gets an ICollection containing the values of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
+        /// <returns>An ICollection containing the values of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
         public ICollection<TValue> Values
         {
             get
@@ -308,7 +311,7 @@ namespace PCS.Collections
         // ProcessQueue and KeyedProcessQueue. Users implementing a KeyedProcessQueue will likely be
         // thinking in terms of "keys" and "values", and not a KeyValuePair structure. Note that the
         // bulk item ProcessItems delegate is not translated since an array of KeyValuePair structures
-        // would make more since and be more efficient than two separate arrays of keys and values.
+        // would make more sense and be more efficient than two separate arrays of keys and values.
         private void ProcessKeyedItem(KeyValuePair<TKey, TValue> item)
         {
             m_processItemFunction(item.Key, item.Value);
@@ -340,11 +343,11 @@ namespace PCS.Collections
 
         #region [ Generic IDictionary(Of TKey, TValue) Implementation ]
 
-        /// <summary>Adds an element with the provided key and value to the queue.</summary>
+        /// <summary>Adds an element with the provided key and value to the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
         /// <param name="value">The object to use as the value of the element to add.</param>
         /// <param name="key">The object to use as the key of the element to add.</param>
-        /// <exception cref="NotSupportedException">The queue is read-only.</exception>
-        /// <exception cref="ArgumentException">An element with the same key already exists in the queue.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="KeyedProcessQueue{TKey,TValue}"/> is read-only.</exception>
+        /// <exception cref="ArgumentException">An element with the same key already exists in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</exception>
         /// <exception cref="ArgumentNullException">key is null.</exception>
         public void Add(TKey key, TValue value)
         {
@@ -355,9 +358,9 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Determines whether the queue contains an element with the specified key.</summary>
-        /// <returns>True, if the queue contains an element with the key; otherwise, false.</returns>
-        /// <param name="key">The key to locate in the queue.</param>
+        /// <summary>Determines whether the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the specified key.</summary>
+        /// <returns>True, if the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the key; otherwise, false.</returns>
+        /// <param name="key">The key to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</param>
         /// <exception cref="ArgumentNullException">key is null.</exception>
         public bool ContainsKey(TKey key)
         {
@@ -367,9 +370,9 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Determines whether the queue contains an element with the specified value.</summary>
-        /// <returns>True, if the queue contains an element with the value; otherwise, false.</returns>
-        /// <param name="value">The value to locate in the queue.</param>
+        /// <summary>Determines whether the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the specified value.</summary>
+        /// <returns>True, if the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the value; otherwise, false.</returns>
+        /// <param name="value">The value to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</param>
         public bool ContainsValue(TValue value)
         {
             lock (SyncRoot)
@@ -378,6 +381,11 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Searches for the specified key and returns the zero-based index within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="key">The key to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</param>
+        /// <returns>The zero-based index of key within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>, if found; otherwise, -1.</returns>
         public int IndexOfKey(TKey key)
         {
             lock (SyncRoot)
@@ -386,6 +394,11 @@ namespace PCS.Collections
             }
         }
 
+        /// <summary>
+        /// Searches for the specified value and returns the zero-based index of the first occurrence within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>.
+        /// </summary>
+        /// <param name="value">The value to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>. The value can be null for reference types.</param>
+        /// <returns>The zero-based index of the first occurrence of value within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>, if found; otherwise, -1.</returns>
         public int IndexOfValue(TValue value)
         {
             lock (SyncRoot)
@@ -394,7 +407,7 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Removes the element with the specified key from the queue.</summary>
+        /// <summary>Removes the element with the specified key from the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
         /// <param name="key">The key of the element to remove.</param>
         /// <exception cref="ArgumentNullException">key is null.</exception>
         public bool Remove(TKey key)
@@ -406,7 +419,7 @@ namespace PCS.Collections
         }
 
         /// <summary>Gets the value associated with the specified key.</summary>
-        /// <returns>True, if the queue contains an element with the specified key; otherwise, false.</returns>
+        /// <returns>True, if the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the specified key; otherwise, false.</returns>
         /// <param name="value">When this method returns, contains the value associated with the specified key, if the
         /// key is found; otherwise, the default value for the type of the value parameter. This parameter is passed
         /// uninitialized.</param>
@@ -427,66 +440,165 @@ namespace PCS.Collections
         // Because consumers will be able to call these functions in their "dictionary" style queue, we'll make
         // sure they return something that makes sense in case they get called, but we will hide the functions from
         // the editor to help avoid confusion.
+
+        ///	<summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        ///	<param name="item">The object to locate. The value can be null for reference types.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(KeyValuePair<TKey, TValue> item)
         {
             return IndexOfKey(item.Key);
         }
 
+        ///	<summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <remarks>
+        ///	<param name="item">The object to locate. The value can be null for reference types.</param>
+        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
+        /// null to use the default comparer: Generic.Comparer(Of T).Default</param>
+        /// </remarks>  
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
             return IndexOfKey(item.Key);
         }
 
+        ///	<summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <param name="index">The zero-based starting index of the range to search.</param>
+        /// <param name="count">The length of the range to search.</param>
+        ///	<param name="item">The object to locate. The value can be null for reference types.</param>
+        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or- null to use
+        /// the default comparer: Generic.Comparer(Of T).Default</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(int index, int count, KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
             return IndexOfKey(item.Key);
         }
 
+        /// <summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int IndexOf(KeyValuePair<TKey, TValue> item)
         {
             return IndexOfKey(item.Key);
         }
 
+        /// <summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <param name="count">The number of elements in the section to search.</param>
+        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
+        /// <param name="index">The zero-based starting index of the search.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int IndexOf(KeyValuePair<TKey, TValue> item, int index, int count)
         {
             return IndexOfKey(item.Key);
         }
 
+        /// <summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int LastIndexOf(KeyValuePair<TKey, TValue> item)
         {
             return IndexOfKey(item.Key);
         }
 
+        /// <summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
+        /// <param name="index">The zero-based starting index of the backward search.</param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override int LastIndexOf(KeyValuePair<TKey, TValue> item, int index)
+        {
+            return IndexOfKey(item.Key);
+        }
+
+        /// <summary>
+        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
+        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// in case it gets called.
+        /// </summary>
+        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
+        /// <param name="index">The zero-based starting index of the backward search.</param>
+        /// <param name="count">The number of elements in the section to search.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int LastIndexOf(KeyValuePair<TKey, TValue> item, int index, int count)
         {
             return IndexOfKey(item.Key);
         }
 
+        /// <summary>
+        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Sort()
         {
             // This list is already sorted.
         }
 
+        /// <summary>
+        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
+        /// </summary>
+        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
+        /// null to use the default comparer: Generic.Comparer(Of T).Default</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Sort(IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
             // This list is already sorted.
         }
 
+        /// <summary>
+        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
+        /// </summary>
+        /// <param name="comparison">The comparison to use when comparing elements.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Sort(System.Comparison<KeyValuePair<TKey, TValue>> comparison)
         {
             // This list is already sorted.
         }
 
+        /// <summary>
+        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
+        /// </summary>
+        /// <param name="index">The zero-based starting index of the range to search.</param>
+        /// <param name="count">The length of the range to search.</param>
+        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
+        /// null to use the default comparer: Generic.Comparer(Of T).Default</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Sort(int index, int count, IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
@@ -502,7 +614,7 @@ namespace PCS.Collections
         #region [ Single-Item Processing Constructors ]
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
@@ -511,7 +623,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
@@ -520,7 +632,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
@@ -529,7 +641,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
@@ -538,7 +650,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous process queue, using specified settings.
+        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -546,7 +658,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous process queue, using specified settings.
+        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -554,7 +666,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous process queue (i.e., single process thread) with the default settings:
+        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
@@ -563,7 +675,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous process queue (i.e., single process thread) with the default settings:
+        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
@@ -572,7 +684,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous process queue (i.e., single process thread), using specified settings.
+        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -580,7 +692,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous process queue (i.e., single process thread), using specified settings.
+        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -588,7 +700,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time process queue with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
@@ -597,7 +709,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time process queue with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
@@ -606,7 +718,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time process queue, using specified settings.
+        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -614,7 +726,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time process queue, using the specified settings.
+        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/>, using the specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -626,7 +738,7 @@ namespace PCS.Collections
         #region [ Multi-Item Processing Constructors ]
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
@@ -635,7 +747,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
@@ -644,7 +756,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
@@ -653,7 +765,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item process queue with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
@@ -662,7 +774,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item process queue, using specified settings.
+        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -670,7 +782,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item process queue, using specified settings.
+        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -678,7 +790,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item process queue (i.e., single process thread) with the default settings:
+        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
@@ -687,7 +799,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item process queue (i.e., single process thread) with the default settings:
+        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
@@ -696,7 +808,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item process queue (i.e., single process thread), using specified settings.
+        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -704,7 +816,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item process queue (i.e., single process thread), using specified settings.
+        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -712,7 +824,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item process queue with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
@@ -721,7 +833,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item process queue with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
@@ -730,7 +842,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item process queue, using specified settings.
+        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
@@ -738,7 +850,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item process queue, using specified settings.
+        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
