@@ -505,6 +505,9 @@ namespace PCS.Parsing
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        if (m_outputTypes != null)
+                            m_outputTypes.Clear();
+
                         if (m_unparsedDataQueue != null)
                             m_unparsedDataQueue.Dispose();
                     }
