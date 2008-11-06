@@ -126,16 +126,21 @@ namespace PCS.Scheduling
         public event EventHandler Started;
 
         /// <summary>
-        /// Occurs when a <see cref="Schedule"/> is due according to the rule specified for it.
+        /// Occurs asynchronously when a <see cref="Schedule"/> is due according to the rule specified for it.
         /// </summary>
-        /// <remarks><see cref="ScheduleDue"/> is an asynchronous event.</remarks>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Schedule"/> that is due.
+        /// </remarks>
         [Category("Schedules"),
-        Description("Occurs when a Schedule is due according to the rule specified for it.")]
+        Description("Occurs asynchronously when a Schedule is due according to the rule specified for it.")]
         public event EventHandler<EventArgs<Schedule>> ScheduleDue;
 
         /// <summary>
         /// Occurs when the a particular <see cref="Schedule"/> is being checked to see if it is due.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Schedule"/> that is being checked to see if it is due.
+        /// </remarks>
         [Category("Schedules"),
         Description("Occurs when the a particular Schedule is being checked to see if it is due.")]
         public event EventHandler<EventArgs<Schedule>> ScheduleDueCheck;

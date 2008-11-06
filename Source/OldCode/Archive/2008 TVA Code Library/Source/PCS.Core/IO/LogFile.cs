@@ -130,6 +130,9 @@ namespace PCS.IO
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while writing entries to the <see cref="LogFile"/>.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered during writing of log entries.
+        /// </remarks>
         [Description("Occurs when an Exception is encountered while writing entries to the LogFile.")]
         public event EventHandler<EventArgs<Exception>> LogException;
 
