@@ -21,6 +21,7 @@
 
 using System;
 using System.IO;
+using System.ComponentModel;
 
 namespace PCS.IO
 {
@@ -28,7 +29,7 @@ namespace PCS.IO
     /// Represents a destination location when exporting data using <see cref="MultipleDestinationExporter"/>.
     /// </summary>
     /// <seealso cref="MultipleDestinationExporter"/>
-    public struct ExportDestination
+    public class ExportDestination
     {
         /// <summary>
         /// Path and file name of export destination.
@@ -56,6 +57,13 @@ namespace PCS.IO
         public string Password;
 
         /// <summary>
+        /// Constructs a new <see cref="ExportDestination"/>.
+        /// </summary>
+        public ExportDestination()
+        {
+        }
+
+        /// <summary>
         /// Constructs a new <see cref="ExportDestination"/> given the specified parameters.
         /// </summary>
         /// <param name="destinationFile">Path and file name of export destination.</param>
@@ -73,8 +81,9 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Path root of DestinationFile (e.g., E:\ or \\server\share)
+        /// Path root of <see cref="ExportDestination.DestinationFile"/> (e.g., E:\ or \\server\share).
         /// </summary>
+        [Browsable(false)]
         public string Share
         {
             get
@@ -84,8 +93,9 @@ namespace PCS.IO
         }
 
         /// <summary>
-        /// Path and filename of DestinationFile
+        /// Path and filename of <see cref="ExportDestination.DestinationFile"/>.
         /// </summary>
+        [Browsable(false)]
         public string FileName
         {
             get

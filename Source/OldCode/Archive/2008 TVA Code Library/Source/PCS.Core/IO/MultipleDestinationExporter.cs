@@ -28,6 +28,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Collections.Generic;
 using PCS.Collections;
 using PCS.Configuration;
 using PCS.Threading;
@@ -155,7 +156,7 @@ namespace PCS.IO
         private string m_settingsCategory;
         private long m_totalExports;
         private Encoding m_textEncoding;
-        private ExportDestination[] m_exportDestinations;
+        private List<ExportDestination> m_exportDestinations;
         private object m_destinationLock;
         private ProcessQueue<byte[]> m_exportQueue;
         private bool m_disposed;
@@ -183,6 +184,7 @@ namespace PCS.IO
             m_settingsCategory = settingsCategory;
             m_persistSettings = DefaultPersistSettings;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
+            m_exportDestinations = new List<ExportDestination>();
             m_destinationLock = new object();
 
             // Set up a synchronous process queue to handle exports that will limit total export time to export interval
@@ -315,8 +317,14 @@ namespace PCS.IO
         /// <summary>
         /// Gets a list of currently defined <see cref="ExportDestination"/>.
         /// </summary>
-        [Browsable(false)]
-        public ExportDestination[] ExportDestinations
+        /// <remarks>
+        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="MultipleDestinationExporter"/>, a lock must be 
+        /// obtained on <see cref="ExportDestinations"/> before accessing it.
+        /// </remarks>
+        [Category("Settings"),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
+        Description("Gets a list of all the defined export destinations to be used by the MultipleDestinationExporter.")]
+        public List<ExportDestination> ExportDestinations
         {
             get
             {
@@ -423,7 +431,7 @@ namespace PCS.IO
         /// must be called in order to initialize exports.  Even if used as a component this method can be
         /// called at anytime to reintialize the exports with new configuration information.
         /// </remarks>
-        public void Initialize(ExportDestination[] defaultDestinations)
+        public void Initialize(List<ExportDestination> defaultDestinations)
         {
             // So as to not delay calling thread due to share authentication, we perform initialization on another thread...
 #if ThreadTracking
@@ -504,8 +512,8 @@ namespace PCS.IO
                 settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
                 lock (m_destinationLock)
                 {
-                    settings["ExportCount", true].Update(m_exportDestinations.Length, "Total number of export files to produce.");
-                    for (int x = 0; x < m_exportDestinations.Length; x++)
+                    settings["ExportCount", true].Update(m_exportDestinations.Count, "Total number of export files to produce.");
+                    for (int x = 0; x < m_exportDestinations.Count; x++)
                     {
                         settings[string.Format("ExportDestination{0}", x + 1), true].Update(m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
                         settings[string.Format("ExportDestination{0}.ConnectToShare", x + 1), true].Update(m_exportDestinations[x].ConnectToShare, "Set to True to attempt authentication to network share.");
@@ -538,16 +546,21 @@ namespace PCS.IO
                 if (settings.Count == 0) return;    // Don't proceed if export destination are not in config file.
 
                 string entryRoot;
+                int count;
+
                 ExportDestination destination;
                 m_exportTimeout = settings["ExportTimeout", true].ValueAs(m_exportTimeout);
-                m_exportDestinations = new ExportDestination[settings["ExportCount", true].ValueAsInt32()];
+                count = settings["ExportCount", true].ValueAsInt32();
+                m_exportDestinations = new List<ExportDestination>(count);
+
                 lock (m_destinationLock)
                 {
-                    for (int x = 0; x < m_exportDestinations.Length; x++)
+                    for (int x = 0; x < count; x++)
                     {
                         entryRoot = string.Format("ExportDestination{0}", x + 1);
 
                         // Load export destination from configuration entries
+                        destination = new ExportDestination();
                         destination.DestinationFile = settings[entryRoot, true].ValueAsString() + settings[string.Format("{0}.FileName", entryRoot), true].ValueAsString();
                         destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot), true].ValueAsBoolean();
                         destination.Domain = settings[string.Format("{0}.Domain", entryRoot), true].ValueAsString();
@@ -555,7 +568,7 @@ namespace PCS.IO
                         destination.Password = settings[string.Format("{0}.Password", entryRoot), true].ValueAsString();
 
                         // Save new export destination
-                        m_exportDestinations[x] = destination;
+                        m_exportDestinations.Add(destination);
                     }
                 }
             }
@@ -589,11 +602,11 @@ namespace PCS.IO
             // Retrieve any specified default export destinations
             lock (m_destinationLock)
             {
-                m_exportDestinations = state as ExportDestination[];
+                m_exportDestinations = state as List<ExportDestination>;
             }
             LoadSettings(); // Load export destinations from the config file.
 
-            ExportDestination[] destinations;
+            List<ExportDestination> destinations;
             lock (m_destinationLock)
             {
                 // Cache a local copy of export destinations to reduce lock time,
@@ -601,7 +614,7 @@ namespace PCS.IO
                 destinations = m_exportDestinations;
             }
 
-            for (int x = 0; x < destinations.Length; x++)
+            for (int x = 0; x < destinations.Count; x++)
             {
                 // Connect to network shares if necessary
                 if (destinations[x].ConnectToShare)
@@ -641,7 +654,7 @@ namespace PCS.IO
                 lock (m_destinationLock)
                 {
                     // We'll be nice and disconnect network shares when this class is disposed...
-                    for (int x = 0; x < m_exportDestinations.Length; x++)
+                    for (int x = 0; x < m_exportDestinations.Count; x++)
                     {
                         if (m_exportDestinations[x].ConnectToShare)
                         {
@@ -663,7 +676,7 @@ namespace PCS.IO
         private void WriteExportFiles(byte[] fileData)
         {
             string filename;
-            ExportDestination[] destinations;
+            List<ExportDestination> destinations;
 
             lock (m_destinationLock)
             {
@@ -673,7 +686,7 @@ namespace PCS.IO
             }
 
             // Loop through each defined export file
-            for (int x = 0; x <= destinations.Length - 1; x++)
+            for (int x = 0; x <= destinations.Count - 1; x++)
             {
                 try
                 {
