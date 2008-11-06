@@ -20,8 +20,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
 using System.ComponentModel;
+using System.Drawing.Design;
+using System.IO;
+using System.Windows.Forms.Design;
 
 namespace PCS.IO
 {
@@ -31,30 +33,18 @@ namespace PCS.IO
     /// <seealso cref="MultipleDestinationExporter"/>
     public class ExportDestination
     {
-        /// <summary>
-        /// Path and file name of export destination.
-        /// </summary>
-        public string DestinationFile;
+        #region [ Members ]
 
-        /// <summary>
-        /// Determines whether or not to attempt network connection to share specified in <see cref="ExportDestination.DestinationFile"/>.
-        /// </summary>
-        public bool ConnectToShare;
+        // Fields
+        private string m_destinationFile;
+        private bool m_connectToShare;
+        private string m_domain;
+        private string m_userName;
+        private string m_password;
 
-        /// <summary>
-        /// Domain used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
-        /// </summary>
-        public string Domain;
+        #endregion
 
-        /// <summary>
-        /// User name used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
-        /// </summary>
-        public string UserName;
-
-        /// <summary>
-        /// Password used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
-        /// </summary>
-        public string Password;
+        #region [ Constructors ]
 
         /// <summary>
         /// Constructs a new <see cref="ExportDestination"/>.
@@ -73,11 +63,61 @@ namespace PCS.IO
         /// <param name="password">Password used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
         public ExportDestination(string destinationFile, bool connectToShare, string domain, string userName, string password)
         {
-            this.DestinationFile = destinationFile;
-            this.ConnectToShare = connectToShare;
-            this.Domain = domain;
-            this.UserName = userName;
-            this.Password = password;
+            this.m_destinationFile = destinationFile;
+            this.m_connectToShare = connectToShare;
+            this.m_domain = domain;
+            this.m_userName = userName;
+            this.m_password = password;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Path and file name of export destination.
+        /// </summary>
+        [Editor(typeof(FileNameEditor), typeof(UITypeEditor))]
+        public string DestinationFile
+        {
+            get { return m_destinationFile; }
+            set { m_destinationFile = value; }
+        }
+
+        /// <summary>
+        /// Determines whether or not to attempt network connection to share specified in <see cref="ExportDestination.DestinationFile"/>.
+        /// </summary>
+        public bool ConnectToShare
+        {
+            get { return m_connectToShare; }
+            set { m_connectToShare = value; }
+        }
+
+        /// <summary>
+        /// Domain used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
+        /// </summary>
+        public string Domain
+        {
+            get { return m_domain; }
+            set { m_domain = value; }
+        }
+
+        /// <summary>
+        /// User name used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
+        /// </summary>
+        public string UserName
+        {
+            get { return m_userName; }
+            set { m_userName = value; }
+        }
+
+        /// <summary>
+        /// Password used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
+        /// </summary>
+        public string Password
+        {
+            get { return m_password; }
+            set { m_password = value; }
         }
 
         /// <summary>
@@ -88,7 +128,7 @@ namespace PCS.IO
         {
             get
             {
-                return Path.GetPathRoot(DestinationFile);
+                return Path.GetPathRoot(m_destinationFile);
             }
         }
 
@@ -100,9 +140,13 @@ namespace PCS.IO
         {
             get
             {
-                return DestinationFile.Substring(Share.Length);
+                return m_destinationFile.Substring(Share.Length);
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the current <see cref="ExportDestination"/>.
@@ -110,7 +154,9 @@ namespace PCS.IO
         /// <returns>A <see cref="String"/> that represents the current <see cref="ExportDestination"/>.</returns>
         public override string ToString()
         {
-            return DestinationFile;
+            return FilePath.GetFileName(m_destinationFile);
         }
+
+        #endregion
     }
 }
