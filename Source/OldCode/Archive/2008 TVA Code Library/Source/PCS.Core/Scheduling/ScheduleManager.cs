@@ -237,6 +237,9 @@ namespace PCS.Scheduling
         /// Thread-safety Warning: Due to the asynchronous nature of <see cref="ScheduleManager"/>, a lock must be 
         /// obtained on <see cref="Schedules"/> before accessing it.
         /// </remarks>
+        [Category("Settings"), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content), 
+        Description("Gets a list of all Schedule monitored by the ScheduleManager object.")]
         public List<Schedule> Schedules
         {
             get

@@ -18,6 +18,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Text;
 
 namespace PCS.Scheduling
@@ -101,6 +102,14 @@ namespace PCS.Scheduling
         #endregion
 
         #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
+        /// </summary>
+        public Schedule()
+            : this("Schedule" + (++m_instances))
+        { 
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Schedule"/> class.
@@ -222,6 +231,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents minute <see cref="DateTimePart"/>.
         /// </summary>
+        [Browsable(false)]
         public SchedulePart MinutePart
         {
             get
@@ -233,6 +243,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents hour <see cref="DateTimePart"/>.
         /// </summary>
+        [Browsable(false)]
         public SchedulePart HourPart
         {
             get
@@ -244,6 +255,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents day of month <see cref="DateTimePart"/>.
         /// </summary>
+        [Browsable(false)]
         public SchedulePart DayPart
         {
             get
@@ -255,6 +267,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents month <see cref="DateTimePart"/>.
         /// </summary>
+        [Browsable(false)]
         public SchedulePart MonthPart
         {
             get
@@ -266,6 +279,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the <see cref="SchedulePart"/> of the <see cref="Schedule"/> that represents day of week <see cref="DateTimePart"/>.
         /// </summary>
+        [Browsable(false)]
         public SchedulePart DaysOfWeekPart
         {
             get
@@ -277,6 +291,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the <see cref="DateTime"/> when the <see cref="Schedule"/> was last due.
         /// </summary>
+        [Browsable(false)]
         public DateTime LastDueAt
         {
             get
@@ -288,6 +303,7 @@ namespace PCS.Scheduling
         /// <summary>
         /// Gets the current status of the <see cref="Schedule"/>.
         /// </summary>
+        [Browsable(false)]
         public string Status
         {
             get
@@ -361,5 +377,13 @@ namespace PCS.Scheduling
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static int m_instances;
+
+        #endregion
+        
     }
 }
