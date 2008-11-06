@@ -173,7 +173,7 @@ namespace PCS.Collections
 
         /// <summary>Rearranges all the elements in the list into a random order.</summary>
         /// <remarks>This function uses a cryptographically strong random number generator to perform the scramble.</remarks>
-        public static void ScrambleList<TSource>(this IList<TSource> source)
+        public static void Scramble<TSource>(this IList<TSource> source)
         {
             if (source.IsReadOnly) throw new ArgumentException("Cannot modify items in a read only list");
 
