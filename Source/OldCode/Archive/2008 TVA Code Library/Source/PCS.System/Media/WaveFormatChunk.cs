@@ -386,7 +386,7 @@ namespace System.Media
         /// and <see cref="AudioFormat"/>.
         /// </summary>
         /// <returns>
-        /// Sample type code based on  defined <see cref="BitsPerSample"/> and
+        /// Sample type code based on defined <see cref="BitsPerSample"/> and
         /// <see cref="AudioFormat"/>.
         /// </returns>
         public TypeCode GetSampleTypeCode()
