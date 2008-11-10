@@ -32,6 +32,7 @@ Imports TVA.Services
 Imports InterfaceAdapters
 Imports PhasorProtocols
 Imports PhasorProtocols.Common
+Imports PCS
 
 Public Class PhasorMeasurementReceiver
 
@@ -225,7 +226,7 @@ Public Class PhasorMeasurementReceiver
                     accessID = Convert.ToUInt16(row("AccessID"))
 
                     ' We pre-parse the connection string for special parameters
-                    keys = ParseKeyValuePairs(connectionString)
+                    keys = connectionString.ParseKeyValuePairs()
 
                     ' See if this is a virtual device
                     virtualDevice = False
@@ -427,13 +428,8 @@ Public Class PhasorMeasurementReceiver
                         ' Add mapper to collection
                         m_mappers.Add(source, .This)
 
-                        Try
-                            ' Attempt to start connection cycle
-                            .Connect()
-                        Catch ex As Exception
-                            UpdateStatus(String.Format("Connection attempt failed for ""{0}"": {1}", source, ex.Message))
-                            m_exceptionLogger.Log(ex)
-                        End Try
+                        ' Attempt to start connection cycle
+                        .Connect()
                     End With
                 Next
             End With

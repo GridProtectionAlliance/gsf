@@ -605,8 +605,8 @@ Public Class PhasorMeasurementMapper
         m_isConnected = True
         m_attemptingConnection = False
 
-        ' Enable data stream monitor for non-UDP connections
-        m_dataStreamMonitor.Enabled = (m_frameParser.TransportProtocol <> TransportProtocol.Udp)
+        ' Enable data stream monitor for connections that support commands
+        m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands
 
         UpdateStatus(String.Format("Connection to {0} established.", m_source))
 
@@ -734,8 +734,13 @@ Public Class PhasorMeasurementMapper
     ' Delayed connection handler
     Private Sub m_delayedConnection_Elapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs) Handles m_delayedConnection.Elapsed
 
-        ' Start frame parser (this will attempt connection)...
-        m_frameParser.Start()
+        Try
+            ' Start frame parser (this will attempt connection)...
+            m_frameParser.Start()
+        Catch ex As Exception
+            UpdateStatus(String.Format("Connection to {0} failed due to exception: {1}", m_source, ex.Message))
+            m_exceptionLogger.Log(ex)
+        End Try
 
     End Sub
 

@@ -31,6 +31,7 @@ Imports TVA.ErrorManagement
 Imports TVA.Text.Common
 Imports TVA.Services
 Imports PhasorProtocols
+Imports PCS
 
 Public MustInherit Class PhasorDataConcentratorBase
 
@@ -285,7 +286,7 @@ Public MustInherit Class PhasorDataConcentratorBase
             For x As Integer = 0 To .Count - 1
                 With .Item(x)
                     ' Parse additional connection info for special parameters
-                    keys = ParseKeyValuePairs(.Item("AdditionalConnectionInfo").ToString())
+                    keys = .Item("AdditionalConnectionInfo").ToString().ParseKeyValuePairs()
 
                     ' See if this is a virtual device
                     virtualDevice = False

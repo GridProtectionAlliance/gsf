@@ -36,6 +36,7 @@ Imports TVA.Services
 Imports TVA.Threading
 Imports InterfaceAdapters
 Imports PhasorProtocols
+Imports PCS
 
 Public Class Service
 
@@ -62,7 +63,7 @@ Public Class Service
 
     Private Sub ServiceHelper_ServiceStarting(ByVal sender As Object, ByVal e As TVA.GenericEventArgs(Of Object())) Handles ServiceHelper.ServiceStarting
 
-        Dim _forceBuildNumInc As Integer = 10
+        Dim _forceBuildNumInc As Integer = 11
 
         ' Make sure default service settings exist
         Settings.Add("PMUDatabase", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Databases\PhasorMeasurementData.mdb", "PMU metaData database connect string")
@@ -351,7 +352,7 @@ Public Class Service
                         measurementConcentrator = Nothing
 
                         ' Load protocol specific key/value pairs
-                        keys = ParseKeyValuePairs(connectionString)
+                        keys = connectionString.ParseKeyValuePairs()
 
                         ' Create new data concentrator
                         Select Case .Item("Type").ToString().Trim.ToUpper()
