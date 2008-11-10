@@ -95,8 +95,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\PCS.Communication.ClientBase.bmp" />
-    <EmbeddedResource Include="Resources\PCS.Communication.ServerBase.bmp" />
+    <EmbeddedResource Include="ClientBase.bmp" />
+    <EmbeddedResource Include="ServerBase.bmp" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
