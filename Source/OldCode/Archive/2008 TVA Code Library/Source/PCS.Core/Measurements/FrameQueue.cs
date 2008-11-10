@@ -71,7 +71,7 @@ namespace PCS.Measurements
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets numbner of ticks per frame to be used by <see cref="FrameQueue"/>.
+        /// Gets or sets number of ticks per frame to be used by <see cref="FrameQueue"/>.
         /// </summary>
         public decimal TicksPerFrame
         {

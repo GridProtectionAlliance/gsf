@@ -54,7 +54,7 @@ namespace PCS.Measurements
     /// into the concentrator. Make sure you allow enough time for transmission of data over the network
     /// allowing any needed time for possible network congestion.  Lead time should be defined as your
     /// confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
-    /// trust that your local is within plus or minus 2 seconds of real-time.)
+    /// trust that your local clock is within plus or minus 2 seconds of real-time.)
     /// </para>
     /// </remarks>
     public abstract class ConcentratorBase : IDisposable
@@ -146,7 +146,7 @@ namespace PCS.Measurements
             m_allowSortsByArrival = true;
             m_lagTime = lagTime;
             m_leadTime = leadTime;
-            m_lagTicks = (int)(m_lagTime * Ticks.PerSecond);
+            m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
             m_latestMeasurements = new ImmediateMeasurements(this);
 
             // Creates a new queue for managing real-time frames
