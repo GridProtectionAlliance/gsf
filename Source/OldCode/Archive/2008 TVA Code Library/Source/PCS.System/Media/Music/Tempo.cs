@@ -53,6 +53,11 @@ namespace System.Media.Music
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Contructs a new <see cref="Tempo"/> object.
+        /// </summary>
+        /// <param name="totalNoteValues">Total note values for <see cref="Tempo"/>.</param>
+        /// <param name="noteValue">Note value used for <see cref="Tempo"/>.</param>
         public Tempo(int totalNoteValues, double noteValue)
         {
             m_totalNoteValues = totalNoteValues;
@@ -60,6 +65,11 @@ namespace System.Media.Music
             CalculateNoteValueTime();
         }
 
+        /// <summary>
+        /// Contructs a new <see cref="Tempo"/> object.
+        /// </summary>
+        /// <param name="totalNoteValues">Total note values for <see cref="Tempo"/>.</param>
+        /// <param name="noteValue">Named note value used for <see cref="Tempo"/>.</param>
         public Tempo(int totalNoteValues, NoteValue noteValue)
         {
             m_totalNoteValues = totalNoteValues;
@@ -67,6 +77,11 @@ namespace System.Media.Music
             CalculateNoteValueTime();
         }
 
+        /// <summary>
+        /// Contructs a new <see cref="Tempo"/> object.
+        /// </summary>
+        /// <param name="totalNoteValues"></param>
+        /// <param name="noteValue">Named note value used for <see cref="Tempo"/>.</param>
         public Tempo(int totalNoteValues, NoteValueBritish noteValue)
         {
             m_totalNoteValues = totalNoteValues;

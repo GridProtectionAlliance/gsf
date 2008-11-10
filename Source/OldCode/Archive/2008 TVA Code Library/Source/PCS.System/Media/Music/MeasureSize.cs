@@ -143,6 +143,11 @@ namespace System.Media.Music
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Validates that given note value will fit within this <see cref="MeasureSize"/> for specified beat.
+        /// </summary>
+        /// <param name="noteValue">Note value (i.e., length) to validate.</param>
+        /// <param name="beat">Beat within in measure where note value is trying to fit.</param>
         public void ValidateNoteValueAtBeat(double noteValue, int beat)
         {
             if (beat < 0 || beat > m_beats - 1)
@@ -152,11 +157,23 @@ namespace System.Media.Music
                 throw new ArgumentOutOfRangeException("noteValue", "NoteValue is too large to fit within remaining measure");
         }
 
+        /// <summary>
+        /// Validates that given note value will fit within this <see cref="MeasureSize"/> for specified beat.
+        /// </summary>
+        /// <param name="noteValue">Named note value to validate.</param>
+        /// <param name="beat">Beat within in measure where note value is trying to fit.</param>
+        /// <param name="dots">Dot length extensions to apply to named note value.</param>
         public void ValidateNoteValueAtBeat(NoteValue noteValue, int beat, int dots)
         {
             ValidateNoteValueAtBeat(noteValue.Duration(dots), beat);
         }
 
+        /// <summary>
+        /// Validates that given note value will fit within this <see cref="MeasureSize"/> for specified beat.
+        /// </summary>
+        /// <param name="noteValue">Named note value to validate.</param>
+        /// <param name="beat">Beat within in measure where note value is trying to fit.</param>
+        /// <param name="dots">Dot length extensions to apply to named note value.</param>
         public void ValidateNoteValueAtBeat(NoteValueBritish noteValue, int beat, int dots)
         {
             ValidateNoteValueAtBeat(noteValue.Duration(dots), beat);

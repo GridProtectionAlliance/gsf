@@ -39,26 +39,47 @@ namespace System.Media
     [Flags]
     public enum Speakers
     {
+        /// <summary>Speaker positions undefined.</summary>
         Undefined = 0x0,
+        /// <summary>Front left speaker position.</summary>
         FrontLeft = 0x1,
+        /// <summary>Front right speaker position.</summary>
         FrontRight = 0x2,
+        /// <summary>Front center speaker position.</summary>
         FronCenter = 0x4,
+        /// <summary>Low frequency speaker.</summary>
         LowFrequency = 0x8,
+        /// <summary>Back left speaker position.</summary>
         BackLeft = 0x10,
+        /// <summary>back right speaker position.</summary>
         BackRight = 0x20,
+        /// <summary>Front left of center speaker position.</summary>
         FronLeftOfCenter = 0x40,
+        /// <summary>Front right of center speaker position.</summary>
         FronRightOfCenter = 0x80,
+        /// <summary>Back center speaker position.</summary>
         BackCenter = 0x100,
+        /// <summary>Side left speaker position.</summary>
         SideLeft = 0x200,
+        /// <summary>Side right speaker position.</summary>
         SideRight = 0x400,
+        /// <summary>Top center speaker position.</summary>
         TopCenter = 0x800,
+        /// <summary>Top front left speaker position.</summary>
         TopFrontLeft = 0x1000,
+        /// <summary>Top front center speaker position.</summary>
         TopFrontCenter = 0x2000,
+        /// <summary>Top front right speaker position.</summary>
         TopFrontRight = 0x4000,
+        /// <summary>Top back left speaker position.</summary>
         TopBackLeft = 0x8000,
+        /// <summary>Top back center speaker position.</summary>
         TopBackCenter = 0x10000,
+        /// <summary>Top back right speaker position.</summary>
         TopBackRight = 0x20000,
+        /// <summary>Reserved flags for <see cref="Speakers"/> enumeration.</summary>
         Reserved = 0x7FFC0000,
+        /// <summary>All Speaker positions defined.</summary>
         All = -2147483648 // 0x80000000
     }
 
@@ -212,6 +233,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets binary representation of this <see cref="WaveFormatExtensible"/> instance.
+        /// </summary>
         public byte[] BinaryImage
         {
             get
@@ -226,6 +250,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets the length of the binary representation of this <see cref="WaveFormatExtensible"/> instance.
+        /// </summary>
         public int BinaryLength
         {
             get

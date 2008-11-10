@@ -35,7 +35,9 @@ using System.Text.RegularExpressions;
 
 namespace PCS
 {
-    /// <summary>Handles conversion of byte buffers to and from user presentable data formats.</summary>
+    /// <summary>
+    /// Handles conversion of byte buffers to and from user presentable data formats.
+    /// </summary>
     public abstract class ByteEncoding
     {
         #region [ Members ]
@@ -43,6 +45,9 @@ namespace PCS
         // Nested Types
         #region [ Hexadecimal Encoding Class ]
 
+        /// <summary>
+        /// Handles conversion of byte buffers to and from a hexadecimal data format.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class HexadecimalEncoding : ByteEncoding
         {
@@ -109,6 +114,9 @@ namespace PCS
 
         #region [ Decimal Encoding Class ]
 
+        /// <summary>
+        /// Handles conversion of byte buffers to and from a decimal data format.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class DecimalEncoding : ByteEncoding
         {
@@ -175,6 +183,9 @@ namespace PCS
 
         #region [ Binary Encoding Class ]
 
+        /// <summary>
+        /// Handles conversion of byte buffers to and from a binary (i.e., 0 and 1's) data format.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class BinaryEncoding : ByteEncoding
         {
@@ -342,6 +353,9 @@ namespace PCS
 
         #region [ Base64 Encoding Class ]
 
+        /// <summary>
+        /// Handles conversion of byte buffers to and from a base64 data format.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class Base64Encoding : ByteEncoding
         {
@@ -397,6 +411,9 @@ namespace PCS
 
         #region [ ASCII Encoding Class ]
 
+        /// <summary>
+        /// Handles conversion of byte buffers to and from a ASCII data format.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public class ASCIIEncoding : ByteEncoding
         {
@@ -450,7 +467,9 @@ namespace PCS
 
         #endregion
 
-        // Constants
+        /// <summary>
+        /// Constant used to specify that "no spacing" should be used for data conversion.
+        /// </summary>
         public const char NoSpacing = char.MinValue;
 
         #endregion

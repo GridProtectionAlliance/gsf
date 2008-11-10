@@ -35,19 +35,34 @@ namespace System.Media.Sound
 {
     #region [ Enumerations ]
     
+    /// <summary>
+    /// Touch tone key enumeration.
+    /// </summary>
     public enum TouchToneKey
     {
+        /// <summary>Represents the number "1" on a touch tone key pad.</summary>
         One,
+        /// <summary>Represents the number "2" on a touch tone key pad.</summary>
         Two,
+        /// <summary>Represents the number "3" on a touch tone key pad.</summary>
         Three,
+        /// <summary>Represents the number "4" on a touch tone key pad.</summary>
         Four,
+        /// <summary>Represents the number "5" on a touch tone key pad.</summary>
         Five,
+        /// <summary>Represents the number "6" on a touch tone key pad.</summary>
         Six,
+        /// <summary>Represents the number "7" on a touch tone key pad.</summary>
         Seven,
+        /// <summary>Represents the number "8" on a touch tone key pad.</summary>
         Eight,
+        /// <summary>Represents the number "9" on a touch tone key pad.</summary>
         Nine,
+        /// <summary>Represents the "*" key on a touch tone key pad.</summary>
         Asterisk,
+        /// <summary>Represents the number "0" on a touch tone key pad.</summary>
         Zero,
+        /// <summary>Represents the "#" key on a touch tone key pad.</summary>
         Pound
     }
 
@@ -87,8 +102,20 @@ namespace System.Media.Sound
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Valid touch tone keys.
+        /// </summary>
         public const string ValidTouchTones = "123456789*0#";
+        
+        /// <summary>
+        /// Default duration, in seconds, of touch tones.
+        /// </summary>
         public const double DefaultKeyDuration = 0.15D;
+        
+        /// <summary>
+        /// Default duration, in seconds, of pause between touch tones.
+        /// </summary>
         public const double DefaultInterKeyPause = 0.05D;
 
         // Fields
@@ -98,6 +125,10 @@ namespace System.Media.Sound
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new <see cref="TouchTone"/> for specified touch tone key.
+        /// </summary>
+        /// <param name="key">Touch tone to create.</param>
         public TouchTone(TouchToneKey key)
         {
             Key = key;
@@ -120,8 +151,8 @@ namespace System.Media.Sound
                 m_key = value;
 
                 // Define touch tone frequencies for given key
-                LowFrequency = LowTouchTones[(int)m_key / 3];
-                HighFrequency = HighTouchTones[(int)m_key % 3];
+                LowFrequency = m_lowTouchTones[(int)m_key / 3];
+                HighFrequency = m_highTouchTones[(int)m_key % 3];
             }
         }
 
@@ -130,14 +161,14 @@ namespace System.Media.Sound
         #region [ Static ]
 
         // Static Fields
-        public static double[] LowTouchTones;
-        public static double[] HighTouchTones;
+        private static double[] m_lowTouchTones;
+        private static double[] m_highTouchTones;
 
         // Static Constructor
         static TouchTone()
         {
-            LowTouchTones = new double[] { 697, 770, 852, 941 };
-            HighTouchTones = new double[] { 1209, 1336, 1477 };
+            m_lowTouchTones = new double[] { 697, 770, 852, 941 };
+            m_highTouchTones = new double[] { 1209, 1336, 1477 };
         }
 
         // Static Methods

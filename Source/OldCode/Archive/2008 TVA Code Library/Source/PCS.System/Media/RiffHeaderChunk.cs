@@ -42,6 +42,10 @@ namespace System.Media
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Type ID of a RIFF header chunk.
+        /// </summary>
         public const string RiffTypeID = "RIFF";
 
         // Fields
@@ -51,6 +55,10 @@ namespace System.Media
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new RIFF header chunk for the specified format.
+        /// </summary>
+        /// <param name="format">RIFF header chunk header format.</param>
         public RiffHeaderChunk(string format)
             : base(RiffTypeID)
         {
@@ -89,6 +97,9 @@ namespace System.Media
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets format for RIFF header chunk.
+        /// </summary>
         public string Format
         {
             get
@@ -107,6 +118,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets binary representation of RIFF header chunk.
+        /// </summary>
         public override byte[] BinaryImage
         {
             get
@@ -121,6 +135,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets length of binary representation of RIFF header chunk.
+        /// </summary>
         public new int BinaryLength
         {
             get
@@ -133,6 +150,10 @@ namespace System.Media
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Returns a cloned instance of this RIFF header chunk.
+        /// </summary>
+        /// <returns>A cloned instance of this RIFF header chunk.</returns>
         public new RiffHeaderChunk Clone()
         {
             return new RiffHeaderChunk(m_format);

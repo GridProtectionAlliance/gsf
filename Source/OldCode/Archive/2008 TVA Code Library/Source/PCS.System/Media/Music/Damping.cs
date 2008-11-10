@@ -41,7 +41,10 @@ namespace System.Media.Music
     /// <param name="sampleRate">Number of samples per second, if useful for calculation.</param>
     /// <returns>Scaling factor in the range of zero to one used to damp an amplitude at the given sample index.</returns>
     public delegate double DampingFunction(long sampleIndex, long samplePeriod, int sampleRate);
-    
+
+    /// <summary>
+    /// Defines a few damping functions.
+    /// </summary>
     public static class Damping
 	{
         /// <summary>

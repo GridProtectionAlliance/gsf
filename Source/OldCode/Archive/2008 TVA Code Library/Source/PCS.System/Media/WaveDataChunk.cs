@@ -42,6 +42,10 @@ namespace System.Media
         #region [ Members ]
 
         // Constants
+        
+        /// <summary>
+        /// Type ID of a WAVE data chunk.
+        /// </summary>
         public const string RiffTypeID = "data";
 
         // Fields
@@ -52,6 +56,10 @@ namespace System.Media
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new WAVE data chunk for the specified format.
+        /// </summary>
+        /// <param name="waveFormat"><see cref="WaveFormatChunk"/> that describes this <see cref="WaveDataChunk"/>.</param>
         public WaveDataChunk(WaveFormatChunk waveFormat)
             : base(RiffTypeID)
         {
@@ -99,6 +107,9 @@ namespace System.Media
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets associated <see cref="WaveFormatChunk"/> that defines the format of the data in this <see cref="WaveDataChunk"/>.
+        /// </summary>
         public WaveFormatChunk WaveFormat
         {
             get
@@ -111,6 +122,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets list of little-endian formatted sample data blocks of this <see cref="WaveDataChunk"/>.
+        /// </summary>
         public List<LittleBinaryValue[]> SampleBlocks
         {
             get
@@ -119,6 +133,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets the chunk size of this <see cref="WaveDataChunk"/>.
+        /// </summary>
         public override int ChunkSize
         {
             get
@@ -131,6 +148,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets binary representation of this <see cref="WaveDataChunk"/>.
+        /// </summary>
         public override byte[] BinaryImage
         {
             get
@@ -157,6 +177,9 @@ namespace System.Media
             }
         }
 
+        /// <summary>
+        /// Gets length of the binary representation of this <see cref="WaveDataChunk"/>.
+        /// </summary>
         public new int BinaryLength
         {
             get

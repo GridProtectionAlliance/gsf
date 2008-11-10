@@ -48,6 +48,9 @@ namespace System.Media.Music
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new <see cref="Phrase"/>.
+        /// </summary>
         public Phrase()
         {
             m_notes = new List<Note[]>();

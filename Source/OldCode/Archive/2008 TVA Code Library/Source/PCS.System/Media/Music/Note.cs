@@ -92,105 +92,505 @@ namespace System.Media.Music
         // Constants
 
         // Fundamental musical note frequencies (http://www.phy.mtu.edu/~suits/notefreqs.html)
+
+        /// <summary>
+        /// Fundamental frequency for note C0.
+        /// </summary>
         public const double C0 = 16.35;
+
+        /// <summary>
+        /// Fundamental frequency for note C0#.
+        /// </summary>
         public const double C0S = 17.32;
+
+        /// <summary>
+        /// Fundamental frequency for note D0.
+        /// </summary>
         public const double D0 = 18.35;
+
+        /// <summary>
+        /// Fundamental frequency for note D0#.
+        /// </summary>
         public const double D0S = 19.45;
+
+        /// <summary>
+        /// Fundamental frequency for note E0.
+        /// </summary>
         public const double E0 = 20.6;
+
+        /// <summary>
+        /// Fundamental frequency for note F0.
+        /// </summary>
         public const double F0 = 21.83;
+
+        /// <summary>
+        /// Fundamental frequency for note F0#.
+        /// </summary>
         public const double F0S = 23.12;
+
+        /// <summary>
+        /// Fundamental frequency for note G0.
+        /// </summary>
         public const double G0 = 24.5;
+
+        /// <summary>
+        /// Fundamental frequency for note G0#.
+        /// </summary>
         public const double G0S = 25.96;
+
+        /// <summary>
+        /// Fundamental frequency for note A0.
+        /// </summary>
         public const double A0 = 27.5;
+
+        /// <summary>
+        /// Fundamental frequency for note A0#.
+        /// </summary>
         public const double A0S = 29.14;
+
+        /// <summary>
+        /// Fundamental frequency for note B0.
+        /// </summary>
         public const double B0 = 30.87;
+
+        /// <summary>
+        /// Fundamental frequency for note C1.
+        /// </summary>
         public const double C1 = 32.7;
+
+        /// <summary>
+        /// Fundamental frequency for note C1#.
+        /// </summary>
         public const double C1S = 34.65;
+
+        /// <summary>
+        /// Fundamental frequency for note D1.
+        /// </summary>
         public const double D1 = 36.71;
+
+        /// <summary>
+        /// Fundamental frequency for note D1#.
+        /// </summary>
         public const double D1S = 38.89;
+
+        /// <summary>
+        /// Fundamental frequency for note E1.
+        /// </summary>
         public const double E1 = 41.2;
+
+        /// <summary>
+        /// Fundamental frequency for note F1.
+        /// </summary>
         public const double F1 = 43.65;
+
+        /// <summary>
+        /// Fundamental frequency for note F1#.
+        /// </summary>
         public const double F1S = 46.25;
+
+        /// <summary>
+        /// Fundamental frequency for note G1.
+        /// </summary>
         public const double G1 = 49.0;
+
+        /// <summary>
+        /// Fundamental frequency for note G1#.
+        /// </summary>
         public const double G1S = 51.91;
+
+        /// <summary>
+        /// Fundamental frequency for note A1.
+        /// </summary>
         public const double A1 = 55.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A1#.
+        /// </summary>
         public const double A1S = 58.27;
+
+        /// <summary>
+        /// Fundamental frequency for note B1.
+        /// </summary>
         public const double B1 = 61.74;
+
+        /// <summary>
+        /// Fundamental frequency for note C2.
+        /// </summary>
         public const double C2 = 65.41;
+
+        /// <summary>
+        /// Fundamental frequency for note C2#.
+        /// </summary>
         public const double C2S = 69.3;
+
+        /// <summary>
+        /// Fundamental frequency for note D2.
+        /// </summary>
         public const double D2 = 73.42;
+
+        /// <summary>
+        /// Fundamental frequency for note D2#.
+        /// </summary>
         public const double D2S = 77.78;
+
+        /// <summary>
+        /// Fundamental frequency for note E2.
+        /// </summary>
         public const double E2 = 82.41;
+
+        /// <summary>
+        /// Fundamental frequency for note F2.
+        /// </summary>
         public const double F2 = 87.31;
+
+        /// <summary>
+        /// Fundamental frequency for note F2#.
+        /// </summary>
         public const double F2S = 92.5;
+
+        /// <summary>
+        /// Fundamental frequency for note G2.
+        /// </summary>
         public const double G2 = 98.0;
+
+        /// <summary>
+        /// Fundamental frequency for note G2#.
+        /// </summary>
         public const double G2S = 103.83;
+
+        /// <summary>
+        /// Fundamental frequency for note A2.
+        /// </summary>
         public const double A2 = 110.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A2#.
+        /// </summary>
         public const double A2S = 116.54;
+
+        /// <summary>
+        /// Fundamental frequency for note B2.
+        /// </summary>
         public const double B2 = 123.47;
+
+        /// <summary>
+        /// Fundamental frequency for note C3.
+        /// </summary>
         public const double C3 = 130.81;
+
+        /// <summary>
+        /// Fundamental frequency for note C3#.
+        /// </summary>
         public const double C3S = 138.59;
+
+        /// <summary>
+        /// Fundamental frequency for note D3.
+        /// </summary>
         public const double D3 = 146.83;
+
+        /// <summary>
+        /// Fundamental frequency for note D3#.
+        /// </summary>
         public const double D3S = 155.56;
+
+        /// <summary>
+        /// Fundamental frequency for note E3.
+        /// </summary>
         public const double E3 = 164.81;
+
+        /// <summary>
+        /// Fundamental frequency for note F3.
+        /// </summary>
         public const double F3 = 174.61;
+
+        /// <summary>
+        /// Fundamental frequency for note F3#.
+        /// </summary>
         public const double F3S = 185.0;
+
+        /// <summary>
+        /// Fundamental frequency for note G3.
+        /// </summary>
         public const double G3 = 196.0;
+
+        /// <summary>
+        /// Fundamental frequency for note G3#.
+        /// </summary>
         public const double G3S = 207.65;
+
+        /// <summary>
+        /// Fundamental frequency for note A3.
+        /// </summary>
         public const double A3 = 220.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A3#.
+        /// </summary>
         public const double A3S = 233.08;
+
+        /// <summary>
+        /// Fundamental frequency for note B3.
+        /// </summary>
         public const double B3 = 246.94;
-        public const double C4 = 261.63;    // Middle C
+
+        /// <summary>
+        /// Fundamental frequency for note C4 - Middle C.
+        /// </summary>
+        public const double C4 = 261.63;
+
+        /// <summary>
+        /// Fundamental frequency for note C4#.
+        /// </summary>
         public const double C4S = 277.18;
+
+        /// <summary>
+        /// Fundamental frequency for note D4.
+        /// </summary>
         public const double D4 = 293.66;
+
+        /// <summary>
+        /// Fundamental frequency for note D4#.
+        /// </summary>
         public const double D4S = 311.13;
+
+        /// <summary>
+        /// Fundamental frequency for note E4.
+        /// </summary>
         public const double E4 = 329.63;
+
+        /// <summary>
+        /// Fundamental frequency for note F4.
+        /// </summary>
         public const double F4 = 349.23;
+
+        /// <summary>
+        /// Fundamental frequency for note F4#.
+        /// </summary>
         public const double F4S = 369.99;
+
+        /// <summary>
+        /// Fundamental frequency for note G4.
+        /// </summary>
         public const double G4 = 392.0;
+
+        /// <summary>
+        /// Fundamental frequency for note G4#.
+        /// </summary>
         public const double G4S = 415.3;
+
+        /// <summary>
+        /// Fundamental frequency for note A4.
+        /// </summary>
         public const double A4 = 440.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A4#.
+        /// </summary>
         public const double A4S = 466.16;
+
+        /// <summary>
+        /// Fundamental frequency for note B4.
+        /// </summary>
         public const double B4 = 493.88;
+
+        /// <summary>
+        /// Fundamental frequency for note C5.
+        /// </summary>
         public const double C5 = 523.25;
+
+        /// <summary>
+        /// Fundamental frequency for note C5#.
+        /// </summary>
         public const double C5S = 554.37;
+
+        /// <summary>
+        /// Fundamental frequency for note D5.
+        /// </summary>
         public const double D5 = 587.33;
+
+        /// <summary>
+        /// Fundamental frequency for note D5#.
+        /// </summary>
         public const double D5S = 622.25;
+
+        /// <summary>
+        /// Fundamental frequency for note E5.
+        /// </summary>
         public const double E5 = 659.26;
+
+        /// <summary>
+        /// Fundamental frequency for note F5.
+        /// </summary>
         public const double F5 = 698.46;
+
+        /// <summary>
+        /// Fundamental frequency for note F5#.
+        /// </summary>
         public const double F5S = 739.99;
+
+        /// <summary>
+        /// Fundamental frequency for note G5.
+        /// </summary>
         public const double G5 = 783.99;
+
+        /// <summary>
+        /// Fundamental frequency for note G5#.
+        /// </summary>
         public const double G5S = 830.61;
+
+        /// <summary>
+        /// Fundamental frequency for note A5.
+        /// </summary>
         public const double A5 = 880.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A5#.
+        /// </summary>
         public const double A5S = 932.33;
+
+        /// <summary>
+        /// Fundamental frequency for note B5.
+        /// </summary>
         public const double B5 = 987.77;
+
+        /// <summary>
+        /// Fundamental frequency for note C6.
+        /// </summary>
         public const double C6 = 1046.5;
+
+        /// <summary>
+        /// Fundamental frequency for note C6#.
+        /// </summary>
         public const double C6S = 1108.73;
+
+        /// <summary>
+        /// Fundamental frequency for note D6.
+        /// </summary>
         public const double D6 = 1174.66;
+
+        /// <summary>
+        /// Fundamental frequency for note D6#.
+        /// </summary>
         public const double D6S = 1244.51;
+
+        /// <summary>
+        /// Fundamental frequency for note E6.
+        /// </summary>
         public const double E6 = 1318.51;
+
+        /// <summary>
+        /// Fundamental frequency for note F6.
+        /// </summary>
         public const double F6 = 1396.91;
+
+        /// <summary>
+        /// Fundamental frequency for note F6#.
+        /// </summary>
         public const double F6S = 1479.98;
+
+        /// <summary>
+        /// Fundamental frequency for note G6.
+        /// </summary>
         public const double G6 = 1567.98;
+
+        /// <summary>
+        /// Fundamental frequency for note G6#.
+        /// </summary>
         public const double G6S = 1661.22;
+
+        /// <summary>
+        /// Fundamental frequency for note A6.
+        /// </summary>
         public const double A6 = 1760.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A6#.
+        /// </summary>
         public const double A6S = 1864.66;
+
+        /// <summary>
+        /// Fundamental frequency for note B6.
+        /// </summary>
         public const double B6 = 1975.53;
+
+        /// <summary>
+        /// Fundamental frequency for note C7.
+        /// </summary>
         public const double C7 = 2093.0;
+
+        /// <summary>
+        /// Fundamental frequency for note C7#.
+        /// </summary>
         public const double C7S = 2217.46;
+
+        /// <summary>
+        /// Fundamental frequency for note D7.
+        /// </summary>
         public const double D7 = 2349.32;
+
+        /// <summary>
+        /// Fundamental frequency for note D7#.
+        /// </summary>
         public const double D7S = 2489.02;
+
+        /// <summary>
+        /// Fundamental frequency for note E7.
+        /// </summary>
         public const double E7 = 2637.02;
+
+        /// <summary>
+        /// Fundamental frequency for note F7.
+        /// </summary>
         public const double F7 = 2793.83;
+
+        /// <summary>
+        /// Fundamental frequency for note F7#.
+        /// </summary>
         public const double F7S = 2959.96;
+
+        /// <summary>
+        /// Fundamental frequency for note G7.
+        /// </summary>
         public const double G7 = 3135.96;
+
+        /// <summary>
+        /// Fundamental frequency for note G7#.
+        /// </summary>
         public const double G7S = 3322.44;
+
+        /// <summary>
+        /// Fundamental frequency for note A7.
+        /// </summary>
         public const double A7 = 3520.0;
+
+        /// <summary>
+        /// Fundamental frequency for note A7#.
+        /// </summary>
         public const double A7S = 3729.31;
+
+        /// <summary>
+        /// Fundamental frequency for note B7.
+        /// </summary>
         public const double B7 = 3951.07;
+
+        /// <summary>
+        /// Fundamental frequency for note C8.
+        /// </summary>
         public const double C8 = 4186.01;
+
+        /// <summary>
+        /// Fundamental frequency for note C8#.
+        /// </summary>
         public const double C8S = 4434.92;
+
+        /// <summary>
+        /// Fundamental frequency for note D8.
+        /// </summary>
         public const double D8 = 4698.64;
+
+        /// <summary>
+        /// Fundamental frequency for note D8#.
+        /// </summary>
         public const double D8S = 4978.03;
 
         /// <summary>Note ID for "Middle C"</summary>
@@ -580,6 +980,10 @@ namespace System.Media.Music
             throw new ArgumentException("Note can only be compared with other Notes...");
         }
 
+        /// <summary>
+        /// Serves as a hash function for the current <see cref="Note"/>.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="Note"/>.</returns>
         public override int GetHashCode()
         {
             return (Frequency * Value).GetHashCode();
@@ -589,31 +993,49 @@ namespace System.Media.Music
 
         #region [ Operators ]
 
+        /// <summary>
+        /// Compares two <see cref="Note"/> frequencies and values for equality.
+        /// </summary>
         public static bool operator ==(Note note1, Note note2)
         {
             return note1.Equals(note2);
         }
 
+        /// <summary>
+        /// Compares two <see cref="Note"/> frequencies and values for inequality.
+        /// </summary>
         public static bool operator !=(Note note1, Note note2)
         {
             return !note1.Equals(note2);
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Note"/> timestamp is greater than right <see cref="Note"/>.
+        /// </summary>
         public static bool operator >(Note note1, Note note2)
         {
             return note1.CompareTo(note2) > 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Note"/> timestamp is greater than or equal to right <see cref="Note"/>.
+        /// </summary>
         public static bool operator >=(Note note1, Note note2)
         {
             return note1.CompareTo(note2) >= 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Note"/> timestamp is less than right <see cref="Note"/>.
+        /// </summary>
         public static bool operator <(Note note1, Note note2)
         {
             return note1.CompareTo(note2) < 0;
         }
 
+        /// <summary>
+        /// Returns true if left <see cref="Note"/> timestamp is less than or equal to right <see cref="Note"/>.
+        /// </summary>
         public static bool operator <=(Note note1, Note note2)
         {
             return note1.CompareTo(note2) <= 0;

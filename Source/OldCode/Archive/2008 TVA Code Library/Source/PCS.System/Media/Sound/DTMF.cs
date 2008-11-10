@@ -88,18 +88,30 @@ namespace System.Media.Sound
         #region [ Members ]
 
         // Fields
+
+        /// <summary>Low frequency of <see cref="DTMF"/>.</summary>
         public double LowFrequency;
+
+        /// <summary>High frequency of <see cref="DTMF"/>.</summary>
         public double HighFrequency;
+
+        /// <summary>Frequency duration, in seconds, of <see cref="DTMF"/>.</summary>
         public double Duration;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new <see cref="DTMF"/>.
+        /// </summary>
         public DTMF()
         {
         }
 
+        /// <summary>
+        /// Constructs a new <see cref="DTMF"/> using specified parameters.
+        /// </summary>
         public DTMF(double lowFrequency, double highFrequency, double duration)
         {
             LowFrequency = lowFrequency;

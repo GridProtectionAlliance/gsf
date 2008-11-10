@@ -34,6 +34,7 @@ namespace System
     /// Represents a binary data sample stored as a byte array, 
     /// but implicitly castable to most common native types.
     /// </summary>
+    /// <typeparam name="TEndianOrder">Type of <see cref="EndianOrder"/> class used to transpose byte order of derived implementation of <see cref="BinaryValueBase{TEndianOrder}"/>.</typeparam>
     public class BinaryValueBase<TEndianOrder> where TEndianOrder : EndianOrder
     {
         #region [ Members ]
@@ -127,18 +128,33 @@ namespace System
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Returns a byte from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A byte from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Byte ToByte()
         {
             ValidateBufferLength(TypeCode.Byte, sizeof(Byte));
             return m_buffer[0];
         }
 
+        /// <summary>
+        /// Returns a 16-bit signed integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 16-bit signed integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Int16 ToInt16()
         {
             ValidateBufferLength(TypeCode.Int16, sizeof(Int16));
             return m_endianOrder.ToInt16(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 16-bit unsigned integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 16-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         [CLSCompliant(false)]
         public UInt16 ToUInt16()
         {
@@ -146,6 +162,11 @@ namespace System
             return m_endianOrder.ToUInt16(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 24-bit signed integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 24-bit signed integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Int24 ToInt24()
         {
             // There is no system type code for Int24
@@ -155,6 +176,11 @@ namespace System
             return m_endianOrder.ToInt24(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 24-bit unsigned integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 24-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         [CLSCompliant(false)]
         public UInt24 ToUInt24()
         {
@@ -165,12 +191,22 @@ namespace System
             return m_endianOrder.ToUInt24(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 32-bit signed integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 32-bit signed integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Int32 ToInt32()
         {
             ValidateBufferLength(TypeCode.Int32, sizeof(Int32));
             return m_endianOrder.ToInt32(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 32-bit unsigned integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 32-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         [CLSCompliant(false)]
         public UInt32 ToUInt32()
         {
@@ -178,12 +214,22 @@ namespace System
             return m_endianOrder.ToUInt32(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 64-bit signed integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 64-bit signed integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Int64 ToInt64()
         {
             ValidateBufferLength(TypeCode.Int64, sizeof(Int64));
             return m_endianOrder.ToInt64(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 64-bit unsigned integer, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A 64-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         [CLSCompliant(false)]
         public UInt64 ToUInt64()
         {
@@ -191,12 +237,22 @@ namespace System
             return m_endianOrder.ToUInt64(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a single-precision floating point number, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A single-precision floating point number, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Single ToSingle()
         {
             ValidateBufferLength(TypeCode.Single, sizeof(Single));
             return m_endianOrder.ToSingle(m_buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a double-precision floating point number, accounting for <see cref="EndianOrder"/>, converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.
+        /// </summary>
+        /// <returns>A double-precision floating point number, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
+        /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         public Double ToDouble()
         {
             ValidateBufferLength(TypeCode.Double, sizeof(Double));
@@ -214,6 +270,10 @@ namespace System
         #region [ Static ]
 
         // Because each "typed" instance will be it's own class - each will have its own static variable instance
+
+        /// <summary>
+        /// <see cref="EndianOrder"/> instance used to transpose byte order of derived implementation of <see cref="BinaryValueBase{TEndianOrder}"/>.
+        /// </summary>
         protected static TEndianOrder m_endianOrder;
 
         #endregion

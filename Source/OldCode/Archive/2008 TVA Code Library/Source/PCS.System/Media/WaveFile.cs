@@ -813,6 +813,9 @@ namespace System.Media
             m_waveData.SampleBlocks.Add(samples);
         }
 
+        /// <summary>
+        /// Plays the wave file using <see cref="SoundPlayer"/>.
+        /// </summary>
         public void Play()
         {
             MemoryStream stream = new MemoryStream();
@@ -822,6 +825,10 @@ namespace System.Media
             player.Play();
         }
 
+        /// <summary>
+        /// Saves wave file to the specified file name.
+        /// </summary>
+        /// <param name="waveFileName">Desired destination file name for wave file.</param>
         public void Save(string waveFileName)
         {
             FileStream stream = File.Create(waveFileName);
@@ -829,6 +836,10 @@ namespace System.Media
             stream.Close();
         }
 
+        /// <summary>
+        /// Saves wave file to the specified stream.
+        /// </summary>
+        /// <param name="destination">Destination stream for binary wave file data.</param>
         public void Save(Stream destination)
         {
             m_waveHeader.ChunkSize = 4 + m_waveFormat.BinaryLength + m_waveData.BinaryLength;
@@ -837,6 +848,12 @@ namespace System.Media
             destination.Write(m_waveData.BinaryImage, 0, m_waveData.BinaryLength);
         }
 
+        /// <summary>
+        /// Reverses the data samples in the wave file.
+        /// </summary>
+        /// <remarks>
+        /// This is just used to reverse the sound in the file for effect.
+        /// </remarks>
         public void Reverse()
         {
             m_waveData.SampleBlocks.Reverse();

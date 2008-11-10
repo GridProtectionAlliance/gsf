@@ -35,7 +35,9 @@ namespace System
     /// <summary>Endian Byte Order Enumeration</summary>
     public enum Endianness
     {
+        /// <summary>Big-endian byte order.</summary>
         BigEndian,
+        /// <summary>Little-endian byte order.</summary>
         LittleEndian
     }
 
@@ -46,6 +48,9 @@ namespace System
     {
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new instance of the <see cref="BigEndianOrder"/> class.
+        /// </summary>
         public BigEndianOrder()
             : base(Endianness.BigEndian)
         {
@@ -57,6 +62,9 @@ namespace System
 
         private static BigEndianOrder m_endianOrder;
 
+        /// <summary>
+        /// Returns the default instance of the <see cref="BigEndianOrder"/> class.
+        /// </summary>
         public static BigEndianOrder Default
         {
             get
@@ -74,6 +82,9 @@ namespace System
     {
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new instance of the <see cref="LittleEndianOrder"/> class.
+        /// </summary>
         public LittleEndianOrder()
             : base(Endianness.LittleEndian)
         {
@@ -85,6 +96,9 @@ namespace System
 
         private static LittleEndianOrder m_endianOrder;
 
+        /// <summary>
+        /// Returns the default instance of the <see cref="LittleEndianOrder"/> class.
+        /// </summary>
         public static LittleEndianOrder Default
         {
             get
@@ -102,6 +116,9 @@ namespace System
     {
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new instance of the <see cref="NativeEndianOrder"/> class.
+        /// </summary>
         public NativeEndianOrder()
             : base(BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian)
         {
@@ -113,6 +130,9 @@ namespace System
 
         private static NativeEndianOrder m_endianOrder;
 
+        /// <summary>
+        /// Returns the default instance of the <see cref="NativeEndianOrder"/> class.
+        /// </summary>
         public static NativeEndianOrder Default
         {
             get
@@ -148,6 +168,9 @@ namespace System
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Constructs a new instance of the <see cref="EndianOrder"/> class.
+        /// </summary>
         protected EndianOrder(Endianness targetEndianness)
         {
             m_targetEndianness = targetEndianness;
@@ -190,6 +213,9 @@ namespace System
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Returns the target endian-order of this <see cref="EndianOrder"/> representation.
+        /// </summary>
         public Endianness TargetEndianness
         {
             get
@@ -230,22 +256,49 @@ namespace System
             return buffer;
         }
 
-        // For non-standard length byte manipulations, we expose copy function that will copy OS-ordered source buffer into proper target endian-order
+        /// <summary>
+        /// Copies a buffer in the target endian-order of this <see cref="EndianOrder"/> representation.
+        /// </summary>
+        /// <param name="sourceBuffer">The source buffer.</param>
+        /// <param name="sourceIndex">The byte offset into <paramref name="sourceBuffer"/>.</param>
+        /// <param name="destinationBuffer">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationBuffer"/>.</param>
+        /// <param name="length">The number of bytes to copy.</param>
         public void CopyBuffer(byte[] sourceBuffer, int sourceIndex, byte[] destinationBuffer, int destinationIndex, int length)
         {
+            // For non-standard length byte manipulations, we expose copy function that will copy OS-ordered source buffer into proper target endian-order
             m_copyBuffer(sourceBuffer, sourceIndex, destinationBuffer, destinationIndex, length);
         }
 
+        /// <summary>
+        /// Changes the order of a buffer (reverse or pass-through) based on the target endian-order of this <see cref="EndianOrder"/> representation.
+        /// </summary>
         public byte[] CoerceByteOrder(byte[] buffer)
         {
             return m_coerceByteOrder(buffer);
         }
 
+        /// <summary>
+        /// Returns a <see cref="Boolean"/> value converted from one byte at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array of bytes.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>true if the byte at startIndex in value is nonzero; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public bool ToBoolean(byte[] value, int startIndex)
         {
             return BitConverter.ToBoolean(value, startIndex);
         }
 
+        /// <summary>
+        /// Returns a Unicode character converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A character formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public char ToChar(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[2];
@@ -255,6 +308,14 @@ namespace System
             return BitConverter.ToChar(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a double-precision floating point number converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A double-precision floating point number formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public double ToDouble(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[8];
@@ -264,6 +325,14 @@ namespace System
             return BitConverter.ToDouble(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 16-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 16-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public short ToInt16(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[2];
@@ -273,6 +342,14 @@ namespace System
             return BitConverter.ToInt16(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 24-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 24-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public Int24 ToInt24(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[3];
@@ -282,6 +359,14 @@ namespace System
             return Int24.GetValue(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 32-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 32-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public int ToInt32(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[4];
@@ -291,6 +376,14 @@ namespace System
             return BitConverter.ToInt32(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 64-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 64-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public long ToInt64(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[8];
@@ -300,6 +393,14 @@ namespace System
             return BitConverter.ToInt64(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a single-precision floating point number converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A single-precision floating point number formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public float ToSingle(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[4];
@@ -309,6 +410,14 @@ namespace System
             return BitConverter.ToSingle(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 16-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 16-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]
         public ushort ToUInt16(byte[] value, int startIndex)
         {
@@ -319,6 +428,14 @@ namespace System
             return BitConverter.ToUInt16(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 24-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 24-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]
         public UInt24 ToUInt24(byte[] value, int startIndex)
         {
@@ -329,6 +446,14 @@ namespace System
             return UInt24.GetValue(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 32-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 32-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]
         public uint ToUInt32(byte[] value, int startIndex)
         {
@@ -339,6 +464,14 @@ namespace System
             return BitConverter.ToUInt32(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a 64-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 64-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]
         public ulong ToUInt64(byte[] value, int startIndex)
         {
@@ -349,129 +482,261 @@ namespace System
             return BitConverter.ToUInt64(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns the specified <see cref="Boolean"/> value as an array of bytes in the target endian-order.
+        /// </summary>
+        /// <param name="value">The <see cref="Boolean"/> value to convert.</param>
+        /// <returns>An array of bytes with length 1.</returns>
         public byte[] GetBytes(bool value)
         {
             // No need to reverse buffer for one byte:
             return BitConverter.GetBytes(value);
         }
 
+        /// <summary>
+        /// Returns the specified Unicode character value as an array of bytes in the target endian-order.
+        /// </summary>
+        /// <param name="value">The Unicode character value to convert.</param>
+        /// <returns>An array of bytes with length 2.</returns>
         public byte[] GetBytes(char value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified double-precision floating point value as an array of bytes in the target endian-order.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 8.</returns>
         public byte[] GetBytes(double value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 16-bit signed integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 2.</returns>
         public byte[] GetBytes(short value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 24-bit signed integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 3.</returns>
         public byte[] GetBytes(Int24 value)
         {
             return m_coerceByteOrder(Int24.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 32-bit signed integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 4.</returns>
         public byte[] GetBytes(int value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 64-bit signed integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 8.</returns>
         public byte[] GetBytes(long value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified single-precision floating point value as an array of bytes in the target endian-order.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 4.</returns>
         public byte[] GetBytes(float value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 16-bit unsigned integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 2.</returns>
         [CLSCompliant(false)]
         public byte[] GetBytes(ushort value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 24-bit unsigned integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 3.</returns>
         [CLSCompliant(false)]
         public byte[] GetBytes(UInt24 value)
         {
             return m_coerceByteOrder(UInt24.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 32-bit unsigned integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 4.</returns>
         [CLSCompliant(false)]
         public byte[] GetBytes(uint value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Returns the specified 64-bit unsigned integer value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 8.</returns>
         [CLSCompliant(false)]
         public byte[] GetBytes(ulong value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
         }
 
+        /// <summary>
+        /// Copies the specified <see cref="Boolean"/> value as an array of 1 byte in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The <see cref="Boolean"/> value to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 1);
         }
 
+        /// <summary>
+        /// Copies the specified Unicode character value as an array of 2 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The Unicode character value to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(char value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
         }
 
+        /// <summary>
+        /// Copies the specified double-precision floating point value as an array of 8 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(double value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
         }
 
+        /// <summary>
+        /// Copies the specified 16-bit signed integer value as an array of 2 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(short value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
         }
 
+        /// <summary>
+        /// Copies the specified 24-bit signed integer value as an array of 3 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(Int24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
         }
 
+        /// <summary>
+        /// Copies the specified 32-bit signed integer value as an array of 4 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(int value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
         }
 
+        /// <summary>
+        /// Copies the specified 64-bit signed integer value as an array of 8 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(long value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
         }
 
+        /// <summary>
+        /// Copies the specified single-precision floating point value as an array of 4 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         public void CopyBytes(float value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
         }
 
+        /// <summary>
+        /// Copies the specified 16-bit unsigned integer value as an array of 2 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         [CLSCompliant(false)]
         public void CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
         }
 
+        /// <summary>
+        /// Copies the specified 24-bit unsigned integer value as an array of 3 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         [CLSCompliant(false)]
         public void CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(UInt24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
         }
 
+        /// <summary>
+        /// Copies the specified 32-bit unsigned integer value as an array of 4 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         [CLSCompliant(false)]
         public void CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
         }
 
+        /// <summary>
+        /// Copies the specified 64-bit unsigned integer value as an array of 8 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The number to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         [CLSCompliant(false)]
         public void CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
         {
@@ -482,10 +747,10 @@ namespace System
 
         #region [ Static ]
 
-        /// <summary>Big-Endian byte order conversion class.</summary>
+        /// <summary>Default instance of the Big-Endian byte order conversion class.</summary>
         public static EndianOrder BigEndian;
 
-        /// <summary>Little-Endian byte order conversion class.</summary>
+        /// <summary>Default instance of the Little-Endian byte order conversion class.</summary>
         public static EndianOrder LittleEndian;
 
         static EndianOrder()

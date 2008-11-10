@@ -541,91 +541,145 @@ namespace System
 
         #region [ Comparison Operators ]
 
+        /// <summary>
+        /// Compares the two values for equality.
+        /// </summary>
         public static bool operator ==(Int24 value1, Int24 value2)
         {
             return value1.Equals(value2);
         }
 
+        /// <summary>
+        /// Compares the two values for equality.
+        /// </summary>
         public static bool operator ==(int value1, Int24 value2)
         {
             return value1.Equals((int)value2);
         }
 
+        /// <summary>
+        /// Compares the two values for equality.
+        /// </summary>
         public static bool operator ==(Int24 value1, int value2)
         {
             return ((int)value1).Equals(value2);
         }
 
+        /// <summary>
+        /// Compares the two values for inequality.
+        /// </summary>
         public static bool operator !=(Int24 value1, Int24 value2)
         {
             return !value1.Equals(value2);
         }
 
+        /// <summary>
+        /// Compares the two values for inequality.
+        /// </summary>
         public static bool operator !=(int value1, Int24 value2)
         {
             return !value1.Equals((int)value2);
         }
 
+        /// <summary>
+        /// Compares the two values for inequality.
+        /// </summary>
         public static bool operator !=(Int24 value1, int value2)
         {
             return !((int)value1).Equals(value2);
         }
 
+        /// <summary>
+        /// Returns true if left value is less than right value.
+        /// </summary>
         public static bool operator <(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) < 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is less than right value.
+        /// </summary>
         public static bool operator <(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) < 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is less than right value.
+        /// </summary>
         public static bool operator <(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) < 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is less or equal to than right value.
+        /// </summary>
         public static bool operator <=(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) <= 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is less or equal to than right value.
+        /// </summary>
         public static bool operator <=(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) <= 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is less or equal to than right value.
+        /// </summary>
         public static bool operator <=(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) <= 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is greater than right value.
+        /// </summary>
         public static bool operator >(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) > 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is greater than right value.
+        /// </summary>
         public static bool operator >(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) > 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is greater than right value.
+        /// </summary>
         public static bool operator >(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) > 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is greater than or equal to right value.
+        /// </summary>
         public static bool operator >=(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) >= 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is greater than or equal to right value.
+        /// </summary>
         public static bool operator >=(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) >= 0);
         }
 
+        /// <summary>
+        /// Returns true if left value is greater than or equal to right value.
+        /// </summary>
         public static bool operator >=(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) >= 0);
@@ -637,41 +691,74 @@ namespace System
 
         #region [ Explicit Narrowing Conversions ]
 
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(string value)
         {
             return new Int24(Convert.ToInt32(value));
         }
 
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(decimal value)
         {
             return new Int24(Convert.ToInt32(value));
         }
 
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(double value)
         {
             return new Int24(Convert.ToInt32(value));
         }
 
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(float value)
         {
             return new Int24(Convert.ToInt32(value));
         }
 
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(long value)
         {
             return new Int24(Convert.ToInt32(value));
         }
 
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(int value)
         {
             return new Int24(value);
         }
 
+        /// <summary>
+        /// Explicitly converts <see cref="Int24"/> to <see cref="Int16"/>.
+        /// </summary>
         public static explicit operator short(Int24 value)
         {
             return (short)((int)value);
         }
 
+        /// <summary>
+        /// Explicitly converts <see cref="Int24"/> to <see cref="UInt16"/>.
+        /// </summary>
+        [CLSCompliant(false)]
+        public static explicit operator ushort(Int24 value)
+        {
+            return (ushort)((uint)value);
+        }
+
+        /// <summary>
+        /// Explicitly converts <see cref="Int24"/> to <see cref="Byte"/>.
+        /// </summary>
         public static explicit operator byte(Int24 value)
         {
             return (byte)((int)value);
@@ -681,58 +768,91 @@ namespace System
 
         #region [ Implicit Widening Conversions ]
 
+        /// <summary>
+        /// Implicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static implicit operator Int24(byte value)
         {
             return new Int24((int)value);
         }
 
+        /// <summary>
+        /// Implicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static implicit operator Int24(char value)
         {
             return new Int24((int)value);
         }
 
+        /// <summary>
+        /// Implicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static implicit operator Int24(short value)
         {
             return new Int24((int)value);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="Int32"/>.
+        /// </summary>
         public static implicit operator int(Int24 value)
         {
             return ((IConvertible)value).ToInt32(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="UInt32"/>.
+        /// </summary>
         [CLSCompliant(false)]
         public static implicit operator uint(Int24 value)
         {
             return ((IConvertible)value).ToUInt32(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="Int64"/>.
+        /// </summary>
         public static implicit operator long(Int24 value)
         {
             return ((IConvertible)value).ToInt64(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="UInt64"/>.
+        /// </summary>
         [CLSCompliant(false)]
         public static implicit operator ulong(Int24 value)
         {
             return ((IConvertible)value).ToUInt64(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="Double"/>.
+        /// </summary>
         public static implicit operator double(Int24 value)
         {
             return ((IConvertible)value).ToDouble(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="Single"/>.
+        /// </summary>
         public static implicit operator float(Int24 value)
         {
             return ((IConvertible)value).ToSingle(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="Decimal"/>.
+        /// </summary>
         public static implicit operator decimal(Int24 value)
         {
             return ((IConvertible)value).ToDecimal(null);
         }
 
+        /// <summary>
+        /// Implicitly converts <see cref="Int24"/> to <see cref="String"/>.
+        /// </summary>
         public static implicit operator string(Int24 value)
         {
             return value.ToString();
@@ -744,61 +864,97 @@ namespace System
 
         #region [ Boolean and Bitwise Operators ]
 
+        /// <summary>
+        /// Returns true if value is not zero.
+        /// </summary>
         public static bool operator true(Int24 value)
         {
             return (value != 0);
         }
 
+        /// <summary>
+        /// Returns true if value is equal to zero.
+        /// </summary>
         public static bool operator false(Int24 value)
         {
             return (value == 0);
         }
 
+        /// <summary>
+        /// Returns bitwise complement of value.
+        /// </summary>
         public static Int24 operator ~(Int24 value)
         {
             return (Int24)ApplyBitMask(~(int)value);
         }
 
+        /// <summary>
+        /// Returns logical bitwise AND of values.
+        /// </summary>
         public static Int24 operator &(Int24 value1, Int24 value2)
         {
             return (Int24)ApplyBitMask((int)value1 & (int)value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise AND of values.
+        /// </summary>
         public static int operator &(int value1, Int24 value2)
         {
             return (value1 & (int)value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise AND of values.
+        /// </summary>
         public static int operator &(Int24 value1, int value2)
         {
             return ((int)value1 & value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise OR of values.
+        /// </summary>
         public static Int24 operator |(Int24 value1, Int24 value2)
         {
             return (Int24)ApplyBitMask((int)value1 | (int)value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise OR of values.
+        /// </summary>
         public static int operator |(int value1, Int24 value2)
         {
             return (value1 | (int)value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise OR of values.
+        /// </summary>
         public static int operator |(Int24 value1, int value2)
         {
             return ((int)value1 | value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise exclusive-OR of values.
+        /// </summary>
         public static Int24 operator ^(Int24 value1, Int24 value2)
         {
             return (Int24)ApplyBitMask((int)value1 ^ (int)value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise exclusive-OR of values.
+        /// </summary>
         public static int operator ^(int value1, Int24 value2)
         {
             return (value1 ^ (int)value2);
         }
 
+        /// <summary>
+        /// Returns logical bitwise exclusive-OR of values.
+        /// </summary>
         public static int operator ^(Int24 value1, int value2)
         {
             return ((int)value1 ^ value2);
@@ -808,77 +964,123 @@ namespace System
 
         #region [ Arithmetic Operators ]
 
+        /// <summary>
+        /// Returns computed remainder after dividing first value by the second.
+        /// </summary>
         public static Int24 operator %(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 % (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed remainder after dividing first value by the second.
+        /// </summary>
         public static int operator %(int value1, Int24 value2)
         {
             return (value1 % (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed remainder after dividing first value by the second.
+        /// </summary>
         public static int operator %(Int24 value1, int value2)
         {
             return ((int)value1 % value2);
         }
 
+        /// <summary>
+        /// Returns computed sum of values.
+        /// </summary>
         public static Int24 operator +(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 + (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed sum of values.
+        /// </summary>
         public static int operator +(int value1, Int24 value2)
         {
             return (value1 + (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed sum of values.
+        /// </summary>
         public static int operator +(Int24 value1, int value2)
         {
             return ((int)value1 + value2);
         }
 
+        /// <summary>
+        /// Returns computed difference of values.
+        /// </summary>
         public static Int24 operator -(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 - (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed difference of values.
+        /// </summary>
         public static int operator -(int value1, Int24 value2)
         {
             return (value1 - (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed difference of values.
+        /// </summary>
         public static int operator -(Int24 value1, int value2)
         {
             return ((int)value1 - value2);
         }
 
+        /// <summary>
+        /// Returns computed product of values.
+        /// </summary>
         public static Int24 operator *(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 * (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed product of values.
+        /// </summary>
         public static int operator *(int value1, Int24 value2)
         {
             return (value1 * (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed product of values.
+        /// </summary>
         public static int operator *(Int24 value1, int value2)
         {
             return ((int)value1 * value2);
         }
 
         // Integer division operators
+        
+        /// <summary>
+        /// Returns computed division of values.
+        /// </summary>
         public static Int24 operator /(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 / (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed division of values.
+        /// </summary>
         public static int operator /(int value1, Int24 value2)
         {
             return (value1 / (int)value2);
         }
 
+        /// <summary>
+        /// Returns computed division of values.
+        /// </summary>
         public static int operator /(Int24 value1, int value2)
         {
             return ((int)value1 / value2);
@@ -900,11 +1102,17 @@ namespace System
         //    return ((double)value1 / (double)value2);
         //}
 
+        /// <summary>
+        /// Returns value after right shifts of first value by the number of bits specified by second value.
+        /// </summary>
         public static Int24 operator >>(Int24 value, int shifts)
         {
             return (Int24)(ApplyBitMask((int)value >> shifts));
         }
 
+        /// <summary>
+        /// Returns value after left shifts of first value by the number of bits specified by second value.
+        /// </summary>
         public static Int24 operator <<(Int24 value, int shifts)
         {
             return (Int24)(ApplyBitMask((int)value << shifts));
@@ -913,18 +1121,27 @@ namespace System
         // C# doesn't expose an exponent operator but some other .NET languages do,
         // so we expose the operator via its native special IL function name
 
+        /// <summary>
+        /// Returns result of first value raised to power of second value.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(Int24 value1, Int24 value2)
         {
             return System.Math.Pow((double)value1, (double)value2);
         }
 
+        /// <summary>
+        /// Returns result of first value raised to power of second value.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(int value1, Int24 value2)
         {
             return System.Math.Pow((double)value1, (double)value2);
         }
 
+        /// <summary>
+        /// Returns result of first value raised to power of second value.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(Int24 value1, int value2)
         {
