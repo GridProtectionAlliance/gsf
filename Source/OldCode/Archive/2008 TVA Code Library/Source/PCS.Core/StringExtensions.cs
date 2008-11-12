@@ -90,7 +90,7 @@ namespace PCS
         /// <param name="segmentSize">Maximum size of returned segment.</param>
         /// <returns>Array of string segments as parsed from source string.</returns>
         /// <remarks>Returns a single element array with an empty string if source string is null or empty.</remarks>
-        public static string[] GetStringSegments(this string value, int segmentSize)
+        public static string[] GetSegments(this string value, int segmentSize)
         {
             if (string.IsNullOrEmpty(value)) return new string[] { "" };
 
