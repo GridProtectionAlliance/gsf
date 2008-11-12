@@ -237,7 +237,6 @@
     <Compile Include="Parsing\BinaryDataParserBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="EventArgs.cs" />
     <Compile Include="Parsing\IBinaryDataConsumer.cs" />
     <Compile Include="Parsing\IBinaryDataProducer.cs" />
     <Compile Include="IdentifiableItem.cs" />

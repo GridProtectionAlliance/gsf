@@ -52,9 +52,9 @@ namespace PCS.Net.Ftp
         /// Raised when file transfer begins.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument1"/> is local filename,
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument2"/> is remote filename, 
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
+        /// <see cref="System.EventArgs{T1,T2,T3}.Argument1"/> is local filename,
+        /// <see cref="System.EventArgs{T1,T2,T3}.Argument2"/> is remote filename, 
+        /// <see cref="System.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
         /// </remarks>
         public event EventHandler<EventArgs<string, string, TransferDirection>> BeginFileTransfer;
         
@@ -62,9 +62,9 @@ namespace PCS.Net.Ftp
         /// Raised when file transfer completes.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument1"/> is local filename,
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument2"/> is remote filename, 
-        /// <see cref="PCS.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
+        /// <see cref="System.EventArgs{T1,T2,T3}.Argument1"/> is local filename,
+        /// <see cref="System.EventArgs{T1,T2,T3}.Argument2"/> is remote filename, 
+        /// <see cref="System.EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
         /// </remarks>
         public event EventHandler<EventArgs<string, string, TransferDirection>> EndFileTransfer;
         
@@ -72,8 +72,8 @@ namespace PCS.Net.Ftp
         /// Raised as file transfer is progressing.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T1,T2}.Argument1"/> is current file transfer progress,
-        /// <see cref="PCS.EventArgs{T1,T2}.Argument2"/> is file transfer direction.
+        /// <see cref="System.EventArgs{T1,T2}.Argument1"/> is current file transfer progress,
+        /// <see cref="System.EventArgs{T1,T2}.Argument2"/> is file transfer direction.
         /// </remarks>
         public event EventHandler<EventArgs<ProcessProgress<long>, TransferDirection>> FileTransferProgress;
         
@@ -81,7 +81,7 @@ namespace PCS.Net.Ftp
         /// Raised when ansynchronous file transfer process has completed (success or failure).
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is result of asynchronous FTP transfer process.
+        /// <see cref="System.EventArgs{T}.Argument"/> is result of asynchronous FTP transfer process.
         /// </remarks>
         public event EventHandler<EventArgs<FtpAsyncResult>> FileTransferNotification;
         
@@ -89,7 +89,7 @@ namespace PCS.Net.Ftp
         /// Raised when FTP response has been received.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is received FTP response.
+        /// <see cref="System.EventArgs{T}.Argument"/> is received FTP response.
         /// </remarks>
         public event EventHandler<EventArgs<string>> ResponseReceived;
 
@@ -97,7 +97,7 @@ namespace PCS.Net.Ftp
         /// Raised when FTP command has been sent.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is sent FTP command.
+        /// <see cref="System.EventArgs{T}.Argument"/> is sent FTP command.
         /// </remarks>
         public event EventHandler<EventArgs<string>> CommandSent;
 

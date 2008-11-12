@@ -34,7 +34,7 @@ namespace PCS.NumericalAnalysis
         /// Raised when new status messages come from the <see cref="RealTimeSlope"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is status message from the <see cref="RealTimeSlope"/>.
+        /// <see cref="System.EventArgs{T}.Argument"/> is status message from the <see cref="RealTimeSlope"/>.
         /// </remarks>
         public event EventHandler<EventArgs<string>> Status;
 

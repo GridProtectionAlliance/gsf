@@ -40,7 +40,7 @@ namespace PCS.Net.Ftp
         /// Raised when new file is added to monitored FTP directory.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is reference to newly added file.
+        /// <see cref="System.EventArgs{T}.Argument"/> is reference to newly added file.
         /// </remarks>
         public event EventHandler<EventArgs<FtpFile>> FileAdded;
 
@@ -48,7 +48,7 @@ namespace PCS.Net.Ftp
         /// Raised when file is deleted from monitored FTP directory.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is reference to file that was removed.
+        /// <see cref="System.EventArgs{T}.Argument"/> is reference to file that was removed.
         /// </remarks>
         public event EventHandler<EventArgs<FtpFile>> FileDeleted;
 
@@ -56,7 +56,7 @@ namespace PCS.Net.Ftp
         /// Raised when new status messages come from the FTP file watcher.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is status message from FTP file watcher.
+        /// <see cref="System.EventArgs{T}.Argument"/> is status message from FTP file watcher.
         /// </remarks>
         public event EventHandler<EventArgs<string>> Status;
 
@@ -64,7 +64,7 @@ namespace PCS.Net.Ftp
         /// Raised when FTP command has been sent.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is sent FTP command.
+        /// <see cref="System.EventArgs{T}.Argument"/> is sent FTP command.
         /// </remarks>
         public event EventHandler<EventArgs<string>> CommandSent;
 
@@ -72,7 +72,7 @@ namespace PCS.Net.Ftp
         /// Raised when FTP response has been received.
         /// </summary>
         /// <remarks>
-        /// <see cref="PCS.EventArgs{T}.Argument"/> is received FTP response.
+        /// <see cref="System.EventArgs{T}.Argument"/> is received FTP response.
         /// </remarks>
         public event EventHandler<EventArgs<string>> ResponseReceived;
 
