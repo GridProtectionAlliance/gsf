@@ -945,7 +945,7 @@ namespace PCS.Services
             if (GetProcess(processName) != null)
             {
                 // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
-                Schedule existingSchedule = m_scheduler.GetSchedule(processName);
+                Schedule existingSchedule = m_scheduler.FindSchedule(processName);
 
                 if (existingSchedule != null)
                 {
@@ -1074,9 +1074,9 @@ namespace PCS.Services
             m_logStatusUpdates = true;
         }
 
-        private void m_scheduler_ScheduleDue(object sender, ScheduleEventArgs e)
+        private void m_scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            ServiceProcess scheduledProcess = GetProcess(e.Schedule.Name);
+            ServiceProcess scheduledProcess = GetProcess(e.Argument.Name);
 
             // Start the process execution if it exists.
             if (scheduledProcess != null)
@@ -2287,7 +2287,7 @@ namespace PCS.Services
                 bool saveSchedules = requestInfo.Request.Arguments.Exists("save");
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                Schedule scheduleToRemove = m_scheduler.GetSchedule(processName);
+                Schedule scheduleToRemove = m_scheduler.FindSchedule(processName);
 
                 if (scheduleToRemove != null)
                 {
