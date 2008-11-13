@@ -24,7 +24,7 @@ namespace PCS
     {
         /// <summary>Returns a copy of the specified portion of the source buffer.</summary>
         /// <remarks>Grows or shrinks returned buffer, as needed, to make it the desired length.</remarks>
-        public static byte[] CopyBuffer(this byte[] source, int startIndex, int length)
+        public static byte[] BlockCopy(this byte[] source, int startIndex, int length)
         {
             byte[] copiedBytes =  new byte[source.Length - startIndex < length ? source.Length - startIndex : length];
 

@@ -204,7 +204,7 @@ namespace PCS.IO.Compression
 
             // Extract only used part of compressed buffer
             if (destinationLength != uncompressedSize)
-                destination = destination.CopyBuffer(0, destinationLength);
+                destination = destination.BlockCopy(0, destinationLength);
 
 	        // When user requests muli-pass compression, there may be multiple compression passes on a buffer,
 	        // so we cycle through the needed uncompressions to get back to the original data

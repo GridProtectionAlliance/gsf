@@ -221,7 +221,7 @@ namespace PCS.Security.Cryptography
             while (read > 0)
             {
                 // Encrypts buffer.
-                outBuffer = inBuffer.CopyBuffer(0, read).Encrypt(key, IV, strength);
+                outBuffer = inBuffer.BlockCopy(0, read).Encrypt(key, IV, strength);
 
                 // The destination encryption stream length does not have to be same as the input stream length, so we
                 // prepend the final size of each encrypted buffer onto the destination ouput stream so that we can
