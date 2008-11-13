@@ -186,6 +186,7 @@ namespace PCS.IO
         /// </summary>
         /// <param name="filePath">The file path to be tested.</param>
         /// <returns>true if the file path contains a file name; otherwise false.</returns>
+        /// <remarks>Note that this will always return false for file names with no extension.</remarks>
         public static bool FilePathHasFileName(string filePath)
         {
             return Path.GetFileName(RemovePathSuffix(filePath)).Contains(".");
