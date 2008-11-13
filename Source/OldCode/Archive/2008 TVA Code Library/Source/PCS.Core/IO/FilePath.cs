@@ -416,49 +416,57 @@ namespace PCS.IO
         /// <returns>The path with the root removed if it was present.</returns>
         public static string DropPathRoot(string filePath)
         {
-            string result = filePath;
+            // JRC: Changed this to the following more simple algorithm
+            if (string.IsNullOrEmpty(filePath))
+                return "";
+            else
+                return filePath.Remove(0, Path.GetPathRoot(filePath).Length);
 
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                if ((filePath[0] == '\\') || (filePath[0] == '/'))
-                {
-                    // UNC name ?
-                    if ((filePath.Length > 1) && ((filePath[1] == '\\') || (filePath[1] == '/')))
-                    {
-                        int index = 2;
-                        int elements = 2;
+            #region [ Original Code ]
+            //string result = filePath;
 
-                        // Scan for two separate elements \\machine\share\restofpath
-                        while ((index <= filePath.Length) &&
-                            (((filePath[index] != '\\') && (filePath[index] != '/')) || (--elements > 0)))
-                        {
-                            index++;
-                        }
+            //if (!string.IsNullOrEmpty(filePath))
+            //{
+            //    if ((filePath[0] == '\\') || (filePath[0] == '/'))
+            //    {
+            //        // UNC name ?
+            //        if ((filePath.Length > 1) && ((filePath[1] == '\\') || (filePath[1] == '/')))
+            //        {
+            //            int index = 2;
+            //            int elements = 2;
 
-                        index++;
+            //            // Scan for two separate elements \\machine\share\restofpath
+            //            while ((index <= filePath.Length) &&
+            //                (((filePath[index] != '\\') && (filePath[index] != '/')) || (--elements > 0)))
+            //            {
+            //                index++;
+            //            }
 
-                        if (index < filePath.Length)
-                        {
-                            result = filePath.Substring(index);
-                        }
-                        else
-                        {
-                            result = "";
-                        }
-                    }
-                }
-                else if ((filePath.Length > 1) && (filePath[1] == ':'))
-                {
-                    int dropCount = 2;
-                    if ((filePath.Length > 2) && ((filePath[2] == '\\') || (filePath[2] == '/')))
-                    {
-                        dropCount = 3;
-                    }
-                    result = result.Remove(0, dropCount);
-                }
-            }
+            //            index++;
 
-            return result;
+            //            if (index < filePath.Length)
+            //            {
+            //                result = filePath.Substring(index);
+            //            }
+            //            else
+            //            {
+            //                result = "";
+            //            }
+            //        }
+            //    }
+            //    else if ((filePath.Length > 1) && (filePath[1] == ':'))
+            //    {
+            //        int dropCount = 2;
+            //        if ((filePath.Length > 2) && ((filePath[2] == '\\') || (filePath[2] == '/')))
+            //        {
+            //            dropCount = 3;
+            //        }
+            //        result = result.Remove(0, dropCount);
+            //    }
+            //}
+
+            //return result;
+            #endregion
         }
 
         /// <summary>
