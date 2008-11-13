@@ -115,7 +115,7 @@ namespace PCS.PhasorProtocols
                 {
                     byte[] buffer = new byte[ConversionFactorLength];
 
-                    buffer[0] = TVA.Common.IIf<byte>(Type == PhasorType.Voltage, 0, 1);
+                    buffer[0] = (byte)(Type == PhasorType.Voltage ? 0 : 1);
 
                     EndianOrder.BigEndian.CopyBuffer(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3);
 

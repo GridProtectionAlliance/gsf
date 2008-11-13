@@ -24,13 +24,8 @@ namespace PCS.PhasorProtocols
 {
     /// <summary>Common constants and functions for phasor classes</summary>
     [CLSCompliant(false)]
-    public sealed class Common
+    public static class Common
     {
-        private Common()
-        {
-            // This class contains only global functions and is not meant to be instantiated
-        }
-
         /// <summary>Typical data stream synchrnonization byte</summary>
         public const byte SyncByte = 0xAA;
 

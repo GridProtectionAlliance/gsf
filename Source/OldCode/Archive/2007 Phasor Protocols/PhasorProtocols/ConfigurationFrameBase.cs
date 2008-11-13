@@ -111,7 +111,7 @@ namespace PCS.PhasorProtocols
             set
             {
                 m_frameRate = value;
-                m_ticksPerFrame = decimal.Divide(TVA.DateTime.Common.get_SecondsToTicks(1), m_frameRate);
+                m_ticksPerFrame = (decimal)Seconds.ToTicks(1) / (decimal)m_frameRate;
             }
         }
 
