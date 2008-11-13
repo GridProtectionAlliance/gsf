@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System;
-////using TVA.Common;
+////using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-////using TVA.Interop.Bit;
+////using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -29,7 +29,7 @@ using System.Text;
 //*******************************************************************************************************
 
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace IeeeC37_118
     {
@@ -171,7 +171,7 @@ namespace PhasorProtocols
                 {
                     Dictionary<string, string> baseAttributes = base.Attributes;
 
-                    baseAttributes.Add("Analog Type", (int)Type + ": " + Enum.GetName(typeof(AnalogType), Type));
+                    baseAttributes.Add("Analog Type", (int)Type + ": " + Type);
 
                     return baseAttributes;
                 }

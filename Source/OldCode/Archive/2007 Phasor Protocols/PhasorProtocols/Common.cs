@@ -17,11 +17,10 @@
 
 using System;
 using System.Collections.Generic;
-using TVA;
-using TVA.Interop;
-using TVA.Measurements;
+using PCS;
+using PCS.Measurements;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>Common constants and functions for phasor classes</summary>
     [CLSCompliant(false)]
@@ -60,7 +59,7 @@ namespace PhasorProtocols
         /// <remarks>Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization</remarks>
         public static string GetValidLabel(string value)
         {
-            return TVA.Text.Common.RemoveDuplicateWhiteSpace(TVA.Text.Common.ReplaceControlCharacters(value, ' ')).Trim();
+            return value.ReplaceControlCharacters().RemoveDuplicateWhiteSpace().Trim();
         }
 
         /// <summary>Returns display friendly protocol name</summary>

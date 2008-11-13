@@ -20,11 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using TVA;
-using TVA.Interop;
-using TVA.Math;
+using PCS;
+using PCS.NumericalAnalysis;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent representation of a phasor value.</summary>
     [CLSCompliant(false), Serializable()]
@@ -473,7 +472,7 @@ namespace PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Phasor Type", (int)Type + ": " + Enum.GetName(typeof(PhasorType), Type));
+                baseAttributes.Add("Phasor Type", (int)Type + ": " + Type);
                 baseAttributes.Add("Angle Value", Angle + "°");
                 baseAttributes.Add("Magnitude Value", Magnitude.ToString());
                 baseAttributes.Add("Real Value", Real.ToString());

@@ -18,10 +18,10 @@
 using System;
 using System.Runtime.Serialization;
 using System.Diagnostics.CodeAnalysis;
-using TVA;
-using TVA.Interop;
+using PCS;
+using PCS.Interop;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>Phasor coordinate formats</summary>
     [Serializable()]

@@ -17,10 +17,10 @@
 
 using System;
 using System.Collections.Generic;
-using TVA;
-using TVA.Parsing;
+using PCS;
+using PCS.Parsing;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>
     [CLSCompliant(false), Serializable()]
@@ -49,7 +49,7 @@ namespace PhasorProtocols
             }
         }
 
-        int IBinaryDataProvider.BinaryLength
+        int IBinaryDataProducer.BinaryLength
         {
             get
             {

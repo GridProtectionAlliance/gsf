@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -31,7 +31,7 @@ using System.Text;
 //*******************************************************************************************************
 
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace Ieee1344
     {
@@ -375,7 +375,7 @@ namespace PhasorProtocols
                     baseAttributes.Add("Status Flags", StatusFlags.ToString());
                     baseAttributes.Add("Synchronization Is Valid", SynchronizationIsValid.ToString());
                     baseAttributes.Add("Data Is Valid", DataIsValid.ToString());
-                    baseAttributes.Add("Trigger Status", (int)TriggerStatus + ": " + Enum.GetName(typeof(TriggerStatus), TriggerStatus));
+                    baseAttributes.Add("Trigger Status", (int)TriggerStatus + ": " + TriggerStatus);
 
                     return baseAttributes;
                 }

@@ -1,18 +1,18 @@
 using System.Diagnostics;
 using System;
-////using TVA.Common;
+////using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-////using TVA.Interop.Bit;
+////using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 //using System.Buffer;
 using System.Text;
 //using PhasorProtocols.Common;
-//using TVA.Text.Common;
+//using PCS.Text.Common;
 
 //*******************************************************************************************************
 //  ConfigurationCellBase.vb - Configuration cell base class
@@ -32,7 +32,7 @@ using System.Text;
 //*******************************************************************************************************
 
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent common implementation of a set of configuration related data settings that can be sent or received from a PMU.</summary>
     [CLSCompliant(false), Serializable()]
@@ -476,10 +476,10 @@ namespace PhasorProtocols
 
                 baseAttributes.Add("Station Name", StationName);
                 baseAttributes.Add("ID Label", IDLabel);
-                baseAttributes.Add("Phasor Coordinate Format", (int)PhasorCoordinateFormat + ": " + Enum.GetName(typeof(CoordinateFormat), PhasorCoordinateFormat));
-                baseAttributes.Add("Phasor Data Format", (int)PhasorDataFormat + ": " + Enum.GetName(typeof(DataFormat), PhasorDataFormat));
-                baseAttributes.Add("Frequency Data Format", (int)FrequencyDataFormat + ": " + Enum.GetName(typeof(DataFormat), FrequencyDataFormat));
-                baseAttributes.Add("Analog Data Format", (int)AnalogDataFormat + ": " + Enum.GetName(typeof(DataFormat), AnalogDataFormat));
+                baseAttributes.Add("Phasor Coordinate Format", (int)PhasorCoordinateFormat + ": " + PhasorCoordinateFormat);
+                baseAttributes.Add("Phasor Data Format", (int)PhasorDataFormat + ": " + PhasorDataFormat);
+                baseAttributes.Add("Frequency Data Format", (int)FrequencyDataFormat + ": " + FrequencyDataFormat);
+                baseAttributes.Add("Analog Data Format", (int)AnalogDataFormat + ": " + AnalogDataFormat);
                 baseAttributes.Add("Total Phasor Definitions", PhasorDefinitions.Count.ToString());
                 baseAttributes.Add("Total Analog Definitions", AnalogDefinitions.Count.ToString());
                 baseAttributes.Add("Total Digital Definitions", DigitalDefinitions.Count.ToString());

@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
 
 //*******************************************************************************************************
@@ -26,7 +26,7 @@ using System.Linq;
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This interface represents a protocol independent parsing state used by any kind of data.</summary>
     /// <remarks>Data parsing is very format specific, classes implementing this interface create a common form for parsing state information particular to a data type.</remarks>

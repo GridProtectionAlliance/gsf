@@ -19,13 +19,12 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using TVA;
-using TVA.Interop;
-using TVA.DateTime;
-using TVA.Parsing;
-using TVA.Measurements;
+using PCS;
+using PCS.Parsing;
+using PCS.Measurements;
+using PCS.IO.Checksums;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace Ieee1344
     {
@@ -134,7 +133,7 @@ namespace PhasorProtocols
                 private bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
                 {
                     int sumLength = length - 2;
-                    return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == TVA.IO.Compression.Common.CRC16(ushort.MaxValue, buffer, startIndex, sumLength);
+                    return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == buffer.Crc16Checksum(startIndex, sumLength);
                 }
 
                 public bool IsFirstFrame
@@ -311,7 +310,7 @@ namespace PhasorProtocols
                     }
                 }
 
-                int IBinaryDataProvider.BinaryLength
+                int IBinaryDataProducer.BinaryLength
                 {
                     get
                     {
@@ -376,12 +375,12 @@ namespace PhasorProtocols
                     }
                 }
 
-                public bool Equals(TVA.Measurements.IFrame other)
+                public bool Equals(IFrame other)
                 {
                     return (CompareTo(other) == 0);
                 }
 
-                public int CompareTo(TVA.Measurements.IFrame other)
+                public int CompareTo(IFrame other)
                 {
                     return m_ticks.CompareTo(other.Ticks);
                 }
@@ -394,11 +393,6 @@ namespace PhasorProtocols
                         return CompareTo(other);
                     }
                     throw (new ArgumentException("Frame can only be compared with other IFrames..."));
-                }
-
-                IFrame IFrame.Clone()
-                {
-                    return this;
                 }
 
                 public IDictionary<MeasurementKey, IMeasurement> Measurements
@@ -445,13 +439,13 @@ namespace PhasorProtocols
                         m_attributes.Add("Derived Type", DerivedType.Name);
                         m_attributes.Add("Binary Length", BinaryLength.ToString());
                         m_attributes.Add("Total Cells", "0");
-                        m_attributes.Add("Fundamental Frame Type", (int)FundamentalFrameType + ": " + Enum.GetName(typeof(FundamentalFrameType), FundamentalFrameType));
+                        m_attributes.Add("Fundamental Frame Type", (int)FundamentalFrameType + ": " + FundamentalFrameType);
                         m_attributes.Add("ID Code", IDCode.ToString());
                         m_attributes.Add("Is Partial Frame", IsPartial.ToString());
                         m_attributes.Add("Published", Published.ToString());
                         m_attributes.Add("Ticks", Ticks.ToString());
                         m_attributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                        m_attributes.Add("Frame Type", (int)FrameType + ": " + Enum.GetName(typeof(FrameType), FrameType));
+                        m_attributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
                         m_attributes.Add("Frame Length", FrameLength.ToString());
                         m_attributes.Add("64-Bit ID Code", IDCode.ToString());
                         m_attributes.Add("Sample Count", InternalSampleCount.ToString());

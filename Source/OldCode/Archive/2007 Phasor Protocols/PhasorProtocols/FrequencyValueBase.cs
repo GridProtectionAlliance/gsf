@@ -18,10 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using TVA;
-using TVA.Interop;
+using PCS;
+using PCS.Interop;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent a frequency and dfdt value.</summary>
     [CLSCompliant(false), Serializable()]

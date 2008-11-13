@@ -23,7 +23,7 @@ using System.Runtime.Serialization;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace BpaPdcStream
     {

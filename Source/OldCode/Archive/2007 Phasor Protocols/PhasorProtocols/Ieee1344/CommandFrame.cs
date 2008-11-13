@@ -1,17 +1,3 @@
-using System.Diagnostics;
-using System;
-//using TVA.Common;
-using System.Collections;
-using TVA.Interop;
-using Microsoft.VisualBasic;
-using TVA;
-using System.Collections.Generic;
-//using TVA.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.ComponentModel;
-using TVA.DateTime;
-//using TVA.IO.Compression.Common;
 
 //*******************************************************************************************************
 //  CommandFrame.vb - IEEE1344 Command Frame
@@ -30,8 +16,13 @@ using TVA.DateTime;
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.ComponentModel;
+using PCS.IO.Checksums;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace Ieee1344
     {
@@ -135,10 +126,8 @@ namespace PhasorProtocols
 
             protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
             {
-
                 // IEEE 1344 uses CRC16 to calculate checksum for frames
-                return TVA.IO.Compression.Common.CRC16(ushort.MaxValue, buffer, offset, length);
-
+                return buffer.Crc16Checksum(offset, length);
             }
 
             protected override ushort HeaderLength

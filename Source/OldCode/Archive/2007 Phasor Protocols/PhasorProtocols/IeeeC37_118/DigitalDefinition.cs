@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.ComponentModel;
@@ -31,7 +31,7 @@ using System.Text;
 //*******************************************************************************************************
 
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace IeeeC37_118
     {
@@ -169,18 +169,14 @@ namespace PhasorProtocols
             public string Labels(int index)
             {
                 if (index < 0 || index >= LabelCount)
-                {
-                    throw (new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + Enum.GetName(typeof(DraftRevision), DraftRevision) + " of the IEEE C37.118 protocol"));
-                }
+                    throw (new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + DraftRevision + " of the IEEE C37.118 protocol"));
 
                 return PhasorProtocols.Common.GetValidLabel(Label.PadRight(MaximumLabelLength).Substring(index * 16, base.MaximumLabelLength));
             }
             public void SetLabels(int index, string value)
             {
                 if (index < 0 || index >= LabelCount)
-                {
-                    throw (new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + Enum.GetName(typeof(DraftRevision), DraftRevision) + " of the IEEE C37.118 protocol"));
-                }
+                    throw (new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + DraftRevision + " of the IEEE C37.118 protocol"));
 
                 if (value.Trim().Length > base.MaximumLabelLength)
                 {

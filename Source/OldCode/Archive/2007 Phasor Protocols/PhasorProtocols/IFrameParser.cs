@@ -18,7 +18,7 @@
 using System;
 using PCS;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     public delegate void ReceivedCommandFrameEventHandler(ICommandFrame frame);
     public delegate void ReceivedConfigurationFrameEventHandler(IConfigurationFrame frame);
@@ -28,8 +28,6 @@ namespace PhasorProtocols
     public delegate void ReceivedUndeterminedFrameEventHandler(IChannelFrame frame);
     public delegate void ConfigurationChangedEventHandler();
     public delegate void DataStreamExceptionEventHandler(Exception ex);
-
-    // TODO: Implement the following: ISupportLifecycle, IStatusProvider
 
     /// <summary>This interface represents the protocol independent representation of a frame parser.</summary>
     public interface IFrameParser : IDisposable
@@ -71,11 +69,6 @@ namespace PhasorProtocols
         }
 
         void Write(byte[] buffer, int offset, int count);
-
-        string Status
-        {
-            get;
-        }
 
         IConnectionParameters ConnectionParameters
         {

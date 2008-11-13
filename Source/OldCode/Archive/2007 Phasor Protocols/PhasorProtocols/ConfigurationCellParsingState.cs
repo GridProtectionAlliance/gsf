@@ -17,7 +17,7 @@
 
 using System;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent common implementation of a parsing state for a set of configuration related data settings that can be sent or received from a PMU.</summary>
     [CLSCompliant(false)]

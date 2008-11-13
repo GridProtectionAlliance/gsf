@@ -1,15 +1,15 @@
 using System.Diagnostics;
 using System;
-////using TVA.Common;
+////using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-////using TVA.Interop.Bit;
+////using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
-using TVA.Measurements;
+using PCS.Measurements;
 
 //*******************************************************************************************************
 //  ChannelValueBase.vb - Channel data value base class
@@ -28,7 +28,7 @@ using TVA.Measurements;
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the common implementation of the protocol independent representation of any kind of data value.</summary>
     [CLSCompliant(false), Serializable()]
@@ -164,7 +164,7 @@ namespace PhasorProtocols
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Label", Label);
-                baseAttributes.Add("Data Format", (int)DataFormat + ": " + Enum.GetName(typeof(DataFormat), DataFormat));
+                baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
                 baseAttributes.Add("Is Empty", IsEmpty.ToString());
                 baseAttributes.Add("Total Composite Values", CompositeValueCount.ToString());
 

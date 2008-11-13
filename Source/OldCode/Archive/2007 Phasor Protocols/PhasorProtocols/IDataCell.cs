@@ -1,14 +1,14 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
-using TVA.Measurements;
+using PCS.Measurements;
 
 //*******************************************************************************************************
 //  IDataCell.vb - Data cell interface
@@ -27,7 +27,7 @@ using TVA.Measurements;
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This interface represents the protocol independent representation of a set of phasor related data values.</summary>
     [CLSCompliant(false)]

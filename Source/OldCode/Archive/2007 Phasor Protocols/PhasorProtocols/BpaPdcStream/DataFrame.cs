@@ -19,11 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
-using TVA;
-using TVA.Interop;
-using TVA.DateTime;
+using PCS;
+using PCS.IO.Checksums;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace BpaPdcStream
     {
@@ -168,7 +167,7 @@ namespace PhasorProtocols
             {
                 get
                 {
-                    return new NtpTimeTag(TVA.DateTime.Common.get_TicksToSeconds(Ticks));
+                    return new NtpTimeTag(PCS.Ticks.ToSeconds(Ticks));
                 }
             }
 
@@ -184,12 +183,12 @@ namespace PhasorProtocols
             protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
             {
                 // PDCstream uses simple XOR checksum
-                return TVA.Math.Common.Xor16BitCheckSum(buffer, offset, length);
+                return buffer.Xor16CheckSum(offset, length);
             }
 
-            // Oddly enough, check sum for frames in BPA PDC stream is little-endian
             protected override void AppendChecksum(byte[] buffer, int startIndex)
             {
+                // Oddly enough, check sum for frames in BPA PDC stream is little-endian
                 EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
             }
 

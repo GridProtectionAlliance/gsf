@@ -16,9 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using TVA.DateTime;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace Ieee1344
     {

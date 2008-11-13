@@ -18,10 +18,10 @@
 using System;
 using System.IO;
 using System.Text;
-using TVA;
-using TVA.Interop;
+using PCS;
+using PCS.Interop;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace FNet
     {

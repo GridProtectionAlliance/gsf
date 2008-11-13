@@ -19,10 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using TVA;
-using TVA.Parsing;
+using PCS;
+using PCS.Parsing;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data.</summary>
     /// <remarks>By having our collections implement IChannel (inherited via IChannelCollection), we have the benefit of providing a binary image of the entire collection</remarks>
@@ -110,7 +110,7 @@ namespace PhasorProtocols
             }
         }
 
-        int IBinaryDataProvider.BinaryLength
+        int IBinaryDataProducer.BinaryLength
         {
             get
             {

@@ -1,15 +1,15 @@
 using System.Diagnostics;
 using System;
-////using TVA.Common;
+////using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-////using TVA.Interop.Bit;
+////using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
-using TVA.Measurements;
+using PCS.Measurements;
 
 //*******************************************************************************************************
 //  IChannelValue.vb - Channel data value interface
@@ -29,7 +29,7 @@ using TVA.Measurements;
 //*******************************************************************************************************
 
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This interface represents a protocol independent representation of any kind of data value.</summary>
     [CLSCompliant(false)]

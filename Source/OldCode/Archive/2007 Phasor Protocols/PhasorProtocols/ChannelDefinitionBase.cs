@@ -1,17 +1,17 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 //using PhasorProtocols.Common;
-//using TVA.Text.Common;
+//using PCS.Text.Common;
 
 //*******************************************************************************************************
 //  ChannelDefinitionBase.vb - Channel data definition base class
@@ -30,7 +30,7 @@ using System.Text;
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>
     [CLSCompliant(false), Serializable()]
@@ -299,7 +299,7 @@ namespace PhasorProtocols
                 baseAttributes.Add("Label", Label);
                 baseAttributes.Add("Index", Index.ToString());
                 baseAttributes.Add("Offset", Offset.ToString());
-                baseAttributes.Add("Data Format", (int)DataFormat + ": " + Enum.GetName(typeof(DataFormat), DataFormat));
+                baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
                 baseAttributes.Add("Scaling Factor", ScalingFactor.ToString());
                 baseAttributes.Add("Scale per Bit", ScalePerBit.ToString());
                 baseAttributes.Add("Maximum Scaling Factor", MaximumScalingFactor.ToString());

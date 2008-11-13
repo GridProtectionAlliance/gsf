@@ -19,9 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Diagnostics.CodeAnalysis;
-using TVA;
+using PCS;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the common implementation of the protocol independent representation of a collection of any kind of data value.</summary>
     [CLSCompliant(false), Serializable(), SuppressMessage("Microsoft.Usage", "CA2240")]

@@ -18,12 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using TVA;
-using TVA.Interop;
-using TVA.DateTime;
-using TVA.Measurements;
+using PCS;
+using PCS.Interop;
+using PCS.Measurements;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent common implementation of any frame of data that can be sent or received from a PMU.</summary>
     [CLSCompliant(false), Serializable()]
@@ -145,13 +144,6 @@ namespace PhasorProtocols
             {
                 m_ticks = value;
             }
-        }
-
-        IFrame IFrame.Clone()
-        {
-            // We don't need to make a "clone" of the measurements in this frame since phasor concentration
-            // handles measurement assignment in a special way - so we just return ourself for publication
-            return this;
         }
 
         public IMeasurement LastSortedMeasurement
@@ -352,7 +344,7 @@ namespace PhasorProtocols
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Total Cells", Cells.Count.ToString());
-                baseAttributes.Add("Fundamental Frame Type", (int)FundamentalFrameType + ": " + Enum.GetName(typeof(FundamentalFrameType), FundamentalFrameType));
+                baseAttributes.Add("Fundamental Frame Type", (int)FundamentalFrameType + ": " + FundamentalFrameType);
                 baseAttributes.Add("ID Code", IDCode.ToString());
                 baseAttributes.Add("Is Partial Frame", IsPartial.ToString());
                 baseAttributes.Add("Published", Published.ToString());

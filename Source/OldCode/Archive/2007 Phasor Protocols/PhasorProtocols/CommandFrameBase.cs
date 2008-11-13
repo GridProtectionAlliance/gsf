@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -29,7 +29,7 @@ using System.Text;
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.</summary>
     [CLSCompliant(false), Serializable()]
@@ -166,7 +166,7 @@ namespace PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Device Command", (int)Command + ": " + Enum.GetName(typeof(DeviceCommand), Command));
+                baseAttributes.Add("Device Command", (int)Command + ": " + Command);
 
                 if (Cells.Count > 0)
                 {

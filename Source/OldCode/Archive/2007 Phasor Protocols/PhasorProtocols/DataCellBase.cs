@@ -18,11 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using TVA;
-using TVA.Interop;
-using TVA.Measurements;
+using PCS;
+using PCS.Interop;
+using PCS.Measurements;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.</summary>
     [CLSCompliant(false), Serializable()]

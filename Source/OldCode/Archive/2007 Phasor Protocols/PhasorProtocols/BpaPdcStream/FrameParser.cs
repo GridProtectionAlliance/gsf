@@ -20,8 +20,9 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System.ComponentModel;
+using PCS.IO;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace BpaPdcStream
     {
@@ -179,10 +180,10 @@ namespace PhasorProtocols
                     if (m_configurationFrame != null)
                     {
                         status.Append("       BPA PDC stream type: ");
-                        status.Append(Enum.GetName(typeof(StreamType), m_configurationFrame.StreamType));
+                        status.Append(m_configurationFrame.StreamType);
                         status.AppendLine();
                         status.Append("   BPA PDC revision number: ");
-                        status.Append(Enum.GetName(typeof(RevisionNumber), m_configurationFrame.RevisionNumber));
+                        status.Append(m_configurationFrame.RevisionNumber);
                         status.AppendLine();
                     }
                     status.Append(base.Status);
@@ -320,31 +321,24 @@ namespace PhasorProtocols
                 ConfigurationFrame derivedFrame = configurationFrame as ConfigurationFrame;
 
                 if (derivedFrame == null)
-                {
                     return new ConfigurationFrame(configurationFrame);
-                }
                 else
-                {
                     return derivedFrame;
-                }
             }
 
             private void m_configurationFileWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
             {
-
                 // File watcher sends several notifications for file change - we only want to report one,
                 // so we ignore repeated file change notifications that occur within 1/2 a second
-                if (m_lastUpdateNotification == 0 || TVA.DateTime.Common.get_TicksToSeconds(DateTime.Now.Ticks - m_lastUpdateNotification) > 0.5)
+                if (m_lastUpdateNotification == 0 || Ticks.ToSeconds(DateTime.Now.Ticks - m_lastUpdateNotification) > 0.5)
                 {
                     if (m_configurationFrame != null)
-                    {
                         m_configurationFrame.Refresh();
-                    }
+
                     RaiseConfigurationChangeDetected();
                 }
 
                 m_lastUpdateNotification = DateTime.Now.Ticks;
-
             }
 
             private void ResetFileWatcher()
@@ -360,9 +354,10 @@ namespace PhasorProtocols
                 {
                     try
                     {
+                        
                         // Create a new file watcher for configuration file - we'll automatically refresh configuration file
                         // when this file gets updated...
-                        m_configurationFileWatcher = new FileSystemWatcher(TVA.IO.FilePath.JustPath(m_configurationFileName), TVA.IO.FilePath.JustFileName(m_configurationFileName));
+                        m_configurationFileWatcher = new FileSystemWatcher(Path.GetFullPath(m_configurationFileName), FilePath.GetFileName(m_configurationFileName));
                         m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
                         m_configurationFileWatcher.EnableRaisingEvents = true;
                         m_configurationFileWatcher.IncludeSubdirectories = false;

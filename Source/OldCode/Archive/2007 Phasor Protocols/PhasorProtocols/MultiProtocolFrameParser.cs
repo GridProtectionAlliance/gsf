@@ -45,15 +45,11 @@ using System.Text;
 using System.Net;
 using System.Threading;
 using System.ComponentModel;
-
-// TODO: Converge to PCS once code is migrated...
-using TVA;
-using TVA.Collections;
-using TVA.Communication;
-using PhasorProtocols;
 using PCS;
+using PCS.Collections;
+using PCS.Communication;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>Protocol independent frame parser</summary>
     [CLSCompliant(false)]
@@ -99,9 +95,9 @@ namespace PhasorProtocols
         private ushort m_deviceID;
         private int m_bufferSize;
         private IFrameParser m_frameParser;
-        private ICommunicationClient m_communicationClient;
-        private ICommunicationServer m_communicationServer;
-        private ICommunicationClient m_commandChannel;  // Command communication channel added to support SEL's UDP_T and UDP_U
+        private IClient m_communicationClient;
+        private IServer m_communicationServer;
+        private IClient m_commandChannel; // Command communication channel added to support SEL's UDP_T and UDP_U
         private System.Timers.Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
         private long m_dataStreamStartTime;
@@ -462,7 +458,7 @@ namespace PhasorProtocols
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public ICommunicationClient InternalCommunicationClient
+        public IClient InternalCommunicationClient
         {
             get
             {
@@ -471,7 +467,7 @@ namespace PhasorProtocols
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public ICommunicationServer InternalCommunicationServer
+        public IServer InternalCommunicationServer
         {
             get
             {
@@ -480,7 +476,7 @@ namespace PhasorProtocols
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public ICommunicationClient InternalCommandChannel
+        public IClient InternalCommandChannel
         {
             get
             {
@@ -663,10 +659,6 @@ namespace PhasorProtocols
             m_frameRate = 0.0D;
             m_byteRate = 0.0D;
 
-            // TODO: Remove this code after all code is using new PCS library - old ParseKeyValuePair function
-            // in TVA communications library won't be too happy with nested connection strings:
-            string originalConnectionString = m_connectionString;
-
             try
             {
                 // Instantiate protocol specific frame parser
@@ -761,7 +753,7 @@ namespace PhasorProtocols
                         throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File", "ConnectionString");
 
                     // Instantiate command channel based on defined transport layer
-                    m_commandChannel = TVA.Communication.Common.CreateCommunicationClient(connectionString);
+                    m_commandChannel = ClientBase.Create(connectionString);
 
                     // Setup event handlers
                     m_commandChannel.Connected += m_commandChannel_Connected;
@@ -776,16 +768,6 @@ namespace PhasorProtocols
                     m_commandChannel.Handshake = false;
                     m_commandChannel.Connect();
                     m_clientConnectionAttempts = 0;
-
-                    // TODO: Remove this code after all code is using new PCS library - old ParseKeyValuePair function
-                    // in TVA communications library won't be too happy with nested connection strings:
-                    settings.Remove("commandchannel");
-                    m_connectionString = "";
-
-                    foreach (KeyValuePair<string,string> setting in settings)
-                    {
-                        m_connectionString += (m_connectionString.Length > 0 ? "; " : "") + setting.Key + "=" + setting.Value;
-                    }
                 }
 
                 // Handle primary data connection, this *must* be defined...
@@ -835,12 +817,6 @@ namespace PhasorProtocols
             {
                 Stop();
                 throw;
-            }
-            finally
-            {
-                // TODO: Remove this code after all code is using new PCS library - old ParseKeyValuePair function
-                // in TVA communications library won't be too happy with nested connection strings:
-                m_connectionString = originalConnectionString;
             }
         }
 
@@ -1075,12 +1051,12 @@ namespace PhasorProtocols
 
         #region [ Communications Client Event Handlers ]
 
-        private void m_communicationClient_Connected(System.Object sender, System.EventArgs e)
+        private void m_communicationClient_Connected(object sender, EventArgs e)
         {
             ClientConnected();
         }
 
-        private void m_communicationClient_Connecting(object sender, System.EventArgs e)
+        private void m_communicationClient_Connecting(object sender, EventArgs e)
         {
             m_clientConnectionAttempts++;
 
@@ -1088,13 +1064,13 @@ namespace PhasorProtocols
                 AttemptingConnection();
         }
 
-        private void m_communicationClient_ConnectingException(object sender, GenericEventArgs<System.Exception> e)
+        private void m_communicationClient_ConnectingException(object sender, EventArgs<Exception> e)
         {
             if (ConnectionException != null)
                 ConnectionException(e.Argument, m_clientConnectionAttempts);
         }
 
-        private void m_communicationClient_Disconnected(object sender, System.EventArgs e)
+        private void m_communicationClient_Disconnected(object sender, EventArgs e)
         {
             if (Disconnected != null)
                 Disconnected();
@@ -1113,30 +1089,30 @@ namespace PhasorProtocols
 
         #region [ Communications Server Event Handlers ]
 
-        private void m_communicationServer_ClientConnected(object sender, GenericEventArgs<System.Guid> e)
+        private void m_communicationServer_ClientConnected(object sender, EventArgs<Guid> e)
         {
             ClientConnected();
         }
 
-        private void m_communicationServer_ClientDisconnected(object sender, GenericEventArgs<System.Guid> e)
+        private void m_communicationServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
             if (Disconnected != null)
                 Disconnected();
         }
 
-        private void m_communicationServer_ServerStarted(object sender, System.EventArgs e)
+        private void m_communicationServer_ServerStarted(object sender, EventArgs e)
         {
             if (ServerStarted != null)
                 ServerStarted();
         }
 
-        private void m_communicationServer_ServerStopped(object sender, System.EventArgs e)
+        private void m_communicationServer_ServerStopped(object sender, EventArgs e)
         {
             if (ServerStopped != null)
                 ServerStopped();
         }
 
-        private void m_communicationServer_ServerStartupException(object sender, GenericEventArgs<System.Exception> e)
+        private void m_communicationServer_ServerStartupException(object sender, EventArgs<Exception> e)
         {
             if (ConnectionException != null)
                 ConnectionException(e.Argument, 1);
@@ -1146,12 +1122,12 @@ namespace PhasorProtocols
 
         #region [ Command Channel Event Handlers ]
 
-        private void m_commandChannel_Connected(System.Object sender, System.EventArgs e)
+        private void m_commandChannel_Connected(object sender, EventArgs e)
         {
             ClientConnected();
         }
 
-        private void m_commandChannel_Connecting(object sender, System.EventArgs e)
+        private void m_commandChannel_Connecting(object sender, EventArgs e)
         {
             m_clientConnectionAttempts++;
 
@@ -1159,13 +1135,13 @@ namespace PhasorProtocols
                 AttemptingConnection();
         }
 
-        private void m_commandChannel_ConnectingException(object sender, GenericEventArgs<System.Exception> e)
+        private void m_commandChannel_ConnectingException(object sender, EventArgs<Exception> e)
         {
             if (ConnectionException != null)
                 ConnectionException(e.Argument, m_clientConnectionAttempts);
         }
 
-        private void m_commandChannel_Disconnected(object sender, System.EventArgs e)
+        private void m_commandChannel_Disconnected(object sender, EventArgs e)
         {
             if (Disconnected != null)
                 Disconnected();
@@ -1339,7 +1315,7 @@ namespace PhasorProtocols
             }
         }
 
-        private void m_frameParser_DataStreamException(System.Exception ex)
+        private void m_frameParser_DataStreamException(Exception ex)
         {
             if (DataStreamException != null)
                 DataStreamException(ex);

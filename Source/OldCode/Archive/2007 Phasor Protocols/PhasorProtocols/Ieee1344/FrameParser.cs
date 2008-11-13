@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace Ieee1344
     {

@@ -20,7 +20,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace IeeeC37_118
     {
@@ -157,7 +157,7 @@ namespace PhasorProtocols
                 {
                     StringBuilder status = new StringBuilder();
                     status.Append("IEEEC37.118 draft revision: ");
-                    status.Append(Enum.GetName(typeof(DraftRevision), m_draftRevision));
+                    status.Append(m_draftRevision);
                     status.AppendLine();
                     status.Append("         Current time base: ");
                     status.Append(TimeBase);

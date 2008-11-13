@@ -19,7 +19,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the common implementation of the protocol independent connection parameters base class.</summary>
     /// <remarks>

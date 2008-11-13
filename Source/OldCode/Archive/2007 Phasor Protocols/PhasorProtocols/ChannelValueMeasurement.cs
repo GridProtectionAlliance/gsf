@@ -17,10 +17,10 @@
 
 using System;
 using System.Collections.Generic;
-using TVA;
-using TVA.Measurements;
+using PCS;
+using PCS.Measurements;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class represents the protocol independent representation of any kind of data value as an abstract measurement.</summary>
     internal class ChannelValueMeasurement<T> : IMeasurement where T : IChannelDefinition

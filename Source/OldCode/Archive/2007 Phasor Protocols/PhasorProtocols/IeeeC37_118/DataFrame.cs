@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System;
-//using TVA.Common;
+//using PCS.Common;
 using System.Collections;
-using TVA.Interop;
+using PCS.Interop;
 using Microsoft.VisualBasic;
-using TVA;
+using PCS;
 using System.Collections.Generic;
-//using TVA.Interop.Bit;
+//using PCS.Interop.Bit;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -28,7 +28,7 @@ using System.Runtime.Serialization;
 //*******************************************************************************************************
 
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace IeeeC37_118
     {
@@ -261,13 +261,13 @@ namespace PhasorProtocols
                 {
                     Dictionary<string, string> baseAttributes = base.Attributes;
 
-                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + Enum.GetName(typeof(FrameType), FrameType));
+                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
                     baseAttributes.Add("Frame Length", FrameLength.ToString());
                     baseAttributes.Add("Version", Version.ToString());
                     baseAttributes.Add("Second of Century", SecondOfCentury.ToString());
                     baseAttributes.Add("Fraction of Second", FractionOfSecond.ToString());
-                    baseAttributes.Add("Time Quality Flags", (int)TimeQualityFlags + ": " + Enum.GetName(typeof(TimeQualityFlags), TimeQualityFlags));
-                    baseAttributes.Add("Time Quality Indicator Code", (int)TimeQualityIndicatorCode + ": " + Enum.GetName(typeof(TimeQualityIndicatorCode), TimeQualityIndicatorCode));
+                    baseAttributes.Add("Time Quality Flags", (int)TimeQualityFlags + ": " + TimeQualityFlags);
+                    baseAttributes.Add("Time Quality Indicator Code", (int)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
                     baseAttributes.Add("Time Base", TimeBase.ToString());
 
                     return baseAttributes;

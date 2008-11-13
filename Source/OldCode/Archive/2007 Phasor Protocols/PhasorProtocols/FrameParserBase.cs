@@ -19,10 +19,10 @@ using System;
 using System.IO;
 using System.Text;
 using System.ComponentModel;
-using TVA;
-using TVA.Collections;
+using PCS;
+using PCS.Collections;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     /// <summary>This class defines the basic functionality for a protocol to parse a binary data stream and return the parsed data via events</summary>
     /// <remarks>Frame parsers are implemented as a write-only stream - this way data can come from any source</remarks>
@@ -174,7 +174,7 @@ namespace PhasorProtocols
                 if (m_executeParseOnSeparateThread)
                 {
                     // Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
-                    m_bufferQueue.Add(TVA.IO.Common.CopyBuffer(buffer, offset, count));
+                    m_bufferQueue.Add(buffer.BlockCopy(offset, count));
                 }
                 else
                 {
@@ -192,7 +192,7 @@ namespace PhasorProtocols
                     // Initialize data stream starting at located sync byte
                     if (m_executeParseOnSeparateThread)
                     {
-                        m_bufferQueue.Add(TVA.IO.Common.CopyBuffer(buffer, syncBytePosition, count - syncBytePosition));
+                        m_bufferQueue.Add(buffer.BlockCopy(syncBytePosition, count - syncBytePosition));
                     }
                     else
                     {

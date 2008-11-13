@@ -22,10 +22,12 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Principal;
 using System.Threading;
-using TVA;
-using TVA.Interop;
+using PCS;
+using PCS.Interop;
+using PCS.Reflection;
+using PCS.IO.Checksums;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace BpaPdcStream
     {
@@ -496,8 +498,8 @@ namespace PhasorProtocols
                     {
                         System.Text.StringBuilder fileImage = new StringBuilder();
                         fileImage.Append("; File - " + m_iniFile.FileName + Environment.NewLine);
-                        fileImage.Append("; Auto-generated on " + DateTime.Now + " by TVA DatAWare PDC" + Environment.NewLine);
-                        fileImage.Append(";    Assembly: " + TVA.Assembly.GetShortAssemblyName(System.Reflection.Assembly.GetExecutingAssembly()) + Environment.NewLine);
+                        fileImage.Append("; Auto-generated on " + DateTime.Now + Environment.NewLine);
+                        fileImage.Append(";    Assembly: " + AssemblyInfo.ExecutingAssembly.Name + Environment.NewLine);
                         fileImage.Append(";    Compiled: " + File.GetLastWriteTime(System.Reflection.Assembly.GetExecutingAssembly().Location) + Environment.NewLine);
                         fileImage.Append(";" + Environment.NewLine);
                         fileImage.Append(";" + Environment.NewLine);
@@ -606,23 +608,18 @@ namespace PhasorProtocols
             [CLSCompliant(false)]
             protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
             {
-
-                // PDCstream uses an XOR based check sum
-                return TVA.Math.Common.Xor16BitCheckSum(buffer, offset, length);
-
+                // PDCstream uses a 16-bit XOR based check sum
+                return buffer.Xor16CheckSum(offset, length);
             }
 
-            // Oddly enough, check sum for frames in BPA PDC stream is little-endian
             protected override void AppendChecksum(byte[] buffer, int startIndex)
             {
-
+                // Oddly enough, check sum for frames in BPA PDC stream is little-endian
                 EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
-
             }
 
             protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
             {
-
                 int sumLength = (int)(BinaryLength - 2);
                 return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
 
@@ -702,8 +699,8 @@ namespace PhasorProtocols
                         baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
                     }
                     baseAttributes.Add("Packet Number", Common.DescriptorPacketFlag.ToString());
-                    baseAttributes.Add("Stream Type", (int)m_streamType + ": " + Enum.GetName(typeof(StreamType), m_streamType));
-                    baseAttributes.Add("Revision Number", (int)m_revisionNumber + ": " + Enum.GetName(typeof(RevisionNumber), m_revisionNumber));
+                    baseAttributes.Add("Stream Type", (int)m_streamType + ": " + m_streamType);
+                    baseAttributes.Add("Revision Number", (int)m_revisionNumber + ": " + m_revisionNumber);
                     baseAttributes.Add("Packets Per Sample", m_packetsPerSample.ToString());
 
                     return baseAttributes;

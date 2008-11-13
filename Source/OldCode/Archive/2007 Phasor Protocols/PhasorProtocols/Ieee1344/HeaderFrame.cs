@@ -18,9 +18,9 @@
 using System;
 using System.Runtime.Serialization;
 using System.Collections.Generic;
-using TVA.DateTime;
+using PCS.IO.Checksums;
 
-namespace PhasorProtocols
+namespace PCS.PhasorProtocols
 {
     namespace Ieee1344
     {
@@ -154,10 +154,8 @@ namespace PhasorProtocols
 
             protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
             {
-
                 // IEEE 1344 uses CRC16 to calculate checksum for frames
-                return TVA.IO.Compression.Common.CRC16(ushort.MaxValue, buffer, offset, length);
-
+                return buffer.Crc16Checksum(offset, length);
             }
 
             protected override ushort HeaderLength
@@ -194,7 +192,7 @@ namespace PhasorProtocols
                 {
                     Dictionary<string, string> baseAttributes = base.Attributes;
 
-                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + Enum.GetName(typeof(FrameType), FrameType));
+                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
                     baseAttributes.Add("Frame Length", FrameLength.ToString());
                     baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
                     baseAttributes.Add("Sample Count", m_sampleCount.ToString());
