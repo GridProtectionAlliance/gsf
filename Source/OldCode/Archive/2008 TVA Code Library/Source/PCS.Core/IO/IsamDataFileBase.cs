@@ -37,7 +37,7 @@ namespace PCS.IO
     /// </summary>
     /// <typeparam name="T">
     /// <see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the 
-    /// <see cref="IBinaryDataProducer"/> and <see cref="IBinaryDataConsumer{TTypeIdentifier}"/> interfaces.
+    /// <see cref="IBinaryImageProvider"/> and <see cref="IBinaryImageConsumer{TTypeIdentifier}"/> interfaces.
     /// </typeparam>
     /// <remarks>
     /// See <a href="http://en.wikipedia.org/wiki/ISAM" target="_blank">http://en.wikipedia.org/wiki/ISAM</a> for more information on ISAM files .
@@ -203,7 +203,7 @@ namespace PCS.IO
     /// }
     /// </code>
     /// </example>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryDataProducer, IBinaryDataConsumer<long>
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryImageProvider, IBinaryImageConsumer<long>
     {
         #region [ Members ]
 
