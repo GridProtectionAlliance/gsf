@@ -38,7 +38,7 @@ namespace PCS.Parsing
         int Initialize(byte[] binaryImage, int startIndex);
 
         /// <summary>
-        /// Gets or sets current parsing state of <see cref="IBinaryDataConsumer{TTypeIdentifier}"/>.
+        /// Gets or sets current parsing state of <see cref="IBinaryImageConsumer{TTypeIdentifier}"/>.
         /// </summary>
         /// <remarks>
         /// If used, this will need to be set before call to <see cref="Initialize(byte[],int)"/>.
@@ -53,7 +53,7 @@ namespace PCS.Parsing
         /// <see cref="TypeID"/> must be unique across all siblings implementing a common <see cref="Type"/>.
         /// </para>
         /// <para>
-        /// Output types implement this class so they have a consistent identification propery.
+        /// Output types implement this class so they have a consistently addressable identification property.
         /// </para>
         /// </remarks>
         TTypeIdentifier TypeID { get; }
