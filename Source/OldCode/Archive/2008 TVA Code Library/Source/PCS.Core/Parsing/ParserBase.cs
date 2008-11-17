@@ -39,7 +39,7 @@ namespace PCS.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier for the output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the output.</typeparam>
-    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where TOutputType : IBinaryDataConsumer<TTypeIdentifier>
+    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
     {
         #region [ Members ]
 

@@ -23,7 +23,7 @@ using System.Text;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// Defines the current parsing state for image.
+    /// Defines the current parsing state for an image.
     /// </summary>
     /// <remarks>
     /// Parsing state implementations will extend this class as necessary to accomodate custom parsing states.
