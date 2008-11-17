@@ -84,7 +84,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
-    <Compile Include="Parsing\IIdentifiableType.cs" />
     <Compile Include="IO\IsamDataFileBase.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -182,6 +181,8 @@
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
+    <Compile Include="Parsing\IParsingState.cs" />
+    <Compile Include="Parsing\ParsingStateBase.cs" />
     <Compile Include="ProcessProgressHandler.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="Seconds.cs" />

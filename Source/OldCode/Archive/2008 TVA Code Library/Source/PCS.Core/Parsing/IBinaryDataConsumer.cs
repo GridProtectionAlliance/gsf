@@ -19,12 +19,15 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace PCS.Parsing
 {
     /// <summary>
     /// Specifies that this <see cref="System.Type"/> can initialize objects from a binary image.
     /// </summary>
-    public interface IBinaryDataConsumer
+    /// <typeparam name="TTypeIdentifier">Type of the identifier.</typeparam>
+    public interface IBinaryDataConsumer<TTypeIdentifier>
     {
         /// <summary>
         /// Initializes object from the specified binary image.
@@ -33,5 +36,26 @@ namespace PCS.Parsing
         /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
         /// <returns>The number of bytes used for initialization.</returns>
         int Initialize(byte[] binaryImage, int startIndex);
+
+        /// <summary>
+        /// Gets or sets current parsing state of <see cref="IBinaryDataConsumer{TTypeIdentifier}"/>.
+        /// </summary>
+        /// <remarks>
+        /// If used, this will need to be set before call to <see cref="Initialize(byte[],int)"/>.
+        /// </remarks>
+        IParsingState<TTypeIdentifier> ParsingState { get; set; }
+
+        /// <summary>
+        /// Gets the identifier that can be used for identifying the <see cref="Type"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="TypeID"/> must be unique across all siblings implementing a common <see cref="Type"/>.
+        /// </para>
+        /// <para>
+        /// Output types implement this class so they have a consistent identification propery.
+        /// </para>
+        /// </remarks>
+        TTypeIdentifier TypeID { get; }
     }
 }

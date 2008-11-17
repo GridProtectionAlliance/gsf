@@ -39,7 +39,7 @@ namespace PCS.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier for the output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the output.</typeparam>
-    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportLifecycle, ISupportInitialize , IPersistSettings where TOutputType : IBinaryDataConsumer, IIdentifiableType<TTypeIdentifier>
+    public abstract class BinaryDataParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where TOutputType : IBinaryDataConsumer<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -96,7 +96,6 @@ namespace PCS.Parsing
         private delegate TOutputType DefaultConstructor();
 
         // Events
-
 
         /// <summary>
         /// Occurs when data image cannot be deserialized to the <see cref="Type"/> that the data image was for 
@@ -246,11 +245,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data parser object is currently enabled.
         /// </summary>
-        /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
-        /// </remarks>
         [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
@@ -269,20 +264,31 @@ namespace PCS.Parsing
         #region [ Methods ]
 
         /// <summary>
-        /// Starts the data parser.
+        /// Start the data parser.
         /// </summary>
+        /// <remarks>
+        /// This overload loads public types from assemblies in the application binaries directory that implement the parser's output type.
+        /// </remarks>
         public void Start()
+        {
+            Start(typeof(TOutputType).LoadImplementations());
+        }
+
+        /// <summary>
+        /// Starts the data parser given the specified type implementations.
+        /// </summary>
+        /// <param name="implementations">Output type implementations to establish for the parser.</param>
+        public void Start(ICollection<Type> implementations)
         {
             Initialize();   // Initialize if uninitialized.
 
             ConstructorInfo typeCtor = null;
-            string dllDirectory = FilePath.GetAbsolutePath("");
             AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("InMemory"), AssemblyBuilderAccess.Run);
             ModuleBuilder modBuilder = asmBuilder.DefineDynamicModule("Helper");
             TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
             List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
 
-            foreach (Type asmType in typeof(TOutputType).LoadImplementations())
+            foreach (Type asmType in implementations)
             {
                 typeCtor = asmType.GetConstructor(Type.EmptyTypes);
                 if (typeCtor != null)
@@ -334,7 +340,7 @@ namespace PCS.Parsing
                 Type bakedType = typeBuilder.CreateType(); // This can be done only once!!!
                 foreach (TypeInfo outputType in outputTypes)
                 {
-                    outputType.CreateNew = (DefaultConstructor)(System.Delegate.CreateDelegate(typeof(DefaultConstructor), bakedType.GetMethod(outputType.RuntimeType.Name)));
+                    outputType.CreateNew = (DefaultConstructor)(Delegate.CreateDelegate(typeof(DefaultConstructor), bakedType.GetMethod(outputType.RuntimeType.Name)));
                 }
             }
 
@@ -346,9 +352,7 @@ namespace PCS.Parsing
                 TOutputType instance = outputType.CreateNew();
                 outputType.TypeID = instance.TypeID;
                 if (!m_outputTypes.ContainsKey(outputType.TypeID))
-                {
                     m_outputTypes.Add(outputType.TypeID, outputType);
-                }
             }
 
             m_unparsedDataQueue.Start();
@@ -454,9 +458,7 @@ namespace PCS.Parsing
         public void EndInit()
         {
             if (!DesignMode)
-            {
                 Initialize();
-            }
         }
 
         /// <summary>
@@ -521,18 +523,18 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// When overridden in a derived class, gets ID of the <see cref="Type"/> the data image is for.
+        /// Derived classes needs to return parsing state, which includes ID of the <see cref="Type"/> the data image is for.
         /// </summary>
         /// <param name="binaryImage">The data image whose target type is to be determined.</param>
         /// <param name="startIndex">The index in the data image from where the data is valid.</param>
-        /// <returns>ID of the <see cref="Type"/> the data image is for.</returns>
-        protected abstract TTypeIdentifier ExtractTypeID(byte[] binaryImage, int startIndex);
+        /// <returns>The <see cref="IParsingState{TTypeIdentifier}"/> which includes a type ID for <see cref="Type"/> the data image is for.</returns>
+        protected abstract IParsingState<TTypeIdentifier> GetParsingState(byte[] binaryImage, int startIndex);
 
         private void ParseData(DataContainer[] item)
         {
             int cursor;
             TOutputType instance;
-            TTypeIdentifier typeID;
+            IParsingState<TTypeIdentifier> parsingState;
             TypeInfo outputType;
 
             for (int i = 0; i <= item.Length - 1; i++)
@@ -550,14 +552,16 @@ namespace PCS.Parsing
                     cursor = 0;
                     while (cursor < item[i].Data.Length)
                     {
-                        typeID = ExtractTypeID(item[i].Data, cursor); // <- Necessary overhead :(
+                        // Get parsing state of image, this will always include the type ID
+                        parsingState = GetParsingState(item[i].Data, cursor);
 
-                        if (m_outputTypes.TryGetValue(typeID, out outputType))
+                        if (m_outputTypes.TryGetValue(parsingState.TypeID, out outputType))
                         {
                             // We have type that can be instantiated and initialized with the data from this image.
                             try
                             {
                                 instance = outputType.CreateNew();
+                                instance.ParsingState = parsingState;
                                 cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
                                 output.Add(instance);
                                 m_assemblyAttemptTracker[item[i].Source] = 0;       // <- Necessary overhead :(
@@ -630,7 +634,7 @@ namespace PCS.Parsing
                                     cursor = item[i].Data.Length; // Move on to the next data image.
 
                                     m_assemblyAttemptTracker[item[i].Source] = 0;
-                                    OnDataDiscarded(new EventArgs<TTypeIdentifier>(typeID));
+                                    OnDataDiscarded(new EventArgs<TTypeIdentifier>(parsingState.TypeID));
                                 }
                             }
                         }
@@ -639,9 +643,8 @@ namespace PCS.Parsing
                             // If we come accross data in the image we cannot convert to a type than, we are going
                             // to have to discard the remainder of the image because we will now know where the
                             // the next valid block of data is within the image.
-
                             cursor = item[i].Data.Length; // Move on to the next data image.
-                            OnOutputTypeNotFound(new EventArgs<TTypeIdentifier>(typeID));
+                            OnOutputTypeNotFound(new EventArgs<TTypeIdentifier>(parsingState.TypeID));
                         }
                     }
 
