@@ -27,7 +27,7 @@ namespace PCS.Parsing
     /// Specifies that this <see cref="System.Type"/> can initialize objects from a binary image.
     /// </summary>
     /// <typeparam name="TTypeIdentifier">Type of the identifier.</typeparam>
-    public interface IBinaryDataConsumer<TTypeIdentifier>
+    public interface IBinaryImageConsumer<TTypeIdentifier>
     {
         /// <summary>
         /// Initializes object from the specified binary image.

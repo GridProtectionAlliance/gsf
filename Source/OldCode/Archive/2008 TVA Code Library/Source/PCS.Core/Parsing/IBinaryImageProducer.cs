@@ -24,7 +24,7 @@ namespace PCS.Parsing
     /// <summary>
     /// Specifies that this <see cref="System.Type"/> can provide a binary image of the object.
     /// </summary>
-    public interface IBinaryDataProducer
+    public interface IBinaryImageProducer
     {
         /// <summary>
         /// Gets the binary image of the object.
