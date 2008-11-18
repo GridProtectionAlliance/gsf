@@ -36,7 +36,7 @@ using Microsoft.VisualBasic;
 namespace PCS.Security.Cryptography
 {
     #region [ Enumerations ]
-    
+
     /// <summary>Enumerates cryptographic strength.</summary>
     /// <remarks>
     /// <para>
@@ -101,9 +101,21 @@ namespace PCS.Security.Cryptography
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        public static byte[] Encrypt(this byte[] source, byte[] key, CipherStrength strength)
+        {
+            return source.Encrypt(0, source.Length, key, key, strength);
+        }
+
+        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
         public static byte[] Encrypt(this byte[] source, byte[] key, byte[] IV, CipherStrength strength)
         {
             return source.Encrypt(0, source.Length, key, IV, strength);
+        }
+
+        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        public static byte[] Encrypt(this byte[] source, int startIndex, int length, byte[] key, CipherStrength strength)
+        {
+            return source.Encrypt(startIndex, length, key, key, strength);
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
@@ -328,9 +340,21 @@ namespace PCS.Security.Cryptography
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        public static byte[] Decrypt(this byte[] source, byte[] key, CipherStrength strength)
+        {
+            return source.Decrypt(0, source.Length, key, key, strength);
+        }
+
+        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
         public static byte[] Decrypt(this byte[] source, byte[] key, byte[] IV, CipherStrength strength)
         {
             return source.Decrypt(0, source.Length, key, IV, strength);
+        }
+
+        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        public static byte[] Decrypt(this byte[] source, int startIndex, int length, byte[] key, CipherStrength strength)
+        {
+            return source.Decrypt(startIndex, length, key, key, strength);
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
@@ -849,80 +873,80 @@ namespace PCS.Security.Cryptography
 
         /// <summary>Generates a random key useful for cryptographic functions.</summary>
         public static string GenerateKey()
-		{
-			char[] keyChars;
-			char keyChar;
-			int x, y;
-			
-			// Generates a character array of unique values.
-			StringBuilder result = new StringBuilder();
+        {
+            char[] keyChars;
+            char keyChar;
+            int x, y;
 
-			result.Append(StandardKey);
-			result.Append(Guid.NewGuid().ToString().ToLower().Replace("-", "©ª¦"));
-			result.Append(DateTime.UtcNow.Ticks);
+            // Generates a character array of unique values.
+            StringBuilder result = new StringBuilder();
 
-			for (x = 1; x <= 50; x++)
-			{
-				result.Append(Convert.ToChar(Random.Int32Between(33, 255)));
-			}
+            result.Append(StandardKey);
+            result.Append(Guid.NewGuid().ToString().ToLower().Replace("-", "©ª¦"));
+            result.Append(DateTime.UtcNow.Ticks);
 
-			result.Append(Environment.MachineName);
-			result.Append(GetKeyFromSeed((Int24)DateAndTime.Timer));
-			result.Append(Environment.UserDomainName);
-			result.Append(Environment.UserName);
-			result.Append(Common.SystemTimer);
-			result.Append(DateTime.Now.ToString().Replace("/", "¡¤¥").Replace(" ", "°"));
-			result.Append(Guid.NewGuid().ToString().ToUpper().Replace("-", "£§"));
+            for (x = 1; x <= 50; x++)
+            {
+                result.Append(Convert.ToChar(Random.Int32Between(33, 255)));
+            }
 
-			keyChars = result.ToString().ToCharArray();
-			
-			// Swaps values around in array at random.
-			for (x = 0; x <= keyChars.Length - 1; x++)
-			{
-				y = Random.Int32Between(1, keyChars.Length) - 1;
-				if (x != y)
-				{
-					keyChar = keyChars[x];
-					keyChars[x] = keyChars[y];
-					keyChars[y] = keyChar;
-				}
-			}
-			
-			return new string(keyChars);
-		}
+            result.Append(Environment.MachineName);
+            result.Append(GetKeyFromSeed((Int24)DateAndTime.Timer));
+            result.Append(Environment.UserDomainName);
+            result.Append(Environment.UserName);
+            result.Append(Common.SystemTimer);
+            result.Append(DateTime.Now.ToString().Replace("/", "¡¤¥").Replace(" ", "°"));
+            result.Append(Guid.NewGuid().ToString().ToUpper().Replace("-", "£§"));
+
+            keyChars = result.ToString().ToCharArray();
+
+            // Swaps values around in array at random.
+            for (x = 0; x <= keyChars.Length - 1; x++)
+            {
+                y = Random.Int32Between(1, keyChars.Length) - 1;
+                if (x != y)
+                {
+                    keyChar = keyChars[x];
+                    keyChars[x] = keyChars[y];
+                    keyChars[y] = keyChar;
+                }
+            }
+
+            return new string(keyChars);
+        }
 
         /// <summary>Returns a simple encoded string representing a number which can later be decoded
         /// with <see cref="GetSeedFromKey" />.</summary>
         /// <remarks>This function was designed for 24-bit values.</remarks>
         public static string GetKeyFromSeed(Int24 seed)
-		{
+        {
             if (seed < 0)
                 throw new ArgumentException("Cannot calculate key from negative seed");
 
             // This is a handy algorithm for encoding an integer value, use GetSeedFromKey to decode.
-			int seedValue = (int)seed;
-			byte[] seedBytes = new byte[4];
-			int alphaIndex;
-			int asciiA = Strings.Asc('A');
-			
-			// Breaks seed into its component bytes.
-			seedBytes[0] = Bit.LoByte(Bit.LoWord(seedValue));
-			seedBytes[1] = Bit.HiByte(Bit.LoWord(seedValue));
-			seedBytes[2] = Bit.LoByte(Bit.HiWord(seedValue));
-			
-			// Creates alpha-numeric key string.
-			StringBuilder result = new StringBuilder();
+            int seedValue = (int)seed;
+            byte[] seedBytes = new byte[4];
+            int alphaIndex;
+            int asciiA = Strings.Asc('A');
 
-			for (int x = 0; x <= 2; x++)
-			{
-				alphaIndex = Random.Int32Between(0, 25);
-				if (x > 0) result.Append('-');
-				result.Append(Convert.ToChar(asciiA + (25 - alphaIndex)));
-				result.Append(seedBytes[x] + alphaIndex);
-			}
-			
-			return result.ToString();
-		}
+            // Breaks seed into its component bytes.
+            seedBytes[0] = Bit.LoByte(Bit.LoWord(seedValue));
+            seedBytes[1] = Bit.HiByte(Bit.LoWord(seedValue));
+            seedBytes[2] = Bit.LoByte(Bit.HiWord(seedValue));
+
+            // Creates alpha-numeric key string.
+            StringBuilder result = new StringBuilder();
+
+            for (int x = 0; x <= 2; x++)
+            {
+                alphaIndex = Random.Int32Between(0, 25);
+                if (x > 0) result.Append('-');
+                result.Append(Convert.ToChar(asciiA + (25 - alphaIndex)));
+                result.Append(seedBytes[x] + alphaIndex);
+            }
+
+            return result.ToString();
+        }
 
         /// <summary>Returns the number from a string encoded with <see cref="GetKeyFromSeed" />.</summary>
         public static Int24 GetSeedFromKey(string key)
@@ -964,7 +988,7 @@ namespace PCS.Security.Cryptography
                         }
 
                         // Calculates byte.
-                        value = (int)Conversion.Val(code.Substring(code.Length - code.Length - 1, code.Length - 1)) - 
+                        value = (int)Conversion.Val(code.Substring(code.Length - code.Length - 1, code.Length - 1)) -
                             (25 - (Strings.Asc(code.Substring(0, 1)) - Strings.Asc("A")));
 
                         // Validates calculation.
