@@ -23,7 +23,7 @@ namespace PCS.Parsing
     /// <summary>
     /// This interface represents the protocol independent representation of a frame parser.
     /// </summary>
-    public interface IFrameParser : ISupportLifecycle, IStatusProvider
+    public interface IBinaryImageParser : ISupportLifecycle, IStatusProvider
     {
         //event EventHandler<EventArgs<IBinaryImageConsumer>> ReceivedImage;
         //event EventHandler<EventArgs<IBinaryImageConsumer>> ReceivedUndeterminedImage;
@@ -34,7 +34,7 @@ namespace PCS.Parsing
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered while parsing data.
         /// </remarks>
-        public event EventHandler<EventArgs<Exception>> ParsingException;
+        event EventHandler<EventArgs<Exception>> ParsingException;
 
         /// <summary>
         /// Start the data parser.
@@ -71,7 +71,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Writes a sequence of bytes onto the <see cref="IFrameParser"/> stream for parsing.
+        /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.
         /// </summary>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>

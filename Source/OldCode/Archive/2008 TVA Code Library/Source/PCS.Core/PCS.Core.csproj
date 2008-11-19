@@ -181,6 +181,8 @@
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
+    <Compile Include="Parsing\BinaryImageParserBase.cs" />
+    <Compile Include="Parsing\IBinaryImageParser.cs" />
     <Compile Include="Parsing\IParsingState.cs" />
     <Compile Include="Parsing\ParsingStateBase.cs" />
     <Compile Include="ProcessProgressHandler.cs" />

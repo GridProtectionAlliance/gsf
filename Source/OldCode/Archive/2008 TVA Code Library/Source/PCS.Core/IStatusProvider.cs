@@ -23,10 +23,14 @@ namespace PCS
     /// </summary>
     public interface IStatusProvider
     {
-        /// <summary>Name of the adapter</summary>
+        /// <summary>
+        /// Gets the name of the object providing status information.
+        /// </summary>
         string Name { get; }
 
-        /// <summary>Provides current status information about the adapter</summary>
+        /// <summary>
+        /// Gets the current status details about object providing status information.
+        /// </summary>
         string Status { get; }
     }
  }

@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  FrameParserBase.cs
+//  BinaryImageParserBase.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -30,8 +30,11 @@ namespace PCS.Parsing
     /// <remarks>
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </remarks>
-    [Description("Defines the basic functionality for parsing a binary data stream and return the parsed data via events."), DefaultEvent("ParsingException"), DefaultProperty("ExecuteParseOnSeparateThread")]
-    public abstract class FrameParserBase : Stream, IComponent, IFrameParser
+    [Description("Defines the basic functionality for parsing a binary data stream and return the parsed data via events."),
+    DesignerCategory("Component"), 
+    DefaultEvent("ParsingException"), 
+    DefaultProperty("ExecuteParseOnSeparateThread")]
+    public abstract class BinaryImageParserBase : Stream, IComponent, IBinaryImageParser
     {
         #region [ Members ]
 
@@ -47,12 +50,27 @@ namespace PCS.Parsing
         /// <summary>
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
-        public const string DefaultSettingsCategory = "BinaryDataParser";
+        public const string DefaultSettingsCategory = "BinaryImageParser";
         
         /// <summary>
         /// Default data stream protocol synchrnonization byte.
         /// </summary>
         public const byte DefaultProtocolSyncByte = 0xAA;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="DefaultExecuteParseOnSeparateThread"/> property.
+        /// </summary>
+        public const bool DefaultExecuteParseOnSeparateThread = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="OptimizeTypeConstruction"/> property.
+        /// </summary>
+        public const bool DefaultOptimizeTypeConstruction = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ParseRetryLimit"/> property.
+        /// </summary>
+        public const int DefaultParseRetryLimit = 0;
 
         // Delegates
 
@@ -76,10 +94,13 @@ namespace PCS.Parsing
         private ProcessQueue<byte[]> m_bufferQueue;
         private bool m_executeParseOnSeparateThread;
         private MemoryStream m_dataStream;
+        private bool m_dataStreamInitialized;
         private byte m_protocolSyncByte;
-        private ISite m_componentSite;
         private string m_settingsCategory;
         private bool m_persistSettings;
+        private bool m_optimizeTypeConstruction;
+        private int m_parseRetryLimit;
+        private ISite m_componentSite;
         private bool m_initialized;
         private bool m_enabled;
         private bool m_disposed;
@@ -89,12 +110,17 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="FrameParserBase"/> class.
+        /// Creates a new instance of the <see cref="BinaryImageParserBase"/> class.
         /// </summary>
-        protected FrameParserBase()
+        protected BinaryImageParserBase()
 	    {
             m_protocolSyncByte = DefaultProtocolSyncByte;
-	    }
+            m_executeParseOnSeparateThread = DefaultExecuteParseOnSeparateThread;
+            m_optimizeTypeConstruction = DefaultOptimizeTypeConstruction;
+            m_parseRetryLimit = DefaultParseRetryLimit;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
+        }
 
         #endregion
 
@@ -141,6 +167,33 @@ namespace PCS.Parsing
         }
 
         /// <summary>
+        /// Gets flag that determines if this protocol parsing implementation uses a synchronization byte.
+        /// </summary>
+        [Browsable(false)]
+        public abstract bool ProtocolUsesSyncByte
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets or sets synchronization byte for this parsing implementation, is used.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultProtocolSyncByte),
+        Description("Specifies the synchronization byte for this parsing implementation, if used.")]
+        public virtual byte ProtocolSyncByte
+        {
+            get
+            {
+                return m_protocolSyncByte;
+            }
+            set
+            {
+                m_protocolSyncByte = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets flag that detemines if the internal buffer queue is enabled.
         /// </summary>
         /// <remarks>
@@ -150,6 +203,9 @@ namespace PCS.Parsing
         /// immediately on the thread that invoked the <see cref="Write"/> method.
         /// </para>
         /// </remarks>
+        [Category("Settings"),
+        DefaultValue(DefaultExecuteParseOnSeparateThread),
+        Description("Indicates if an internal buffer queue is used while parsing data.")]
         public virtual bool ExecuteParseOnSeparateThread
         {
             get
@@ -188,6 +244,92 @@ namespace PCS.Parsing
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that indicates if data types get constructed in an optimized fashion.
+        /// </summary>
+        /// <remarks>
+        /// This property defaults to true, it only needs to be changed if there are issues with type creation.
+        /// </remarks>
+        [Category("Settings"),
+        DefaultValue(DefaultOptimizeTypeConstruction),
+        Description("Indicates whether the data types are constructed in an optimal mode.")]
+        public bool OptimizeTypeConstruction
+        {
+            get
+            {
+                return m_optimizeTypeConstruction;
+            }
+            set
+            {
+                m_optimizeTypeConstruction = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of attempts to be made for parsing possible partial data images before giving up.
+        /// </summary>
+        /// <remarks>
+        /// This places a retry limit on the number of times a buffer will be attempted to be parsed if exceptions
+        /// are thrown. This defaults to zero as typically protocols will be able to derive length based on known
+        /// specifications and only attempt parse if enough data is available.
+        /// </remarks>
+        [Category("Settings"),
+        DefaultValue(DefaultParseRetryLimit),
+        Description("Number of attempts to be made for parsing possible partial data images before giving up.")]
+        public int ParseRetryLimit
+        {
+            get
+            {
+                return m_parseRetryLimit;
+            }
+            set
+            {
+                m_parseRetryLimit = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the settings of data parser object are 
+        /// to be saved to the config file.
+        /// </summary>
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of data parser object are to be saved to the config file.")]
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the category under which the settings of data parser object are to be saved
+        /// to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of data parser object are to be saved to the config file if the PersistSettings property is set to true.")]
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of buffers that are currently queued for processing, if any.
         /// </summary>
         [Browsable(false)]
@@ -207,35 +349,10 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets flag that determines if this parsing implementation uses a synchronization byte.
-        /// </summary>
-        [Browsable(false)]
-        public abstract bool ProtocolUsesSyncByte
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets or sets synchronization byte for this parsing implementation, is used.
-        /// </summary>
-        [Browsable(false)]
-        public virtual byte ProtocolSyncByte
-        {
-            get
-            {
-                return m_protocolSyncByte;
-            }
-            set
-            {
-                m_protocolSyncByte = value;
-            }
-        }
-
-        /// <summary>
         /// Gets a value indicating whether the current stream supports reading.
         /// </summary>
         /// <remarks>
-        /// The <see cref="FrameParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanRead
@@ -250,7 +367,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         /// <remarks>
-        /// The <see cref="FrameParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanSeek
@@ -265,7 +382,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         /// <remarks>
-        /// The <see cref="FrameParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
+        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
         /// </remarks>
         [Browsable(false)]
         public override bool CanWrite
@@ -275,9 +392,22 @@ namespace PCS.Parsing
                 return true;
             }
         }
+        
+        /// <summary>
+        /// Gets the unique display name of the <see cref="BinaryImageParserBase"/> object.
+        /// </summary>
+        [Browsable(false)]
+        public string Name
+        {
+            get
+            {
+                // We just return the settings category name for unique identification of this component
+                return m_settingsCategory;
+            }
+        }
 
         /// <summary>
-        /// Gets current status of <see cref="FrameParserBase"/>.
+        /// Gets current status of <see cref="BinaryImageParserBase"/>.
         /// </summary>
         [Browsable(false)]
         public virtual string Status
@@ -287,6 +417,12 @@ namespace PCS.Parsing
                 StringBuilder status = new StringBuilder();
                 status.Append("      Current parser state: ");
                 status.Append(m_enabled ? "Active" : "Idle");
+                status.AppendLine();
+                status.Append("    Data parse retry limit: ");
+                status.Append(m_parseRetryLimit);
+                status.AppendLine();
+                status.Append("   Optimized type creation: ");
+                status.Append(m_optimizeTypeConstruction);
                 status.AppendLine();
                 if (ProtocolUsesSyncByte)
                 {
@@ -311,12 +447,23 @@ namespace PCS.Parsing
             }
         }
 
+        /// <summary>
+        /// Gets design mode of component site, if component has a site; or false, if the component does not have a site.
+        /// </summary>
+        protected bool DesignMode
+        {
+            get
+            {
+                return m_componentSite != null && m_componentSite.DesignMode;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
 				
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FrameParserBase"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="BinaryImageParserBase"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -357,7 +504,8 @@ namespace PCS.Parsing
         /// </summary>
         public virtual void Start()
         {
-            m_initialized = !ProtocolUsesSyncByte;
+            // Initialized state depends whether or not derived class uses a protocol synchrnonization byte
+            m_dataStreamInitialized = !ProtocolUsesSyncByte;
             
             if (m_executeParseOnSeparateThread)
                 m_bufferQueue.Start();
@@ -388,7 +536,7 @@ namespace PCS.Parsing
         {
             // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
             // thus the attempt below to "align" data stream to specified ProtocolSyncByte.
-            if (m_initialized)
+            if (m_dataStreamInitialized)
             {
                 if (m_executeParseOnSeparateThread)
                 {
@@ -420,7 +568,7 @@ namespace PCS.Parsing
                         ParseBuffer(buffer, syncBytePosition, count - syncBytePosition);
                     }
 
-                    m_initialized = true;
+                    m_dataStreamInitialized = true;
                 }
             }
         }
@@ -435,16 +583,17 @@ namespace PCS.Parsing
         /// </para>
         /// <para>
         /// If the user has called <see cref="Start"/> method, this method will block the current thread until all queued buffers
-        /// have been parsed - the <see cref="FrameParserBase"/> will then be automatically stopped. This method is typically called
-        /// on shutdown to make sure any remaining queued buffers get parsed before the class instance is destructed.
+        /// have been parsed - the <see cref="BinaryImageParserBase"/> will then be automatically stopped. This method is typically
+        /// called on shutdown to make sure any remaining queued buffers get parsed before the class instance is destructed.
         /// </para>
         /// <para>
         /// It is possible for items to be queued while the flush is executing. The flush will continue to parse buffers as quickly
         /// as possible until the internal buffer queue is empty. Unless the user stops queueing data to be parsed (i.e. calling the
         /// <see cref="Write"/> method), the flush call may never return (not a happy situtation on shutdown).
+        /// </para>
         /// <para>
-        /// The <see cref="FramePraserBase"/> does not clear queue prior to destruction. If the user fails to call this method before the
-        /// class is destructed, there may be data that remains unparsed in the internal buffer.
+        /// The <see cref="BinaryImageParserBase"/> does not clear queue prior to destruction. If the user fails to call this method
+        /// before the class is destructed, there may be data that remains unparsed in the internal buffer.
         /// </para>
         /// </remarks>
         public override void Flush()
@@ -550,8 +699,9 @@ namespace PCS.Parsing
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["OptimizeParsing", true].Update(m_optimizeParsing, "True if data parsing is to be done in an optimal mode; otherwise False.");
-                settings["DataAssemblyAttempts", true].Update(m_dataAssemblyAttempts, "Number of attempts to be made for assembling partial data images before parsing it.");
+                settings["ExecuteParseOnSeparateThread", true].Update(m_executeParseOnSeparateThread, "True if the internal buffer queue is enabled; otherwise False.");
+                settings["OptimizeTypeConstruction", true].Update(m_optimizeTypeConstruction, "True if if data types get constructed in an optimized fashion; otherwise False.");
+                settings["ParseRetryLimit", true].Update(m_parseRetryLimit, "Number of attempts to be made for parsing possible partial data images before giving up");
                 config.Save();
             }
         }
@@ -571,8 +721,9 @@ namespace PCS.Parsing
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                OptimizeParsing = settings["OptimizeParsing", true].ValueAs(m_optimizeParsing);
-                DataAssemblyAttempts = settings["DataAssemblyAttempts", true].ValueAs(m_dataAssemblyAttempts);
+                ExecuteParseOnSeparateThread = settings["ExecuteParseOnSeparateThread", true].ValueAs(m_executeParseOnSeparateThread);
+                OptimizeTypeConstruction = settings["OptimizeTypeConstruction", true].ValueAs(m_optimizeTypeConstruction);
+                ParseRetryLimit = settings["ParseRetryLimit", true].ValueAs(m_parseRetryLimit);
             }
         }
 
@@ -716,7 +867,7 @@ namespace PCS.Parsing
             }
             catch (Exception ex)
             {
-                m_initialized = !ProtocolUsesSyncByte;;
+                m_dataStreamInitialized = !ProtocolUsesSyncByte;;
                 m_dataStream = null;
                 OnParsingException(ex);
             }
