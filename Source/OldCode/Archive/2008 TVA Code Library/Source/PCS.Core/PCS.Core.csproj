@@ -130,6 +130,7 @@
     <Compile Include="IO\Compression\GZip\GzipInputStream.cs" />
     <Compile Include="IO\Compression\GZip\GzipOutputStream.cs" />
     <Content Include="IO\Compression\!CopyrightNotice.txt" />
+    <EmbeddedResource Include="Parsing\BinaryImageParserBase.bmp" />
     <EmbeddedResource Include="IO\MultipleDestinationExporter.bmp" />
     <EmbeddedResource Include="Scheduling\ScheduleManager.bmp" />
     <EmbeddedResource Include="Net\Ftp\FtpClient.bmp" />

@@ -18,6 +18,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Drawing;
 using System.ComponentModel;
 using PCS.Configuration;
 using PCS.Collections;
@@ -33,7 +34,8 @@ namespace PCS.Parsing
     [Description("Defines the basic functionality for parsing a binary data stream and return the parsed data via events."),
     DesignerCategory("Component"), 
     DefaultEvent("ParsingException"), 
-    DefaultProperty("ExecuteParseOnSeparateThread")]
+    DefaultProperty("ExecuteParseOnSeparateThread"),
+    ToolboxBitmap(typeof(BinaryImageParserBase))]
     public abstract class BinaryImageParserBase : Stream, IComponent, IBinaryImageParser
     {
         #region [ Members ]
