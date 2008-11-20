@@ -21,12 +21,37 @@ using PCS;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This interface represents the protocol independent representation of a frame parser.
+    /// This interface represents the protocol independent representation of a binary image parser.
     /// </summary>
-    public interface IBinaryImageParser : ISupportLifecycle, IStatusProvider
+    public interface IBinaryImageParser<TTypeIdentifier, TOutputType> : ISupportLifecycle, IStatusProvider
     {
         //event EventHandler<EventArgs<IBinaryImageConsumer>> ReceivedImage;
         //event EventHandler<EventArgs<IBinaryImageConsumer>> ReceivedUndeterminedImage;
+
+        /// <summary>
+        /// Occurs when a data image is deserialized successfully to one of the output types that the data
+        /// image represented.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the object that was deserialized from the binary image.
+        /// </remarks>
+        event EventHandler<EventArgs<TOutputType>> DataParsed;
+
+        /// <summary>
+        /// Occurs when matching a output type for deserializing the data image cound not be found.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the output type that could not be found.
+        /// </remarks>
+        event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
+
+        /// <summary>
+        /// Occurs when data image cannot be deserialized to the output type that the data image represented.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the binary image that failed to parse.
+        /// </remarks>
+        event EventHandler<EventArgs<byte[]>> DataDiscarded;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while attempting to parse data.

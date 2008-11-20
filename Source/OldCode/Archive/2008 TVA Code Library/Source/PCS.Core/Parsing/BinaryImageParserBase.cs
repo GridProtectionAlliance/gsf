@@ -38,7 +38,7 @@ namespace PCS.Parsing
     DesignerCategory("Component"), 
     DefaultEvent("ParsingException"), 
     DefaultProperty("ExecuteParseOnSeparateThread")]
-    public abstract class BinaryImageParserBase<TTypeIdentifier, TOutputType> : Stream, IComponent, IBinaryImageParser
+    public abstract class BinaryImageParserBase<TTypeIdentifier, TOutputType> : Stream, IComponent, IBinaryImageParser<TTypeIdentifier, TOutputType>
     {
         #region [ Members ]
 
@@ -71,36 +71,17 @@ namespace PCS.Parsing
         /// </summary>
         public const bool DefaultOptimizeTypeConstruction = true;
 
-        /// <summary>
-        /// Specifies the default value for the <see cref="ParseRetryLimit"/> property.
-        /// </summary>
-        public const int DefaultParseRetryLimit = 0;
-
         // Events
 
         /// <summary>
-        /// Occurs when data image cannot be deserialized to the output type that the data image represented.
+        /// Occurs when a data image is deserialized successfully to one of the output types that the data
+        /// image represented.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the output type that the data image was for.
-        /// </para>
-        /// <para>
-        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the binary image that failed to parse.
-        /// </para>
+        /// <see cref="EventArgs{T}.Argument"/> is the object that was deserialized from the binary image.
         /// </remarks>
-        [Description("Occurs when data image cannot be deserialized to the output type that the data image represented.")]
-        public event EventHandler<EventArgs<TTypeIdentifier, byte[]>> DataDiscarded;
-
-        /// <summary>
-        /// Occurs when a data image is deserialized successfully to one or more object of the output types
-        /// that the data image represented.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a list of objects deserialized from the binary image.
-        /// </remarks>
-        [Description("Occurs when a binary image is deserialized successfully into one or more objects of the ouput type.")]
-        public event EventHandler<EventArgs<ICollection<TOutputType>>> DataParsed;
+        [Description("Occurs when a binary image is deserialized successfully into an ouput type.")]
+        public event EventHandler<EventArgs<TOutputType>> DataParsed;
 
         /// <summary>
         /// Occurs when matching a output type for deserializing the data image cound not be found.
@@ -110,6 +91,15 @@ namespace PCS.Parsing
         /// </remarks>
         [Description("Occurs when matching Type for deserializing the data image cound not be found.")]
         public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
+
+        /// <summary>
+        /// Occurs when data image cannot be deserialized to the output type that the data image represented.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the binary image that failed to parse.
+        /// </remarks>
+        [Description("Occurs when data image cannot be deserialized to the output type that the data image represented.")]
+        public event EventHandler<EventArgs<byte[]>> DataDiscarded;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while attempting to parse data.
@@ -134,7 +124,6 @@ namespace PCS.Parsing
         private string m_settingsCategory;
         private bool m_persistSettings;
         private bool m_optimizeTypeConstruction;
-        private int m_parseRetryLimit;
         private ISite m_componentSite;
         private bool m_initialized;
         private bool m_enabled;
@@ -152,7 +141,6 @@ namespace PCS.Parsing
             m_protocolSyncByte = DefaultProtocolSyncByte;
             m_executeParseOnSeparateThread = DefaultExecuteParseOnSeparateThread;
             m_optimizeTypeConstruction = DefaultOptimizeTypeConstruction;
-            m_parseRetryLimit = DefaultParseRetryLimit;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
         }
@@ -300,29 +288,6 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets or sets the number of attempts to be made for parsing possible partial data images before giving up.
-        /// </summary>
-        /// <remarks>
-        /// This places a retry limit on the number of times a buffer will be attempted to be parsed if exceptions
-        /// are thrown. This defaults to zero as typically protocols will be able to derive length based on known
-        /// specifications and only attempt parse if enough data is available.
-        /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultParseRetryLimit),
-        Description("Number of attempts to be made for parsing possible partial data images before giving up.")]
-        public virtual int ParseRetryLimit
-        {
-            get
-            {
-                return m_parseRetryLimit;
-            }
-            set
-            {
-                m_parseRetryLimit = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of data parser object are 
         /// to be saved to the config file.
         /// </summary>
@@ -449,9 +414,6 @@ namespace PCS.Parsing
                 status.Append("      Current parser state: ");
                 status.Append(m_enabled ? "Active" : "Idle");
                 status.AppendLine();
-                status.Append("    Data parse retry limit: ");
-                status.Append(m_parseRetryLimit);
-                status.AppendLine();
                 status.Append("   Optimized type creation: ");
                 status.Append(m_optimizeTypeConstruction);
                 status.AppendLine();
@@ -466,11 +428,13 @@ namespace PCS.Parsing
                 {
                     status.Append("Independent thread using queued data");
                     status.AppendLine();
-                    status.Append(m_bufferQueue.Status);
+                    
+                    if (m_bufferQueue != null)
+                        status.Append(m_bufferQueue.Status);
                 }
                 else
                 {
-                    status.Append("Data source acquisition thread");
+                    status.Append("Data acquisition thread");
                     status.AppendLine();
                 }
 
@@ -732,7 +696,6 @@ namespace PCS.Parsing
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["ExecuteParseOnSeparateThread", true].Update(m_executeParseOnSeparateThread, "True if the internal buffer queue is enabled; otherwise False.");
                 settings["OptimizeTypeConstruction", true].Update(m_optimizeTypeConstruction, "True if if data types get constructed in an optimized fashion; otherwise False.");
-                settings["ParseRetryLimit", true].Update(m_parseRetryLimit, "Number of attempts to be made for parsing possible partial data images before giving up");
                 config.Save();
             }
         }
@@ -754,7 +717,6 @@ namespace PCS.Parsing
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 ExecuteParseOnSeparateThread = settings["ExecuteParseOnSeparateThread", true].ValueAs(m_executeParseOnSeparateThread);
                 OptimizeTypeConstruction = settings["OptimizeTypeConstruction", true].ValueAs(m_optimizeTypeConstruction);
-                ParseRetryLimit = settings["ParseRetryLimit", true].ValueAs(m_parseRetryLimit);
             }
         }
 
@@ -813,28 +775,50 @@ namespace PCS.Parsing
         /// </para>
         /// </remarks>
         protected abstract int ParseFrame(byte[] buffer, int offset, int length);
+        //{
+        //    int parsedBytes;
+        //    TTypeIdentifier id;
 
-        /// <summary>
-        /// Raises the <see cref="DataDiscarded"/> event.
-        /// </summary>
-        /// <param name="id">ID of the output type that failed to parse.</param>
-        /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
-        /// <param name="offset">Offset into <paramref name="buffer"/> where data begins.</param>
-        /// <param name="length">Length of data in buffer.</param>
-        protected virtual void OnDataDiscarded(TTypeIdentifier id, byte[] buffer, int offset, int length)
-        {
-            if (DataDiscarded != null)
-                DataDiscarded(this, new EventArgs<TTypeIdentifier, byte[]>(id, buffer.BlockCopy(offset, length)));
-        }
+        //    // Extract the type ID
+        //    parsedBytes = ExtractTypeID(buffer, offset, length, out id);
+        //    offset += parsedBytes;
+
+        //    if (m_outputTypes.TryGetValue(id, out outputType))
+        //    {
+        //            instance = outputType.CreateNew();
+        //            instance.ParsingState = parsingState;
+        //            cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
+        //            output.Add(instance);
+        //            m_assemblyAttemptTracker[item[i].Source] = 0;       // <- Necessary overhead :(
+        //    }
+        //    else
+        //    {
+        //        // If we come accross data in the image we cannot convert to a type than, we are going
+        //        // to have to discard the remainder of the image because we will now know where the
+        //        // the next valid block of data is within the image.
+        //        cursor = item[i].Data.Length; // Move on to the next data image.
+        //        //OnOutputTypeNotFound(new EventArgs<TTypeIdentifier>(parsingState.TypeID));
+        //    }
+
+        //    OnDataParsed(output);
+
+        //    return parsedBytes;
+        //}
+
+        //protected virtual int ExtractTypeID(byte[] buffer, int offset, int length, out TTypeIdentifier id)
+        //{
+        //    id = default(TTypeIdentifier);
+        //    return 0;
+        //}
 
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
         /// </summary>
-        /// <param name="objects">Objescts deserialized from binary image.</param>
-        protected virtual void OnDataParsed(ICollection<TOutputType> objects)
+        /// <param name="obj">Object deserialized from binary image.</param>
+        protected virtual void OnDataParsed(TOutputType obj)
         {
             if (DataParsed != null)
-                DataParsed(this, new EventArgs<ICollection<TOutputType>>(objects));
+                DataParsed(this, new EventArgs<TOutputType>(obj));
         }
 
         /// <summary>
@@ -845,6 +829,18 @@ namespace PCS.Parsing
         {
             if (OutputTypeNotFound != null)
                 OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DataDiscarded"/> event.
+        /// </summary>
+        /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
+        /// <param name="offset">Offset into <paramref name="buffer"/> where data begins.</param>
+        /// <param name="length">Length of data in buffer.</param>
+        protected virtual void OnDataDiscarded(byte[] buffer)
+        {
+            if (DataDiscarded != null)
+                DataDiscarded(this, new EventArgs<byte[]>(buffer));
         }
 
         /// <summary>
@@ -931,6 +927,7 @@ namespace PCS.Parsing
             }
             catch (Exception ex)
             {
+                OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
                 m_dataStreamInitialized = !ProtocolUsesSyncByte;;
                 m_dataStream = null;
                 OnParsingException(ex);
