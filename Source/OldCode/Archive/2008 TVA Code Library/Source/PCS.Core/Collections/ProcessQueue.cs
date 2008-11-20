@@ -745,7 +745,7 @@ namespace PCS.Collections
         }
 
         /// <summary>
-        /// Gets the total amount of time, in seconds, that the process <see cref="ProcessQueue{T}"/> has been active.
+        /// Gets the total amount of time, in seconds, that the <see cref="ProcessQueue{T}"/> has been active.
         /// </summary>
         public virtual double RunTime
         {
