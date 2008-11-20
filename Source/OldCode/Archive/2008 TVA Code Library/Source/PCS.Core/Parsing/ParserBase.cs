@@ -325,7 +325,7 @@ namespace PCS.Parsing
         {
             get
             {
-                if (m_executeParseOnSeparateThread && m_bufferQueue != null)
+                if (m_bufferQueue != null)
                     return m_bufferQueue.Count;
                 else
                     return 0;
@@ -340,7 +340,7 @@ namespace PCS.Parsing
         {
             get
             {
-                if (m_executeParseOnSeparateThread && m_bufferQueue != null)
+                if (m_bufferQueue != null)
                     return m_bufferQueue.TotalProcessedItems;
                 else
                     return m_imagesProcessed;
@@ -354,14 +354,14 @@ namespace PCS.Parsing
         {
             get
             {
-                if (m_executeParseOnSeparateThread && m_bufferQueue != null)
+                if (m_bufferQueue != null)
                 {
                     return m_bufferQueue.CurrentStatistics;
                 }
                 else
                 {
                     // Infer some statistics when using calling source thread
-                    ProcessQueueStatistics stats = new ProcessQueueStatistics();
+                    ProcessQueueStatistics stats = default(ProcessQueueStatistics);
                     
                     stats.ActiveThreads = 1;
                     stats.IsEnabled = m_enabled;
