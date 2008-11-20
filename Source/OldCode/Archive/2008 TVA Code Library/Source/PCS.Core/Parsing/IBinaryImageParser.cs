@@ -49,7 +49,7 @@ namespace PCS.Parsing
         /// Occurs when data image cannot be deserialized to the output type that the data image represented.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the binary image that failed to parse.
+        /// <see cref="EventArgs{T}.Argument"/> is the remaining portion of the binary image that failed to parse.
         /// </remarks>
         event EventHandler<EventArgs<byte[]>> DataDiscarded;
 
