@@ -181,7 +181,8 @@
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
-    <Compile Include="Parsing\BinaryImageParserBase.cs" />
+    <Compile Include="Parsing\BasicParserBase.cs" />
+    <Compile Include="Parsing\ParserBase.cs" />
     <Compile Include="Parsing\IBinaryImageParser.cs" />
     <Compile Include="Parsing\IParsingState.cs" />
     <Compile Include="Parsing\ParsingStateBase.cs" />
@@ -237,7 +238,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Scheduling\SchedulePart.cs" />
-    <Compile Include="Parsing\ParserBase.cs">
+    <Compile Include="Parsing\OldParserBase.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Parsing\IBinaryImageConsumer.cs" />

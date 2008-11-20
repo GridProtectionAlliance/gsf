@@ -149,7 +149,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Initializes a new instance of the <see cref="BinaryDataParserBase{TSourceIdentifier, TTypeIdentifier, TOutputType}"/> class.
         /// </summary>
-        public BinaryDataParserBase()
+        public OldParserBase()
         {
             m_optimizeParsing = DefaultOptimizeParsing;
             m_dataAssemblyAttempts = DefaultDataAssemblyAttempts;

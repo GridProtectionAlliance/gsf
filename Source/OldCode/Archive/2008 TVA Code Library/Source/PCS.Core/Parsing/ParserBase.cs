@@ -1,6 +1,6 @@
 //*******************************************************************************************************
-//  BinaryImageParserBase.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  ParserBase.cs
+//  Copyright ©2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: James R Carroll
@@ -27,7 +27,7 @@ using PCS.Collections;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This class defines the basic functionality for parsing a binary data stream and return the parsed data via events.
+    /// This class defines the fundamental functionality for parsing any binary data stream.
     /// </summary>
     /// <remarks>
     /// This parser is designed as a write-only stream such that data can come from any source.
@@ -38,7 +38,7 @@ namespace PCS.Parsing
     DesignerCategory("Component"), 
     DefaultEvent("ParsingException"), 
     DefaultProperty("ExecuteParseOnSeparateThread")]
-    public abstract class BinaryImageParserBase<TTypeIdentifier, TOutputType> : Stream, IComponent, IBinaryImageParser<TTypeIdentifier, TOutputType>
+    public abstract class ParserBase : Stream, IComponent, IParser
     {
         #region [ Members ]
 
@@ -74,26 +74,7 @@ namespace PCS.Parsing
         // Events
 
         /// <summary>
-        /// Occurs when a data image is deserialized successfully to one of the output types that the data
-        /// image represented.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the object that was deserialized from the binary image.
-        /// </remarks>
-        [Description("Occurs when a binary image is deserialized successfully into an ouput type.")]
-        public event EventHandler<EventArgs<TOutputType>> DataParsed;
-
-        /// <summary>
-        /// Occurs when matching a output type for deserializing the data image cound not be found.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the ID of the output type that could not be found.
-        /// </remarks>
-        [Description("Occurs when matching Type for deserializing the data image cound not be found.")]
-        public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
-
-        /// <summary>
-        /// Occurs when data image cannot be deserialized to the output type that the data image represented.
+        /// Occurs when data image fails deserialized due to an exception.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the remaining portion of the binary image that failed to parse.
@@ -136,7 +117,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Creates a new instance of the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
-        protected BinaryImageParserBase()
+        protected ParserBase()
 	    {
             m_protocolSyncByte = DefaultProtocolSyncByte;
             m_executeParseOnSeparateThread = DefaultExecuteParseOnSeparateThread;
@@ -811,25 +792,6 @@ namespace PCS.Parsing
         //    return 0;
         //}
 
-        /// <summary>
-        /// Raises the <see cref="DataParsed"/> event.
-        /// </summary>
-        /// <param name="obj">Object deserialized from binary image.</param>
-        protected virtual void OnDataParsed(TOutputType obj)
-        {
-            if (DataParsed != null)
-                DataParsed(this, new EventArgs<TOutputType>(obj));
-        }
-
-        /// <summary>
-        /// Raises the <see cref="OutputTypeNotFound"/> event.
-        /// </summary>
-        /// <param name="id">ID of the output type that was not found.</param>
-        protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
-        {
-            if (OutputTypeNotFound != null)
-                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
-        }
 
         /// <summary>
         /// Raises the <see cref="DataDiscarded"/> event.
