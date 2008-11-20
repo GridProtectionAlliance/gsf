@@ -16,7 +16,6 @@
 //*******************************************************************************************************
 
 using System;
-using PCS;
 
 namespace PCS.Parsing
 {
@@ -76,7 +75,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.
+        /// Writes a sequence of bytes onto the <see cref="IParser"/> stream for parsing.
         /// </summary>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>

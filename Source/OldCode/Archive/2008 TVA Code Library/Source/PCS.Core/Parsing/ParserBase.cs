@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Drawing;
+using System.Threading;
 using System.ComponentModel;
 using System.Collections.Generic;
 using PCS.Configuration;
@@ -32,9 +33,7 @@ namespace PCS.Parsing
     /// <remarks>
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </remarks>
-    /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
-    /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    [Description("Defines the basic functionality for parsing a binary data stream and return the parsed data via events."),
+    [Description("Defines the fundamental functionality for parsing any binary data stream."),
     DesignerCategory("Component"), 
     DefaultEvent("ParsingException"), 
     DefaultProperty("ExecuteParseOnSeparateThread")]
@@ -54,7 +53,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
-        public const string DefaultSettingsCategory = "BinaryImageParser";
+        public const string DefaultSettingsCategory = "ParsingEngine";
         
         /// <summary>
         /// Default data stream protocol synchrnonization byte.
@@ -65,11 +64,6 @@ namespace PCS.Parsing
         /// Specifies the default value for the <see cref="DefaultExecuteParseOnSeparateThread"/> property.
         /// </summary>
         public const bool DefaultExecuteParseOnSeparateThread = true;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="OptimizeTypeConstruction"/> property.
-        /// </summary>
-        public const bool DefaultOptimizeTypeConstruction = true;
 
         // Events
 
@@ -104,7 +98,9 @@ namespace PCS.Parsing
         private byte m_protocolSyncByte;
         private string m_settingsCategory;
         private bool m_persistSettings;
-        private bool m_optimizeTypeConstruction;
+        private long m_imagesProcessed;
+        private long m_startTime;
+        private long m_stopTime;
         private ISite m_componentSite;
         private bool m_initialized;
         private bool m_enabled;
@@ -115,13 +111,12 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> class.
+        /// Creates a new instance of the <see cref="ParserBase"/> class.
         /// </summary>
         protected ParserBase()
 	    {
             m_protocolSyncByte = DefaultProtocolSyncByte;
             m_executeParseOnSeparateThread = DefaultExecuteParseOnSeparateThread;
-            m_optimizeTypeConstruction = DefaultOptimizeTypeConstruction;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
         }
@@ -178,6 +173,8 @@ namespace PCS.Parsing
         {
             get;
         }
+
+        // TODO: Make this an array (i.e., byte[]) for multi-byte synchronization implementations...
 
         /// <summary>
         /// Gets or sets synchronization byte for this parsing implementation, is used.
@@ -248,27 +245,6 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates if data types get constructed in an optimized fashion.
-        /// </summary>
-        /// <remarks>
-        /// This property defaults to true, it only needs to be changed if there are issues with type creation.
-        /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultOptimizeTypeConstruction),
-        Description("Indicates whether the data types are constructed in an optimal mode.")]
-        public virtual bool OptimizeTypeConstruction
-        {
-            get
-            {
-                return m_optimizeTypeConstruction;
-            }
-            set
-            {
-                m_optimizeTypeConstruction = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of data parser object are 
         /// to be saved to the config file.
         /// </summary>
@@ -311,6 +287,37 @@ namespace PCS.Parsing
         }
 
         /// <summary>
+        /// Gets the total amount of time, in seconds, that the <see cref="ParserBase"/> has been active.
+        /// </summary>
+        public virtual double RunTime
+        {
+            get
+            {
+                if (m_bufferQueue != null)
+                {
+                    return m_bufferQueue.RunTime;
+                }
+                else
+                {
+                    long processingTime = 0;
+
+                    if (m_startTime > 0)
+                    {
+                        if (m_stopTime > 0)
+                            processingTime = m_stopTime - m_startTime;
+                        else
+                            processingTime = DateTime.Now.Ticks - m_startTime;
+                    }
+
+                    if (processingTime < 0)
+                        processingTime = 0;
+
+                    return Ticks.ToSeconds(processingTime);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of buffers that are currently queued for processing, if any.
         /// </summary>
         [Browsable(false)]
@@ -326,10 +333,55 @@ namespace PCS.Parsing
         }
 
         /// <summary>
+        /// Gets the total number of images processed so far.
+        /// </summary>
+        /// <returns>Total number of images processed so far.</returns>
+        public long TotalProcessedImages
+        {
+            get
+            {
+                if (m_executeParseOnSeparateThread && m_bufferQueue != null)
+                    return m_bufferQueue.TotalProcessedItems;
+                else
+                    return m_imagesProcessed;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current run-time statistics of the <see cref="ParserBase"/>.
+        /// </summary>
+        public virtual ProcessQueueStatistics CurrentStatistics
+        {
+            get
+            {
+                ProcessQueueStatistics stats = new ProcessQueueStatistics();
+
+                if (m_executeParseOnSeparateThread && m_bufferQueue != null)
+                {
+                    stats = m_bufferQueue.CurrentStatistics;
+                }
+                else
+                {
+                    // Infer some statistics when using calling source thread
+                    stats.ActiveThreads = 1;
+                    stats.IsEnabled = m_enabled;
+                    stats.IsProcessing = true;
+                    stats.ProcessingStyle = QueueProcessingStyle.OneAtATime;
+                    stats.ProcessTimeout = Timeout.Infinite;
+                    stats.ThreadingMode = QueueThreadingMode.Synchronous;
+                    stats.RunTime = RunTime;
+                    stats.TotalProcessedItems = m_imagesProcessed;
+                }
+
+                return stats;
+            }
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the current stream supports reading.
         /// </summary>
         /// <remarks>
-        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="ParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanRead
@@ -344,7 +396,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         /// <remarks>
-        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="ParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanSeek
@@ -359,7 +411,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         /// <remarks>
-        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> is implemented as a WriteOnly stream, so this defaults to true.
+        /// The <see cref="ParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
         /// </remarks>
         [Browsable(false)]
         public override bool CanWrite
@@ -371,7 +423,7 @@ namespace PCS.Parsing
         }
         
         /// <summary>
-        /// Gets the unique display name of the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> object.
+        /// Gets the unique display name of the <see cref="ParserBase"/> object.
         /// </summary>
         [Browsable(false)]
         public virtual string Name
@@ -384,7 +436,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets current status of <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/>.
+        /// Gets current status of <see cref="ParserBase"/>.
         /// </summary>
         [Browsable(false)]
         public virtual string Status
@@ -395,9 +447,6 @@ namespace PCS.Parsing
                 status.Append("      Current parser state: ");
                 status.Append(m_enabled ? "Active" : "Idle");
                 status.AppendLine();
-                status.Append("   Optimized type creation: ");
-                status.Append(m_optimizeTypeConstruction);
-                status.AppendLine();
                 if (ProtocolUsesSyncByte)
                 {
                     status.Append(" Data synchronization byte: 0x");
@@ -405,17 +454,20 @@ namespace PCS.Parsing
                     status.AppendLine();
                 }
                 status.Append("  Parsing execution source: ");
-                if (m_executeParseOnSeparateThread)
+                status.Append(m_executeParseOnSeparateThread ? "Independent thread using queued data" : "Data acquisition thread");
+                status.AppendLine();
+
+                if (m_bufferQueue != null)
                 {
-                    status.Append("Independent thread using queued data");
-                    status.AppendLine();
-                    
-                    if (m_bufferQueue != null)
-                        status.Append(m_bufferQueue.Status);
+                    status.Append(m_bufferQueue.Status);
                 }
                 else
                 {
-                    status.Append("Data acquisition thread");
+                    status.Append("    Total process run time: ");
+                    status.Append(Seconds.ToText(RunTime));
+                    status.AppendLine();
+                    status.Append("     Total items processed: ");
+                    status.Append(m_imagesProcessed);
                     status.AppendLine();
                 }
 
@@ -439,7 +491,7 @@ namespace PCS.Parsing
         #region [ Methods ]
 				
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="ParserBase"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -480,6 +532,10 @@ namespace PCS.Parsing
         /// </summary>
         public virtual void Start()
         {
+            m_imagesProcessed = 0;
+            m_stopTime = 0;
+            m_startTime = DateTime.Now.Ticks;
+
             // Initialized state depends whether or not derived class uses a protocol synchrnonization byte
             m_dataStreamInitialized = !ProtocolUsesSyncByte;
             
@@ -498,6 +554,8 @@ namespace PCS.Parsing
 
             if (m_executeParseOnSeparateThread)
                 m_bufferQueue.Stop();
+
+            m_stopTime = DateTime.Now.Ticks;
         }
 
         // Stream implementation overrides
@@ -547,6 +605,9 @@ namespace PCS.Parsing
                     m_dataStreamInitialized = true;
                 }
             }
+
+            // Track total processed images
+            m_imagesProcessed++;
         }
 
         /// <summary>
@@ -559,7 +620,7 @@ namespace PCS.Parsing
         /// </para>
         /// <para>
         /// If the user has called <see cref="Start"/> method, this method will block the current thread until all queued buffers
-        /// have been parsed - the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> will then be automatically stopped. This method is typically
+        /// have been parsed - the <see cref="ParserBase"/> will then be automatically stopped. This method is typically
         /// called on shutdown to make sure any remaining queued buffers get parsed before the class instance is destructed.
         /// </para>
         /// <para>
@@ -568,7 +629,7 @@ namespace PCS.Parsing
         /// <see cref="Write"/> method), the flush call may never return (not a happy situtation on shutdown).
         /// </para>
         /// <para>
-        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction. If the user fails to call this method
+        /// The <see cref="ParserBase"/> does not clear queue prior to destruction. If the user fails to call this method
         /// before the class is destructed, there may be data that remains unparsed in the internal buffer.
         /// </para>
         /// </remarks>
@@ -676,7 +737,6 @@ namespace PCS.Parsing
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["ExecuteParseOnSeparateThread", true].Update(m_executeParseOnSeparateThread, "True if the internal buffer queue is enabled; otherwise False.");
-                settings["OptimizeTypeConstruction", true].Update(m_optimizeTypeConstruction, "True if if data types get constructed in an optimized fashion; otherwise False.");
                 config.Save();
             }
         }
@@ -697,7 +757,6 @@ namespace PCS.Parsing
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 ExecuteParseOnSeparateThread = settings["ExecuteParseOnSeparateThread", true].ValueAs(m_executeParseOnSeparateThread);
-                OptimizeTypeConstruction = settings["OptimizeTypeConstruction", true].ValueAs(m_optimizeTypeConstruction);
             }
         }
 
@@ -742,11 +801,11 @@ namespace PCS.Parsing
         /// the total amount of data was parsed and the remaining unparsed will be prepended to next received buffer.
         /// </para>
         /// <para>
-        /// Derived implementations should return an integer value that represents the length of the data that was parsed, and zero if no
-        /// data was able to be parsed. Note that exceptions are expensive when parsing fast moving streaming data and a good code practice
-        /// for implementations of this method will be to not throw an exception when there is not enough data to parse the data, instead
-        /// check the <paramref name="length"/> property to insure there is enough data in buffer to represent the desired image. If there
-        /// is not enough data to represent the image return zero and the base class will prepend buffer onto next incoming set of data.
+        /// Derived implementations should return an integer value that represents the length of the data that was parsed, and zero if not
+        /// enough data was able to be parsed. Note that exceptions are expensive when parsing fast moving streaming data and a good coding
+        /// practice for implementations of this method will be to not throw an exception when there is not enough data to parse the data,
+        /// instead check the <paramref name="length"/> property to insure there is enough data in buffer to represent the desired image. If
+        /// there is not enough data to represent the image return zero and the base class will prepend buffer onto next incoming set of data.
         /// </para>
         /// <para>
         /// Because of the expense incurred when an exception is thrown, any exceptions encounted in the derived implementations of this method
@@ -756,49 +815,11 @@ namespace PCS.Parsing
         /// </para>
         /// </remarks>
         protected abstract int ParseFrame(byte[] buffer, int offset, int length);
-        //{
-        //    int parsedBytes;
-        //    TTypeIdentifier id;
-
-        //    // Extract the type ID
-        //    parsedBytes = ExtractTypeID(buffer, offset, length, out id);
-        //    offset += parsedBytes;
-
-        //    if (m_outputTypes.TryGetValue(id, out outputType))
-        //    {
-        //            instance = outputType.CreateNew();
-        //            instance.ParsingState = parsingState;
-        //            cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
-        //            output.Add(instance);
-        //            m_assemblyAttemptTracker[item[i].Source] = 0;       // <- Necessary overhead :(
-        //    }
-        //    else
-        //    {
-        //        // If we come accross data in the image we cannot convert to a type than, we are going
-        //        // to have to discard the remainder of the image because we will now know where the
-        //        // the next valid block of data is within the image.
-        //        cursor = item[i].Data.Length; // Move on to the next data image.
-        //        //OnOutputTypeNotFound(new EventArgs<TTypeIdentifier>(parsingState.TypeID));
-        //    }
-
-        //    OnDataParsed(output);
-
-        //    return parsedBytes;
-        //}
-
-        //protected virtual int ExtractTypeID(byte[] buffer, int offset, int length, out TTypeIdentifier id)
-        //{
-        //    id = default(TTypeIdentifier);
-        //    return 0;
-        //}
-
 
         /// <summary>
         /// Raises the <see cref="DataDiscarded"/> event.
         /// </summary>
         /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
-        /// <param name="offset">Offset into <paramref name="buffer"/> where data begins.</param>
-        /// <param name="length">Length of data in buffer.</param>
         protected virtual void OnDataDiscarded(byte[] buffer)
         {
             if (DataDiscarded != null)
@@ -889,9 +910,11 @@ namespace PCS.Parsing
             }
             catch (Exception ex)
             {
-                OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
+                // Probable mal-formed data image, discard data on move on...
                 m_dataStreamInitialized = !ProtocolUsesSyncByte;;
                 m_dataStream = null;
+
+                OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
                 OnParsingException(ex);
             }
         }

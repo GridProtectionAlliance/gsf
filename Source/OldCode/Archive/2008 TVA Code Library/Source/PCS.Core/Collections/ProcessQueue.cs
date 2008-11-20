@@ -756,19 +756,13 @@ namespace PCS.Collections
                 if (m_startTime > 0)
                 {
                     if (m_stopTime > 0)
-                    {
                         processingTime = m_stopTime - m_startTime;
-                    }
                     else
-                    {
                         processingTime = DateTime.Now.Ticks - m_startTime;
-                    }
                 }
 
                 if (processingTime < 0)
-                {
                     processingTime = 0;
-                }
 
                 return Ticks.ToSeconds(processingTime);
             }
