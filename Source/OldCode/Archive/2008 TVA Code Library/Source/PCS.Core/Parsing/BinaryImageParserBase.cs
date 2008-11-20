@@ -20,6 +20,7 @@ using System.IO;
 using System.Text;
 using System.Drawing;
 using System.ComponentModel;
+using System.Collections.Generic;
 using PCS.Configuration;
 using PCS.Collections;
 
@@ -31,12 +32,13 @@ namespace PCS.Parsing
     /// <remarks>
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </remarks>
+    /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
+    /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream and return the parsed data via events."),
     DesignerCategory("Component"), 
     DefaultEvent("ParsingException"), 
-    DefaultProperty("ExecuteParseOnSeparateThread"),
-    ToolboxBitmap(typeof(BinaryImageParserBase))]
-    public abstract class BinaryImageParserBase : Stream, IComponent, IBinaryImageParser
+    DefaultProperty("ExecuteParseOnSeparateThread")]
+    public abstract class BinaryImageParserBase<TTypeIdentifier, TOutputType> : Stream, IComponent, IBinaryImageParser
     {
         #region [ Members ]
 
@@ -74,9 +76,40 @@ namespace PCS.Parsing
         /// </summary>
         public const int DefaultParseRetryLimit = 0;
 
-        // Delegates
-
         // Events
+
+        /// <summary>
+        /// Occurs when data image cannot be deserialized to the output type that the data image represented.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the output type that the data image was for.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the binary image that failed to parse.
+        /// </para>
+        /// </remarks>
+        [Description("Occurs when data image cannot be deserialized to the output type that the data image represented.")]
+        public event EventHandler<EventArgs<TTypeIdentifier, byte[]>> DataDiscarded;
+
+        /// <summary>
+        /// Occurs when a data image is deserialized successfully to one or more object of the output types
+        /// that the data image represented.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is a list of objects deserialized from the binary image.
+        /// </remarks>
+        [Description("Occurs when a binary image is deserialized successfully into one or more objects of the ouput type.")]
+        public event EventHandler<EventArgs<ICollection<TOutputType>>> DataParsed;
+
+        /// <summary>
+        /// Occurs when matching a output type for deserializing the data image cound not be found.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the output type that could not be found.
+        /// </remarks>
+        [Description("Occurs when matching Type for deserializing the data image cound not be found.")]
+        public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while attempting to parse data.
@@ -112,7 +145,7 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="BinaryImageParserBase"/> class.
+        /// Creates a new instance of the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
         protected BinaryImageParserBase()
 	    {
@@ -156,7 +189,7 @@ namespace PCS.Parsing
         /// </returns>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ISite Site
+        public virtual ISite Site
         {
             get
             {
@@ -254,7 +287,7 @@ namespace PCS.Parsing
         [Category("Settings"),
         DefaultValue(DefaultOptimizeTypeConstruction),
         Description("Indicates whether the data types are constructed in an optimal mode.")]
-        public bool OptimizeTypeConstruction
+        public virtual bool OptimizeTypeConstruction
         {
             get
             {
@@ -277,7 +310,7 @@ namespace PCS.Parsing
         [Category("Settings"),
         DefaultValue(DefaultParseRetryLimit),
         Description("Number of attempts to be made for parsing possible partial data images before giving up.")]
-        public int ParseRetryLimit
+        public virtual int ParseRetryLimit
         {
             get
             {
@@ -296,7 +329,7 @@ namespace PCS.Parsing
         [Category("Persistance"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of data parser object are to be saved to the config file.")]
-        public bool PersistSettings
+        public virtual bool PersistSettings
         {
             get
             {
@@ -316,7 +349,7 @@ namespace PCS.Parsing
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of data parser object are to be saved to the config file if the PersistSettings property is set to true.")]
-        public string SettingsCategory
+        public virtual string SettingsCategory
         {
             get
             {
@@ -325,7 +358,7 @@ namespace PCS.Parsing
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException();
 
                 m_settingsCategory = value;
             }
@@ -339,14 +372,10 @@ namespace PCS.Parsing
         {
             get
             {
-                if (m_executeParseOnSeparateThread)
-                {
+                if (m_executeParseOnSeparateThread && m_bufferQueue != null)
                     return m_bufferQueue.Count;
-                }
                 else
-                {
                     return 0;
-                }
             }
         }
 
@@ -354,7 +383,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports reading.
         /// </summary>
         /// <remarks>
-        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanRead
@@ -369,7 +398,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         /// <remarks>
-        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanSeek
@@ -384,7 +413,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         /// <remarks>
-        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
+        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> is implemented as a WriteOnly stream, so this defaults to true.
         /// </remarks>
         [Browsable(false)]
         public override bool CanWrite
@@ -396,10 +425,10 @@ namespace PCS.Parsing
         }
         
         /// <summary>
-        /// Gets the unique display name of the <see cref="BinaryImageParserBase"/> object.
+        /// Gets the unique display name of the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> object.
         /// </summary>
         [Browsable(false)]
-        public string Name
+        public virtual string Name
         {
             get
             {
@@ -409,7 +438,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets current status of <see cref="BinaryImageParserBase"/>.
+        /// Gets current status of <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/>.
         /// </summary>
         [Browsable(false)]
         public virtual string Status
@@ -452,7 +481,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets design mode of component site, if component has a site; or false, if the component does not have a site.
         /// </summary>
-        protected bool DesignMode
+        protected virtual bool DesignMode
         {
             get
             {
@@ -465,7 +494,7 @@ namespace PCS.Parsing
         #region [ Methods ]
 				
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="BinaryImageParserBase"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -585,7 +614,7 @@ namespace PCS.Parsing
         /// </para>
         /// <para>
         /// If the user has called <see cref="Start"/> method, this method will block the current thread until all queued buffers
-        /// have been parsed - the <see cref="BinaryImageParserBase"/> will then be automatically stopped. This method is typically
+        /// have been parsed - the <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> will then be automatically stopped. This method is typically
         /// called on shutdown to make sure any remaining queued buffers get parsed before the class instance is destructed.
         /// </para>
         /// <para>
@@ -594,7 +623,7 @@ namespace PCS.Parsing
         /// <see cref="Write"/> method), the flush call may never return (not a happy situtation on shutdown).
         /// </para>
         /// <para>
-        /// The <see cref="BinaryImageParserBase"/> does not clear queue prior to destruction. If the user fails to call this method
+        /// The <see cref="BinaryImageParserBase{TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction. If the user fails to call this method
         /// before the class is destructed, there may be data that remains unparsed in the internal buffer.
         /// </para>
         /// </remarks>
@@ -677,7 +706,7 @@ namespace PCS.Parsing
         /// <see cref="Initialize()"/> is to be called by user-code directly only if the data parser 
         /// object is not consumed through the designer surface of the IDE.
         /// </remarks>
-        public void Initialize()
+        public virtual void Initialize()
         {
             if (!m_initialized)
             {
@@ -690,7 +719,7 @@ namespace PCS.Parsing
         /// Saves settings for the data parser object to the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
         /// </summary>        
-        public void SaveSettings()
+        public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
@@ -712,7 +741,7 @@ namespace PCS.Parsing
         /// Loads saved settings for the data parser object from the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
         /// </summary>        
-        public void LoadSettings()
+        public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
@@ -737,7 +766,7 @@ namespace PCS.Parsing
         /// by the designer if the data parser object is consumed through the designer surface of the IDE.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
+        public virtual void BeginInit()
         {
             // Nothing needs to be done before component is initialized.
         }
@@ -750,7 +779,7 @@ namespace PCS.Parsing
         /// by the designer if the data parser object is consumed through the designer surface of the IDE.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
+        public virtual void EndInit()
         {
             if (!DesignMode)
                 Initialize();
@@ -784,6 +813,39 @@ namespace PCS.Parsing
         /// </para>
         /// </remarks>
         protected abstract int ParseFrame(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// Raises the <see cref="DataDiscarded"/> event.
+        /// </summary>
+        /// <param name="id">ID of the output type that failed to parse.</param>
+        /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
+        /// <param name="offset">Offset into <paramref name="buffer"/> where data begins.</param>
+        /// <param name="length">Length of data in buffer.</param>
+        protected virtual void OnDataDiscarded(TTypeIdentifier id, byte[] buffer, int offset, int length)
+        {
+            if (DataDiscarded != null)
+                DataDiscarded(this, new EventArgs<TTypeIdentifier, byte[]>(id, buffer.BlockCopy(offset, length)));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DataParsed"/> event.
+        /// </summary>
+        /// <param name="objects">Objescts deserialized from binary image.</param>
+        protected virtual void OnDataParsed(ICollection<TOutputType> objects)
+        {
+            if (DataParsed != null)
+                DataParsed(this, new EventArgs<ICollection<TOutputType>>(objects));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="OutputTypeNotFound"/> event.
+        /// </summary>
+        /// <param name="id">ID of the output type that was not found.</param>
+        protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
+        {
+            if (OutputTypeNotFound != null)
+                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
+        }
 
         /// <summary>
         /// Raises the <see cref="ParsingException"/> event.
