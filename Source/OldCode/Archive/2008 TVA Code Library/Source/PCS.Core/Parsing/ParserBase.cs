@@ -354,15 +354,15 @@ namespace PCS.Parsing
         {
             get
             {
-                ProcessQueueStatistics stats = new ProcessQueueStatistics();
-
                 if (m_executeParseOnSeparateThread && m_bufferQueue != null)
                 {
-                    stats = m_bufferQueue.CurrentStatistics;
+                    return m_bufferQueue.CurrentStatistics;
                 }
                 else
                 {
                     // Infer some statistics when using calling source thread
+                    ProcessQueueStatistics stats = new ProcessQueueStatistics();
+                    
                     stats.ActiveThreads = 1;
                     stats.IsEnabled = m_enabled;
                     stats.IsProcessing = true;
@@ -371,9 +371,9 @@ namespace PCS.Parsing
                     stats.ThreadingMode = QueueThreadingMode.Synchronous;
                     stats.RunTime = RunTime;
                     stats.TotalProcessedItems = m_imagesProcessed;
-                }
 
-                return stats;
+                    return stats;
+                }
             }
         }
 
