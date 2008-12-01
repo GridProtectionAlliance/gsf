@@ -33,6 +33,90 @@ namespace PCS
             return copiedBytes;
         }
 
+        /// <summary>
+        /// Searches for the specified sequence of <paramref name="bytesToFind"/> and returns the index of the first occurrence within the <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer to search.</param>
+        /// <param name="bytesToFind">Byte sequence to search for.</param>
+        /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind)
+        {
+            return buffer.IndexOfSequence(bytesToFind, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// Searches for the specified sequence of <paramref name="bytesToFind"/> and returns the index of the first occurrence within the range of elements in the <paramref name="buffer"/> that starts at the specified index.
+        /// </summary>
+        /// <param name="buffer">Buffer to search.</param>
+        /// <param name="bytesToFind">Byte sequence to search for.</param>
+        /// <param name="startIndex">Start index in the <paramref name="buffer"/> to start searching.</param>
+        /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex)
+        {
+            return buffer.IndexOfSequence(bytesToFind, startIndex, buffer.Length - startIndex);
+        }
+
+        /// <summary>
+        /// Searches for the specified sequence of <paramref name="bytesToFind"/> and returns the index of the first occurrence within the range of elements in the <paramref name="buffer"/> that starts at the specified index and contains the specified number of elements.
+        /// </summary>
+        /// <param name="buffer">Buffer to search.</param>
+        /// <param name="bytesToFind">Byte sequence to search for.</param>
+        /// <param name="startIndex">Start index in the <paramref name="buffer"/> to start searching.</param>
+        /// <param name="length">Number of bytes in the <paramref name="buffer"/> to search through.</param>
+        /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex, int length)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            if (bytesToFind == null || bytesToFind.Length == 0)
+                throw new ArgumentNullException("buffer");
+
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+
+            if (startIndex >= buffer.Length)
+                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into source buffer");
+
+            if (startIndex + length > buffer.Length)
+                throw new ArgumentOutOfRangeException("length", "exceeds buffer size");
+
+            // Search for first byte in the sequence, if this doesn't exist then sequence doesn't exist
+            int index = Array.IndexOf(buffer, bytesToFind[0], startIndex, length);
+            bool foundSequence = false;
+
+            while (index > 0 && !foundSequence)
+            {
+                // See if next bytes in sequence match
+                for (int x = 1; x < bytesToFind.Length; x++)
+                {
+                    // Make sure there's enough buffer remaining to accomodate this byte
+                    if (index + x < startIndex + length)
+                    {
+                        // If sequence doesn't match, search for next first-byte
+                        if (buffer[index + x] != bytesToFind[x])
+                        {
+                            index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index - startIndex));
+                            break;
+                        }
+
+                        // If each byte to find matched, we found the sequence
+                        foundSequence = (x == bytesToFind.Length - 1);
+                    }
+                    else
+                    {
+                        // Ran out of buffer, return -1
+                        index = -1;
+                    }
+                }
+            }
+
+            return index;
+        }
+
         /// <summary>Returns comparision results of two binary buffers.</summary>
         public static int CompareTo(this byte[] source, byte[] other)
         {
