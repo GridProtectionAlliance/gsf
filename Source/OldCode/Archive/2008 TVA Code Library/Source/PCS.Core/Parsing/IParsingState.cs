@@ -29,7 +29,7 @@ namespace PCS.Parsing
     /// Parsing state implementations will extend this class as necessary to accomodate custom parsing states.
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of the identifier.</typeparam>
-    public interface IParsingState<TTypeIdentifier>
+    public interface IBinaryImageHeader<TTypeIdentifier>
     {
         /// <summary>
         /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.
