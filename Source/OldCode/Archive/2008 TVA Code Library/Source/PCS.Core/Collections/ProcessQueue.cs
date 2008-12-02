@@ -1121,8 +1121,9 @@ namespace PCS.Collections
         /// <remarks>
         /// <para>
         /// Begins processing items as quickly as possible, regardless of currently defined process interval, until all
-        /// items in the <see cref="ProcessQueue{T}"/> have been processed. Stops the <see cref="ProcessQueue{T}"/> when this function ends. This method is typically
-        /// called on shutdown to make sure any remaining queued items get processed before the <see cref="ProcessQueue{T}"/> is destructed.
+        /// items in the <see cref="ProcessQueue{T}"/> have been processed. Stops the <see cref="ProcessQueue{T}"/> when this function ends.
+        /// This method is typically called on shutdown to make sure any remaining queued items get processed before the
+        /// <see cref="ProcessQueue{T}"/> is destructed.
         /// </para>
         /// <para>
         /// It is possible for items to be added to the <see cref="ProcessQueue{T}"/> while the flush is executing. The flush will continue to
