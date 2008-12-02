@@ -20,19 +20,19 @@ using System;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// Represents the base class for a basic parsing state implementation.
+    /// Represents the base class for a binary image header implementation.
     /// </summary>
     /// <remarks>
     /// Typical implementations will have a constructor similar to the following:
     /// <code>
-    /// public ParsingState(byte[] binaryImage, int startIndex)
+    /// public BinaryImageHeader(byte[] binaryImage, int startIndex, int length)
     /// {
     ///     m_typeID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
     /// }
     /// </code>
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of the identifier.</typeparam>
-    public abstract class ParsingStateBase<TTypeIdentifier> : IParsingState<TTypeIdentifier>
+    public abstract class BinaryImageHeaderBase<TTypeIdentifier> : IBinaryImageHeader<TTypeIdentifier>
     {
         /// <summary>
         /// Internal field that stores the identifier used for identifying the <see cref="Type"/> to be parsed.
