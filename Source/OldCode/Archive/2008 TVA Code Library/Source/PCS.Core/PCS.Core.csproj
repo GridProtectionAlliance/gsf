@@ -183,8 +183,8 @@
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="Parsing\BasicParserBase.cs" />
     <Compile Include="Parsing\IBasicParser.cs" />
-    <Compile Include="Parsing\ParserBase.cs" />
-    <Compile Include="Parsing\IParser.cs" />
+    <Compile Include="Parsing\StreamParserBase.cs" />
+    <Compile Include="Parsing\IStreamParser.cs" />
     <Compile Include="Parsing\ICommonHeader.cs" />
     <Compile Include="Parsing\CommonHeaderBase.cs" />
     <Compile Include="ProcessProgressHandler.cs" />

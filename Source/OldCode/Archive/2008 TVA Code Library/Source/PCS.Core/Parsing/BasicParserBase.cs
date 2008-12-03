@@ -37,7 +37,7 @@ namespace PCS.Parsing
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </para>
     /// <para>
-    /// This class is more specific than the <see cref="ParserBase"/> in that it can automate the parsing of a
+    /// This class is more specific than the <see cref="StreamParserBase"/> in that it can automate the parsing of a
     /// particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
     /// <see cref="IBinaryImageConsumer{TTypeIdentifier}"/> interface. The common method of identification is
@@ -51,7 +51,7 @@ namespace PCS.Parsing
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class BasicParserBase<TTypeIdentifier, TOutputType> : ParserBase, IBasicParser<TTypeIdentifier, TOutputType> where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
+    public abstract class BasicParserBase<TTypeIdentifier, TOutputType> : StreamParserBase, IBasicParser<TTypeIdentifier, TOutputType> where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -221,7 +221,7 @@ namespace PCS.Parsing
         // overrride coding pattern for serialzation of these properties...
 
         ///// <summary>
-        ///// Saves settings for the data parser object to the config file if the <see cref="ParserBase.PersistSettings"/> 
+        ///// Saves settings for the data parser object to the config file if the <see cref="StreamParserBase.PersistSettings"/> 
         ///// property is set to true.
         ///// </summary>        
         //public override void SaveSettings()
@@ -243,7 +243,7 @@ namespace PCS.Parsing
         //}
 
         ///// <summary>
-        ///// Loads saved settings for the data parser object from the config file if the <see cref="ParserBase.PersistSettings"/> 
+        ///// Loads saved settings for the data parser object from the config file if the <see cref="StreamParserBase.PersistSettings"/> 
         ///// property is set to true.
         ///// </summary>        
         //public override void LoadSettings()

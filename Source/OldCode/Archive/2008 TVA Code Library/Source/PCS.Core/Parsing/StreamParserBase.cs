@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  ParserBase.cs
+//  StreamParserBase.cs
 //  Copyright ©2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -38,7 +38,7 @@ namespace PCS.Parsing
     DesignerCategory("Component"), 
     DefaultEvent("ParsingException"), 
     DefaultProperty("ExecuteParseOnSeparateThread")]
-    public abstract class ParserBase : Stream, IComponent, IParser
+    public abstract class StreamParserBase : Stream, IComponent, IStreamParser
     {
         #region [ Members ]
 
@@ -112,9 +112,9 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="ParserBase"/> class.
+        /// Creates a new instance of the <see cref="StreamParserBase"/> class.
         /// </summary>
-        protected ParserBase()
+        protected StreamParserBase()
 	    {
             m_protocolSyncBytes = DefaultProtocolSyncBytes;
             m_executeParseOnSeparateThread = DefaultExecuteParseOnSeparateThread;
@@ -285,7 +285,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets the total amount of time, in seconds, that the <see cref="ParserBase"/> has been active.
+        /// Gets the total amount of time, in seconds, that the <see cref="StreamParserBase"/> has been active.
         /// </summary>
         [Browsable(false)]
         public virtual double RunTime
@@ -338,7 +338,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets the current run-time statistics of the <see cref="ParserBase"/>.
+        /// Gets the current run-time statistics of the <see cref="StreamParserBase"/>.
         /// </summary>
         [Browsable(false)]
         public virtual ProcessQueueStatistics CurrentStatistics
@@ -372,7 +372,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports reading.
         /// </summary>
         /// <remarks>
-        /// The <see cref="ParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="StreamParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanRead
@@ -387,7 +387,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         /// <remarks>
-        /// The <see cref="ParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="StreamParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         [Browsable(false)]
         public override bool CanSeek
@@ -402,7 +402,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         /// <remarks>
-        /// The <see cref="ParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
+        /// The <see cref="StreamParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
         /// </remarks>
         [Browsable(false)]
         public override bool CanWrite
@@ -414,7 +414,7 @@ namespace PCS.Parsing
         }
         
         /// <summary>
-        /// Gets the unique display name of the <see cref="ParserBase"/> object.
+        /// Gets the unique display name of the <see cref="StreamParserBase"/> object.
         /// </summary>
         [Browsable(false)]
         public virtual string Name
@@ -427,7 +427,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets current status of <see cref="ParserBase"/>.
+        /// Gets current status of <see cref="StreamParserBase"/>.
         /// </summary>
         [Browsable(false)]
         public virtual string Status
@@ -481,7 +481,7 @@ namespace PCS.Parsing
         #region [ Methods ]
 				
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ParserBase"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="StreamParserBase"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -611,8 +611,8 @@ namespace PCS.Parsing
         /// </para>
         /// <para>
         /// If the user has called <see cref="Start"/> method, this method will process all remaining buffers on the calling thread
-        /// until all queued buffers have been parsed - the <see cref="ParserBase"/> will then be automatically stopped. This method
-        /// is typically called on shutdown to make sure any remaining queued buffers get parsed before the class instance is
+        /// until all queued buffers have been parsed - the <see cref="StreamParserBase"/> will then be automatically stopped. This
+        /// method is typically called on shutdown to make sure any remaining queued buffers get parsed before the class instance is
         /// destructed.
         /// </para>
         /// <para>
@@ -621,7 +621,7 @@ namespace PCS.Parsing
         /// <see cref="Write"/> method), the flush call may never return (not a happy situtation on shutdown).
         /// </para>
         /// <para>
-        /// The <see cref="ParserBase"/> does not clear queue prior to destruction. If the user fails to call this method
+        /// The <see cref="StreamParserBase"/> does not clear queue prior to destruction. If the user fails to call this method
         /// before the class is destructed, there may be data that remains unparsed in the internal buffer.
         /// </para>
         /// </remarks>

@@ -1,17 +1,17 @@
 //*******************************************************************************************************
-//  IFrameParser.vb - Frame parsing interface
+//  IStreamParser.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -20,9 +20,9 @@ using System;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This interface represents the protocol independent representation of a binary image parser.
+    /// This interface represents the protocol independent representation of a streaming data parser.
     /// </summary>
-    public interface IParser : ISupportLifecycle, IStatusProvider
+    public interface IStreamParser : ISupportLifecycle, IStatusProvider
     {
         /// <summary>
         /// Occurs when data image fails deserialized due to an exception.
@@ -83,7 +83,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Writes a sequence of bytes onto the <see cref="IParser"/> stream for parsing.
+        /// Writes a sequence of bytes onto the <see cref="IStreamParser"/> stream for parsing.
         /// </summary>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
