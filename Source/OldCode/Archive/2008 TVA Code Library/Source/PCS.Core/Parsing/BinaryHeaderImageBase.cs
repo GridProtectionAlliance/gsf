@@ -32,7 +32,7 @@ namespace PCS.Parsing
     /// </code>
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of the identifier.</typeparam>
-    public abstract class BinaryImageHeaderBase<TTypeIdentifier> : IBinaryImageHeader<TTypeIdentifier>
+    public abstract class BinaryImageHeaderBase<TTypeIdentifier> : ICommonHeader<TTypeIdentifier>
     {
         /// <summary>
         /// Internal field that stores the identifier used for identifying the <see cref="Type"/> to be parsed.
