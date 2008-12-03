@@ -1070,7 +1070,7 @@ namespace PCS.Collections
                 m_realTimeProcessThread = new ManagedThread(RealTimeThreadProc);
                 m_realTimeProcessThread.Name = "PCS.Collections.ProcessQueue.RealTimeThreadProc() [" + Name + "]";
 #else
-                m_realTimeProcessThread = new Thread(new System.Threading.ThreadStart(RealTimeThreadProc));
+                m_realTimeProcessThread = new Thread(new ThreadStart(RealTimeThreadProc));
 #endif
 
                 m_realTimeProcessThread.Priority = m_realTimeProcessThreadPriority;
