@@ -22,13 +22,14 @@ using System.Drawing;
 using System.Threading;
 using System.ComponentModel;
 using System.Collections.Generic;
+using PCS;
 using PCS.Configuration;
 using PCS.Collections;
 
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This class defines the fundamental functionality for parsing any binary data stream.
+    /// This class defines the fundamental functionality for parsing any stream of binary data.
     /// </summary>
     /// <remarks>
     /// This parser is designed as a write-only stream such that data can come from any source.
@@ -46,6 +47,11 @@ namespace PCS.Parsing
         // Constants
 
         /// <summary>
+        /// Specified the default value for the <see cref="ProtocolSyncBytes"/> property.
+        /// </summary>
+        public static readonly byte[] DefaultProtocolSyncBytes = new byte[] { 0xAA };
+
+        /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
@@ -56,12 +62,7 @@ namespace PCS.Parsing
         public const string DefaultSettingsCategory = "ParsingEngine";
         
         /// <summary>
-        /// Default data stream protocol synchrnonization byte.
-        /// </summary>
-        public const byte DefaultProtocolSyncByte = 0xAA;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="DefaultExecuteParseOnSeparateThread"/> property.
+        /// Specifies the default value for the <see cref="ExecuteParseOnSeparateThread"/> property.
         /// </summary>
         public const bool DefaultExecuteParseOnSeparateThread = true;
 
@@ -92,15 +93,15 @@ namespace PCS.Parsing
 
         // Fields
         private ProcessQueue<byte[]> m_bufferQueue;
+        private byte[] m_unparsedBuffer;
+        private byte[] m_protocolSyncBytes;
         private bool m_executeParseOnSeparateThread;
-        private MemoryStream m_dataStream;
         private bool m_dataStreamInitialized;
-        private byte m_protocolSyncByte;
-        private string m_settingsCategory;
-        private bool m_persistSettings;
-        private long m_imagesProcessed;
+        private long m_buffersProcessed;
         private long m_startTime;
         private long m_stopTime;
+        private string m_settingsCategory;
+        private bool m_persistSettings;
         private ISite m_componentSite;
         private bool m_initialized;
         private bool m_enabled;
@@ -115,7 +116,7 @@ namespace PCS.Parsing
         /// </summary>
         protected ParserBase()
 	    {
-            m_protocolSyncByte = DefaultProtocolSyncByte;
+            m_protocolSyncBytes = DefaultProtocolSyncBytes;
             m_executeParseOnSeparateThread = DefaultExecuteParseOnSeparateThread;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
@@ -166,31 +167,28 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets flag that determines if this protocol parsing implementation uses a synchronization byte.
+        /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
         /// </summary>
         [Browsable(false)]
-        public abstract bool ProtocolUsesSyncByte
+        public abstract bool ProtocolUsesSyncBytes
         {
             get;
         }
 
-        // TODO: Make this an array (i.e., byte[]) for multi-byte synchronization implementations...
-
         /// <summary>
-        /// Gets or sets synchronization byte for this parsing implementation, is used.
+        /// Gets or sets synchronization bytes for this parsing implementation, if used.
         /// </summary>
         [Category("Settings"),
-        DefaultValue(DefaultProtocolSyncByte),
-        Description("Specifies the synchronization byte for this parsing implementation, if used.")]
-        public virtual byte ProtocolSyncByte
+        Description("Specifies the sequence of synchronization bytes for this parsing implementation, if used.")]
+        public virtual byte[] ProtocolSyncBytes
         {
             get
             {
-                return m_protocolSyncByte;
+                return m_protocolSyncBytes;
             }
             set
             {
-                m_protocolSyncByte = value;
+                m_protocolSyncBytes = value;
             }
         }
 
@@ -289,31 +287,25 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets the total amount of time, in seconds, that the <see cref="ParserBase"/> has been active.
         /// </summary>
+        [Browsable(false)]
         public virtual double RunTime
         {
             get
             {
-                if (m_bufferQueue != null)
+                long processingTime = 0;
+
+                if (m_startTime > 0)
                 {
-                    return m_bufferQueue.RunTime;
+                    if (m_stopTime > 0)
+                        processingTime = m_stopTime - m_startTime;
+                    else
+                        processingTime = DateTime.Now.Ticks - m_startTime;
                 }
-                else
-                {
-                    long processingTime = 0;
 
-                    if (m_startTime > 0)
-                    {
-                        if (m_stopTime > 0)
-                            processingTime = m_stopTime - m_startTime;
-                        else
-                            processingTime = DateTime.Now.Ticks - m_startTime;
-                    }
+                if (processingTime < 0)
+                    processingTime = 0;
 
-                    if (processingTime < 0)
-                        processingTime = 0;
-
-                    return Ticks.ToSeconds(processingTime);
-                }
+                return Ticks.ToSeconds(processingTime);
             }
         }
 
@@ -333,23 +325,22 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets the total number of images processed so far.
+        /// Gets the total number of buffer images processed so far.
         /// </summary>
-        /// <returns>Total number of images processed so far.</returns>
-        public long TotalProcessedImages
+        /// <returns>Total number of buffer images processed so far.</returns>
+        [Browsable(false)]
+        public long TotalProcessedBuffers
         {
             get
             {
-                if (m_bufferQueue != null)
-                    return m_bufferQueue.TotalProcessedItems;
-                else
-                    return m_imagesProcessed;
+                return m_buffersProcessed;
             }
         }
 
         /// <summary>
         /// Gets the current run-time statistics of the <see cref="ParserBase"/>.
         /// </summary>
+        [Browsable(false)]
         public virtual ProcessQueueStatistics CurrentStatistics
         {
             get
@@ -370,7 +361,7 @@ namespace PCS.Parsing
                     stats.ProcessTimeout = Timeout.Infinite;
                     stats.ThreadingMode = QueueThreadingMode.Synchronous;
                     stats.RunTime = RunTime;
-                    stats.TotalProcessedItems = m_imagesProcessed;
+                    stats.TotalProcessedItems = m_buffersProcessed;
 
                     return stats;
                 }
@@ -444,32 +435,30 @@ namespace PCS.Parsing
             get
             {
                 StringBuilder status = new StringBuilder();
+
                 status.Append("      Current parser state: ");
                 status.Append(m_enabled ? "Active" : "Idle");
                 status.AppendLine();
-                if (ProtocolUsesSyncByte)
+
+                if (ProtocolUsesSyncBytes)
                 {
-                    status.Append(" Data synchronization byte: 0x");
-                    status.Append(ProtocolSyncByte.ToString("X"));
+                    status.Append("Data synchronization bytes: ");
+                    status.Append(ByteEncoding.Hexadecimal.GetString(ProtocolSyncBytes));
                     status.AppendLine();
                 }
+
                 status.Append("  Parsing execution source: ");
                 status.Append(m_executeParseOnSeparateThread ? "Independent thread using queued data" : "Data acquisition thread");
                 status.AppendLine();
+                status.Append("     Total parser run-time: ");
+                status.Append(Seconds.ToText(RunTime));
+                status.AppendLine();
+                status.Append("   Total buffers processed: ");
+                status.Append(m_buffersProcessed);
+                status.AppendLine();
 
                 if (m_bufferQueue != null)
-                {
                     status.Append(m_bufferQueue.Status);
-                }
-                else
-                {
-                    status.Append("    Total process run time: ");
-                    status.Append(Seconds.ToText(RunTime));
-                    status.AppendLine();
-                    status.Append("     Total items processed: ");
-                    status.Append(m_imagesProcessed);
-                    status.AppendLine();
-                }
 
                 return status.ToString();
             }
@@ -478,6 +467,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets design mode of component site, if component has a site; or false, if the component does not have a site.
         /// </summary>
+        [Browsable(false)]
         protected virtual bool DesignMode
         {
             get
@@ -509,9 +499,7 @@ namespace PCS.Parsing
                         }
                         m_bufferQueue = null;
 
-                        if (m_dataStream != null) m_dataStream.Dispose();
-                        m_dataStream = null;
-
+                        m_unparsedBuffer = null;
                         m_enabled = false;
                     }
                     
@@ -532,12 +520,15 @@ namespace PCS.Parsing
         /// </summary>
         public virtual void Start()
         {
-            m_imagesProcessed = 0;
+            // Make sure parser is initialized
+            Initialize();
+
+            m_buffersProcessed = 0;
             m_stopTime = 0;
             m_startTime = DateTime.Now.Ticks;
 
             // Initialized state depends whether or not derived class uses a protocol synchrnonization byte
-            m_dataStreamInitialized = !ProtocolUsesSyncByte;
+            m_dataStreamInitialized = !ProtocolUsesSyncBytes;
             
             if (m_executeParseOnSeparateThread)
                 m_bufferQueue.Start();
@@ -569,13 +560,13 @@ namespace PCS.Parsing
         public override void Write(byte[] buffer, int offset, int count)
         {
             // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
-            // thus the attempt below to "align" data stream to specified ProtocolSyncByte.
+            // thus the attempt below to "align" data stream to specified ProtocolSyncBytes.
             if (m_dataStreamInitialized)
             {
                 if (m_executeParseOnSeparateThread)
                 {
-                    // Queue up received data buffer for real-time parsing and return to data collection as quickly as possible...
-                    // Since source buffer may be reused, we queue a "copy" the buffer.
+                    // Queue up received data buffer for parsing and return to data collection as quickly as possible...
+                    // Since source buffer may be reused, we queue a "copy" the buffer for later processing.
                     m_bufferQueue.Add(buffer.BlockCopy(offset, count));
                 }
                 else
@@ -586,28 +577,28 @@ namespace PCS.Parsing
             }
             else
             {
-                // Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte to "line-up" data stream
-                int syncBytePosition = Array.IndexOf(buffer, ProtocolSyncByte, offset, count);
+                // Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte(s) to "line-up" data stream
+                int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
 
-                if (syncBytePosition > -1)
+                if (syncBytesPosition > -1)
                 {
                     // Initialize data stream starting at located sync byte
                     if (m_executeParseOnSeparateThread)
                     {
-                        // Since source buffer may be reused, we queue a "copy" the buffer.
-                        m_bufferQueue.Add(buffer.BlockCopy(syncBytePosition, count - syncBytePosition));
+                        // Since source buffer may be reused, we queue a "copy" the buffer for later processing.
+                        m_bufferQueue.Add(buffer.BlockCopy(syncBytesPosition, count - syncBytesPosition));
                     }
                     else
                     {
-                        ParseBuffer(buffer, syncBytePosition, count - syncBytePosition);
+                        ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
                     }
 
                     m_dataStreamInitialized = true;
                 }
             }
 
-            // Track total processed images
-            m_imagesProcessed++;
+            // Track total processed buffer images
+            m_buffersProcessed++;
         }
 
         /// <summary>
@@ -619,9 +610,10 @@ namespace PCS.Parsing
         /// flush if the internal buffer queue is not enabled.
         /// </para>
         /// <para>
-        /// If the user has called <see cref="Start"/> method, this method will block the current thread until all queued buffers
-        /// have been parsed - the <see cref="ParserBase"/> will then be automatically stopped. This method is typically
-        /// called on shutdown to make sure any remaining queued buffers get parsed before the class instance is destructed.
+        /// If the user has called <see cref="Start"/> method, this method will process all remaining buffers on the calling thread
+        /// until all queued buffers have been parsed - the <see cref="ParserBase"/> will then be automatically stopped. This method
+        /// is typically called on shutdown to make sure any remaining queued buffers get parsed before the class instance is
+        /// destructed.
         /// </para>
         /// <para>
         /// It is possible for items to be queued while the flush is executing. The flush will continue to parse buffers as quickly
@@ -790,9 +782,9 @@ namespace PCS.Parsing
         /// <summary>
         /// Protocol specific frame parsing algorithm.
         /// </summary>
-        /// <param name="buffer">Buffer containing data to parse</param>
-        /// <param name="offset">Offset index into buffer that represents where to start parsing</param>
-        /// <param name="length">Maximum length of valid data from offset</param>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
         /// <para>
@@ -852,37 +844,44 @@ namespace PCS.Parsing
         // We process all queued data buffers that are available at once...
         private void ParseQueuedBuffers(byte[][] buffers)
         {
-            MemoryStream combinedBuffer = new MemoryStream();
-
-            // Combine all currently queued buffers
-            for (int x = 0; x <= buffers.Length - 1; x++)
+            // Process queue ensures that there will always be at least one buffer...
+            if (buffers.Length > 1)
             {
-                combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
-            }
+                MemoryStream combinedBuffer = new MemoryStream();
 
-            // Parse combined data buffers
-            ParseBuffer(combinedBuffer.ToArray(), 0, (int)combinedBuffer.Length);
+                // Combine all currently queued buffers
+                for (int x = 0; x <= buffers.Length - 1; x++)
+                {
+                    combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
+                }
+
+                // Parse combined data buffers
+                ParseBuffer(combinedBuffer.ToArray(), 0, (int)combinedBuffer.Length);
+            }
+            else
+            {
+                // Parse single buffer directly
+                ParseBuffer(buffers[0], 0, buffers[0].Length);
+            }
         }
 
+        // Parse buffer image - user implements protocol specific "ParseFrame" function to extract data from image
         private void ParseBuffer(byte[] buffer, int offset, int count)
         {
             try
             {
                 // Prepend any left over buffer data from last parse call
-                if (m_dataStream != null)
+                if (m_unparsedBuffer != null)
                 {
-                    MemoryStream combinedBuffer = new MemoryStream();
+                    // Combine remaining buffer from last call and current buffer together as a single image
+                    byte[] combinedBuffer = new byte[m_unparsedBuffer.Length + count];
+                    Buffer.BlockCopy(m_unparsedBuffer, 0, combinedBuffer, 0, m_unparsedBuffer.Length);
+                    Buffer.BlockCopy(buffer, offset, combinedBuffer, m_unparsedBuffer.Length, count);
 
-                    combinedBuffer.Write(m_dataStream.ToArray(), 0, (int)m_dataStream.Length);
-                    m_dataStream = null;
-
-                    // Append new incoming data
-                    combinedBuffer.Write(buffer, offset, count);
-
-                    // Pull all combined data together as one big buffer
-                    buffer = combinedBuffer.ToArray();
+                    buffer = combinedBuffer;
                     offset = 0;
-                    count = (int)combinedBuffer.Length;
+                    count = combinedBuffer.Length;
+                    m_unparsedBuffer = null;
                 }
 
                 int endOfBuffer = offset + count - 1;
@@ -894,6 +893,10 @@ namespace PCS.Parsing
                     // Call derived class frame parsing algorithm - this is protocol specific
                     parsedFrameLength = ParseFrame(buffer, offset, endOfBuffer - offset + 1);
 
+                    // Returned value represents total bytes of data in the buffer image that were
+                    // parsed. There could still be data remaining in the buffer, but user parsing
+                    // algorithm could have decided that there was not enough buffer available for
+                    // parsing and returned a "zero" - meaning no data was parsed.
                     if (parsedFrameLength > 0)
                     {
                         // If frame was parsed, increment buffer offset by frame length
@@ -902,23 +905,24 @@ namespace PCS.Parsing
                     else
                     {
                         // If not, save off remaining buffer to prepend onto next read
-                        m_dataStream = new MemoryStream();
-                        m_dataStream.Write(buffer, offset, count - offset);
+                        m_unparsedBuffer = new byte[count - offset];
+                        Buffer.BlockCopy(buffer, offset, m_unparsedBuffer, 0, m_unparsedBuffer.Length);
                         break;
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Probable mal-formed data image, discard data on move on...
-                m_dataStreamInitialized = !ProtocolUsesSyncByte;;
-                m_dataStream = null;
+                // Probable malformed data image, discard data on move on...
+                m_dataStreamInitialized = !ProtocolUsesSyncBytes;
+                m_unparsedBuffer = null;
 
                 OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
                 OnParsingException(ex);
             }
         }
 
+        // We just bubble any exceptions captured in process queue out to parsing exception event...
         private void m_bufferQueue_ProcessException(Exception ex)
         {
             OnParsingException(ex);

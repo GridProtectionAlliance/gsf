@@ -1216,7 +1216,7 @@ namespace PCS.IO
             }
 
             T newRecord = CreateNewRecord(recordID);
-            newRecord.Initialize(m_recordBuffer, 0);
+            newRecord.Initialize(m_recordBuffer, 0, m_recordBuffer.Length);
 
             return newRecord;
         }

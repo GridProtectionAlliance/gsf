@@ -34,23 +34,24 @@ namespace PCS.Parsing
         /// </summary>
         /// <param name="binaryImage">Binary image to be used for initialization.</param>
         /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
+        /// <param name="length">Valid number of bytes within binary image.</param>
         /// <returns>The number of bytes used for initialization.</returns>
-        int Initialize(byte[] binaryImage, int startIndex);
+        int Initialize(byte[] binaryImage, int startIndex, int length);
 
         /// <summary>
-        /// Gets or sets current parsing state of <see cref="IBinaryImageConsumer{TTypeIdentifier}"/>.
+        /// Gets or sets current <see cref="ICommonHeader{TTypeIdentifier}"/>.
         /// </summary>
         /// <remarks>
-        /// If used, this will need to be set before call to <see cref="Initialize(byte[],int)"/>.
+        /// If used, this will need to be set before call to <see cref="Initialize(byte[],int,int)"/>.
         /// </remarks>
-        IParsingState<TTypeIdentifier> ParsingState { get; set; }
+        ICommonHeader<TTypeIdentifier> CommonHeader { get; set; }
 
         /// <summary>
         /// Gets the identifier that can be used for identifying the <see cref="Type"/>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <see cref="TypeID"/> must be unique across all siblings implementing a common <see cref="Type"/>.
+        /// <see cref="TypeID"/> must be unique across all siblings implementing a common <see cref="Type"/> or interface.
         /// </para>
         /// <para>
         /// Output types implement this class so they have a consistently addressable identification property.

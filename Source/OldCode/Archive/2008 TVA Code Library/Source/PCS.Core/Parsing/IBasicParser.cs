@@ -43,10 +43,5 @@ namespace PCS.Parsing
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the output type that could not be found.
         /// </remarks>
         event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates if data types get constructed in an optimized fashion.
-        /// </summary>
-        bool OptimizeTypeConstruction { get; set; }
     }
 }

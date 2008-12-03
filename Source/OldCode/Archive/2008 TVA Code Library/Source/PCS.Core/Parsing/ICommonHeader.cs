@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IParsingState.cs
+//  ICommonHeader.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -23,17 +23,22 @@ using System.Text;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// Defines the the common header of a binary image for a common set of parsed types, consisting at least of a type ID.
+    /// Defines the common header of a binary image for a set of parsed types, consisting at least of a type ID.
     /// </summary>
     /// <remarks>
-    /// Header implementations will extend this inertface as necessary to accomodate specific header images.
+    /// Header implementations can extend this interface as necessary to accomodate specific header images.
     /// </remarks>
-    /// <typeparam name="TTypeIdentifier">.NET type that represents the the output type identifier.</typeparam>
-    public interface IBinaryImageHeader<TTypeIdentifier>
+    /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
+    public interface ICommonHeader<TTypeIdentifier>
     {
         /// <summary>
         /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.
         /// </summary>
         TTypeIdentifier TypeID { get; set; }
+
+        /// <summary>
+        /// Gets or sets any additional state information that might be needed for parsing.
+        /// </summary>
+        object State { get; set; }
     }
 }

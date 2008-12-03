@@ -75,6 +75,14 @@ namespace PCS.Parsing
         }
 
         /// <summary>
+        /// Gets the total number of buffer images processed so far.
+        /// </summary>
+        long TotalProcessedBuffers
+        {
+            get;
+        }
+
+        /// <summary>
         /// Writes a sequence of bytes onto the <see cref="IParser"/> stream for parsing.
         /// </summary>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>

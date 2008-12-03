@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  ParsingState.cs
+//  CommonHeaderBase.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -20,24 +20,29 @@ using System;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// Represents the base class for a binary image header implementation.
+    /// Represents the base class for a common binary image header implementation.
     /// </summary>
     /// <remarks>
-    /// Typical implementations will have a constructor similar to the following:
+    /// Here is an example of a possible derived class constructor that has an integer TypeID as the
+    /// first 4 bytes in the image:
     /// <code>
-    /// public BinaryImageHeader(byte[] binaryImage, int startIndex, int length)
+    /// public CommonHeader(object state, byte[] binaryImage, int startIndex, int length)
     /// {
-    ///     m_typeID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+    ///     if (length > 3)
+    ///     {
+    ///         TypeID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+    ///         State = state;
+    ///     }
+    ///     else
+    ///         throw new InvalidOperationException("Malformed image");
     /// }
     /// </code>
     /// </remarks>
-    /// <typeparam name="TTypeIdentifier">Type of the identifier.</typeparam>
-    public abstract class BinaryImageHeaderBase<TTypeIdentifier> : ICommonHeader<TTypeIdentifier>
+    /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
+    public abstract class CommonHeaderBase<TTypeIdentifier> : ICommonHeader<TTypeIdentifier>
     {
-        /// <summary>
-        /// Internal field that stores the identifier used for identifying the <see cref="Type"/> to be parsed.
-        /// </summary>
-        protected TTypeIdentifier m_typeID;
+        private TTypeIdentifier m_typeID;
+        private object m_state;
         
         /// <summary>
         /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.
@@ -51,6 +56,21 @@ namespace PCS.Parsing
             set
             {
                 m_typeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets any additional state information that might be needed for parsing.
+        /// </summary>
+        public object State
+        {
+            get
+            {
+                return m_state;
+            }
+            set
+            {
+                m_state = value;
             }
         }
     }

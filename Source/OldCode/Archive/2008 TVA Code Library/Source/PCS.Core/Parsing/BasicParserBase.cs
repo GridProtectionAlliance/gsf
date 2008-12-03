@@ -19,6 +19,8 @@ using System;
 using System.IO;
 using System.Text;
 using System.Drawing;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.ComponentModel;
 using System.Collections.Generic;
 using PCS.Configuration;
@@ -27,30 +29,46 @@ using PCS.Collections;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This class defines a basic implementation of parsing functionality suitable for common, simple formatted, binary data
-    /// streams returning the parsed data via events.
+    /// This class defines a basic implementation of parsing functionality suitable for automating the parsing of a
+    /// binary data stream represented as frames with common headers and returning the parsed data via an event.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This parser is designed as a write-only stream such that data can come from any source.
+    /// </para>
+    /// <para>
+    /// This class is more specific than the <see cref="ParserBase"/> in that it can automate the parsing of a
+    /// particular protocol that is formatted as a series of frames that have a common method of identification.
+    /// Automation of type creation occurs by loading implementations of common types that implement the
+    /// <see cref="IBinaryImageConsumer{TTypeIdentifier}"/> interface. The common method of identification is
+    /// handled by creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily
+    /// includes a TypeID property, but also should include any state information needed to parse a particular
+    /// frame if necessary. Derived classes simply override the <see cref="ParseCommonHeader"/> function in order
+    /// to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
+    /// </para>
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    [Description("Defines the basic functionality for parsing a binary data stream and returning the parsed data via events."),
+    [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class BasicParserBase<TTypeIdentifier, TOutputType> : ParserBase, IBasicParser<TTypeIdentifier, TOutputType>
+    public abstract class BasicParserBase<TTypeIdentifier, TOutputType> : ParserBase, IBasicParser<TTypeIdentifier, TOutputType> where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
     {
         #region [ Members ]
 
         // Nested Types
 
+        // Container for Type information.
+        private class TypeInfo
+        {
+            public Type RuntimeType;
+            public TTypeIdentifier TypeID;
+            public DefaultConstructor CreateNew;
+        }
+
         // Constants
 
-        /// <summary>
-        /// Specifies the default value for the <see cref="OptimizeTypeConstruction"/> property.
-        /// </summary>
-        public const bool DefaultOptimizeTypeConstruction = true;
-
         // Delegates
+        private delegate TOutputType DefaultConstructor();
 
         // Events
 
@@ -72,7 +90,7 @@ namespace PCS.Parsing
         public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
 
         // Fields
-        private bool m_optimizeTypeConstruction;
+        private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
 
         #endregion
 
@@ -83,33 +101,12 @@ namespace PCS.Parsing
         /// </summary>
         protected BasicParserBase()
         {
-            m_optimizeTypeConstruction = DefaultOptimizeTypeConstruction;
+            m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates if data types get constructed in an optimized fashion.
-        /// </summary>
-        /// <remarks>
-        /// This property defaults to true, it only needs to be changed if there are issues with type creation.
-        /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultOptimizeTypeConstruction),
-        Description("Indicates whether the data types are constructed in an optimal mode.")]
-        public virtual bool OptimizeTypeConstruction
-        {
-            get
-            {
-                return m_optimizeTypeConstruction;
-            }
-            set
-            {
-                m_optimizeTypeConstruction = value;
-            }
-        }
 
         /// <summary>
         /// Gets current status of <see cref="BasicParserBase{TTypeIdentifier,TOutputType}"/>.
@@ -122,8 +119,8 @@ namespace PCS.Parsing
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.Append("   Optimized type creation: ");
-                status.Append(m_optimizeTypeConstruction);
+                status.Append("Total defined output types: ");
+                status.Append(m_outputTypes.Count);
                 status.AppendLine();
 
                 return status.ToString();
@@ -133,94 +130,200 @@ namespace PCS.Parsing
         #endregion
 
         #region [ Methods ]
-
+        
         /// <summary>
-        /// Saves settings for the data parser object to the config file if the <see cref="ParserBase.PersistSettings"/> 
-        /// property is set to true.
-        /// </summary>        
-        public override void SaveSettings()
-        {
-            if (PersistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["OptimizeTypeConstruction", true].Update(m_optimizeTypeConstruction, "True if if data types get constructed in an optimized fashion; otherwise False.");
-
-                // Save base class settings, this will flush any pending changes to config file
-                base.SaveSettings();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings for the data parser object from the config file if the <see cref="ParserBase.PersistSettings"/> 
-        /// property is set to true.
-        /// </summary>        
-        public override void LoadSettings()
-        {
-            if (PersistSettings)
-            {
-                // Load base class settings, this will validate settings category
-                base.LoadSettings();
-                
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                OptimizeTypeConstruction = settings["OptimizeTypeConstruction", true].ValueAs(m_optimizeTypeConstruction);
-            }
-        }
-
-        /// <summary>
-        /// 
+        /// Start the data parser.
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
+        /// <remarks>
+        /// This overload loads public types from assemblies in the application binaries directory that implement the parser's output type.
+        /// </remarks>
+        public override void Start()
+        {
+            Start(typeof(TOutputType).LoadImplementations());
+        }
+
+        /// <summary>
+        /// Starts the data parser given the specified type implementations.
+        /// </summary>
+        /// <param name="implementations">Output type implementations to establish for the parser.</param>
+        public void Start(IEnumerable<Type> implementations)
+        {
+            // Call base class start method, this ensures "Initialize" has been called
+            base.Start();
+
+            ConstructorInfo typeCtor = null;
+            AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("BasicParser"), AssemblyBuilderAccess.Run);
+            ModuleBuilder modBuilder = asmBuilder.DefineDynamicModule("Helper");
+            TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
+            List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
+
+            foreach (Type asmType in implementations)
+            {
+                // See if a parameterless constructor is available for this type
+                typeCtor = asmType.GetConstructor(Type.EmptyTypes);
+
+                // Since user can call this overload with any list of types, we double check the type criteria.
+                // If output type is a class, see if current type derives from it, else if output type is an
+                // interface, see if current type implements it.
+                if (typeCtor != null && !asmType.IsAbstract && 
+                (   
+                   (typeof(TOutputType).IsClass && asmType.IsSubclassOf(typeof(TOutputType))) ||
+                   (typeof(TOutputType).IsInterface && asmType.GetInterface(typeof(TOutputType).Name) != null))
+                )
+                {
+                    // The type meets the following criteria:
+                    //      - has a default public constructor
+                    //      - is not abstract and can be instantiated.
+                    //      - type is related to class or interface specified for the output
+                    TypeInfo outputType = new TypeInfo();
+                    outputType.RuntimeType = asmType;
+
+                    // We employ the best peforming way of instantiating objects using reflection.
+                    // See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
+
+                    // Invokation approach: Reflection.Emit + Delegate
+                    MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public | MethodAttributes.Static, asmType, Type.EmptyTypes);
+                    ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
+                    ilGen.Emit(OpCodes.Nop);
+                    ilGen.Emit(OpCodes.Newobj, typeCtor);
+                    ilGen.Emit(OpCodes.Ret);
+
+                    // We'll hold all of the matching types in this list temporarily until their IDs are determined.
+                    outputTypes.Add(outputType);
+                }
+            }
+
+            // The reason we have to do this here is because we can create a type only once. This is the type
+            // that has all the constructors created above for the various class matching the requirements for
+            // the output type.
+            Type bakedType = typeBuilder.CreateType(); // This can be done only once!
+
+            foreach (TypeInfo outputType in outputTypes)
+            {
+                outputType.CreateNew = (DefaultConstructor)(Delegate.CreateDelegate(typeof(DefaultConstructor), bakedType.GetMethod(outputType.RuntimeType.Name)));
+            }
+
+            foreach (TypeInfo outputType in outputTypes)
+            {
+                // Now, we'll go though all of the output types we've found and instantiate an instance of each in order to get
+                // the identifier for each of the type. This will help lookup of the type to be used when parsing the data.
+                TOutputType instance = outputType.CreateNew();
+                outputType.TypeID = instance.TypeID;
+
+                if (!m_outputTypes.ContainsKey(outputType.TypeID))
+                    m_outputTypes.Add(outputType.TypeID, outputType);
+            }
+        }
+
+        #region [ Example Persist Settings Overrides ]
+
+        // If any persistable properties are added to this class, or derived classes, then this code represents a good
+        // overrride coding pattern for serialzation of these properties...
+
+        ///// <summary>
+        ///// Saves settings for the data parser object to the config file if the <see cref="ParserBase.PersistSettings"/> 
+        ///// property is set to true.
+        ///// </summary>        
+        //public override void SaveSettings()
+        //{
+        //    if (PersistSettings)
+        //    {
+        //        // Ensure that settings category is specified.
+        //        if (string.IsNullOrEmpty(SettingsCategory))
+        //            throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+        //        // Save settings under the specified category.
+        //        ConfigurationFile config = ConfigurationFile.Current;
+        //        CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+        //        settings["OptimizeTypeConstruction", true].Update(m_optimizeTypeConstruction, "True if if data types get constructed in an optimized fashion; otherwise False.");
+
+        //        // Save base class settings, this will flush any pending changes to config file
+        //        base.SaveSettings();
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Loads saved settings for the data parser object from the config file if the <see cref="ParserBase.PersistSettings"/> 
+        ///// property is set to true.
+        ///// </summary>        
+        //public override void LoadSettings()
+        //{
+        //    if (PersistSettings)
+        //    {
+        //        // Load base class settings, this will validate settings category
+        //        base.LoadSettings();
+
+        //        // Save settings under the specified category.
+        //        ConfigurationFile config = ConfigurationFile.Current;
+        //        CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+        //        OptimizeTypeConstruction = settings["OptimizeTypeConstruction", true].ValueAs(m_optimizeTypeConstruction);
+        //    }
+        //}
+
+        #endregion
+
+        /// <summary>
+        /// Output type specific frame parsing algorithm.
+        /// </summary>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
+        /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFrame(byte[] buffer, int offset, int length)
         {
-            //{
-            //    int parsedBytes;
-            //    TTypeIdentifier id;
+            int cursor = offset;
+            int endOfBuffer = offset + length - 1;
+            ICommonHeader<TTypeIdentifier> commonHeader;
+            TypeInfo outputType;
+            TOutputType instance;
 
-            //    // Extract the type ID
-            //    parsedBytes = ExtractTypeID(buffer, offset, length, out id);
-            //    offset += parsedBytes;
+            // Extract the common header from the buffer image which includes the output type ID.
+            // For any protocol data that is represented as frames of data in a stream, there will
+            // be some set of common identification properties at the top the frame image that is
+            // common for all frame types.  This 
+            cursor += ParseCommonHeader(buffer, cursor, length, out commonHeader);
 
-            //    if (m_outputTypes.TryGetValue(id, out outputType))
-            //    {
-            //            instance = outputType.CreateNew();
-            //            instance.ParsingState = parsingState;
-            //            cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
-            //            output.Add(instance);
-            //            m_assemblyAttemptTracker[item[i].Source] = 0;       // <- Necessary overhead :(
-            //    }
-            //    else
-            //    {
-            //        // If we come accross data in the image we cannot convert to a type than, we are going
-            //        // to have to discard the remainder of the image because we will now know where the
-            //        // the next valid block of data is within the image.
-            //        cursor = item[i].Data.Length; // Move on to the next data image.
-            //        //OnOutputTypeNotFound(new EventArgs<TTypeIdentifier>(parsingState.TypeID));
-            //    }
+            if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
+            {
+                instance = outputType.CreateNew();
+                instance.CommonHeader = commonHeader;
+                cursor += instance.Initialize(buffer, cursor, endOfBuffer - cursor + 1);
+                
+                // Expose parsed type to consumer
+                OnDataParsed(instance);
+            }
+            else
+            {
+                // If we come across data in the image that we cannot convert to a type then we move on
+                // to the next buffer of data :(
+                cursor = length;
+                OnOutputTypeNotFound(commonHeader.TypeID);
+            }
 
-            //    OnDataParsed(output);
-
-            //    return parsedBytes;
-            //}
-
-            //protected virtual int ExtractTypeID(byte[] buffer, int offset, int length, out TTypeIdentifier id)
-            //{
-            //    id = default(TTypeIdentifier);
-            //    return 0;
-            //}
-
-            return 0;
+            return (cursor - offset);
         }
+        
+        /// <summary>
+        /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented in the binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
+        /// <param name="headerImage">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for <see cref="Type"/> the data image is for.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// <para>
+        /// Derived classes need to return a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for the
+        /// output types, which primarily includes an ID of the <see cref="Type"/> the data image is for.  This parsing is *only* for common header
+        /// information, actual parsing will be handled by output type via "Initialize" method. This header image should also be used to add needed
+        /// complex state information about the output type being parsed if needed.
+        /// </para>
+        /// <para>
+        /// Consumers can choose to return "zero" if the output type "Initialize" implementation expects the entire buffer image, however it will
+        /// be optimal if the "ParseCommonHeader" method parses the header, and the type "Initialize" method only parses the body of the image.
+        /// </para>
+        /// </remarks>
+        protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> headerImage);
 
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.

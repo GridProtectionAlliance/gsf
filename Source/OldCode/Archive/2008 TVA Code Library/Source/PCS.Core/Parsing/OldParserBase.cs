@@ -147,7 +147,7 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BinaryDataParserBase{TSourceIdentifier, TTypeIdentifier, TOutputType}"/> class.
+        /// Initializes a new instance of the  class.
         /// </summary>
         public OldParserBase()
         {
@@ -527,14 +527,14 @@ namespace PCS.Parsing
         /// </summary>
         /// <param name="binaryImage">The data image whose target type is to be determined.</param>
         /// <param name="startIndex">The index in the data image from where the data is valid.</param>
-        /// <returns>The <see cref="IParsingState{TTypeIdentifier}"/> which includes a type ID for <see cref="Type"/> the data image is for.</returns>
-        protected abstract IParsingState<TTypeIdentifier> GetParsingState(byte[] binaryImage, int startIndex);
+        /// <returns>The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for <see cref="Type"/> the data image is for.</returns>
+        protected abstract ICommonHeader<TTypeIdentifier> GetParsingState(byte[] binaryImage, int startIndex);
 
         private void ParseData(DataContainer[] item)
         {
             int cursor;
             TOutputType instance;
-            IParsingState<TTypeIdentifier> parsingState;
+            ICommonHeader<TTypeIdentifier> parsingState;
             TypeInfo outputType;
 
             for (int i = 0; i <= item.Length - 1; i++)
@@ -561,8 +561,8 @@ namespace PCS.Parsing
                             try
                             {
                                 instance = outputType.CreateNew();
-                                instance.ParsingState = parsingState;
-                                cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
+                                //instance.CommonHeaderHeader = parsingState;
+                                //cursor += instance.Initialize(item[i].Data, cursor);    // Returns the number of bytes used.
                                 output.Add(instance);
                                 m_assemblyAttemptTracker[item[i].Source] = 0;       // <- Necessary overhead :(
                             }
