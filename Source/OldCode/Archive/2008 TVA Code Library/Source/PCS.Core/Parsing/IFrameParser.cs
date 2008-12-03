@@ -25,7 +25,7 @@ namespace PCS.Parsing
     /// </summary>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public interface IBasicParser<TTypeIdentifier, TOutputType> : IStreamParser
+    public interface IFrameParser<TTypeIdentifier, TOutputType> : IStreamParser
     {
         /// <summary>
         /// Occurs when a data image is deserialized successfully to one of the output types that the data
