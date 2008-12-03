@@ -16,15 +16,11 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
 using System.Text;
-using System.Drawing;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.ComponentModel;
 using System.Collections.Generic;
-using PCS.Configuration;
-using PCS.Collections;
 
 namespace PCS.Parsing
 {
@@ -213,6 +209,92 @@ namespace PCS.Parsing
             }
         }
 
+        /// <summary>
+        /// Output type specific frame parsing algorithm.
+        /// </summary>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseFrame(byte[] buffer, int offset, int length)
+        {
+            int endOfBuffer = offset + length - 1;
+            int parsedFrameLength;
+            ICommonHeader<TTypeIdentifier> commonHeader;
+            TypeInfo outputType;
+            TOutputType instance;
+
+            // Extract the common header from the buffer image which includes the output type ID.
+            // For any protocol data that is represented as frames of data in a stream, there will
+            // be some set of common identification properties in the frame image, usually at the
+            // top, that is common for all frame types.
+            parsedFrameLength = ParseCommonHeader(buffer, offset, length, out commonHeader);
+            offset += parsedFrameLength;
+
+            if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
+            {
+                instance = outputType.CreateNew();
+                instance.CommonHeader = commonHeader;
+                parsedFrameLength += instance.Initialize(buffer, offset, endOfBuffer - offset + 1);
+                
+                // Expose parsed type to consumer
+                OnDataParsed(instance);
+            }
+            else
+            {
+                // If we come across data in the image that we cannot convert to a type then we move on
+                // to the next buffer of data :(
+                parsedFrameLength = length;
+                OnOutputTypeNotFound(commonHeader.TypeID);
+            }
+
+            return parsedFrameLength;
+        }
+        
+        /// <summary>
+        /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented in the binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
+        /// <param name="commonHeader">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// <para>
+        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
+        /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
+        /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
+        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> method. This header image should also be used to add needed complex state
+        /// information about the output type being parsed if needed.
+        /// </para>
+        /// <para>
+        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output type
+        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
+        /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
+        /// </para>
+        /// </remarks>
+        protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> commonHeader);
+
+        /// <summary>
+        /// Raises the <see cref="DataParsed"/> event.
+        /// </summary>
+        /// <param name="obj">Object deserialized from binary image.</param>
+        protected virtual void OnDataParsed(TOutputType obj)
+        {
+            if (DataParsed != null)
+                DataParsed(this, new EventArgs<TOutputType>(obj));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="OutputTypeNotFound"/> event.
+        /// </summary>
+        /// <param name="id">ID of the output type that was not found.</param>
+        protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
+        {
+            if (OutputTypeNotFound != null)
+                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
+        }
+
         #region [ Example Persist Settings Overrides ]
 
         // If any persistable properties are added to this class, or derived classes, then this code represents a good
@@ -260,108 +342,6 @@ namespace PCS.Parsing
 
         #endregion
 
-        /// <summary>
-        /// Output type specific frame parsing algorithm.
-        /// </summary>
-        /// <param name="buffer">Buffer containing data to parse.</param>
-        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
-        /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        protected override int ParseFrame(byte[] buffer, int offset, int length)
-        {
-            int cursor = offset;
-            int endOfBuffer = offset + length - 1;
-            ICommonHeader<TTypeIdentifier> commonHeader;
-            TypeInfo outputType;
-            TOutputType instance;
-
-            // Extract the common header from the buffer image which includes the output type ID.
-            // For any protocol data that is represented as frames of data in a stream, there will
-            // be some set of common identification properties in the frame image, usually at the
-            // top, that is common for all frame types.
-            cursor += ParseCommonHeader(buffer, cursor, length, out commonHeader);
-
-            if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
-            {
-                instance = outputType.CreateNew();
-                instance.CommonHeader = commonHeader;
-                cursor += instance.Initialize(buffer, cursor, endOfBuffer - cursor + 1);
-                
-                // Expose parsed type to consumer
-                OnDataParsed(instance);
-            }
-            else
-            {
-                // If we come across data in the image that we cannot convert to a type then we move on
-                // to the next buffer of data :(
-                cursor = length;
-                OnOutputTypeNotFound(commonHeader.TypeID);
-            }
-
-            return (cursor - offset);
-        }
-        
-        /// <summary>
-        /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented in the binary image.
-        /// </summary>
-        /// <param name="buffer">Buffer containing data to parse.</param>
-        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
-        /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <param name="commonHeader">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        /// <remarks>
-        /// <para>
-        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
-        /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
-        /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
-        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> method. This header image should also be used to add needed complex state
-        /// information about the output type being parsed if needed.
-        /// </para>
-        /// <para>
-        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output type
-        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
-        /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
-        /// </para>
-        /// </remarks>
-        protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> commonHeader);
-
-        /// <summary>
-        /// Raises the <see cref="DataParsed"/> event.
-        /// </summary>
-        /// <param name="obj">Object deserialized from binary image.</param>
-        protected virtual void OnDataParsed(TOutputType obj)
-        {
-            if (DataParsed != null)
-                DataParsed(this, new EventArgs<TOutputType>(obj));
-        }
-
-        /// <summary>
-        /// Raises the <see cref="OutputTypeNotFound"/> event.
-        /// </summary>
-        /// <param name="id">ID of the output type that was not found.</param>
-        protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
-        {
-            if (OutputTypeNotFound != null)
-                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
-        }
-
         #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
-
-        #endregion
-        
     }
 }

@@ -11,7 +11,9 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  09/19/2008 - James R Carroll
-//       Generated original version of source code.
+//      Generated original version of source code.
+//  12/03/2008 - James R Carroll
+//      Added "Combine" and "IndexOfSequence" overloaded extensions.
 //
 //*******************************************************************************************************
 

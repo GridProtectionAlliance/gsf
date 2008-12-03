@@ -183,6 +183,7 @@
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="Parsing\FrameParserBase.cs" />
     <Compile Include="Parsing\IFrameParser.cs" />
+    <Compile Include="Parsing\MultiSourceFrameParserBase.cs" />
     <Compile Include="Parsing\StreamParserBase.cs" />
     <Compile Include="Parsing\IStreamParser.cs" />
     <Compile Include="Parsing\ICommonHeader.cs" />

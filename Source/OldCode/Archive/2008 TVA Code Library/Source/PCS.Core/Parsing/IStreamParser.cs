@@ -41,12 +41,12 @@ namespace PCS.Parsing
         event EventHandler<EventArgs<Exception>> ParsingException;
 
         /// <summary>
-        /// Start the data parser.
+        /// Start the streaming data parser.
         /// </summary>
         void Start();
 
         /// <summary>
-        /// Stops the data parser.
+        /// Stops the streaming data parser.
         /// </summary>
         void Stop();
 

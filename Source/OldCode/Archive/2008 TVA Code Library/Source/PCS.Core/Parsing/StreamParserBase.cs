@@ -18,11 +18,8 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Drawing;
 using System.Threading;
 using System.ComponentModel;
-using System.Collections.Generic;
-using PCS;
 using PCS.Configuration;
 using PCS.Collections;
 
@@ -516,7 +513,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Start the data parser.
+        /// Start the streaming data parser.
         /// </summary>
         public virtual void Start()
         {
@@ -537,7 +534,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Stops the data parser.
+        /// Stops the streaming data parser.
         /// </summary>
         public virtual void Stop()
         {
@@ -844,25 +841,16 @@ namespace PCS.Parsing
         // We process all queued data buffers that are available at once...
         private void ParseQueuedBuffers(byte[][] buffers)
         {
+            byte[] combinedBuffer;
+
             // Process queue ensures that there will always be at least one buffer...
             if (buffers.Length > 1)
-            {
-                MemoryStream combinedBuffer = new MemoryStream();
-
-                // Combine all currently queued buffers
-                for (int x = 0; x <= buffers.Length - 1; x++)
-                {
-                    combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
-                }
-
-                // Parse combined data buffers
-                ParseBuffer(combinedBuffer.ToArray(), 0, (int)combinedBuffer.Length);
-            }
+                combinedBuffer = buffers.Combine();
             else
-            {
-                // Parse single buffer directly
-                ParseBuffer(buffers[0], 0, buffers[0].Length);
-            }
+                combinedBuffer = buffers[0];    // Parse single buffer directly as an optimization
+
+            // Parse combined buffers
+            ParseBuffer(combinedBuffer, 0, combinedBuffer.Length);
         }
 
         // Parse buffer image - user implements protocol specific "ParseFrame" function to extract data from image
@@ -874,13 +862,9 @@ namespace PCS.Parsing
                 if (m_unparsedBuffer != null)
                 {
                     // Combine remaining buffer from last call and current buffer together as a single image
-                    byte[] combinedBuffer = new byte[m_unparsedBuffer.Length + count];
-                    Buffer.BlockCopy(m_unparsedBuffer, 0, combinedBuffer, 0, m_unparsedBuffer.Length);
-                    Buffer.BlockCopy(buffer, offset, combinedBuffer, m_unparsedBuffer.Length, count);
-
-                    buffer = combinedBuffer;
+                    buffer = m_unparsedBuffer.Combine(0, m_unparsedBuffer.Length, buffer, offset, count);
                     offset = 0;
-                    count = combinedBuffer.Length;
+                    count = buffer.Length;
                     m_unparsedBuffer = null;
                 }
 
@@ -905,8 +889,7 @@ namespace PCS.Parsing
                     else
                     {
                         // If not, save off remaining buffer to prepend onto next read
-                        m_unparsedBuffer = new byte[count - offset];
-                        Buffer.BlockCopy(buffer, offset, m_unparsedBuffer, 0, m_unparsedBuffer.Length);
+                        m_unparsedBuffer = buffer.BlockCopy(offset, count - offset);
                         break;
                     }
                 }
