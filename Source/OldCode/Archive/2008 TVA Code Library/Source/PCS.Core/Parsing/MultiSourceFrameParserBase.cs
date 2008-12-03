@@ -16,8 +16,10 @@
 //*******************************************************************************************************
 
 using System;
+using System.Text;
 using System.ComponentModel;
 using System.Collections.Generic;
+using PCS.Collections;
 
 namespace PCS.Parsing
 {
@@ -37,25 +39,15 @@ namespace PCS.Parsing
     /// handled by creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily
     /// includes a TypeID property, but also should include any state information needed to parse a particular frame if
     /// necessary. Derived classes override the <see cref="FrameParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
-    /// function in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image. Also, 
-    /// since a data source identifier is being specified to track the incoming data source - user will need to override
-    /// the <see cref="SerializeSourceID"/> and <see cref="DeserializeSourceID"/> as well.
+    /// function in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
     /// </para>
     /// </remarks>
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    [Description("Defines the basic functionality for parsing multiple binary data streams, each represented as frames with common headers and returning the parsed data via an event."),
-    DefaultEvent("DataParsed")]
     public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameParserBase<TTypeIdentifier, TOutputType> where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
     {
         #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
 
         // Events
 
@@ -72,10 +64,13 @@ namespace PCS.Parsing
         /// </para>
         /// </remarks>
         [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
-        public new event EventHandler<EventArgs<TSourceIdentifier, List<TOutputType>>> DataParsed;
+        public new event EventHandler<EventArgs<TSourceIdentifier, ICollection<TOutputType>>> DataParsed;
 
         // Fields
+        private ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> m_bufferQueue;
+        private Dictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private List<TOutputType> m_parsedOutputs;
+        private bool m_disposed;
 
         #endregion
 
@@ -86,115 +81,219 @@ namespace PCS.Parsing
         /// </summary>
         public MultiSourceFrameParserBase()
         {
-            // We attach to base class event to get individual parsed data elements
-            base.DataParsed += CumulateParsedData;
-            
+            m_bufferQueue = CreateBufferQueue();
+            m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
+            m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
             m_parsedOutputs = new List<TOutputType>();
+
+            // We attach to base class data parsed event so we can cumulate outputs per data source
+            base.DataParsed += CumulateParsedOutput;
         }
 
         #endregion
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets the total number of buffers that are currently queued for processing, if any.
+        /// </summary>
+        public virtual int QueuedBuffers
+        {
+            get
+            {
+                if (m_bufferQueue != null)
+                    return m_bufferQueue.Count;
+                else
+                    return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current run-time statistics of the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
+        /// </summary>
+        public virtual ProcessQueueStatistics CurrentStatistics
+        {
+            get
+            {
+                return m_bufferQueue.CurrentStatistics;
+            }
+        }
+
+        /// <summary>
+        /// Gets current status of <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+                status.Append(m_bufferQueue.Status);
+
+                return status.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Writes a sequence of bytes, from the specified data source, onto the stream for parsing.
+        /// Releases the unmanaged resources used by the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
         /// </summary>
-        /// <param name="source">ID of the data source.</param>
-        /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
-        /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
-        /// <param name="count">The number of bytes to be written to the current stream.</param>
-        public void Write(TSourceIdentifier source, byte[] buffer, int offset, int count)
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
         {
-            // Serialize source ID
-            byte[] sourceID = SerializeSourceID(source);
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_bufferQueue != null)
+                        {
+                            m_bufferQueue.ProcessException -= m_bufferQueue_ProcessException;
+                            m_bufferQueue.Dispose();
+                        }
+                        m_bufferQueue = null;
 
-            // Prepend serialized source ID before actual buffer so data can be tracked with data source
-            buffer = sourceID.Combine(0, sourceID.Length, buffer, offset, count);
+                        if (m_sourceInitialized != null)
+                        {
+                            m_sourceInitialized.Clear();
+                        }
+                        m_sourceInitialized = null;
 
-            // Send combined buffer to parsing engine
-            base.Write(buffer, 0, buffer.Length);
+                        if (m_parsedOutputs != null)
+                        {
+                            m_parsedOutputs.Clear();
+                        }
+                        m_parsedOutputs = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         /// <summary>
-        /// Consumers should call the <see cref="Write(TSourceIdentifier,byte[],int,int)"/> overload instead to make sure data source ID gets tracked with data buffer.
+        /// Start the streaming data parser.
+        /// </summary>
+        public override void Start()
+        {
+            base.Start();
+            m_sourceInitialized.Clear();
+            m_bufferQueue.Start();
+        }
+
+        /// <summary>
+        /// Stops the streaming data parser.
+        /// </summary>
+        public override void Stop()
+        {
+            base.Stop();
+            m_bufferQueue.Stop();
+        }
+
+        /// <summary>
+        /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
+        /// </summary>
+        /// <param name="source">ID of the data source.</param>
+        /// <param name="buffer">An array of bytes to queue for parsing</param>
+        public void Parse(TSourceIdentifier source, byte[] buffer)
+        {
+            m_bufferQueue.Add(new IdentifiableItem<TSourceIdentifier, byte[]>(source, buffer));
+        }
+
+        /// <summary>
+        /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
+        /// </summary>
+        /// <param name="source">ID of the data source.</param>
+        /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
+        /// <param name="count">The number of bytes to be written to the current stream.</param>
+        public void Parse(TSourceIdentifier source, byte[] buffer, int offset, int count)
+        {
+            m_bufferQueue.Add(new IdentifiableItem<TSourceIdentifier, byte[]>(source, buffer.BlockCopy(offset, count)));
+        }
+
+        /// <summary>
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[])"/> method instead to make sure data source ID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This function should not be called directly.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("This function should not be called directly, call overload that takes data source ID as parameter instead.");
+            throw new NotImplementedException("This function should not be called directly, call the Parse method to queue data for parsing instead.");
         }
 
         /// <summary>
-        /// Output type specific frame parsing algorithm.
+        /// Clears all buffers for this stream and causes any buffered data to be parsed immediately.
         /// </summary>
-        /// <param name="buffer">Buffer containing data to parse.</param>
-        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
-        /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        protected override int ParseFrame(byte[] buffer, int offset, int length)
+        /// <remarks>
+        /// <para>
+        /// If the user has called <see cref="Start"/> method, this method will process all remaining buffers on the calling thread until all
+        /// queued buffers have been parsed - the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>
+        /// will then be automatically stopped. This method is typically called on shutdown to make sure any remaining queued buffers get
+        /// parsed before the class instance is destructed.
+        /// </para>
+        /// <para>
+        /// It is possible for items to be queued while the flush is executing. The flush will continue to parse buffers as quickly
+        /// as possible until the internal buffer queue is empty. Unless the user stops queueing data to be parsed (i.e. calling the
+        /// <see cref="Write"/> method), the flush call may never return (not a happy situtation on shutdown).
+        /// </para>
+        /// <para>
+        /// The <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction.
+        /// If the user fails to call this method before the class is destructed, there may be data that remains unparsed in the internal buffer.
+        /// </para>
+        /// </remarks>
+        public override void Flush()
         {
-            int parsedFrameLength;
-
-            parsedFrameLength =  base.ParseFrame(buffer, offset, length);
-
-            return parsedFrameLength;
+            m_bufferQueue.Flush();
         }
 
         /// <summary>
-        /// Serializes a data source identifier into a binary image.
+        /// Creates the internal buffer queue.
         /// </summary>
-        /// <param name="sourceID">Data source ID to serialize.</param>
-        /// <returns>Binary serialized representation of data source identifier.</returns>
         /// <remarks>
-        /// This example shows how to serialize a TSourceIdentifier defined as a Guid:
-        /// <code>
-        /// protected override byte[] SerializeSourceID(TSourceIdentifier sourceID)
-        /// {
-        ///     return sourceID.ToByteArray();
-        /// }
-        /// </code>
+        /// This method is virtual to allow derived classes to customize the style of processing queue used when consumers
+        /// choose to implement an internal buffer queue.  Default type is a real-time queue with the default settings.
         /// </remarks>
-        protected abstract byte[] SerializeSourceID(TSourceIdentifier sourceID);
+        /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
+        protected virtual ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> CreateBufferQueue()
+        {
+            return ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>>.CreateRealTimeQueue(ParseQueuedBuffers);
+        }
 
-        /// <summary>
-        /// Deserializes data source identifier from a binary image.
-        /// </summary>
-        /// <param name="buffer">Buffer containing data source identifier to deserialize.</param>
-        /// <param name="offset">Offset index into buffer that represents where to start deserializing.</param>
-        /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <param name="sourceID">Deserialized data source identifier.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        /// <remarks>
-        /// <para>
-        /// Implementors should return 0 if there is not enough data available to represent the image, do this
-        /// instead of throwing an exception.
-        /// </para>
-        /// <para>
-        /// This example shows how to deserialize a TSourceIdentifier defined as a Guid:
-        /// <code>
-        /// protected override int DeserializeSourceID(byte[] buffer, int offset, int length, out TSourceIdentifier sourceID);
-        /// {
-        ///     if (length &lt; 16)
-        ///     {
-        ///         // Not enough data to represent data source Guid
-        ///         sourceID = Guid.Empty;
-        ///         return 0;
-        ///     }
-        ///     else
-        ///     {
-        ///         sourceID = new Guid(buffer.BlockCopy(offset, 16));
-        ///         return 16;
-        ///     }
-        /// }
-        /// </code>
-        /// </para>
-        /// </remarks>
-        protected abstract int DeserializeSourceID(byte[] buffer, int offset, int length, out TSourceIdentifier sourceID);
+        // We process all queued data buffers that are available at once...
+        private void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
+        {
+            TSourceIdentifier sourceID;
+            byte[] buffer;
+
+            foreach (IdentifiableItem<TSourceIdentifier, byte[]> item in buffers)
+            {
+                sourceID = item.ID;
+                buffer = item.Item;
+
+                // Check to see if this data source has been initialized
+                if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(sourceID, out m_dataStreamInitialized))
+                    m_sourceInitialized.Add(sourceID, true);
+
+                // Clear any existing parsed outputs
+                m_parsedOutputs.Clear();
+
+                // Start parsing sequence for this buffer - this will cumulate new parsed outputs
+                base.Write(buffer, 0, buffer.Length);
+
+                // Expose parsed data
+                if (m_parsedOutputs.Count > 0)
+                    OnDataParsed(sourceID, m_parsedOutputs);
+            }
+        }
 
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
@@ -204,13 +303,19 @@ namespace PCS.Parsing
         protected void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
         {            
             if (DataParsed != null)
-                DataParsed(this, new EventArgs<TSourceIdentifier,List<TOutputType>>(sourceID, parsedData));
+                DataParsed(this, new EventArgs<TSourceIdentifier, ICollection<TOutputType>>(sourceID, parsedData));
         }
 
-        // Cumulate individual data elements for all buffers received from a single data source
-        private void CumulateParsedData(object source, EventArgs<TOutputType> data)
+        // Cumulate output data for current data source
+        private void CumulateParsedOutput(object sender, EventArgs<TOutputType> data)
         {
             m_parsedOutputs.Add(data.Argument);
+        }
+
+        // We just bubble any exceptions captured in process queue out to parsing exception event...
+        private void m_bufferQueue_ProcessException(Exception ex)
+        {
+            OnParsingException(ex);
         }
 
         #endregion

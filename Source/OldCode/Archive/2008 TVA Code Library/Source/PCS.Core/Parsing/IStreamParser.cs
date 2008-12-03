@@ -22,7 +22,7 @@ namespace PCS.Parsing
     /// <summary>
     /// This interface represents the protocol independent representation of a streaming data parser.
     /// </summary>
-    public interface IStreamParser : ISupportLifecycle, IStatusProvider
+    public interface IStreamParser
     {
         /// <summary>
         /// Occurs when data image fails deserialized due to an exception.
@@ -51,36 +51,15 @@ namespace PCS.Parsing
         void Stop();
 
         /// <summary>
-        /// Gets or sets flag that detemines if the internal buffer queue is enabled.
+        /// Gets current status of <see cref="IStreamParser"/>.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// When interface implementations set this property to true, an internal buffer queue should be enabled causing
-        /// any data to added to <see cref="Write"/> method to be queued for parsing on a separate thread. If the property
-        /// is set to false, the parse should occur immediately on the thread that invoked the <see cref="Write"/> method.
-        /// </para>
-        /// </remarks>
-        bool ExecuteParseOnSeparateThread
-        {
-            get;
-            set;
-        }
+        string Status { get; }
 
-        /// <summary>
-        /// Gets the total number of buffers that are currently queued for processing, if any.
-        /// </summary>
-        int QueuedBuffers
-        {
-            get;
-        }
 
         /// <summary>
         /// Gets the total number of buffer images processed so far.
         /// </summary>
-        long TotalProcessedBuffers
-        {
-            get;
-        }
+        long TotalProcessedBuffers { get; }
 
         /// <summary>
         /// Writes a sequence of bytes onto the <see cref="IStreamParser"/> stream for parsing.

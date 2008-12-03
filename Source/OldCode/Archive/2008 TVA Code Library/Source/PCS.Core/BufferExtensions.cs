@@ -228,9 +228,6 @@ namespace PCS
             }
             else
             {
-                // Code replicated here as an optimization, instead of calling overloaded CompareBuffers
-                // to prevent duplicate "== null" checks for empty buffers. This function needs to
-                // execute as quickly as possible given possible intended uses.
                 int length1 = source.Length;
                 int length2 = other.Length;
 
@@ -259,7 +256,7 @@ namespace PCS
         }
 
         /// <summary>Returns comparision results of two binary buffers.</summary>
-        public static int CompareTo(this byte[] source, int sourceOffset, int sourceLength, byte[] other, int otherOffset, int otherLength)
+        public static int CompareTo(this byte[] source, int sourceOffset, byte[] other, int otherOffset, int count)
         {
             if (source == null && other == null)
             {
@@ -278,27 +275,19 @@ namespace PCS
             }
             else
             {
-                if (sourceLength == otherLength)
-                {
-                    int comparision = 0;
+                int comparision = 0;
 
-                    // Compares elements of buffers that are of equal size.
-                    for (int x = 0; x <= sourceLength - 1; x++)
+                // Compares elements of buffers that are of equal size.
+                for (int x = 0; x <= count - 1; x++)
+                {
+                    comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
+                    if (comparision != 0)
                     {
-                        comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
-                        if (comparision != 0)
-                        {
-                            break;
-                        }
+                        break;
                     }
+                }
 
-                    return comparision;
-                }
-                else
-                {
-                    // Buffer lengths are unequal. Buffer with largest number of elements is assumed to be largest.
-                    return sourceLength.CompareTo(otherLength);
-                }
+                return comparision;
             }
         }
     }
