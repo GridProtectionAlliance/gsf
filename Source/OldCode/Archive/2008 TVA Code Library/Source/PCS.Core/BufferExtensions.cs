@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.IO;
 
 namespace PCS
 {
@@ -31,6 +32,94 @@ namespace PCS
             Buffer.BlockCopy(source, startIndex, copiedBytes, 0, copiedBytes.Length);
 
             return copiedBytes;
+        }
+
+        /// <summary>
+        /// Combines buffers together as a single image.
+        /// </summary>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="other">Other buffer to combine to source buffer.</param>
+        /// <returns>Combined buffers.</returns>
+        public static byte[] Combine(this byte[] source, byte[] other)
+        {
+            return source.Combine(0, source.Length, other, 0, other.Length);
+        }
+
+        /// <summary>
+        /// Combines specified portions of buffers together as a single image.
+        /// </summary>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="sourceOffset">Offset into source buffer to begin copy.</param>
+        /// <param name="sourceCount">Number of bytes to copy from source buffer.</param>
+        /// <param name="other">Other buffer to combine to source buffer.</param>
+        /// <param name="otherOffset">Offset into other buffer to begin copy.</param>
+        /// <param name="otherCount">Number of bytes to copy from other buffer.</param>
+        /// <returns>Combined specified portions of both buffers.</returns>
+        public static byte[] Combine(this byte[] source, int sourceOffset, int sourceCount, byte[] other, int otherOffset, int otherCount)
+        {
+            // Combine buffers together as a single image
+            byte[] combinedBuffer = new byte[sourceCount + otherCount];
+            
+            Buffer.BlockCopy(source, sourceOffset, combinedBuffer, 0, sourceCount);
+            Buffer.BlockCopy(other, otherOffset, combinedBuffer, sourceCount, otherCount);
+            
+            return combinedBuffer;
+        }
+
+        /// <summary>
+        /// Combines buffers together as a single image.
+        /// </summary>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="other1">First buffer to combine to source buffer.</param>
+        /// <param name="other2">Second buffer to combine to source buffer.</param>
+        /// <returns>Combined buffers.</returns>
+        public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2)
+        {
+            return (new byte[][] { source, other1, other2 }).Combine();
+        }
+
+        /// <summary>
+        /// Combines buffers together as a single image.
+        /// </summary>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="other1">First buffer to combine to source buffer.</param>
+        /// <param name="other2">Second buffer to combine to source buffer.</param>
+        /// <param name="other3">Third buffer to combine to source buffer.</param>
+        /// <returns>Combined buffers.</returns>
+        public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3)
+        {
+            return (new byte[][] { source, other1, other2, other3 }).Combine();
+        }
+
+        /// <summary>
+        /// Combines buffers together as a single image.
+        /// </summary>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="other1">First buffer to combine to source buffer.</param>
+        /// <param name="other2">Second buffer to combine to source buffer.</param>
+        /// <param name="other3">Third buffer to combine to source buffer.</param>
+        /// <param name="other4">Fourth buffer to combine to source buffer.</param>
+        /// <returns>Combined buffers.</returns>
+        public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3, byte[] other4)
+        {
+            return (new byte[][] { source, other1, other2, other3, other4 }).Combine();
+        }
+
+        /// <summary>
+        /// Combines array of buffers together as a single image.
+        /// </summary>
+        public static byte[] Combine(this byte[][] buffers)
+        {
+            MemoryStream combinedBuffer = new MemoryStream();
+
+            // Combine all currently queued buffers
+            for (int x = 0; x <= buffers.Length - 1; x++)
+            {
+                combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
+            }
+
+            // return combined data buffers
+            return combinedBuffer.ToArray();
         }
 
         /// <summary>
