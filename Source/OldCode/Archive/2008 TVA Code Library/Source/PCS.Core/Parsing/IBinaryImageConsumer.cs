@@ -35,7 +35,7 @@ namespace PCS.Parsing
         /// <param name="binaryImage">Binary image to be used for initialization.</param>
         /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
         /// <param name="length">Valid number of bytes within binary image.</param>
-        /// <returns>The number of bytes used for initialization.</returns>
+        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
         int Initialize(byte[] binaryImage, int startIndex, int length);
 
         /// <summary>

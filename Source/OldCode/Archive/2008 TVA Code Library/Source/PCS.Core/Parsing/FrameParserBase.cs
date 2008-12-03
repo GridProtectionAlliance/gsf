@@ -65,8 +65,6 @@ namespace PCS.Parsing
             public DefaultConstructor CreateNew;
         }
 
-        // Constants
-
         // Delegates
         private delegate TOutputType DefaultConstructor();
 
@@ -279,8 +277,8 @@ namespace PCS.Parsing
 
             // Extract the common header from the buffer image which includes the output type ID.
             // For any protocol data that is represented as frames of data in a stream, there will
-            // be some set of common identification properties at the top the frame image that is
-            // common for all frame types.  This 
+            // be some set of common identification properties in the frame image, usually at the
+            // top, that is common for all frame types.
             cursor += ParseCommonHeader(buffer, cursor, length, out commonHeader);
 
             if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
@@ -309,21 +307,23 @@ namespace PCS.Parsing
         /// <param name="buffer">Buffer containing data to parse.</param>
         /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
         /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <param name="headerImage">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for <see cref="Type"/> the data image is for.</param>
+        /// <param name="commonHeader">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
         /// <para>
-        /// Derived classes need to return a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for the
-        /// output types, which primarily includes an ID of the <see cref="Type"/> the data image is for.  This parsing is *only* for common header
-        /// information, actual parsing will be handled by output type via "Initialize" method. This header image should also be used to add needed
-        /// complex state information about the output type being parsed if needed.
+        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
+        /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
+        /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
+        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> method. This header image should also be used to add needed complex state
+        /// information about the output type being parsed if needed.
         /// </para>
         /// <para>
-        /// Consumers can choose to return "zero" if the output type "Initialize" implementation expects the entire buffer image, however it will
-        /// be optimal if the "ParseCommonHeader" method parses the header, and the type "Initialize" method only parses the body of the image.
+        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output type
+        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
+        /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
         /// </para>
         /// </remarks>
-        protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> headerImage);
+        protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> commonHeader);
 
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
