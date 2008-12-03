@@ -146,7 +146,7 @@ namespace PCS.Parsing
             base.Start();
 
             ConstructorInfo typeCtor = null;
-            AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("BasicParser"), AssemblyBuilderAccess.Run);
+            AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("FrameParser"), AssemblyBuilderAccess.Run);
             ModuleBuilder modBuilder = asmBuilder.DefineDynamicModule("Helper");
             TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
             List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
