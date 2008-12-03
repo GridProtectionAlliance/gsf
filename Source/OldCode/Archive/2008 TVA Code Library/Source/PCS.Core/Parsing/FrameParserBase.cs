@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  BasicParserBase.cs
+//  FrameParserBase.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -97,7 +97,7 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="BasicParserBase{TTypeIdentifier,TOutputType}"/> class.
+        /// Creates a new instance of the <see cref="FrameParserBase{TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
         protected FrameParserBase()
         {
@@ -109,7 +109,7 @@ namespace PCS.Parsing
         #region [ Properties ]
 
         /// <summary>
-        /// Gets current status of <see cref="BasicParserBase{TTypeIdentifier,TOutputType}"/>.
+        /// Gets current status of <see cref="FrameParserBase{TTypeIdentifier,TOutputType}"/>.
         /// </summary>
         [Browsable(false)]
         public override string Status
