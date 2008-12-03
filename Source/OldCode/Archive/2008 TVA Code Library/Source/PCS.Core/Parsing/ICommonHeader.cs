@@ -1,0 +1,39 @@
+﻿//*******************************************************************************************************
+//  IParsingState.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  11/17/2008 - James R Carroll
+//       Generated original version of source code.
+//
+//*******************************************************************************************************
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace PCS.Parsing
+{
+    /// <summary>
+    /// Defines the the common header of a binary image for a common set of parsed types, consisting at least of a type ID.
+    /// </summary>
+    /// <remarks>
+    /// Header implementations will extend this inertface as necessary to accomodate specific header images.
+    /// </remarks>
+    /// <typeparam name="TTypeIdentifier">.NET type that represents the the output type identifier.</typeparam>
+    public interface IBinaryImageHeader<TTypeIdentifier>
+    {
+        /// <summary>
+        /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.
+        /// </summary>
+        TTypeIdentifier TypeID { get; set; }
+    }
+}
