@@ -180,7 +180,7 @@ namespace PCS.IO
     ///         get
     ///         {
     ///             // Serialize TestIsamFileRecord into byte array.
-    ///             byte[] image = new byte[BinaryLength];
+    ///             byte[] image = new byte[RecordLength];
     ///             Buffer.BlockCopy(Encoding.ASCII.GetBytes(Name), 0, image, 0, 20);
     ///             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, image, 20, 8);
     ///             Buffer.BlockCopy(Encoding.ASCII.GetBytes(Description), 0, image, 28, 100);
@@ -194,7 +194,7 @@ namespace PCS.IO
     ///     /// </summary>
     ///     public int Initialize(byte[] binaryImage, int startIndex, int length)
     ///     {
-    ///         if (length &gt;= BinaryLength)
+    ///         if (length &gt;= RecordLength)
     ///         {
     ///             // Deserialize byte array into TestIsamFileRecord.
     ///             Name = Encoding.ASCII.GetString(binaryImage, startIndex, 20);
