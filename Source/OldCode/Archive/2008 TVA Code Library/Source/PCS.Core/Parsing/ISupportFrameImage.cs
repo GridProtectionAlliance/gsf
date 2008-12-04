@@ -28,7 +28,7 @@ namespace PCS.Parsing
     /// </summary>
     /// <remarks>
     /// Related types of protocol data that occur as frames in a stream can implement this interface for automated parsing
-    /// via the <see cref="FrameImageParserBase"/> class.
+    /// via the <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> class.
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of the frame identifier.</typeparam>
     public interface ISupportFrameImage<TTypeIdentifier> : ISupportBinaryImage

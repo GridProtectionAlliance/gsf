@@ -25,11 +25,28 @@ namespace PCS
     /// <summary>Defines extension functions related to buffer manipulation.</summary>
     public static class BufferExtensions
     {
-        /// <summary>Returns a copy of the specified portion of the source buffer.</summary>
-        /// <remarks>Grows or shrinks returned buffer, as needed, to make it the desired length.</remarks>
+        /// <summary>Returns a copy of the specified portion of the <paramref name="source"/> buffer.</summary>
+        /// <returns>A buffer of data copied from the specified portion of the source buffer.</returns>
+        /// <remarks>
+        /// Returned buffer will be extended as needed to make it the specified <paramref name="length"/>, but it will
+        /// never be less than the source buffer length - <paramref name="startIndex"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of valid indexes for the source buffer -or-
+        /// <paramref name="length"/> is less than 0.
+        /// </exception>
         public static byte[] BlockCopy(this byte[] source, int startIndex, int length)
         {
-            byte[] copiedBytes =  new byte[source.Length - startIndex < length ? source.Length - startIndex : length];
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+
+            if (startIndex >= source.Length)
+                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into source buffer");
+
+            byte[] copiedBytes = new byte[source.Length - startIndex < length ? source.Length - startIndex : length];
 
             Buffer.BlockCopy(source, startIndex, copiedBytes, 0, copiedBytes.Length);
 
@@ -40,7 +57,7 @@ namespace PCS
         /// Combines buffers together as a single image.
         /// </summary>
         /// <param name="source">Source buffer.</param>
-        /// <param name="other">Other buffer to combine to source buffer.</param>
+        /// <param name="other">Other buffer to combine to <paramref name="source"/> buffer.</param>
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other)
         {
@@ -51,14 +68,44 @@ namespace PCS
         /// Combines specified portions of buffers together as a single image.
         /// </summary>
         /// <param name="source">Source buffer.</param>
-        /// <param name="sourceOffset">Offset into source buffer to begin copy.</param>
-        /// <param name="sourceCount">Number of bytes to copy from source buffer.</param>
-        /// <param name="other">Other buffer to combine to source buffer.</param>
-        /// <param name="otherOffset">Offset into other buffer to begin copy.</param>
-        /// <param name="otherCount">Number of bytes to copy from other buffer.</param>
+        /// <param name="sourceOffset">Offset into <paramref name="source"/> buffer to begin copy.</param>
+        /// <param name="sourceCount">Number of bytes to copy from <paramref name="source"/> buffer.</param>
+        /// <param name="other">Other buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="otherOffset">Offset into <paramref name="other"/> buffer to begin copy.</param>
+        /// <param name="otherCount">Number of bytes to copy from <paramref name="other"/> buffer.</param>
         /// <returns>Combined specified portions of both buffers.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> is outside the range of valid indexes for the associated buffer -or-
+        /// <paramref name="sourceCount"/> or <paramref name="otherCount"/> is less than 0 -or- 
+        /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/>, 
+        /// and <paramref name="sourceCount"/> or <paramref name="otherCount"/> do not specify a valid section in the the associated buffer.
+        /// </exception>
         public static byte[] Combine(this byte[] source, int sourceOffset, int sourceCount, byte[] other, int otherOffset, int otherCount)
         {
+            if (sourceOffset < 0)
+                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+
+            if (otherOffset < 0)
+                throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
+
+            if (sourceCount < 0)
+                throw new ArgumentOutOfRangeException("sourceCount", "cannot be negative");
+
+            if (otherCount < 0)
+                throw new ArgumentOutOfRangeException("otherCount", "cannot be negative");
+
+            if (sourceOffset >= source.Length)
+                throw new ArgumentOutOfRangeException("sourceOffset", "not a valid index into source buffer");
+
+            if (otherOffset >= other.Length)
+                throw new ArgumentOutOfRangeException("otherOffset", "not a valid index into other buffer");
+
+            if (sourceOffset + sourceCount > source.Length)
+                throw new ArgumentOutOfRangeException("sourceCount", "exceeds source buffer size");
+
+            if (otherOffset + otherCount > other.Length)
+                throw new ArgumentOutOfRangeException("otherCount", "exceeds other buffer size");
+
             // Combine buffers together as a single image
             byte[] combinedBuffer = new byte[sourceCount + otherCount];
             
@@ -72,8 +119,8 @@ namespace PCS
         /// Combines buffers together as a single image.
         /// </summary>
         /// <param name="source">Source buffer.</param>
-        /// <param name="other1">First buffer to combine to source buffer.</param>
-        /// <param name="other2">Second buffer to combine to source buffer.</param>
+        /// <param name="other1">First buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="other2">Second buffer to combine to <paramref name="source"/> buffer.</param>
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2)
         {
@@ -84,9 +131,9 @@ namespace PCS
         /// Combines buffers together as a single image.
         /// </summary>
         /// <param name="source">Source buffer.</param>
-        /// <param name="other1">First buffer to combine to source buffer.</param>
-        /// <param name="other2">Second buffer to combine to source buffer.</param>
-        /// <param name="other3">Third buffer to combine to source buffer.</param>
+        /// <param name="other1">First buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="other2">Second buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="other3">Third buffer to combine to <paramref name="source"/> buffer.</param>
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3)
         {
@@ -97,10 +144,10 @@ namespace PCS
         /// Combines buffers together as a single image.
         /// </summary>
         /// <param name="source">Source buffer.</param>
-        /// <param name="other1">First buffer to combine to source buffer.</param>
-        /// <param name="other2">Second buffer to combine to source buffer.</param>
-        /// <param name="other3">Third buffer to combine to source buffer.</param>
-        /// <param name="other4">Fourth buffer to combine to source buffer.</param>
+        /// <param name="other1">First buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="other2">Second buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="other3">Third buffer to combine to <paramref name="source"/> buffer.</param>
+        /// <param name="other4">Fourth buffer to combine to <paramref name="source"/> buffer.</param>
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3, byte[] other4)
         {
@@ -209,11 +256,11 @@ namespace PCS
         }
 
         /// <summary>Returns comparision results of two binary buffers.</summary>
-        /// <param name="source"></param>
-        /// <param name="other"></param>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="other">Other buffer to compare to <paramref name="source"/> buffer.</param>
         /// <returns>
         /// <para>
-        /// A signed integer that indicates the relative comparison of source buffer and other buffer.
+        /// A signed integer that indicates the relative comparison of <paramref name="source"/> buffer and <paramref name="other"/> buffer.
         /// </para>
         /// <para>
         /// <list type="table">
@@ -284,14 +331,14 @@ namespace PCS
         /// <summary>
         /// Returns comparision results of two binary buffers.
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceOffset"></param>
-        /// <param name="other"></param>
-        /// <param name="otherOffset"></param>
-        /// <param name="count"></param>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="sourceOffset">Offset into <paramref name="source"/> buffer to begin compare.</param>
+        /// <param name="other">Other buffer to compare to <paramref name="source"/> buffer.</param>
+        /// <param name="otherOffset">Offset into <paramref name="other"/> buffer to begin compare.</param>
+        /// <param name="count">Number of bytes to compare in both buffers.</param>
         /// <returns>
         /// <para>
-        /// A signed integer that indicates the relative comparison of source buffer and other buffer.
+        /// A signed integer that indicates the relative comparison of <paramref name="source"/> buffer and <paramref name="other"/> buffer.
         /// </para>
         /// <para>
         /// <list type="table">
@@ -314,6 +361,11 @@ namespace PCS
         /// </list>
         /// </para>
         /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> is outside the range of valid indexes for the associated buffer -or-
+        /// <paramref name="count"/> is less than 0 -or- 
+        /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> and <paramref name="count"/> do not specify a valid section in the the associated buffer.
+        /// </exception>
         public static int CompareTo(this byte[] source, int sourceOffset, byte[] other, int otherOffset, int count)
         {
             if (source == null && other == null)

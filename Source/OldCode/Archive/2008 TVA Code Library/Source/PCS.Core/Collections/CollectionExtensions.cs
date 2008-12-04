@@ -38,9 +38,26 @@ namespace PCS.Collections
         /// <param name="source">The source <see cref="Array"/> whose elements are to be copied.</param>
         /// <param name="startIndex">The source array index from where the elements are to be copied.</param>
         /// <param name="length">The number of elements to be copied starting from the startIndex.</param>
-        /// <returns>An <see cref="Array"/> of elements.</returns>
+        /// <returns>An <see cref="Array"/> of elements copied from the specified portion of the source <see cref="Array"/>.</returns>
+        /// <remarks>
+        /// Returned <see cref="Array"/> will be extended as needed to make it the specified <paramref name="length"/>, but
+        /// it will never be less than the source <see cref="Array"/> length - <paramref name="startIndex"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of valid indexes for the source <see cref="Array"/> -or-
+        /// <paramref name="length"/> is less than 0.
+        /// </exception>
         public static T[] Copy<T>(this T[] source, int startIndex, int length)
         {
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+
+            if (startIndex >= source.Length)
+                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into source buffer");
+
             // Create a new array that will be returned with the specified array elements.
             T[] copyOfSource = new T[source.Length - startIndex < length ? source.Length - startIndex : length];
             Array.Copy(source, startIndex, copyOfSource, 0, copyOfSource.Length);
