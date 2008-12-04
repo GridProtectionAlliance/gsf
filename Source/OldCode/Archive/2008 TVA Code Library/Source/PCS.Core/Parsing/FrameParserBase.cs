@@ -47,7 +47,7 @@ namespace PCS.Parsing
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class FrameParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class FrameParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
