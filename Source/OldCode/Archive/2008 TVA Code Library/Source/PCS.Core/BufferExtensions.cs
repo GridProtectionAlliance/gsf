@@ -28,8 +28,8 @@ namespace PCS
         /// <summary>Returns a copy of the specified portion of the <paramref name="source"/> buffer.</summary>
         /// <returns>A buffer of data copied from the specified portion of the source buffer.</returns>
         /// <remarks>
-        /// Returned buffer will be extended as needed to make it the specified <paramref name="length"/>, but it will
-        /// never be less than the source buffer length - <paramref name="startIndex"/>.
+        /// Returned buffer will be extended as needed to make it the specified <paramref name="length"/>, but
+        /// it will never be less than the source buffer length - <paramref name="startIndex"/>.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="startIndex"/> is outside the range of valid indexes for the source buffer -or-
