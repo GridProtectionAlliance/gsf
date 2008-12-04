@@ -70,6 +70,7 @@ namespace PCS.Parsing
         private ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> m_bufferQueue;
         private Dictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private List<TOutputType> m_parsedOutputs;
+        private TSourceIdentifier m_sourceID;
         private bool m_disposed;
 
         #endregion
@@ -86,8 +87,9 @@ namespace PCS.Parsing
             m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
             m_parsedOutputs = new List<TOutputType>();
 
-            // We attach to base class data parsed event so we can cumulate outputs per data source
+            // We attach to base class events so we can cumulate outputs per data source and handle data errors
             base.DataParsed += CumulateParsedOutput;
+            base.DataDiscarded += ResetDataSourceInitialization;
         }
 
         #endregion
@@ -169,6 +171,10 @@ namespace PCS.Parsing
                             m_parsedOutputs.Clear();
                         }
                         m_parsedOutputs = null;
+
+                        // Detach from base class events
+                        base.DataParsed -= CumulateParsedOutput;
+                        base.DataDiscarded -= ResetDataSourceInitialization;
                     }
                 }
                 finally
@@ -271,17 +277,16 @@ namespace PCS.Parsing
         // We process all queued data buffers that are available at once...
         private void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
         {
-            TSourceIdentifier sourceID;
             byte[] buffer;
 
             foreach (IdentifiableItem<TSourceIdentifier, byte[]> item in buffers)
             {
-                sourceID = item.ID;
+                m_sourceID = item.ID;
                 buffer = item.Item;
 
                 // Check to see if this data source has been initialized
-                if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(sourceID, out StreamInitialized))
-                    m_sourceInitialized.Add(sourceID, true);
+                if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
+                    m_sourceInitialized.Add(m_sourceID, true);
 
                 // Clear any existing parsed outputs
                 m_parsedOutputs.Clear();
@@ -291,7 +296,7 @@ namespace PCS.Parsing
 
                 // Expose parsed data
                 if (m_parsedOutputs.Count > 0)
-                    OnDataParsed(sourceID, m_parsedOutputs);
+                    OnDataParsed(m_sourceID, m_parsedOutputs);
             }
         }
 
@@ -310,6 +315,13 @@ namespace PCS.Parsing
         private void CumulateParsedOutput(object sender, EventArgs<TOutputType> data)
         {
             m_parsedOutputs.Add(data.Argument);
+        }
+
+        // If an error occurs during parsing from a data source, we reset its initialization state
+        private void ResetDataSourceInitialization(object sender, EventArgs<byte[]> data)
+        {
+            if (ProtocolUsesSyncBytes)
+                m_sourceInitialized[m_sourceID] = false;
         }
 
         // We just bubble any exceptions captured in process queue out to parsing exception event...
