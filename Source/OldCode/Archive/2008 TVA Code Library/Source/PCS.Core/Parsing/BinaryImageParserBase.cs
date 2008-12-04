@@ -29,7 +29,7 @@ namespace PCS.Parsing
     /// <remarks>
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </remarks>
-    public abstract class StreamParserBase : Stream, IStreamParser
+    public abstract class BinaryImageParserBase : Stream, IBinaryImageParser
     {
         #region [ Members ]
 
@@ -80,7 +80,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Creates a new instance of the <see cref="StreamParserBase"/> class.
         /// </summary>
-        protected StreamParserBase()
+        protected BinaryImageParserBase()
 	    {
             m_protocolSyncBytes = DefaultProtocolSyncBytes;
         }

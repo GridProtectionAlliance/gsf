@@ -33,7 +33,7 @@ namespace PCS.Parsing
         /// Gets or sets current <see cref="ICommonHeader{TTypeIdentifier}"/>.
         /// </summary>
         /// <remarks>
-        /// If used, this will need to be set before call to <see cref="IBinaryImageConsumer.Initialize"/>.
+        /// If used, this will need to be set before call to <see cref="ISupportBinaryImage.Initialize"/>.
         /// </remarks>
         ICommonHeader<TTypeIdentifier> CommonHeader { get; set; }
 

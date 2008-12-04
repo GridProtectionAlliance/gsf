@@ -171,7 +171,7 @@
     <Compile Include="IO\Compression\Zip\ZipInputStream.cs" />
     <Compile Include="IO\Compression\Zip\ZipNameTransform.cs" />
     <Compile Include="IO\Compression\Zip\ZipOutputStream.cs" />
-    <Compile Include="IStatusProvider.cs" />
+    <Compile Include="IProvideStatus.cs" />
     <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFtpFile.cs" />
     <Compile Include="Net\Ftp\FtpInputDataStream.cs" />
@@ -186,8 +186,8 @@
     <Compile Include="Parsing\FrameParserBase.cs" />
     <Compile Include="Parsing\IFrameParser.cs" />
     <Compile Include="Parsing\MultiSourceFrameParserBase.cs" />
-    <Compile Include="Parsing\StreamParserBase.cs" />
-    <Compile Include="Parsing\IStreamParser.cs" />
+    <Compile Include="Parsing\BinaryImageParserBase.cs" />
+    <Compile Include="Parsing\IBinaryImageParser.cs" />
     <Compile Include="Parsing\ICommonHeader.cs" />
     <Compile Include="Parsing\CommonHeaderBase.cs" />
     <Compile Include="ProcessProgressHandler.cs" />
