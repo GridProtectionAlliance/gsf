@@ -45,7 +45,7 @@ namespace PCS.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -80,7 +80,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Creates a new instance of the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
-        public MultiSourceFrameParserBase()
+        public MultiSourceFrameImageParserBase()
         {
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
