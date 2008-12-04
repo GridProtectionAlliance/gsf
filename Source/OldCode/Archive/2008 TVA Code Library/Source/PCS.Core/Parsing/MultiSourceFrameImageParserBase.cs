@@ -32,10 +32,10 @@ namespace PCS.Parsing
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </para>
     /// <para>
-    /// This class is more specific than the <see cref="StreamParserBase"/> in that it can automate the parsing of a
+    /// This class is more specific than the <see cref="BinaryImageParserBase"/> in that it can automate the parsing of a
     /// particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
-    /// <see cref="IFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
+    /// <see cref="ISupportFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
     /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
     /// TypeID property, but also should include any state information needed to parse a particular frame if necessary.
     /// Derived classes override the <see cref="FrameParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
@@ -45,7 +45,7 @@ namespace PCS.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -80,7 +80,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Creates a new instance of the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
-        public MultiSourceFrameImageParserBase()
+        public MultiSourceFrameParserBase()
         {
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;

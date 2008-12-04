@@ -33,10 +33,10 @@ namespace PCS.Parsing
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </para>
     /// <para>
-    /// This class is more specific than the <see cref="StreamParserBase"/> in that it can automate the parsing of
+    /// This class is more specific than the <see cref="BinaryImageParserBase"/> in that it can automate the parsing of
     /// a particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
-    /// <see cref="IFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
+    /// <see cref="ISupportFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
     /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
     /// TypeID property, but also should include any state information needed to parse a particular frame if
     /// necessary. Derived classes simply override the <see cref="ParseCommonHeader"/> function in order to parse
@@ -47,7 +47,7 @@ namespace PCS.Parsing
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class FrameImageParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class FrameParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -93,7 +93,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Creates a new instance of the <see cref="FrameParserBase{TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
-        protected FrameImageParserBase()
+        protected FrameParserBase()
         {
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
         }
@@ -264,12 +264,12 @@ namespace PCS.Parsing
         /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
         /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
         /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
-        /// <see cref="IBinaryImageConsumer.Initialize"/> method. This header image should also be used to add needed complex state information
+        /// <see cref="ISupportBinaryImage.Initialize"/> method. This header image should also be used to add needed complex state information
         /// about the output type being parsed if needed.
         /// </para>
         /// <para>
         /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output
-        /// type <see cref="IBinaryImageConsumer.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
+        /// type <see cref="ISupportBinaryImage.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
         /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
         /// </para>
         /// </remarks>
@@ -294,53 +294,6 @@ namespace PCS.Parsing
             if (OutputTypeNotFound != null)
                 OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
         }
-
-        #region [ Example Persist Settings Overrides ]
-
-        // If any persistable properties are added to this class, or derived classes, then this code represents a good
-        // overrride coding pattern for serialzation of these properties...
-
-        ///// <summary>
-        ///// Saves settings for the data parser object to the config file if the <see cref="StreamParserBase.PersistSettings"/> 
-        ///// property is set to true.
-        ///// </summary>        
-        //public override void SaveSettings()
-        //{
-        //    if (PersistSettings)
-        //    {
-        //        // Ensure that settings category is specified.
-        //        if (string.IsNullOrEmpty(SettingsCategory))
-        //            throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-        //        // Save settings under the specified category.
-        //        ConfigurationFile config = ConfigurationFile.Current;
-        //        CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-        //        settings["OptimizeTypeConstruction", true].Update(m_optimizeTypeConstruction, "True if if data types get constructed in an optimized fashion; otherwise False.");
-
-        //        // Save base class settings, this will flush any pending changes to config file
-        //        base.SaveSettings();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Loads saved settings for the data parser object from the config file if the <see cref="StreamParserBase.PersistSettings"/> 
-        ///// property is set to true.
-        ///// </summary>        
-        //public override void LoadSettings()
-        //{
-        //    if (PersistSettings)
-        //    {
-        //        // Load base class settings, this will validate settings category
-        //        base.LoadSettings();
-
-        //        // Save settings under the specified category.
-        //        ConfigurationFile config = ConfigurationFile.Current;
-        //        CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-        //        OptimizeTypeConstruction = settings["OptimizeTypeConstruction", true].ValueAs(m_optimizeTypeConstruction);
-        //    }
-        //}
-
-        #endregion
 
         #endregion
     }

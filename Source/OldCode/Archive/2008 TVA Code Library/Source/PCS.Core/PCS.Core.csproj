@@ -185,7 +185,7 @@
     <Compile Include="Parsing\ISupportFrameImage.cs" />
     <Compile Include="Parsing\FrameImageParserBase.cs" />
     <Compile Include="Parsing\IFrameImageParser.cs" />
-    <Compile Include="Parsing\MultiSourceFrameParserBase.cs" />
+    <Compile Include="Parsing\MultiSourceFrameImageParserBase.cs" />
     <Compile Include="Parsing\BinaryImageParserBase.cs" />
     <Compile Include="Parsing\IBinaryImageParser.cs" />
     <Compile Include="Parsing\ICommonHeader.cs" />

@@ -20,7 +20,7 @@
 //  10/28/2008 - Pinal C. Patel
 //       Edited code comments.
 //  12/04/2008 - J. Ritchie Carroll
-//       Modified class an example to use new IBinaryImageConsumer / IBinaryImageProvider interfaces.
+//       Modified class an example to use new ISupportBinaryImage
 //
 //*******************************************************************************************************
 

@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  StreamParserBase.cs
+//  BinaryImageParserBase.cs
 //  Copyright ©2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -79,7 +79,7 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="StreamParserBase"/> class.
+        /// Creates a new instance of the <see cref="BinaryImageParserBase"/> class.
         /// </summary>
         protected BinaryImageParserBase()
 	    {
@@ -133,7 +133,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets the total amount of time, in seconds, that the <see cref="StreamParserBase"/> has been active.
+        /// Gets the total amount of time, in seconds, that the <see cref="BinaryImageParserBase"/> has been active.
         /// </summary>
         public virtual double RunTime
         {
@@ -172,7 +172,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports reading.
         /// </summary>
         /// <remarks>
-        /// The <see cref="StreamParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         public override bool CanRead
         {
@@ -186,7 +186,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         /// <remarks>
-        /// The <see cref="StreamParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
+        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
         public override bool CanSeek
         {
@@ -200,7 +200,7 @@ namespace PCS.Parsing
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         /// <remarks>
-        /// The <see cref="StreamParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
+        /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
         /// </remarks>
         public override bool CanWrite
         {
@@ -211,7 +211,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets current status of <see cref="StreamParserBase"/>.
+        /// Gets current status of <see cref="BinaryImageParserBase"/>.
         /// </summary>
         public virtual string Status
         {
@@ -242,7 +242,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets the name of <see cref="StreamParserBase"/>.
+        /// Gets the name of <see cref="BinaryImageParserBase"/>.
         /// </summary>
         public virtual string Name
         {

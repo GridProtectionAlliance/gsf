@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  IStreamParser.cs
+//  IBinaryImageParser.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -56,7 +56,7 @@ namespace PCS.Parsing
         long TotalProcessedBuffers { get; }
 
         /// <summary>
-        /// Writes a sequence of bytes onto the <see cref="IStreamParser"/> stream for parsing.
+        /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.
         /// </summary>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
