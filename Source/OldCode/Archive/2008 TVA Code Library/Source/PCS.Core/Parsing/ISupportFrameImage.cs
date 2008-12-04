@@ -27,7 +27,7 @@ namespace PCS.Parsing
     /// Specifies that this <see cref="System.Type"/> can produce or consume a frame of data represented as a binary image.
     /// </summary>
     /// <typeparam name="TTypeIdentifier">Type of the frame identifier.</typeparam>
-    public interface IFrameImage<TTypeIdentifier> : IBinaryImageProvider, IBinaryImageConsumer
+    public interface ISupportFrameImage<TTypeIdentifier> : ISupportBinaryImage
     {
         /// <summary>
         /// Gets or sets current <see cref="ICommonHeader{TTypeIdentifier}"/>.

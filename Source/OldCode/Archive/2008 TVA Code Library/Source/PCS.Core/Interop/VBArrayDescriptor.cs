@@ -34,7 +34,7 @@ namespace PCS.Interop
     /// into a file using older Visual Basic applications (VB 6 and prior), this way old VB apps
     /// can still deserialize an array stored in a file written by a .NET application and vice versa.
     /// </remarks>
-    public class VBArrayDescriptor : IBinaryImageProvider
+    public class VBArrayDescriptor : ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -116,6 +116,16 @@ namespace PCS.Interop
             {
                 return 2 + 8 * m_arrayDimensionDescriptors.Count;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        // Currently not supporting initialization from binary image
+        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

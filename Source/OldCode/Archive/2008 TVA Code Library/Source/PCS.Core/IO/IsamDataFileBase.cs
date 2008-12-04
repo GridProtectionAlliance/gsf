@@ -38,8 +38,7 @@ namespace PCS.IO
     /// An abstract class that defines the read/write capabilities for ISAM (Indexed Sequential Access Method) file.
     /// </summary>
     /// <typeparam name="T">
-    /// <see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the 
-    /// <see cref="IBinaryImageProvider"/> and <see cref="IBinaryImageConsumer"/> interfaces.
+    /// <see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the <see cref="ISupportBinaryImage"/> interface.
     /// </typeparam>
     /// <remarks>
     /// <para>
@@ -112,7 +111,7 @@ namespace PCS.IO
     ///     }
     /// }
     /// 
-    /// class TestIsamFileRecord : IBinaryImageProvider, IBinaryImageConsumer
+    /// class TestIsamFileRecord : ISupportBinaryImage
     /// {
     ///     private int m_index;
     ///     private string m_name;                  // 20  * 1 =  20
@@ -218,7 +217,7 @@ namespace PCS.IO
     /// }
     /// </code>
     /// </example>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryImageProvider, IBinaryImageConsumer
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : ISupportBinaryImage
     {
         #region [ Members ]
 
