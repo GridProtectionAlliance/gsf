@@ -78,7 +78,7 @@ namespace PCS.IO
     /// </code>
     /// </example>
     [ToolboxBitmap(typeof(LogFile))]
-    public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IStatusProvider, IPersistSettings
+    public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
         #region [ Members ]
 

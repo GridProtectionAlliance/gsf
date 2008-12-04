@@ -183,8 +183,8 @@
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="Parsing\ISupportBinaryImage.cs" />
     <Compile Include="Parsing\ISupportFrameImage.cs" />
-    <Compile Include="Parsing\FrameParserBase.cs" />
-    <Compile Include="Parsing\IFrameParser.cs" />
+    <Compile Include="Parsing\FrameImageParserBase.cs" />
+    <Compile Include="Parsing\IFrameImageParser.cs" />
     <Compile Include="Parsing\MultiSourceFrameParserBase.cs" />
     <Compile Include="Parsing\BinaryImageParserBase.cs" />
     <Compile Include="Parsing\IBinaryImageParser.cs" />

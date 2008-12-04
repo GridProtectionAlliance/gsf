@@ -97,7 +97,7 @@ namespace PCS.Collections
     /// (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
     /// <para>Note that the <see cref="ProcessQueue{T}"/> will not start processing until the Start method is called.</para>
     /// </remarks>
-    public class ProcessQueue<T> : IList<T>, ICollection, IDisposable, IStatusProvider, ISupportLifecycle
+    public class ProcessQueue<T> : IList<T>, ICollection, IDisposable, IProvideStatus, ISupportLifecycle
     {
         #region [ Members ]
 

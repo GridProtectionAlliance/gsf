@@ -88,7 +88,7 @@ namespace PCS.Scheduling
     /// </code>
     /// </example>
     [ToolboxBitmap(typeof(ScheduleManager))]
-    public class ScheduleManager : Component, ISupportLifecycle, ISupportInitialize, IStatusProvider, IPersistSettings
+    public class ScheduleManager : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
         #region [ Members ]
 

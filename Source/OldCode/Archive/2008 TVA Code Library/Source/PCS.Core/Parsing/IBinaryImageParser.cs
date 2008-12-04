@@ -22,7 +22,7 @@ namespace PCS.Parsing
     /// <summary>
     /// This interface represents the protocol independent representation of a streaming data parser.
     /// </summary>
-    public interface IBinaryImageParser
+    public interface IBinaryImageParser : IProvideStatus
     {
         /// <summary>
         /// Occurs when data image fails deserialized due to an exception.
@@ -49,11 +49,6 @@ namespace PCS.Parsing
         /// Stops the streaming data parser.
         /// </summary>
         void Stop();
-
-        /// <summary>
-        /// Gets current status of <see cref="IStreamParser"/>.
-        /// </summary>
-        string Status { get; }
 
         /// <summary>
         /// Gets the total number of buffer images processed so far.

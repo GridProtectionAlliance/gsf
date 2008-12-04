@@ -69,6 +69,7 @@ namespace PCS.Parsing
         private byte[] m_unparsedBuffer;
         private byte[] m_protocolSyncBytes;
         private long m_buffersProcessed;
+        private string m_name;
         private long m_startTime;
         private long m_stopTime;
         private bool m_enabled;
@@ -83,6 +84,7 @@ namespace PCS.Parsing
         protected BinaryImageParserBase()
 	    {
             m_protocolSyncBytes = DefaultProtocolSyncBytes;
+            m_name = this.GetType().Name;
         }
 
         #endregion
@@ -236,6 +238,21 @@ namespace PCS.Parsing
                 status.AppendLine();
 
                 return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets the name of <see cref="StreamParserBase"/>.
+        /// </summary>
+        public virtual string Name
+        {
+            get
+            {
+                return m_name;
+            }
+            set
+            {
+                m_name = value;
             }
         }
 

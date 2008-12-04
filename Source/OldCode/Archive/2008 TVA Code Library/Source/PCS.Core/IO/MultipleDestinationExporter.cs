@@ -114,7 +114,7 @@ namespace PCS.IO
     /// </code>
     /// </example>
     [ToolboxBitmap(typeof(MultipleDestinationExporter))]
-    public class MultipleDestinationExporter : Component, ISupportLifecycle, ISupportInitialize, IStatusProvider, IPersistSettings
+    public class MultipleDestinationExporter : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
         #region [ Members ]
 

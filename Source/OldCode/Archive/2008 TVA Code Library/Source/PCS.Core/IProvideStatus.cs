@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IStatusProvider.cs
+//  IProvideStatus.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -21,7 +21,7 @@ namespace PCS
     /// Defines an interface for any object to allow it to provide a name and status
     /// that can be displayed for informational purposes.
     /// </summary>
-    public interface IStatusProvider
+    public interface IProvideStatus
     {
         /// <summary>
         /// Gets the name of the object providing status information.

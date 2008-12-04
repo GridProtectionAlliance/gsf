@@ -58,7 +58,7 @@ namespace PCS.Diagnostics
     /// }
     /// </code>
     /// </example>
-    public class PerformanceMonitor : IDisposable, IStatusProvider
+    public class PerformanceMonitor : IDisposable, IProvideStatus
     {
         #region [ Members ]
 
