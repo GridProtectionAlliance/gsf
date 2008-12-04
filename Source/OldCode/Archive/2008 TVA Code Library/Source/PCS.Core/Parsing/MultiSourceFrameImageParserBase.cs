@@ -38,14 +38,14 @@ namespace PCS.Parsing
     /// <see cref="ISupportFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
     /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
     /// TypeID property, but also should include any state information needed to parse a particular frame if necessary.
-    /// Derived classes override the <see cref="FrameParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
+    /// Derived classes override the <see cref="FrameImageParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
     /// function in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
     /// </para>
     /// </remarks>
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
