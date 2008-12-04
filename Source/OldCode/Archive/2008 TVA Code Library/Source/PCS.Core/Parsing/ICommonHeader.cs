@@ -23,10 +23,10 @@ using System.Text;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// Defines the common header of a binary image for a set of parsed types, consisting at least of a type ID.
+    /// Defines the common header of a frame image for a set of parsed types, consisting at least of a type ID.
     /// </summary>
     /// <remarks>
-    /// Header implementations can extend this interface as necessary to accomodate specific header images.
+    /// Header implementations can extend this interface as necessary to accomodate protocol specific header images.
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     public interface ICommonHeader<TTypeIdentifier>
