@@ -64,7 +64,7 @@ namespace PCS.Parsing
         /// <remarks>
         /// Only relevant if <see cref="ProtocolUsesSyncBytes"/> is true.
         /// </remarks>
-        protected bool m_dataStreamInitialized;
+        protected bool StreamInitialized;
         
         private byte[] m_unparsedBuffer;
         private byte[] m_protocolSyncBytes;
@@ -254,7 +254,7 @@ namespace PCS.Parsing
             m_startTime = DateTime.Now.Ticks;
 
             // Initialized state depends whether or not derived class uses a protocol synchrnonization byte
-            m_dataStreamInitialized = !ProtocolUsesSyncBytes;
+            StreamInitialized = !ProtocolUsesSyncBytes;
 
             m_enabled = true;
         }
@@ -280,7 +280,7 @@ namespace PCS.Parsing
         {
             // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
             // thus the attempt below to "align" data stream to specified ProtocolSyncBytes.
-            if (m_dataStreamInitialized)
+            if (StreamInitialized)
             {
                 // Directly parse frame using calling thread (typically communications thread)
                 ParseBuffer(buffer, offset, count);
@@ -293,7 +293,7 @@ namespace PCS.Parsing
                 if (syncBytesPosition > -1)
                 {
                     ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
-                    m_dataStreamInitialized = true;
+                    StreamInitialized = true;
                 }
             }
 
@@ -367,6 +367,58 @@ namespace PCS.Parsing
 
         #endregion
 
+        // Parse buffer image - user implements protocol specific "ParseFrame" function to extract data from image
+        private void ParseBuffer(byte[] buffer, int offset, int count)
+        {
+            try
+            {
+                // Prepend any left over buffer data from last parse call
+                if (m_unparsedBuffer != null)
+                {
+                    // Combine remaining buffer from last call and current buffer together as a single image
+                    buffer = m_unparsedBuffer.Combine(0, m_unparsedBuffer.Length, buffer, offset, count);
+                    offset = 0;
+                    count = buffer.Length;
+                    m_unparsedBuffer = null;
+                }
+
+                int endOfBuffer = offset + count - 1;
+                int parsedFrameLength;
+
+                // Move through buffer parsing all available frames
+                while (!(offset > endOfBuffer))
+                {
+                    // Call derived class frame parsing algorithm - this is protocol specific
+                    parsedFrameLength = ParseFrame(buffer, offset, endOfBuffer - offset + 1);
+
+                    // Returned value represents total bytes of data in the buffer image that were
+                    // parsed. There could still be data remaining in the buffer, but user parsing
+                    // algorithm could have decided that there was not enough buffer available for
+                    // parsing and returned a "zero" - meaning no data was parsed.
+                    if (parsedFrameLength > 0)
+                    {
+                        // If frame was parsed, increment buffer offset by frame length
+                        offset += parsedFrameLength;
+                    }
+                    else
+                    {
+                        // If not, save off remaining buffer to prepend onto next read
+                        m_unparsedBuffer = buffer.BlockCopy(offset, count - offset);
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Probable malformed data image, discard data on move on...
+                StreamInitialized = !ProtocolUsesSyncBytes;
+                m_unparsedBuffer = null;
+
+                OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
+                OnParsingException(ex);
+            }
+        }
+
         /// <summary>
         /// Protocol specific frame parsing algorithm.
         /// </summary>
@@ -414,58 +466,6 @@ namespace PCS.Parsing
         {
             if (ParsingException != null)
                 ParsingException(this, new EventArgs<Exception>(ex));
-        }
-
-        // Parse buffer image - user implements protocol specific "ParseFrame" function to extract data from image
-        private void ParseBuffer(byte[] buffer, int offset, int count)
-        {
-            try
-            {
-                // Prepend any left over buffer data from last parse call
-                if (m_unparsedBuffer != null)
-                {
-                    // Combine remaining buffer from last call and current buffer together as a single image
-                    buffer = m_unparsedBuffer.Combine(0, m_unparsedBuffer.Length, buffer, offset, count);
-                    offset = 0;
-                    count = buffer.Length;
-                    m_unparsedBuffer = null;
-                }
-
-                int endOfBuffer = offset + count - 1;
-                int parsedFrameLength;
-
-                // Move through buffer parsing all available frames
-                while (!(offset > endOfBuffer))
-                {
-                    // Call derived class frame parsing algorithm - this is protocol specific
-                    parsedFrameLength = ParseFrame(buffer, offset, endOfBuffer - offset + 1);
-
-                    // Returned value represents total bytes of data in the buffer image that were
-                    // parsed. There could still be data remaining in the buffer, but user parsing
-                    // algorithm could have decided that there was not enough buffer available for
-                    // parsing and returned a "zero" - meaning no data was parsed.
-                    if (parsedFrameLength > 0)
-                    {
-                        // If frame was parsed, increment buffer offset by frame length
-                        offset += parsedFrameLength;
-                    }
-                    else
-                    {
-                        // If not, save off remaining buffer to prepend onto next read
-                        m_unparsedBuffer = buffer.BlockCopy(offset, count - offset);
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Probable malformed data image, discard data on move on...
-                m_dataStreamInitialized = !ProtocolUsesSyncBytes;
-                m_unparsedBuffer = null;
-
-                OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
-                OnParsingException(ex);
-            }
         }
 
         #endregion

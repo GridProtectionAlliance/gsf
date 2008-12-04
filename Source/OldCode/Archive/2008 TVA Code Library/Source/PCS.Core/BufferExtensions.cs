@@ -255,7 +255,39 @@ namespace PCS
             }
         }
 
-        /// <summary>Returns comparision results of two binary buffers.</summary>
+        /// <summary>
+        /// Returns comparision results of two binary buffers.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceOffset"></param>
+        /// <param name="other"></param>
+        /// <param name="otherOffset"></param>
+        /// <param name="count"></param>
+        /// <returns>
+        /// <para>
+        /// A signed integer that indicates the relative order of this instance and value.
+        /// </para>
+        /// <para>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Return Value</term>
+        ///         <description>Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Less than zero</term>
+        ///         <description>This instance is less than value.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Zero</term>
+        ///         <description>This instance is equal to value.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Greater than zero</term>
+        ///         <description>This instance is greater than value.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </returns>
         public static int CompareTo(this byte[] source, int sourceOffset, byte[] other, int otherOffset, int count)
         {
             if (source == null && other == null)
@@ -275,6 +307,27 @@ namespace PCS
             }
             else
             {
+                if (sourceOffset < 0)
+                    throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+                
+                if (otherOffset < 0)
+                    throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
+
+                if (count < 0)
+                    throw new ArgumentOutOfRangeException("count", "cannot be negative");
+
+                if (sourceOffset >= source.Length)
+                    throw new ArgumentOutOfRangeException("sourceOffset", "not a valid index into source buffer");
+
+                if (otherOffset >= other.Length)
+                    throw new ArgumentOutOfRangeException("otherOffset", "not a valid index into other buffer");
+
+                if (sourceOffset + count > source.Length)
+                    throw new ArgumentOutOfRangeException("count", "exceeds source buffer size");
+
+                if (otherOffset + count > other.Length)
+                    throw new ArgumentOutOfRangeException("count", "exceeds other buffer size");
+
                 int comparision = 0;
 
                 // Compares elements of buffers that are of equal size.

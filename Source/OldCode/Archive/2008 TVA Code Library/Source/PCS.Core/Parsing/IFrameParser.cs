@@ -20,12 +20,12 @@ using System;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This interface represents the protocol independent representation of a binary image parser suitable for common,
-    /// simple formatted, binary data streams returning the parsed data via events
+    /// This interface represents a basic implementation of parsing functionality suitable for automating the parsing of
+    /// a binary data stream represented as frames with common headers and returning the parsed data via an event.
     /// </summary>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public interface IFrameParser<TTypeIdentifier, TOutputType> : IStreamParser
+    public interface IFrameParser<TTypeIdentifier, TOutputType> : IStreamParser where TOutputType : IFrameImage<TTypeIdentifier>
     {
         /// <summary>
         /// Occurs when a data image is deserialized successfully to one of the output types that the data

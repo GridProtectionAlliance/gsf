@@ -19,6 +19,8 @@
 //       Converted to C#.
 //  10/28/2008 - Pinal C. Patel
 //       Edited code comments.
+//  12/04/2008 - J. Ritchie Carroll
+//       Modified class an example to use new IBinaryImageConsumer / IBinaryImageProvider interfaces.
 //
 //*******************************************************************************************************
 
@@ -33,14 +35,20 @@ using PCS.Parsing;
 namespace PCS.IO
 {
     /// <summary>
-    /// An abstract class that represents an ISAM (Indexed Sequential Access Method) file.
+    /// An abstract class that defines the read/write capabilities for ISAM (Indexed Sequential Access Method) file.
     /// </summary>
     /// <typeparam name="T">
     /// <see cref="Type"/> of the records the file contains. This <see cref="Type"/> must implement the 
-    /// <see cref="IBinaryImageProvider"/> and <see cref="IBinaryImageConsumer{TTypeIdentifier}"/> interfaces.
+    /// <see cref="IBinaryImageProvider"/> and <see cref="IBinaryImageConsumer"/> interfaces.
     /// </typeparam>
     /// <remarks>
-    /// See <a href="http://en.wikipedia.org/wiki/ISAM" target="_blank">http://en.wikipedia.org/wiki/ISAM</a> for more information on ISAM files .
+    /// <para>
+    /// This ISAM implementation keeps all the records in memory, so it may not be suitable for very large files. Since data is stored
+    /// in memory using a list, the maximum number of possible supported records will be 2,147,483,647 (i.e., Int32.MaxValue).
+    /// </para>
+    /// <para>
+    /// See <a href="http://en.wikipedia.org/wiki/ISAM" target="_blank">http://en.wikipedia.org/wiki/ISAM</a> for more information on ISAM files.
+    /// </para>
     /// </remarks>
     /// <example>
     /// This example shows a sample implementation of <see cref="IsamDataFileBase{T}"/>:
@@ -71,8 +79,8 @@ namespace PCS.IO
     ///         testFile.Open();
     /// 
     ///         // Write test records.
-    ///         testFile.Write(r1.ID, r1);
-    ///         testFile.Write(r2.ID, r2);
+    ///         testFile.Write(r1.Index, r1);
+    ///         testFile.Write(r2.Index, r2);
     /// 
     ///         // Read test records.
     ///         Console.WriteLine(testFile.Read(1));
@@ -85,7 +93,7 @@ namespace PCS.IO
     ///     }
     /// }
     /// 
-    /// class TestIsamFile : IsamDataFileBase<![CDATA[<]]>TestIsamFileRecord<![CDATA[>]]>
+    /// class TestIsamFile : IsamDataFileBase&lt;TestIsamFileRecord&gt;
     /// {
     ///     /// <summary>
     ///     /// Size of a single file record.
@@ -104,28 +112,30 @@ namespace PCS.IO
     ///     }
     /// }
     /// 
-    /// class TestIsamFileRecord : IBinaryDataProducer, IBinaryDataConsumer&lt;long&gt;
+    /// class TestIsamFileRecord : IBinaryImageProvider, IBinaryImageConsumer
     /// {
-    ///     private int m_id;
+    ///     private int m_index;
     ///     private string m_name;                  // 20  * 1 =  20
     ///     private double m_value;                 // 1   * 8 =   8
     ///     private string m_description;           // 100 * 1 = 100
+    ///     
     ///     public const int RecordLength = 128;    // Total   = 128
     /// 
-    ///     public TestIsamFileRecord(int recordID)
+    ///     public TestIsamFileRecord(int recordIndex)
     ///     {
-    ///         m_id = recordID;
+    ///         m_index = recordIndex;
+    ///         
     ///         Name = string.Empty;
     ///         Value = double.NaN;
     ///         Description = string.Empty;
     ///     }
     /// 
     ///     /// <summary>
-    ///     /// ID of the record.
+    ///     /// 1-based index of the record.
     ///     /// </summary>
-    ///     public int ID
+    ///     public int Index
     ///     {
-    ///         get { return m_id; }
+    ///         get { return m_index; }
     ///     }
     /// 
     ///     /// <summary>
@@ -183,12 +193,17 @@ namespace PCS.IO
     ///     /// <summary>
     ///     /// Deserializes the record.
     ///     /// </summary>
-    ///     public int Initialize(byte[] binaryImage, int startIndex)
+    ///     public int Initialize(byte[] binaryImage, int startIndex, int length)
     ///     {
-    ///         // Deserialize byte array into TestIsamFileRecord.
-    ///         Name = Encoding.ASCII.GetString(binaryImage, startIndex, 20);
-    ///         Value = BitConverter.ToDouble(binaryImage, startIndex + 20);
-    ///         Description = Encoding.ASCII.GetString(binaryImage, startIndex + 28, 100);
+    ///         if (length &gt;= BinaryLength)
+    ///         {
+    ///             // Deserialize byte array into TestIsamFileRecord.
+    ///             Name = Encoding.ASCII.GetString(binaryImage, startIndex, 20);
+    ///             Value = BitConverter.ToDouble(binaryImage, startIndex + 20);
+    ///             Description = Encoding.ASCII.GetString(binaryImage, startIndex + 28, 100);
+    ///         }
+    ///         else
+    ///             throw new InvalidOperationException("Invalid record size, not enough data to deserialize record."); 
     /// 
     ///         return RecordLength;
     ///     }
@@ -203,7 +218,7 @@ namespace PCS.IO
     /// }
     /// </code>
     /// </example>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryImageProvider, IBinaryImageConsumer<long>
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : IBinaryImageProvider, IBinaryImageConsumer
     {
         #region [ Members ]
 
@@ -302,7 +317,6 @@ namespace PCS.IO
         private ManualResetEvent m_saveWaitHandle;
         private System.Timers.Timer m_autoSaveTimer;
         private FileSystemWatcher m_fileSystemWatcher;
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -518,20 +532,23 @@ namespace PCS.IO
         /// Gets or sets a boolean value that indicates whether the file is currently enabled.
         /// </summary>
         /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// Setting <see cref="Enabled"/> to true will open the file if it is closed, setting
+        /// to false will close the file if it is open.
         /// </remarks>
         [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
             get
             {
-                return m_enabled;
+                return IsOpen;
             }
             set
             {
-                m_enabled = value;
+                if (value && !IsOpen)
+                    Open();
+                else if (!value && IsOpen)
+                    Close();
             }
         }
 
@@ -904,7 +921,7 @@ namespace PCS.IO
         /// <remarks>
         /// This operation will causes existing records to be deleted and replaced with the ones specified.
         /// </remarks>
-        public virtual void Write(List<T> records)
+        public virtual void Write(IEnumerable<T> records)
         {
             if (IsOpen)
             {
@@ -930,9 +947,9 @@ namespace PCS.IO
         /// <summary>
         /// Writes specified record to disk if records were not loaded in memory otherwise updates the record in memory.
         /// </summary>
-        /// <param name="recordID">ID of the record to be written.</param>
+        /// <param name="recordIndex">1-based index of the record to be written.</param>
         /// <param name="record">Record to be written.</param>
-        public virtual void Write(int recordID, T record)
+        public virtual void Write(int recordIndex, T record)
         {
             if (IsOpen)
             {
@@ -941,18 +958,18 @@ namespace PCS.IO
                     if (m_fileRecords == null)
                     {
                         // We're writing directly to the file.
-                        WriteToDisk(recordID, record);
+                        WriteToDisk(recordIndex, record);
                     }
                     else
                     {
                         // We're updating the in-memory record list.
-                        int lastRecordID = RecordsInMemory;
+                        int lastRecordIndex = RecordsInMemory;
 
-                        if (recordID > lastRecordID)
+                        if (recordIndex > lastRecordIndex)
                         {
-                            if (recordID > lastRecordID + 1)
+                            if (recordIndex > lastRecordIndex + 1)
                             {
-                                for (int i = lastRecordID + 1; i <= recordID - 1; i++)
+                                for (int i = lastRecordIndex + 1; i <= recordIndex - 1; i++)
                                 {
                                     Write(i, CreateNewRecord(i));
                                 }
@@ -968,7 +985,7 @@ namespace PCS.IO
                             // Updates the existing record with the new one.
                             lock (m_fileRecords)
                             {
-                                m_fileRecords[recordID - 1] = record;
+                                m_fileRecords[recordIndex - 1] = record;
                             }
                         }
                     }
@@ -1019,28 +1036,28 @@ namespace PCS.IO
         /// <summary>
         /// Reads specified file record from disk if records were not loaded in memory otherwise returns the record in memory.
         /// </summary>
-        /// <param name="recordID">ID of the record to be read.</param>
+        /// <param name="recordIndex">1-based index of the record to be read.</param>
         /// <returns>Record with the specified ID if it exists; otherwise null.</returns>
-        public virtual T Read(int recordID)
+        public virtual T Read(int recordIndex)
         {
             if (IsOpen)
             {
                 T record = default(T);
 
-                if (recordID > 0)
+                if (recordIndex > 0)
                 {
                     // ID of the requested record is valid.
-                    if (m_fileRecords == null && recordID <= RecordsOnDisk)
+                    if (m_fileRecords == null && recordIndex <= RecordsOnDisk)
                     {
                         // Reads the requested record exists in the file.
-                        record = ReadFromDisk(recordID);
+                        record = ReadFromDisk(recordIndex);
                     }
-                    else if ((m_fileRecords != null) && recordID <= RecordsInMemory)
+                    else if ((m_fileRecords != null) && recordIndex <= RecordsInMemory)
                     {
                         // Uses the requested record from memory.
                         lock (m_fileRecords)
                         {
-                            record = m_fileRecords[recordID - 1];
+                            record = m_fileRecords[recordIndex - 1];
                         }
                     }
                 }
@@ -1148,39 +1165,41 @@ namespace PCS.IO
         /// <summary>
         /// When overridden in a derived class, returns a new empty record.
         /// </summary>
-        /// <param name="id">ID of the new record.</param>
+        /// <param name="recordIndex">1-based index of the new record.</param>
         /// <returns>New empty record.</returns>
-        protected abstract T CreateNewRecord(int id);
+        protected abstract T CreateNewRecord(int recordIndex);
 
         /// <summary>
         /// Writes records to disk.
         /// </summary>
         /// <param name="records">Records to be written to disk.</param>
-        private void WriteToDisk(List<T> records)
+        private void WriteToDisk(IEnumerable<T> records)
         {
             // Write all records to disk.
-            for (int i = 1; i <= records.Count; i++)
+            int index = 0;
+
+            foreach (T item in records)
             {
-                WriteToDisk(i, records[i - 1]);
+                WriteToDisk(++index, item);
             }
 
             // Discard previously existing records that were not written.
             lock (m_fileStream)
             {
-                m_fileStream.SetLength(records.Count * m_recordBuffer.Length);
+                m_fileStream.SetLength(index * m_recordBuffer.Length);
             }
         }
 
         /// <summary>
         /// Writes single record to disk.
         /// </summary>
-        /// <param name="recordID">ID of the record to be written to disk.</param>
+        /// <param name="recordIndex">1-based index of the record to be written to disk.</param>
         /// <param name="record">Record to be written to disk.</param>
-        private void WriteToDisk(int recordID, T record)
+        private void WriteToDisk(int recordIndex, T record)
         {
             lock (m_fileStream)
             {
-                m_fileStream.Seek((recordID - 1) * record.BinaryLength, SeekOrigin.Begin);
+                m_fileStream.Seek((recordIndex - 1) * record.BinaryLength, SeekOrigin.Begin);
                 m_fileStream.Write(record.BinaryImage, 0, record.BinaryLength);
             }
         }
@@ -1205,17 +1224,17 @@ namespace PCS.IO
         /// <summary>
         /// Read single record from disk.
         /// </summary>
-        /// <param name="recordID">ID of the record to be read.</param>
+        /// <param name="recordIndex">1-based index of the record to be read.</param>
         /// <returns>Record from the disk.</returns>
-        private T ReadFromDisk(int recordID)
+        private T ReadFromDisk(int recordIndex)
         {
             lock (m_fileStream)
             {
-                m_fileStream.Seek((recordID - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
+                m_fileStream.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileStream.Read(m_recordBuffer, 0, m_recordBuffer.Length);
             }
 
-            T newRecord = CreateNewRecord(recordID);
+            T newRecord = CreateNewRecord(recordIndex);
             newRecord.Initialize(m_recordBuffer, 0, m_recordBuffer.Length);
 
             return newRecord;

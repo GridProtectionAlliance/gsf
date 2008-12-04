@@ -35,17 +35,17 @@ namespace PCS.Parsing
     /// This class is more specific than the <see cref="StreamParserBase"/> in that it can automate the parsing of a
     /// particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
-    /// <see cref="IBinaryImageConsumer{TTypeIdentifier}"/> interface. The common method of identification is
-    /// handled by creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily
-    /// includes a TypeID property, but also should include any state information needed to parse a particular frame if
-    /// necessary. Derived classes override the <see cref="FrameParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
+    /// <see cref="IFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
+    /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
+    /// TypeID property, but also should include any state information needed to parse a particular frame if necessary.
+    /// Derived classes override the <see cref="FrameParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
     /// function in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
     /// </para>
     /// </remarks>
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameParserBase<TTypeIdentifier, TOutputType> where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
+    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameParserBase<TTypeIdentifier, TOutputType> where TOutputType : IFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -280,7 +280,7 @@ namespace PCS.Parsing
                 buffer = item.Item;
 
                 // Check to see if this data source has been initialized
-                if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(sourceID, out m_dataStreamInitialized))
+                if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(sourceID, out StreamInitialized))
                     m_sourceInitialized.Add(sourceID, true);
 
                 // Clear any existing parsed outputs

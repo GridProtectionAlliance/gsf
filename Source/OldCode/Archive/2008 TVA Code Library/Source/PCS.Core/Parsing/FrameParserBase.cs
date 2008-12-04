@@ -25,29 +25,29 @@ using System.Collections.Generic;
 namespace PCS.Parsing
 {
     /// <summary>
-    /// This class defines a basic implementation of parsing functionality suitable for automating the parsing of a
-    /// binary data stream represented as frames with common headers and returning the parsed data via an event.
+    /// This class defines a basic implementation of parsing functionality suitable for automating the parsing of
+    /// a binary data stream represented as frames with common headers and returning the parsed data via an event.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This parser is designed as a write-only stream such that data can come from any source.
     /// </para>
     /// <para>
-    /// This class is more specific than the <see cref="StreamParserBase"/> in that it can automate the parsing of a
-    /// particular protocol that is formatted as a series of frames that have a common method of identification.
+    /// This class is more specific than the <see cref="StreamParserBase"/> in that it can automate the parsing of
+    /// a particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
-    /// <see cref="IBinaryImageConsumer{TTypeIdentifier}"/> interface. The common method of identification is
-    /// handled by creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily
-    /// includes a TypeID property, but also should include any state information needed to parse a particular
-    /// frame if necessary. Derived classes simply override the <see cref="ParseCommonHeader"/> function in order
-    /// to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
+    /// <see cref="IFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
+    /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
+    /// TypeID property, but also should include any state information needed to parse a particular frame if
+    /// necessary. Derived classes simply override the <see cref="ParseCommonHeader"/> function in order to parse
+    /// the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
     /// </para>
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class FrameParserBase<TTypeIdentifier, TOutputType> : StreamParserBase, IFrameParser<TTypeIdentifier, TOutputType> where TOutputType : IBinaryImageConsumer<TTypeIdentifier>
+    public abstract class FrameParserBase<TTypeIdentifier, TOutputType> : StreamParserBase, IFrameParser<TTypeIdentifier, TOutputType> where TOutputType : IFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -264,12 +264,12 @@ namespace PCS.Parsing
         /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
         /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
         /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
-        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> method. This header image should also be used to add needed complex state
-        /// information about the output type being parsed if needed.
+        /// <see cref="IBinaryImageConsumer.Initialize"/> method. This header image should also be used to add needed complex state information
+        /// about the output type being parsed if needed.
         /// </para>
         /// <para>
-        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output type
-        /// <see cref="IBinaryImageConsumer{TTypeIdentifier}.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
+        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output
+        /// type <see cref="IBinaryImageConsumer.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
         /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
         /// </para>
         /// </remarks>
