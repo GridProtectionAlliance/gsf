@@ -209,6 +209,33 @@ namespace PCS
         }
 
         /// <summary>Returns comparision results of two binary buffers.</summary>
+        /// <param name="source"></param>
+        /// <param name="other"></param>
+        /// <returns>
+        /// <para>
+        /// A signed integer that indicates the relative comparison of source buffer and other buffer.
+        /// </para>
+        /// <para>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Return Value</term>
+        ///         <description>Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Less than zero</term>
+        ///         <description>Source buffer is less than other buffer.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Zero</term>
+        ///         <description>Source buffer is equal to other buffer.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Greater than zero</term>
+        ///         <description>Source buffer is greater than other buffer.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </returns>
         public static int CompareTo(this byte[] source, byte[] other)
         {
             if (source == null && other == null)
@@ -239,10 +266,9 @@ namespace PCS
                     for (int x = 0; x <= length1 - 1; x++)
                     {
                         comparision = source[x].CompareTo(other[x]);
+
                         if (comparision != 0)
-                        {
                             break;
-                        }
                     }
 
                     return comparision;
@@ -265,7 +291,7 @@ namespace PCS
         /// <param name="count"></param>
         /// <returns>
         /// <para>
-        /// A signed integer that indicates the relative order of this instance and value.
+        /// A signed integer that indicates the relative comparison of source buffer and other buffer.
         /// </para>
         /// <para>
         /// <list type="table">
@@ -275,15 +301,15 @@ namespace PCS
         ///     </listheader>
         ///     <item>
         ///         <term>Less than zero</term>
-        ///         <description>This instance is less than value.</description>
+        ///         <description>Source buffer is less than other buffer.</description>
         ///     </item>
         ///     <item>
         ///         <term>Zero</term>
-        ///         <description>This instance is equal to value.</description>
+        ///         <description>Source buffer is equal to other buffer.</description>
         ///     </item>
         ///     <item>
         ///         <term>Greater than zero</term>
-        ///         <description>This instance is greater than value.</description>
+        ///         <description>Source buffer is greater than other buffer.</description>
         ///     </item>
         /// </list>
         /// </para>
@@ -334,10 +360,9 @@ namespace PCS
                 for (int x = 0; x <= count - 1; x++)
                 {
                     comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
+
                     if (comparision != 0)
-                    {
                         break;
-                    }
                 }
 
                 return comparision;
