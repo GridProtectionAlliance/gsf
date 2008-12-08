@@ -98,7 +98,7 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
         /// </summary>
-        event EventHandler<EventArgs<Guid>> ReceiveClientDataTimedout;
+        event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
         /// <summary>
         /// Occurs when data is received from a client.
