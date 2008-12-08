@@ -143,7 +143,7 @@ namespace PCS.Services
                     m_remotingClient.Connected -= m_remotingClient_Connected;
                     m_remotingClient.Connecting -= m_remotingClient_Connecting;
                     m_remotingClient.Disconnected -= m_remotingClient_Disconnected;
-                    m_remotingClient.ReceivedData -= m_remotingClient_ReceivedData;
+                    m_remotingClient.ReceiveDataComplete -= m_remotingClient_ReceiveDataComplete;
                 }
 
                 m_remotingClient = value;
@@ -154,7 +154,7 @@ namespace PCS.Services
                     m_remotingClient.Connected += m_remotingClient_Connected;
                     m_remotingClient.Connecting += m_remotingClient_Connecting;
                     m_remotingClient.Disconnected += m_remotingClient_Disconnected;
-                    m_remotingClient.ReceivedData += m_remotingClient_ReceivedData;
+                    m_remotingClient.ReceiveDataComplete += m_remotingClient_ReceiveDataComplete;
                 }
             }
         }
@@ -381,9 +381,9 @@ namespace PCS.Services
             UpdateStatus(status.ToString(), 1);
         }
 
-        private void m_remotingClient_ReceivedData(object sender, EventArgs<IdentifiableItem<Guid, byte[]>> e)
+        private void m_remotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
-            ServiceResponse response = Serialization.GetObject<ServiceResponse>(e.Argument.Item);
+            ServiceResponse response = Serialization.GetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2));
 
             if (response != null)
             {

@@ -360,7 +360,7 @@ namespace PCS.Services
                 {
                     // Detach events from any existing instance
 				    m_remotingServer.ClientDisconnected -= m_remotingServer_ClientDisconnected;
-				    m_remotingServer.ReceivedClientData -= m_remotingServer_ReceivedClientData;
+				    m_remotingServer.ReceiveClientDataComplete -= m_remotingServer_ReceiveClientDataComplete;
                 }
 
 				m_remotingServer = value;
@@ -369,7 +369,7 @@ namespace PCS.Services
                 {
                     // Attach events to new instance
 				    m_remotingServer.ClientDisconnected += m_remotingServer_ClientDisconnected;
-				    m_remotingServer.ReceivedClientData += m_remotingServer_ReceivedClientData;
+				    m_remotingServer.ReceiveClientDataComplete += m_remotingServer_ReceiveClientDataComplete;
                 }
 			}
 		}
@@ -1107,11 +1107,11 @@ namespace PCS.Services
             }
         }
 
-        private void m_remotingServer_ReceivedClientData(object sender, EventArgs<IdentifiableItem<Guid, byte[]>> e)
+        private void m_remotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
-            ClientInfo client = Serialization.GetObject<ClientInfo>(e.Argument.Item);
-            ClientRequest request = Serialization.GetObject<ClientRequest>(e.Argument.Item);
-            ClientInfo requestSender = GetConnectedClient(e.Argument.ID);
+            ClientInfo client = Serialization.GetObject<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3));
+            ClientRequest request = Serialization.GetObject<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3));
+            ClientInfo requestSender = GetConnectedClient(e.Argument1);
 
             if (client != null)
             {
