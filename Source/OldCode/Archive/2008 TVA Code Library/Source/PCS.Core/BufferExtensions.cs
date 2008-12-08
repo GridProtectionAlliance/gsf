@@ -38,7 +38,7 @@ namespace PCS
         public static byte[] BlockCopy(this byte[] source, int startIndex, int length)
         {
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
 
             if (length < 0)
                 throw new ArgumentOutOfRangeException("length", "cannot be negative");
@@ -224,30 +224,34 @@ namespace PCS
 
             // Search for first byte in the sequence, if this doesn't exist then sequence doesn't exist
             int index = Array.IndexOf(buffer, bytesToFind[0], startIndex, length);
-            bool foundSequence = false;
 
-            while (index > 0 && !foundSequence)
+            if (bytesToFind.Length > 1)
             {
-                // See if next bytes in sequence match
-                for (int x = 1; x < bytesToFind.Length; x++)
-                {
-                    // Make sure there's enough buffer remaining to accomodate this byte
-                    if (index + x < startIndex + length)
-                    {
-                        // If sequence doesn't match, search for next first-byte
-                        if (buffer[index + x] != bytesToFind[x])
-                        {
-                            index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index - startIndex));
-                            break;
-                        }
+                bool foundSequence = false;
 
-                        // If each byte to find matched, we found the sequence
-                        foundSequence = (x == bytesToFind.Length - 1);
-                    }
-                    else
+                while (index > 0 && !foundSequence)
+                {
+                    // See if next bytes in sequence match
+                    for (int x = 1; x < bytesToFind.Length; x++)
                     {
-                        // Ran out of buffer, return -1
-                        index = -1;
+                        // Make sure there's enough buffer remaining to accomodate this byte
+                        if (index + x < startIndex + length)
+                        {
+                            // If sequence doesn't match, search for next first-byte
+                            if (buffer[index + x] != bytesToFind[x])
+                            {
+                                index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index - startIndex));
+                                break;
+                            }
+
+                            // If each byte to find matched, we found the sequence
+                            foundSequence = (x == bytesToFind.Length - 1);
+                        }
+                        else
+                        {
+                            // Ran out of buffer, return -1
+                            index = -1;
+                        }
                     }
                 }
             }
