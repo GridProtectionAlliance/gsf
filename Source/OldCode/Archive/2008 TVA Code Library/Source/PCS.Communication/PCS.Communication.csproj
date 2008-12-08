@@ -75,7 +75,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Transport.cs" />
-    <Compile Include="StateInfo.cs" />
     <Compile Include="SerialClient.cs">
     </Compile>
     <Compile Include="TcpClient.cs">
