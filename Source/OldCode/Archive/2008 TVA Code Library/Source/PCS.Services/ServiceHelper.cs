@@ -40,7 +40,7 @@ namespace PCS.Services
 {
     /// <summary>Helper class for a windows service</summary>
 	[ToolboxBitmap(typeof(ServiceHelper))]
-    public class ServiceHelper : Component, IPersistSettings, ISupportInitialize, IStatusProvider
+    public class ServiceHelper : Component, IPersistSettings, ISupportInitialize, IProvideStatus
 	{
 		#region [ Members ]
 		
@@ -489,7 +489,7 @@ namespace PCS.Services
 
                 foreach (ISupportLifecycle serviceComponent in m_serviceComponents)
                 {
-                    IStatusProvider statusProvider = serviceComponent as IStatusProvider;
+                    IProvideStatus statusProvider = serviceComponent as IProvideStatus;
 
                     if (statusProvider != null)
                     {
@@ -1757,7 +1757,7 @@ namespace PCS.Services
                                 {
                                     reloadableComponent.LoadSettings();
 
-                                    IStatusProvider statusProvider = component as IStatusProvider;
+                                    IProvideStatus statusProvider = component as IProvideStatus;
                                     if (statusProvider != null)
                                         settingsTarget = statusProvider.Name;
 
