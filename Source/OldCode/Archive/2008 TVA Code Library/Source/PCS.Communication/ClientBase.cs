@@ -100,11 +100,6 @@ namespace PCS.Communication
         /// </summary>
         public const string DefaultSettingsCategory = "CommunicationClient";
 
-        /// <summary>
-        /// Specifies the default value for the <see cref="Enabled"/> property.
-        /// </summary>
-        public const bool DefaultEnabled = true;
-
         // Events
 
         /// <summary>
@@ -205,7 +200,6 @@ namespace PCS.Communication
         private bool m_isConnected;
         private long m_connectTime;
         private long m_disconnectTime;
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -229,7 +223,6 @@ namespace PCS.Communication
             m_compression = DefaultCompression;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-            m_enabled = DefaultEnabled;
             m_textEncoding = Encoding.ASCII;
             m_serverID = Guid.Empty;
             m_clientID = Guid.NewGuid();
@@ -1089,7 +1082,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="SendDataException"/> event.
         /// </summary>
-        /// <param name="e"><see cref="SendDataException"/> event data.</param>
+        /// <param name="ex">Exception to send to <see cref="SendDataException"/> event.</param>
         protected virtual void OnSendDataException(Exception ex)
         {
             if (SendDataException != null)
