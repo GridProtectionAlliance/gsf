@@ -16,234 +16,245 @@
 //       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  11/07/2008 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Text;
-using System.Collections.Generic;
+using System.Threading;
 using PCS.IO.Compression;
 using PCS.Security.Cryptography;
 
 namespace PCS.Communication
 {
-	public interface IServer : ISupportLifecycle, IStatusProvider
-	{	
-		/// <summary>
-		/// Occurs when the server is started.
-		/// </summary>
-		event EventHandler ServerStarted;
-		
-		/// <summary>
-		/// Occurs when the server is stopped.
-		/// </summary>
-		event EventHandler ServerStopped;
-		
-		/// <summary>
-		/// Occurs when an exception is encountered while starting up the server.
-		/// </summary>
-		event EventHandler<EventArgs<Exception>> ServerStartupException;
-		
-		/// <summary>
-		/// Occurs when a client is connected to the server.
-		/// </summary>
-		event EventHandler<EventArgs<Guid>> ClientConnected;
-		
-		/// <summary>
-		/// Occurs when a client is disconnected from the server.
-		/// </summary>
-		event EventHandler<EventArgs<Guid>> ClientDisconnected;
-		
-		/// <summary>
-		/// Occurs when data is received from a client.
-		/// </summary>
-		event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedClientData;
-		
-		/// <summary>
-		/// Gets or sets the data that is required by the server to initialize.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The data that is required by the server to initialize.</returns>
-		string ConfigurationString{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets the maximum number of clients that can connect to the server.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The maximum number of clients that can connect to the server.</returns>
-		int MaximumClients{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets a boolean value indicating whether the data exchanged between the server and clients
-		/// will be encrypted using a private session passphrase.
-		/// </summary>
-		/// <value></value>
-		/// <returns>
-		/// True if the data exchanged between the server and clients will be encrypted using a private session
-		/// passphrase; otherwise False.
-		/// </returns>
-		bool SecureSession{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets a boolean value indicating whether the server will do a handshake with the client after
-		/// accepting its connection.
-		/// </summary>
-		/// <value></value>
-		/// <returns>True if the server will do a handshake with the client; otherwise False.</returns>
-		bool Handshake{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets the passpharse that the clients must provide for authentication during the handshake process.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The passpharse that the clients must provide for authentication during the handshake process.</returns>
-		string HandshakePassphrase{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The maximum number of bytes that can be received at a time by the server from the clients.</returns>
-		int ReceiveBufferSize{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets the encryption level to be used for encrypting the data exchanged between the server and
-		/// clients.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The encryption level to be used for encrypting the data exchanged between the server and clients.</returns>
-		CipherStrength Encryption{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets the compression level to be used for compressing the data exchanged between the server and
-		/// clients.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The compression level to be used for compressing the data exchanged between the server and clients.</returns>
-		CompressionStrength Compression{ get; set; }
-		
-		/// <summary>
-		/// Gets or sets the encoding to be used for the text sent to the connected clients.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The encoding to be used for the text sent to the connected clients.</returns>
-		Encoding TextEncoding{ get; set; }
-		
-		/// <summary>
-		/// Gets the protocol used by the server for transferring data to and from the clients.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The protocol used by the server for transferring data to and from the clients.</returns>
-		TransportProtocol Protocol{ get; set; }
-		
-		/// <summary>
-		/// Setting this property allows consumer to "intercept" data before it goes through normal processing
-		/// </summary>
-		Action<byte[], int, int> ReceiveRawDataFunction{ get; set; }
-		
-		/// <summary>
-		/// Gets the server's ID.
-		/// </summary>
-		/// <value></value>
-		/// <returns>ID of the server.</returns>
-		Guid ServerID{ get; }
-		
-		/// <summary>
-		/// Gets a collection of client IDs that are connected to the server.
-		/// </summary>
-		/// <value></value>
-		/// <returns>A collection of client IDs that are connected to the server.</returns>
-		List<Guid> ClientIDs{ get; }
-		
-		/// <summary>
-		/// Gets a boolean value indicating whether the server is currently running.
-		/// </summary>
-		/// <value></value>
-		/// <returns>True if the server is running; otherwise False.</returns>
-		bool IsRunning{ get; }
-		
-		/// <summary>
-		/// Gets the time in seconds for which the server has been running.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The time in seconds for which the server has been running.</returns>
-		double RunTime{ get; }
-		
-		/// <summary>
-		/// Starts the server.
-		/// </summary>
-		void Start();
-		
-		/// <summary>
-		/// Stops the server.
-		/// </summary>
-		void Stop();
-		
-		/// <summary>
-		/// Sends data to the specified client.
-		/// </summary>
-		/// <param name="clientID">ID of the client to which the data is to be sent.</param>
-		/// <param name="data">The plain-text data that is to be sent to the client.</param>
-		void SendTo(Guid clientID, string data);
-		
-		/// <summary>
-		/// Sends data to the specified client.
-		/// </summary>
-		/// <param name="clientID">ID of the client to which the data is to be sent.</param>
-		/// <param name="serializableObject">The serializable object that is to be sent to the client.</param>
-		void SendTo(Guid clientID, object serializableObject);
-		
-		/// <summary>
-		/// Sends data to the specified client.
-		/// </summary>
-		/// <param name="clientID">ID of the client to which the data is to be sent.</param>
-		/// <param name="data">The binary data that is to be sent to the client.</param>
-		void SendTo(Guid clientID, byte[] data);
-		
-		/// <summary>
-		/// Sends the specified subset of data from the data buffer to the specified client.
-		/// </summary>
-		/// <param name="clientID">ID of the client to which the data is to be sent.</param>
-		/// <param name="data">The buffer that contains the binary data to be sent.</param>
-		/// <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
-		/// <param name="size">The number of bytes to be sent.</param>
-		void SendTo(Guid clientID, byte[] data, int offset, int size);
-		
-		/// <summary>
-		/// Sends data to all of the subscribed clients.
-		/// </summary>
-		/// <param name="data">The plain-text data that is to sent to the subscribed clients.</param>
-		void Multicast(string data);
-		
-		/// <summary>
-		/// Sends data to all of the subscribed clients.
-		/// </summary>
-		/// <param name="serializableObject">The serializable object that is to be sent to the subscribed clients.</param>
-		void Multicast(object serializableObject);
-		
-		/// <summary>
-		/// Sends data to all of the subscribed clients.
-		/// </summary>
-		/// <param name="data">The binary data that is to sent to the subscribed clients.</param>
-		void Multicast(byte[] data);
-		
-		/// <summary>
-		/// Sends the specified subset of data from the data buffer to all of the subscribed clients.
-		/// </summary>
-		/// <param name="data">The buffer that contains the binary data to be sent.</param>
-		/// <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
-		/// <param name="size">The number of bytes to be sent.</param>
-		void Multicast(byte[] data, int offset, int size);
-		
-		/// <summary>
-		/// Disconnects all of the connected clients.
-		/// </summary>
-		void DisconnectAll();
-		
-		/// <summary>
-		/// Disconnects a connected client.
-		/// </summary>
-		/// <param name="clientID">ID of the client to be disconnected.</param>
-		void DisconnectOne(Guid clientID);	
-	}	
+    /// <summary>
+    /// Defines a server involved in server-client communication.
+    /// </summary>
+    public interface IServer : ISupportLifecycle
+    {
+        /// <summary>
+        /// Occurs when the server is started.
+        /// </summary>
+        event EventHandler ServerStarted;
+
+        /// <summary>
+        /// Occurs when the server is stopped.
+        /// </summary>
+        event EventHandler ServerStopped;
+
+        /// <summary>
+        /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
+        /// </summary>
+        event EventHandler HandshakeTimedout;
+
+        /// <summary>
+        /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
+        /// </summary>
+        event EventHandler HandshakeUnsuccessful;
+
+        /// <summary>
+        /// Occurs when a client connects to the server.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that connected to the server.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid>> ClientConnected;
+
+        /// <summary>
+        /// Occurs when a client disconnects from the server.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that disconnected from the server.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid>> ClientDisconnected;
+
+        /// <summary>
+        /// Occurs when data is being sent to a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data is being sent.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid>> SendClientDataStarted;
+
+        /// <summary>
+        /// Occurs when data has been sent to a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data has been sent.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid>> SendClientDataComplete;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when sending data to a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client to which the data was being sent.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when sending data to a client.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid, Exception>> SendClientDataException;
+
+        /// <summary>
+        /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
+        /// </summary>
+        event EventHandler<EventArgs<Guid>> ReceiveClientDataTimedout;
+
+        /// <summary>
+        /// Occurs when data is received from a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the client from which data is received.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the buffer containing data received from the client starting at index zero.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of bytes received in the buffer from the client.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
+
+        /// <summary>
+        /// Gets or sets the data required by the server to initialize.
+        /// </summary>
+        string ConfigurationString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of clients that can connect to the server.
+        /// </summary>
+        int MaxClientConnections { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the server will do a handshake with the clients after the connection has been established.
+        /// </summary>
+        bool Handshake { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of milliseconds that the server will wait for the clients to initiate the <see cref="Handshake"/> process.
+        /// </summary>
+        int HandshakeTimeout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the passpharse that the clients must provide for authentication during the <see cref="Handshake"/> process.
+        /// </summary>
+        string HandshakePassphrase { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.
+        /// </summary>
+        bool SecureSession { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimedout"/> event if no data is received from a client.
+        /// </summary>
+        int ReceiveTimeout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
+        /// </summary>
+        int ReceiveBufferSize { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
+        /// </summary>
+        CipherStrength Encryption { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the server and clients.
+        /// </summary>
+        CompressionStrength Compression { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
+        /// </summary>
+        Encoding TextEncoding { get; set; }
+
+        /// <summary>
+        /// Gets or sets a <see cref="Delegate"/> to be invoked instead of the <see cref="ReceiveClientDataComplete"/> event when data is received from clients.
+        /// </summary>
+        /// <remarks>
+        /// arg1 in <see cref="ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
+        /// arg2 in <see cref="ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
+        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
+        /// </remarks>
+        Action<Guid, byte[], int> ReceiveClientDataHandler { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
+        /// </summary>
+        TransportProtocol TransportProtocol { get; }
+
+        /// <summary>
+        /// Gets the server's ID.
+        /// </summary>
+        Guid ServerID { get; }
+
+        /// <summary>
+        /// Gets the IDs of clients connected to the server.
+        /// </summary>
+        Guid[] ClientIDs { get; }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether the server is currently running.
+        /// </summary>
+        bool IsRunning { get; }
+
+        /// <summary>
+        /// Gets the time in seconds for which the server has been running.
+        /// </summary>
+        double RunTime { get; }
+
+        /// <summary>
+        /// Starts the server.
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        /// Stops the server.
+        /// </summary>
+        void Stop();
+
+        /// <summary>
+        /// Disconnects all of the connected clients.
+        /// </summary>
+        void DisconnectAll();
+
+        /// <summary>
+        /// Disconnects a connected client.
+        /// </summary>
+        /// <param name="clientID">ID of the client to be disconnected.</param>
+        void DisconnectOne(Guid clientID);
+
+        /// <summary>
+        /// Sends data to the specified client synchronously.
+        /// </summary>
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        void SendTo(Guid clientID, byte[] data, int offset, int length);
+
+        /// <summary>
+        /// Sends data to all of the connected clients synchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        void Multicast(byte[] data, int offset, int length);
+
+        /// <summary>
+        /// Sends data to the specified client asynchronously.
+        /// </summary>
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        WaitHandle SendToAsync(Guid clientID, byte[] data, int offset, int length);
+
+        /// <summary>
+        /// Sends data to all of the connected clients asynchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        WaitHandle[] MulticastAsync(byte[] data, int offset, int length);
+    }
 }

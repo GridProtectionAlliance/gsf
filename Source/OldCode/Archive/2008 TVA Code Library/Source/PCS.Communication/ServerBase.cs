@@ -25,141 +25,248 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Text;
 using System.Threading;
-using System.Drawing;
-using System.ComponentModel;
-using System.Collections.Generic;
-using PCS.IO;
+using PCS.Configuration;
 using PCS.IO.Compression;
 using PCS.Security.Cryptography;
-using PCS.Configuration;
-using PCS.Security;
 
 namespace PCS.Communication
 {
     /// <summary>
-    /// Represents a server involved in the transportation of data.
+    /// Represents a server involved in server-client communication.
     /// </summary>
-    [ToolboxBitmap(typeof(ServerBase)), DefaultEvent("ReceivedClientData")]
-    public abstract partial class ServerBase : Component, IServer, IPersistSettings, ISupportInitialize
-	{
+    [ToolboxBitmap(typeof(ServerBase))]
+    public abstract partial class ServerBase : Component, IServer, ISupportInitialize, IProvideStatus, IPersistSettings
+    {
         #region [ Members ]
 
         // Constants
 
         /// <summary>
-        /// The maximum number of bytes that can be sent from the server to clients in a single send operation.
+        /// Specifies the default value for the <see cref="MaxClientConnections"/> property.
         /// </summary>
-        public const int MaximumDataSize = 524288000; // 500 MB
+        public const int DefaultMaxClientConnections = -1;
 
         /// <summary>
-        /// The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.
+        /// Specifies the default value for the <see cref="Handshake"/> property.
         /// </summary>
-        protected const string DefaultCryptoKey = "6572a33d-826f-4d96-8c28-8be66bbc700e";
+        public const bool DefaultHandshake = false;
 
-        // Delegates
+        /// <summary>
+        /// Specifies the default value for the <see cref="HandshakeTimeout"/> property.
+        /// </summary>
+        public const int DefaultHandshakeTimeout = 3000;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="HandshakePassphrase"/> property.
+        /// </summary>
+        public const string DefaultHandshakePassphrase = "6572a33d-826f-4d96-8c28-8be66bbc700e";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="SecureSession"/> property.
+        /// </summary>
+        public const bool DefaultSecureSession = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ReceiveTimeout"/> property.
+        /// </summary>
+        public const int DefaultReceiveTimeout = -1;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ReceiveBufferSize"/> property.
+        /// </summary>
+        public const int DefaultReceiveBufferSize = 8192;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Encryption"/> property.
+        /// </summary>
+        public const CipherStrength DefaultEncryption = CipherStrength.None;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Compression"/> property.
+        /// </summary>
+        public const CompressionStrength DefaultCompression = CompressionStrength.NoCompression;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
+        /// </summary>
+        public const bool DefaultPersistSettings = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
+        /// </summary>
+        public const string DefaultSettingsCategory = "CommunicationServer";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Enabled"/> property.
+        /// </summary>
+        public const bool DefaultEnabled = true;
 
         // Events
 
         /// <summary>
         /// Occurs when the server is started.
         /// </summary>
-        [Description("Occurs when the server is started."), Category("Server")]
+        [Category("Server"),
+        Description("Occurs when the server is started.")]
         public event EventHandler ServerStarted;
 
         /// <summary>
         /// Occurs when the server is stopped.
         /// </summary>
-        [Description("Occurs when the server is stopped."), Category("Server")]
+        [Category("Server"),
+        Description("Occurs when the server is stopped.")]
         public event EventHandler ServerStopped;
 
         /// <summary>
-        /// Occurs when an exception is encountered while starting up the server.
+        /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
         /// </summary>
-        [Description("Occurs when an exception is encountered while starting up the server."), Category("Server")]
-        public event EventHandler<EventArgs<Exception>> ServerStartupException;
+        [Category("Server"),
+        Description("Occurs when server-client handshake, when enabled, cannot be performed within the specified HandshakeTimeout time.")]
+        public event EventHandler HandshakeTimedout;
 
         /// <summary>
-        /// Occurs when a client is connected to the server.
+        /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
         /// </summary>
-        [Description("Occurs when a client is connected to the server."), Category("Client")]
+        [Category("Server"),
+        Description("Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.")]
+        public event EventHandler HandshakeUnsuccessful;
+
+        /// <summary>
+        /// Occurs when a client connects to the server.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that connected to the server.
+        /// </remarks>
+        [Category("Client"),
+        Description("Occurs when a client connects to the server.")]
         public event EventHandler<EventArgs<Guid>> ClientConnected;
 
         /// <summary>
-        /// Occurs when a client is disconnected from the server.
+        /// Occurs when a client disconnects from the server.
         /// </summary>
-        [Description("Occurs when a client is disconnected from the server."), Category("Client")]
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that disconnected from the server.
+        /// </remarks>
+        [Category("Client"),
+        Description("Occurs when a client disconnects from the server.")]
         public event EventHandler<EventArgs<Guid>> ClientDisconnected;
+
+        /// <summary>
+        /// Occurs when data is being sent to a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data is being sent.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when data is being sent to a client.")]
+        public event EventHandler<EventArgs<Guid>> SendClientDataStarted;
+
+        /// <summary>
+        /// Occurs when data has been sent to a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data has been sent.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when data has been sent to a client.")]
+        public event EventHandler<EventArgs<Guid>> SendClientDataComplete;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when sending data to a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client to which the data was being sent.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when sending data to a client.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when an Exception is encountered when sending data to a client.")]
+        public event EventHandler<EventArgs<Guid, Exception>> SendClientDataException;
+
+        /// <summary>
+        /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
+        /// </summary>
+        [Category("Data"), 
+        Description("Occurs when no data is received from a client for the ReceiveTimeout time.")]
+        public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimedout;
 
         /// <summary>
         /// Occurs when data is received from a client.
         /// </summary>
-        [Description("Occurs when data is received from a client."), Category("Data")]
-        public event EventHandler<EventArgs<IdentifiableItem<Guid, Byte[]>>> ReceivedClientData;		
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the client from which data is received.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the buffer containing data received from the client starting at index zero.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of bytes received in the buffer from the client.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when data is received from a client.")]
+        public event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
 
         // Fields
         private string m_configurationString;
-        private int m_receiveBufferSize;
-        private int m_maximumClients;
-        private bool m_secureSession;
+        private int m_maxClientConnections;
         private bool m_handshake;
+        private int m_handshakeTimeout;
         private string m_handshakePassphrase;
+        private bool m_secureSession;
+        private int m_receiveTimeout;
+        private int m_receiveBufferSize;
         private CipherStrength m_encryption;
         private CompressionStrength m_compression;
-        //private CRCCheckType m_crcCheck;
-        private bool m_enabled;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private TransportProtocol m_protocol;
+        private Action<Guid, byte[], int> m_receiveClientDataHandler;
+        private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
         private List<Guid> m_clientIDs;
         private bool m_isRunning;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
-        private bool m_disposed;
-        private long m_startTime;
         private long m_stopTime;
-        private bool m_initialized;
-
-        // We expose these two members to derived classes for their own internal use
-        protected Action<byte[], int, int> m_receiveRawDataFunction;
-        protected byte[] m_buffer;
+        private long m_startTime;
+        private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;             
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the server.
+        /// </summary>
         protected ServerBase()
-		{
-			// Setup the default values.
-			m_receiveBufferSize = 8192;
-			m_maximumClients = - 1;
-			m_handshake = true;
-			m_encryption = CipherStrength.None;
-			m_compression = CompressionStrength.NoCompression;
-			//m_crcCheck = CRCCheckType.None;
-			m_enabled = true;
-			m_textEncoding = System.Text.Encoding.ASCII;
-			m_serverID = Guid.NewGuid(); // Create an ID for the server.
-			m_clientIDs = new List<Guid>();
-			m_settingsCategory = this.GetType().Name;			
-			m_startTime = 0;
-			m_stopTime = 0;
-			m_buffer = new byte[m_receiveBufferSize];
-		}
-
-        protected ServerBase(string configurationString)
-            : this()
-		{
-            m_configurationString = configurationString;
-		}
+        {
+            m_maxClientConnections = DefaultMaxClientConnections;
+            m_handshake = DefaultHandshake;
+            m_handshakeTimeout = DefaultHandshakeTimeout;
+            m_handshakePassphrase = DefaultHandshakePassphrase;
+            m_secureSession = DefaultSecureSession;
+            m_receiveTimeout = DefaultReceiveTimeout;
+            m_receiveBufferSize = DefaultReceiveBufferSize;
+            m_encryption = DefaultEncryption;
+            m_compression = DefaultCompression;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
+            m_enabled = DefaultEnabled;
+            m_textEncoding = Encoding.ASCII;
+            m_serverID = Guid.NewGuid();
+            m_clientIDs = new List<Guid>();
+        }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="ServerBase"/> object is reclaimed by <see cref="GC"/>.
+        /// Initializes a new instance of the server.
         /// </summary>
-        ~ServerBase()
+        /// <param name="transportProtocol">One of the <see cref="TransportProtocol"/> values.</param>
+        /// <param name="configurationString">The data used by the server for initialization.</param>
+        protected ServerBase(TransportProtocol transportProtocol, string configurationString)
+            : this()
         {
-            Dispose(false);
+            m_transportProtocol = transportProtocol;
+            this.ConfigurationString = configurationString;
         }
 
         #endregion
@@ -167,11 +274,10 @@ namespace PCS.Communication
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the data that is required by the server to initialize.
+        /// Gets or sets the data required by the server to initialize.
         /// </summary>
-        /// <value></value>
-        /// <returns>The data that is required by the server to initialize.</returns>
-        [Description("The data that is required by the server to initialize."), Category("Configuration")]
+        [Category("Settings"),
+        Description("The data that is required by the server to initialize.")]
         public virtual string ConfigurationString
         {
             get
@@ -180,15 +286,14 @@ namespace PCS.Communication
             }
             set
             {
-                if (ValidConfigurationString(value))
+                ValidateConfigurationString(value);
+
+                m_configurationString = value;
+                if (m_isRunning)
                 {
-                    m_configurationString = value;
-                    if (IsRunning)
-                    {
-                        // Restart the server when configuration data is changed.
-                        Stop();
-                        Start();
-                    }
+                    // Restart the server when configuration data is changed.
+                    Stop();
+                    Start();
                 }
             }
         }
@@ -196,67 +301,37 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets the maximum number of clients that can connect to the server.
         /// </summary>
-        /// <value></value>
-        /// <returns>The maximum number of clients that can connect to the server.</returns>
-        /// <remarks>Set MaximumClients = -1 for infinite client connections.</remarks>
-        [Description("The maximum number of clients that can connect to the server. Set MaximumClients = -1 for infinite client connections."), Category("Configuration"), DefaultValue(typeof(int), "-1")]
-        public virtual int MaximumClients
+        /// <remarks>
+        /// Set <see cref="MaxClientConnections"/> to -1 to allow infinite client connections.
+        /// </remarks>
+        [Category("Settings"),
+        DefaultValue(DefaultMaxClientConnections),
+        Description("The maximum number of clients that can connect to the server. Set MaxClientConnections to -1 to allow infinite client connections.")]
+        public virtual int MaxClientConnections
         {
             get
             {
-                return m_maximumClients;
+                return m_maxClientConnections;
             }
             set
             {
-                if (value == -1 || value > 0)
-                {
-                    m_maximumClients = value;
-                }
+                if (value < 1)
+                    m_maxClientConnections = -1;
                 else
-                {
-                    throw new ArgumentOutOfRangeException("value");
-                }
+                    m_maxClientConnections = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the data exchanged between the server and clients
-        /// will be encrypted using a private session passphrase.
+        /// Gets or sets a boolean value that indicates whether the server will do a handshake with the clients after the connection has been established.
         /// </summary>
-        /// <value></value>
-        /// <returns>
-        /// True if the data exchanged between the server and clients will be encrypted using a private session
-        /// passphrase; otherwise False.
-        /// </returns>
-        ///<remarks>Handshake and Encryption must be enabled in order to use SecureSession.</remarks>
-        [Description("Indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase."), Category("Security"), DefaultValue(typeof(bool), "False")]
-        public virtual bool SecureSession
-        {
-            get
-            {
-                return m_secureSession;
-            }
-            set
-            {
-                if (!value || (value && m_handshake && m_encryption != CipherStrength.None))
-                {
-                    m_secureSession = value;
-                }
-                else
-                {
-                    throw new InvalidOperationException("Handshake and Encryption must be enabled in order to use SecureSession.");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value indicating whether the server will do a handshake with the client after
-        /// accepting its connection.
-        /// </summary>
-        /// <value></value>
-        /// <returns>True if the server will do a handshake with the client; otherwise False.</returns>
-        /// <remarks>SecureSession must be disabled before disabling Handshake.</remarks>
-        [Description("Indicates whether the server will do a handshake with the client after accepting its connection."), Category("Security"), DefaultValue(typeof(bool), "True")]
+        /// <remarks>
+        /// <see cref="Handshake"/> is required when <see cref="SecureSession"/> is enabled.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException"><see cref="Handshake"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
+        [Category("Security"),
+        DefaultValue(DefaultHandshake),
+        Description("Indicates whether the server will do a handshake with the client after accepting its connection.")]
         public virtual bool Handshake
         {
             get
@@ -265,29 +340,42 @@ namespace PCS.Communication
             }
             set
             {
-                if (value || (!value && !m_secureSession))
-                {
-                    m_handshake = value;
+                // Can't disable handshake when secure session is enabled.
+                if (!value && m_secureSession)
+                    throw new InvalidOperationException("Handshake is required when SecureSession is enabled.");
 
-                    if (!m_handshake)
-                    {
-                        // Handshake passphrase will have no effect if handshaking is disabled.
-                        m_handshakePassphrase = "";
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException("SecureSession must be disabled before disabling Handshake.");
-                }
+                m_handshake = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the passpharse that the clients must provide for authentication during the handshake process.
+        /// Gets or sets the number of milliseconds that the server will wait for the clients to initiate the <see cref="Handshake"/> process.
         /// </summary>
-        /// <value></value>
-        /// <returns>The passpharse that the clients must provide for authentication during the handshake process.</returns>
-        [Description("The passpharse that the clients must provide for authentication during the handshake process."), Category("Security"), DefaultValue(typeof(string), "")]
+        /// <exception cref="ArgumentException">The value specified is either zero or negative.</exception>
+        [Category("Security"), 
+        DefaultValue(DefaultHandshakeTimeout),
+        Description("The number of milliseconds that the server will wait for the clients to initiate the handshake process.")]
+        public virtual int HandshakeTimeout
+        {
+            get
+            {
+                return m_handshakeTimeout;
+            }
+            set 
+            {
+                if (value < 1)
+                    throw new ArgumentException("Value cannot be zero or negative."); 
+                    
+                m_handshakeTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the passpharse that the clients must provide for authentication during the <see cref="Handshake"/> process.
+        /// </summary>
+        [Category("Security"),
+        DefaultValue(DefaultHandshakePassphrase),
+        Description("The passpharse that the clients must provide for authentication during the handshake process.")]
         public virtual string HandshakePassphrase
         {
             get
@@ -296,24 +384,73 @@ namespace PCS.Communication
             }
             set
             {
-                m_handshakePassphrase = value;
-
-                if (!string.IsNullOrEmpty(m_handshakePassphrase))
-                {
-                    // Handshake password has no effect until handshaking is enabled.
-                    m_handshake = true;
-                }
+                if (!string.IsNullOrEmpty(value))
+                    m_handshakePassphrase = value;
+                else
+                    m_handshakePassphrase = DefaultHandshakePassphrase;
             }
         }
 
         /// <summary>
-        /// Gets or sets the maximum number of bytes that can be received at a time by the server from the clients.
+        /// Gets or sets a boolean value that indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.
         /// </summary>
-        /// <value>Receive buffer size</value>
-        /// <exception cref="InvalidOperationException">This exception will be thrown if an attempt is made to change the receive buffer size while server is running</exception>
-        /// <exception cref="ArgumentOutOfRangeException">This exception will be thrown if an attempt is made to set the receive buffer size to a value that is less than one</exception>
-        /// <returns>The maximum number of bytes that can be received at a time by the server from the clients.</returns>
-        [Description("The maximum number of bytes that can be received at a time by the server from the clients."), Category("Data"), DefaultValue(typeof(int), "8192")]
+        ///<remarks>
+        ///<see cref="Handshake"/> and <see cref="Encryption"/> must be enabled in order to use <see cref="SecureSession"/>.
+        ///</remarks>
+        ///<exception cref="InvalidOperationException"><see cref="SecureSession"/> is being enabled before enabling <see cref="Handshake"/>.</exception>
+        ///<exception cref="InvalidOperationException"><see cref="SecureSession"/> is being enabled before enabling <see cref="Encryption"/>.</exception>
+        [Category("Security"),
+        DefaultValue(DefaultSecureSession),
+        Description("Indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.")]
+        public virtual bool SecureSession
+        {
+            get
+            {
+                return m_secureSession;
+            }
+            set
+            {
+                // Handshake is required for SecureSession.
+                if (value && !m_handshake)
+                    throw new InvalidOperationException("Handshake must be enabled in order to use SecureSession.");
+
+                // Encryption is required for SecureSession.
+                if (value && m_encryption == CipherStrength.None)
+                    throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession.");
+
+                m_secureSession = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimedout"/> event if no data is received from a client.
+        /// </summary>
+        /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
+        [Category("Data"), 
+        DefaultValue(DefaultReceiveTimeout), 
+        Description("The number of milliseconds after which the server will raise the ReceiveClientDataTimedout event if no data is received from a client.")]
+        public virtual int ReceiveTimeout
+        {
+            get
+            {
+                return m_receiveTimeout;
+            }
+            set 
+            {
+                if (value < 1)
+                    m_receiveTimeout = -1;
+                else
+                    m_receiveTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value specified is either zero or negative.</exception>
+        [Category("Data"),
+        DefaultValue(DefaultReceiveBufferSize),
+        Description("The size of the buffer used by the server for receiving data from the clients.")]
         public virtual int ReceiveBufferSize
         {
             get
@@ -322,39 +459,35 @@ namespace PCS.Communication
             }
             set
             {
-                if (m_isRunning)
-                    throw new InvalidOperationException("Cannot change receive buffer size while server is running");
+                if (value < 1)
+                    throw new ArgumentException("Value cannot be zero or negative.");
 
-                if (value > 0)
-                {
-                    m_receiveBufferSize = value;
-                    m_buffer = new byte[value];
-                }
-                else
-                {
-                    throw new ArgumentOutOfRangeException("value");
-                }
+                m_receiveBufferSize = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the encryption level to be used for encrypting the data exchanged between the server and
-        /// clients.
+        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The encryption level to be used for encrypting the data exchanged between the server and clients.</returns>
         /// <remarks>
-        /// <para>Set Encryption = None to disable encryption.</para>
-        /// <para>
-        /// The key used for performing cryptography will be different in different senarios.
-        /// 1) HandshakePassphrase will be used as the key when HandshakePassphrase is set and SecureSession is
-        ///    disabled.
-        /// 2) DefaultCryptoKey will be used as the key when HandshakePassphrase is not set and SecureSession is
-        ///    disabled.
-        /// 3) A private session key will be used as the key when SecureSession is enabled.
-        /// </para>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term><see cref="SecureSession"/></term>
+        ///         <description>Key used for <see cref="Encryption"/></description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Disabled</term>
+        ///         <description><see cref="HandshakePassphrase"/> is used.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Enabled</term>
+        ///         <description>A private key exchanged between the server and client during the <see cref="Handshake"/> process is used.</description>
+        ///     </item>
+        /// </list>
         /// </remarks>
-        [Description("The encryption level to be used for encrypting the data exchanged between the server and clients."), Category("Data"), DefaultValue(typeof(CipherStrength), "None")]
+        [Category("Data"),
+        DefaultValue(DefaultEncryption),
+        Description("The CipherStrength to be used for ciphering the data exchanged between the server and clients.")]
         public virtual CipherStrength Encryption
         {
             get
@@ -363,25 +496,20 @@ namespace PCS.Communication
             }
             set
             {
-                if (!m_secureSession || (m_secureSession && value != CipherStrength.None))
-                {
-                    m_encryption = value;
-                }
-                else
-                {
-                    throw new ArgumentException("SecureSession session must be disabled before disabling Encryption.");
-                }
+                // Can't disable encryption when secure session is enabled.
+                if (value == CipherStrength.None && m_secureSession)
+                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
+
+                m_encryption = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the compression level to be used for compressing the data exchanged between the server and
-        /// clients.
+        /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the server and clients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The compression level to be used for compressing the data exchanged between the server and clients.</returns>
-        /// <remarks>Set Compression = NoCompression to disable compression.</remarks>
-        [Description("The compression level to be used for compressing the data exchanged between the server and clients."), Category("Data"), DefaultValue(typeof(CompressionStrength), "NoCompression")]
+        [Category("Data"),
+        DefaultValue(DefaultCompression),
+        Description("The CompressionStrength to be used for compressing the data exchanged between the server and clients.")]
         public virtual CompressionStrength Compression
         {
             get
@@ -395,12 +523,55 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the server is enabled.
+        /// Gets or sets a boolean value that indicates whether the server settings are to be saved to the config file.
         /// </summary>
-        /// <value></value>
-        /// <returns>True if the server is enabled; otherwise False.</returns>
-        [Description("Indicates whether the server is enabled."), Category("Behavior"), DefaultValue(typeof(bool), "True")]
-        public virtual bool Enabled
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the server settings are to be saved to the config file.")]
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the category under which the server settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value specified is a null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the server settings are to be saved to the config file if the PersistSettings property is set to true.")]
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the server is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
         {
             get
             {
@@ -413,11 +584,10 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets or sets the encoding to be used for the text sent to the connected clients.
+        /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The encoding to be used for the text sent to the connected clients.</returns>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
             get
@@ -431,49 +601,49 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Setting this property allows consumer to "intercept" data before it goes through normal processing
+        /// Gets or sets a <see cref="Delegate"/> to be invoked instead of the <see cref="ReceiveClientDataComplete"/> event when data is received from clients.
         /// </summary>
         /// <remarks>
-        /// This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this
-        /// will not be necessary.  Setting this property gives the consumer access to the data stream as soon as it's available, but this also
-        /// bypasses all of the advanced convience properties (e.g., PayloadAware, Handshake, Encryption, Compression, etc.)
+        /// <para>
+        /// This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this will not be necessary.  
+        /// Setting this property gives the consumer access to the data stream as soon as it's available, but this also bypasses <see cref="Encryption"/> and 
+        /// <see cref="Compression"/> on received data.
+        /// </para>
+        /// <para>
+        /// arg1 in <see cref="ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
+        /// arg2 in <see cref="ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
+        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
+        /// </para>
         /// </remarks>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Action<byte[], int, int> ReceiveRawDataFunction
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public virtual Action<Guid, byte[], int> ReceiveClientDataHandler
         {
             get
             {
-                return m_receiveRawDataFunction;
+                return m_receiveClientDataHandler;
             }
             set
             {
-                m_receiveRawDataFunction = value;
+                m_receiveClientDataHandler = value;
             }
         }
 
         /// <summary>
-        /// Gets the protocol used by the server for transferring data to and from the clients.
+        /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
         /// </summary>
-        /// <value></value>
-        /// <returns>The protocol used by the server for transferring data to and from the clients.</returns>
         [Browsable(false)]
-        public virtual TransportProtocol Protocol
+        public virtual TransportProtocol TransportProtocol
         {
             get
             {
-                return m_protocol;
-            }
-            set
-            {
-                m_protocol = value;
+                return m_transportProtocol;
             }
         }
 
         /// <summary>
         /// Gets the server's ID.
         /// </summary>
-        /// <value></value>
-        /// <returns>ID of the server.</returns>
         [Browsable(false)]
         public virtual Guid ServerID
         {
@@ -484,24 +654,23 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets a collection of client IDs that are connected to the server.
+        /// Gets the IDs of clients connected to the server.
         /// </summary>
-        /// <value></value>
-        /// <returns>A collection of client IDs that are connected to the server.</returns>
         [Browsable(false)]
-        public virtual List<Guid> ClientIDs
+        public virtual Guid[] ClientIDs
         {
             get
             {
-                return m_clientIDs;
+                lock (m_clientIDs)
+                {
+                    return m_clientIDs.ToArray();
+                }
             }
         }
 
         /// <summary>
-        /// Gets a boolean value indicating whether the server is currently running.
+        /// Gets a boolean value that indicates whether the server is currently running.
         /// </summary>
-        /// <value></value>
-        /// <returns>True if the server is running; otherwise False.</returns>
         [Browsable(false)]
         public virtual bool IsRunning
         {
@@ -514,8 +683,6 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the time in seconds for which the server has been running.
         /// </summary>
-        /// <value></value>
-        /// <returns>The time in seconds for which the server has been running.</returns>
         [Browsable(false)]
         public virtual double RunTime
         {
@@ -525,19 +692,20 @@ namespace PCS.Communication
 
                 if (m_startTime > 0)
                 {
-                    if (m_isRunning) // Server is running.
-                    {
+                    if (m_isRunning)
+                        // Server is running.
                         serverRunTime = Ticks.ToSeconds(DateTime.Now.Ticks - m_startTime);
-                    }
-                    else // Server is not running.
-                    {
+                    else
+                        // Server is not running.
                         serverRunTime = Ticks.ToSeconds(m_stopTime - m_startTime);
-                    }
                 }
                 return serverRunTime;
             }
         }
 
+        /// <summary>
+        /// Gets the unique identifier of the server.
+        /// </summary>
         [Browsable(false)]
         public string Name
         {
@@ -548,20 +716,21 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets the current status of the server.
+        /// Gets the descriptive status of the server.
         /// </summary>
-        /// <value></value>
-        /// <returns>The current status of the server.</returns>
         [Browsable(false)]
         public string Status
         {
             get
             {
                 StringBuilder status = new StringBuilder();
-
-                status.Append("                 Server ID: ");
-                status.Append(m_serverID.ToString());
-                status.AppendLine();
+                if (m_handshake)
+                {
+                    // Display ID only if handshaking is enabled.
+                    status.Append("                 Server ID: ");
+                    status.Append(m_serverID.ToString());
+                    status.AppendLine();
+                }
                 status.Append("              Server state: ");
                 status.Append(m_isRunning ? "Running" : "Not Running");
                 status.AppendLine();
@@ -571,20 +740,20 @@ namespace PCS.Communication
                 status.Append("      Configuration string: ");
                 status.Append(m_configurationString);
                 status.AppendLine();
-                status.Append("        Subscribed clients: ");
+                status.Append("         Connected clients: ");
                 lock (m_clientIDs)
                 {
                     status.Append(m_clientIDs.Count);
                 }
                 status.AppendLine();
                 status.Append("           Maximum clients: ");
-                status.Append(m_maximumClients == -1 ? "Infinite" : m_maximumClients.ToString());
+                status.Append(m_maxClientConnections == -1 ? "Infinite" : m_maxClientConnections.ToString());
                 status.AppendLine();
                 status.Append("            Receive buffer: ");
                 status.Append(m_receiveBufferSize.ToString());
                 status.AppendLine();
                 status.Append("        Transport protocol: ");
-                status.Append(m_protocol.ToString());
+                status.Append(m_transportProtocol.ToString());
                 status.AppendLine();
                 status.Append("        Text encoding used: ");
                 status.Append(m_textEncoding.EncodingName);
@@ -594,73 +763,58 @@ namespace PCS.Communication
             }
         }
 
-        [Category("Settings")]
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        [Category("Settings")]
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    m_settingsCategory = value;
-                }
-                else
-                {
-                    throw new ArgumentNullException("SettingsCategoryName");
-                }
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
 
-        /// <summary>
-        /// Releases the unmanaged resources used by an instance of the <see cref="ServerBase" /> class and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        Stop();         // Stop the server.
-                        SaveSettings(); // Saves settings to the config file.
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
+        #region [ Abstract ]
 
         /// <summary>
-        /// Initializes the <see cref="ServerBase"/> object.
+        /// When overridden in a derived class, starts the server.
+        /// </summary>
+        public abstract void Start();
+
+        /// <summary>
+        /// When overridden in a derived class, stops the server.
+        /// </summary>
+        public abstract void Stop();
+
+        /// <summary>
+        /// When overridden in a derived class, disconnects a connected client.
+        /// </summary>
+        /// <param name="clientID">ID of the client to be disconnected.</param>
+        public abstract void DisconnectOne(Guid clientID);
+
+        /// <summary>
+        /// When overridden in a derived class, validates the specified <paramref name="configurationString"/>.
+        /// </summary>
+        /// <param name="configurationString">The configuration string to be validated.</param>
+        protected abstract void ValidateConfigurationString(string configurationString);
+
+        /// <summary>
+        /// When overridden in a derived class, returns the passphrase used for ciphering client data.
+        /// </summary>
+        /// <param name="clientID">ID of the client whose passphrase is to be retrieved.</param>
+        /// <returns>Passphrase of the specified client.</returns>
+        protected abstract string GetSessionPassphrase(Guid clientID);
+
+        /// <summary>
+        /// When overridden in a derived class, sends data to the specified client asynchronously.
+        /// </summary>
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        protected abstract WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length);
+
+        #endregion
+
+        /// <summary>
+        /// Initializes the server.
         /// </summary>
         /// <remarks>
-        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="ServerBase"/> 
-        /// object is not consumed through the designer surface of the IDE.
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the server is not consumed through the designer surface of the IDE.
         /// </remarks>
         public void Initialize()
         {
@@ -672,141 +826,83 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Sends data to the specified client.
+        /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
-        /// <param name="data">The plain-text data that is to be sent to the client.</param>
+        /// <param name="data">The plain-text data that is to be sent.</param>
         public virtual void SendTo(Guid clientID, string data)
         {
             SendTo(clientID, m_textEncoding.GetBytes(data));
         }
 
         /// <summary>
-        /// Sends data to the specified client.
+        /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
-        /// <param name="serializableObject">The serializable object that is to be sent to the client.</param>
+        /// <param name="serializableObject">The serializable object that is to be sent.</param>
         public virtual void SendTo(Guid clientID, object serializableObject)
         {
             SendTo(clientID, Serialization.GetBytes(serializableObject));
         }
 
         /// <summary>
-        /// Sends data to the specified client.
+        /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
-        /// <param name="data">The binary data that is to be sent to the client.</param>
+        /// <param name="data">The binary data that is to be sent.</param>
         public virtual void SendTo(Guid clientID, byte[] data)
         {
             SendTo(clientID, data, 0, data.Length);
         }
 
         /// <summary>
-        /// Sends the specified subset of data from the data buffer to the specified client.
+        /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
-        /// <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
-        /// <param name="length">The number of bytes to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         public virtual void SendTo(Guid clientID, byte[] data, int offset, int length)
         {
-            if (m_enabled && m_isRunning)
-            {
-                if (data == null)
-                    throw new ArgumentNullException("data");
-
-                if (length > 0)
-                {
-                    // Pre-condition data as needed (compression, encryption, etc.)
-                    data = GetPreparedData(data, offset, length);
-
-                    if (data.Length <= MaximumDataSize)
-                    {
-                        // PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
-                        SendPreparedDataTo(clientID, data);
-                    }
-                    else
-                    {
-                        // Prepared data is too large to be sent.
-                        throw new ArgumentException("Size of the data to be sent exceeds the maximum data size of " + MaximumDataSize + " bytes.");
-                    }
-                }
-            }
+            SendToAsync(clientID, data, offset, length).WaitOne();
         }
 
         /// <summary>
-        /// Sends data to all of the subscribed clients.
+        /// Sends data to all of the connected clients synchronously.
         /// </summary>
-        /// <param name="data">The plain-text data that is to sent to the subscribed clients.</param>
+        /// <param name="data">The plain-text data that is to be sent.</param>
         public virtual void Multicast(string data)
         {
             Multicast(m_textEncoding.GetBytes(data));
         }
 
         /// <summary>
-        /// Sends data to all of the subscribed clients.
+        /// Sends data to all of the connected clients synchronously.
         /// </summary>
-        /// <param name="serializableObject">The serializable object that is to be sent to the subscribed clients.</param>
+        /// <param name="serializableObject">The serializable object that is to be sent.</param>
         public virtual void Multicast(object serializableObject)
         {
             Multicast(Serialization.GetBytes(serializableObject));
         }
 
         /// <summary>
-        /// Sends data to all of the subscribed clients.
+        /// Sends data to all of the connected clients synchronously.
         /// </summary>
-        /// <param name="data">The binary data that is to sent to the subscribed clients.</param>
+        /// <param name="data">The binary data that is to be sent.</param>
         public virtual void Multicast(byte[] data)
         {
             Multicast(data, 0, data.Length);
         }
 
         /// <summary>
-        /// Sends the specified subset of data from the data buffer to all of the subscribed clients.
+        /// Sends data to all of the connected clients synchronously.
         /// </summary>
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
-        /// <param name="offset">The zero-based position in the buffer parameter at which to begin sending data.</param>
-        /// <param name="length">The number of bytes to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         public virtual void Multicast(byte[] data, int offset, int length)
         {
-            if (m_enabled && m_isRunning)
-            {
-                if (data == null)
-                    throw new ArgumentNullException("data");
-
-                if (length > 0)
-                {
-                    // Pre-condition data as needed (compression, encryption, etc.)
-                    data = GetPreparedData(data, offset, length);
-
-                    if (data.Length <= MaximumDataSize)
-                    {
-                        lock (m_clientIDs)
-                        {
-                            foreach (Guid clientID in m_clientIDs)
-                            {
-                                try
-                                {
-                                    // PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
-                                    SendPreparedDataTo(clientID, data);
-                                }
-                                catch
-                                {
-                                    // In rare cases, we might encounter an exception here when the inheriting server
-                                    // class doesn't think that the ID of the client to which it has to send the message is
-                                    // valid (even though it is). This might happen when connection with a new client is
-                                    // not yet complete and we're trying to send a message to the client.
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Prepared data is too large to be sent.
-                        throw new ArgumentException("Size of the data to be sent exceeds the maximum data size of " + MaximumDataSize + " bytes.");
-                    }
-                }
-            }
+            WaitHandle.WaitAll(MulticastAsync(data, offset, length));
         }
 
         /// <summary>
@@ -814,366 +910,596 @@ namespace PCS.Communication
         /// </summary>
         public void DisconnectAll()
         {
-            List<Guid> clientIDs = new List<Guid>();
-
-            lock (m_clientIDs)
-            {
-                ClientIDs.AddRange(m_clientIDs);
-            }
-
-            foreach (Guid clientID in clientIDs)
+            foreach (Guid clientID in ClientIDs)
             {
                 DisconnectOne(clientID);
             }
         }
 
         /// <summary>
-        /// Starts the server.
-        /// </summary>
-        public abstract void Start();
-
-        /// <summary>
-        /// Stops the server.
-        /// </summary>
-        public abstract void Stop();
-
-        /// <summary>
-        /// Disconnects a connected client.
-        /// </summary>
-        /// <param name="clientID">ID of the client to be disconnected.</param>
-        public abstract void DisconnectOne(Guid clientID);
-
-        public virtual void LoadSettings()
-        {
-            try
-            {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                if (settings.Count > 0)
-                {
-                    ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
-                    ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
-                    MaximumClients = settings["MaximumClients"].ValueAs(m_maximumClients);
-                    SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
-                    Handshake = settings["Handshake"].ValueAs(m_handshake);
-                    HandshakePassphrase = settings["HandshakePassphrase"].ValueAs(m_handshakePassphrase);
-                    Encryption = settings["Encryption"].ValueAs(m_encryption);
-                    Compression = settings["Compression"].ValueAs(m_compression);
-                    Enabled = settings["Enabled"].ValueAs(m_enabled);
-                }
-            }
-            catch
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
+        /// Saves server settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    CategorizedSettingsElement setting;
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
 
-                    settings.Clear();
-
-                    setting = settings["ConfigurationString", true];
-                    setting.Value = m_configurationString;
-                    setting.Description = "Data required by the server to initialize.";
-                    
-                    setting = settings["ReceiveBufferSize", true];
-                    setting.Value = m_receiveBufferSize.ToString();
-                    setting.Description = "Maximum number of bytes that can be received at a time by the server from the clients.";
-                    
-                    setting = settings["MaximumClients", true];
-                    setting.Value = m_maximumClients.ToString();
-                    setting.Description = "Maximum number of clients that can connect to the server.";
-                    
-                    setting = settings["SecureSession", true];
-                    setting.Value = m_secureSession.ToString();
-                    setting.Description = "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.";
-                    
-                    setting = settings["Handshake", true];
-                    setting.Value = m_handshake.ToString();
-                    setting.Description = "True if the server will do a handshake with the client; otherwise False.";
-                    
-                    setting = settings["HandshakePassphrase", true];
-                    setting.Value = m_handshakePassphrase;
-                    setting.Description = "Passpharse that the clients must provide for authentication during the handshake process.";
-                    
-                    setting = settings["Encryption", true];
-                    setting.Value = m_encryption.ToString();
-                    setting.Description = "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for encrypting the data exchanged between the server and clients.";
-                    
-                    setting = settings["Compression", true];
-                    setting.Value = m_compression.ToString();
-                    setting.Description = "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.";
-                    
-                    setting = settings["Enabled", true];
-                    setting.Value = m_enabled.ToString();
-                    setting.Description = "True if the server is enabled; otherwise False.";
-
-                    ConfigurationFile.Current.Save();
-                }
-                catch
-                {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
-                }
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["ConfigurationString", true].Update(m_configurationString, "Data required by the server for initialization.");
+                settings["MaxClientConnections", true].Update(m_maxClientConnections, "Maximum number of clients that can connect to the server.");
+                settings["Handshake", true].Update(m_handshake, "True if the server will do a handshake with the client; otherwise False.");
+                settings["HandshakePassphrase", true].Update(m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the handshake process.");
+                settings["SecureSession", true].Update(m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
+                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize, "Maximum number of bytes that can be received at a time by the server from the clients.");
+                settings["Encryption", true].Update(m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for encrypting the data exchanged between the server and clients.");
+                settings["Compression", true].Update(m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
+                config.Save();
             }
         }
 
         /// <summary>
-        /// Performs necessary operations before the <see cref="ServerBase"/> object properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ServerBase"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        public void BeginInit()
+        /// Loads saved server settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public virtual void LoadSettings()
         {
-            // We don't need to do anything before the component is initialized.
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                ConfigurationString = settings["ConfigurationString", true].ValueAs(m_configurationString);
+                MaxClientConnections = settings["MaxClientConnections", true].ValueAs(m_maxClientConnections);
+                Handshake = settings["Handshake", true].ValueAs(m_handshake);
+                HandshakePassphrase = settings["HandshakePassphrase", true].ValueAs(m_handshakePassphrase);
+                ReceiveBufferSize = settings["ReceiveBufferSize", true].ValueAs(m_receiveBufferSize);
+                Encryption = settings["Encryption", true].ValueAs(m_encryption);
+                Compression = settings["Compression", true].ValueAs(m_compression);
+                SecureSession = settings["SecureSession", true].ValueAs(m_secureSession);
+            }
         }
 
         /// <summary>
-        /// Performs necessary operations after the <see cref="ServerBase"/> object properties are initialized.
+        /// Performs necessary operations before the server properties are initialized.
         /// </summary>
         /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ServerBase"/> object is consumed through the designer surface of the IDE.
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through 
+        /// the designer surface of the IDE.
         /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            // Nothing needs to be done before component is initialized.
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the server properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through the 
+        /// designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
+            if (!DesignMode)
             {
                 Initialize();
             }
         }
 
         /// <summary>
-        /// Raises the PCS.Communication.ServerBase.ServerStarted event.
+        /// Sends data to the specified client asynchronously.
         /// </summary>
-        /// <param name="e">A System.EventArgs that contains the event data.</param>
-        /// <remarks>This method is to be called after the server has been started.</remarks>
-        protected virtual void OnServerStarted(EventArgs e)
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="data">The plain-text data that is to be sent.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle SendToAsync(Guid clientID, string data)
         {
-            m_isRunning = true;
-            m_startTime = DateTime.Now.Ticks; // Save the time when server is started.
-            m_stopTime = 0;
-            if (ServerStarted != null) ServerStarted(this, e);
+            return SendToAsync(clientID, m_textEncoding.GetBytes(data));
         }
 
         /// <summary>
-        /// Raises the PCS.Communication.ServerBase.ServerStopped event.
+        /// Sends data to the specified client asynchronously.
         /// </summary>
-        /// <param name="e">A System.EventArgs that contains the event data.</param>
-        /// <remarks>This method is to be called after the server has been stopped.</remarks>
-        protected virtual void OnServerStopped(EventArgs e)
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="serializableObject">The serializable object that is to be sent.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle SendToAsync(Guid clientID, object serializableObject)
         {
-            m_isRunning = false;
-            m_stopTime = DateTime.Now.Ticks; // Save the time when server is stopped.
-            if (ServerStopped != null) ServerStopped(this, e);
+            return SendToAsync(clientID, Serialization.GetBytes(serializableObject));
         }
 
         /// <summary>
-        /// Raises the PCS.Communication.ServerBase.ServerStartupException event.
+        /// Sends data to the specified client asynchronously.
         /// </summary>
-        /// <param name="e">A PCS.ExceptionEventArgs that contains the event data.</param>
-        /// <remarks>This method is to be called if the server throws an exception during startup.</remarks>
-        protected virtual void OnServerStartupException(Exception e)
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="data">The binary data that is to be sent.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle SendToAsync(Guid clientID, byte[] data)
         {
-            if (ServerStartupException != null) ServerStartupException(this, new EventArgs<Exception>(e));
+            return SendToAsync(clientID, data, 0, data.Length);
         }
 
         /// <summary>
-        /// Raises the PCS.Communication.ServerBase.ClientConnected event.
+        /// Sends data to the specified client asynchronously.
         /// </summary>
-        /// <param name="e">A PCS.IdentifiableSourceEventArgs that contains the event data.</param>
-        /// <remarks>This method is to be called when a client is connected to the server.</remarks>
-        protected virtual void OnClientConnected(Guid e)
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle SendToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            lock (m_clientIDs)
+            if (m_isRunning)
             {
-                m_clientIDs.Add(e);
-            }
-
-            if (ClientConnected != null) ClientConnected(this, new EventArgs<Guid>(e));
-        }
-
-        /// <summary>
-        /// Raises the PCS.Communication.ServerBase.ClientDisconnected event.
-        /// </summary>
-        /// <param name="e">A PCS.IdentifiableSourceEventArgs that contains the event data.</param>
-        /// <remarks>This method is to be called when a client has disconnected from the server.</remarks>
-        protected virtual void OnClientDisconnected(Guid e)
-        {
-            lock (m_clientIDs)
-            {
-                m_clientIDs.Remove(e);
-            }
-
-            if (ClientDisconnected != null) ClientDisconnected(this, new EventArgs<Guid>(e));
-        }
-
-        /// <summary>
-        /// Raises the PCS.Communication.ServerBase.ReceivedClientData event.
-        /// </summary>
-        /// <param name="e">A PCS.DataEventArgs that contains the event data.</param>
-        /// <remarks>This method is to be called when the server receives data from a client.</remarks>
-        protected virtual void OnReceivedClientData(IdentifiableItem<Guid, byte[]> e)
-        {
-            try
-            {
-                e.Item = GetActualData(e.Item);
-            }
-            catch
-            {
-                // We'll just pass on the data that we received.
-            }
-
-            if (ReceivedClientData != null) ReceivedClientData(this, new EventArgs<IdentifiableItem<Guid, byte[]>>(e));
-        }
-
-        /// <summary>
-        /// Performs the necessary compression and encryption on the specified data and returns it.
-        /// </summary>
-        /// <param name="data">The data on which compression and encryption is to be performed.</param>
-        /// <returns>Compressed and encrypted data.</returns>
-        /// <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
-        protected virtual byte[] GetPreparedData(byte[] data)
-        {
-            return GetPreparedData(data, 0, data.Length);
-        }
-
-        /// <summary>
-        /// Performs the necessary compression and encryption on the specified data and returns it.
-        /// </summary>
-        /// <param name="data">The data on which compression and encryption is to be performed.</param>
-        /// <param name="offset">The index into buffer at which the desired data begins.</param>
-        /// <param name="length">The length of the stream in bytes.</param>
-        /// <returns>Compressed and encrypted data.</returns>
-        /// <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
-        protected virtual byte[] GetPreparedData(byte[] data, int offset, int length)
-        {
-            if ((m_secureSession || m_encryption == CipherStrength.None) && m_compression == CompressionStrength.NoCompression)
-            {
-                // Return only used part of source buffer
-                return data.CopyBuffer(offset, length);
+                // Pre-condition data as needed and then send it.
+                Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionPassphrase(clientID), m_compression);
+                return SendDataToAsync(clientID, data, offset, length);
             }
             else
             {
-                if (m_compression != CompressionStrength.NoCompression)
-                {
-                    data = Transport.CompressData(data, offset, length, m_compression);
-                    offset = 0;
-                    length = data.Length;
-                }
-
-                if (!m_secureSession && m_encryption != CipherStrength.None)
-                {
-                    string key = m_handshakePassphrase;
-
-                    if (string.IsNullOrEmpty(key))
-                        key = DefaultCryptoKey;
-
-                    data = Transport.EncryptData(data, offset, length, key, m_encryption);
-                }
-
-                return data;
+                throw new InvalidOperationException("Server is not running.");
             }
         }
 
         /// <summary>
-        /// Performs the necessary uncompression and decryption on the specified data and returns it.
+        /// Sends data to all of the connected clients asynchronously.
         /// </summary>
-        /// <param name="data">The data on which uncompression and decryption is to be performed.</param>
-        /// <returns>Uncompressed and decrypted data.</returns>
-        /// <remarks>No decryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
-        protected virtual byte[] GetActualData(byte[] data)
+        /// <param name="data">The plain-text data that is to be sent.</param>
+        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle[] MulticastAsync(string data)
         {
-            if (!m_secureSession && m_encryption != CipherStrength.None)
-            {
-                string key = m_handshakePassphrase;
-
-                if (string.IsNullOrEmpty(key))
-                    key = DefaultCryptoKey;
-
-                data = Transport.DecryptData(data, key, m_encryption);
-            }
-
-            if (m_compression != CompressionStrength.NoCompression)
-            {
-                data = Transport.DecompressData(data, m_compression);
-            }
-
-            return data;
+            return MulticastAsync(m_textEncoding.GetBytes(data));
         }
 
         /// <summary>
-        /// Sends prepared data to the specified client.
+        /// Sends data to all of the connected clients asynchronously.
         /// </summary>
-        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
-        /// <param name="data">The prepared data that is to be sent to the client.</param>
-        protected abstract void SendPreparedDataTo(Guid clientID, byte[] data);
+        /// <param name="serializableObject">The serializable object that is to be sent.</param>
+        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle[] MulticastAsync(object serializableObject)
+        {
+            return MulticastAsync(Serialization.GetBytes(serializableObject));
+        }
 
         /// <summary>
-        /// Determines whether specified configuration string required for the server to initialize is valid.
+        /// Sends data to all of the connected clients asynchronously.
         /// </summary>
-        /// <param name="configurationString">The configuration string to be validated.</param>
-        /// <returns>True is the configuration string is valid; otherwise False.</returns>
-        protected abstract bool ValidConfigurationString(string configurationString);
+        /// <param name="data">The binary data that is to be sent.</param>
+        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle[] MulticastAsync(byte[] data)
+        {
+            return MulticastAsync(data, 0, data.Length);
+        }
+
+        /// <summary>
+        /// Sends data to all of the connected clients asynchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public virtual WaitHandle[] MulticastAsync(byte[] data, int offset, int length)
+        {
+            List<WaitHandle> handles = new List<WaitHandle>();
+            foreach (Guid clientID in ClientIDs)
+            {
+                handles.Add(SendToAsync(clientID, data, offset, length));
+            }
+
+            return handles.ToArray();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the server and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    SaveSettings();
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Stop();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServerStarted"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="ServerStarted"/> event data.</param>
+        protected virtual void OnServerStarted(EventArgs e)
+        {
+            m_isRunning = true;
+            m_stopTime = 0;
+            m_startTime = DateTime.Now.Ticks;   // Save the time when server is started.
+
+            if (ServerStarted != null)
+                ServerStarted(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServerStopped"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="ServerStopped"/> event data.</param>
+        protected virtual void OnServerStopped(EventArgs e)
+        {
+            m_isRunning = false;
+            m_stopTime = DateTime.Now.Ticks;    // Save the time when server is stopped.
+
+            if (ServerStopped != null)
+                ServerStopped(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="HandshakeTimedout"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="HandshakeTimedout"/> event data.</param>
+        protected virtual void OnHandshakeTimedout(EventArgs e)
+        {
+            if (HandshakeTimedout != null)
+                HandshakeTimedout(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="HandshakeUnsuccessful"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="HandshakeUnsuccessful"/> event data.</param>
+        protected virtual void OnHandshakeUnsuccessful(EventArgs e)
+        {
+            if (HandshakeUnsuccessful != null)
+                HandshakeUnsuccessful(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientConnected"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="ClientConnected"/> event data.</param>
+        protected virtual void OnClientConnected(EventArgs<Guid> e)
+        {
+            lock (m_clientIDs)
+            {
+                m_clientIDs.Add(e.Argument);
+            }
+
+            if (ClientConnected != null)
+                ClientConnected(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientDisconnected"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="ClientDisconnected"/> event data.</param>
+        protected virtual void OnClientDisconnected(EventArgs<Guid> e)
+        {
+            lock (m_clientIDs)
+            {
+                m_clientIDs.Remove(e.Argument);
+            }
+
+            if (ClientDisconnected != null)
+                ClientDisconnected(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="SendClientDataStarted"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="SendClientDataStarted"/> event data.</param>
+        protected virtual void OnSendClientDataStarted(EventArgs<Guid> e)
+        {
+            if (SendClientDataStarted != null)
+                SendClientDataStarted(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="SendClientDataComplete"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="SendClientDataComplete"/> event data.</param>
+        protected virtual void OnSendClientDataComplete(EventArgs<Guid> e)
+        {
+            if (SendClientDataComplete != null)
+                SendClientDataComplete(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="SendClientDataException"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="SendClientDataException"/> event data.</param>
+        protected virtual void OnSendClientDataException(EventArgs<Guid, Exception> e)
+        {
+            if (SendClientDataException != null)
+                SendClientDataException(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceiveClientDataTimedout"/> event.
+        /// </summary>
+        /// <param name="e"><see cref="ReceiveClientDataTimedout"/> event data.</param>
+        protected virtual void OnReceiveClientDataTimedout(EventArgs<Guid> e)
+        {
+            if (ReceiveClientDataTimedout != null)
+                ReceiveClientDataTimedout(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceiveClientDataComplete"/> event.
+        /// </summary>
+        /// <param name="clientID">ID of the client from which data is received.</param>
+        /// <param name="data">Data received from the client.</param>
+        /// <param name="size">Number of bytes received from the client.</param>
+        protected virtual void OnReceiveClientDataComplete(Guid clientID, byte[] data, int size)
+        {
+            if (m_receiveClientDataHandler != null)
+            {
+                m_receiveClientDataHandler(clientID, data, size);
+            }
+            else
+            {
+                if (ReceiveClientDataComplete != null)
+                {
+                    try
+                    {
+                        int offset = 0; // Received buffer will always have valid data starting at offset zero.
+                        Payload.ProcessReceived(ref data, ref offset, ref size, m_encryption, GetSessionPassphrase(clientID), m_compression);
+                    }
+                    catch
+                    {
+                        // Ignore encountered exception and pass-on the raw data.
+                    }
+                    finally
+                    {
+                        ReceiveClientDataComplete(this, new EventArgs<Guid, byte[], int>(clientID, data, size));
+                    }
+                }
+            }
+        }
 
         #endregion
 
         #region [ Static ]
 
-        /// <summary>
-        /// Create a communications server
-        /// </summary>
-        /// <remarks>
-        /// Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
-        /// </remarks>
-        public static IServer Create(string configurationString)
-        {
-            Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();
-            IServer server = null;
-            string protocol;
+        ///// <summary>
+        ///// Create a communications server
+        ///// </summary>
+        ///// <remarks>
+        ///// Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
+        ///// </remarks>
+        //public static IServer Create(string configurationString)
+        //{
+        //    Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();
+        //    IServer server = null;
+        //    string protocol;
 
-            if (configurationData.TryGetValue("protocol", out protocol))
-            {
-                configurationData.Remove("protocol");
-                StringBuilder settings = new StringBuilder();
+        //    if (configurationData.TryGetValue("protocol", out protocol))
+        //    {
+        //        configurationData.Remove("protocol");
+        //        StringBuilder settings = new StringBuilder();
 
-                foreach (string key in configurationData.Keys)
-                {
-                    settings.Append(key);
-                    settings.Append("=");
-                    settings.Append(configurationData[key]);
-                    settings.Append(";");
-                }
+        //        foreach (string key in configurationData.Keys)
+        //        {
+        //            settings.Append(key);
+        //            settings.Append("=");
+        //            settings.Append(configurationData[key]);
+        //            settings.Append(";");
+        //        }
 
-                switch (protocol.ToLower())
-                {
-                    case "tcp":
-                        server = new TcpServer(settings.ToString());
-                        break;
-                    case "udp":
-                        server = new UdpServer(settings.ToString());
-                        break;
-                    default:
-                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
-                }
-            }
-            else
-            {
-                throw new ArgumentException("Transport protocol must be specified.");
-            }
+        //        switch (protocol.ToLower())
+        //        {
+        //            case "tcp":
+        //                server = new TcpServer(settings.ToString());
+        //                break;
+        //            case "udp":
+        //                server = new UdpServer(settings.ToString());
+        //                break;
+        //            default:
+        //                throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
+        //        }
+        //    }
+        //    else
+        //    {
+        //        throw new ArgumentException("Transport protocol must be specified.");
+        //    }
 
-            return server;
-        }
+        //    return server;
+        //}
 
         #endregion
-				
-	}	
+
+    }
 }
+
+///// <summary>
+///// Performs the necessary uncompression and decryption on the specified data and returns it.
+///// </summary>
+///// <param name="data">The data on which uncompression and decryption is to be performed.</param>
+///// <param name="offset"></param>
+///// <param name="length"></param>
+///// <param name="cryptoKey"></param>
+///// <returns>Uncompressed and decrypted data.</returns>
+//protected virtual byte[] GetActualData(byte[] data, int offset, int length, string cryptoKey)
+//{
+//    if (m_encryption == CipherStrength.None && m_compression == CompressionStrength.NoCompression)
+//    {
+//        if (length - offset == data.Length)
+//            return data;
+//        else
+//            return data.BlockCopy(offset, length);
+//    }
+//    else
+//    {
+//        if (m_encryption != CipherStrength.None)
+//        {
+//            data = Payload.DecryptData(data, offset, length, cryptoKey, m_encryption);
+//        }
+
+//        if (m_compression != CompressionStrength.NoCompression)
+//        {
+//            data = Payload.DecompressData(data, m_compression);
+//        }
+
+//        return data;
+//    }
+//}
+
+///// <summary>
+///// Performs the necessary compression and encryption on the specified data and returns it.
+///// </summary>
+///// <param name="data">The data on which compression and encryption is to be performed.</param>
+///// <param name="offset"></param>
+///// <param name="length"></param>
+///// <param name="cryptoKey"></param>
+///// <returns>Compressed and encrypted data.</returns>
+//protected virtual byte[] GetPreparedData(byte[] data, int offset, int length, string cryptoKey)
+//{
+//    if (m_encryption == CipherStrength.None && m_compression == CompressionStrength.NoCompression)
+//    {
+
+//        if (length - offset == data.Length)
+//            return data;
+//        else
+//            return data.BlockCopy(offset, length);
+//    }
+//    else
+//    {
+//        if (m_compression != CompressionStrength.NoCompression)
+//        {
+//            // Compress the data.
+//            data = Payload.CompressData(data, offset, length, m_compression);
+//            offset = 0;
+//            length = data.Length;
+//        }
+
+//        if (m_encryption != CipherStrength.None)
+//        {
+//            // Encrypt the data.
+//            data = Payload.EncryptData(data, offset, length, cryptoKey, m_encryption);
+//        }
+
+//        return data;
+//    }
+//}
+
+//if (m_isRunning)
+//{
+//    if (data == null)
+//        throw new ArgumentNullException("data");
+
+//    if (length > 0)
+//    {
+//        // Pre-condition data as needed (compression, encryption, etc.)
+//        data = GetPreparedData(data, offset, length);
+//        lock (m_clientIDs)
+//        {
+//            foreach (Guid clientID in m_clientIDs)
+//            {
+//                try
+//                {
+//                    // PCP - 05/24/2007: Reverting to synchronous send to avoid out-of-sequence transmissions.
+//                    SendPreparedDataTo(clientID, data);
+//                }
+//                catch
+//                {
+//                    // In rare cases, we might encounter an exception here when the inheriting server
+//                    // class doesn't think that the ID of the client to which it has to send the message is
+//                    // valid (even though it is). This might happen when connection with a new client is
+//                    // not yet complete and we're trying to send a message to the client.
+//                }
+//            }
+//        }
+//    }
+//}
+
+///// <summary>
+///// The key used for encryption and decryption when Encryption is enabled but HandshakePassphrase is not set.
+///// </summary>
+//private const string DefaultCryptoKey = "6572a33d-826f-4d96-8c28-8be66bbc700e";
+
+///// <summary>
+///// The maximum number of bytes that can be sent from the server to clients in a single send operation.
+///// </summary>
+//public const int MaximumDataSize = 524288000; // 500 MB
+
+///// <summary>
+///// Occurs when the server is started.
+///// </summary>
+//[Description("Occurs when the server is started."), Category("Server")]
+//public event EventHandler ServerStarted;
+
+///// <summary>
+///// Occurs when the server is stopped.
+///// </summary>
+//[Description("Occurs when the server is stopped."), Category("Server")]
+//public event EventHandler ServerStopped;
+
+///// <summary>
+///// Occurs when an exception is encountered while starting up the server.
+///// </summary>
+//[Description("Occurs when an exception is encountered while starting up the server."), Category("Server")]
+//public event EventHandler<EventArgs<Exception>> ServerStartupException;
+
+///// <summary>
+///// Raises the PCS.Communication.ServerBase.ServerStarted event.
+///// </summary>
+///// <param name="e">A System.EventArgs that contains the event data.</param>
+///// <remarks>This method is to be called after the server has been started.</remarks>
+//protected virtual void OnServerStarted(EventArgs e)
+//{
+//    m_isRunning = true;
+//    m_startTime = DateTime.Now.Ticks; // Save the time when server is started.
+//    m_stopTime = 0;
+//    if (ServerStarted != null) ServerStarted(this, e);
+//}
+
+///// <summary>
+///// Raises the PCS.Communication.ServerBase.ServerStopped event.
+///// </summary>
+///// <param name="e">A System.EventArgs that contains the event data.</param>
+///// <remarks>This method is to be called after the server has been stopped.</remarks>
+//protected virtual void OnServerStopped(EventArgs e)
+//{
+//    m_isRunning = false;
+//    m_stopTime = DateTime.Now.Ticks; // Save the time when server is stopped.
+//    if (ServerStopped != null) ServerStopped(this, e);
+//}
+
+///// <summary>
+///// Raises the PCS.Communication.ServerBase.ServerStartupException event.
+///// </summary>
+///// <param name="e">A PCS.ExceptionEventArgs that contains the event data.</param>
+///// <remarks>This method is to be called if the server throws an exception during startup.</remarks>
+//protected virtual void OnServerStartupException(Exception e)
+//{
+//    if (ServerStartupException != null) ServerStartupException(this, new EventArgs<Exception>(e));
+//}
+
+///// <summary>
+///// Performs the necessary compression and encryption on the specified data and returns it.
+///// </summary>
+///// <param name="data">The data on which compression and encryption is to be performed.</param>
+///// <returns>Compressed and encrypted data.</returns>
+///// <remarks>No encryption is performed if SecureSession is enabled, even if Encryption is enabled.</remarks>
+//protected virtual byte[] GetPreparedData(byte[] data)
+//{
+//    return GetPreparedData(data, 0, data.Length);
+//}

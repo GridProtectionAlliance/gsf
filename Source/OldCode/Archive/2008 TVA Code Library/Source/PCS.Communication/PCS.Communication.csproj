@@ -64,7 +64,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="FileClient.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="IClient.cs" />
     <Compile Include="IServer.cs" />
@@ -78,7 +77,6 @@
     <Compile Include="Transport.cs" />
     <Compile Include="StateInfo.cs" />
     <Compile Include="SerialClient.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="TcpClient.cs">
       <SubType>Component</SubType>
@@ -87,11 +85,11 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TransportProtocol.cs" />
+    <Compile Include="TransportProvider.cs" />
+    <Compile Include="TransportStatistics.cs" />
     <Compile Include="UdpClient.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="UdpServer.cs">
-      <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +102,10 @@
     <ProjectReference Include="..\PCS.Core\PCS.Core.csproj">
       <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
       <Name>PCS.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PCS.System\PCS.System.csproj">
+      <Project>{4B228C40-17E8-4751-B580-D5E052A5A53E}</Project>
+      <Name>PCS.System</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
