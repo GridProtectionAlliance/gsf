@@ -1171,7 +1171,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ClientConnected"/> event.
         /// </summary>
-        /// <param name="e"><see cref="ClientConnected"/> event data.</param>
+        /// <param name="clientID">ID of client to send to <see cref="ClientConnected"/> event.</param>
         protected virtual void OnClientConnected(Guid clientID)
         {
             lock (m_clientIDs)
@@ -1186,7 +1186,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ClientDisconnected"/> event.
         /// </summary>
-        /// <param name="e"><see cref="ClientDisconnected"/> event data.</param>
+        /// <param name="clientID">ID of client to send to <see cref="ClientDisconnected"/> event.</param>
         protected virtual void OnClientDisconnected(Guid clientID)
         {
             lock (m_clientIDs)
@@ -1201,7 +1201,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="SendClientDataStarted"/> event.
         /// </summary>
-        /// <param name="e"><see cref="SendClientDataStarted"/> event data.</param>
+        /// <param name="clientID">ID of client to send to <see cref="SendClientDataStarted"/> event.</param>
         protected virtual void OnSendClientDataStarted(Guid clientID)
         {
             if (SendClientDataStarted != null)
@@ -1211,7 +1211,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="SendClientDataComplete"/> event.
         /// </summary>
-        /// <param name="e"><see cref="SendClientDataComplete"/> event data.</param>
+        /// <param name="clientID">ID of client to send to <see cref="SendClientDataComplete"/> event.</param>
         protected virtual void OnSendClientDataComplete(Guid clientID)
         {
             if (SendClientDataComplete != null)
@@ -1221,7 +1221,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="SendClientDataException"/> event.
         /// </summary>
-        /// <param name="e"><see cref="SendClientDataException"/> event data.</param>
+        /// <param name="clientID">ID of client to send to <see cref="SendClientDataException"/> event.</param>
         protected virtual void OnSendClientDataException(Guid clientID, Exception ex)
         {
             if (SendClientDataException != null)
@@ -1231,7 +1231,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ReceiveClientDataTimedout"/> event.
         /// </summary>
-        /// <param name="e"><see cref="ReceiveClientDataTimedout"/> event data.</param>
+        /// <param name="clientID">ID of client to send to <see cref="ReceiveClientDataTimedout"/> event.</param>
         protected virtual void OnReceiveClientDataTimedout(Guid clientID)
         {
             if (ReceiveClientDataTimedout != null)
