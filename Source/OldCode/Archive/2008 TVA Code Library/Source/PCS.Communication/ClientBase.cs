@@ -893,7 +893,6 @@ namespace PCS.Communication
                 Encryption = settings["Encryption", true].ValueAs(m_encryption);
                 Compression = settings["Compression", true].ValueAs(m_compression);
                 SecureSession = settings["SecureSession", true].ValueAs(m_secureSession);
-                Enabled = settings["Enabled", true].ValueAs(m_enabled);
             }
         }
 
