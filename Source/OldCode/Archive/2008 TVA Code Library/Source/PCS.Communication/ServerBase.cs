@@ -1222,6 +1222,7 @@ namespace PCS.Communication
         /// Raises the <see cref="SendClientDataException"/> event.
         /// </summary>
         /// <param name="clientID">ID of client to send to <see cref="SendClientDataException"/> event.</param>
+        /// <param name="ex">Exception to send to <see cref="SendClientDataException"/> event.</param>
         protected virtual void OnSendClientDataException(Guid clientID, Exception ex)
         {
             if (SendClientDataException != null)
