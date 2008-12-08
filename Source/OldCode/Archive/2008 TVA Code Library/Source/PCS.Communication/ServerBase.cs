@@ -101,11 +101,6 @@ namespace PCS.Communication
         /// </summary>
         public const string DefaultSettingsCategory = "CommunicationServer";
 
-        /// <summary>
-        /// Specifies the default value for the <see cref="Enabled"/> property.
-        /// </summary>
-        public const bool DefaultEnabled = true;
-
         // Events
 
         /// <summary>
@@ -227,7 +222,6 @@ namespace PCS.Communication
         private bool m_isRunning;
         private long m_stopTime;
         private long m_startTime;
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;             
 
@@ -251,7 +245,6 @@ namespace PCS.Communication
             m_compression = DefaultCompression;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-            m_enabled = DefaultEnabled;
             m_textEncoding = Encoding.ASCII;
             m_serverID = Guid.NewGuid();
             m_clientIDs = new List<Guid>();
@@ -566,20 +559,23 @@ namespace PCS.Communication
         /// Gets or sets a boolean value that indicates whether the server is currently enabled.
         /// </summary>
         /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// Setting <see cref="Enabled"/> to true will start the server if it is not running, setting
+        /// to false will stop the server if it is running.
         /// </remarks>
         [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
             get
             {
-                return m_enabled;
+                return IsRunning;
             }
             set
             {
-                m_enabled = value;
+                if (value && !IsRunning)
+                    Start();
+                else if (!value && IsRunning)
+                    Stop();
             }
         }
 
@@ -1176,70 +1172,70 @@ namespace PCS.Communication
         /// Raises the <see cref="ClientConnected"/> event.
         /// </summary>
         /// <param name="e"><see cref="ClientConnected"/> event data.</param>
-        protected virtual void OnClientConnected(EventArgs<Guid> e)
+        protected virtual void OnClientConnected(Guid clientID)
         {
             lock (m_clientIDs)
             {
-                m_clientIDs.Add(e.Argument);
+                m_clientIDs.Add(clientID);
             }
 
             if (ClientConnected != null)
-                ClientConnected(this, e);
+                ClientConnected(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>
         /// Raises the <see cref="ClientDisconnected"/> event.
         /// </summary>
         /// <param name="e"><see cref="ClientDisconnected"/> event data.</param>
-        protected virtual void OnClientDisconnected(EventArgs<Guid> e)
+        protected virtual void OnClientDisconnected(Guid clientID)
         {
             lock (m_clientIDs)
             {
-                m_clientIDs.Remove(e.Argument);
+                m_clientIDs.Remove(clientID);
             }
 
             if (ClientDisconnected != null)
-                ClientDisconnected(this, e);
+                ClientDisconnected(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>
         /// Raises the <see cref="SendClientDataStarted"/> event.
         /// </summary>
         /// <param name="e"><see cref="SendClientDataStarted"/> event data.</param>
-        protected virtual void OnSendClientDataStarted(EventArgs<Guid> e)
+        protected virtual void OnSendClientDataStarted(Guid clientID)
         {
             if (SendClientDataStarted != null)
-                SendClientDataStarted(this, e);
+                SendClientDataStarted(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>
         /// Raises the <see cref="SendClientDataComplete"/> event.
         /// </summary>
         /// <param name="e"><see cref="SendClientDataComplete"/> event data.</param>
-        protected virtual void OnSendClientDataComplete(EventArgs<Guid> e)
+        protected virtual void OnSendClientDataComplete(Guid clientID)
         {
             if (SendClientDataComplete != null)
-                SendClientDataComplete(this, e);
+                SendClientDataComplete(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>
         /// Raises the <see cref="SendClientDataException"/> event.
         /// </summary>
         /// <param name="e"><see cref="SendClientDataException"/> event data.</param>
-        protected virtual void OnSendClientDataException(EventArgs<Guid, Exception> e)
+        protected virtual void OnSendClientDataException(Guid clientID, Exception ex)
         {
             if (SendClientDataException != null)
-                SendClientDataException(this, e);
+                SendClientDataException(this, new EventArgs<Guid,Exception>(clientID, ex));
         }
 
         /// <summary>
         /// Raises the <see cref="ReceiveClientDataTimedout"/> event.
         /// </summary>
         /// <param name="e"><see cref="ReceiveClientDataTimedout"/> event data.</param>
-        protected virtual void OnReceiveClientDataTimedout(EventArgs<Guid> e)
+        protected virtual void OnReceiveClientDataTimedout(Guid clientID)
         {
             if (ReceiveClientDataTimedout != null)
-                ReceiveClientDataTimedout(this, e);
+                ReceiveClientDataTimedout(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>

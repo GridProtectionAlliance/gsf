@@ -542,20 +542,23 @@ namespace PCS.Communication
         /// Gets or sets a boolean value that indicates whether the client is currently enabled.
         /// </summary>
         /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// Setting <see cref="Enabled"/> to true will start connection cycle for the client if it
+        /// is not connected, setting to false will disconnect the client if it is connected.
         /// </remarks>
         [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
             get
             {
-                return m_enabled;
+                return IsConnected;
             }
             set
             {
-                m_enabled = value;
+                if (value && !IsConnected)
+                    Connect();
+                else if (!value && IsConnected)
+                    Disconnect();
             }
         }
 
@@ -1087,10 +1090,10 @@ namespace PCS.Communication
         /// Raises the <see cref="SendDataException"/> event.
         /// </summary>
         /// <param name="e"><see cref="SendDataException"/> event data.</param>
-        protected virtual void OnSendDataException(EventArgs<Exception> e)
+        protected virtual void OnSendDataException(Exception ex)
         {
             if (SendDataException != null)
-                SendDataException(this, e);
+                SendDataException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
