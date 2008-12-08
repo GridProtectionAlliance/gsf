@@ -187,7 +187,7 @@ namespace PCS.Communication
         /// </summary>
         [Category("Data"), 
         Description("Occurs when no data is received from a client for the ReceiveTimeout time.")]
-        public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
+        public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimedout;
 
         /// <summary>
         /// Occurs when data is received from a client.
@@ -1235,8 +1235,8 @@ namespace PCS.Communication
         /// <param name="clientID">ID of client to send to <see cref="ReceiveClientDataTimedout"/> event.</param>
         protected virtual void OnReceiveClientDataTimedout(Guid clientID)
         {
-            if (ReceiveClientDataTimeout != null)
-                ReceiveClientDataTimeout(this, new EventArgs<Guid>(clientID));
+            if (ReceiveClientDataTimedout != null)
+                ReceiveClientDataTimedout(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>
