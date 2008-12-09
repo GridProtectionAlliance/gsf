@@ -1124,48 +1124,44 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ServerStarted"/> event.
         /// </summary>
-        /// <param name="e"><see cref="ServerStarted"/> event data.</param>
-        protected virtual void OnServerStarted(EventArgs e)
+        protected virtual void OnServerStarted()
         {
             m_isRunning = true;
             m_stopTime = 0;
             m_startTime = DateTime.Now.Ticks;   // Save the time when server is started.
 
             if (ServerStarted != null)
-                ServerStarted(this, e);
+                ServerStarted(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="ServerStopped"/> event.
         /// </summary>
-        /// <param name="e"><see cref="ServerStopped"/> event data.</param>
-        protected virtual void OnServerStopped(EventArgs e)
+        protected virtual void OnServerStopped()
         {
             m_isRunning = false;
             m_stopTime = DateTime.Now.Ticks;    // Save the time when server is stopped.
 
             if (ServerStopped != null)
-                ServerStopped(this, e);
+                ServerStopped(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="HandshakeTimedout"/> event.
         /// </summary>
-        /// <param name="e"><see cref="HandshakeTimedout"/> event data.</param>
         protected virtual void OnHandshakeTimedout(EventArgs e)
         {
             if (HandshakeTimedout != null)
-                HandshakeTimedout(this, e);
+                HandshakeTimedout(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="HandshakeUnsuccessful"/> event.
         /// </summary>
-        /// <param name="e"><see cref="HandshakeUnsuccessful"/> event data.</param>
-        protected virtual void OnHandshakeUnsuccessful(EventArgs e)
+        protected virtual void OnHandshakeUnsuccessful()
         {
             if (HandshakeUnsuccessful != null)
-                HandshakeUnsuccessful(this, e);
+                HandshakeUnsuccessful(this, EventArgs.Empty);
         }
 
         /// <summary>

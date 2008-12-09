@@ -1003,79 +1003,72 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="Connecting"/> event.
         /// </summary>
-        /// <param name="e"><see cref="Connecting"/> event data.</param>
-        protected virtual void OnConnecting(EventArgs e)
+        protected virtual void OnConnecting()
         {
             if (Connecting != null)
-                Connecting(this, e);
+                Connecting(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="Connected"/> event.
         /// </summary>
-        /// <param name="e"><see cref="Connected"/> event data.</param>
-        protected virtual void OnConnected(EventArgs e)
+        protected virtual void OnConnected()
         {
             m_isConnected = true;
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
 
             if (Connected != null)
-                Connected(this, e);
+                Connected(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="Disconnected"/> event.
         /// </summary>
-        /// <param name="e"><see cref="Disconnected"/> event data.</param>
-        protected virtual void OnDisconnected(EventArgs e)
+        protected virtual void OnDisconnected()
         {
             m_isConnected = false;
             m_serverID = Guid.Empty;
             m_disconnectTime = DateTime.Now.Ticks;  // Save the time when client was disconnected from the server.
 
             if (Disconnected != null)
-                Disconnected(this, e);
+                Disconnected(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="HandshakeTimedout"/> event.
         /// </summary>
-        /// <param name="e"><see cref="HandshakeTimedout"/> event data.</param>
-        protected virtual void OnHandshakeTimedout(EventArgs e)
+        protected virtual void OnHandshakeTimedout()
         {
             if (HandshakeTimedout != null)
-                HandshakeTimedout(this, e);
+                HandshakeTimedout(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="HandshakeUnsuccessful"/> event.
         /// </summary>
-        /// <param name="e"><see cref="HandshakeUnsuccessful"/> event data.</param>
-        protected virtual void OnHandshakeUnsuccessful(EventArgs e)
+        protected virtual void OnHandshakeUnsuccessful()
         {
             if (HandshakeUnsuccessful != null)
-                HandshakeUnsuccessful(this, e);
+                HandshakeUnsuccessful(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="SendDataStarted"/> event.
         /// </summary>
-        /// <param name="e"><see cref="SendDataStarted"/> event data.</param>
-        protected virtual void OnSendDataStarted(EventArgs e)
+        protected virtual void OnSendDataStarted()
         {
             if (SendDataStarted != null)
-                SendDataStarted(this, e);
+                SendDataStarted(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="SendDataComplete"/> event.
         /// </summary>
-        /// <param name="e"><see cref="SendDataComplete"/> event data.</param>
-        protected virtual void OnSendDataComplete(EventArgs e)
+        protected virtual void OnSendDataComplete()
         {
             if (SendDataComplete != null)
-                SendDataComplete(this, e);
+                SendDataComplete(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1091,11 +1084,10 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ReceiveDataTimedout"/> event.
         /// </summary>
-        /// <param name="e"><see cref="ReceiveDataTimedout"/> event data.</param>
-        protected virtual void OnReceiveDataTimedout(EventArgs e)
+        protected virtual void OnReceiveDataTimedout()
         {
             if (ReceiveDataTimedout != null)
-                ReceiveDataTimedout(this, e);
+                ReceiveDataTimedout(this, EventArgs.Empty);
         }
 
         /// <summary>

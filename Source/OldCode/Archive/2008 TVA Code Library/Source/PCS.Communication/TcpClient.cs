@@ -229,7 +229,7 @@ namespace PCS.Communication
                 // Initialize if unitialized.
                 Initialize();
 
-                OnConnecting(EventArgs.Empty);
+                OnConnecting();
                 if (m_tcpClient.Provider == null)
                 {
                     // Create client socket to establish presence.
@@ -294,7 +294,7 @@ namespace PCS.Communication
             m_tcpClient.SendBufferOffset = offset;
             m_tcpClient.SendBufferLength = length;
             handle = m_tcpClient.Provider.BeginSend(m_tcpClient.SendBuffer, m_tcpClient.SendBufferOffset, m_tcpClient.SendBufferLength, SocketFlags.None, SendPayloadAsyncCallback, m_tcpClient).AsyncWaitHandle;
-            OnSendDataStarted(EventArgs.Empty);
+            OnSendDataStarted();
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
@@ -337,7 +337,7 @@ namespace PCS.Communication
                 else
                 {
                     // No handshaking to be performed.
-                    OnConnected(EventArgs.Empty);
+                    OnConnected();
                     ReceivePayloadAsync(tcpClient);
                 }
             }
@@ -372,12 +372,12 @@ namespace PCS.Communication
             {
                 // Send operation is complete.
                 tcpClient.Statistics.UpdateBytesSent(tcpClient.Provider.EndSend(asyncResult));
-                OnSendDataComplete(EventArgs.Empty);
+                OnSendDataComplete();
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendDataException(new EventArgs<Exception>(ex));
+                OnSendDataException(ex);
             }
         }
 
@@ -411,7 +411,7 @@ namespace PCS.Communication
             {
                 // Handshake response is not recevied in a timely fashion.
                 TerminateConnection(tcpClient, false);
-                OnHandshakeTimedout(EventArgs.Empty);
+                OnHandshakeTimedout();
             }
             else
             {
@@ -437,21 +437,21 @@ namespace PCS.Communication
                         tcpClient.Passphrase = handshake.Passphrase;
 
                         // Client is now considered to be connected to the server.
-                        OnConnected(EventArgs.Empty);
+                        OnConnected();
                         ReceivePayloadAsync(tcpClient);
                     }
                     else 
                     {
                         // Received handshake response message could not be parsed.
                         TerminateConnection(tcpClient, false);
-                        OnHandshakeUnsuccessful(EventArgs.Empty);
+                        OnHandshakeUnsuccessful();
                     }
                 }
                 catch
                 {
                     // This is most likely because the server forcibly disconnected the client.
                     TerminateConnection(tcpClient, false);
-                    OnHandshakeUnsuccessful(EventArgs.Empty);
+                    OnHandshakeUnsuccessful();
                 }
             }
         }
@@ -519,7 +519,7 @@ namespace PCS.Communication
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
-                OnReceiveDataTimedout(EventArgs.Empty);
+                OnReceiveDataTimedout();
                 tcpClient.WaitAsync(ReceiveTimeout, ReceivePayloadAwareAsyncCallback, asyncResult);
             }
             else
@@ -611,7 +611,7 @@ namespace PCS.Communication
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
-                OnReceiveDataTimedout(EventArgs.Empty);
+                OnReceiveDataTimedout();
                 tcpClient.WaitAsync(ReceiveTimeout, ReceivePayloadUnawareAsyncCallback, asyncResult);
             }
             else
@@ -646,7 +646,7 @@ namespace PCS.Communication
         {
             client.Reset();
             if (raiseEvent)
-                OnDisconnected(EventArgs.Empty);
+                OnDisconnected();
         }
 
         #endregion

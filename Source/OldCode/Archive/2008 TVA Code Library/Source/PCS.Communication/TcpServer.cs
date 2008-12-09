@@ -240,7 +240,7 @@ namespace PCS.Communication
                 // Begin accepting incoming connection asynchronously.
                 m_tcpServer.BeginAccept(AcceptAsyncCallback, null);
                 // Notify that the server has been started successfully.
-                OnServerStarted(EventArgs.Empty);
+                OnServerStarted();
             }
             else 
             {
@@ -325,7 +325,7 @@ namespace PCS.Communication
             tcpClient.SendBufferOffset = offset;
             tcpClient.SendBufferLength = length;
             handle = tcpClient.Provider.BeginSend(tcpClient.SendBuffer, tcpClient.SendBufferOffset, tcpClient.SendBufferLength, SocketFlags.None, SendPayloadAsyncCallback, tcpClient).AsyncWaitHandle;
-            OnSendClientDataStarted(new EventArgs<Guid>(tcpClient.ID));
+            OnSendClientDataStarted(tcpClient.ID);
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
@@ -364,7 +364,7 @@ namespace PCS.Communication
                         {
                             m_tcpClients.Add(tcpClient.ID, tcpClient);
                         }
-                        OnClientConnected(new EventArgs<Guid>(tcpClient.ID));
+                        OnClientConnected(tcpClient.ID);
                         ReceivePayloadAsync(tcpClient);
                     }
                 }
@@ -373,7 +373,7 @@ namespace PCS.Communication
             {
                 // Server socket has been terminated.
                 m_tcpServer.Close();
-                OnServerStopped(EventArgs.Empty);
+                OnServerStopped();
             }
         }
 
@@ -387,12 +387,12 @@ namespace PCS.Communication
             {
                 // Send operation is complete.
                 tcpClient.Statistics.UpdateBytesSent(tcpClient.Provider.EndSend(asyncResult));
-                OnSendClientDataComplete(new EventArgs<Guid>(tcpClient.ID));
+                OnSendClientDataComplete(tcpClient.ID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendClientDataException(new EventArgs<Guid, Exception>(tcpClient.ID, ex));
+                OnSendClientDataException(tcpClient.ID, ex);
             }
         }
 
@@ -474,28 +474,28 @@ namespace PCS.Communication
                             {
                                 m_tcpClients.Add(tcpClient.ID, tcpClient);
                             }
-                            OnClientConnected(new EventArgs<Guid>(tcpClient.ID));
+                            OnClientConnected(tcpClient.ID);
                             ReceivePayloadAsync(tcpClient);
                         }
                         else
                         {
                             // Authentication during handshake failed, so we terminate the client connection.
                             TerminateConnection(tcpClient, false);
-                            OnHandshakeUnsuccessful(EventArgs.Empty);
+                            OnHandshakeUnsuccessful();
                         }
                     }
                     else
                     {
                         // Handshake message could not be parsed, so we terminate the client connection.
                         TerminateConnection(tcpClient, false);
-                        OnHandshakeUnsuccessful(EventArgs.Empty);
+                        OnHandshakeUnsuccessful();
                     }
                 }
                 catch
                 {
                     // Handshake process could not be completed most likely due to client disconnect.
                     TerminateConnection(tcpClient, false);
-                    OnHandshakeUnsuccessful(EventArgs.Empty);
+                    OnHandshakeUnsuccessful();
                 }
             }
         }
@@ -563,7 +563,7 @@ namespace PCS.Communication
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
-                OnReceiveClientDataTimedout(new EventArgs<Guid>(tcpClient.ID));
+                OnReceiveClientDataTimedout(tcpClient.ID);
                 tcpClient.WaitAsync(ReceiveTimeout, ReceivePayloadAwareAsyncCallback, asyncResult);
             }
             else
@@ -655,7 +655,7 @@ namespace PCS.Communication
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
-                OnReceiveClientDataTimedout(new EventArgs<Guid>(tcpClient.ID));
+                OnReceiveClientDataTimedout(tcpClient.ID);
                 tcpClient.WaitAsync(ReceiveTimeout, ReceivePayloadUnawareAsyncCallback, asyncResult);
             }
             else
@@ -689,7 +689,7 @@ namespace PCS.Communication
         {
             client.Reset();
             if (raiseEvent)
-                OnClientDisconnected(new EventArgs<Guid>(client.ID));
+                OnClientDisconnected(client.ID);
 
             lock (m_tcpClients)
             {

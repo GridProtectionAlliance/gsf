@@ -89,6 +89,7 @@
     <Compile Include="UdpClient.cs">
     </Compile>
     <Compile Include="UdpServer.cs">
+      <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>

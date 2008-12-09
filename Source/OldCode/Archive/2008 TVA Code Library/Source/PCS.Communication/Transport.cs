@@ -54,6 +54,8 @@ namespace PCS.Communication
                     socket.Bind(new IPEndPoint(IPAddress.Any, port));
                     break;
                 case ProtocolType.Udp:
+                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket.Bind(new IPEndPoint(IPAddress.Any, port));
                     break;
                 default:
                     throw new NotSupportedException(string.Format("{0} is not supported.", protocol));
