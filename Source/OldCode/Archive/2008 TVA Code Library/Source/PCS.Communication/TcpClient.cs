@@ -118,8 +118,8 @@ namespace PCS.Communication
         // Fields
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
-        private int m_connectionAttempts;
         private TransportProvider<Socket> m_tcpClient;
+        private int m_connectionAttempts;
         private Dictionary<string, string> m_connectData;
 
         #endregion
@@ -194,7 +194,7 @@ namespace PCS.Communication
         /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<Socket> ClientSocket
+        public TransportProvider<Socket> Client
         {
             get
             {

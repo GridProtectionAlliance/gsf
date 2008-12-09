@@ -125,8 +125,8 @@ namespace PCS.Communication
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private Socket m_tcpServer;
-        private Dictionary<string, string> m_configData;
         private Dictionary<Guid, TransportProvider<Socket>> m_tcpClients;
+        private Dictionary<string, string> m_configData;
 
         #endregion
 
@@ -200,7 +200,7 @@ namespace PCS.Communication
         /// Gets the <see cref="Socket"/> object for the <see cref="TcpServer"/>.
         /// </summary>
         [Browsable(false)]
-        public Socket ServerSocket
+        public Socket Server
         {
             get
             {
@@ -255,7 +255,7 @@ namespace PCS.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            ClientSocket(clientID).Provider.Close();
+            Client(clientID).Provider.Close();
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace PCS.Communication
         /// <param name="clientID">ID of the client.</param>
         /// <returns>An <see cref="TransportProvider{Socket}"/> object.</returns>
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        public TransportProvider<Socket> ClientSocket(Guid clientID)
+        public TransportProvider<Socket> Client(Guid clientID)
         {
             TransportProvider<Socket> tcpClient;
             lock (m_tcpClients)
@@ -300,7 +300,7 @@ namespace PCS.Communication
         /// <returns>Cipher passphrase of the client with the specified <paramref name="clientID"/>.</returns>
         protected override string GetSessionPassphrase(Guid clientID)
         {
-            return ClientSocket(clientID).Passphrase;
+            return Client(clientID).Passphrase;
         }
 
         /// <summary>
@@ -314,17 +314,18 @@ namespace PCS.Communication
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
             WaitHandle handle;
-            TransportProvider<Socket> tcpClient = ClientSocket(clientID);
+            TransportProvider<Socket> tcpClient = Client(clientID);
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
             // Send payload to the client asynchronously.
+            handle = tcpClient.Provider.BeginSend(data, offset, length, SocketFlags.None, SendPayloadAsyncCallback, tcpClient).AsyncWaitHandle;
+            
             tcpClient.SendBuffer = data;
             tcpClient.SendBufferOffset = offset;
             tcpClient.SendBufferLength = length;
-            handle = tcpClient.Provider.BeginSend(tcpClient.SendBuffer, tcpClient.SendBufferOffset, tcpClient.SendBufferLength, SocketFlags.None, SendPayloadAsyncCallback, tcpClient).AsyncWaitHandle;
             OnSendClientDataStart(tcpClient.ID);
 
             // Return the async handle that can be used to wait for the async operation to complete.
