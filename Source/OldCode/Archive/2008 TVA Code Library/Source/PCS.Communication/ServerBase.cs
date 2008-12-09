@@ -122,14 +122,14 @@ namespace PCS.Communication
         /// </summary>
         [Category("Server"),
         Description("Occurs when server-client handshake, when enabled, cannot be performed within the specified HandshakeTimeout time.")]
-        public event EventHandler HandshakeTimedout;
+        public event EventHandler HandshakeProcessTimeout;
 
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
         /// </summary>
         [Category("Server"),
         Description("Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.")]
-        public event EventHandler HandshakeUnsuccessful;
+        public event EventHandler HandshakeProcessUnsuccessful;
 
         /// <summary>
         /// Occurs when a client connects to the server.
@@ -159,7 +159,7 @@ namespace PCS.Communication
         /// </remarks>
         [Category("Data"),
         Description("Occurs when data is being sent to a client.")]
-        public event EventHandler<EventArgs<Guid>> SendClientDataStarted;
+        public event EventHandler<EventArgs<Guid>> SendClientDataStart;
 
         /// <summary>
         /// Occurs when data has been sent to a client.
@@ -187,7 +187,7 @@ namespace PCS.Communication
         /// </summary>
         [Category("Data"), 
         Description("Occurs when no data is received from a client for the ReceiveTimeout time.")]
-        public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimedout;
+        public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
         /// <summary>
         /// Occurs when data is received from a client.
@@ -416,7 +416,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimedout"/> event if no data is received from a client.
+        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimeout"/> event if no data is received from a client.
         /// </summary>
         /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
         [Category("Data"), 
@@ -1147,21 +1147,21 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="HandshakeTimedout"/> event.
+        /// Raises the <see cref="HandshakeProcessTimeout"/> event.
         /// </summary>
-        protected virtual void OnHandshakeTimedout(EventArgs e)
+        protected virtual void OnHandshakeProcessTimeout()
         {
-            if (HandshakeTimedout != null)
-                HandshakeTimedout(this, EventArgs.Empty);
+            if (HandshakeProcessTimeout != null)
+                HandshakeProcessTimeout(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="HandshakeUnsuccessful"/> event.
+        /// Raises the <see cref="HandshakeProcessUnsuccessful"/> event.
         /// </summary>
-        protected virtual void OnHandshakeUnsuccessful()
+        protected virtual void OnHandshakeProcessUnsuccessful()
         {
-            if (HandshakeUnsuccessful != null)
-                HandshakeUnsuccessful(this, EventArgs.Empty);
+            if (HandshakeProcessUnsuccessful != null)
+                HandshakeProcessUnsuccessful(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1195,13 +1195,13 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="SendClientDataStarted"/> event.
+        /// Raises the <see cref="SendClientDataStart"/> event.
         /// </summary>
-        /// <param name="clientID">ID of client to send to <see cref="SendClientDataStarted"/> event.</param>
-        protected virtual void OnSendClientDataStarted(Guid clientID)
+        /// <param name="clientID">ID of client to send to <see cref="SendClientDataStart"/> event.</param>
+        protected virtual void OnSendClientDataStart(Guid clientID)
         {
-            if (SendClientDataStarted != null)
-                SendClientDataStarted(this, new EventArgs<Guid>(clientID));
+            if (SendClientDataStart != null)
+                SendClientDataStart(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>
@@ -1226,13 +1226,13 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="ReceiveClientDataTimedout"/> event.
+        /// Raises the <see cref="ReceiveClientDataTimeout"/> event.
         /// </summary>
-        /// <param name="clientID">ID of client to send to <see cref="ReceiveClientDataTimedout"/> event.</param>
-        protected virtual void OnReceiveClientDataTimedout(Guid clientID)
+        /// <param name="clientID">ID of client to send to <see cref="ReceiveClientDataTimeout"/> event.</param>
+        protected virtual void OnReceiveClientDataTimeout(Guid clientID)
         {
-            if (ReceiveClientDataTimedout != null)
-                ReceiveClientDataTimedout(this, new EventArgs<Guid>(clientID));
+            if (ReceiveClientDataTimeout != null)
+                ReceiveClientDataTimeout(this, new EventArgs<Guid>(clientID));
         }
 
         /// <summary>

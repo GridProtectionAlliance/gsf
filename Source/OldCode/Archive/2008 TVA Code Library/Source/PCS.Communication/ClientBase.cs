@@ -128,21 +128,21 @@ namespace PCS.Communication
         /// </summary>
         [Category("Server"),
         Description("Occurs when server-client handshake, when enabled, cannot be performed within the specified HandshakeTimeout time.")]
-        public event EventHandler HandshakeTimedout;
+        public event EventHandler HandshakeProcessTimeout;
 
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
         /// </summary>
         [Category("Server"),
         Description("Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.")]
-        public event EventHandler HandshakeUnsuccessful;
+        public event EventHandler HandshakeProcessUnsuccessful;
 
         /// <summary>
         /// Occurs when the client begins sending data to the server.
         /// </summary>
         [Category("Data"),
         Description("Occurs when the client begins sending data to the server.")]
-        public event EventHandler SendDataStarted;
+        public event EventHandler SendDataStart;
 
         /// <summary>
         /// Occurs when the client has successfully sent data to the server.
@@ -166,7 +166,7 @@ namespace PCS.Communication
         /// </summary>
         [Category("Data"),
         Description("Occurs when no data is received from the server for the ReceiveTimeout time.")]
-        public event EventHandler ReceiveDataTimedout;
+        public event EventHandler ReceiveDataTimeout;
 
         /// <summary>
         /// Occurs when the client receives data from the server.
@@ -392,7 +392,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets or sets the number of milliseconds after which the client will raise the <see cref="ReceiveDataTimedout"/> event if no data is received from the server.
+        /// Gets or sets the number of milliseconds after which the client will raise the <see cref="ReceiveDataTimeout"/> event if no data is received from the server.
         /// </summary>
         /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
         [Category("Data"),
@@ -1036,30 +1036,30 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="HandshakeTimedout"/> event.
+        /// Raises the <see cref="HandshakeProcessTimeout"/> event.
         /// </summary>
-        protected virtual void OnHandshakeTimedout()
+        protected virtual void OnHandshakeProcessTimeout()
         {
-            if (HandshakeTimedout != null)
-                HandshakeTimedout(this, EventArgs.Empty);
+            if (HandshakeProcessTimeout != null)
+                HandshakeProcessTimeout(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="HandshakeUnsuccessful"/> event.
+        /// Raises the <see cref="HandshakeProcessUnsuccessful"/> event.
         /// </summary>
-        protected virtual void OnHandshakeUnsuccessful()
+        protected virtual void OnHandshakeProcessUnsuccessful()
         {
-            if (HandshakeUnsuccessful != null)
-                HandshakeUnsuccessful(this, EventArgs.Empty);
+            if (HandshakeProcessUnsuccessful != null)
+                HandshakeProcessUnsuccessful(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="SendDataStarted"/> event.
+        /// Raises the <see cref="SendDataStart"/> event.
         /// </summary>
-        protected virtual void OnSendDataStarted()
+        protected virtual void OnSendDataStart()
         {
-            if (SendDataStarted != null)
-                SendDataStarted(this, EventArgs.Empty);
+            if (SendDataStart != null)
+                SendDataStart(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1082,12 +1082,12 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="ReceiveDataTimedout"/> event.
+        /// Raises the <see cref="ReceiveDataTimeout"/> event.
         /// </summary>
-        protected virtual void OnReceiveDataTimedout()
+        protected virtual void OnReceiveDataTimeout()
         {
-            if (ReceiveDataTimedout != null)
-                ReceiveDataTimedout(this, EventArgs.Empty);
+            if (ReceiveDataTimeout != null)
+                ReceiveDataTimeout(this, EventArgs.Empty);
         }
 
         /// <summary>

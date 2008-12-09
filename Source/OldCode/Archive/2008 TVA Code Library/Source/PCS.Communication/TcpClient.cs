@@ -294,7 +294,7 @@ namespace PCS.Communication
             m_tcpClient.SendBufferOffset = offset;
             m_tcpClient.SendBufferLength = length;
             handle = m_tcpClient.Provider.BeginSend(m_tcpClient.SendBuffer, m_tcpClient.SendBufferOffset, m_tcpClient.SendBufferLength, SocketFlags.None, SendPayloadAsyncCallback, m_tcpClient).AsyncWaitHandle;
-            OnSendDataStarted();
+            OnSendDataStart();
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
@@ -411,7 +411,7 @@ namespace PCS.Communication
             {
                 // Handshake response is not recevied in a timely fashion.
                 TerminateConnection(tcpClient, false);
-                OnHandshakeTimedout();
+                OnHandshakeProcessTimeout();
             }
             else
             {
@@ -444,14 +444,14 @@ namespace PCS.Communication
                     {
                         // Received handshake response message could not be parsed.
                         TerminateConnection(tcpClient, false);
-                        OnHandshakeUnsuccessful();
+                        OnHandshakeProcessUnsuccessful();
                     }
                 }
                 catch
                 {
                     // This is most likely because the server forcibly disconnected the client.
                     TerminateConnection(tcpClient, false);
-                    OnHandshakeUnsuccessful();
+                    OnHandshakeProcessUnsuccessful();
                 }
             }
         }
@@ -519,7 +519,7 @@ namespace PCS.Communication
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
-                OnReceiveDataTimedout();
+                OnReceiveDataTimeout();
                 tcpClient.WaitAsync(ReceiveTimeout, ReceivePayloadAwareAsyncCallback, asyncResult);
             }
             else
@@ -611,7 +611,7 @@ namespace PCS.Communication
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
-                OnReceiveDataTimedout();
+                OnReceiveDataTimeout();
                 tcpClient.WaitAsync(ReceiveTimeout, ReceivePayloadUnawareAsyncCallback, asyncResult);
             }
             else

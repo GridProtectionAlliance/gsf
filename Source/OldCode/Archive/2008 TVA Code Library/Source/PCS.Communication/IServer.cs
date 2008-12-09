@@ -47,12 +47,12 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
         /// </summary>
-        event EventHandler HandshakeTimedout;
+        event EventHandler HandshakeProcessTimeout;
 
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
         /// </summary>
-        event EventHandler HandshakeUnsuccessful;
+        event EventHandler HandshakeProcessUnsuccessful;
 
         /// <summary>
         /// Occurs when a client connects to the server.
@@ -76,7 +76,7 @@ namespace PCS.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data is being sent.
         /// </remarks>
-        event EventHandler<EventArgs<Guid>> SendClientDataStarted;
+        event EventHandler<EventArgs<Guid>> SendClientDataStart;
 
         /// <summary>
         /// Occurs when data has been sent to a client.
@@ -98,7 +98,7 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
         /// </summary>
-        event EventHandler<EventArgs<Guid>> ReceiveClientDataTimedout;
+        event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
         /// <summary>
         /// Occurs when data is received from a client.
@@ -141,7 +141,7 @@ namespace PCS.Communication
         bool SecureSession { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimedout"/> event if no data is received from a client.
+        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimeout"/> event if no data is received from a client.
         /// </summary>
         int ReceiveTimeout { get; set; }
 

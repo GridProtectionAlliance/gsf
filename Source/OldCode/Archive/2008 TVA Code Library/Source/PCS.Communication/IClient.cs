@@ -56,17 +56,17 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
         /// </summary>
-        event EventHandler HandshakeTimedout;
+        event EventHandler HandshakeProcessTimeout;
 
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
         /// </summary>
-        event EventHandler HandshakeUnsuccessful;
+        event EventHandler HandshakeProcessUnsuccessful;
 
         /// <summary>
         /// Occurs when the client begins sending data to the server.
         /// </summary>
-        event EventHandler SendDataStarted;
+        event EventHandler SendDataStart;
 
         /// <summary>
         /// Occurs when the client has successfully sent data to the server.
@@ -84,7 +84,7 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when no data is received from the server for the <see cref="ReceiveTimeout"/> time.
         /// </summary>
-        event EventHandler ReceiveDataTimedout;
+        event EventHandler ReceiveDataTimeout;
 
         /// <summary>
         /// Occurs when the client receives data from the server.
@@ -126,7 +126,7 @@ namespace PCS.Communication
         bool SecureSession { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of milliseconds after which the client will raise the <see cref="ReceiveDataTimedout"/> event if no data is received from the server.
+        /// Gets or sets the number of milliseconds after which the client will raise the <see cref="ReceiveDataTimeout"/> event if no data is received from the server.
         /// </summary>
         int ReceiveTimeout { get; set; }
 
