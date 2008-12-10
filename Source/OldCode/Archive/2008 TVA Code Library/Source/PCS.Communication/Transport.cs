@@ -71,14 +71,22 @@ namespace PCS.Communication
         /// <returns>An <see cref="IPEndPoint"/> object.</returns>
         public static IPEndPoint CreateEndPoint(string hostNameOrAddress, int port)
         {
-            try
+            if (string.IsNullOrEmpty(hostNameOrAddress))
             {
-                return new IPEndPoint(Dns.GetHostEntry(hostNameOrAddress).AddressList[0], port);
+                // We use one of the local IP.
+                return new IPEndPoint(IPAddress.Any, port);
             }
-            catch (SocketException)
+            else 
             {
-                // SocketException will be thrown if the host is not found, so we'll try manual IP
-                return new IPEndPoint(IPAddress.Parse(hostNameOrAddress), port);
+                try
+                {
+                    return new IPEndPoint(Dns.GetHostEntry(hostNameOrAddress).AddressList[0], port);
+                }
+                catch (SocketException)
+                {
+                    // SocketException will be thrown if the host is not found, so we'll try manual IP
+                    return new IPEndPoint(IPAddress.Parse(hostNameOrAddress), port);
+                }
             }
         }
 

@@ -219,8 +219,8 @@ namespace PCS.Communication
         {
             if (IsRunning)
             {
+                DisconnectAll();        // Disconnection all clients.
                 m_tcpServer.Close();    // Stop accepting new connections.
-                DisconnectAll();        // Disconnection all connection clients.
             }
         }
 
@@ -323,6 +323,7 @@ namespace PCS.Communication
             // Send payload to the client asynchronously.
             handle = tcpClient.Provider.BeginSend(data, offset, length, SocketFlags.None, SendPayloadAsyncCallback, tcpClient).AsyncWaitHandle;
             
+            // Notify that the send operation has started.
             tcpClient.SendBuffer = data;
             tcpClient.SendBufferOffset = offset;
             tcpClient.SendBufferLength = length;
@@ -383,7 +384,7 @@ namespace PCS.Communication
         /// </summary>
         private void SendPayloadAsyncCallback(IAsyncResult asyncResult)
         {
-            TransportProvider<Socket> tcpClient = asyncResult.AsyncState as TransportProvider<Socket>;
+            TransportProvider<Socket> tcpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
             try
             {
                 // Send operation is complete.
@@ -422,7 +423,7 @@ namespace PCS.Communication
         /// </summary>
         private void ReceiveHandshakeAsyncCallback(IAsyncResult asyncResult)
         {
-            TransportProvider<Socket> tcpClient = asyncResult.AsyncState as TransportProvider<Socket>;
+            TransportProvider<Socket> tcpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
             if (!asyncResult.IsCompleted)
             {
                 // Handshake didn't complete in a timely fashion.
@@ -468,7 +469,7 @@ namespace PCS.Communication
                             Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
 
                             // Transmit the prepared and processed handshake response message.
-                            tcpClient.Provider.Send(tcpClient.SendBuffer, tcpClient.SendBufferOffset, tcpClient.SendBufferLength, SocketFlags.None);
+                            tcpClient.Provider.Send(tcpClient.SendBuffer);
 
                             // Handshake process is complete and client is considered connected.
                             lock (m_tcpClients)
@@ -560,7 +561,7 @@ namespace PCS.Communication
         /// </summary>
         private void ReceivePayloadAwareAsyncCallback(IAsyncResult asyncResult)
         {
-            TransportProvider<Socket> tcpClient = asyncResult.AsyncState as TransportProvider<Socket>;
+            TransportProvider<Socket> tcpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
@@ -652,7 +653,7 @@ namespace PCS.Communication
         /// </summary>
         private void ReceivePayloadUnawareAsyncCallback(IAsyncResult asyncResult)
         {
-            TransportProvider<Socket> tcpClient = asyncResult.AsyncState as TransportProvider<Socket>;
+            TransportProvider<Socket> tcpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
