@@ -60,6 +60,7 @@ namespace PCS.Communication
         private EndPoint m_udpServer;
         private TransportProvider<Socket> m_udpClient;
         private Dictionary<string, string> m_connectData;
+        private Func<byte[], int, int, bool> m_isGoodbye;
 
         #endregion
 
@@ -166,6 +167,7 @@ namespace PCS.Communication
                 if (Handshake)
                 {
                     // Handshaking must be performed. 
+                    m_isGoodbye = DoGoodbyeCheck;
                     HandshakeMessage handshake = new HandshakeMessage();
                     handshake.ID = this.ClientID;
                     handshake.Passphrase = this.HandshakePassphrase;
@@ -180,10 +182,11 @@ namespace PCS.Communication
                     m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
 
                     // Wait for the server's reponse to the handshake message.
-                    ReceiveHandshakeAsync(m_udpClient);       
+                    ReceiveHandshakeAsync(m_udpClient);
                 }
                 else
                 {
+                    m_isGoodbye = NoGoodbyeCheck;
                     OnConnected();
                     ReceivePayloadAsync(m_udpClient);
                 }
@@ -370,6 +373,10 @@ namespace PCS.Communication
                     udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref m_udpServer));
                     udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
 
+                    // Received a goodbye message from the server.
+                    if (m_isGoodbye(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength))
+                        throw new SocketException((int)SocketError.Disconnecting);
+
                     // Notify of received data and resume receive operation.
                     OnReceiveDataComplete(udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
                     ReceivePayloadAsync(udpClient);
@@ -380,6 +387,20 @@ namespace PCS.Communication
                     TerminateConnection(udpClient, true);
                 }
             }
+        }
+
+        private bool NoGoodbyeCheck(byte[] buffer, int offset, int length)
+        {
+            return false;
+        }
+
+        private bool DoGoodbyeCheck(byte[] buffer, int offset, int length)
+        {
+            // Process data received in the buffer.
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, HandshakePassphrase, Compression);
+
+            // Check if data is for goodbye message.
+            return (new GoodbyeMessage().Initialize(buffer, offset, length) != -1);
         }
 
         /// <summary>

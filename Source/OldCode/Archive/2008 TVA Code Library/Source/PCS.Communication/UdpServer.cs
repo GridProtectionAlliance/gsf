@@ -204,7 +204,7 @@ namespace PCS.Communication
                 throw new InvalidOperationException("Server is currently running.");
             }
         }
-                
+
         /// <summary>
         /// Disconnects the specified connected client.
         /// </summary>
@@ -382,7 +382,16 @@ namespace PCS.Communication
                         }
                         OnClientConnected(udpClient.ID);
                         ReceiveHandshakeAsync(udpServer);
-                        ReceivePayloadOneAsync(udpClient);
+
+                        try
+                        {
+                            ReceivePayloadOneAsync(udpClient);
+                        }
+                        catch
+                        {
+                            // Receive will fail if client disconnected before handshake is complete.
+                            TerminateConnection(udpClient, true);
+                        }
                     }
                     else
                     {
@@ -486,16 +495,13 @@ namespace PCS.Communication
                     udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref client));
                     udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
 
+                    // Received a goodbye message from the client.
                     if (m_isGoodbye(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength))
-                    {
-                        TerminateConnection(udpClient, true);
-                    }
-                    else
-                    {
-                        // Notify of received data and resume receive operation.
-                        OnReceiveClientDataComplete(udpClient.ID, udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
-                        ReceivePayloadOneAsync(udpClient);
-                    }
+                        throw new SocketException((int)SocketError.Disconnecting);
+
+                    // Notify of received data and resume receive operation.
+                    OnReceiveClientDataComplete(udpClient.ID, udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
+                    ReceivePayloadOneAsync(udpClient);
                 }
                 catch
                 {

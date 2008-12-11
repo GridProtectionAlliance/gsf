@@ -57,7 +57,7 @@ namespace PCS.Communication
         /// </summary>
         public int BinaryLength
         {
-            get { return 16 + 2; }
+            get { return 2+ 16; }
         }
 
         /// <summary>
@@ -91,10 +91,10 @@ namespace PCS.Communication
                     return -1;
                 }
 
-                // Binary image has sufficient data.
                 try
                 {
-                    ID = new Guid(binaryImage.BlockCopy(startIndex, 16));
+                    // Binary image has sufficient data.
+                    ID = new Guid(binaryImage.BlockCopy(startIndex + 2, 16));
 
                     return BinaryLength;
                 }

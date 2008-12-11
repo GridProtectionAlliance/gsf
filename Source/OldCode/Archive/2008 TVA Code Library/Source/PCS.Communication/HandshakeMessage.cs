@@ -27,6 +27,11 @@ namespace PCS.Communication
     internal class HandshakeMessage : ISupportBinaryImage
     {
         /// <summary>
+        /// 2-Byte identifier for <see cref="HandshakeMessage"/>.
+        /// </summary>
+        public static byte[] MessageIdentifier = { 0x98, 0xC4 };
+
+        /// <summary>
         /// Gets or sets the unique identifier.
         /// </summary>
         /// <remarks>Max size is 16.</remarks>
@@ -43,7 +48,7 @@ namespace PCS.Communication
         /// </summary>
         public HandshakeMessage()
             : this(Guid.Empty, string.Empty)
-        { 
+        {
         }
 
         /// <summary>
@@ -60,7 +65,7 @@ namespace PCS.Communication
         /// </summary>
         public int BinaryLength
         {
-            get { return 16 + 260; }
+            get { return 2 + 16 + 260; }
         }
 
         /// <summary>
@@ -68,14 +73,15 @@ namespace PCS.Communication
         /// </summary>
         public byte[] BinaryImage
         {
-            get 
+            get
             {
                 // Create the image.
                 byte[] image = new byte[BinaryLength];
                 // Populate the image.
                 Passphrase = Passphrase.PadRight(260).TruncateRight(260);
-                Buffer.BlockCopy(ID.ToByteArray(), 0, image, 0, 16);
-                Buffer.BlockCopy(Encoding.ASCII.GetBytes(Passphrase), 0, image, 16, 260);
+                Buffer.BlockCopy(MessageIdentifier, 0, image, 0, 2);
+                Buffer.BlockCopy(ID.ToByteArray(), 0, image, 2, 16);
+                Buffer.BlockCopy(Encoding.ASCII.GetBytes(Passphrase), 0, image, 18, 260);
                 // Return the image.
                 return image;
             }
@@ -88,11 +94,18 @@ namespace PCS.Communication
         {
             if (length - startIndex >= BinaryLength)
             {
-                // Binary image has sufficient data.
+                if (binaryImage[startIndex] != MessageIdentifier[0] ||
+                    binaryImage[startIndex + 1] != MessageIdentifier[1])
+                {
+                    // Message identifier don't match.
+                    return -1;
+                }
+
                 try
                 {
-                    ID = new Guid(binaryImage.BlockCopy(startIndex, 16));
-                    Passphrase = Encoding.ASCII.GetString(binaryImage, startIndex + 16, 260).Trim();
+                    // Binary image has sufficient data.
+                    ID = new Guid(binaryImage.BlockCopy(startIndex + 2, 16));
+                    Passphrase = Encoding.ASCII.GetString(binaryImage, startIndex + 18, 260).Trim();
 
                     return BinaryLength;
                 }
