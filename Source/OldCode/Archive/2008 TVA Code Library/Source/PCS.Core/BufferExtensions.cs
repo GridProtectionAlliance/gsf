@@ -202,13 +202,17 @@ namespace PCS
         /// <param name="startIndex">Start index in the <paramref name="buffer"/> to start searching.</param>
         /// <param name="length">Number of bytes in the <paramref name="buffer"/> to search through.</param>
         /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="bytesToFind"/> is null or has zero length.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of valid indexes for the source buffer -or-
+        /// <paramref name="length"/> is less than 0.
+        /// </exception>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex, int length)
         {
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
-
             if (bytesToFind == null || bytesToFind.Length == 0)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException("bytesToFind");
 
             if (startIndex < 0)
                 throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");

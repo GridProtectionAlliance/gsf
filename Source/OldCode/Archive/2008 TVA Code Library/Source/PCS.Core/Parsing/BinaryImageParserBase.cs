@@ -65,8 +65,12 @@ namespace PCS.Parsing
         /// Only relevant if <see cref="ProtocolUsesSyncBytes"/> is true.
         /// </remarks>
         protected bool StreamInitialized;
-        
-        private byte[] m_unparsedBuffer;
+
+        /// <summary>
+        /// Remaining unparsed buffer from last parsing execution, if any.
+        /// </summary>
+        protected byte[] UnparsedBuffer;
+
         private byte[] m_protocolSyncBytes;
         private long m_buffersProcessed;
         private string m_name;
@@ -390,13 +394,13 @@ namespace PCS.Parsing
             try
             {
                 // Prepend any left over buffer data from last parse call
-                if (m_unparsedBuffer != null)
+                if (UnparsedBuffer != null)
                 {
                     // Combine remaining buffer from last call and current buffer together as a single image
-                    buffer = m_unparsedBuffer.Combine(0, m_unparsedBuffer.Length, buffer, offset, count);
+                    buffer = UnparsedBuffer.Combine(0, UnparsedBuffer.Length, buffer, offset, count);
                     offset = 0;
                     count = buffer.Length;
-                    m_unparsedBuffer = null;
+                    UnparsedBuffer = null;
                 }
 
                 int endOfBuffer = offset + count - 1;
@@ -420,7 +424,7 @@ namespace PCS.Parsing
                     else
                     {
                         // If not, save off remaining buffer to prepend onto next read
-                        m_unparsedBuffer = buffer.BlockCopy(offset, count - offset);
+                        UnparsedBuffer = buffer.BlockCopy(offset, count - offset);
                         break;
                     }
                 }
@@ -429,7 +433,7 @@ namespace PCS.Parsing
             {
                 // Probable malformed data image, discard data on move on...
                 StreamInitialized = !ProtocolUsesSyncBytes;
-                m_unparsedBuffer = null;
+                UnparsedBuffer = null;
 
                 OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
                 OnParsingException(ex);

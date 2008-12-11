@@ -29,9 +29,6 @@ namespace PCS.Parsing
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This parser is designed as a write-only stream such that data can come from any source.
-    /// </para>
-    /// <para>
     /// This class is more specific than the <see cref="BinaryImageParserBase"/> in that it can automate the parsing of a
     /// particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
@@ -69,6 +66,7 @@ namespace PCS.Parsing
         // Fields
         private ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> m_bufferQueue;
         private Dictionary<TSourceIdentifier, bool> m_sourceInitialized;
+        private Dictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
         private List<TOutputType> m_parsedOutputs;
         private TSourceIdentifier m_sourceID;
         private bool m_disposed;
@@ -85,6 +83,7 @@ namespace PCS.Parsing
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
             m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
+            m_unparsedBuffers = new Dictionary<TSourceIdentifier, byte[]>();
             m_parsedOutputs = new List<TOutputType>();
 
             // We attach to base class events so we can cumulate outputs per data source and handle data errors
@@ -166,6 +165,12 @@ namespace PCS.Parsing
                         }
                         m_sourceInitialized = null;
 
+                        if (m_unparsedBuffers != null)
+                        {
+                            m_unparsedBuffers.Clear();
+                        }
+                        m_unparsedBuffers = null;
+
                         if (m_parsedOutputs != null)
                         {
                             m_parsedOutputs.Clear();
@@ -192,6 +197,7 @@ namespace PCS.Parsing
         {
             base.Start();
             m_sourceInitialized.Clear();
+            m_unparsedBuffers.Clear();
             m_bufferQueue.Start();
         }
 
@@ -249,7 +255,7 @@ namespace PCS.Parsing
         /// <para>
         /// It is possible for items to be queued while the flush is executing. The flush will continue to parse buffers as quickly
         /// as possible until the internal buffer queue is empty. Unless the user stops queueing data to be parsed (i.e. calling the
-        /// <see cref="Write"/> method), the flush call may never return (not a happy situtation on shutdown).
+        /// <see cref="Parse(TSourceIdentifier,byte[])"/> method), the flush call may never return (not a happy situtation on shutdown).
         /// </para>
         /// <para>
         /// The <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction.
@@ -267,6 +273,8 @@ namespace PCS.Parsing
         /// <remarks>
         /// This method is virtual to allow derived classes to customize the style of processing queue used when consumers
         /// choose to implement an internal buffer queue.  Default type is a real-time queue with the default settings.
+        /// When overriding, use the <see cref="ParseQueuedBuffers"/> method for the <see cref="ProcessQueue{T}"/>) item
+        /// processing delegate.
         /// </remarks>
         /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
         protected virtual ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> CreateBufferQueue()
@@ -274,11 +282,18 @@ namespace PCS.Parsing
             return ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>>.CreateRealTimeQueue(ParseQueuedBuffers);
         }
 
-        // We process all queued data buffers that are available at once...
-        private void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
+        /// <summary>
+        /// This method is used by the internal <see cref="ProcessQueue{T}"/> to process all queued data buffers.
+        /// </summary>
+        /// <param name="buffers">Source identifiable buffers to process.</param>
+        /// <remarks>
+        /// This is the item processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
+        /// </remarks>
+        protected void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
         {
             byte[] buffer;
 
+            // Process all queued data buffers...
             foreach (IdentifiableItem<TSourceIdentifier, byte[]> item in buffers)
             {
                 m_sourceID = item.ID;
@@ -288,13 +303,20 @@ namespace PCS.Parsing
                 if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
                     m_sourceInitialized.Add(m_sourceID, true);
 
+                // Restore any unparsed buffers for this data source, if any
+                if (!m_unparsedBuffers.TryGetValue(m_sourceID, out UnparsedBuffer))
+                    m_unparsedBuffers.Add(m_sourceID, null);
+
                 // Clear any existing parsed outputs
                 m_parsedOutputs.Clear();
 
                 // Start parsing sequence for this buffer - this will cumulate new parsed outputs
                 base.Write(buffer, 0, buffer.Length);
 
-                // Expose parsed data
+                // Track last unparsed buffer for this data source
+                m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
+
+                // Expose any parsed data
                 if (m_parsedOutputs.Count > 0)
                     OnDataParsed(m_sourceID, m_parsedOutputs);
             }
