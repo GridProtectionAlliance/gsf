@@ -56,6 +56,7 @@ namespace PCS.Communication
         private Dictionary<Guid, TransportProvider<Socket>> m_udpClients;
         private EndPoint m_udpClientEndPoint;
         private Dictionary<string, string> m_configData;
+        private Func<byte[], int, int, bool> m_isGoodbye;
 
         #endregion
 
@@ -159,10 +160,12 @@ namespace PCS.Communication
 
                 if (Handshake)
                 {
+                    m_isGoodbye = DoGoodbyeCheck;
                     ReceiveHandshakeAsync(m_udpServer);
                 }
                 else
                 {
+                    m_isGoodbye = NoGoodbyeCheck;
                     ReceivePayloadAnyAsync(m_udpServer);
 
                     // When handshake is not to be performed, we process the static list to clients.
@@ -201,7 +204,7 @@ namespace PCS.Communication
                 throw new InvalidOperationException("Server is currently running.");
             }
         }
-
+                
         /// <summary>
         /// Disconnects the specified connected client.
         /// </summary>
@@ -216,7 +219,7 @@ namespace PCS.Communication
                 udpClient.SendBuffer = new GoodbyeMessage(udpClient.ID).BinaryImage;
                 udpClient.SendBufferOffset = 0;
                 udpClient.SendBufferLength = udpClient.SendBuffer.Length;
-                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, udpClient.Passphrase, Compression);
+                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
 
                 udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
             }
@@ -329,24 +332,30 @@ namespace PCS.Communication
 
         private void ReceiveHandshakeAsyncCallback(IAsyncResult asyncResult)
         {
-            TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
+            TransportProvider<Socket> udpServer = (TransportProvider<Socket>)asyncResult.AsyncState;
             // Received handshake data from client so we'll process it.
             try
             {
                 // Update statistics and pointers.
                 EndPoint client = Transport.CreateEndPoint(string.Empty, 0);
-                udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref client));
-                udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
+                udpServer.Statistics.UpdateBytesReceived(udpServer.Provider.EndReceiveFrom(asyncResult, ref client));
+                udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
 
                 // Process the received handshake message.
-                Payload.ProcessReceived(ref udpClient.ReceiveBuffer, ref udpClient.ReceiveBufferOffset, ref udpClient.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
+                Payload.ProcessReceived(ref udpServer.ReceiveBuffer, ref udpServer.ReceiveBufferOffset, ref udpServer.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
 
                 HandshakeMessage handshake = new HandshakeMessage();
-                if (handshake.Initialize(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength) != -1)
+                if (handshake.Initialize(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
                 {
                     // Received handshake message could be parsed successfully.
                     if (handshake.ID != Guid.Empty && handshake.Passphrase == HandshakePassphrase)
                     {
+                        // Create a random socket and connect it to the client.
+                        TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
+                        udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+                        udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
+                        udpClient.Provider.Connect(client);
+
                         // Authentication is successful; respond to the handshake.
                         udpClient.ID = handshake.ID;
                         handshake.ID = this.ServerID;
@@ -364,8 +373,7 @@ namespace PCS.Communication
                         Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
 
                         // Transmit the prepared and processed handshake response message.
-                        udpClient.Provider.Connect(client);
-                        udpClient.Provider.SendTo(udpClient.SendBuffer, client);
+                        udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
 
                         // Handshake process is complete and client is considered connected.
                         lock (m_udpClients)
@@ -373,27 +381,28 @@ namespace PCS.Communication
                             m_udpClients.Add(udpClient.ID, udpClient);
                         }
                         OnClientConnected(udpClient.ID);
+                        ReceiveHandshakeAsync(udpServer);
                         ReceivePayloadOneAsync(udpClient);
                     }
                     else
                     {
                         // Authentication during handshake failed, so we terminate the client connection.
-                        TerminateConnection(udpClient, false);
+                        TerminateConnection(udpServer, false);
                         OnHandshakeProcessUnsuccessful();
                     }
                 }
                 else
                 {
                     // Handshake message could not be parsed, so we terminate the client connection.
-                    TerminateConnection(udpClient, false);
+                    TerminateConnection(udpServer, false);
                     OnHandshakeProcessUnsuccessful();
                 }
             }
             catch
             {
-                // Handshake process could not be completed most likely due to client disconnect.
-                TerminateConnection(udpClient, false);
-                OnHandshakeProcessUnsuccessful();
+                // Server socket has been terminated.
+                udpServer.Reset();
+                OnServerStopped();
             }
         }
 
@@ -477,9 +486,16 @@ namespace PCS.Communication
                     udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref client));
                     udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
 
-                    // Notify of received data and resume receive operation.
-                    OnReceiveClientDataComplete(udpClient.ID, udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
-                    ReceivePayloadOneAsync(udpClient);
+                    if (m_isGoodbye(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength))
+                    {
+                        TerminateConnection(udpClient, true);
+                    }
+                    else
+                    {
+                        // Notify of received data and resume receive operation.
+                        OnReceiveClientDataComplete(udpClient.ID, udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
+                        ReceivePayloadOneAsync(udpClient);
+                    }
                 }
                 catch
                 {
@@ -487,6 +503,20 @@ namespace PCS.Communication
                     TerminateConnection(udpClient, true);
                 }
             }
+        }
+
+        private bool NoGoodbyeCheck(byte[] buffer, int offset, int length)
+        {
+            return false;
+        }
+
+        private bool DoGoodbyeCheck(byte[] buffer, int offset, int length)
+        {
+            // Process data received in the buffer.
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, HandshakePassphrase, Compression);
+
+            // Check if data is for goodbye message.
+            return (new GoodbyeMessage().Initialize(buffer, offset, length) != -1);
         }
 
         /// <summary>

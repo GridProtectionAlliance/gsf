@@ -58,7 +58,7 @@ namespace PCS.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="HandshakeTimeout"/> property.
         /// </summary>
-        public const int DefaultHandshakeTimeout = 30000;
+        public const int DefaultHandshakeTimeout = 3000;
 
         /// <summary>
         /// Specifies the default value for the <see cref="HandshakePassphrase"/> property.

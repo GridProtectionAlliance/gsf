@@ -22,9 +22,14 @@ using PCS.Parsing;
 
 namespace PCS.Communication
 {
-	[Serializable()]
+    [Serializable()]
     internal class GoodbyeMessage : ISupportBinaryImage
-	{
+    {
+        /// <summary>
+        /// 2-Byte identifier for <see cref="GoodbyeMessage"/>.
+        /// </summary>
+        public static byte[] MessageIdentifier = { 0xA3, 0xC4 };
+
         /// <summary>
         /// Gets or sets the disconnecting client's ID.
         /// </summary>
@@ -36,23 +41,23 @@ namespace PCS.Communication
         /// </summary>
         public GoodbyeMessage()
             : this(Guid.Empty)
-        { 
+        {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoodbyeMessage"/> class.
         /// </summary>
-		public GoodbyeMessage(Guid id)
-		{
-			ID = id;
-		}
+        public GoodbyeMessage(Guid id)
+        {
+            ID = id;
+        }
 
         /// <summary>
         /// Gets the length of the <see cref="BinaryImage"/>.
         /// </summary>
         public int BinaryLength
         {
-            get { return 16; }
+            get { return 16 + 2; }
         }
 
         /// <summary>
@@ -60,12 +65,13 @@ namespace PCS.Communication
         /// </summary>
         public byte[] BinaryImage
         {
-            get 
+            get
             {
                 // Create the image.
                 byte[] image = new byte[BinaryLength];
                 // Populate the image.
-                Buffer.BlockCopy(ID.ToByteArray(), 0, image, 0, 16);
+                Buffer.BlockCopy(MessageIdentifier, 0, image, 0, 2);
+                Buffer.BlockCopy(ID.ToByteArray(), 0, image, 2 , 16);
                 // Return the image.
                 return image;
             }
@@ -78,6 +84,13 @@ namespace PCS.Communication
         {
             if (length - startIndex >= BinaryLength)
             {
+                if (binaryImage[startIndex] != MessageIdentifier[0] || 
+                    binaryImage[startIndex + 1] != MessageIdentifier[1])
+                {
+                    // Message identifier don't match.
+                    return -1;
+                }
+
                 // Binary image has sufficient data.
                 try
                 {

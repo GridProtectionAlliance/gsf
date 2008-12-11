@@ -110,6 +110,17 @@ namespace PCS.Communication
         {
             if (IsConnected)
             {
+                if (Handshake)
+                {
+                    // Handshake is enabled so we'll notify the client.
+                    m_udpClient.SendBuffer = new GoodbyeMessage(m_udpClient.ID).BinaryImage;
+                    m_udpClient.SendBufferOffset = 0;
+                    m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
+                    Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+
+                    m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
+                }
+
                 m_udpClient.Provider.Close();
             }
         }
