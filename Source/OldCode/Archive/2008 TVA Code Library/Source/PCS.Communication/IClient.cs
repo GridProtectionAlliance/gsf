@@ -190,6 +190,11 @@ namespace PCS.Communication
         void Connect();
 
         /// <summary>
+        /// Connects client to the server asynchronously.
+        /// </summary>
+        void ConnectAsync();
+
+        /// <summary>
         /// Disconnects client from the server synchronously.
         /// </summary>
         void Disconnect();
@@ -203,18 +208,12 @@ namespace PCS.Communication
         void Send(byte[] data, int offset, int length);
 
         /// <summary>
-        /// Connects client to the server asynchronously.
-        /// </summary>
-        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        WaitHandle ConnectAsync();
-
-        /// <summary>
         /// Sends data to the server asynchronously.
         /// </summary>
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
         /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
-        /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         WaitHandle SendAsync(byte[] data, int offset, int length);
     }
 }

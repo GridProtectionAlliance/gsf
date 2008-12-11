@@ -58,7 +58,7 @@ namespace PCS.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="HandshakeTimeout"/> property.
         /// </summary>
-        public const int DefaultHandshakeTimeout = 3000;
+        public const int DefaultHandshakeTimeout = 30000;
 
         /// <summary>
         /// Specifies the default value for the <see cref="HandshakePassphrase"/> property.
@@ -202,6 +202,7 @@ namespace PCS.Communication
         private long m_disconnectTime;
         private bool m_disposed;
         private bool m_initialized;
+        private ManualResetEvent m_connectHandle;
 
         #endregion
 
@@ -226,6 +227,7 @@ namespace PCS.Communication
             m_textEncoding = Encoding.ASCII;
             m_serverID = Guid.Empty;
             m_clientID = Guid.NewGuid();
+            m_connectHandle = new ManualResetEvent(false);
         }
 
         /// <summary>
@@ -752,8 +754,7 @@ namespace PCS.Communication
         /// <summary>
         /// When overridden in a derived class, connects client to the server asynchronously.
         /// </summary>
-        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public abstract WaitHandle ConnectAsync();
+        public abstract void ConnectAsync();
 
         /// <summary>
         /// When overridden in a derived class, validates the specified <paramref name="connectionString"/>.
@@ -802,7 +803,8 @@ namespace PCS.Communication
             if (MaxConnectionAttempts == -1)
                 throw new InvalidOperationException("Synchronous connection cannot be attempted with MaxConnectionAttempts = -1.");
 
-            ConnectAsync().WaitOne();
+            ConnectAsync();             // Start asynchronous connection attempt.
+            m_connectHandle.WaitOne();  // Block for connection process to complete.
         }
 
         /// <summary>
@@ -1005,6 +1007,8 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnConnecting()
         {
+            m_connectHandle.Reset();
+
             if (Connecting != null)
                 Connecting(this, EventArgs.Empty);
         }
@@ -1017,6 +1021,7 @@ namespace PCS.Communication
             m_isConnected = true;
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
+            m_connectHandle.Set();
 
             if (Connected != null)
                 Connected(this, EventArgs.Empty);

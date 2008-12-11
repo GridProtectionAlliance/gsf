@@ -37,10 +37,6 @@ namespace PCS.Communication
     /// </summary>
     /// <remarks>
     /// Use <see cref="UdpServer"/> when the primary purpose is to transmit data.
-    /// 
-    /// UDP by nature is a connectionless protocol, but with this implementation of UDP server we can have a
-    /// connectionfull session with the server by enabling Handshake. This in-turn enables us to take advantage
-    /// of SecureSession which otherwise is not possible.
     /// </remarks>
     public class UdpServer : ServerBase
     {
@@ -155,11 +151,12 @@ namespace PCS.Communication
                 m_udpClientEndPoint = Transport.CreateEndPoint(string.Empty, 0);
                 // Bind server socket to local end-point.
                 m_udpServer = new TransportProvider<Socket>();
+                m_udpServer.ID = this.ServerID;
                 m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
                 m_udpServer.Provider = Transport.CreateSocket(int.Parse(m_configData["port"]), ProtocolType.Udp);
                 // Notify that the server has been started successfully.
                 OnServerStarted();
-                
+
                 if (Handshake)
                 {
                     ReceiveHandshakeAsync(m_udpServer);
@@ -319,12 +316,118 @@ namespace PCS.Communication
 
         private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
         {
-            throw new NotImplementedException();
+            // Receive data asynchronously.
+            EndPoint client = Transport.CreateEndPoint(string.Empty, 0);
+            worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
+                                             worker.ReceiveBufferOffset,
+                                             worker.ReceiveBuffer.Length,
+                                             SocketFlags.None,
+                                             ref client,
+                                             ReceiveHandshakeAsyncCallback,
+                                             worker);
         }
 
         private void ReceiveHandshakeAsyncCallback(IAsyncResult asyncResult)
         {
-            // TODO: Upon successful handahshake, call ReceivePayloadAsync()
+            TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
+            // Received handshake data from client so we'll process it.
+            try
+            {
+                // Update statistics and pointers.
+                EndPoint client = Transport.CreateEndPoint(string.Empty, 0);
+                udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref client));
+                udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
+
+                // Process the received handshake message.
+                Payload.ProcessReceived(ref udpClient.ReceiveBuffer, ref udpClient.ReceiveBufferOffset, ref udpClient.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
+
+                HandshakeMessage handshake = new HandshakeMessage();
+                if (handshake.Initialize(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength) != -1)
+                {
+                    // Received handshake message could be parsed successfully.
+                    if (handshake.ID != Guid.Empty && handshake.Passphrase == HandshakePassphrase)
+                    {
+                        // Authentication is successful; respond to the handshake.
+                        udpClient.ID = handshake.ID;
+                        handshake.ID = this.ServerID;
+                        if (SecureSession)
+                        {
+                            // Create a secret key for ciphering client data.
+                            udpClient.Passphrase = Cipher.GenerateKey();
+                            handshake.Passphrase = udpClient.Passphrase;
+                        }
+
+                        // Prepare binary image of handshake response to be transmitted.
+                        udpClient.SendBuffer = handshake.BinaryImage;
+                        udpClient.SendBufferOffset = 0;
+                        udpClient.SendBufferLength = udpClient.SendBuffer.Length;
+                        Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+
+                        // Transmit the prepared and processed handshake response message.
+                        udpClient.Provider.Connect(client);
+                        udpClient.Provider.SendTo(udpClient.SendBuffer, client);
+
+                        // Handshake process is complete and client is considered connected.
+                        lock (m_udpClients)
+                        {
+                            m_udpClients.Add(udpClient.ID, udpClient);
+                        }
+                        OnClientConnected(udpClient.ID);
+                        ReceivePayloadOneAsync(udpClient);
+                    }
+                    else
+                    {
+                        // Authentication during handshake failed, so we terminate the client connection.
+                        TerminateConnection(udpClient, false);
+                        OnHandshakeProcessUnsuccessful();
+                    }
+                }
+                else
+                {
+                    // Handshake message could not be parsed, so we terminate the client connection.
+                    TerminateConnection(udpClient, false);
+                    OnHandshakeProcessUnsuccessful();
+                }
+            }
+            catch
+            {
+                // Handshake process could not be completed most likely due to client disconnect.
+                TerminateConnection(udpClient, false);
+                OnHandshakeProcessUnsuccessful();
+            }
+        }
+
+        private void ReceivePayloadAnyAsync(TransportProvider<Socket> worker)
+        {
+            worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
+                                             worker.ReceiveBufferOffset,
+                                             worker.ReceiveBuffer.Length,
+                                             SocketFlags.None,
+                                             ref m_udpClientEndPoint,
+                                             ReceivePayloadAnyAsyncCallback,
+                                             worker);
+        }
+
+        private void ReceivePayloadAnyAsyncCallback(IAsyncResult asyncResult)
+        {
+            TransportProvider<Socket> udpServer = (TransportProvider<Socket>)asyncResult.AsyncState;
+            try
+            {
+                // Update statistics and pointers.
+                udpServer.Statistics.UpdateBytesReceived(udpServer.Provider.EndReceiveFrom(asyncResult, ref m_udpClientEndPoint));
+                udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
+
+                // TODO: Check endpoint with available client for match.
+
+                // Resume receive operation on the server socket.
+                ReceivePayloadAnyAsync(udpServer);
+            }
+            catch
+            {
+                // Server socket has been terminated.
+                udpServer.Reset();
+                OnServerStopped();
+            }
         }
 
         private void ReceivePayloadOneAsync(TransportProvider<Socket> worker)
@@ -333,27 +436,27 @@ namespace PCS.Communication
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.
-                worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer, 
-                                                 worker.ReceiveBufferOffset, 
-                                                 worker.ReceiveBuffer.Length, 
-                                                 SocketFlags.None, 
-                                                 ref client, 
-                                                 ReceivePayloadOneAsyncCallback, 
+                worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
+                                                 worker.ReceiveBufferOffset,
+                                                 worker.ReceiveBuffer.Length,
+                                                 SocketFlags.None,
+                                                 ref client,
+                                                 ReceivePayloadOneAsyncCallback,
                                                  worker);
             }
             else
             {
                 // Wait for data with a timeout.
-                worker.WaitAsync(ReceiveTimeout, 
-                                 ReceivePayloadOneAsyncCallback, 
-                                 worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer, 
-                                                                  worker.ReceiveBufferOffset, 
-                                                                  worker.ReceiveBuffer.Length, 
-                                                                  SocketFlags.None, 
-                                                                  ref client, 
-                                                                  ReceivePayloadOneAsyncCallback, 
+                worker.WaitAsync(ReceiveTimeout,
+                                 ReceivePayloadOneAsyncCallback,
+                                 worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
+                                                                  worker.ReceiveBufferOffset,
+                                                                  worker.ReceiveBuffer.Length,
+                                                                  SocketFlags.None,
+                                                                  ref client,
+                                                                  ReceivePayloadOneAsyncCallback,
                                                                   worker));
-            }            
+            }
         }
 
         private void ReceivePayloadOneAsyncCallback(IAsyncResult asyncResult)
@@ -383,37 +486,6 @@ namespace PCS.Communication
                     // Client disconnected so we'll process it's disconnect.
                     TerminateConnection(udpClient, true);
                 }
-            }
-        }
-
-        private void ReceivePayloadAnyAsync(TransportProvider<Socket> worker)
-        {
-            worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer, 
-                                             worker.ReceiveBufferOffset, 
-                                             worker.ReceiveBuffer.Length, 
-                                             SocketFlags.None, 
-                                             ref m_udpClientEndPoint, 
-                                             ReceivePayloadAnyAsyncCallback, 
-                                             worker);
-        }
-
-        private void ReceivePayloadAnyAsyncCallback(IAsyncResult asyncResult)
-        {
-            TransportProvider<Socket> udpServer = (TransportProvider<Socket>)asyncResult.AsyncState;
-            try
-            {
-                // Update statistics and pointers.
-                udpServer.Statistics.UpdateBytesReceived(udpServer.Provider.EndReceiveFrom(asyncResult, ref m_udpClientEndPoint));
-                udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
-                
-                // TODO: Check endpoint with available client for match.
-                ReceivePayloadAnyAsync(udpServer);
-            }
-            catch
-            {
-                // Server socket has been terminated.
-                udpServer.Reset();
-                OnServerStopped();
             }
         }
 

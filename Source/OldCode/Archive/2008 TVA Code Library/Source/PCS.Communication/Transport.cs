@@ -51,11 +51,11 @@ namespace PCS.Communication
             {
                 case ProtocolType.Tcp:
                     socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    socket.Bind(new IPEndPoint(IPAddress.Any, port));
+                    socket.Bind(Transport.CreateEndPoint(string.Empty, port));
                     break;
                 case ProtocolType.Udp:
                     socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    socket.Bind(new IPEndPoint(IPAddress.Any, port));
+                    socket.Bind(Transport.CreateEndPoint(string.Empty, port));
                     break;
                 default:
                     throw new NotSupportedException(string.Format("{0} is not supported.", protocol));

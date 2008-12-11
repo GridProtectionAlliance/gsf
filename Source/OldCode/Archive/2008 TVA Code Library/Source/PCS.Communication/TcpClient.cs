@@ -220,9 +220,8 @@ namespace PCS.Communication
         /// <summary>
         /// Connects the <see cref="TcpClient"/> to the server asynchronously.
         /// </summary>
-        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TcpClient"/> when it is connected.</exception>
-        public override WaitHandle ConnectAsync()
+        public override void ConnectAsync()
         {
             if (!IsConnected)
             {
@@ -236,7 +235,7 @@ namespace PCS.Communication
                     m_tcpClient.Provider = Transport.CreateSocket(0, ProtocolType.Tcp);
                 }
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
-                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(m_connectData["server"], int.Parse(m_connectData["port"])), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
+                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(m_connectData["server"], int.Parse(m_connectData["port"])), ConnectAsyncCallback, m_tcpClient);
             }
             else
             {
@@ -256,10 +255,10 @@ namespace PCS.Communication
             m_connectData = connectionString.ParseKeyValuePairs();
 
             if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("Server property is missing. Example: {0}.", DefaultConnectionString));
 
             if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
 
             if (!Transport.IsPortNumberValid(m_connectData["port"]))
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));

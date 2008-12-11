@@ -287,7 +287,7 @@ namespace PCS.Communication
             m_configData = configurationString.ParseKeyValuePairs();
 
             if (!m_configData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port is missing. Example: {0}.", DefaultConfigurationString));
+                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
                 throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
