@@ -109,8 +109,10 @@ namespace PCS.Communication
             ReceiveBuffer = null;
             ReceiveBufferOffset = 0;
             ReceiveBufferLength = -1;
+
             // Reset the statistics.
             Statistics.Reset();
+
             // Cleanup the provider.
             try
             {
