@@ -179,6 +179,16 @@ namespace PCS.Communication
         Description("Occurs when the client receives data from the server.")]
         public event EventHandler<EventArgs<byte[], int>> ReceiveDataComplete;
 
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when receiving data from the server.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when receiving data from the server.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when an Exception is encountered when receiving data from the server.")]
+        public event EventHandler<EventArgs<Exception>> ReceiveDataException;
+
         // Fields
         private string m_connectionString;
         private int m_maxConnectionAttempts;
@@ -1125,6 +1135,16 @@ namespace PCS.Communication
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceiveDataException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ReceiveDataException"/> event.</param>
+        protected virtual void OnReceiveDataException(Exception ex)
+        {
+            if (ReceiveDataException != null)
+                ReceiveDataException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

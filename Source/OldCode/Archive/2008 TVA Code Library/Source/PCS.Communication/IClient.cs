@@ -96,6 +96,14 @@ namespace PCS.Communication
         event EventHandler<EventArgs<byte[], int>> ReceiveDataComplete;
 
         /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when receiving data from the server.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when receiving data from the server.
+        /// </remarks>
+        event EventHandler<EventArgs<Exception>> ReceiveDataException;
+
+        /// <summary>
         /// Gets or sets the data required by the client to connect to the server.
         /// </summary>
         string ConnectionString { get; set; }

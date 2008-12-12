@@ -185,7 +185,7 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
         /// </summary>
-        [Category("Data"), 
+        [Category("Data"),
         Description("Occurs when no data is received from a client for the ReceiveTimeout time.")]
         public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
@@ -200,6 +200,17 @@ namespace PCS.Communication
         [Category("Data"),
         Description("Occurs when data is received from a client.")]
         public event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when receiving data from a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which the data was being received.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when receiving data from a client.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when an Exception is encountered when receiving data from a client.")]
+        public event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
 
         // Fields
         private string m_configurationString;
@@ -223,7 +234,7 @@ namespace PCS.Communication
         private long m_stopTime;
         private long m_startTime;
         private bool m_disposed;
-        private bool m_initialized;             
+        private bool m_initialized;
 
         #endregion
 
@@ -345,7 +356,7 @@ namespace PCS.Communication
         /// Gets or sets the number of milliseconds that the server will wait for the clients to initiate the <see cref="Handshake"/> process.
         /// </summary>
         /// <exception cref="ArgumentException">The value specified is either zero or negative.</exception>
-        [Category("Security"), 
+        [Category("Security"),
         DefaultValue(DefaultHandshakeTimeout),
         Description("The number of milliseconds that the server will wait for the clients to initiate the handshake process.")]
         public virtual int HandshakeTimeout
@@ -354,11 +365,11 @@ namespace PCS.Communication
             {
                 return m_handshakeTimeout;
             }
-            set 
+            set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value cannot be zero or negative."); 
-                    
+                    throw new ArgumentException("Value cannot be zero or negative.");
+
                 m_handshakeTimeout = value;
             }
         }
@@ -419,8 +430,8 @@ namespace PCS.Communication
         /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimeout"/> event if no data is received from a client.
         /// </summary>
         /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
-        [Category("Data"), 
-        DefaultValue(DefaultReceiveTimeout), 
+        [Category("Data"),
+        DefaultValue(DefaultReceiveTimeout),
         Description("The number of milliseconds after which the server will raise the ReceiveClientDataTimedout event if no data is received from a client.")]
         public virtual int ReceiveTimeout
         {
@@ -428,7 +439,7 @@ namespace PCS.Communication
             {
                 return m_receiveTimeout;
             }
-            set 
+            set
             {
                 if (value < 1)
                     m_receiveTimeout = -1;
@@ -1222,7 +1233,7 @@ namespace PCS.Communication
         protected virtual void OnSendClientDataException(Guid clientID, Exception ex)
         {
             if (SendClientDataException != null)
-                SendClientDataException(this, new EventArgs<Guid,Exception>(clientID, ex));
+                SendClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
         }
 
         /// <summary>
@@ -1266,6 +1277,17 @@ namespace PCS.Communication
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceiveClientDataException"/> event.
+        /// </summary>
+        /// <param name="clientID">ID of client to send to <see cref="ReceiveClientDataException"/> event.</param>
+        /// <param name="ex">Exception to send to <see cref="ReceiveClientDataException"/> event.</param>
+        protected virtual void OnReceiveClientDataException(Guid clientID, Exception ex)
+        {
+            if (ReceiveClientDataException != null)
+                ReceiveClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
         }
 
         #endregion

@@ -111,6 +111,15 @@ namespace PCS.Communication
         event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
 
         /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when receiving data from a client.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which the data was being received.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when receiving data from a client.
+        /// </remarks>
+        event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
+
+        /// <summary>
         /// Gets or sets the data required by the server to initialize.
         /// </summary>
         string ConfigurationString { get; set; }
