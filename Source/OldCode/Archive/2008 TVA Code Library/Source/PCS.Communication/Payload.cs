@@ -115,31 +115,23 @@ namespace PCS.Communication
         {
             if (cryptoLevel != CipherStrength.None || compressLevel != CompressionStrength.NoCompression)
             {
-                // Make a copy of the data to be processed.
-                byte[] temp = buffer.BlockCopy(offset, length);
-
                 if (cryptoLevel != CipherStrength.None)
                 {
+                    byte[] key = Encoding.ASCII.GetBytes(cryptoKey);
+
                     // Decrypt the data.
-                    temp = temp.Decrypt(Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
+                    buffer = buffer.Decrypt(offset, length, key, cryptoLevel);
                     offset = 0;
-                    length = temp.Length;
+                    length = buffer.Length;
                 }
                 
                 if (compressLevel != CompressionStrength.NoCompression)
                 {
                     // Uncompress the data.
-                    temp = new MemoryStream(temp).Decompress().ToArray();
+                    buffer = new MemoryStream(buffer, offset, length).Decompress().ToArray();
                     offset = 0;
-                    length = temp.Length;
+                    length = buffer.Length;
                 }
-
-                if (temp.Length > buffer.Length)
-                    // Processed data cannot fit in the existing buffer.
-                    buffer = temp;
-                else
-                    // Copy the processed data into the existing buffer.
-                    Buffer.BlockCopy(temp, offset, buffer, offset, length);
             }
 
             //if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
