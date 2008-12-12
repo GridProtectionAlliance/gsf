@@ -113,18 +113,33 @@ namespace PCS.Communication
         /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
         public static void ProcessReceived(ref byte[] buffer, ref int offset, ref int length, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
         {
-            if (cryptoLevel != CipherStrength.None)
+            if (cryptoLevel != CipherStrength.None || compressLevel != CompressionStrength.NoCompression)
             {
-                buffer = buffer.Decrypt(offset, length, Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
-                offset = 0;
-                length = buffer.Length;
-            }
+                // Make a copy of the data to be processed.
+                byte[] temp = buffer.BlockCopy(offset, length);
 
-            if (compressLevel != CompressionStrength.NoCompression)
-            {
-                buffer = new MemoryStream(buffer, offset, length).Decompress().ToArray();
-                offset = 0;
-                length = buffer.Length;
+                if (cryptoLevel != CipherStrength.None)
+                {
+                    // Decrypt the data.
+                    temp = temp.Decrypt(Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
+                    offset = 0;
+                    length = temp.Length;
+                }
+                
+                if (compressLevel != CompressionStrength.NoCompression)
+                {
+                    // Uncompress the data.
+                    temp = new MemoryStream(temp).Decompress().ToArray();
+                    offset = 0;
+                    length = temp.Length;
+                }
+
+                if (temp.Length > buffer.Length)
+                    // Processed data cannot fit in the existing buffer.
+                    buffer = temp;
+                else
+                    // Copy the processed data into the existing buffer.
+                    Buffer.BlockCopy(temp, offset, buffer, offset, length);
             }
 
             //if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)

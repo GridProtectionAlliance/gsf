@@ -57,7 +57,7 @@ namespace PCS.Communication
         /// </summary>
         public int BinaryLength
         {
-            get { return 2+ 16; }
+            get { return MessageIdentifier.Length + 16; }
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace PCS.Communication
                 // Create the image.
                 byte[] image = new byte[BinaryLength];
                 // Populate the image.
-                Buffer.BlockCopy(MessageIdentifier, 0, image, 0, 2);
-                Buffer.BlockCopy(ID.ToByteArray(), 0, image, 2 , 16);
+                Buffer.BlockCopy(MessageIdentifier, 0, image, 0, MessageIdentifier.Length);
+                Buffer.BlockCopy(ID.ToByteArray(), 0, image, MessageIdentifier.Length, 16);
                 // Return the image.
                 return image;
             }
@@ -84,17 +84,14 @@ namespace PCS.Communication
         {
             if (length - startIndex >= BinaryLength)
             {
-                if (binaryImage[startIndex] != MessageIdentifier[0] || 
-                    binaryImage[startIndex + 1] != MessageIdentifier[1])
-                {
+                if (binaryImage.CompareTo(0, MessageIdentifier, 0, MessageIdentifier.Length) != 0)
                     // Message identifier don't match.
                     return -1;
-                }
 
                 try
                 {
                     // Binary image has sufficient data.
-                    ID = new Guid(binaryImage.BlockCopy(startIndex + 2, 16));
+                    ID = new Guid(binaryImage.BlockCopy(startIndex + MessageIdentifier.Length, 16));
 
                     return BinaryLength;
                 }

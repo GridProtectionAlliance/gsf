@@ -56,7 +56,7 @@ namespace PCS.Communication
         private Dictionary<Guid, TransportProvider<Socket>> m_udpClients;
         private EndPoint m_udpClientEndPoint;
         private Dictionary<string, string> m_configData;
-        private Func<byte[], int, int, bool> m_isGoodbye;
+        private Func<TransportProvider<Socket>, bool> m_receivedGoodbye;
 
         #endregion
 
@@ -160,12 +160,12 @@ namespace PCS.Communication
 
                 if (Handshake)
                 {
-                    m_isGoodbye = DoGoodbyeCheck;
+                    m_receivedGoodbye = DoGoodbyeCheck;
                     ReceiveHandshakeAsync(m_udpServer);
                 }
                 else
                 {
-                    m_isGoodbye = NoGoodbyeCheck;
+                    m_receivedGoodbye = NoGoodbyeCheck;
                     ReceivePayloadAnyAsync(m_udpServer);
 
                     // When handshake is not to be performed, we process the static list to clients.
@@ -219,7 +219,7 @@ namespace PCS.Communication
                 udpClient.SendBuffer = new GoodbyeMessage(udpClient.ID).BinaryImage;
                 udpClient.SendBufferOffset = 0;
                 udpClient.SendBufferLength = udpClient.SendBuffer.Length;
-                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, udpClient.Passphrase, Compression);
 
                 udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
             }
@@ -353,6 +353,7 @@ namespace PCS.Communication
                         // Create a random socket and connect it to the client.
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                         udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+                        udpClient.Passphrase = HandshakePassphrase;
                         udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
                         udpClient.Provider.Connect(client);
 
@@ -435,7 +436,24 @@ namespace PCS.Communication
                 udpServer.Statistics.UpdateBytesReceived(udpServer.Provider.EndReceiveFrom(asyncResult, ref m_udpClientEndPoint));
                 udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
 
-                // TODO: Check endpoint with available client for match.
+                // Get a local copy of all connected clients.
+                TransportProvider<Socket>[] clients = null;
+                lock (m_udpClients)
+                {
+                    clients = new TransportProvider<Socket>[m_udpClients.Count];
+                    m_udpClients.Values.CopyTo(clients, 0);
+                }
+                
+                // Search connected clients for a client connected to the end-point from where this data is received.
+                foreach (TransportProvider<Socket> client in clients)
+                {
+                    if (client.Provider.RemoteEndPoint.Equals(m_udpClientEndPoint))
+                    {
+                        // Found a match, notify of data.
+                        OnReceiveClientDataComplete(client.ID, udpServer.ReceiveBuffer, udpServer.ReceiveBufferLength);
+                        break;
+                    }
+                }
 
                 // Resume receive operation on the server socket.
                 ReceivePayloadAnyAsync(udpServer);
@@ -496,7 +514,7 @@ namespace PCS.Communication
                     udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
 
                     // Received a goodbye message from the client.
-                    if (m_isGoodbye(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength))
+                    if (m_receivedGoodbye(udpClient))
                         throw new SocketException((int)SocketError.Disconnecting);
 
                     // Notify of received data and resume receive operation.
@@ -511,15 +529,18 @@ namespace PCS.Communication
             }
         }
 
-        private bool NoGoodbyeCheck(byte[] buffer, int offset, int length)
+        private bool NoGoodbyeCheck(TransportProvider<Socket> client)
         {
             return false;
         }
 
-        private bool DoGoodbyeCheck(byte[] buffer, int offset, int length)
+        private bool DoGoodbyeCheck(TransportProvider<Socket> client)
         {
             // Process data received in the buffer.
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, HandshakePassphrase, Compression);
+            int offset = client.ReceiveBufferOffset;
+            int length = client.ReceiveBufferLength;
+            byte[] buffer = client.ReceiveBuffer.BlockCopy(0, length);
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Passphrase, Compression);
 
             // Check if data is for goodbye message.
             return (new GoodbyeMessage().Initialize(buffer, offset, length) != -1);
