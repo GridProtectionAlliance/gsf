@@ -521,10 +521,33 @@ namespace PCS.Communication
                     OnReceiveClientDataComplete(udpClient.ID, udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
                     ReceivePayloadOneAsync(udpClient);
                 }
-                catch
+                catch (ObjectDisposedException)
                 {
-                    // Client disconnected so we'll process it's disconnect.
+                    // Terminate connection when client is disposed.
                     TerminateConnection(udpClient, true);
+                }
+                catch (SocketException ex)
+                {
+                    if (!Handshake && ex.SocketErrorCode == SocketError.ConnectionReset)
+                        // This occurs if client is not listening for data.
+                        ReceivePayloadOneAsync(udpClient);
+                    else
+                        // Terminate connection on other type of exception.
+                        TerminateConnection(udpClient, true);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        // For any other exception, notify and resume receive.
+                        ReceivePayloadOneAsync(udpClient);
+                        OnReceiveClientDataException(udpClient.ID, ex);
+                    }
+                    catch
+                    {
+                        // Terminate connection if resuming receiving fails.
+                        TerminateConnection(udpClient, true);
+                    }
                 }
             }
         }

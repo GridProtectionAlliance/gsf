@@ -610,10 +610,29 @@ namespace PCS.Communication
                         }
                     }
                 }
-                catch
+                catch (ObjectDisposedException)
                 {
-                    // Client disconnected so we'll process it's disconnect.
+                    // Terminate connection when client is disposed.
                     TerminateConnection(tcpClient, true);
+                }
+                catch (SocketException)
+                {
+                    // Terminate connection when socket exception is encountered.
+                    TerminateConnection(tcpClient, true);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        // For any other exception, notify and resume receive.
+                        ReceivePayloadAsync(tcpClient);
+                        OnReceiveClientDataException(tcpClient.ID, ex);
+                    }
+                    catch
+                    {
+                        // Terminate connection if resuming receiving fails.
+                        TerminateConnection(tcpClient, true);
+                    }
                 }
             }
         }
@@ -676,10 +695,29 @@ namespace PCS.Communication
                     OnReceiveClientDataComplete(tcpClient.ID, tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferLength);
                     ReceivePayloadUnawareAsync(tcpClient);
                 }
-                catch
+                catch (ObjectDisposedException)
                 {
-                    // Client disconnected so we'll process it's disconnect.
+                    // Terminate connection when client is disposed.
                     TerminateConnection(tcpClient, true);
+                }
+                catch (SocketException)
+                {
+                    // Terminate connection when socket exception is encountered.
+                    TerminateConnection(tcpClient, true);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        // For any other exception, notify and resume receive.
+                        ReceivePayloadAsync(tcpClient);
+                        OnReceiveClientDataException(tcpClient.ID, ex);
+                    }
+                    catch
+                    {
+                        // Terminate connection if resuming receiving fails.
+                        TerminateConnection(tcpClient, true);
+                    }
                 }
             }
         }
