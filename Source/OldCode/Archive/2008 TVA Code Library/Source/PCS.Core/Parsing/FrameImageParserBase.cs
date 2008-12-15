@@ -13,7 +13,8 @@
 //  03/28/2007 - Pinal C. Patel
 //       Original version of source code generated
 //  11/20/2008 - James R Carroll
-//       Generated original version of source code.
+//       Adapted for more generalized use via the following related base classes:
+//          BinaryImageParserBase => FrameImageParserBase => MultiSourceFrameImageParserBase.
 //
 //*******************************************************************************************************
 
