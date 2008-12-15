@@ -74,7 +74,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Creates a new instance of the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
-        public MultiSourceFrameImageParserBase()
+        protected MultiSourceFrameImageParserBase()
         {
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
