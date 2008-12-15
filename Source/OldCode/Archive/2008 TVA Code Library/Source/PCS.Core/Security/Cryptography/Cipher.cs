@@ -94,10 +94,9 @@ namespace PCS.Security.Cryptography
             if (string.IsNullOrEmpty(encryptionKey))
                 encryptionKey = StandardKey;
 
-            byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
-            byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
 
-            return Convert.ToBase64String(Encoding.Unicode.GetBytes(source).Encrypt(rgbKey, rgbIV, strength));
+            return Convert.ToBase64String(Encoding.Unicode.GetBytes(source).Encrypt(key, key, strength));
         }
 
         /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
@@ -302,10 +301,9 @@ namespace PCS.Security.Cryptography
 
             FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destinationFilename);
-            byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
-            byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
 
-            sourceFileStream.Encrypt(destFileStream, rgbKey, rgbIV, strength, progressHandler);
+            sourceFileStream.Encrypt(destFileStream, key, key, strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
@@ -333,10 +331,9 @@ namespace PCS.Security.Cryptography
             if (string.IsNullOrEmpty(source)) return null;
             if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
 
-            byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
-            byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
 
-            return Encoding.Unicode.GetString(Convert.FromBase64String(source).Decrypt(rgbKey, rgbIV, strength));
+            return Encoding.Unicode.GetString(Convert.FromBase64String(source).Decrypt(key, key, strength));
         }
 
         /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
@@ -556,10 +553,9 @@ namespace PCS.Security.Cryptography
 
             FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destinationFilename);
-            byte[] rgbKey = Encoding.ASCII.GetBytes(encryptionKey);
-            byte[] rgbIV = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
 
-            sourceFileStream.Decrypt(destFileStream, rgbKey, rgbIV, strength, progressHandler);
+            sourceFileStream.Decrypt(destFileStream, key, key, strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
