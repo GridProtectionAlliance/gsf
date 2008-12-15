@@ -34,6 +34,25 @@ using PCS.Security.Cryptography;
 namespace PCS.Communication
 {
     /// <summary>
+    /// Indicates the current state of the client.
+    /// </summary>
+    public enum ClientState
+    {
+        /// <summary>
+        /// Client is establishing connection.
+        /// </summary>
+        Connecting,
+        /// <summary>
+        /// Client has established connection.
+        /// </summary>
+        Connected,
+        /// <summary>
+        /// Client connection is terminated.
+        /// </summary>
+        Disconnected
+    }
+
+    /// <summary>
     /// Defines a client involved in server-client communication.
     /// </summary>
     public interface IClient : ISupportLifecycle
@@ -178,14 +197,14 @@ namespace PCS.Communication
         Guid ClientID { get; set; }
 
         /// <summary>
+        /// Gets the current <see cref="ClientState"/>.
+        /// </summary>
+        ClientState CurrentState { get; }
+
+        /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the client for the transportation of data with the server.
         /// </summary>
         TransportProtocol TransportProtocol { get; }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether the client is currently connected to the server.
-        /// </summary>
-        bool IsConnected { get; }
 
         /// <summary>
         /// Gets the total number of seconds for which the client has been connected to the server.

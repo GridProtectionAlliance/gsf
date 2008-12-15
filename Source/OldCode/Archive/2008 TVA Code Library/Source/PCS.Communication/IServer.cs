@@ -30,6 +30,21 @@ using PCS.Security.Cryptography;
 namespace PCS.Communication
 {
     /// <summary>
+    /// Indicates the current state of the server.
+    /// </summary>
+    public enum ServerState
+    {
+        /// <summary>
+        /// Server is running.
+        /// </summary>
+        Running,
+        /// <summary>
+        /// Server is not running.
+        /// </summary>
+        NotRunning
+    }
+
+    /// <summary>
     /// Defines a server involved in server-client communication.
     /// </summary>
     public interface IServer : ISupportLifecycle
@@ -185,6 +200,11 @@ namespace PCS.Communication
         Action<Guid, byte[], int> ReceiveClientDataHandler { get; set; }
 
         /// <summary>
+        /// Gets the current <see cref="ServerState"/>.
+        /// </summary>
+        ServerState CurrentState { get; }
+
+        /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
         /// </summary>
         TransportProtocol TransportProtocol { get; }
@@ -198,11 +218,6 @@ namespace PCS.Communication
         /// Gets the IDs of clients connected to the server.
         /// </summary>
         Guid[] ClientIDs { get; }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether the server is currently running.
-        /// </summary>
-        bool IsRunning { get; }
 
         /// <summary>
         /// Gets the time in seconds for which the server has been running.

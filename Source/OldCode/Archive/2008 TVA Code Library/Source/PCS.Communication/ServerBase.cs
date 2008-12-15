@@ -20,8 +20,7 @@
 //  02/19/2008 - Pinal C. Patel
 //       Added code to detect and avoid redundant calls to Dispose().
 //  09/29/2008 - James R Carroll
-//       Converted to C#.
-//
+//       Converted to C#.//
 //*******************************************************************************************************
 
 using System;
@@ -227,10 +226,10 @@ namespace PCS.Communication
         private string m_settingsCategory;
         private Encoding m_textEncoding;
         private Action<Guid, byte[], int> m_receiveClientDataHandler;
+        private ServerState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
         private List<Guid> m_clientIDs;
-        private bool m_isRunning;
         private long m_stopTime;
         private long m_startTime;
         private bool m_disposed;
@@ -245,6 +244,10 @@ namespace PCS.Communication
         /// </summary>
         protected ServerBase()
         {
+            m_serverID = Guid.NewGuid();
+            m_clientIDs = new List<Guid>();
+            m_textEncoding = Encoding.ASCII;
+            m_currentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
             m_handshake = DefaultHandshake;
             m_handshakeTimeout = DefaultHandshakeTimeout;
@@ -256,9 +259,6 @@ namespace PCS.Communication
             m_compression = DefaultCompression;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-            m_textEncoding = Encoding.ASCII;
-            m_serverID = Guid.NewGuid();
-            m_clientIDs = new List<Guid>();
         }
 
         /// <summary>
@@ -293,7 +293,7 @@ namespace PCS.Communication
                 ValidateConfigurationString(value);
 
                 m_configurationString = value;
-                if (m_isRunning)
+                if (m_currentState == ServerState.Running)
                 {
                     // Restart the server when configuration data is changed.
                     Stop();
@@ -579,13 +579,13 @@ namespace PCS.Communication
         {
             get
             {
-                return IsRunning;
+                return m_currentState == ServerState.Running;
             }
             set
             {
-                if (value && !IsRunning)
+                if (value && m_currentState != ServerState.Running)
                     Start();
-                else if (!value && IsRunning)
+                else if (!value && m_currentState == ServerState.Running)
                     Stop();
             }
         }
@@ -637,6 +637,17 @@ namespace PCS.Communication
         }
 
         /// <summary>
+        /// Gets the current <see cref="ServerState"/>.
+        /// </summary>
+        public ServerState CurrentState
+        {
+            get
+            {
+                return m_currentState;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
         /// </summary>
         [Browsable(false)]
@@ -676,18 +687,6 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets a boolean value that indicates whether the server is currently running.
-        /// </summary>
-        [Browsable(false)]
-        public virtual bool IsRunning
-        {
-            get
-            {
-                return m_isRunning;
-            }
-        }
-
-        /// <summary>
         /// Gets the time in seconds for which the server has been running.
         /// </summary>
         [Browsable(false)]
@@ -699,7 +698,7 @@ namespace PCS.Communication
 
                 if (m_startTime > 0)
                 {
-                    if (m_isRunning)
+                    if (m_currentState == ServerState.Running)
                         // Server is running.
                         serverRunTime = Ticks.ToSeconds(DateTime.Now.Ticks - m_startTime);
                     else
@@ -739,7 +738,7 @@ namespace PCS.Communication
                     status.AppendLine();
                 }
                 status.Append("              Server state: ");
-                status.Append(m_isRunning ? "Running" : "Not Running");
+                status.Append(m_currentState);
                 status.AppendLine();
                 status.Append("            Server runtime: ");
                 status.Append(Seconds.ToText(RunTime));
@@ -1046,7 +1045,7 @@ namespace PCS.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public virtual WaitHandle SendToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            if (m_isRunning)
+            if (m_currentState == ServerState.Running)
             {
                 // Pre-condition data as needed and then send it.
                 Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionPassphrase(clientID), m_compression);
@@ -1137,7 +1136,7 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnServerStarted()
         {
-            m_isRunning = true;
+            m_currentState = ServerState.Running;
             m_stopTime = 0;
             m_startTime = DateTime.Now.Ticks;   // Save the time when server is started.
 
@@ -1150,7 +1149,7 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnServerStopped()
         {
-            m_isRunning = false;
+            m_currentState = ServerState.NotRunning;
             m_stopTime = DateTime.Now.Ticks;    // Save the time when server is stopped.
 
             if (ServerStopped != null)

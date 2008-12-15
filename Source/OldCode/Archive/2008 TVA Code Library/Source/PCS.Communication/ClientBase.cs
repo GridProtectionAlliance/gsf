@@ -204,15 +204,15 @@ namespace PCS.Communication
         private string m_settingsCategory;
         private Encoding m_textEncoding;
         private Action<byte[], int> m_receiveDataHandler;
+        private ClientState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
         private Guid m_clientID;
-        private bool m_isConnected;
         private long m_connectTime;
         private long m_disconnectTime;
         private bool m_disposed;
         private bool m_initialized;
-        private ManualResetEvent m_connectHandle;
+        //private ManualResetEvent m_connectHandle;
 
         #endregion
 
@@ -223,6 +223,10 @@ namespace PCS.Communication
         /// </summary>
         protected ClientBase()
         {
+            m_serverID = Guid.Empty;
+            m_clientID = Guid.NewGuid();
+            m_textEncoding = Encoding.ASCII;
+            m_currentState = ClientState.Disconnected;
             m_maxConnectionAttempts = DefaultMaxConnectionAttempts;
             m_handshake = DefaultHandshake;
             m_handshakeTimeout = DefaultHandshakeTimeout;
@@ -234,10 +238,7 @@ namespace PCS.Communication
             m_compression = DefaultCompression;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-            m_textEncoding = Encoding.ASCII;
-            m_serverID = Guid.Empty;
-            m_clientID = Guid.NewGuid();
-            m_connectHandle = new ManualResetEvent(false);
+
         }
 
         /// <summary>
@@ -272,7 +273,7 @@ namespace PCS.Communication
                 ValidateConnectionString(value);
 
                 m_connectionString = value;
-                if (m_isConnected)
+                if (m_currentState == ClientState.Connected)
                 {
                     // Reconnect the client when connection data is changed.
                     Disconnect();
@@ -556,13 +557,13 @@ namespace PCS.Communication
         {
             get
             {
-                return IsConnected;
+                return m_currentState == ClientState.Connected;
             }
             set
             {
-                if (value && !IsConnected)
+                if (value && m_currentState == ClientState.Disconnected)
                     Connect();
-                else if (!value && IsConnected)
+                else if (!value && m_currentState != ClientState.Disconnected)
                     Disconnect();
             }
         }
@@ -648,6 +649,17 @@ namespace PCS.Communication
                 m_clientID = value;
             }
         }
+                
+        /// <summary>
+        /// Gets the current <see cref="ClientState"/>.
+        /// </summary>
+        public ClientState CurrentState 
+        {
+            get
+            {
+                return m_currentState;
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the client for the transportation of data with the server.
@@ -658,18 +670,6 @@ namespace PCS.Communication
             get
             {
                 return m_transportProtocol;
-            }
-        }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether the client is currently connected to the server.
-        /// </summary>
-        [Browsable(false)]
-        public virtual bool IsConnected
-        {
-            get
-            {
-                return m_isConnected;
             }
         }
 
@@ -685,14 +685,12 @@ namespace PCS.Communication
 
                 if (m_connectTime > 0)
                 {
-                    if (m_isConnected) // Client is connected to the server.
-                    {
+                    if (m_currentState == ClientState.Connected) 
+                        // Client is connected to the server.
                         clientConnectionTime = Ticks.ToSeconds(DateTime.Now.Ticks - m_connectTime);
-                    }
-                    else // Client is not connected to the server.
-                    {
+                    else 
+                        // Client is not connected to the server.
                         clientConnectionTime = Ticks.ToSeconds(m_disconnectTime - m_connectTime);
-                    }
                 }
 
                 return clientConnectionTime;
@@ -731,7 +729,7 @@ namespace PCS.Communication
                     status.AppendLine();
                 }
                 status.Append("              Client state: ");
-                status.Append(m_isConnected ? "Connected" : "Not Connected");
+                status.Append(m_currentState);
                 status.AppendLine();
                 status.Append("           Connection time: ");
                 status.Append(Seconds.ToText(ConnectionTime));
@@ -813,8 +811,13 @@ namespace PCS.Communication
             if (MaxConnectionAttempts == -1)
                 throw new InvalidOperationException("Synchronous connection cannot be attempted with MaxConnectionAttempts = -1.");
 
-            ConnectAsync();             // Start asynchronous connection attempt.
-            m_connectHandle.WaitOne();  // Block for connection process to complete.
+            // Start asynchronous connection attempt.
+            ConnectAsync();
+            // Block for connection process to complete.
+            while (m_currentState != ClientState.Connected)
+            {
+                Thread.Sleep(1000);
+            }
         }
 
         /// <summary>
@@ -974,7 +977,7 @@ namespace PCS.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public virtual WaitHandle SendAsync(byte[] data, int offset, int length)
         {
-            if (m_isConnected)
+            if (m_currentState == ClientState.Connected)
             {
                 // Pre-condition data as needed and then send it.
                 Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionPassphrase(), m_compression);
@@ -1017,7 +1020,7 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnConnecting()
         {
-            m_connectHandle.Reset();
+            m_currentState = ClientState.Connecting;
 
             if (Connecting != null)
                 Connecting(this, EventArgs.Empty);
@@ -1028,10 +1031,9 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnConnected()
         {
-            m_isConnected = true;
+            m_currentState = ClientState.Connected;
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
-            m_connectHandle.Set();
 
             if (Connected != null)
                 Connected(this, EventArgs.Empty);
@@ -1042,7 +1044,7 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnDisconnected()
         {
-            m_isConnected = false;
+            m_currentState = ClientState.Disconnected;
             m_serverID = Guid.Empty;
             m_disconnectTime = DateTime.Now.Ticks;  // Save the time when client was disconnected from the server.
 

@@ -131,7 +131,7 @@ namespace PCS.Communication
         /// </summary>
         public override void Stop()
         {
-            if (IsRunning)
+            if (CurrentState == ServerState.Running)
             {
                 DisconnectAll();                // Disconnection all clients.
                 m_udpServer.Provider.Close();   // Stop accepting new connections.
@@ -144,7 +144,7 @@ namespace PCS.Communication
         /// <exception cref="InvalidOperationException">Attempt is made to <see cref="Start()"/> the <see cref="UdpServer"/> when it is running.</exception>
         public override void Start()
         {
-            if (!IsRunning)
+            if (CurrentState == ServerState.NotRunning)
             {
                 // Initialize if unitialized.
                 Initialize();

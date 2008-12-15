@@ -109,7 +109,7 @@ namespace PCS.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (IsConnected)
+            if (CurrentState != ClientState.Disconnected)
             {
                 if (Handshake)
                 {
@@ -132,7 +132,7 @@ namespace PCS.Communication
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="UdpClient"/> when it is connected.</exception>
         public override void ConnectAsync()
         {
-            if (!IsConnected)
+            if (CurrentState == ClientState.Disconnected)
             {
                 // Initialize if unitialized.
                 Initialize();
@@ -193,7 +193,7 @@ namespace PCS.Communication
             }
             else
             {
-                throw new InvalidOperationException("Client is currently connected.");
+                throw new InvalidOperationException("Client is currently not disconnected.");
             }
         }
 
