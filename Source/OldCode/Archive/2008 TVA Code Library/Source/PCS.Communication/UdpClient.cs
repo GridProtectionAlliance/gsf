@@ -22,14 +22,11 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.ComponentModel;
-using System.Collections.Generic;
-using PCS.Configuration;
-using PCS.Threading;
 
 namespace PCS.Communication
 {
