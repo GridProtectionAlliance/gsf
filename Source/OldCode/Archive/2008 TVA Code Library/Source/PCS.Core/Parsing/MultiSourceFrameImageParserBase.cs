@@ -42,7 +42,7 @@ namespace PCS.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -76,9 +76,9 @@ namespace PCS.Parsing
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> class.
+        /// Creates a new instance of the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> class.
         /// </summary>
-        public MultiSourceFrameParserBase()
+        public MultiSourceFrameImageParserBase()
         {
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
@@ -110,7 +110,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets the current run-time statistics of the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
+        /// Gets the current run-time statistics of the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
         /// </summary>
         public virtual ProcessQueueStatistics CurrentStatistics
         {
@@ -121,7 +121,7 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Gets current status of <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
+        /// Gets current status of <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
         /// </summary>
         public override string Status
         {
@@ -141,7 +141,7 @@ namespace PCS.Parsing
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -248,7 +248,7 @@ namespace PCS.Parsing
         /// <remarks>
         /// <para>
         /// If the user has called <see cref="Start"/> method, this method will process all remaining buffers on the calling thread until all
-        /// queued buffers have been parsed - the <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>
+        /// queued buffers have been parsed - the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>
         /// will then be automatically stopped. This method is typically called on shutdown to make sure any remaining queued buffers get
         /// parsed before the class instance is destructed.
         /// </para>
@@ -258,7 +258,7 @@ namespace PCS.Parsing
         /// <see cref="Parse(TSourceIdentifier,byte[])"/> method), the flush call may never return (not a happy situtation on shutdown).
         /// </para>
         /// <para>
-        /// The <see cref="MultiSourceFrameParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction.
+        /// The <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction.
         /// If the user fails to call this method before the class is destructed, there may be data that remains unparsed in the internal buffer.
         /// </para>
         /// </remarks>
@@ -271,10 +271,16 @@ namespace PCS.Parsing
         /// Creates the internal buffer queue.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// This method is virtual to allow derived classes to customize the style of processing queue used when consumers
         /// choose to implement an internal buffer queue.  Default type is a real-time queue with the default settings.
         /// When overriding, use the <see cref="ParseQueuedBuffers"/> method for the <see cref="ProcessQueue{T}"/>) item
         /// processing delegate.
+        /// </para>
+        /// <para>
+        /// Note that current design only supports synchronous parsing - consumer overriding this method to return
+        /// an asynchronous (i.e., multi-threaded) process queue will need to redesign the processing delegate.
+        /// </para>
         /// </remarks>
         /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
         protected virtual ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> CreateBufferQueue()

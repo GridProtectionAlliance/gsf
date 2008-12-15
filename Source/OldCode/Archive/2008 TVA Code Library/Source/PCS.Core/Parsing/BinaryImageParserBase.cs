@@ -34,7 +34,7 @@ namespace PCS.Parsing
         #region [ Members ]
 
         /// <summary>
-        /// Specified the default value for the <see cref="ProtocolSyncBytes"/> property.
+        /// Specifies the default value for the <see cref="ProtocolSyncBytes"/> property.
         /// </summary>
         public static readonly byte[] DefaultProtocolSyncBytes = new byte[] { 0xAA };
 

@@ -88,6 +88,7 @@ namespace PCS.Parsing
 
         // Fields
         private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
+        private bool m_disposed;
 
         #endregion
 
@@ -127,6 +128,38 @@ namespace PCS.Parsing
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_outputTypes != null)
+                        {
+                            foreach (KeyValuePair<TTypeIdentifier, TypeInfo> item in m_outputTypes)
+                            {
+                                item.Value.CreateNew = null;
+                            }
+
+                            m_outputTypes.Clear();
+                        }
+                        m_outputTypes = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
         
         /// <summary>
         /// Start the data parser.
@@ -145,7 +178,7 @@ namespace PCS.Parsing
         /// <param name="implementations">Output type implementations to establish for the parser.</param>
         public void Start(IEnumerable<Type> implementations)
         {
-            // Call base class start method, this ensures "Initialize" has been called
+            // Call base class start method
             base.Start();
 
             ConstructorInfo typeCtor = null;
