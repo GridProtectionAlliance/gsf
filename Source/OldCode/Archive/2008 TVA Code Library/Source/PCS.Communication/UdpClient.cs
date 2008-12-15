@@ -134,7 +134,7 @@ namespace PCS.Communication
                 // Initialize if unitialized.
                 Initialize();
 
-                OnConnecting();
+                OnConnectionAttempt();
                 m_udpClient = new TransportProvider<Socket>();
                 m_udpClient.ID = this.ClientID;
                 m_udpClient.Passphrase = HandshakePassphrase;
@@ -184,7 +184,7 @@ namespace PCS.Communication
                 else
                 {
                     m_receivedGoodbye = NoGoodbyeCheck;
-                    OnConnected();
+                    OnConnectionEstablish();
                     ReceivePayloadAsync(m_udpClient);
                 }
             }
@@ -315,7 +315,7 @@ namespace PCS.Communication
                         udpClient.Passphrase = handshake.Passphrase;
 
                         // Client is now considered to be connected to the server.
-                        OnConnected();
+                        OnConnectionEstablish();
                         ReceivePayloadAsync(udpClient);
                     }
                     else
@@ -442,7 +442,7 @@ namespace PCS.Communication
         {
             client.Reset();
             if (raiseEvent)
-                OnDisconnected();
+                OnConnectionTerminate();
         }
 
         #endregion

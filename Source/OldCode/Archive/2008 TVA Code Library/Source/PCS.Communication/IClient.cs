@@ -58,19 +58,24 @@ namespace PCS.Communication
     public interface IClient : ISupportLifecycle, IProvideStatus
     {
         /// <summary>
-        /// Occurs when the client is trying to connect to the server.
+        /// Occurs when client is attempting connection to the server.
         /// </summary>
-        event EventHandler Connecting;
+        event EventHandler ConnectionAttempt;
 
         /// <summary>
-        /// Occurs when the client has connected to the server.
+        /// Occurs when client connection to the server is established.
         /// </summary>
-        event EventHandler Connected;
+        event EventHandler ConnectionEstablish;
 
         /// <summary>
-        /// Occurs when the client has disconnected from the server.
+        /// Occurs when client connection to the server is terminated.
         /// </summary>
-        event EventHandler Disconnected;
+        event EventHandler ConnectionTerminate;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered during connection attempt to the server.
+        /// </summary>
+        event EventHandler<EventArgs<Exception>> ConnectionException;
 
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.

@@ -228,7 +228,7 @@ namespace PCS.Communication
                 // Initialize if unitialized.
                 Initialize();
 
-                OnConnecting();
+                OnConnectionAttempt();
                 if (m_tcpClient.Provider == null)
                 {
                     // Create client socket to establish presence.
@@ -338,12 +338,13 @@ namespace PCS.Communication
                 else
                 {
                     // No handshaking to be performed.
-                    OnConnected();
+                    OnConnectionEstablish();
                     ReceivePayloadAsync(tcpClient);
                 }
             }
             catch (SocketException ex)
             {
+                OnConnectionException(ex);
                 if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
                     (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
                 {
@@ -356,9 +357,10 @@ namespace PCS.Communication
                     TerminateConnection(tcpClient, false);
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // This is highly unlikely, but we must handle this situation just in-case.
+                OnConnectionException(ex);
                 TerminateConnection(tcpClient, false);
             }
         }
@@ -438,7 +440,7 @@ namespace PCS.Communication
                         tcpClient.Passphrase = handshake.Passphrase;
 
                         // Client is now considered to be connected to the server.
-                        OnConnected();
+                        OnConnectionEstablish();
                         ReceivePayloadAsync(tcpClient);
                     }
                     else 
@@ -685,7 +687,7 @@ namespace PCS.Communication
         {
             client.Reset();
             if (raiseEvent)
-                OnDisconnected();
+                OnConnectionTerminate();
         }
 
         #endregion

@@ -104,25 +104,32 @@ namespace PCS.Communication
         // Events
 
         /// <summary>
-        /// Occurs when the client is trying to connect to the server.
+        /// Occurs when client is attempting connection to the server.
         /// </summary>
         [Category("Connection"),
-        Description("Occurs when the client is trying to connect to the server.")]
-        public event EventHandler Connecting;
+        Description("Occurs when client is attempting connection to the server.")]
+        public event EventHandler ConnectionAttempt;
 
         /// <summary>
-        /// Occurs when the client has connected to the server.
+        /// Occurs when client connection to the server is established.
         /// </summary>
         [Category("Connection"),
-        Description("Occurs when the client has connected to the server.")]
-        public event EventHandler Connected;
+        Description("Occurs when client connection to the server is established.")]
+        public event EventHandler ConnectionEstablish;
 
         /// <summary>
-        /// Occurs when the client has disconnected from the server.
+        /// Occurs when client connection to the server is terminated.
         /// </summary>
         [Category("Connection"),
-        Description("Occurs when the client has disconnected from the server.")]
-        public event EventHandler Disconnected;
+        Description("Occurs when client connection to the server is terminated")]
+        public event EventHandler ConnectionTerminate;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered during connection attempt to the server.
+        /// </summary>
+        [Category("Connection"),
+        Description("Occurs when an Exception is encountered during connection attempt to the server.")]
+        public event EventHandler<EventArgs<Exception>> ConnectionException;
 
         /// <summary>
         /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
@@ -1017,40 +1024,50 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="Connecting"/> event.
+        /// Raises the <see cref="ConnectionAttempt"/> event.
         /// </summary>
-        protected virtual void OnConnecting()
+        protected virtual void OnConnectionAttempt()
         {
             m_currentState = ClientState.Connecting;
 
-            if (Connecting != null)
-                Connecting(this, EventArgs.Empty);
+            if (ConnectionAttempt != null)
+                ConnectionAttempt(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="Connected"/> event.
+        /// Raises the <see cref="ConnectionEstablish"/> event.
         /// </summary>
-        protected virtual void OnConnected()
+        protected virtual void OnConnectionEstablish()
         {
             m_currentState = ClientState.Connected;
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
 
-            if (Connected != null)
-                Connected(this, EventArgs.Empty);
+            if (ConnectionEstablish != null)
+                ConnectionEstablish(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="Disconnected"/> event.
+        /// Raises the <see cref="ConnectionTerminate"/> event.
         /// </summary>
-        protected virtual void OnDisconnected()
+        protected virtual void OnConnectionTerminate()
         {
             m_currentState = ClientState.Disconnected;
             m_serverID = Guid.Empty;
             m_disconnectTime = DateTime.Now.Ticks;  // Save the time when client was disconnected from the server.
 
-            if (Disconnected != null)
-                Disconnected(this, EventArgs.Empty);
+            if (ConnectionTerminate != null)
+                ConnectionTerminate(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ConnectionException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ConnectionException"/> event.</param>
+        protected virtual void OnConnectionException(Exception ex)
+        {
+            if (ConnectionException != null)
+                ConnectionException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
