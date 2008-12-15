@@ -204,6 +204,15 @@ namespace PCS.Communication
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
+            // Backwards compatibility adjustments.
+            // New Format: Server=localhost:8888; Port=8989
+            // Old Format: Server=localhost; RemotePort=8888; LocalPort=8888
+            if (m_connectData.ContainsKey("localport") && !m_connectData.ContainsKey("port"))
+                m_connectData.Add("port", m_connectData["localport"]);
+
+            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remoteport"))
+                m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["remoteport"];
+
             if (!m_connectData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
 
