@@ -96,8 +96,12 @@ namespace PCS.Parsing
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the data parser object is currently enabled.
+        /// Gets or sets a boolean value that indicates whether the data parser is currently enabled.
         /// </summary>
+        /// <remarks>
+        /// Setting <see cref="Enabled"/> to true will start the <see cref="BinaryImageParserBase"/> if it is not started,
+        /// setting to false will stop the <see cref="BinaryImageParserBase"/> if it is started.
+        /// </remarks>
         public virtual bool Enabled
         {
             get
@@ -299,27 +303,30 @@ namespace PCS.Parsing
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
-            // thus the attempt below to "align" data stream to specified ProtocolSyncBytes.
-            if (StreamInitialized)
+            if (m_enabled)
             {
-                // Directly parse frame using calling thread (typically communications thread)
-                ParseBuffer(buffer, offset, count);
-            }
-            else
-            {
-                // Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte(s) to "line-up" data stream
-                int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
-
-                if (syncBytesPosition > -1)
+                // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
+                // thus the attempt below to "align" data stream to specified ProtocolSyncBytes.
+                if (StreamInitialized)
                 {
-                    ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
-                    StreamInitialized = true;
+                    // Directly parse frame using calling thread (typically communications thread)
+                    ParseBuffer(buffer, offset, count);
                 }
-            }
+                else
+                {
+                    // Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte(s) to "line-up" data stream
+                    int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
 
-            // Track total processed buffer images
-            m_buffersProcessed++;
+                    if (syncBytesPosition > -1)
+                    {
+                        ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
+                        StreamInitialized = true;
+                    }
+                }
+
+                // Track total processed buffer images
+                m_buffersProcessed++;
+            }
         }
 
         #region [ Unimplemented Stream Overrides ]

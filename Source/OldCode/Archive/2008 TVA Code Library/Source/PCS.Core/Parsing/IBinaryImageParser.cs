@@ -51,6 +51,11 @@ namespace PCS.Parsing
         void Stop();
 
         /// <summary>
+        /// Gets or sets a boolean value that indicates whether the data parser is currently enabled.
+        /// </summary>
+        bool Enabled { get; set; }
+
+        /// <summary>
         /// Gets the total number of buffer images processed so far.
         /// </summary>
         long TotalProcessedBuffers { get; }
