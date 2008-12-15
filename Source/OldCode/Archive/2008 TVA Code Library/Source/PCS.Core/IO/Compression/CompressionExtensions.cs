@@ -190,8 +190,15 @@ namespace PCS.IO.Compression
 
         /// <summary>Uncompress a byte array.</summary>
         /// <remarks>
+        /// <para>
         /// Uncompressed buffer size is requested because we must allocate a buffer large enough to hold resultant uncompressed
         /// data and user will have a better idea of what this will be since they compressed the original data.
+        /// </para>
+        /// <para>
+        /// Note that the <see cref="Stream"/> extensions will automatically serialize the compressed size into the data stream
+        /// making it unnecessary to track this value for large buffers.  You can simply use <c>new MemoryStream(byte[])</c> to
+        /// take advantage of this functionality when compressing and decompressing buffers.
+        /// </para>
         /// </remarks>
         public static byte[] Decompress(this byte[] source, int uncompressedSize)
         {
