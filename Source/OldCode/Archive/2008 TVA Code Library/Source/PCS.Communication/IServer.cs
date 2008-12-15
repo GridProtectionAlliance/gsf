@@ -47,7 +47,7 @@ namespace PCS.Communication
     /// <summary>
     /// Defines a server involved in server-client communication.
     /// </summary>
-    public interface IServer : ISupportLifecycle
+    public interface IServer : ISupportLifecycle, IProvideStatus
     {
         /// <summary>
         /// Occurs when the server is started.

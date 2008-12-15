@@ -39,7 +39,7 @@ namespace PCS.Communication
     /// Represents a server involved in server-client communication.
     /// </summary>
     [ToolboxBitmap(typeof(ServerBase))]
-    public abstract partial class ServerBase : Component, IServer, ISupportInitialize, IProvideStatus, IPersistSettings
+    public abstract partial class ServerBase : Component, IServer, ISupportInitialize, IPersistSettings
     {
         #region [ Members ]
 

@@ -55,7 +55,7 @@ namespace PCS.Communication
     /// <summary>
     /// Defines a client involved in server-client communication.
     /// </summary>
-    public interface IClient : ISupportLifecycle
+    public interface IClient : ISupportLifecycle, IProvideStatus
     {
         /// <summary>
         /// Occurs when the client is trying to connect to the server.
