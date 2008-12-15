@@ -32,6 +32,7 @@ using System.Threading;
 using PCS.Configuration;
 using PCS.IO.Compression;
 using PCS.Security.Cryptography;
+using System.Collections.Generic;
 
 namespace PCS.Communication
 {
@@ -1153,56 +1154,56 @@ namespace PCS.Communication
 
         #region [ Static ]
 
-        ///// <summary>
-        ///// Create a communications client
-        ///// </summary>
-        ///// <remarks>
-        ///// Note that typical connection string should be prefixed with a "protocol=tcp", "protocol=udp", "protocol=serial" or "protocol=file"
-        ///// </remarks>
-        //public static IClient Create(string connectionString)
-        //{
-        //    Dictionary<string, string> connectionData = connectionString.ParseKeyValuePairs();
-        //    IClient client = null;
-        //    string protocol;
+        /// <summary>
+        /// Create a communications client
+        /// </summary>
+        /// <remarks>
+        /// Note that typical connection string should be prefixed with a "protocol=tcp", "protocol=udp", "protocol=serial" or "protocol=file"
+        /// </remarks>
+        public static IClient Create(string connectionString)
+        {
+            Dictionary<string, string> connectionData = connectionString.ParseKeyValuePairs();
+            IClient client = null;
+            string protocol;
 
-        //    if (connectionData.TryGetValue("protocol", out protocol))
-        //    {
-        //        connectionData.Remove("protocol");
-        //        StringBuilder settings = new StringBuilder();
+            if (connectionData.TryGetValue("protocol", out protocol))
+            {
+                connectionData.Remove("protocol");
+                StringBuilder settings = new StringBuilder();
 
-        //        foreach (string key in connectionData.Keys)
-        //        {
-        //            settings.Append(key);
-        //            settings.Append("=");
-        //            settings.Append(connectionData[key]);
-        //            settings.Append(";");
-        //        }
+                foreach (string key in connectionData.Keys)
+                {
+                    settings.Append(key);
+                    settings.Append("=");
+                    settings.Append(connectionData[key]);
+                    settings.Append(";");
+                }
 
-        //        switch (protocol.ToLower())
-        //        {
-        //            case "tcp":
-        //                client = new TcpClient(settings.ToString());
-        //                break;
-        //            case "udp":
-        //                client = new UdpClient(settings.ToString());
-        //                break;
-        //            case "serial":
-        //                client = new SerialClient(settings.ToString());
-        //                break;
-        //            case "file":
-        //                client = new FileClient(settings.ToString());
-        //                break;
-        //            default:
-        //                throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        throw new ArgumentException("Transport protocol must be specified.");
-        //    }
+                switch (protocol.ToLower())
+                {
+                    case "tcp":
+                        client = new TcpClient(settings.ToString());
+                        break;
+                    case "udp":
+                        client = new UdpClient(settings.ToString());
+                        break;
+                    //case "serial":
+                    //    client = new SerialClient(settings.ToString());
+                    //    break;
+                    //case "file":
+                    //    client = new FileClient(settings.ToString());
+                    //    break;
+                    default:
+                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Transport protocol must be specified.");
+            }
 
-        //    return client;
-        //}
+            return client;
+        }
 
         #endregion
     }

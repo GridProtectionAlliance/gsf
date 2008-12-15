@@ -1293,50 +1293,50 @@ namespace PCS.Communication
 
         #region [ Static ]
 
-        ///// <summary>
-        ///// Create a communications server
-        ///// </summary>
-        ///// <remarks>
-        ///// Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
-        ///// </remarks>
-        //public static IServer Create(string configurationString)
-        //{
-        //    Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();
-        //    IServer server = null;
-        //    string protocol;
+        /// <summary>
+        /// Create a communications server
+        /// </summary>
+        /// <remarks>
+        /// Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
+        /// </remarks>
+        public static IServer Create(string configurationString)
+        {
+            Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();
+            IServer server = null;
+            string protocol;
 
-        //    if (configurationData.TryGetValue("protocol", out protocol))
-        //    {
-        //        configurationData.Remove("protocol");
-        //        StringBuilder settings = new StringBuilder();
+            if (configurationData.TryGetValue("protocol", out protocol))
+            {
+                configurationData.Remove("protocol");
+                StringBuilder settings = new StringBuilder();
 
-        //        foreach (string key in configurationData.Keys)
-        //        {
-        //            settings.Append(key);
-        //            settings.Append("=");
-        //            settings.Append(configurationData[key]);
-        //            settings.Append(";");
-        //        }
+                foreach (string key in configurationData.Keys)
+                {
+                    settings.Append(key);
+                    settings.Append("=");
+                    settings.Append(configurationData[key]);
+                    settings.Append(";");
+                }
 
-        //        switch (protocol.ToLower())
-        //        {
-        //            case "tcp":
-        //                server = new TcpServer(settings.ToString());
-        //                break;
-        //            case "udp":
-        //                server = new UdpServer(settings.ToString());
-        //                break;
-        //            default:
-        //                throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        throw new ArgumentException("Transport protocol must be specified.");
-        //    }
+                switch (protocol.ToLower())
+                {
+                    case "tcp":
+                        server = new TcpServer(settings.ToString());
+                        break;
+                    case "udp":
+                        server = new UdpServer(settings.ToString());
+                        break;
+                    default:
+                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Transport protocol must be specified.");
+            }
 
-        //    return server;
-        //}
+            return server;
+        }
 
         #endregion
 

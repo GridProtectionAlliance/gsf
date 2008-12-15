@@ -41,8 +41,14 @@ namespace PCS.Communication
 
         // Constants
 
-        public const int DefaultReceiveBufferSize = 32768;
+        /// <summary>
+        /// Specifies the default value for the <see cref="ServerBase.ReceiveBufferSize"/> property.
+        /// </summary>
+        public new const int DefaultReceiveBufferSize = 32768;
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="ServerBase.ConfigurationString"/> property.
+        /// </summary>
         public const string DefaultConfigurationString = "Port=8888; Clients=localhost:8989";
 
         //public const bool DefaultDestinationReachableCheck = false;

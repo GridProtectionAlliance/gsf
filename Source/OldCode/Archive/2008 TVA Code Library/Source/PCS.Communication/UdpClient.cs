@@ -45,7 +45,7 @@ namespace PCS.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ReceiveBufferSize"/> property.
         /// </summary>
-        public const int DefaultReceiveBufferSize = 32768;
+        public new const int DefaultReceiveBufferSize = 32768;
 
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
