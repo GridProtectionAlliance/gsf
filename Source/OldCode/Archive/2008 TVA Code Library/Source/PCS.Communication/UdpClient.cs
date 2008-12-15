@@ -76,7 +76,7 @@ namespace PCS.Communication
         /// </summary>
         /// <param name="connectString">Connect string of the client. See <see cref="DefaultConnectionString"/> for format.</param>
         public UdpClient(string connectString)
-            : base(TransportProtocol.Tcp, connectString)
+            : base(TransportProtocol.Udp, connectString)
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
         }
