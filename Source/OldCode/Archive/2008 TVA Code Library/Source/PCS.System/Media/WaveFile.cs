@@ -126,7 +126,7 @@ namespace System.Media
         /// <summary>24-bits per sample</summary>
         Bits24 = 24,
         /// <summary>32-bits per sample</summary>
-        Bits32 = 32,
+        Bits32 = 32
     }
 
     /// <summary>
