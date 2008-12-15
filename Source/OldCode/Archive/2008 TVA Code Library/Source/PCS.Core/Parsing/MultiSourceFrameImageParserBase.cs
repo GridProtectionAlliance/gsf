@@ -53,12 +53,8 @@ namespace PCS.Parsing
         /// that the data image was for.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// <see cref="EventArgs{T1, T2}.Argument1"/> is the ID of the source for the data image.
-        /// </para>
-        /// <para>
-        /// <see cref="EventArgs{T1, T2}.Argument2"/> is a list of objects deserialized from the data image.
-        /// </para>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the source for the data image.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is a list of objects deserialized from the data image.
         /// </remarks>
         [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
         public new event EventHandler<EventArgs<TSourceIdentifier, ICollection<TOutputType>>> DataParsed;
