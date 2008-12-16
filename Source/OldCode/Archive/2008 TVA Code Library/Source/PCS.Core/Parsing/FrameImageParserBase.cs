@@ -71,7 +71,7 @@ namespace PCS.Parsing
 
         /// <summary>
         /// Occurs when a data image is deserialized successfully to one of the output types that the data
-        /// image represented.
+        /// image represents.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the object that was deserialized from the binary image.
