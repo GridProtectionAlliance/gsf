@@ -225,7 +225,7 @@ namespace PCS.Communication
         private bool m_persistSettings;
         private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private Action<Guid, byte[], int> m_receiveClientDataHandler;
+        private Action<Guid,byte[],int,int> m_receiveClientDataHandler;
         private ServerState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
@@ -619,12 +619,13 @@ namespace PCS.Communication
         /// <para>
         /// arg1 in <see cref="ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
         /// arg2 in <see cref="ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
-        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
+        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
+        /// arg4 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
         /// </para>
         /// </remarks>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Action<Guid, byte[], int> ReceiveClientDataHandler
+        public virtual Action<Guid,byte[],int,int> ReceiveClientDataHandler
         {
             get
             {
@@ -1255,7 +1256,7 @@ namespace PCS.Communication
         {
             if (m_receiveClientDataHandler != null)
             {
-                m_receiveClientDataHandler(clientID, data, size);
+                m_receiveClientDataHandler(clientID, data, 0, size);
             }
             else
             {

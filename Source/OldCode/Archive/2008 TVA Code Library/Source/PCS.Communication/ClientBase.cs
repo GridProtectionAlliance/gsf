@@ -211,7 +211,7 @@ namespace PCS.Communication
         private bool m_persistSettings;
         private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private Action<byte[], int> m_receiveDataHandler;
+        private Action<byte[],int,int> m_receiveDataHandler;
         private ClientState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
@@ -604,12 +604,13 @@ namespace PCS.Communication
         /// </para>
         /// <para>
         /// arg1 in <see cref="ReceiveDataHandler"/> is the buffer containing the data received from the server.<br/>
-        /// arg2 in <see cref="ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1) starting at index 0.
+        /// arg2 in <see cref="ReceiveDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
+        /// arg3 in <see cref="ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1) starting at index 0.
         /// </para>
         /// </remarks>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Action<byte[], int> ReceiveDataHandler
+        public virtual Action<byte[],int,int> ReceiveDataHandler
         {
             get
             {
@@ -1134,7 +1135,7 @@ namespace PCS.Communication
         {
             if (m_receiveDataHandler != null)
             {
-                m_receiveDataHandler(data, size);
+                m_receiveDataHandler(data, 0, size);
             }
             else
             {
