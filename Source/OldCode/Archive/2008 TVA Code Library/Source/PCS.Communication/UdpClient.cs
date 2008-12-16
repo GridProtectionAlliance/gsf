@@ -184,7 +184,7 @@ namespace PCS.Communication
                 else
                 {
                     m_receivedGoodbye = NoGoodbyeCheck;
-                    OnConnectionEstablish();
+                    OnConnectionEstablished();
                     ReceivePayloadAsync(m_udpClient);
                 }
             }
@@ -315,7 +315,7 @@ namespace PCS.Communication
                         udpClient.Passphrase = handshake.Passphrase;
 
                         // Client is now considered to be connected to the server.
-                        OnConnectionEstablish();
+                        OnConnectionEstablished();
                         ReceivePayloadAsync(udpClient);
                     }
                     else
@@ -442,7 +442,7 @@ namespace PCS.Communication
         {
             client.Reset();
             if (raiseEvent)
-                OnConnectionTerminate();
+                OnConnectionTerminated();
         }
 
         #endregion

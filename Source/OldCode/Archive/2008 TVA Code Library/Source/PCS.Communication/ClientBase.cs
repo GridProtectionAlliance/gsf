@@ -1037,7 +1037,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ConnectionEstablished"/> event.
         /// </summary>
-        protected virtual void OnConnectionEstablish()
+        protected virtual void OnConnectionEstablished()
         {
             m_currentState = ClientState.Connected;
             m_disconnectTime = 0;
@@ -1050,7 +1050,7 @@ namespace PCS.Communication
         /// <summary>
         /// Raises the <see cref="ConnectionTerminated"/> event.
         /// </summary>
-        protected virtual void OnConnectionTerminate()
+        protected virtual void OnConnectionTerminated()
         {
             m_currentState = ClientState.Disconnected;
             m_serverID = Guid.Empty;

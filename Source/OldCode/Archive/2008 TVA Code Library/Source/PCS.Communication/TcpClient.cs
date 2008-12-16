@@ -338,7 +338,7 @@ namespace PCS.Communication
                 else
                 {
                     // No handshaking to be performed.
-                    OnConnectionEstablish();
+                    OnConnectionEstablished();
                     ReceivePayloadAsync(tcpClient);
                 }
             }
@@ -440,7 +440,7 @@ namespace PCS.Communication
                         tcpClient.Passphrase = handshake.Passphrase;
 
                         // Client is now considered to be connected to the server.
-                        OnConnectionEstablish();
+                        OnConnectionEstablished();
                         ReceivePayloadAsync(tcpClient);
                     }
                     else 
@@ -687,7 +687,7 @@ namespace PCS.Communication
         {
             client.Reset();
             if (raiseEvent)
-                OnConnectionTerminate();
+                OnConnectionTerminated();
         }
 
         #endregion
