@@ -176,7 +176,7 @@ namespace PCS.Parsing
         /// Starts the data parser given the specified type implementations.
         /// </summary>
         /// <param name="implementations">Output type implementations to establish for the parser.</param>
-        public void Start(IEnumerable<Type> implementations)
+        public virtual void Start(IEnumerable<Type> implementations)
         {
             // Call base class start method
             base.Start();
