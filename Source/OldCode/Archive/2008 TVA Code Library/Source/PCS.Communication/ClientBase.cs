@@ -115,14 +115,14 @@ namespace PCS.Communication
         /// </summary>
         [Category("Connection"),
         Description("Occurs when client connection to the server is established.")]
-        public event EventHandler ConnectionEstablish;
+        public event EventHandler ConnectionEstablished;
 
         /// <summary>
         /// Occurs when client connection to the server is terminated.
         /// </summary>
         [Category("Connection"),
         Description("Occurs when client connection to the server is terminated")]
-        public event EventHandler ConnectionTerminate;
+        public event EventHandler ConnectionTerminated;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered during connection attempt to the server.
@@ -1035,7 +1035,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="ConnectionEstablish"/> event.
+        /// Raises the <see cref="ConnectionEstablished"/> event.
         /// </summary>
         protected virtual void OnConnectionEstablish()
         {
@@ -1043,12 +1043,12 @@ namespace PCS.Communication
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
 
-            if (ConnectionEstablish != null)
-                ConnectionEstablish(this, EventArgs.Empty);
+            if (ConnectionEstablished != null)
+                ConnectionEstablished(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="ConnectionTerminate"/> event.
+        /// Raises the <see cref="ConnectionTerminated"/> event.
         /// </summary>
         protected virtual void OnConnectionTerminate()
         {
@@ -1056,8 +1056,8 @@ namespace PCS.Communication
             m_serverID = Guid.Empty;
             m_disconnectTime = DateTime.Now.Ticks;  // Save the time when client was disconnected from the server.
 
-            if (ConnectionTerminate != null)
-                ConnectionTerminate(this, EventArgs.Empty);
+            if (ConnectionTerminated != null)
+                ConnectionTerminated(this, EventArgs.Empty);
         }
 
         /// <summary>

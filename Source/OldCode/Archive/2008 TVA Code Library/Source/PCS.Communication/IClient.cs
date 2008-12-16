@@ -65,12 +65,12 @@ namespace PCS.Communication
         /// <summary>
         /// Occurs when client connection to the server is established.
         /// </summary>
-        event EventHandler ConnectionEstablish;
+        event EventHandler ConnectionEstablished;
 
         /// <summary>
         /// Occurs when client connection to the server is terminated.
         /// </summary>
-        event EventHandler ConnectionTerminate;
+        event EventHandler ConnectionTerminated;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered during connection attempt to the server.
