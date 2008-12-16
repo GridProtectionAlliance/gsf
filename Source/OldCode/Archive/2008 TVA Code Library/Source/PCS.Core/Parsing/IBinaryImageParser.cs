@@ -22,7 +22,7 @@ namespace PCS.Parsing
     /// <summary>
     /// This interface represents the protocol independent representation of a streaming data parser.
     /// </summary>
-    public interface IBinaryImageParser : IProvideStatus
+    public interface IBinaryImageParser : IProvideStatus, IDisposable
     {
         /// <summary>
         /// Occurs when data image fails deserialized due to an exception.
