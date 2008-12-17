@@ -106,14 +106,14 @@ namespace PCS.Communication
         // Constants
 
         /// <summary>
-        /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
-        /// </summary>
-        public const string DefaultConnectionString = "Server=localhost; Port=8888";
-
-        /// <summary>
         /// Specifies the default value for the <see cref="PayloadAware"/> property.
         /// </summary>
         public const bool DefaultPayloadAware = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
+        /// </summary>
+        public const string DefaultConnectionString = "Server=localhost; Port=8888";
 
         // Fields
         private bool m_payloadAware;
