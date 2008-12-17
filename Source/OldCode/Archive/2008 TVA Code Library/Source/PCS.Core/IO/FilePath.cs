@@ -20,6 +20,8 @@
 //       Converted to C#.
 //  10/24/2008 - Pinal C. Patel
 //       Edited code comments.
+//  12/17/2008 - Russell F. Robertson
+//       Fixed bug in GetFilePatternRegularExpression().
 //
 //*******************************************************************************************************
 
