@@ -154,11 +154,6 @@ namespace PCS.Communication
         public const bool DefaultAutoRepeat = false;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="StartingOffset"/> property.
-        /// </summary>
-        public const long DefaultStartingOffset = 0;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="ReceiveOnDemand"/> property.
         /// </summary>
         public const bool DefaultReceiveOnDemand = false;
@@ -169,15 +164,38 @@ namespace PCS.Communication
         public const int DefaultReceiveInterval = -1;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="StartingOffset"/> property.
+        /// </summary>
+        public const long DefaultStartingOffset = 0;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="FileOpenMode"/> property.
+        /// </summary>
+        public const FileMode DefaultFileOpenMode = FileMode.OpenOrCreate;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="FileAccessMode"/> property.
+        /// </summary>
+        public const FileAccess DefaultFileAccessMode = FileAccess.ReadWrite;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="FileShareMode"/> property.
+        /// </summary>
+        public const FileShare DefaultFileShareMode = FileShare.ReadWrite;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "File=DataFile.txt";
 
         // Fields
         private bool m_autoRepeat;
-        private long m_startingOffset;
         private bool m_receiveOnDemand;
         private double m_receiveInterval;
+        private long m_startingOffset;
+        private FileMode m_fileOpenMode;
+        private FileShare m_fileShareMode;
+        private FileAccess m_fileAccessMode;
         private TransportProvider<FileStream> m_fileClient;
         private Dictionary<string, string> m_connectData;
         private System.Timers.Timer m_receiveDataTimer;
@@ -207,9 +225,12 @@ namespace PCS.Communication
             : base(TransportProtocol.File, connectString)
         {
             m_autoRepeat = DefaultAutoRepeat;
-            m_startingOffset = DefaultStartingOffset;
             m_receiveOnDemand = DefaultReceiveOnDemand;
             m_receiveInterval = DefaultReceiveInterval;
+            m_startingOffset = DefaultStartingOffset;
+            m_fileOpenMode = DefaultFileOpenMode;
+            m_fileAccessMode = DefaultFileAccessMode;
+            m_fileShareMode = DefaultFileShareMode;
             m_fileClient = new TransportProvider<FileStream>();
             m_receiveDataTimer = new System.Timers.Timer();
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
@@ -234,28 +255,6 @@ namespace PCS.Communication
             set
             {
                 m_autoRepeat = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the starting point relative to the beginning of the file from where the data is to be received (read).
-        /// </summary>
-        /// <exception cref="ArgumentException">The value specified is not a positive number.</exception>
-        [Category("Data"),
-        DefaultValue(DefaultStartingOffset),
-        Description("The starting point relative to the beginning of the file from where the data is to be received (read).")]
-        public long StartingOffset
-        {
-            get
-            {
-                return m_startingOffset;
-            }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be positive.");
-
-                m_startingOffset = value;
             }
         }
 
@@ -303,6 +302,73 @@ namespace PCS.Communication
                     m_receiveInterval = -1;
                 else
                     m_receiveInterval = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the starting point relative to the beginning of the file from where the data is to be received (read).
+        /// </summary>
+        /// <exception cref="ArgumentException">The value specified is not a positive number.</exception>
+        [Category("File"),
+        DefaultValue(DefaultStartingOffset),
+        Description("The starting point relative to the beginning of the file from where the data is to be received (read).")]
+        public long StartingOffset
+        {
+            get
+            {
+                return m_startingOffset;
+            }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("Value must be positive.");
+
+                m_startingOffset = value;
+            }
+        }
+
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public FileMode FileOpenMode
+        {
+            get
+            {
+                return m_fileOpenMode;
+            }
+            set
+            {
+                m_fileOpenMode = value;
+            }
+        }
+
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public FileShare FileShareMode
+        {
+            get
+            {
+                return m_fileShareMode;
+            }
+            set
+            {
+                m_fileShareMode = value;
+            }
+        }
+
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public FileAccess FileAccessMode
+        {
+            get
+            {
+                return m_fileAccessMode;
+            }
+            set
+            {
+                m_fileAccessMode = value;
             }
         }
 
@@ -362,7 +428,8 @@ namespace PCS.Communication
         {
             if (CurrentState == ClientState.Disconnected)
             {
-                m_fileClient.Passphrase = HandshakePassphrase;
+                m_fileClient.ID = this.ClientID;
+                m_fileClient.Passphrase = this.HandshakePassphrase;
                 m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 #if ThreadTracking
                 m_connectionThread = new ManagedThread(OpenFile);
@@ -378,7 +445,6 @@ namespace PCS.Communication
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
             WaitHandle handle;
@@ -435,7 +501,7 @@ namespace PCS.Communication
                 {
                     OnConnectionAttempt(); ;
 
-                    m_fileClient.Provider = new FileStream(m_connectData["file"], FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    m_fileClient.Provider = new FileStream(m_connectData["file"], m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
                     m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); // Move to the specified offset.
 
                     OnConnectionEstablished();
@@ -530,7 +596,7 @@ namespace PCS.Communication
                 lock (m_fileClient)
                 {
                     m_fileClient.Provider.EndWrite(asyncResult);
-                    m_fileClient.Provider.Flush();                    
+                    m_fileClient.Provider.Flush();
                 }
                 OnSendDataComplete();
             }
