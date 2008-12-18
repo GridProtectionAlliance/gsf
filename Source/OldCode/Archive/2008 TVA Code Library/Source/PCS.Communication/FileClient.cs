@@ -154,8 +154,8 @@ namespace PCS.Communication
         /// <remarks>
         /// <see cref="ReceiveInterval"/> will be set to -1 when <see cref="ReceiveOnDemand"/> is enabled.
         /// </remarks>
-        [Category("Data"), 
-        DefaultValue(DefaultReceiveTimeout), 
+        [Category("Data"),
+        DefaultValue(DefaultReceiveTimeout),
         Description("Indicates whether receiving (reading) of data will be initiated manually by calling ReceiveData().")]
         public bool ReceiveOnDemand
         {
@@ -177,8 +177,8 @@ namespace PCS.Communication
         /// Gets or sets the number of milliseconds to pause before receiving (reading) the next available set of data.
         /// </summary>
         /// <remarks>Set <see cref="ReceiveInterval"/> = -1 to receive (read) data continuously without pausing.</remarks>
-        [Category("Data"), 
-        DefaultValue(DefaultReceiveInterval), 
+        [Category("Data"),
+        DefaultValue(DefaultReceiveInterval),
         Description("The number of milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing.")]
         public double ReceiveInterval
         {
@@ -192,6 +192,18 @@ namespace PCS.Communication
                     m_receiveInterval = -1;
                 else
                     m_receiveInterval = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="TransportProvider{FileStream}"/> object for the <see cref="FileClient"/>.
+        /// </summary>
+        [Browsable(false)]
+        public TransportProvider<FileStream> Client
+        {
+            get
+            {
+                return m_fileClient;
             }
         }
 
@@ -239,22 +251,15 @@ namespace PCS.Communication
         {
             if (CurrentState == ClientState.Disconnected)
             {
-                if (File.Exists(m_connectData["file"]))
-                {
-                    m_fileClient.Passphrase = HandshakePassphrase;
-                    m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+                m_fileClient.Passphrase = HandshakePassphrase;
+                m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 #if ThreadTracking
-                    m_connectionThread = new ManagedThread(OpenFile);
-                    m_connectionThread.Name = "PCS.Communication.FileClient.ConnectToFile()";
+                m_connectionThread = new ManagedThread(OpenFile);
+                m_connectionThread.Name = "PCS.Communication.FileClient.ConnectToFile()";
 #else
                     m_connectionThread = new Thread(ConnectToFile);
 #endif
-                    m_connectionThread.Start();
-                }
-                else
-                {
-                    throw new FileNotFoundException(m_connectData["file"] + " does not exist.");
-                }
+                m_connectionThread.Start();
             }
             else
             {
@@ -265,7 +270,23 @@ namespace PCS.Communication
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            throw new NotSupportedException();
+            WaitHandle handle;
+
+            // Send payload to the file asynchronously.
+            lock (m_fileClient.Provider)
+            {
+                handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
+            }
+
+            // Notify that the send operation has started.
+            m_fileClient.SendBuffer = data;
+            m_fileClient.SendBufferOffset = offset;
+            m_fileClient.SendBufferLength = length;
+            m_fileClient.Statistics.UpdateBytesSent(m_fileClient.SendBufferLength);
+            OnSendDataStart();
+
+            // Return the async handle that can be used to wait for the async operation to complete.
+            return handle;
         }
 
         /// <summary>
@@ -303,10 +324,10 @@ namespace PCS.Communication
                 {
                     OnConnectionAttempt(); ;
 
-                    m_fileClient.Provider = new FileStream(m_connectData["file"], FileMode.Open);
+                    m_fileClient.Provider = new FileStream(m_connectData["file"], FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
                     m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); // Move to the specified offset.
 
-                    OnConnectionEstablished() ;
+                    OnConnectionEstablished();
 
                     if (!m_receiveOnDemand)
                     {
@@ -318,8 +339,12 @@ namespace PCS.Communication
                         }
                         else
                         {
-                            // We need to start receiving data continuously.
-                            ReadData();
+                            while (true)
+                            {
+                                // We need to start receiving data continuously.
+                                ReadData();
+                                Thread.Sleep(1000);
+                            }
                         }
                     }
 
@@ -327,10 +352,12 @@ namespace PCS.Communication
                 }
                 catch (ThreadAbortException)
                 {
-                    break; // We must abort connecting to the file.
+                    // We must abort connecting to the file.
+                    break;
                 }
                 catch (Exception ex)
                 {
+                    // We must keep retrying connecting to the file.
                     connectionAttempts++;
                     OnConnectionException(ex);
                 }
@@ -349,7 +376,10 @@ namespace PCS.Communication
                 while (m_fileClient.Provider.Position < m_fileClient.Provider.Length)
                 {
                     // Retrieve data from the file stream.
-                    m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, 0, m_fileClient.ReceiveBuffer.Length);
+                    lock (m_fileClient.Provider)
+                    {
+                        m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, 0, m_fileClient.ReceiveBuffer.Length);
+                    }
                     m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.ReceiveBufferLength);
 
                     OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferLength);
@@ -368,9 +398,29 @@ namespace PCS.Communication
                     }
                 }
             }
-            catch
+            catch (ThreadAbortException)
             {
-                // Exit gracefully when an exception is encountered while receiving data.
+
+            }
+            catch (Exception ex)
+            {
+                OnReceiveDataException(ex);
+            }
+        }
+
+        private void SendDataAsyncCallback(IAsyncResult asyncResult)
+        {
+            try
+            {
+                // Send operation is complete.
+                m_fileClient.Provider.EndWrite(asyncResult);
+                m_fileClient.Provider.Flush();
+                OnSendDataComplete();
+            }
+            catch (Exception ex)
+            {
+                // Send operation failed to complete.
+                OnSendDataException(ex);
             }
         }
 
