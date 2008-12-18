@@ -377,7 +377,14 @@ namespace System.Media
         public new WaveFormatChunk Clone()
         {
             WaveFormatChunk waveFormatChunk = new WaveFormatChunk(m_sampleRate, m_bitsPerSample, m_channels, m_audioFormat);
-            waveFormatChunk.ExtraParameters = m_extraParameters;
+
+            if (m_extraParameters != null)
+            {
+                byte[] extraParameters = new byte[m_extraParameters.Length];
+                Buffer.BlockCopy(m_extraParameters, 0, extraParameters, 0, m_extraParameters.Length);
+                waveFormatChunk.ExtraParameters = extraParameters;
+            }            
+
             return waveFormatChunk;
         }
 
