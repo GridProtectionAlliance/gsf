@@ -280,10 +280,12 @@ namespace PCS.Parsing
 
                 // If data type was able to be parsed, include parsed header length in parsed frame length
                 if (parsedFrameLength > 0)
+                {
                     parsedFrameLength += parsedHeaderLength;
 
-                // Expose parsed type to consumer
-                OnDataParsed(instance);
+                    // Expose parsed type to consumer
+                    OnDataParsed(instance);
+                }
             }
             else
             {
@@ -297,7 +299,8 @@ namespace PCS.Parsing
         }
         
         /// <summary>
-        /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented in the binary image.
+        /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented
+        /// in the binary image.
         /// </summary>
         /// <param name="buffer">Buffer containing data to parse.</param>
         /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
@@ -319,8 +322,9 @@ namespace PCS.Parsing
         /// </para>
         /// <para>
         /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), set <paramref name="commonHeader"/>
-        /// to null and return 0.  If protocol allows frame length to be determined at the time common header is being parsed it will be optimal to prevent
-        /// further parsing by executing the same action (i.e., set <paramref name="commonHeader"/> = null and return 0).
+        /// to null and return 0.  If the protocol allows frame length to be determined at the time common header is being parsed and there is not enough
+        /// buffer to parse the entire frame, it will be optimal to prevent further parsing by executing the same action, that is set
+        /// <paramref name="commonHeader"/> = null and return 0.
         /// </para>
         /// </remarks>
         protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> commonHeader);

@@ -146,8 +146,11 @@ namespace PCS.IO
         /// <summary>
         /// Occurs when status information for the <see cref="MultipleDestinationExporter"/> object is being reported.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the status message being reported by the <see cref="MultipleDestinationExporter"/>.
+        /// </remarks>
         [Description("Occurs when status information for the MultipleDestinationExporter object is being reported.")]
-        public event Action<string> StatusMessage;
+        public event EventHandler<EventArgs<string>> StatusMessage;
 
         // Fields
 
@@ -575,21 +578,21 @@ namespace PCS.IO
         /// <summary>
         /// Raises the <see cref="Initialized"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnInitialized(EventArgs e)
+        protected virtual void OnInitialized()
         {
             if (Initialized != null)
-                Initialized(this, e);
+                Initialized(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
-        /// <param name="status">Event data.</param>
-        protected void OnStatusMessage(string status)
+        /// <param name="status">Status message to report.</param>
+        /// <param name="args"><see cref="string.Format(string,object[])"/> parameters used for status message.</param>
+        protected void OnStatusMessage(string status, params object[] args)
         {
             if (StatusMessage != null)
-                StatusMessage(status);
+                StatusMessage(this, new EventArgs<string>(string.Format(status, args)));
         }
 
         private void Initialize(object state)
@@ -620,22 +623,22 @@ namespace PCS.IO
                     // Attempt connection to external network share
                     try
                     {
-                        OnStatusMessage(string.Format("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share));
+                        OnStatusMessage("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
 
                         FilePath.ConnectToNetworkShare(destinations[x].Share, destinations[x].UserName, destinations[x].Password, destinations[x].Domain);
 
-                        OnStatusMessage(string.Format("Network share authentication to {0} succeeded.", destinations[x].Share));
+                        OnStatusMessage("Network share authentication to {0} succeeded.", destinations[x].Share);
                     }
                     catch (Exception ex)
                     {
                         // Something unexpected happened during attempt to connect to network share - so we'll report it...
-                        OnStatusMessage(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message));
+                        OnStatusMessage("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message);
                     }
                 }
             }
 
             m_exportQueue.Start();          // Start export queue.
-            OnInitialized(EventArgs.Empty); // Notify that initialization is complete.
+            OnInitialized();                // Notify that initialization is complete.
         }
 
         // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
@@ -663,7 +666,7 @@ namespace PCS.IO
                             catch (Exception ex)
                             {
                                 // Something unexpected happened during attempt to disconnect from network share - so we'll report it...
-                                OnStatusMessage(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message));
+                                OnStatusMessage("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message);
                             }
                         }
                     }
@@ -705,7 +708,7 @@ namespace PCS.IO
                 {
                     // Something unexpected happened during export - we'll report it but keep going, could be
                     // that export destination was offline (not uncommon when system is being rebooted, etc.)
-                    OnStatusMessage(string.Format("Exception encountered during export for {0}: {1}", destinations[x].DestinationFile, ex.Message));
+                    OnStatusMessage("Exception encountered during export for {0}: {1}", destinations[x].DestinationFile, ex.Message);
                 }
             }
         }
@@ -713,7 +716,7 @@ namespace PCS.IO
         private void m_exportQueue_ProcessException(Exception ex)
         {
             // Something unexpected happened during export
-            OnStatusMessage("Export exception: " + ex.Message);
+            OnStatusMessage("Export exception: {0}", ex.Message);
         }
 
         #endregion
