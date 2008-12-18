@@ -31,6 +31,115 @@ namespace PCS.Communication
     /// <summary>
     /// Represents a communication client based on <see cref="FileStream"/>.
     /// </summary>
+    /// <example>
+    /// This example shows how to use <see cref="FileClient"/> for writing data to a file:
+    /// <code>
+    /// using System;
+    /// using PCS.Communication;
+    /// 
+    /// class Program
+    /// {
+    ///     static FileClient m_client;
+    /// 
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Initialize the client.
+    ///         m_client = new FileClient(@"File=c:\File.txt");
+    ///         m_client.ReceiveOnDemand = true;
+    ///         m_client.MaxConnectionAttempts = 1;
+    /// 
+    ///         // Register event handlers.
+    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
+    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
+    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
+    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         // Connect the client.
+    ///         m_client.Connect();
+    /// 
+    ///         string input;
+    ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
+    ///         {
+    ///             m_client.Send(input);
+    ///         }
+    /// 
+    ///         m_client.Disconnect();
+    /// 
+    ///         Console.ReadLine();
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client is connecting to server.");
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client connected to server.");
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client disconnected from server.");
+    ///     }
+    /// 
+    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+    ///     {
+    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This example shows how to use <see cref="FileClient"/> for reading data to a file:
+    /// <code>
+    /// using System;
+    /// using PCS.Communication;
+    /// 
+    /// class Program
+    /// {
+    ///     static FileClient m_client;
+    /// 
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Initialize the client.
+    ///         m_client = new FileClient(@"File=c:\File.txt");
+    ///         m_client.ReceiveBufferSize = 1024;
+    /// 
+    ///         // Register event handlers.
+    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
+    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
+    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
+    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         // Connect to the server.
+    ///         m_client.ConnectAsync();
+    /// 
+    ///         Console.ReadLine();
+    /// 
+    ///         m_client.Disconnect();
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client is connecting to server.");
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client connected to server.");
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client disconnected from server.");
+    ///     }
+    /// 
+    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+    ///     {
+    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class FileClient : ClientBase
     {
         #region [ Members ]
