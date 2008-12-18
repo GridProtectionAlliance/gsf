@@ -1208,9 +1208,9 @@ namespace PCS.Communication
                     //case "serial":
                     //    client = new SerialClient(settings.ToString());
                     //    break;
-                    //case "file":
-                    //    client = new FileClient(settings.ToString());
-                    //    break;
+                    case "file":
+                        client = new FileClient(settings.ToString());
+                        break;
                     default:
                         throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
                 }
