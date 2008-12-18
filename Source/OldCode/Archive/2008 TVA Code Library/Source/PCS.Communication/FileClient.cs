@@ -133,7 +133,7 @@ namespace PCS.Communication
     ///         Console.WriteLine("Client disconnected from server.");
     ///     }
     /// 
-    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
     ///     {
     ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
     ///     }
