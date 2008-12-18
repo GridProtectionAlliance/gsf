@@ -1,3 +1,412 @@
+//*******************************************************************************************************
+//  FileClient.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: Pinal C. Patel, Operations Data Architecture [PCS]
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
+//       Email: pcpatel@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  07/24/2006 - Pinal C. Patel
+//       Original version of source code generated
+//  09/06/2006 - J. Ritchie Carroll
+//       Added bypass optimizations for high-speed file data access
+//  09/29/2008 - James R Carroll
+//       Converted to C#.
+//
+//*******************************************************************************************************
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Threading;
+using PCS.Threading;
+
+namespace PCS.Communication
+{
+    /// <summary>
+    /// Represents a communication client based on <see cref="FileStream"/>.
+    /// </summary>
+    public class FileClient : ClientBase
+    {
+        #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AutoRepeat"/> property.
+        /// </summary>
+        public const bool DefaultAutoRepeat = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="StartingOffset"/> property.
+        /// </summary>
+        public const long DefaultStartingOffset = 0;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ReceiveOnDemand"/> property.
+        /// </summary>
+        public const bool DefaultReceiveOnDemand = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ReceiveInterval"/> property.
+        /// </summary>
+        public const int DefaultReceiveInterval = -1;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
+        /// </summary>
+        public const string DefaultConnectionString = "File=DataFile.txt";
+
+        // Fields
+        private bool m_autoRepeat;
+        private long m_startingOffset;
+        private bool m_receiveOnDemand;
+        private double m_receiveInterval;
+        private TransportProvider<FileStream> m_fileClient;
+        private Dictionary<string, string> m_connectData;
+        private System.Timers.Timer m_receiveDataTimer;
+#if ThreadTracking
+        private ManagedThread m_connectionThread;
+#else
+        private Thread m_connectionThread;
+#endif
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileClient"/> class.
+        /// </summary>
+        public FileClient()
+            : this(DefaultConnectionString)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileClient"/> class.
+        /// </summary>
+        /// <param name="connectString">Connect string of the client. See <see cref="DefaultConnectionString"/> for format.</param>
+        public FileClient(string connectString)
+            : base(TransportProtocol.File, connectString)
+        {
+            m_autoRepeat = DefaultAutoRepeat;
+            m_startingOffset = DefaultStartingOffset;
+            m_receiveOnDemand = DefaultReceiveOnDemand;
+            m_receiveInterval = DefaultReceiveInterval;
+            m_fileClient = new TransportProvider<FileStream>();
+            m_receiveDataTimer = new System.Timers.Timer();
+            m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether receiving (reading) of data is to be repeated endlessly.
+        /// </summary>
+        [Category("Data"),
+        DefaultValue(DefaultAutoRepeat),
+        Description("Indicates whether receiving (reading) of data is to be repeated endlessly.")]
+        public bool AutoRepeat
+        {
+            get
+            {
+                return m_autoRepeat;
+            }
+            set
+            {
+                m_autoRepeat = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the starting point relative to the beginning of the file from where the data is to be received (read).
+        /// </summary>
+        /// <exception cref="ArgumentException">The value specified is not a positive number.</exception>
+        [Category("Data"),
+        DefaultValue(DefaultStartingOffset),
+        Description("The starting point relative to the beginning of the file from where the data is to be received (read).")]
+        public long StartingOffset
+        {
+            get
+            {
+                return m_startingOffset;
+            }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("Value must be positive.");
+
+                m_startingOffset = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether receiving (reading) of data will be initiated manually by calling <see cref="ReceiveData()"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="ReceiveInterval"/> will be set to -1 when <see cref="ReceiveOnDemand"/> is enabled.
+        /// </remarks>
+        [Category("Data"), 
+        DefaultValue(DefaultReceiveTimeout), 
+        Description("Indicates whether receiving (reading) of data will be initiated manually by calling ReceiveData().")]
+        public bool ReceiveOnDemand
+        {
+            get
+            {
+                return m_receiveOnDemand;
+            }
+            set
+            {
+                m_receiveOnDemand = value;
+
+                if (m_receiveOnDemand)
+                    // We'll disable receiving data at a set interval if user wants to receive data on demand.
+                    m_receiveInterval = -1;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of milliseconds to pause before receiving (reading) the next available set of data.
+        /// </summary>
+        /// <remarks>Set <see cref="ReceiveInterval"/> = -1 to receive (read) data continuously without pausing.</remarks>
+        [Category("Data"), 
+        DefaultValue(DefaultReceiveInterval), 
+        Description("The number of milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing.")]
+        public double ReceiveInterval
+        {
+            get
+            {
+                return m_receiveInterval;
+            }
+            set
+            {
+                if (value < 1)
+                    m_receiveInterval = -1;
+                else
+                    m_receiveInterval = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Initiates receiving to data from the file.
+        /// </summary>
+        /// <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
+        public void ReceiveData()
+        {
+            if (CurrentState == ClientState.Connected)
+            {
+                ReadData();
+            }
+            else
+            {
+                throw new InvalidOperationException("Client is currently not connected.");
+            }
+        }
+
+        /// <summary>
+        /// Disconnects from the file (i.e., closes the file stream).
+        /// </summary>
+        public override void Disconnect()
+        {
+            if (CurrentState != ClientState.Disconnected)
+            {
+                m_fileClient.Reset();
+                m_receiveDataTimer.Stop();
+
+                if (m_connectionThread != null)
+                    m_connectionThread.Abort();
+
+                OnConnectionTerminated();
+            }
+        }
+
+        /// <summary>
+        /// Connects to the file asynchronously.
+        /// </summary>
+        public override void ConnectAsync()
+        {
+            if (CurrentState == ClientState.Disconnected)
+            {
+                if (File.Exists(m_connectData["file"]))
+                {
+                    m_fileClient.Passphrase = HandshakePassphrase;
+                    m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+#if ThreadTracking
+                    m_connectionThread = new ManagedThread(OpenFile);
+                    m_connectionThread.Name = "PCS.Communication.FileClient.ConnectToFile()";
+#else
+                    m_connectionThread = new Thread(ConnectToFile);
+#endif
+                    m_connectionThread.Start();
+                }
+                else
+                {
+                    throw new FileNotFoundException(m_connectData["file"] + " does not exist.");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Client is currently not disconnected.");
+            }
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <summary>
+        /// Gets the passphrase to be used for ciphering client data.
+        /// </summary>
+        /// <returns>Cipher passphrase.</returns>
+        protected override string GetSessionPassphrase()
+        {
+            return m_fileClient.Passphrase;
+        }
+
+        /// <summary>
+        /// Determines whether specified connection string required for connecting to the file is valid.
+        /// </summary>
+        /// <param name="connectionString">The connection string to be validated.</param>
+        /// <returns>True is the connection string is valid; otherwise False.</returns>
+        protected override void ValidateConnectionString(string connectionString)
+        {
+            m_connectData = connectionString.ParseKeyValuePairs();
+
+            if (!m_connectData.ContainsKey("file"))
+                throw new ArgumentException(string.Format("File property is missing. Example: {0}.", DefaultConnectionString));
+        }
+
+        /// <summary>
+        /// Connects to the file.
+        /// </summary>
+        /// <remarks>This method is meant to be executed on a seperate thread.</remarks>
+        private void OpenFile()
+        {
+            int connectionAttempts = 0;
+            while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
+            {
+                try
+                {
+                    OnConnectionAttempt(); ;
+
+                    m_fileClient.Provider = new FileStream(m_connectData["file"], FileMode.Open);
+                    m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); // Move to the specified offset.
+
+                    OnConnectionEstablished() ;
+
+                    if (!m_receiveOnDemand)
+                    {
+                        if (m_receiveInterval > 0)
+                        {
+                            // We need to start receivng data at the specified interval.
+                            m_receiveDataTimer.Interval = m_receiveInterval;
+                            m_receiveDataTimer.Start();
+                        }
+                        else
+                        {
+                            // We need to start receiving data continuously.
+                            ReadData();
+                        }
+                    }
+
+                    break; // We've successfully connected to the file.
+                }
+                catch (ThreadAbortException)
+                {
+                    break; // We must abort connecting to the file.
+                }
+                catch (Exception ex)
+                {
+                    connectionAttempts++;
+                    OnConnectionException(ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Receive data from the file.
+        /// </summary>
+        /// <remarks>This method is meant to be executed on a seperate thread.</remarks>
+        private void ReadData()
+        {
+            try
+            {
+                // Process the entire file content
+                while (m_fileClient.Provider.Position < m_fileClient.Provider.Length)
+                {
+                    // Retrieve data from the file stream.
+                    m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, 0, m_fileClient.ReceiveBuffer.Length);
+                    m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.ReceiveBufferLength);
+
+                    OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferLength);
+
+                    // We'll re-read the file if the user wants to repeat when we're done reading the file.
+                    if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)
+                    {
+                        m_fileClient.Provider.Seek(0, SeekOrigin.Begin);
+                    }
+
+                    // We must stop processing the file if user has either opted to receive data on
+                    // demand or receive data at a predefined interval.
+                    if (m_receiveOnDemand || m_receiveInterval > 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+                // Exit gracefully when an exception is encountered while receiving data.
+            }
+        }
+
+        private void m_receiveDataTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (m_receiveInterval > 0)
+            {
+                ReadData();
+            }
+        }
+
+        #endregion
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////*******************************************************************************************************
 ////  FileClient.cs
 ////  Copyright © 2008 - TVA, all rights reserved - Gbtc
@@ -31,7 +440,7 @@
 //namespace PCS.Communication
 //{
 //    /// <summary>
-//    /// Represents a File-based communication client.
+//    /// Represents a communication client based on <see cref="FileStream"/>.
 //    /// </summary>
 //    public class FileClient : ClientBase
 //    {
