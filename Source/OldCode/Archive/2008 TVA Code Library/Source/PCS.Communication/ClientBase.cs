@@ -211,7 +211,7 @@ namespace PCS.Communication
         private bool m_persistSettings;
         private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private Action<byte[],int,int> m_receiveDataHandler;
+        private Action<byte[], int, int> m_receiveDataHandler;
         private ClientState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
@@ -610,7 +610,7 @@ namespace PCS.Communication
         /// </remarks>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Action<byte[],int,int> ReceiveDataHandler
+        public virtual Action<byte[], int, int> ReceiveDataHandler
         {
             get
             {
@@ -658,11 +658,11 @@ namespace PCS.Communication
                 m_clientID = value;
             }
         }
-                
+
         /// <summary>
         /// Gets the current <see cref="ClientState"/>.
         /// </summary>
-        public ClientState CurrentState 
+        public ClientState CurrentState
         {
             get
             {
@@ -694,10 +694,10 @@ namespace PCS.Communication
 
                 if (m_connectTime > 0)
                 {
-                    if (m_currentState == ClientState.Connected) 
+                    if (m_currentState == ClientState.Connected)
                         // Client is connected to the server.
                         clientConnectionTime = Ticks.ToSeconds(DateTime.Now.Ticks - m_connectTime);
-                    else 
+                    else
                         // Client is not connected to the server.
                         clientConnectionTime = Ticks.ToSeconds(m_disconnectTime - m_connectTime);
                 }
@@ -1205,14 +1205,14 @@ namespace PCS.Communication
                     case "udp":
                         client = new UdpClient(settings.ToString());
                         break;
-                    //case "serial":
-                    //    client = new SerialClient(settings.ToString());
-                    //    break;
                     case "file":
                         client = new FileClient(settings.ToString());
                         break;
+                    //case "serial":
+                    //    client = new SerialClient(settings.ToString());
+                    //    break;
                     default:
-                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
+                        throw new ArgumentException(protocol + " is not a valid transport protocol.");
                 }
             }
             else
