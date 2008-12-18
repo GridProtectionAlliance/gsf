@@ -36,6 +36,7 @@ namespace PCS.Communication
     /// <code>
     /// using System;
     /// using PCS.Communication;
+    /// using PCS.IO;
     /// 
     /// class Program
     /// {
@@ -45,6 +46,7 @@ namespace PCS.Communication
     ///     {
     ///         // Initialize the client.
     ///         m_client = new FileClient(@"File=c:\File.txt");
+    ///         m_client.StartingOffset = FilePath.GetFileLength(@"c:\File.txt");
     ///         m_client.ReceiveOnDemand = true;
     ///         m_client.MaxConnectionAttempts = 1;
     /// 
@@ -496,7 +498,10 @@ namespace PCS.Communication
                     // We'll re-read the file if the user wants to repeat when we're done reading the file.
                     if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)
                     {
-                        m_fileClient.Provider.Seek(0, SeekOrigin.Begin);
+                        lock (m_fileClient.Provider)
+                        {
+                            m_fileClient.Provider.Seek(0, SeekOrigin.Begin);
+                        }
                     }
 
                     // We must stop processing the file if user has either opted to receive data on
@@ -522,8 +527,11 @@ namespace PCS.Communication
             try
             {
                 // Send operation is complete.
-                m_fileClient.Provider.EndWrite(asyncResult);
-                m_fileClient.Provider.Flush();
+                lock (m_fileClient)
+                {
+                    m_fileClient.Provider.EndWrite(asyncResult);
+                    m_fileClient.Provider.Flush();                    
+                }
                 OnSendDataComplete();
             }
             catch (Exception ex)
