@@ -255,7 +255,7 @@ namespace PCS.Parsing
         protected override int ParseFrame(byte[] buffer, int offset, int length)
         {
             int endOfBuffer = offset + length - 1;
-            int parsedFrameLength;
+            int parsedHeaderLength, parsedFrameLength;
             ICommonHeader<TTypeIdentifier> commonHeader;
             TypeInfo outputType;
             TOutputType instance;
@@ -264,15 +264,24 @@ namespace PCS.Parsing
             // For any protocol data that is represented as frames of data in a stream, there will
             // be some set of common identification properties in the frame image, usually at the
             // top, that is common for all frame types.
-            parsedFrameLength = ParseCommonHeader(buffer, offset, length, out commonHeader);
-            offset += parsedFrameLength;
+            parsedHeaderLength = ParseCommonHeader(buffer, offset, length, out commonHeader);
+
+            // See if there was enough buffer to parse common header, if not exit and wait for more data
+            if (parsedHeaderLength == 0 && commonHeader == null)
+                return 0;
+
+            offset += parsedHeaderLength;
 
             if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
             {
                 instance = outputType.CreateNew();
                 instance.CommonHeader = commonHeader;
-                parsedFrameLength += instance.Initialize(buffer, offset, endOfBuffer - offset + 1);
-                
+                parsedFrameLength = instance.Initialize(buffer, offset, endOfBuffer - offset + 1);
+
+                // If data type was able to be parsed, include parsed header length in parsed frame length
+                if (parsedFrameLength > 0)
+                    parsedFrameLength += parsedHeaderLength;
+
                 // Expose parsed type to consumer
                 OnDataParsed(instance);
             }
@@ -307,6 +316,11 @@ namespace PCS.Parsing
         /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output
         /// type <see cref="ISupportBinaryImage.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
         /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
+        /// </para>
+        /// <para>
+        /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), set <paramref name="commonHeader"/>
+        /// to null and return 0.  If protocol allows frame length to be determined at the time common header is being parsed it will be optimal to prevent
+        /// further parsing by executing the same action (i.e., set <paramref name="commonHeader"/> = null and return 0).
         /// </para>
         /// </remarks>
         protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> commonHeader);
