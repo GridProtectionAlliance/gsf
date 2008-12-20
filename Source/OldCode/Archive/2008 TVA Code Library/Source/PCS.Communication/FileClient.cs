@@ -174,15 +174,15 @@ namespace PCS.Communication
         public const FileMode DefaultFileOpenMode = FileMode.OpenOrCreate;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="FileAccessMode"/> property.
-        /// </summary>
-        public const FileAccess DefaultFileAccessMode = FileAccess.ReadWrite;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="FileShareMode"/> property.
         /// </summary>
         public const FileShare DefaultFileShareMode = FileShare.ReadWrite;
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="FileAccessMode"/> property.
+        /// </summary>
+        public const FileAccess DefaultFileAccessMode = FileAccess.ReadWrite;
+        
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
@@ -229,8 +229,8 @@ namespace PCS.Communication
             m_receiveInterval = DefaultReceiveInterval;
             m_startingOffset = DefaultStartingOffset;
             m_fileOpenMode = DefaultFileOpenMode;
-            m_fileAccessMode = DefaultFileAccessMode;
             m_fileShareMode = DefaultFileShareMode;
+            m_fileAccessMode = DefaultFileAccessMode;
             m_fileClient = new TransportProvider<FileStream>();
             m_receiveDataTimer = new System.Timers.Timer();
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
@@ -243,6 +243,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether receiving (reading) of data is to be repeated endlessly.
         /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="AutoRepeat"/> is enabled when <see cref="FileAccessMode"/> is <see cref="FileAccess.ReadWrite"/></exception>
         [Category("Data"),
         DefaultValue(DefaultAutoRepeat),
         Description("Indicates whether receiving (reading) of data is to be repeated endlessly.")]
@@ -254,6 +255,9 @@ namespace PCS.Communication
             }
             set
             {
+                if (value && m_fileAccessMode == FileAccess.ReadWrite)
+                    throw new InvalidOperationException("AutoRepeat cannot be enabled when FileAccessMode is FileAccess.ReadWrite.");
+
                 m_autoRepeat = value;
             }
         }
@@ -286,7 +290,9 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets the number of milliseconds to pause before receiving (reading) the next available set of data.
         /// </summary>
-        /// <remarks>Set <see cref="ReceiveInterval"/> = -1 to receive (read) data continuously without pausing.</remarks>
+        /// <remarks>
+        /// Set <see cref="ReceiveInterval"/> = -1 to receive (read) data continuously without pausing.
+        /// </remarks>
         [Category("Data"),
         DefaultValue(DefaultReceiveInterval),
         Description("The number of milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing.")]
@@ -330,9 +336,9 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets the <see cref="FileMode"/> value to be used when opening the file.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Category("File"),
+        DefaultValue(DefaultFileOpenMode),
+        Description("Gets or sets the System.IO.FileMode value to be used when opening the file.")]
         public FileMode FileOpenMode
         {
             get
@@ -348,9 +354,9 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or set the <see cref="FileShare"/> value to be used when opening the file.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Category("File"),
+        DefaultValue(DefaultFileShareMode),
+        Description("Gets or sets the System.IO.FileShare value to be used when opening the file.")]
         public FileShare FileShareMode
         {
             get
@@ -366,9 +372,10 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets the <see cref="FileAccess"/> value to be used when opening the file.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        /// <exception cref="InvalidOperationException"><see cref="FileAccessMode"/> is set to <see cref="FileAccess.ReadWrite"/> when <see cref="AutoRepeat"/> is enabled.</exception>
+        [Category("File"),
+        DefaultValue(DefaultFileAccessMode),
+        Description("Gets or sets the System.IO.FileAccess value to be used when opening the file.")]
         public FileAccess FileAccessMode
         {
             get
@@ -377,6 +384,9 @@ namespace PCS.Communication
             }
             set
             {
+                if (value == FileAccess.ReadWrite && m_autoRepeat)
+                    throw new InvalidOperationException("FileAccessMode cannot be set to FileAccess.ReadWrite when AutoRepeat is enabled.");
+
                 m_fileAccessMode = value;
             }
         }
@@ -398,23 +408,31 @@ namespace PCS.Communication
         #region [ Methods ]
 
         /// <summary>
-        /// Initiates receiving to data from the file.
+        /// Receives (reads) data from the file.
         /// </summary>
-        /// <remarks>This method is functional only when ReceiveOnDemand is enabled.</remarks>
+        /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="FileClient"/> is disconnected.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="ReceiveOnDemand"/> is disabled.</exception>
         public void ReceiveData()
         {
-            if (CurrentState == ClientState.Connected)
+            if (m_receiveOnDemand)
             {
-                ReadData();
+                if (CurrentState == ClientState.Connected)
+                {
+                    ReadData();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Client is currently not connected.");
+                }
             }
             else
             {
-                throw new InvalidOperationException("Client is currently not connected.");
+                throw new InvalidOperationException("ReceiveData() cannot be used when ReceiveOnDemand is disabled.");
             }
         }
 
         /// <summary>
-        /// Disconnects from the file (i.e., closes the file stream).
+        /// Disconnects the <see cref="FileClient"/> from the file (Closes the <see cref="FileStream"/>).
         /// </summary>
         public override void Disconnect()
         {
@@ -431,8 +449,9 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Connects to the file asynchronously.
+        /// Connects the <see cref="FileClient"/> to the file asynchronously (Opens the <see cref="FileStream"/>).
         /// </summary>
+        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="FileClient"/> when it is connected.</exception>
         public override void ConnectAsync()
         {
             if (CurrentState == ClientState.Disconnected)
@@ -454,11 +473,40 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Validates the specified <paramref name="connectionString"/>.
+        /// </summary>
+        /// <param name="connectionString">Connection string to be validated.</param>
+        /// <exception cref="ArgumentException">File property is missing.</exception>
+        protected override void ValidateConnectionString(string connectionString)
+        {
+            m_connectData = connectionString.ParseKeyValuePairs();
+
+            if (!m_connectData.ContainsKey("file"))
+                throw new ArgumentException(string.Format("File property is missing. Example: {0}.", DefaultConnectionString));
+        }
+
+        /// <summary>
+        /// Gets the passphrase to be used for ciphering client data.
+        /// </summary>
+        /// <returns>Cipher passphrase.</returns>
+        protected override string GetSessionPassphrase()
+        {
+            return m_fileClient.Passphrase;
+        }
+
+        /// <summary>
+        /// Sends (writes) data to the file asynchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent (written).</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending (writing) data.</param>
+        /// <param name="length">The number of bytes to be sent (written) from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
             WaitHandle handle;
 
-            // Send payload to the file asynchronously.
+            // Send data to the file asynchronously.
             lock (m_fileClient.Provider)
             {
                 handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
@@ -476,31 +524,8 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
-        /// </summary>
-        /// <returns>Cipher passphrase.</returns>
-        protected override string GetSessionPassphrase()
-        {
-            return m_fileClient.Passphrase;
-        }
-
-        /// <summary>
-        /// Determines whether specified connection string required for connecting to the file is valid.
-        /// </summary>
-        /// <param name="connectionString">The connection string to be validated.</param>
-        /// <returns>True is the connection string is valid; otherwise False.</returns>
-        protected override void ValidateConnectionString(string connectionString)
-        {
-            m_connectData = connectionString.ParseKeyValuePairs();
-
-            if (!m_connectData.ContainsKey("file"))
-                throw new ArgumentException(string.Format("File property is missing. Example: {0}.", DefaultConnectionString));
-        }
-
-        /// <summary>
         /// Connects to the file.
         /// </summary>
-        /// <remarks>This method is meant to be executed on a seperate thread.</remarks>
         private void OpenFile()
         {
             int connectionAttempts = 0;
@@ -510,8 +535,10 @@ namespace PCS.Communication
                 {
                     OnConnectionAttempt(); ;
 
+                    // Open the file.
                     m_fileClient.Provider = new FileStream(m_connectData["file"], m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
-                    m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); // Move to the specified offset.
+                    // Move to the specified offset.
+                    m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); 
 
                     OnConnectionEstablished();
 
@@ -519,31 +546,31 @@ namespace PCS.Communication
                     {
                         if (m_receiveInterval > 0)
                         {
-                            // We need to start receivng data at the specified interval.
+                            // Start receiving data at interval.
                             m_receiveDataTimer.Interval = m_receiveInterval;
                             m_receiveDataTimer.Start();
                         }
                         else
                         {
+                            // Start receiving data continuously.
                             while (true)
                             {
-                                // We need to start receiving data continuously.
-                                ReadData();
-                                Thread.Sleep(1000);
+                                ReadData();         // Read all available data.
+                                Thread.Sleep(1000); // Wait for more data to be available.
                             }
                         }
                     }
 
-                    break; // We've successfully connected to the file.
+                    break;  // We're done here.
                 }
                 catch (ThreadAbortException)
                 {
-                    // We must abort connecting to the file.
+                    // Exit gracefully.
                     break;
                 }
                 catch (Exception ex)
                 {
-                    // We must keep retrying connecting to the file.
+                    // Keep retrying connecting to the file.
                     connectionAttempts++;
                     OnConnectionException(ex);
                 }
@@ -553,7 +580,6 @@ namespace PCS.Communication
         /// <summary>
         /// Receive data from the file.
         /// </summary>
-        /// <remarks>This method is meant to be executed on a seperate thread.</remarks>
         private void ReadData()
         {
             try
@@ -561,26 +587,26 @@ namespace PCS.Communication
                 // Process the entire file content
                 while (m_fileClient.Provider.Position < m_fileClient.Provider.Length)
                 {
-                    // Retrieve data from the file stream.
+                    // Retrieve data from the file.
                     lock (m_fileClient.Provider)
                     {
                         m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, 0, m_fileClient.ReceiveBuffer.Length);
                     }
                     m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.ReceiveBufferLength);
 
+                    // Notify of the retrieved data.
                     OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferLength);
 
-                    // We'll re-read the file if the user wants to repeat when we're done reading the file.
+                    // Re-read the file if the user wants to repeat when done reading the file.
                     if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)
                     {
                         lock (m_fileClient.Provider)
                         {
-                            m_fileClient.Provider.Seek(0, SeekOrigin.Begin);
+                            m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
                         }
                     }
 
-                    // We must stop processing the file if user has either opted to receive data on
-                    // demand or receive data at a predefined interval.
+                    // Stop processing the file if user has either opted to receive data on demand or receive data at a predefined interval.
                     if (m_receiveOnDemand || m_receiveInterval > 0)
                     {
                         break;
@@ -589,14 +615,18 @@ namespace PCS.Communication
             }
             catch (ThreadAbortException)
             {
-
+                // Exit gracefully.
             }
             catch (Exception ex)
             {
+                // Notify of the exception.
                 OnReceiveDataException(ex);
             }
         }
 
+        /// <summary>
+        /// Callback method for asynchronous send operation.
+        /// </summary>
         private void SendDataAsyncCallback(IAsyncResult asyncResult)
         {
             try
@@ -618,10 +648,7 @@ namespace PCS.Communication
 
         private void m_receiveDataTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (m_receiveInterval > 0)
-            {
-                ReadData();
-            }
+            ReadData();
         }
 
         #endregion
