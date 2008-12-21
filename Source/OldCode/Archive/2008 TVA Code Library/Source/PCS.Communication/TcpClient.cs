@@ -223,17 +223,15 @@ namespace PCS.Communication
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TcpClient"/> when it is connected.</exception>
         public override void ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
+            if (CurrentState != ClientState.Connected)
             {
                 // Initialize if unitialized.
                 Initialize();
 
                 OnConnectionAttempt();
                 if (m_tcpClient.Provider == null)
-                {
                     // Create client socket to establish presence.
                     m_tcpClient.Provider = Transport.CreateSocket(0, ProtocolType.Tcp);
-                }
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
                 m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(m_connectData["server"], int.Parse(m_connectData["port"])), ConnectAsyncCallback, m_tcpClient);
             }
