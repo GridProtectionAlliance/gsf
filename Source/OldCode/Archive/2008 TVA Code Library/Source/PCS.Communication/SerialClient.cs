@@ -122,6 +122,8 @@ namespace PCS.Communication
                 m_serialClient.ID = this.ClientID;
                 m_serialClient.Passphrase = this.HandshakePassphrase;
                 m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+                m_serialClient.Provider = new SerialPort();
+                m_serialClient.Provider.DataReceived += DataReceivedCallback;
                 m_serialClient.Provider.PortName = m_connectData["port"];
                 m_serialClient.Provider.BaudRate = int.Parse(m_connectData["baudrate"]);
                 m_serialClient.Provider.DataBits = int.Parse(m_connectData["databits"]);
@@ -184,20 +186,6 @@ namespace PCS.Communication
         {
             return m_serialClient.Passphrase;
         }
-
-        ///// <summary>
-        ///// Sends prepared data to the server.
-        ///// </summary>
-        ///// <param name="data">The prepared data that is to be sent to the server.</param>
-        //protected override void SendPreparedData(byte[] data)
-        //{
-        //    if (base.Enabled && base.IsConnected)
-        //    {
-        //        OnSendDataBegin(new IdentifiableItem<Guid, byte[]>(ClientID, data));
-        //        m_serialClient.Write(data, 0, data.Length);
-        //        OnSendDataComplete(new IdentifiableItem<Guid, byte[]>(ClientID, data));
-        //    }
-        //}
 
         /// <summary>
         /// Sends (writes) data to the file asynchronously.
@@ -274,34 +262,18 @@ namespace PCS.Communication
         /// <summary>
         /// Receive data from the serial port (.NET serial port class raises this event when data is available)
         /// </summary>
-        private void m_serialClient_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        private void DataReceivedCallback(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
-            // Retrieve data from the port.
-            m_serialClient.ReceiveBufferLength = m_serialClient.Provider.Read(m_serialClient.ReceiveBuffer,  m_serialClient.ReceiveBufferOffset, m_serialClient.ReceiveBuffer.Length);
-            m_serialClient.Statistics.UpdateBytesReceived(m_serialClient.ReceiveBufferLength);
+            /// JRC: Modified code to make sure all available data on the serial port buffer is read.
+            for (int x = 1; x <= (int)(Math.Ceiling((double)m_serialClient.Provider.BytesToRead / m_serialClient.ReceiveBuffer.Length)); x++)
+            {
+                // Retrieve data from the port.
+                m_serialClient.ReceiveBufferLength = m_serialClient.Provider.Read(m_serialClient.ReceiveBuffer, m_serialClient.ReceiveBufferOffset, m_serialClient.ReceiveBuffer.Length);
+                m_serialClient.Statistics.UpdateBytesReceived(m_serialClient.ReceiveBufferLength);
 
-            // Notify of the retrieved data.
-            OnReceiveDataComplete(m_serialClient.ReceiveBuffer, m_serialClient.ReceiveBufferLength);
-
-            //int received;
-            //// JRC: modified this code to make sure all available data on the serial port buffer is read, regardless of size of communication buffer
-            //for (int x = 1; x <= (int)(System.Math.Ceiling((double)m_serialClient.BytesToRead / m_buffer.Length)); x++)
-            //{
-            //    // Retrieve data from the serial port
-            //    received = m_serialClient.Read(m_buffer, 0, m_buffer.Length);
-
-            //    // Post raw data to real-time function delegate if defined - this bypasses all other activity
-            //    if (m_receiveRawDataFunction != null)
-            //    {
-            //        m_receiveRawDataFunction(m_buffer, 0, received);
-            //        m_totalBytesReceived += received;
-            //    }
-            //    else
-            //    {
-            //        // Unpack data and make available via event
-            //        OnReceivedData(new IdentifiableItem<Guid, byte[]>(ServerID, m_buffer.CopyBuffer(0, received)));
-            //    }
-            //}
+                // Notify of the retrieved data.
+                OnReceiveDataComplete(m_serialClient.ReceiveBuffer, m_serialClient.ReceiveBufferLength);
+            }
         }
 
         #endregion
