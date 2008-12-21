@@ -456,6 +456,9 @@ namespace PCS.Communication
         {
             if (CurrentState == ClientState.Disconnected)
             {
+                // Initialize if unitialized.
+                Initialize();
+
                 m_fileClient.ID = this.ClientID;
                 m_fileClient.Passphrase = this.HandshakePassphrase;
                 m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];

@@ -103,6 +103,8 @@ namespace PCS.Communication
             if (CurrentState != ClientState.Disconnected)
             {
                 m_serialClient.Reset();
+                m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
+                m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
 
                 if (m_connectionThread != null)
                     m_connectionThread.Abort();
@@ -119,11 +121,15 @@ namespace PCS.Communication
         {
             if (CurrentState == ClientState.Disconnected)
             {
+                // Initialize if unitialized.
+                Initialize();
+
                 m_serialClient.ID = this.ClientID;
                 m_serialClient.Passphrase = this.HandshakePassphrase;
                 m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
                 m_serialClient.Provider = new SerialPort();
-                m_serialClient.Provider.DataReceived += DataReceivedCallback;
+                m_serialClient.Provider.DataReceived += SerialPort_DataReceived;
+                m_serialClient.Provider.ErrorReceived += SerialPort_ErrorReceived;
                 m_serialClient.Provider.PortName = m_connectData["port"];
                 m_serialClient.Provider.BaudRate = int.Parse(m_connectData["baudrate"]);
                 m_serialClient.Provider.DataBits = int.Parse(m_connectData["databits"]);
@@ -262,7 +268,7 @@ namespace PCS.Communication
         /// <summary>
         /// Receive data from the serial port (.NET serial port class raises this event when data is available)
         /// </summary>
-        private void DataReceivedCallback(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        private void SerialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             // JRC: Modified code to make sure all available data on the serial port buffer is read.
             for (int x = 1; x <= (int)(Math.Ceiling((double)m_serialClient.Provider.BytesToRead / m_serialClient.ReceiveBuffer.Length)); x++)
@@ -273,7 +279,31 @@ namespace PCS.Communication
 
                 // Notify of the retrieved data.
                 OnReceiveDataComplete(m_serialClient.ReceiveBuffer, m_serialClient.ReceiveBufferLength);
+
             }
+        }
+
+        private void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            switch (e.EventType)
+            {
+                case SerialError.Frame:
+                    OnReceiveDataException(new ApplicationException("The hardware detected a framing error."));
+                    break;
+                case SerialError.Overrun:
+                    OnReceiveDataException(new ApplicationException("A character-buffer overrun has occurred. The next character is lost."));
+                    break;
+                case SerialError.RXOver:
+                    OnReceiveDataException(new ApplicationException("An input buffer overflow has occurred. There is either no room in the input buffer, or a character was received after the end-of-file (EOF) character."));
+                    break;
+                case SerialError.RXParity:
+                    OnReceiveDataException(new ApplicationException("The hardware detected a parity error."));
+                    break;
+                case SerialError.TXFull:
+                    OnReceiveDataException(new ApplicationException("The application tried to transmit a character, but the output buffer was full."));
+                    break;
+            }
+            
         }
 
         #endregion
