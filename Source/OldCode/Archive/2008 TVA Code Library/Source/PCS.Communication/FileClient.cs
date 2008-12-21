@@ -432,7 +432,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Disconnects the <see cref="FileClient"/> from the file (Closes the <see cref="FileStream"/>).
+        /// Disconnects the <see cref="FileClient"/> from the <see cref="FileStream"/>.
         /// </summary>
         public override void Disconnect()
         {
@@ -449,7 +449,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Connects the <see cref="FileClient"/> to the file asynchronously (Opens the <see cref="FileStream"/>).
+        /// Connects the <see cref="FileClient"/> to the <see cref="FileStream"/> asynchronously.
         /// </summary>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="FileClient"/> when it is connected.</exception>
         public override void ConnectAsync()
@@ -461,9 +461,9 @@ namespace PCS.Communication
                 m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 #if ThreadTracking
                 m_connectionThread = new ManagedThread(OpenFile);
-                m_connectionThread.Name = "PCS.Communication.FileClient.ConnectToFile()";
+                m_connectionThread.Name = "PCS.Communication.FileClient.OpenFile()";
 #else
-                    m_connectionThread = new Thread(ConnectToFile);
+                m_connectionThread = new Thread(OpenFile);
 #endif
                 m_connectionThread.Start();
             }
@@ -521,6 +521,28 @@ namespace PCS.Communication
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
+        }
+
+        /// <summary>
+        /// Callback method for asynchronous send operation.
+        /// </summary>
+        private void SendDataAsyncCallback(IAsyncResult asyncResult)
+        {
+            try
+            {
+                // Send operation is complete.
+                lock (m_fileClient)
+                {
+                    m_fileClient.Provider.EndWrite(asyncResult);
+                    m_fileClient.Provider.Flush();
+                }
+                OnSendDataComplete();
+            }
+            catch (Exception ex)
+            {
+                // Send operation failed to complete.
+                OnSendDataException(ex);
+            }
         }
 
         /// <summary>
@@ -590,7 +612,7 @@ namespace PCS.Communication
                     // Retrieve data from the file.
                     lock (m_fileClient.Provider)
                     {
-                        m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, 0, m_fileClient.ReceiveBuffer.Length);
+                        m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferOffset, m_fileClient.ReceiveBuffer.Length);
                     }
                     m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.ReceiveBufferLength);
 
@@ -621,28 +643,6 @@ namespace PCS.Communication
             {
                 // Notify of the exception.
                 OnReceiveDataException(ex);
-            }
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous send operation.
-        /// </summary>
-        private void SendDataAsyncCallback(IAsyncResult asyncResult)
-        {
-            try
-            {
-                // Send operation is complete.
-                lock (m_fileClient)
-                {
-                    m_fileClient.Provider.EndWrite(asyncResult);
-                    m_fileClient.Provider.Flush();
-                }
-                OnSendDataComplete();
-            }
-            catch (Exception ex)
-            {
-                // Send operation failed to complete.
-                OnSendDataException(ex);
             }
         }
 
