@@ -264,7 +264,7 @@ namespace PCS.Communication
         /// </summary>
         private void DataReceivedCallback(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
-            /// JRC: Modified code to make sure all available data on the serial port buffer is read.
+            // JRC: Modified code to make sure all available data on the serial port buffer is read.
             for (int x = 1; x <= (int)(Math.Ceiling((double)m_serialClient.Provider.BytesToRead / m_serialClient.ReceiveBuffer.Length)); x++)
             {
                 // Retrieve data from the port.
