@@ -34,7 +34,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.
         /// </summary>
-        TTypeIdentifier TypeID { get; set; }
+        TTypeIdentifier TypeID { get; }
 
         /// <summary>
         /// Gets or sets any additional state information that might be needed for parsing.
