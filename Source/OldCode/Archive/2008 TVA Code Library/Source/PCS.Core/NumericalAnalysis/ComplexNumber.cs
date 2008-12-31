@@ -113,7 +113,7 @@ namespace PCS.NumericalAnalysis
         }
 
         /// <summary>
-        /// Gets the conjugate of this <see cref="ComplexNumber"/>.
+        /// Gets the complex conjugate of this <see cref="ComplexNumber"/>.
         /// </summary>
         public ComplexNumber Conjugate
         {
