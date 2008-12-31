@@ -45,7 +45,7 @@ namespace PCS.NumericalAnalysis
             }
 
             if (sampleCount > 0)
-                return System.Math.Sqrt(totalVariance / sampleCount);
+                return Math.Sqrt(totalVariance / sampleCount);
             else
                 return 0.0D;
         }
@@ -71,7 +71,7 @@ namespace PCS.NumericalAnalysis
             }
 
             if (sampleCount > 0)
-                return (decimal)System.Math.Sqrt((double)(totalVariance / sampleCount));
+                return (decimal)Math.Sqrt((double)(totalVariance / sampleCount));
             else
                 return 0;
         }
@@ -97,7 +97,7 @@ namespace PCS.NumericalAnalysis
             }
 
             if (sampleCount > 0)
-                return (float)System.Math.Sqrt((double)(totalVariance / sampleCount));
+                return (float)Math.Sqrt((double)(totalVariance / sampleCount));
             else
                 return 0.0F;
         }

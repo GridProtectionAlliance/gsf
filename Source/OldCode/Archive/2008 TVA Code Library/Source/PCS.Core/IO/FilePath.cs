@@ -507,7 +507,7 @@ namespace PCS.IO
 
                         double offset = (length - justExtension.Length - 3) / 2.0D;
 
-                        return trimName.Substring(0, (int)(System.Math.Ceiling(offset))) + "..." +
+                        return trimName.Substring(0, (int)(Math.Ceiling(offset))) + "..." +
                             trimName.Substring((int)Math.Round(trimName.Length - Math.Floor(offset) + 1.0D)) + justExtension;
                     }
                     else

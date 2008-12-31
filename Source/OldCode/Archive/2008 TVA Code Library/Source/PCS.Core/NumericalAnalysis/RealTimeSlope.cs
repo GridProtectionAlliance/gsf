@@ -200,7 +200,7 @@ namespace PCS.NumericalAnalysis
                 m_calculating = false;
             }
 
-            if (System.Math.Sign(m_slope) != System.Math.Sign(m_lastSlope))
+            if (Math.Sign(m_slope) != Math.Sign(m_lastSlope))
             {
                 m_slopeRun = DateTime.Now;
             }

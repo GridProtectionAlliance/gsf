@@ -1320,7 +1320,7 @@ namespace PCS.Measurements
         //                    Exit Do
         //                ElseIf distance > 1 Then
         //                    ' Add intermediate samples as needed...
-        //                    For x As Integer = 1 To System.Math.Floor(distance)
+        //                    For x As Integer = 1 To Math.Floor(distance)
         //                        CreateSample(m_currentSampleTimestamp.AddSeconds(x).Ticks)
         //                    Next
         //                End If

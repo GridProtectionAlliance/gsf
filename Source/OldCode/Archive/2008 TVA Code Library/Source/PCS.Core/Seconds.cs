@@ -229,7 +229,7 @@ namespace PCS
             if (secondPrecision == 0)
             {
                 // No fractional seconds requested. Rounds seconds to nearest integer.
-                int wholeSeconds = (int)System.Math.Round(seconds);
+                int wholeSeconds = (int)Math.Round(seconds);
 
                 if (wholeSeconds > 0)
                 {

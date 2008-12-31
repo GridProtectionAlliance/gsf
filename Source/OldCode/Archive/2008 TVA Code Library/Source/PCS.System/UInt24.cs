@@ -1143,7 +1143,7 @@ namespace System
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(UInt24 value1, UInt24 value2)
         {
-            return System.Math.Pow((double)value1, (double)value2);
+            return Math.Pow((double)value1, (double)value2);
         }
 
         /// <summary>
@@ -1152,7 +1152,7 @@ namespace System
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(int value1, UInt24 value2)
         {
-            return System.Math.Pow((double)value1, (double)value2);
+            return Math.Pow((double)value1, (double)value2);
         }
 
         /// <summary>
@@ -1161,7 +1161,7 @@ namespace System
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(UInt24 value1, int value2)
         {
-            return System.Math.Pow((double)value1, (double)value2);
+            return Math.Pow((double)value1, (double)value2);
         }
 
         #endregion

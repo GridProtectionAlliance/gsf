@@ -842,7 +842,7 @@ namespace PCS.IO.Compression.Tar
 		{
 			using (FileStream fs = File.OpenRead(filename))
 			{
-				int sampleSize = System.Math.Min(4096, (int)fs.Length);
+				int sampleSize = Math.Min(4096, (int)fs.Length);
 				byte[] content = new byte[sampleSize];
 			
 				int bytesRead = fs.Read(content, 0, sampleSize);

@@ -313,7 +313,7 @@ namespace PCS.Web
 			{
 				System.Text.StringBuilder with_1 = new StringBuilder;
 				with_1.Append("<script language=\"javascript\">" + System.Environment.NewLine);
-				with_1.Append("   Show(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(help)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + ");" + System.Environment.NewLine);
+				with_1.Append("   Show(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(help)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + ");" + System.Environment.NewLine);
 				with_1.Append("</script>" + System.Environment.NewLine);
 				
 				if (! page.ClientScript.IsStartupScriptRegistered("Show." + url))
@@ -391,7 +391,7 @@ namespace PCS.Web
 				control.Page.ClientScript.RegisterClientScriptBlock(control.Page.GetType(), "Show", CreateClientSideScript(ClientSideScript.Show));
 			}
 			
-			HookupScriptToControl(control, "javascript:return(Show(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(help)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + "))", "OnClick");
+			HookupScriptToControl(control, "javascript:return(Show(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(help)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + "))", "OnClick");
 			
 		}
 		
@@ -531,11 +531,11 @@ namespace PCS.Web
 				with_1.Append("<script language=\"javascript\">" + System.Environment.NewLine);
 				if (dialogResultHolder != null)
 				{
-					with_1.Append("   ShowDialog(\'" + url + "\', \'" + dialogResultHolder.ClientID+ "\', " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(help)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + ");" + System.Environment.NewLine);
+					with_1.Append("   ShowDialog(\'" + url + "\', \'" + dialogResultHolder.ClientID+ "\', " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(help)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + ");" + System.Environment.NewLine);
 				}
 				else
 				{
-					with_1.Append("   if (ShowDialog(\'" + url + "\', null, " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(help)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + "))" + System.Environment.NewLine);
+					with_1.Append("   if (ShowDialog(\'" + url + "\', null, " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(help)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + "))" + System.Environment.NewLine);
 					with_1.Append("   {" + System.Environment.NewLine);
 					
 					foreach (System.Web.UI.Control Control in page.Controls)
@@ -683,11 +683,11 @@ namespace PCS.Web
 			
 			if (dialogResultHolder != null)
 			{
-				HookupScriptToControl(control, "javascript:return(ShowDialog(\'" + url + "\', \'" + dialogResultHolder.ClientID+ "\', " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(help)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + "))", "OnClick");
+				HookupScriptToControl(control, "javascript:return(ShowDialog(\'" + url + "\', \'" + dialogResultHolder.ClientID+ "\', " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(help)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + "))", "OnClick");
 			}
 			else
 			{
-				HookupScriptToControl(control, "javascript:return(ShowDialog(\'" + url + "\', null, " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(help)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + "))", "OnClick");
+				HookupScriptToControl(control, "javascript:return(ShowDialog(\'" + url + "\', null, " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(help)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + "))", "OnClick");
 			}
 			
 		}
@@ -771,7 +771,7 @@ namespace PCS.Web
 			{
 				System.Text.StringBuilder with_1 = new StringBuilder;
 				with_1.Append("<script language=\"javascript\">" + System.Environment.NewLine);
-				with_1.Append("   ShowPopup(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(scrollbars)) + ", " + System.Math.Abs(System.Convert.ToInt32(toolbar)) + ", " + System.Math.Abs(System.Convert.ToInt32(menubar)) + ", " + System.Math.Abs(System.Convert.ToInt32(location)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + ", " + System.Math.Abs(System.Convert.ToInt32(directories)) + ");" + System.Environment.NewLine);
+				with_1.Append("   ShowPopup(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(scrollbars)) + ", " + Math.Abs(System.Convert.ToInt32(toolbar)) + ", " + Math.Abs(System.Convert.ToInt32(menubar)) + ", " + Math.Abs(System.Convert.ToInt32(location)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + ", " + Math.Abs(System.Convert.ToInt32(directories)) + ");" + System.Environment.NewLine);
 				with_1.Append("</script>" + System.Environment.NewLine);
 				
 				page.ClientScript.RegisterStartupScript(page.GetType(), "ShowPopup." + url, with_1.ToString());
@@ -850,7 +850,7 @@ namespace PCS.Web
 				control.Page.ClientScript.RegisterClientScriptBlock(control.Page.GetType(), "ShowPopup", CreateClientSideScript(ClientSideScript.ShowPopup));
 			}
 			
-			HookupScriptToControl(control, "javascript:return(ShowPopup(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + System.Math.Abs(System.Convert.ToInt32(center)) + ", " + System.Math.Abs(System.Convert.ToInt32(resizable)) + ", " + System.Math.Abs(System.Convert.ToInt32(scrollbars)) + ", " + System.Math.Abs(System.Convert.ToInt32(toolbar)) + ", " + System.Math.Abs(System.Convert.ToInt32(menubar)) + ", " + System.Math.Abs(System.Convert.ToInt32(location)) + ", " + System.Math.Abs(System.Convert.ToInt32(status)) + ", " + System.Math.Abs(System.Convert.ToInt32(directories)) + "))", "OnClick");
+			HookupScriptToControl(control, "javascript:return(ShowPopup(\'" + url + "\', " + height + ", " + width + ", " + left + ", " + top + ", " + Math.Abs(System.Convert.ToInt32(center)) + ", " + Math.Abs(System.Convert.ToInt32(resizable)) + ", " + Math.Abs(System.Convert.ToInt32(scrollbars)) + ", " + Math.Abs(System.Convert.ToInt32(toolbar)) + ", " + Math.Abs(System.Convert.ToInt32(menubar)) + ", " + Math.Abs(System.Convert.ToInt32(location)) + ", " + Math.Abs(System.Convert.ToInt32(status)) + ", " + Math.Abs(System.Convert.ToInt32(directories)) + "))", "OnClick");
 			
 		}
 		
