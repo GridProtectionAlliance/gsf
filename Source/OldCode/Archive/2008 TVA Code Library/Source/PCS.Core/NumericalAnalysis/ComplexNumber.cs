@@ -254,9 +254,9 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static ComplexNumber operator /(ComplexNumber value1, ComplexNumber value2)
         {
-            double devisor = Math.Pow(value2.m_real, 2) + Math.Pow(value2.m_imaginary, 2);
-            double real = (value1.m_real * value2.m_real + value1.m_imaginary * value2.m_imaginary) / devisor;
-            double imaginary = (value1.m_imaginary * value2.m_real - value1.m_real * value2.m_imaginary) / devisor;
+            double divisor = Math.Pow(value2.m_real, 2) + Math.Pow(value2.m_imaginary, 2);
+            double real = (value1.m_real * value2.m_real + value1.m_imaginary * value2.m_imaginary) / divisor;
+            double imaginary = (value1.m_imaginary * value2.m_real - value1.m_real * value2.m_imaginary) / divisor;
 
             return new ComplexNumber(real, imaginary);
         }
