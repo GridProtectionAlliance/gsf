@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  ChannelValueCollectionBase.vb - Channel data value collection base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -70,7 +70,7 @@ namespace PCS.PhasorProtocols
 
         }
 
-        public override ushort BinaryLength
+        public override int BinaryLength
         {
             get
             {
@@ -79,12 +79,12 @@ namespace PCS.PhasorProtocols
                     if (m_fixedCount == 0 || m_floatCount == 0)
                     {
                         // Data types in list are consistent, a simple calculation will derive total binary length
-                        return (ushort)(this[0].BinaryLength * Count);
+                        return this[0].BinaryLength * Count;
                     }
                     else
                     {
                         // List has items of different data types, will have to traverse list to calculate total binary length
-                        ushort length = 0;
+                        int length = 0;
 
                         for (int x = 0; x <= Count - 1; x++)
                         {

@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  IChannel.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: James R Carroll
@@ -21,37 +21,32 @@ using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This interface represents a protocol independent representation of any data type.</summary>
-    /// <remarks>This is the root interface of the phasor protocol library.</remarks>
-    [CLSCompliant(false)]
-    public interface IChannel : IBinaryDataProducer
+    /// <summary>
+    /// This interface represents a protocol independent representation of any data type that can be parsed or generated.
+    /// </summary>
+    /// <remarks>
+    /// This is the root interface of the phasor protocol library.
+    /// </remarks>
+    public interface IChannel : ISupportBinaryImage
     {
+        /// <summary>
+        /// Final derived <see cref="IChannel"/> <see cref="Type"/>.
+        /// </summary>
+        Type DerivedType { get; }
 
-        Type DerivedType
-        {
-            get;
-        }
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
+        /// </summary>
+        Dictionary<string, string> Attributes { get; }
 
-        // At its most basic level - all data represented by the protocols can either be "parsed" or "generated"
-        // hence the following methods common to all elements
+        /// <summary>
+        /// Gets or sets the parsing state for the <see cref="IChannel"/> object.
+        /// </summary>
+        IChannelParsingState State { get; set; }
 
-        void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex);
-
-        new ushort BinaryLength
-        {
-            get;
-        }
-
-        Dictionary<string, string> Attributes
-        {
-            get;
-        }
-
-        object Tag
-        {
-            get;
-            set;
-        }
-
+        /// <summary>
+        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
+        /// </summary>
+        object Tag { get; set; }
     }
 }

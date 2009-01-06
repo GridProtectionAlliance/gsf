@@ -12,7 +12,7 @@ using System.Runtime.Serialization;
 
 //*******************************************************************************************************
 //  DataFrameBase.vb - Data frame base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -69,16 +69,16 @@ namespace PCS.PhasorProtocols
 
         }
 
-        // Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As int)
-        // and automatically pass in parsing state
-        protected DataFrameBase(IDataFrameParsingState state, byte[] binaryImage, int startIndex)
-            : base(state, binaryImage, startIndex)
-        {
+        //// Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As int)
+        //// and automatically pass in parsing state
+        //protected DataFrameBase(IDataFrameParsingState state, byte[] binaryImage, int startIndex)
+        //    : base(state, binaryImage, startIndex)
+        //{
 
 
-            m_configurationFrame = state.ConfigurationFrame;
+        //    m_configurationFrame = state.ConfigurationFrame;
 
-        }
+        //}
 
         // Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
         protected DataFrameBase(IDataFrame dataFrame)
@@ -88,7 +88,7 @@ namespace PCS.PhasorProtocols
 
         }
 
-        protected override FundamentalFrameType FundamentalFrameType
+        public override FundamentalFrameType FrameType
         {
             get
             {

@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  IConfigurationFrameParsingState.vb - Configuration frame parsing state interface
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -32,9 +32,9 @@ namespace PCS.PhasorProtocols
     [CLSCompliant(false)]
     public interface IConfigurationFrameParsingState : IChannelFrameParsingState<IConfigurationCell>
     {
-        new ConfigurationCellCollection Cells
-        {
-            get;
-        }
+        //new ConfigurationCellCollection Cells
+        //{
+        //    get;
+        //}
     }
 }

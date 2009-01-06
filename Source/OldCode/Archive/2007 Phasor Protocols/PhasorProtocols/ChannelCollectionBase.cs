@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  ChannelCollectionBase.vb - Channel data collection base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -30,6 +30,7 @@ namespace PCS.PhasorProtocols
     public abstract class ChannelCollectionBase<T> : List<T>, IChannelCollection<T> where T : IChannel
     {
         private int m_maximumCount;
+        private IChannelParsingState m_state;
         private Dictionary<string, string> m_attributes;
         private object m_tag;
 
@@ -87,34 +88,42 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
+        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
         {
-
-            throw (new NotImplementedException("Binary images are not intended to be parsed at a collection level"));
-
+            throw new NotImplementedException();
         }
 
-        public virtual ushort BinaryLength
+        /// <summary>
+        /// Gets or sets the parsing state for the <see cref="IChannel"/> object.
+        /// </summary>
+        public virtual IChannelParsingState State
+        {
+            get
+            {
+                return m_state;
+            }
+            set
+            {
+                m_state = value;
+            }
+        }
+
+        //[EditorBrowsable(EditorBrowsableState.Never)]
+        //public virtual void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
+        //{
+
+        //    throw (new NotImplementedException("Binary images are not intended to be parsed at a collection level"));
+
+        //}
+
+        public virtual int BinaryLength
         {
             get
             {
                 if (Count > 0)
-                {
-                    return (ushort)(this[0].BinaryLength * Count);
-                }
+                    return this[0].BinaryLength * Count;
                 else
-                {
                     return 0;
-                }
-            }
-        }
-
-        int IBinaryDataProducer.BinaryLength
-        {
-            get
-            {
-                return (int)BinaryLength;
             }
         }
 

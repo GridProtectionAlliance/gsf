@@ -12,7 +12,7 @@ using System.Runtime.Serialization;
 
 //*******************************************************************************************************
 //  ChannelFrameCollectionBase.vb - Channel data frame collection base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -54,12 +54,12 @@ namespace PCS.PhasorProtocols
 
         }
 
-        public override ushort BinaryLength
+        public override int BinaryLength
         {
             get
             {
                 // Frames will be different lengths, so we must manually sum lengths
-                ushort length = 0;
+                int length = 0;
 
                 for (int x = 0; x <= Count - 1; x++)
                 {

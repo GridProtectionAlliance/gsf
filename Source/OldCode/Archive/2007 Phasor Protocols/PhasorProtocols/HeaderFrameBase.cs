@@ -13,7 +13,7 @@ using System.Text;
 
 //*******************************************************************************************************
 //  HeaderFrameBase.vb - Header frame base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -55,14 +55,14 @@ namespace PCS.PhasorProtocols
 
         }
 
-        // Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
-        // and automatically pass in parsing state
-        protected HeaderFrameBase(IHeaderFrameParsingState state, byte[] binaryImage, int startIndex)
-            : base(state, binaryImage, startIndex)
-        {
+        //// Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
+        //// and automatically pass in parsing state
+        //protected HeaderFrameBase(IHeaderFrameParsingState state, byte[] binaryImage, int startIndex)
+        //    : base(state, binaryImage, startIndex)
+        //{
 
 
-        }
+        //}
 
         // Derived classes are expected to expose a Public Sub New(ByVal headerFrame As IHeaderFrame)
         protected HeaderFrameBase(IHeaderFrame headerFrame)
@@ -72,7 +72,7 @@ namespace PCS.PhasorProtocols
 
         }
 
-        protected override FundamentalFrameType FundamentalFrameType
+        public override FundamentalFrameType FrameType
         {
             get
             {
@@ -97,7 +97,7 @@ namespace PCS.PhasorProtocols
             set
             {
                 Cells.Clear();
-                ParseBodyImage(new HeaderFrameParsingState(Cells, 0, (short)value.Length), Encoding.ASCII.GetBytes(value), 0);
+                ParseBodyImage(new HeaderFrameParsingState(/*Cells,*/ 0, (short)value.Length), Encoding.ASCII.GetBytes(value), 0);
             }
         }
 

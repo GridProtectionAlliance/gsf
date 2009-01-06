@@ -1,165 +1,88 @@
 //*******************************************************************************************************
-//  ChannelBase.vb - Channel data base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  ChannelBase.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  3/7/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  3/7/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using PCS;
 using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the common implementation of the protocol independent definition of any kind of data.</summary>
-    [CLSCompliant(false), Serializable()]
-    public abstract class ChannelBase : IChannel
+    /// <summary>
+    /// This base class represents the common implementation of the protocol independent definition of any kind of data that can be parsed or generated.
+    /// </summary>
+    /// <remarks>
+    /// This is the root class of the phasor protocol library.<br/>
+    /// This base class represents <see cref="IChannel"/> data images for parsing or generation in terms of a header, body and footer (see <see cref="BinaryImageBase"/> for details).
+    /// </remarks>
+    [Serializable()]
+    public abstract class ChannelBase : BinaryImageBase, IChannel
     {
-        // This is the attributes dictionary relevant to all channel properties.  This dictionary
-        // will only be instantiated with a call to "Attributes" property which will begin the
-        // enumeration of relevant system properties.  This is typically used for display purposes.
-        // For example, this information is displayed in a tree view on the the PMU Connection
-        // Tester to display attributes of data elements that may be protocol specific
-        private Dictionary<string, string> m_attributes;
-        private object m_tag;
+        #region [ Members ]
 
-        // This is expected to be overriden by the final derived class
-        public abstract Type DerivedType
-        {
-            get;
-        }
+        // Fields        
+        private IChannelParsingState m_state;               // Current parsing state
+        private Dictionary<string, string> m_attributes;    // Attributes dictionary
+        private object m_tag;                               // User defined tag
 
-        // This property is not typically overriden
-        public virtual ushort BinaryLength
-        {
-            get
-            {
-                return (ushort)(HeaderLength + BodyLength + FooterLength);
-            }
-        }
+        #endregion
 
-        int IBinaryDataProducer.BinaryLength
-        {
-            get
-            {
-                return (int)BinaryLength;
-            }
-        }
+        #region [ Properties ]
 
-        // This property is not typically overriden
-        public virtual byte[] BinaryImage
+        /// <summary>
+        /// Gets the final derived type of class implementing <see cref="IChannel"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is expected to be overriden by the final derived class.
+        /// </remarks>
+        public abstract Type DerivedType { get; }
+
+        /// <summary>
+        /// Gets or sets the parsing state for the <see cref="IChannel"/> object.
+        /// </summary>
+        public virtual IChannelParsingState State
         {
             get
             {
-                byte[] buffer = new byte[BinaryLength];
-                int index = 0;
-
-                // Copy in header, body and footer images
-                Common.CopyImage(HeaderImage, buffer, ref index, HeaderLength);
-                Common.CopyImage(BodyImage, buffer, ref index, BodyLength);
-                Common.CopyImage(FooterImage, buffer, ref index, FooterLength);
-
-                return buffer;
+                return m_state;
             }
-        }
-
-        // This property is not typically overriden
-        virtual public void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-            // Parse out header, body and footer images
-            ParseHeaderImage(state, binaryImage, startIndex);
-            startIndex += HeaderLength;
-
-            ParseBodyImage(state, binaryImage, startIndex);
-            startIndex += BodyLength;
-
-            ParseFooterImage(state, binaryImage, startIndex);
-        }
-
-        protected virtual void ParseHeaderImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-        }
-
-        protected virtual void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-        }
-
-        protected virtual void ParseFooterImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-        }
-
-        protected virtual ushort HeaderLength
-        {
-            get
+            set
             {
-                return 0;
+                m_state = value;
             }
         }
 
-        protected virtual byte[] HeaderImage
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        protected virtual ushort BodyLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
-
-        protected virtual byte[] BodyImage
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        protected virtual ushort FooterLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
-
-        protected virtual byte[] FooterImage
-        {
-            get
-            {
-                return null;
-            }
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
+        /// </summary>
+        /// <remarks>
+        /// The attributes dictionary is relevant to all channel properties.  This dictionary will only be instantiated with a call to
+        /// the <c>Attributes</c> property which will begin the enumeration of relevant system properties.  This is typically used for
+        /// display purposes. For example, this information is displayed in a tree view on the the <b>PMU Connection Tester</b> to display
+        /// attributes of data elements that may be protocol specific.
+        /// </remarks>
         public virtual Dictionary<string, string> Attributes
         {
             get
             {
                 // Create a new attributes dictionary or clear the contents of any existing one
                 if (m_attributes == null)
-                {
                     m_attributes = new Dictionary<string, string>();
-                }
                 else
-                {
                     m_attributes.Clear();
-                }
 
                 m_attributes.Add("Derived Type", DerivedType.FullName);
                 m_attributes.Add("Binary Length", BinaryLength.ToString());
@@ -168,7 +91,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        /// <summary>User definable tag used to hold a reference associated with channel data</summary>
+        /// <summary>
+        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
+        /// </summary>
         public virtual object Tag
         {
             get
@@ -180,5 +105,7 @@ namespace PCS.PhasorProtocols
                 m_tag = value;
             }
         }
+
+        #endregion
     }
 }

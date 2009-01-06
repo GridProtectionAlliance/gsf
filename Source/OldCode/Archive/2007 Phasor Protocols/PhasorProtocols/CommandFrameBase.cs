@@ -14,7 +14,7 @@ using System.Text;
 
 //*******************************************************************************************************
 //  CommandFrameBase.vb - Command frame base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -62,14 +62,14 @@ namespace PCS.PhasorProtocols
 
         }
 
-        // Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
-        // and automatically pass in parsing state
-        protected CommandFrameBase(ICommandFrameParsingState state, byte[] binaryImage, int startIndex)
-            : base(state, binaryImage, startIndex)
-        {
+        //// Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
+        //// and automatically pass in parsing state
+        //protected CommandFrameBase(ICommandFrameParsingState state, byte[] binaryImage, int startIndex)
+        //    : base(state, binaryImage, startIndex)
+        //{
 
 
-        }
+        //}
 
         // Derived classes are expected to expose a Public Sub New(ByVal commandFrame As ICommandFrame)
         protected CommandFrameBase(ICommandFrame commandFrame)
@@ -79,7 +79,7 @@ namespace PCS.PhasorProtocols
 
         }
 
-        protected override FundamentalFrameType FundamentalFrameType
+        public override FundamentalFrameType FrameType
         {
             get
             {
@@ -116,15 +116,15 @@ namespace PCS.PhasorProtocols
             set
             {
                 Cells.Clear();
-                base.ParseBodyImage(new CommandFrameParsingState(Cells, 0, (short)value.Length), value, 0);
+                base.ParseBodyImage(new CommandFrameParsingState(/*Cells,*/ 0, (short)value.Length), value, 0);
             }
         }
 
-        protected override ushort BodyLength
+        protected override int BodyLength
         {
             get
             {
-                return (ushort)(base.BodyLength + 2);
+                return base.BodyLength + 2;
             }
         }
 

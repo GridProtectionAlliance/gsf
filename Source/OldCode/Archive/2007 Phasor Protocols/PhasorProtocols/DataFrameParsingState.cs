@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  DataFrameParsingState.vb - Data frame parsing state class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -37,8 +37,8 @@ namespace PCS.PhasorProtocols
 
         private IConfigurationFrame m_configurationFrame;
 
-        public DataFrameParsingState(DataCellCollection cells, ushort frameLength, IConfigurationFrame configurationFrame, CreateNewCellFunctionSignature<IDataCell> createNewCellFunction)
-            : base(cells, frameLength, createNewCellFunction)
+        public DataFrameParsingState(/*DataCellCollection cells,*/ ushort frameLength, IConfigurationFrame configurationFrame, CreateNewCellFunctionSignature<IDataCell> createNewCellFunction)
+            : base(/*cells,*/ frameLength, createNewCellFunction)
         {
 
 
@@ -63,13 +63,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual new DataCellCollection Cells
-        {
-            get
-            {
-                return (DataCellCollection)base.Cells;
-            }
-        }
+        //public virtual new DataCellCollection Cells
+        //{
+        //    get
+        //    {
+        //        return (DataCellCollection)base.Cells;
+        //    }
+        //}
 
     }
 }

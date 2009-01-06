@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  PhasorValueBase.vb - Phasor value base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -213,7 +213,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_compositeValues.get_Received(CompositePhasorValue.Angle);
+                return m_compositeValues.Received(CompositePhasorValue.Angle);
             }
         }
 
@@ -236,7 +236,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_compositeValues.get_Received(CompositePhasorValue.Magnitude);
+                return m_compositeValues.Received(CompositePhasorValue.Magnitude);
             }
         }
 
@@ -359,18 +359,14 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        protected override ushort BodyLength
+        protected override int BodyLength
         {
             get
             {
                 if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
-                {
                     return 4;
-                }
                 else
-                {
                     return 8;
-                }
             }
         }
 

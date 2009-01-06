@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  ConfigurationFrameParsingState.vb - Configuration frame parsing state class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -35,8 +35,8 @@ namespace PCS.PhasorProtocols
 
 
 
-        public ConfigurationFrameParsingState(ConfigurationCellCollection cells, ushort frameLength, CreateNewCellFunctionSignature<IConfigurationCell> createNewCellFunction)
-            : base((IChannelCellCollection<IConfigurationCell>)cells, frameLength, createNewCellFunction)
+        public ConfigurationFrameParsingState(/*ConfigurationCellCollection cells,*/ int frameLength, CreateNewCellFunctionSignature<IConfigurationCell> createNewCellFunction)
+            : base(/*(IChannelCellCollection<IConfigurationCell>)cells,*/ frameLength, createNewCellFunction)
         {
 
 
@@ -50,13 +50,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return (ConfigurationCellCollection)base.Cells;
-            }
-        }
+        //public virtual new ConfigurationCellCollection Cells
+        //{
+        //    get
+        //    {
+        //        return (ConfigurationCellCollection)base.Cells;
+        //    }
+        //}
 
     }
 }

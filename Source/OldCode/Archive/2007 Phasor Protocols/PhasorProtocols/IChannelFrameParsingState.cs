@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  IChannelFrameParsingState.vb - Channel data frame parsing state interface
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -34,26 +34,15 @@ namespace PCS.PhasorProtocols
     [CLSCompliant(false)]
     public interface IChannelFrameParsingState<T> : IChannelParsingState where T : IChannelCell
     {
-        CreateNewCellFunctionSignature<T> CreateNewCellFunction
-        {
-            get;
-        }
+        CreateNewCellFunctionSignature<T> CreateNewCellFunction { get; }
 
-        IChannelCellCollection<T> Cells
-        {
-            get;
-        }
+        //IChannelCellCollection<T> Cells
+        //{
+        //    get;
+        //}
 
-        int CellCount
-        {
-            get;
-            set;
-        }
+        int CellCount { get; set; }
 
-        ushort ParsedBinaryLength
-        {
-            get;
-            set;
-        }
+        int ParsedBinaryLength { get; set; }
     }
 }

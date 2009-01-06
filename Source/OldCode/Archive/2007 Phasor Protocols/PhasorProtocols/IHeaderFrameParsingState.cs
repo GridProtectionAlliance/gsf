@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  IHeaderFrameParsingState.vb - Header frame parsing state interface
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -34,10 +34,10 @@ namespace PCS.PhasorProtocols
     {
 
 
-        new HeaderCellCollection Cells
-        {
-            get;
-        }
+        //new HeaderCellCollection Cells
+        //{
+        //    get;
+        //}
 
     }
 }

@@ -68,9 +68,11 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -79,27 +81,6 @@
     <Compile Include="AnalogDefinitionCollection.cs" />
     <Compile Include="AnalogValueBase.cs" />
     <Compile Include="AnalogValueCollection.cs" />
-    <Compile Include="BpaPdcStream\AnalogDefinition.cs" />
-    <Compile Include="BpaPdcStream\AnalogValue.cs" />
-    <Compile Include="BpaPdcStream\Common.cs" />
-    <Compile Include="BpaPdcStream\CommonFrameHeader.cs" />
-    <Compile Include="BpaPdcStream\ConfigurationCell.cs" />
-    <Compile Include="BpaPdcStream\ConfigurationCellCollection.cs" />
-    <Compile Include="BpaPdcStream\ConfigurationFrame.cs" />
-    <Compile Include="BpaPdcStream\ConnectionParameters.cs" />
-    <Compile Include="BpaPdcStream\DataCell.cs" />
-    <Compile Include="BpaPdcStream\DataCellCollection.cs" />
-    <Compile Include="BpaPdcStream\DataCellParsingState.cs" />
-    <Compile Include="BpaPdcStream\DataFrame.cs" />
-    <Compile Include="BpaPdcStream\DigitalDefinition.cs" />
-    <Compile Include="BpaPdcStream\DigitalValue.cs" />
-    <Compile Include="BpaPdcStream\Enumerations.cs" />
-    <Compile Include="BpaPdcStream\FrameParser.cs" />
-    <Compile Include="BpaPdcStream\FrequencyDefinition.cs" />
-    <Compile Include="BpaPdcStream\FrequencyValue.cs" />
-    <Compile Include="BpaPdcStream\ICommonFrameHeader.cs" />
-    <Compile Include="BpaPdcStream\PhasorDefinition.cs" />
-    <Compile Include="BpaPdcStream\PhasorValue.cs" />
     <Compile Include="ChannelBase.cs" />
     <Compile Include="ChannelCellBase.cs" />
     <Compile Include="ChannelCellCollectionBase.cs" />
@@ -126,22 +107,9 @@
     <Compile Include="CommandFrameBase.cs" />
     <Compile Include="ChannelValueMeasurement.cs" />
     <Compile Include="ConnectionParametersBase.cs" />
-    <Compile Include="FNet\Common.cs" />
-    <Compile Include="FNet\ConfigurationCell.cs" />
-    <Compile Include="FNet\ConfigurationCellCollection.cs" />
-    <Compile Include="FNet\ConfigurationFrame.cs" />
-    <Compile Include="FNet\ConnectionParameters.cs" />
-    <Compile Include="FNet\DataCell.cs" />
-    <Compile Include="FNet\DataCellCollection.cs" />
-    <Compile Include="FNet\DataFrame.cs" />
-    <Compile Include="FNet\Enumerations.cs" />
-    <Compile Include="FNet\FrameParser.cs" />
-    <Compile Include="FNet\FrequencyDefinition.cs" />
-    <Compile Include="FNet\FrequencyValue.cs" />
-    <Compile Include="FNet\PhasorDefinition.cs" />
-    <Compile Include="FNet\PhasorValue.cs" />
     <Compile Include="FrameParserBase.cs" />
     <Compile Include="IConnectionParameters.cs" />
+    <Compile Include="Ieee1344\FrameImageCollector.cs" />
     <Compile Include="IFrameParser.cs" />
     <Compile Include="Enumerations.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
@@ -157,10 +125,6 @@
     <Compile Include="Ieee1344\Enumerations.cs" />
     <Compile Include="Ieee1344\FrequencyDefinition.cs" />
     <Compile Include="Ieee1344\FrequencyValue.cs" />
-    <Compile Include="Ieee1344\ICommonFrameHeader.cs" />
-    <Compile Include="IeeeC37_118\ConfigurationFrameDraft6.cs" />
-    <Compile Include="IeeeC37_118\Enumerations.cs" />
-    <Compile Include="IeeeC37_118\HeaderFrame.cs" />
     <Compile Include="IHeaderFrameParsingState.cs" />
     <Compile Include="HeaderFrameBase.cs" />
     <Compile Include="HeaderCell.cs" />
@@ -213,25 +177,6 @@
     <Compile Include="Ieee1344\HeaderFrame.cs" />
     <Compile Include="Ieee1344\PhasorDefinition.cs" />
     <Compile Include="Ieee1344\PhasorValue.cs" />
-    <Compile Include="IeeeC37_118\AnalogDefinition.cs" />
-    <Compile Include="IeeeC37_118\AnalogValue.cs" />
-    <Compile Include="IeeeC37_118\CommandFrame.cs" />
-    <Compile Include="IeeeC37_118\Common.cs" />
-    <Compile Include="IeeeC37_118\ConfigurationCell.cs" />
-    <Compile Include="IeeeC37_118\ConfigurationCellCollection.cs" />
-    <Compile Include="IeeeC37_118\ConfigurationFrame.cs" />
-    <Compile Include="IeeeC37_118\DataCell.cs" />
-    <Compile Include="IeeeC37_118\DataCellCollection.cs" />
-    <Compile Include="IeeeC37_118\DataFrame.cs" />
-    <Compile Include="IeeeC37_118\DigitalDefinition.cs" />
-    <Compile Include="IeeeC37_118\DigitalValue.cs" />
-    <Compile Include="IeeeC37_118\CommonFrameHeader.cs" />
-    <Compile Include="IeeeC37_118\FrameParser.cs" />
-    <Compile Include="IeeeC37_118\FrequencyDefinition.cs" />
-    <Compile Include="IeeeC37_118\FrequencyValue.cs" />
-    <Compile Include="IeeeC37_118\ICommonFrameHeader.cs" />
-    <Compile Include="IeeeC37_118\PhasorDefinition.cs" />
-    <Compile Include="IeeeC37_118\PhasorValue.cs" />
     <Compile Include="IFrequencyDefinition.cs" />
     <Compile Include="IFrequencyValue.cs" />
     <Compile Include="IPhasorDefinition.cs" />
@@ -241,31 +186,6 @@
     <Compile Include="PhasorDefinitionCollection.cs" />
     <Compile Include="PhasorValueBase.cs" />
     <Compile Include="PhasorValueCollection.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Relationship Diagrams\Analog Definition Relationships.cd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Relationship Diagrams\Analog Value Relationships.cd" />
-    <None Include="Relationship Diagrams\CommandCell Collection Relationships.cd" />
-    <None Include="Relationship Diagrams\CommandCell Relationships.cd" />
-    <None Include="Relationship Diagrams\CommandFrame Relationships.cd" />
-    <None Include="Relationship Diagrams\ConfigurationCell Collection Relationships.cd" />
-    <None Include="Relationship Diagrams\ConfigurationCell Relationships.cd" />
-    <None Include="Relationship Diagrams\ConfigurationFrame Relationships.cd" />
-    <None Include="Relationship Diagrams\DataCell Collection Relationships.cd" />
-    <None Include="Relationship Diagrams\DataCell Relationships.cd" />
-    <None Include="Relationship Diagrams\DataFrame Relationships.cd" />
-    <None Include="Relationship Diagrams\Digital Definition Relationships.cd" />
-    <None Include="Relationship Diagrams\Digital Value Relationships.cd" />
-    <None Include="Relationship Diagrams\FrameParser Relationships.cd" />
-    <None Include="Relationship Diagrams\Frequency Definition Relationships.cd" />
-    <None Include="Relationship Diagrams\Frequency Value Relationships.cd" />
-    <None Include="Relationship Diagrams\HeaderCell Collection Relationships.cd" />
-    <None Include="Relationship Diagrams\HeaderCell Relationships.cd" />
-    <None Include="Relationship Diagrams\HeaderFrame Relationships.cd" />
-    <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
-    <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

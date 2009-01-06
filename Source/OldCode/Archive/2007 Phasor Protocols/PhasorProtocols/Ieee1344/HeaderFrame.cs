@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  HeaderFrame.vb - IEEE1344 Header Frame
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -18,6 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 using System.Collections.Generic;
+using PCS.Parsing;
 using PCS.IO.Checksums;
 
 namespace PCS.PhasorProtocols
@@ -26,17 +27,18 @@ namespace PCS.PhasorProtocols
     {
         /// <summary>IEEE1344 Header Frame</summary>
         [CLSCompliant(false), Serializable()]
-        public class HeaderFrame : HeaderFrameBase, ICommonFrameHeader
+        public class HeaderFrame : HeaderFrameBase, ISupportFrameImage<FrameType>
         {
+            private CommonFrameHeader m_frameHeader;
             private ulong m_idCode;
             private short m_sampleCount;
             private short m_statusFlags;
 
             public HeaderFrame()
-                : base(new HeaderCellCollection(PhasorProtocols.Ieee1344.Common.MaximumHeaderDataLength))
+                : base(new HeaderCellCollection(Ieee1344.Common.MaximumHeaderDataLength))
             {
 
-                CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
+                //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
 
             }
 
@@ -52,19 +54,19 @@ namespace PCS.PhasorProtocols
 
             }
 
-            public HeaderFrame(ICommonFrameHeader parsedFrameHeader, byte[] binaryImage, int startIndex)
-                : base(new HeaderFrameParsingState(new HeaderCellCollection(Common.MaximumHeaderDataLength), parsedFrameHeader.FrameLength, (short)(parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 2)), binaryImage, startIndex)
-            {
-                CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
-                CommonFrameHeader.Clone(parsedFrameHeader, this);
-                parsedFrameHeader.Dispose();
-            }
+            //public HeaderFrame(IFrameImage parsedFrameHeader, byte[] binaryImage, int startIndex)
+            //    : base(new HeaderFrameParsingState(new HeaderCellCollection(Common.MaximumHeaderDataLength), parsedFrameHeader.FrameLength, (short)(parsedFrameHeader.FrameLength - CommonFrameHeader.FixedLength - 2)), binaryImage, startIndex)
+            //{
+            //    //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
+            //    //CommonFrameHeader.Clone(parsedFrameHeader, this);
+            //    //parsedFrameHeader.Dispose();
+            //}
 
             public HeaderFrame(IHeaderFrame headerFrame)
                 : base(headerFrame)
             {
 
-                CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
+                //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
 
             }
 
@@ -92,23 +94,39 @@ namespace PCS.PhasorProtocols
             {
                 get
                 {
-                    return CommonFrameHeader.TimeTag(this);
+                    return m_frameHeader.TimeTag;
                 }
             }
 
-            public FrameType FrameType
+            public FrameType TypeID
             {
                 get
                 {
-                    return CommonFrameHeader.FrameType(this);
+                    return Ieee1344.FrameType.HeaderFrame;
                 }
             }
 
-            FundamentalFrameType ICommonFrameHeader.FundamentalFrameType
+            public CommonFrameHeader CommonHeader
             {
                 get
                 {
-                    return base.FundamentalFrameType;
+                    return m_frameHeader;
+                }
+                set
+                {
+                    m_frameHeader = value;
+                }
+            }
+
+            ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
+            {
+                get
+                {
+                    return (ICommonHeader<FrameType>) m_frameHeader;
+                }
+                set
+                {
+                    m_frameHeader = (CommonFrameHeader)value;
                 }
             }
 
@@ -116,7 +134,7 @@ namespace PCS.PhasorProtocols
             {
                 get
                 {
-                    return CommonFrameHeader.FrameLength(this);
+                    return m_frameHeader.FrameLength;
                 }
             }
 
@@ -124,33 +142,33 @@ namespace PCS.PhasorProtocols
             {
                 get
                 {
-                    return CommonFrameHeader.DataLength(this);
+                    return m_frameHeader.DataLength;
                 }
             }
 
-            public short InternalSampleCount
-            {
-                get
-                {
-                    return m_sampleCount;
-                }
-                set
-                {
-                    m_sampleCount = value;
-                }
-            }
+            //public short InternalSampleCount
+            //{
+            //    get
+            //    {
+            //        return m_sampleCount;
+            //    }
+            //    set
+            //    {
+            //        m_sampleCount = value;
+            //    }
+            //}
 
-            public short InternalStatusFlags
-            {
-                get
-                {
-                    return m_statusFlags;
-                }
-                set
-                {
-                    m_statusFlags = value;
-                }
-            }
+            //public short InternalStatusFlags
+            //{
+            //    get
+            //    {
+            //        return m_statusFlags;
+            //    }
+            //    set
+            //    {
+            //        m_statusFlags = value;
+            //    }
+            //}
 
             protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
             {
@@ -158,11 +176,11 @@ namespace PCS.PhasorProtocols
                 return buffer.Crc16Checksum(offset, length);
             }
 
-            protected override ushort HeaderLength
+            protected override int HeaderLength
             {
                 get
                 {
-                    return CommonFrameHeader.BinaryLength;
+                    return m_frameHeader.BinaryLength;
                 }
             }
 
@@ -170,7 +188,7 @@ namespace PCS.PhasorProtocols
             {
                 get
                 {
-                    return CommonFrameHeader.BinaryImage(this);
+                    return m_frameHeader.BinaryImage;
                 }
             }
 
@@ -192,23 +210,13 @@ namespace PCS.PhasorProtocols
                 {
                     Dictionary<string, string> baseAttributes = base.Attributes;
 
-                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
+                    baseAttributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
                     baseAttributes.Add("Frame Length", FrameLength.ToString());
                     baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
                     baseAttributes.Add("Sample Count", m_sampleCount.ToString());
 
                     return baseAttributes;
                 }
-            }
-
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            protected virtual void Dispose(bool disposing)
-            {
             }
         }
     }

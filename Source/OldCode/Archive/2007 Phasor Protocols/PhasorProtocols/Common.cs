@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  Common.vb - Common declarations and functions for phasor classes
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -26,38 +26,48 @@ namespace PCS.PhasorProtocols
     [CLSCompliant(false)]
     public static class Common
     {
-        /// <summary>Typical data stream synchrnonization byte</summary>
+        /// <summary>Typical data stream synchrnonization byte.</summary>
         public const byte SyncByte = 0xAA;
 
-        /// <summary>Undefined measurement key</summary>
+        /// <summary>Undefined measurement key.</summary>
         public static MeasurementKey UndefinedKey = new MeasurementKey(-1, "__");
 
-        /// <summary>This is a common optimized block copy function for any kind of data</summary>
-        /// <remarks>This function automatically advances index for convenience</remarks>
-        public static void CopyImage(IChannel channel, byte[] buffer, ref int index)
+        /// <summary>This is a common optimized block copy function for any kind of data.</summary>
+        /// <remarks>This function automatically advances index for convenience.</remarks>
+        /// <param name="channel">Source channel with BinaryImage data to copy.</param>
+        /// <param name="destination">Destination buffer to hold copied buffer data.</param>
+        /// <param name="index">Index into <paramref name="destination"/> buffer to begin copy.  Index is automatically incremented by channel's BinaryLength.</param>
+        public static void CopyImage(this IChannel channel, byte[] destination, ref int index)
         {
-            CopyImage(channel.BinaryImage, buffer, ref index, channel.BinaryLength);
+            CopyImage(channel.BinaryImage, destination, ref index, channel.BinaryLength);
         }
 
-        /// <summary>This is a common optimized block copy function for binary data</summary>
-        /// <remarks>This function automatically advances index for convenience</remarks>
-        public static void CopyImage(byte[] source, byte[] buffer, ref int index, int length)
+        /// <summary>This is a common optimized block copy function for binary data.</summary>
+        /// <remarks>
+        /// Source index is always zero so hence not requested.
+        /// This function automatically advances index for convenience.
+        /// </remarks>
+        /// <param name="source">Source buffer to copy data from.</param>
+        /// <param name="destination">Destination buffer to hold copied buffer data.</param>
+        /// <param name="index">Index into <paramref name="destination"/> buffer to begin copy.  Index is automatically incremented by <paramref name="length"/>.</param>
+        /// <param name="length">Number of bytes to copy from source.</param>
+        public static void CopyImage(this byte[] source, byte[] destination, ref int index, int length)
         {
             if (length > 0)
             {
-                Buffer.BlockCopy(source, 0, buffer, index, length);
+                Buffer.BlockCopy(source, 0, destination, index, length);
                 index += length;
             }
         }
 
-        /// <summary>Removes duplicate white space and control characters from a string</summary>
-        /// <remarks>Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization</remarks>
+        /// <summary>Removes duplicate white space and control characters from a string.</summary>
+        /// <remarks>Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization.</remarks>
         public static string GetValidLabel(string value)
         {
             return value.ReplaceControlCharacters().RemoveDuplicateWhiteSpace().Trim();
         }
 
-        /// <summary>Returns display friendly protocol name</summary>
+        /// <summary>Returns display friendly protocol name.</summary>
         public static string GetFormattedProtocolName(PhasorProtocol protocol)
         {
             switch (protocol)

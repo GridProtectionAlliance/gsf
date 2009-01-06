@@ -13,7 +13,7 @@ using System.Runtime.Serialization;
 
 //*******************************************************************************************************
 //  ConfigurationFrameBase.vb - Configuration frame base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -34,7 +34,6 @@ namespace PCS.PhasorProtocols
     [CLSCompliant(false), Serializable()]
     public abstract class ConfigurationFrameBase : ChannelFrameBase<IConfigurationCell>, IConfigurationFrame
     {
-
 
 
         private short m_frameRate;
@@ -69,14 +68,14 @@ namespace PCS.PhasorProtocols
 
         }
 
-        // Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
-        // and automatically pass in state parameter
-        protected ConfigurationFrameBase(IConfigurationFrameParsingState state, byte[] binaryImage, int startIndex)
-            : base(state, binaryImage, startIndex)
-        {
+        //// Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
+        //// and automatically pass in state parameter
+        //protected ConfigurationFrameBase(IConfigurationFrameParsingState state, byte[] binaryImage, int startIndex)
+        //    : base(state, binaryImage, startIndex)
+        //{
 
 
-        }
+        //}
 
         // Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
         protected ConfigurationFrameBase(IConfigurationFrame configurationFrame)
@@ -86,7 +85,7 @@ namespace PCS.PhasorProtocols
 
         }
 
-        protected override FundamentalFrameType FundamentalFrameType
+        public override FundamentalFrameType FrameType
         {
             get
             {

@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  MultiProtocolFrameParser.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
 //  Primary Developer: James R Carroll
@@ -51,41 +51,141 @@ using PCS.Communication;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>Protocol independent frame parser</summary>
+    /// <summary>Protocol independent frame parser.</summary>
     [CLSCompliant(false)]
     public class MultiProtocolFrameParser : IFrameParser
     {
         #region [ Members ]
 
         // Constants
-        public const int DefaultBufferSize = 262144; // 256K
-        public const double DefaultFrameRate = 1.0D / 30.0D;
 
-        // Delegates
-        public delegate void SentCommandFrameEventHandler(ICommandFrame frame);
-        public delegate void ConnectionExceptionEventHandler(Exception ex, int connectionAttempts);
-        public delegate void AttemptingConnectionEventHandler();
-        public delegate void ConnectedEventHandler();
-        public delegate void DisconnectedEventHandler();
-        public delegate void ServerStartedEventHandler();
-        public delegate void ServerStoppedEventHandler();
+        /// <summary>
+        /// Specifies the default value for the <see cref="BufferSize"/> property.
+        /// </summary>
+        public const int DefaultBufferSize = 262144; // 256K
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="DefinedFrameRate"/> property.
+        /// </summary>
+        public const double DefaultDefinedFrameRate = 1.0D / 30.0D;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MaximumConnectionAttempts"/> property.
+        /// </summary>
+        public const int DefaultMaximumConnectionAttempts = -1;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AutoStartDataParsingSequence"/> property.
+        /// </summary>
+        public const bool DefaultAutoStartDataParsingSequence = true;
 
         // Events
-        public event ReceivedConfigurationFrameEventHandler ReceivedConfigurationFrame;
-        public event ReceivedDataFrameEventHandler ReceivedDataFrame;
-        public event ReceivedHeaderFrameEventHandler ReceivedHeaderFrame;
-        public event ReceivedCommandFrameEventHandler ReceivedCommandFrame;
-        public event ReceivedUndeterminedFrameEventHandler ReceivedUndeterminedFrame;
-        public event ReceivedFrameBufferImageEventHandler ReceivedFrameBufferImage;
-        public event ConfigurationChangedEventHandler ConfigurationChanged;
-        public event DataStreamExceptionEventHandler DataStreamException;
-        public event SentCommandFrameEventHandler SentCommandFrame;
-        public event ConnectionExceptionEventHandler ConnectionException;
-        public event AttemptingConnectionEventHandler AttemptingConnection;
-        public event ConnectedEventHandler Connected;
-        public event DisconnectedEventHandler Disconnected;
-        public event ServerStartedEventHandler ServerStarted;
-        public event ServerStoppedEventHandler ServerStopped;
+
+        /// <summary>
+        /// Occurs when a <see cref="ICommandFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ICommandFrame"/> that was received.
+        /// </remarks>
+        public event EventHandler<EventArgs<ICommandFrame>> ReceivedCommandFrame;
+
+        /// <summary>
+        /// Occurs when a <see cref="IConfigurationFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="IConfigurationFrame"/> that was received.
+        /// </remarks>
+        public event EventHandler<EventArgs<IConfigurationFrame>> ReceivedConfigurationFrame;
+
+        /// <summary>
+        /// Occurs when a <see cref="IDataFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="IDataFrame"/> that was received.
+        /// </remarks>
+        public event EventHandler<EventArgs<IDataFrame>> ReceivedDataFrame;
+
+        /// <summary>
+        /// Occurs when a <see cref="IHeaderFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="IHeaderFrame"/> that was received.
+        /// </remarks>
+        public event EventHandler<EventArgs<IHeaderFrame>> ReceivedHeaderFrame;
+
+        /// <summary>
+        /// Occurs when an undetermined <see cref="IChannelFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the undetermined <see cref="IChannelFrame"/> that was received.
+        /// </remarks>
+        public event EventHandler<EventArgs<IChannelFrame>> ReceivedUndeterminedFrame;
+
+        /// <summary>
+        /// Occurs when a frame buffer image has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2,T3,T4}.Argument1"/> is the <see cref="FundamentalFrameType"/> of the frame buffer image that was received.<br/>
+        /// <see cref="EventArgs{T1,T2,T3,T4}.Argument2"/> is the buffer that contains the frame image that was received.<br/>
+        /// <see cref="EventArgs{T1,T2,T3,T4}.Argument3"/> is the offset into the buffer that contains the frame image that was received.<br/>
+        /// <see cref="EventArgs{T1,T2,T3,T4}.Argument4"/> is the length of data in the buffer that contains the frame image that was received..
+        /// </remarks>
+        public event EventHandler<EventArgs<FundamentalFrameType, byte[], int, int>> ReceivedFrameBufferImage;
+
+        /// <summary>
+        /// Occurs when a device sends a notification that its configuration has changed.
+        /// </summary>
+        public event EventHandler ConfigurationChanged;
+        
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered while parsing the data stream.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered while parsing the data stream.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> ParsingException;
+        
+        /// <summary>
+        /// Occurs when a <see cref="ICommandFrame"/> is sent to a device.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is a reference to the <see cref="ICommandFrame"/> that was sent to the device.
+        /// </remarks>
+        public event EventHandler<EventArgs<ICommandFrame>> SentCommandFrame;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered during connection attempt to a device.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the exception that occured during the connection attempt.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of connections attempted so far.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception, int>> ConnectionException;
+
+        /// <summary>
+        /// Occurs when <see cref="MultiProtocolFrameParser"/> is attempting connection to a device.
+        /// </summary>
+        public event EventHandler ConnectionAttempt;
+
+        /// <summary>
+        /// Occurs when <see cref="MultiProtocolFrameParser"/> has established a connection to a device.
+        /// </summary>
+        public event EventHandler ConnectionEstablished;
+
+        /// <summary>
+        /// Occurs when device connection has been terminated.
+        /// </summary>
+        public event EventHandler ConnectionTerminated;
+        
+        /// <summary>
+        /// Occurs when the <see cref="MultiProtocolFrameParser"/> is setup as a listening connection and server connection has been started.
+        /// </summary>
+        public event EventHandler ServerStarted;
+
+        /// <summary>
+        /// Occurs when the <see cref="MultiProtocolFrameParser"/> is setup as a listening connection and server connection has been stopped.
+        /// </summary>
+        public event EventHandler ServerStopped;
 
         // Fields
         private PhasorProtocol m_phasorProtocol;
@@ -97,7 +197,7 @@ namespace PCS.PhasorProtocols
         private IFrameParser m_frameParser;
         private IClient m_communicationClient;
         private IServer m_communicationServer;
-        private IClient m_commandChannel; // Command communication channel added to support SEL's UDP_T and UDP_U
+        private IClient m_commandChannel;
         private System.Timers.Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
         private long m_dataStreamStartTime;
@@ -119,7 +219,7 @@ namespace PCS.PhasorProtocols
         private bool m_deviceSupportsCommands;
         private bool m_enabled;
         private IConnectionParameters m_connectionParameters;
-        private int m_clientConnectionAttempts;
+        private int m_connectionAttempts;
         private bool m_disposed;
 
         #endregion
@@ -127,17 +227,17 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new multi-protocol frame parser using the default settings.
+        /// Creates a new <see cref="MultiProtocolFrameParser"/> using the default settings.
         /// </summary>
         public MultiProtocolFrameParser()
         {
-            m_connectionString = "server=127.0.0.1; port=4712";
+            m_connectionString = "server=127.0.0.1:4712";
             m_deviceID = 1;
             m_bufferSize = DefaultBufferSize;
-            m_definedFrameRate = DefaultFrameRate;
+            m_definedFrameRate = DefaultDefinedFrameRate;
+            m_maximumConnectionAttempts = DefaultMaximumConnectionAttempts;
+            m_autoStartDataParsingSequence = DefaultAutoStartDataParsingSequence;
             m_rateCalcTimer = new System.Timers.Timer();
-            m_maximumConnectionAttempts = -1;
-            m_autoStartDataParsingSequence = true;
 
             m_phasorProtocol = PhasorProtocol.IeeeC37_118V1;
             m_transportProtocol = TransportProtocol.Tcp;
@@ -149,7 +249,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Creates a new multi-protocol frame parser using the specified <paramref name="phasorProtocol"/> and <paramref name="transportProtocol"/>.
+        /// Creates a new <see cref="MultiProtocolFrameParser"/> using the specified <see cref="PhasorProtocol"/> and <see cref="TransportProtocol"/>.
         /// </summary>
         /// <param name="phasorProtocol">Phasor protocol to use for this frame parser.</param>
         /// <param name="transportProtocol">Transport protocol to use for this frame parser.</param>
@@ -186,24 +286,25 @@ namespace PCS.PhasorProtocols
                 m_phasorProtocol = value;
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
 
-                // Setup protocol specific connection parameters...
-                switch (value)
-                {
-                    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
-                        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
-                        break;
-                    case PhasorProtocols.PhasorProtocol.FNet:
-                        m_connectionParameters = new FNet.ConnectionParameters();
-                        break;
-                    default:
-                        m_connectionParameters = null;
-                        break;
-                }
+                // TODO: Uncomment!
+                //// Setup protocol specific connection parameters...
+                //switch (value)
+                //{
+                //    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
+                //        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
+                //        break;
+                //    case PhasorProtocols.PhasorProtocol.FNet:
+                //        m_connectionParameters = new FNet.ConnectionParameters();
+                //        break;
+                //    default:
+                //        m_connectionParameters = null;
+                //        break;
+                //}
             }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="TVA.Communication.TransportProtocol"/> to use with this <see cref="MultiProtocolFrameParser"/>.
+        /// Gets or sets <see cref="TransportProtocol"/> to use with this <see cref="MultiProtocolFrameParser"/>.
         /// </summary>
         public TransportProtocol TransportProtocol
         {
@@ -213,25 +314,14 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                // UDP transport has special requirements on buffer size
-                if (value == TVA.Communication.TransportProtocol.Udp)
-                {
-                    if (m_bufferSize < UdpClient.MinimumUdpBufferSize)
-                        m_bufferSize = UdpClient.MinimumUdpBufferSize;
-
-                    if (m_bufferSize > UdpClient.MaximumUdpDatagramSize)
-                        m_bufferSize = UdpClient.MaximumUdpDatagramSize;
-                }
-                else
-                {
-                    m_bufferSize = DefaultBufferSize;
-                }
-
                 m_transportProtocol = value;
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
             }
         }
 
+        /// <summary>
+        /// Gets or sets the key/value pair based connection information required by the <see cref="MultiProtocolFrameParser"/> to connect to a device.
+        /// </summary>
         public string ConnectionString
         {
             get
@@ -245,6 +335,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag that determines if a device supports commands.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically derived based on the selected <see cref="PhasorProtocol"/>, <see cref="TransportProtocol"/>
+        /// and <see cref="ConnectionString"/>, but can be overriden if the consumer already knows that a device supports commands.
+        /// </remarks>
         public bool DeviceSupportsCommands
         {
             get
@@ -258,6 +355,12 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets the device identification code often needed to establish a connection.
+        /// </summary>
+        /// <remarks>
+        /// Most devices validate this ID when sending commands, so it must be correct in order to start parsing sequence.
+        /// </remarks>
         public ushort DeviceID
         {
             get
@@ -270,6 +373,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the <see cref="MultiProtocolFrameParser"/> for sending and receiving data from a device.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value specified is either zero or negative.</exception>
         public int BufferSize
         {
             get
@@ -278,32 +385,17 @@ namespace PCS.PhasorProtocols
             }
             set
             {
+                if (value < 1)
+                    throw new ArgumentException("Value cannot be zero or negative.");
+
                 m_bufferSize = value;
-
-                // UDP has special restrictions on overall buffer size
-                if (m_transportProtocol == TVA.Communication.TransportProtocol.Udp)
-                {
-                    if (m_bufferSize < UdpClient.MinimumUdpBufferSize)
-                        m_bufferSize = UdpClient.MinimumUdpBufferSize;
-
-                    if (m_bufferSize > UdpClient.MaximumUdpDatagramSize)
-                        m_bufferSize = UdpClient.MaximumUdpDatagramSize;
-                }                    
             }
         }
 
-        public double DefinedFrameRate
-        {
-            get
-            {
-                return m_definedFrameRate;
-            }
-            set
-            {
-                m_definedFrameRate = value;
-            }
-        }
-
+        /// <summary>
+        /// Gets or sets the maximum number of times the <see cref="MultiProtocolFrameParser"/> will attempt to connect to a device.
+        /// </summary>
+        /// <remarks>Set to -1 for infinite connection attempts.</remarks>
         public int MaximumConnectionAttempts
         {
             get
@@ -316,6 +408,12 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag to automatically send the ConfigFrame2 and EnableRealTimeData command frames used to start a typical data parsing sequence.
+        /// </summary>
+        /// <remarks>
+        /// For devices that support IEEE commands, setting this property to true will automatically start the data parsing sequence.
+        /// </remarks>
         public bool AutoStartDataParsingSequence
         {
             get
@@ -328,18 +426,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public bool InjectSimulatedTimestamp
-        {
-            get
-            {
-                return m_injectSimulatedTimestamp;
-            }
-            set
-            {
-                m_injectSimulatedTimestamp = value;
-            }
-        }
-
+        /// <summary>
+        /// Gets or sets a descriptive name for a device connection.
+        /// </summary>
         public string SourceName
         {
             get
@@ -352,21 +441,12 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public string ConnectionName
-        {
-            get
-            {
-                if (m_sourceName == null)
-                {
-                    return m_deviceID + " (" + m_connectionString + ")";
-                }
-                else
-                {
-                    return m_sourceName + ", ID " + m_deviceID + " (" + m_connectionString + ")";
-                }
-            }
-        }
-
+        /// <summary>
+        /// Gets or sets a flag that allows frame parsing to be executed on a separate thread (i.e., other than communications thread).
+        /// </summary>
+        /// <remarks>
+        /// This is typically only needed when data frames are very large. This change will happen dynamically, even if a connection is active.
+        /// </remarks>
         public bool ExecuteParseOnSeparateThread
         {
             get
@@ -384,6 +464,49 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets desired frame rate to use for maintaining captured frame replay timing.
+        /// </summary>
+        /// <remarks>
+        /// This is only applicable when connection is made to a file for replay purposes.
+        /// </remarks>
+        public double DefinedFrameRate
+        {
+            get
+            {
+                return m_definedFrameRate;
+            }
+            set
+            {
+                m_definedFrameRate = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating whether or not to inject local system time into parsed data frames.
+        /// </summary>
+        /// <remarks>
+        /// When connection is made to a file for replay purposes or consumer doesn't trust remote clock source, this flag
+        /// can be set to true replace all frame timestamps with a UTC timestamp dervied from the local system clock.
+        /// </remarks>
+        public bool InjectSimulatedTimestamp
+        {
+            get
+            {
+                return m_injectSimulatedTimestamp;
+            }
+            set
+            {
+                m_injectSimulatedTimestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a flag that determines if a file used for replaying data should be restarted at the beginning once it has been completed.
+        /// </summary>
+        /// <remarks>
+        /// This is only applicable when connection is made to a file for replay purposes.
+        /// </remarks>
         public bool AutoRepeatCapturedPlayback
         {
             get
@@ -396,6 +519,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
+        /// </summary>
+        /// <remarks>
+        /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame.  Consumer can manually assign a
+        /// <see cref="IConfigurationFrame"/> to start parsing data if one has not been encountered in the stream.
+        /// </remarks>
         public IConfigurationFrame ConfigurationFrame
         {
             get
@@ -412,6 +542,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets a flag that determines if the currently selected <see cref="PhasorProtocol"/> is an IEEE standard protocol.
+        /// </summary>
         public bool IsIEEEProtocol
         {
             get
@@ -422,6 +555,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="MultiProtocolFrameParser"/> is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// Setting <see cref="Enabled"/> to true will start the <see cref="MultiProtocolFrameParser"/> if it is not started,
+        /// setting to false will stop the <see cref="MultiProtocolFrameParser"/> if it is started.
+        /// </remarks>
         public bool Enabled
         {
             get
@@ -437,6 +577,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the total number of buffers that are currently queued for processing, if any.
+        /// </summary>
         public int QueuedBuffers
         {
             get
@@ -448,7 +591,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        /// <summary>
+        /// Gets a reference to the internal <see cref="IFrameParser"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IFrameParser InternalFrameParser
         {
             get
@@ -457,6 +603,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets a reference to the internal <see cref="IClient"/>, if any.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IClient InternalCommunicationClient
         {
@@ -466,6 +615,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets a reference to the internal <see cref="IServer"/>, if any.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IServer InternalCommunicationServer
         {
@@ -475,6 +627,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets a reference to the internal <see cref="IClient"/> used for a command channel, if any.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IClient InternalCommandChannel
         {
@@ -484,6 +639,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets total number of frames that have been received from a device so far.
+        /// </summary>
         public long TotalFramesReceived
         {
             get
@@ -492,6 +650,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets total number of bytes that have been received from a device so far.
+        /// </summary>
         public long TotalBytesReceived
         {
             get
@@ -500,6 +661,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the calculated frame rate (i.e., frames per second) based on data received from device connection.
+        /// </summary>
         public double FrameRate
         {
             get
@@ -508,6 +672,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the calculated byte rate (i.e., bytes per second) based on data received from device connection.
+        /// </summary>
         public double ByteRate
         {
             get
@@ -516,6 +683,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the calculated bit rate (i.e., bits per second) based on data received from device connection.
+        /// </summary>
         public double BitRate
         {
             get
@@ -524,14 +694,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public double KiloBitRate
-        {
-            get
-            {
-                return m_byteRate * 8.0D / 1024.0D;
-            }
-        }
-
+        /// <summary>
+        /// Gets the calculated mbps rate (i.e., megabits per second) based on data received from device connection.
+        /// </summary>
         public double MegaBitRate
         {
             get
@@ -539,7 +704,27 @@ namespace PCS.PhasorProtocols
                 return m_byteRate * 8.0D / 1048576.0D;
             }
         }
+        /// <summary>
+        /// Gets a descriptive name for a device connection that includes <see cref="SourceName"/>, if provided, as well as connection information.
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                if (m_sourceName == null)
+                {
+                    return m_deviceID + " (" + m_connectionString + ")";
+                }
+                else
+                {
+                    return m_sourceName + ", ID " + m_deviceID + " (" + m_connectionString + ")";
+                }
+            }
+        }
 
+        /// <summary>
+        /// Gets current descriptive status of the <see cref="MultiProtocolFrameParser"/>.
+        /// </summary>
         public string Status
         {
             get
@@ -587,6 +772,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets any connection specific <see cref="IConnectionParameters"/> that may be applicable for the current <see cref="PhasorProtocol"/>.
+        /// </summary>
         public IConnectionParameters ConnectionParameters
         {
             get
@@ -664,21 +852,23 @@ namespace PCS.PhasorProtocols
                 // Instantiate protocol specific frame parser
                 switch (m_phasorProtocol)
                 {
-                    case PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
-                        m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7);
-                        break;
-                    case PhasorProtocols.PhasorProtocol.IeeeC37_118D6:
-                        m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
-                        break;
+                    // TODO: Uncomment!
+                    //case PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
+                    //    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7);
+                    //    break;
+                    //case PhasorProtocols.PhasorProtocol.IeeeC37_118D6:
+                    //    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
+                    //    break;
                     case PhasorProtocols.PhasorProtocol.Ieee1344:
                         m_frameParser = new Ieee1344.FrameParser();
                         break;
-                    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
-                        m_frameParser = new BpaPdcStream.FrameParser();
-                        break;
-                    case PhasorProtocols.PhasorProtocol.FNet:
-                        m_frameParser = new FNet.FrameParser();
-                        break;
+                    // TODO: Uncomment!
+                    //case PhasorProtocols.PhasorProtocol.BpaPdcStream:
+                    //    m_frameParser = new BpaPdcStream.FrameParser();
+                    //    break;
+                    //case PhasorProtocols.PhasorProtocol.FNet:
+                    //    m_frameParser = new FNet.FrameParser();
+                    //    break;
                 }
 
                 // Setup event handlers
@@ -689,7 +879,7 @@ namespace PCS.PhasorProtocols
                 m_frameParser.ReceivedUndeterminedFrame += m_frameParser_ReceivedUndeterminedFrame;
                 m_frameParser.ReceivedFrameBufferImage += m_frameParser_ReceivedFrameBufferImage;
                 m_frameParser.ConfigurationChanged += m_frameParser_ConfigurationChanged;
-                m_frameParser.DataStreamException += m_frameParser_DataStreamException;
+                m_frameParser.ParsingException += m_frameParser_ParsingException;
 
                 // Define frame parser specific properties and start parsing engine
                 m_frameParser.ConnectionParameters = m_connectionParameters;
@@ -744,49 +934,49 @@ namespace PCS.PhasorProtocols
 
                     // Verify user did not attempt to setup command channel as a TCP server
                     if (commandSettings.ContainsKey("islistener") && commandSettings["islistener"].ParseBoolean())
-                        throw new ArgumentException("Command channel cannot be setup as a TCP server.", "ConnectionString");
+                        throw new ArgumentException("Command channel cannot be setup as a TCP server.");
 
                     // Validate command channel transport protocol selection
                     TransportProtocol transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), commandSettings["protocol"], true);
 
                     if (transportProtocol != TransportProtocol.Tcp && transportProtocol != TransportProtocol.Serial && transportProtocol != TransportProtocol.File)
-                        throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File", "ConnectionString");
+                        throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File");
 
                     // Instantiate command channel based on defined transport layer
                     m_commandChannel = ClientBase.Create(connectionString);
 
                     // Setup event handlers
-                    m_commandChannel.Connected += m_commandChannel_Connected;
-                    m_commandChannel.Connecting += m_commandChannel_Connecting;
-                    m_commandChannel.ConnectingException += m_commandChannel_ConnectingException;
-                    m_commandChannel.Disconnected += m_commandChannel_Disconnected;
+                    m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
+                    m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
+                    m_commandChannel.ConnectionException += m_commandChannel_ConnectionException;
+                    m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
 
                     // Attempt connection to device over command channel
-                    m_commandChannel.ReceiveRawDataFunction = Write;
+                    m_commandChannel.ReceiveDataHandler = Write;
                     m_commandChannel.ReceiveBufferSize = m_bufferSize;
-                    m_commandChannel.MaximumConnectionAttempts = m_maximumConnectionAttempts;
+                    m_commandChannel.MaxConnectionAttempts = m_maximumConnectionAttempts;
                     m_commandChannel.Handshake = false;
                     m_commandChannel.Connect();
-                    m_clientConnectionAttempts = 0;
+                    m_connectionAttempts = 0;
                 }
 
                 // Handle primary data connection, this *must* be defined...
                 if (m_communicationClient != null)
                 {
                     // Setup event handlers
-                    m_communicationClient.Connected += m_communicationClient_Connected;
-                    m_communicationClient.Connecting += m_communicationClient_Connecting;
-                    m_communicationClient.ConnectingException += m_communicationClient_ConnectingException;
-                    m_communicationClient.Disconnected += m_communicationClient_Disconnected;
+                    m_communicationClient.ConnectionEstablished += m_communicationClient_ConnectionEstablished;
+                    m_communicationClient.ConnectionAttempt += m_communicationClient_ConnectionAttempt;
+                    m_communicationClient.ConnectionException += m_communicationClient_ConnectionException;
+                    m_communicationClient.ConnectionTerminated += m_communicationClient_ConnectionTerminated;
 
                     // Attempt connection to device
-                    m_communicationClient.ReceiveRawDataFunction = Write;
+                    m_communicationClient.ReceiveDataHandler = Write;
                     m_communicationClient.ReceiveBufferSize = m_bufferSize;
                     m_communicationClient.ConnectionString = m_connectionString;
-                    m_communicationClient.MaximumConnectionAttempts = m_maximumConnectionAttempts;
+                    m_communicationClient.MaxConnectionAttempts = m_maximumConnectionAttempts;
                     m_communicationClient.Handshake = false;
                     m_communicationClient.Connect();
-                    m_clientConnectionAttempts = 0;
+                    m_connectionAttempts = 0;
                 }
                 else if (m_communicationServer != null)
                 {
@@ -795,13 +985,12 @@ namespace PCS.PhasorProtocols
                     m_communicationServer.ClientDisconnected += m_communicationServer_ClientDisconnected;
                     m_communicationServer.ServerStarted += m_communicationServer_ServerStarted;
                     m_communicationServer.ServerStopped += m_communicationServer_ServerStopped;
-                    m_communicationServer.ServerStartupException += m_communicationServer_ServerStartupException;
 
                     // Listen for device connection
-                    m_communicationServer.ReceiveRawDataFunction = Write;
+                    m_communicationServer.ReceiveClientDataHandler = Write;
                     m_communicationServer.ReceiveBufferSize = m_bufferSize;
                     m_communicationServer.ConfigurationString = m_connectionString;
-                    m_communicationServer.MaximumClients = 1;
+                    m_communicationServer.MaxClientConnections = 1;
                     m_communicationServer.Handshake = false;
                     m_communicationServer.Start();
                 }
@@ -836,17 +1025,17 @@ namespace PCS.PhasorProtocols
                 m_frameParser.ReceivedUndeterminedFrame -= m_frameParser_ReceivedUndeterminedFrame;
                 m_frameParser.ReceivedFrameBufferImage -= m_frameParser_ReceivedFrameBufferImage;
                 m_frameParser.ConfigurationChanged -= m_frameParser_ConfigurationChanged;
-                m_frameParser.DataStreamException -= m_frameParser_DataStreamException;
+                m_frameParser.ParsingException -= m_frameParser_ParsingException;
                 m_frameParser.Dispose();
             }
             m_frameParser = null;
 
             if (m_communicationClient != null)
             {
-                m_communicationClient.Connected -= m_communicationClient_Connected;
-                m_communicationClient.Connecting -= m_communicationClient_Connecting;
-                m_communicationClient.ConnectingException -= m_communicationClient_ConnectingException;
-                m_communicationClient.Disconnected -= m_communicationClient_Disconnected;
+                m_communicationClient.ConnectionEstablished -= m_communicationClient_ConnectionEstablished;
+                m_communicationClient.ConnectionAttempt -= m_communicationClient_ConnectionAttempt;
+                m_communicationClient.ConnectionException -= m_communicationClient_ConnectionException;
+                m_communicationClient.ConnectionTerminated -= m_communicationClient_ConnectionTerminated;
                 m_communicationClient.Dispose();
             }
             m_communicationClient = null;
@@ -857,17 +1046,16 @@ namespace PCS.PhasorProtocols
                 m_communicationServer.ClientDisconnected -= m_communicationServer_ClientDisconnected;
                 m_communicationServer.ServerStarted -= m_communicationServer_ServerStarted;
                 m_communicationServer.ServerStopped -= m_communicationServer_ServerStopped;
-                m_communicationServer.ServerStartupException -= m_communicationServer_ServerStartupException;
                 m_communicationServer.Dispose();
             }
             m_communicationServer = null;
 
             if (m_commandChannel != null)
             {
-                m_commandChannel.Connected -= m_commandChannel_Connected;
-                m_commandChannel.Connecting -= m_commandChannel_Connecting;
-                m_commandChannel.ConnectingException -= m_commandChannel_ConnectingException;
-                m_commandChannel.Disconnected -= m_commandChannel_Disconnected;
+                m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
+                m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
+                m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;
+                m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
                 m_commandChannel.Dispose();
             }
             m_commandChannel = null;
@@ -882,10 +1070,11 @@ namespace PCS.PhasorProtocols
                 // Only the IEEE protocols support commands
                 switch (m_phasorProtocol)
                 {
-                    case PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
-                    case PhasorProtocols.PhasorProtocol.IeeeC37_118D6:
-                        commandFrame = new IeeeC37_118.CommandFrame(m_deviceID, command, 1);
-                        break;
+                    // TODO: Uncomment!
+                    //case PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
+                    //case PhasorProtocols.PhasorProtocol.IeeeC37_118D6:
+                    //    commandFrame = new IeeeC37_118.CommandFrame(m_deviceID, command, 1);
+                    //    break;
                     case PhasorProtocols.PhasorProtocol.Ieee1344:
                         commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);
                         break;
@@ -896,17 +1085,19 @@ namespace PCS.PhasorProtocols
 
                 if (commandFrame != null)
                 {
+                    byte[] buffer = commandFrame.BinaryImage;
+
                     // Send command over appropriate communications channel - command channel, if defined,
                     // will take precedence over other communications channels for command traffic...
                     if (m_commandChannel != null)
-                        m_commandChannel.Send(commandFrame.BinaryImage);
+                        m_commandChannel.SendAsync(buffer, 0, buffer.Length);
                     else if (m_communicationClient != null)
-                        m_communicationClient.Send(commandFrame.BinaryImage);
+                        m_communicationClient.SendAsync(buffer, 0, buffer.Length);
                     else
-                        m_communicationServer.Multicast(commandFrame.BinaryImage);
+                        m_communicationServer.MulticastAsync(buffer, 0, buffer.Length);
 
                     if (SentCommandFrame != null)
-                        SentCommandFrame(commandFrame);
+                        SentCommandFrame(this, new EventArgs<ICommandFrame>(commandFrame));
                 }
             }
         }
@@ -923,7 +1114,7 @@ namespace PCS.PhasorProtocols
         public void Write(byte[] buffer, int offset, int count)
         {
             // This is the delegate implementation used by the communication source for reception
-            // of data directly from the socket (i.e., ReceiveRawDataFunction) that is used for a
+            // of data directly from the socket (i.e., ReceiveDataHandler) that is used for a
             // speed boost in communications processing...
 
             // Pass data from communications client into protocol specific frame parser
@@ -935,9 +1126,37 @@ namespace PCS.PhasorProtocols
                 m_initialBytesReceived += count;
         }
 
+        // Data received from a server will include a client ID - since in our case
+        // the server will only host a single device, we ignore this ID
+        private void Write(Guid clientID, byte[] buffer, int offset, int count)
+        {
+            Write(buffer, offset, count);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ParsingException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ParsingException"/> event.</param>
+        private void OnParsingException(Exception ex)
+        {
+            if (ParsingException != null)
+                ParsingException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ParsingException"/> event.
+        /// </summary>
+        /// <param name="innerException">Actual exception to send as inner exception to <see cref="ParsingException"/> event.</param>
+        /// <param name="message">Message of new exception to send to <see cref="ParsingException"/> event.</param>
+        /// <param name="args">Arguments of message of new exception to send to <see cref="ParsingException"/> event.</param>
+        private void OnParsingException(Exception innerException, string message, params object[] args)
+        {
+            OnParsingException(new Exception(string.Format(message, args), innerException));
+        }
+
         private void m_rateCalcTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            double time = TVA.DateTime.Common.get_TicksToSeconds(DateTime.Now.Ticks - m_dataStreamStartTime);
+            double time = Ticks.ToSeconds(DateTime.Now.Ticks - m_dataStreamStartTime);
 
             m_frameRate = (double)m_frameRateTotal / time;
             m_byteRate = (double)m_byteRateTotal / time;
@@ -952,21 +1171,15 @@ namespace PCS.PhasorProtocols
 
         private void ClientConnected()
         {
-            if (Connected != null)
-                Connected();
+            if (ConnectionEstablished != null)
+                ConnectionEstablished(this, EventArgs.Empty);
 
             // Begin data parsing sequence to handle reception of configuration frame
             if (m_deviceSupportsCommands && m_autoStartDataParsingSequence)
             {
                 m_initialBytesReceived = 0;
                 m_initiatingDataStream = true;
-
-#if ThreadTracking
-				TVA.Threading.ManagedThread thread = TVA.Threading.ManagedThreadPool.QueueUserWorkItem(StartDataParsingSequence);
-				thread.Name = "PhasorProtocols.MultiProtocolFrameParser.StartDataParsingSequence()";
-#else
-                ThreadPool.UnsafeQueueUserWorkItem(StartDataParsingSequence, null);
-#endif
+                ThreadPool.QueueUserWorkItem(StartDataParsingSequence, null);
             }
         }
 
@@ -1038,7 +1251,7 @@ namespace PCS.PhasorProtocols
             if (m_lastFrameReceivedTime > 0)
             {
                 // To keep precise timing on "frames per second", we wait for defined frame rate interval
-                double sleepTime = m_definedFrameRate - ((double)(DateTime.Now.Ticks - m_lastFrameReceivedTime) / (double)TVA.DateTime.Common.TicksPerSecond);
+                double sleepTime = m_definedFrameRate - ((double)(DateTime.Now.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond);
                 //double sleepTime = m_definedFrameRate - ((double)(TVA.DateTime.PrecisionTimer.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)TVA.DateTime.Common.TicksPerSecond);
 
                 if (sleepTime > 0)
@@ -1051,36 +1264,36 @@ namespace PCS.PhasorProtocols
 
         #region [ Communications Client Event Handlers ]
 
-        private void m_communicationClient_Connected(object sender, EventArgs e)
+        private void m_communicationClient_ConnectionEstablished(object sender, EventArgs e)
         {
             ClientConnected();
         }
 
-        private void m_communicationClient_Connecting(object sender, EventArgs e)
+        private void m_communicationClient_ConnectionAttempt(object sender, EventArgs e)
         {
-            m_clientConnectionAttempts++;
+            m_connectionAttempts++;
 
-            if (AttemptingConnection != null)
-                AttemptingConnection();
+            if (ConnectionAttempt != null)
+                ConnectionAttempt(this, EventArgs.Empty);
         }
 
-        private void m_communicationClient_ConnectingException(object sender, EventArgs<Exception> e)
+        private void m_communicationClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
             if (ConnectionException != null)
-                ConnectionException(e.Argument, m_clientConnectionAttempts);
+                ConnectionException(this, new EventArgs<Exception,int>(e.Argument, m_connectionAttempts));
         }
 
-        private void m_communicationClient_Disconnected(object sender, EventArgs e)
+        private void m_communicationClient_ConnectionTerminated(object sender, EventArgs e)
         {
-            if (Disconnected != null)
-                Disconnected();
+            if (ConnectionTerminated != null)
+                ConnectionTerminated(this, EventArgs.Empty);
 
             if (m_communicationClient != null)
             {
-                m_communicationClient.Connected -= m_communicationClient_Connected;
-                m_communicationClient.Connecting -= m_communicationClient_Connecting;
-                m_communicationClient.ConnectingException -= m_communicationClient_ConnectingException;
-                m_communicationClient.Disconnected -= m_communicationClient_Disconnected;
+                m_communicationClient.ConnectionEstablished -= m_communicationClient_ConnectionEstablished;
+                m_communicationClient.ConnectionAttempt -= m_communicationClient_ConnectionAttempt;
+                m_communicationClient.ConnectionException -= m_communicationClient_ConnectionException;
+                m_communicationClient.ConnectionTerminated -= m_communicationClient_ConnectionTerminated;
             }
             m_communicationClient = null;
         }
@@ -1096,62 +1309,56 @@ namespace PCS.PhasorProtocols
 
         private void m_communicationServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            if (Disconnected != null)
-                Disconnected();
+            if (ConnectionTerminated != null)
+                ConnectionTerminated(this, EventArgs.Empty);
         }
 
         private void m_communicationServer_ServerStarted(object sender, EventArgs e)
         {
             if (ServerStarted != null)
-                ServerStarted();
+                ServerStarted(this, EventArgs.Empty);
         }
 
         private void m_communicationServer_ServerStopped(object sender, EventArgs e)
         {
             if (ServerStopped != null)
-                ServerStopped();
-        }
-
-        private void m_communicationServer_ServerStartupException(object sender, EventArgs<Exception> e)
-        {
-            if (ConnectionException != null)
-                ConnectionException(e.Argument, 1);
+                ServerStopped(this, EventArgs.Empty);
         }
 
         #endregion
 
         #region [ Command Channel Event Handlers ]
 
-        private void m_commandChannel_Connected(object sender, EventArgs e)
+        private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
             ClientConnected();
         }
 
-        private void m_commandChannel_Connecting(object sender, EventArgs e)
+        private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
         {
-            m_clientConnectionAttempts++;
+            m_connectionAttempts++;
 
-            if (AttemptingConnection != null)
-                AttemptingConnection();
+            if (ConnectionAttempt != null)
+                ConnectionAttempt(this, EventArgs.Empty);
         }
 
-        private void m_commandChannel_ConnectingException(object sender, EventArgs<Exception> e)
+        private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             if (ConnectionException != null)
-                ConnectionException(e.Argument, m_clientConnectionAttempts);
+                ConnectionException(this, new EventArgs<Exception,int>(e.Argument, m_connectionAttempts));
         }
 
-        private void m_commandChannel_Disconnected(object sender, EventArgs e)
+        private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
         {
-            if (Disconnected != null)
-                Disconnected();
+            if (ConnectionTerminated != null)
+                ConnectionTerminated(this, EventArgs.Empty);
 
             if (m_commandChannel != null)
             {
-                m_commandChannel.Connected -= m_commandChannel_Connected;
-                m_commandChannel.Connecting -= m_commandChannel_Connecting;
-                m_commandChannel.ConnectingException -= m_commandChannel_ConnectingException;
-                m_commandChannel.Disconnected -= m_commandChannel_Disconnected;
+                m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
+                m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
+                m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;
+                m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
             }
             m_commandChannel = null;
         }
@@ -1160,7 +1367,7 @@ namespace PCS.PhasorProtocols
 
         #region [ Frame Parser Event Handlers ]
 
-        private void m_frameParser_ReceivedCommandFrame(ICommandFrame frame)
+        private void m_frameParser_ReceivedCommandFrame(object sender, EventArgs<ICommandFrame> e)
         {
             m_frameRateTotal++;
 
@@ -1168,52 +1375,50 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
                     //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
 
                 if (ReceivedCommandFrame != null)
-                    ReceivedCommandFrame(frame);
+                    ReceivedCommandFrame(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ReceivedCommandFrame\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedCommandFrame\" event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
                 MaintainCapturedFrameReplayTiming();
         }
 
-        private void m_frameParser_ReceivedConfigurationFrame(IConfigurationFrame frame)
+        private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
         {
             // We automatically request enabling of real-time data upon reception of config frame if requested
             if (m_configurationFrame == null && m_deviceSupportsCommands && m_autoStartDataParsingSequence)
                 SendDeviceCommand(DeviceCommand.EnableRealTimeData);
 
             m_frameRateTotal++;
-            m_configurationFrame = frame;
+            m_configurationFrame = e.Argument;
 
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
                     //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
 
                 if (ReceivedConfigurationFrame != null)
-                    ReceivedConfigurationFrame(frame);
+                    ReceivedConfigurationFrame(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ReceivedConfigurationFrame\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedConfigurationFrame\" event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
                 MaintainCapturedFrameReplayTiming();
         }
 
-        private void m_frameParser_ReceivedDataFrame(IDataFrame frame)
+        private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
         {
             m_frameRateTotal++;
 
@@ -1221,23 +1426,22 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
                     //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
 
                 if (ReceivedDataFrame != null)
-                    ReceivedDataFrame(frame);
+                    ReceivedDataFrame(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ReceivedDataFrame\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedDataFrame\" event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
                 MaintainCapturedFrameReplayTiming();
         }
 
-        private void m_frameParser_ReceivedHeaderFrame(IHeaderFrame frame)
+        private void m_frameParser_ReceivedHeaderFrame(object sender, EventArgs<IHeaderFrame> e)
         {
             m_frameRateTotal++;
 
@@ -1245,23 +1449,22 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
                     //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
 
                 if (ReceivedHeaderFrame != null)
-                    ReceivedHeaderFrame(frame);
+                    ReceivedHeaderFrame(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ReceivedHeaderFrame\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedHeaderFrame\" event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
                 MaintainCapturedFrameReplayTiming();
         }
 
-        private void m_frameParser_ReceivedUndeterminedFrame(IChannelFrame frame)
+        private void m_frameParser_ReceivedUndeterminedFrame(object sender, EventArgs<IChannelFrame> e)
         {
             m_frameRateTotal++;
 
@@ -1269,56 +1472,52 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    frame.Ticks = DateTime.UtcNow.Ticks;
+                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
                     //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
 
                 if (ReceivedUndeterminedFrame != null)
-                    ReceivedUndeterminedFrame(frame);
+                    ReceivedUndeterminedFrame(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ReceivedUndeterminedFrame\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedUndeterminedFrame\" event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
                 MaintainCapturedFrameReplayTiming();
         }
 
-        private void m_frameParser_ReceivedFrameBufferImage(FundamentalFrameType frameType, byte[] binaryImage, int offset, int length)
+        private void m_frameParser_ReceivedFrameBufferImage(object sender, EventArgs<FundamentalFrameType, byte[], int, int> e)
         {
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
                 if (ReceivedFrameBufferImage != null)
-                    ReceivedFrameBufferImage(frameType, binaryImage, offset, length);
+                    ReceivedFrameBufferImage(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ReceivedFrameBufferImage\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedFrameBufferImage\" event handler exception: {0}", ex.Message);
             }
         }
 
-        private void m_frameParser_ConfigurationChanged()
+        private void m_frameParser_ConfigurationChanged(object sender, EventArgs e)
         {
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
                 if (ConfigurationChanged != null)
-                    ConfigurationChanged();
+                    ConfigurationChanged(this, e);
             }
             catch (Exception ex)
             {
-                if (DataStreamException != null)
-                    DataStreamException(new Exception(string.Format("MultiProtocolFrameParser consumer \"ConfigurationChanged\" event handler exception: {0}", ex.Message), ex));
+                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ConfigurationChanged\" event handler exception: {0}", ex.Message);
             }
         }
 
-        private void m_frameParser_DataStreamException(Exception ex)
+        private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
         {
-            if (DataStreamException != null)
-                DataStreamException(ex);
+            OnParsingException(e.Argument);
         }
 
         #endregion

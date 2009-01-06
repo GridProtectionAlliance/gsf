@@ -16,7 +16,7 @@ using System.Text;
 
 //*******************************************************************************************************
 //  ConfigurationCellBase.vb - Configuration cell base class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -340,11 +340,11 @@ namespace PCS.PhasorProtocols
         }
 
         // Only the station name is common to configuration frame headers in IEEE protocols
-        protected override ushort HeaderLength
+        protected override int HeaderLength
         {
             get
             {
-                return (ushort)MaximumStationNameLength;
+                return MaximumStationNameLength;
             }
         }
 
@@ -371,11 +371,11 @@ namespace PCS.PhasorProtocols
         }
 
         // Channel names of IEEE C37.118 and IEEE 1344 configuration frames are common in order and type - so they are defined in the base class
-        protected override ushort BodyLength
+        protected override int BodyLength
         {
             get
             {
-                return (ushort)(m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength);
+                return m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength;
             }
         }
 
@@ -428,7 +428,7 @@ namespace PCS.PhasorProtocols
         }
 
         // Footer for IEEE protocols contains nominal frequency definition, so we use this to initialize frequency definition
-        protected override ushort FooterLength
+        protected override int FooterLength
         {
             get
             {

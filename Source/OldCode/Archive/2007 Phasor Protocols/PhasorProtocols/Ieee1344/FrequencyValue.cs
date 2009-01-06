@@ -1,6 +1,6 @@
 //*******************************************************************************************************
 //  FrequencyValue.vb - IEEE 1344 Frequency value
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -91,20 +91,17 @@ namespace PCS.PhasorProtocols
                 }
             }
 
-            protected override ushort BodyLength
+            protected override int BodyLength
             {
                 get
                 {
-                    ushort length = 0;
+                    int length = 0;
 
                     if (Definition.FrequencyIsAvailable)
-                    {
                         length += 2;
-                    }
+
                     if (Definition.DfDtIsAvailable)
-                    {
                         length += 2;
-                    }
 
                     return length;
                 }

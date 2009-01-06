@@ -12,7 +12,7 @@ using System.Runtime.Serialization;
 
 //*******************************************************************************************************
 //  DataCellCollection.vb - IEEE 1344 specific data cell collection
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -28,49 +28,43 @@ using System.Runtime.Serialization;
 //*******************************************************************************************************
 
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.Ieee1344
 {
-    namespace Ieee1344
+
+    [CLSCompliant(false), Serializable()]
+    public class DataCellCollection : PhasorProtocols.DataCellCollection
     {
 
-        [CLSCompliant(false), Serializable()]
-        public class DataCellCollection : PhasorProtocols.DataCellCollection
+
+
+        public DataCellCollection()
+            : base(1, false)
         {
 
-
-
-            public DataCellCollection()
-                : base(1, false)
-            {
-
-                // IEEE 1344 only supports a single PMU - so there should only be one cell
-
-            }
-
-            protected DataCellCollection(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public void Add(DataCell value)
-            {
-
-                base.Add(value);
-
-            }
-
-            public new DataCell this[int index]
-            {
-                get
-                {
-                    return (DataCell)base[index];
-                }
-            }
+            // IEEE 1344 only supports a single PMU - so there should only be one cell
 
         }
 
-    }
+        protected DataCellCollection(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
 
+
+        }
+
+        public void Add(DataCell value)
+        {
+
+            base.Add(value);
+
+        }
+
+        public new DataCell this[int index]
+        {
+            get
+            {
+                return (DataCell)base[index];
+            }
+        }
+    }
 }

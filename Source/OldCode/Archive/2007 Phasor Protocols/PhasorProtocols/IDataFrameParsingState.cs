@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  IDataFrameParsingState.vb - Data frame parsing state interface
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -39,10 +39,10 @@ namespace PCS.PhasorProtocols
             get;
         }
 
-        new DataCellCollection Cells
-        {
-            get;
-        }
+        //new DataCellCollection Cells
+        //{
+        //    get;
+        //}
 
     }
 }

@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  HeaderFrameParsingState.vb - Header frame parsing state class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -35,8 +35,8 @@ namespace PCS.PhasorProtocols
 
 
 
-        public HeaderFrameParsingState(HeaderCellCollection cells, ushort frameLength, short dataLength)
-            : base(cells, frameLength, HeaderCell.CreateNewHeaderCell)
+        public HeaderFrameParsingState(/*HeaderCellCollection cells,*/ int frameLength, int dataLength)
+            : base(/*cells,*/ frameLength, HeaderCell.CreateNewHeaderCell)
         {
 
 
@@ -52,13 +52,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual new HeaderCellCollection Cells
-        {
-            get
-            {
-                return (HeaderCellCollection)base.Cells;
-            }
-        }
+        //public virtual new HeaderCellCollection Cells
+        //{
+        //    get
+        //    {
+        //        return (HeaderCellCollection)base.Cells;
+        //    }
+        //}
 
     }
 }

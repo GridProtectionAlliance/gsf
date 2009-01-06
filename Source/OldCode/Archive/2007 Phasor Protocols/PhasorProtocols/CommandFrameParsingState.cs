@@ -11,7 +11,7 @@ using System.Linq;
 
 //*******************************************************************************************************
 //  CommandFrameParsingState.vb - Command frame parsing state class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: VB.NET, Visual Studio 2008
 //  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
@@ -35,8 +35,8 @@ namespace PCS.PhasorProtocols
 
 
 
-        public CommandFrameParsingState(CommandCellCollection cells, ushort frameLength, short dataLength)
-            : base(cells, frameLength, CommandCell.CreateNewCommandCell)
+        public CommandFrameParsingState(/*CommandCellCollection cells,*/ ushort frameLength, short dataLength)
+            : base(/*cells,*/ frameLength, CommandCell.CreateNewCommandCell)
         {
 
 
@@ -52,13 +52,13 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual new CommandCellCollection Cells
-        {
-            get
-            {
-                return (CommandCellCollection)base.Cells;
-            }
-        }
+        //public virtual new CommandCellCollection Cells
+        //{
+        //    get
+        //    {
+        //        return (CommandCellCollection)base.Cells;
+        //    }
+        //}
 
     }
 }
