@@ -27,27 +27,45 @@ namespace PCS.Measurements
     /// </summary>
     public interface IFrame : IEquatable<IFrame>, IComparable<IFrame>, IComparable
     {
-        /// <summary>Keyed measurements in this <see cref="IFrame"/>.</summary>
-        /// <remarks>Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.</remarks>
+        /// <summary>
+        /// Keyed measurements in this <see cref="IFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
+        /// </remarks>
         IDictionary<MeasurementKey, IMeasurement> Measurements { get; }
 
-        /// <summary>Gets or sets published state of this <see cref="IFrame"/>.</summary>
+        /// <summary>
+        /// Gets or sets published state of this <see cref="IFrame"/>.
+        /// </summary>
         bool Published { get; set; }
 
-        /// <summary>Gets or sets total number of measurements that have been pubilshed for this <see cref="IFrame"/>.</summary>
-        /// <remarks>If this property has not been assigned a value, implementors should return measurement count.</remarks>
+        /// <summary>
+        /// Gets or sets total number of measurements that have been pubilshed for this <see cref="IFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// If this property has not been assigned a value, implementors should return measurement count.
+        /// </remarks>
         int PublishedMeasurements { get; set; }
 
-        /// <summary>Gets or sets exact timestamp, in ticks, of the data represented in this <see cref="IFrame"/>.</summary>
-        /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented in this <see cref="IFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         long Ticks { get; set; }
 
-        /// <summary>Gets the <see cref="DateTime"/> representation of ticks of this <see cref="IFrame"/>.</summary>
+        /// <summary>
+        /// Gets the <see cref="DateTime"/> representation of ticks of this <see cref="IFrame"/>.
+        /// </summary>
         DateTime Timestamp { get; }
 
-        /// <summary>Gets ot sets reference to last measurement that was sorted into this <see cref="IFrame"/>.</summary>
+        /// <summary>
+        /// Gets ot sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.
+        /// </summary>
         /// <remarks>
-        /// <para>This value is used to help monitor slow moving measurements that are being sorted into the frame.</para>
+        /// <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="IFrame"/>.</para>
         /// <para>Implementors need only track the value.</para>
         /// </remarks>
         IMeasurement LastSortedMeasurement { get; set; }
