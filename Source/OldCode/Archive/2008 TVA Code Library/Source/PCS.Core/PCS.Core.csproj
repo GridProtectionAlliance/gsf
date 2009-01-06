@@ -182,6 +182,7 @@
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericExtensions.cs" />
+    <Compile Include="Parsing\BinaryImageBase.cs" />
     <Compile Include="Parsing\ISupportBinaryImage.cs" />
     <Compile Include="Parsing\ISupportFrameImage.cs" />
     <Compile Include="Parsing\FrameImageParserBase.cs" />
