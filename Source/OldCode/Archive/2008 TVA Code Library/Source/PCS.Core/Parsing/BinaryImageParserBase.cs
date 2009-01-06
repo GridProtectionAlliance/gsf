@@ -293,6 +293,18 @@ namespace PCS.Parsing
             m_stopTime = DateTime.Now.Ticks;
         }
 
+        /// <summary>
+        /// Parses the object implementing the <see cref="ISupportBinaryImage"/> interface.
+        /// </summary>
+        /// <param name="image">Object to be parsed that implements the <see cref="ISupportBinaryImage"/> interface.</param>
+        /// <remarks>
+        /// This function takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
+        /// </remarks>
+        public virtual void Parse(ISupportBinaryImage image)
+        {
+            Write(image.BinaryImage, 0, image.BinaryLength);
+        }
+
         // Stream implementation overrides
 
         /// <summary>
