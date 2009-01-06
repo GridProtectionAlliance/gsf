@@ -41,7 +41,7 @@ namespace PCS.Measurements
         bool Published { get; set; }
 
         /// <summary>
-        /// Gets or sets total number of measurements that have been pubilshed for this <see cref="IFrame"/>.
+        /// Gets or sets total number of measurements that have been published for this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
         /// If this property has not been assigned a value, implementors should return measurement count.
