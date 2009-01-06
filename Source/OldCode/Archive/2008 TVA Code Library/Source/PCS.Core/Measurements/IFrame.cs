@@ -42,7 +42,7 @@ namespace PCS.Measurements
         /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
         long Ticks { get; set; }
 
-        /// <summary>Gets the DateTime representation of ticks of this <see cref="IFrame"/>.</summary>
+        /// <summary>Gets the <see cref="DateTime"/> representation of ticks of this <see cref="IFrame"/>.</summary>
         DateTime Timestamp { get; }
 
         /// <summary>Gets ot sets reference to last measurement that was sorted into this <see cref="IFrame"/>.</summary>
