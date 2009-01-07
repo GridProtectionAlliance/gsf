@@ -22,20 +22,22 @@ using System.Collections.Generic;
 
 namespace PCS.Measurements
 {
-    /// <summary>Implementation of a basic frame.</summary>
-    /// <remarks>A frame represents a collection of measurements at a given time.</remarks>
+    /// <summary>
+    /// Implementation of a basic <see cref="IFrame"/>.
+    /// </summary>
+    /// <remarks>
+    /// A frame represents a collection of measurements at a given time.
+    /// </remarks>
     public class Frame : IFrame
     {
         #region [ Members ]
 
         // Fields
-        private long m_ticks;
-        private bool m_published;
-        private int m_publishedMeasurements;
-        private Dictionary<MeasurementKey, IMeasurement> m_measurements;
-        private long m_startSortTime;
-        private long m_lastSortTime;
-        private IMeasurement m_lastSortedMeasurement;
+        private long m_ticks;                                               // Time, represented as 100-nanosecond ticks, of this frame of data
+        private bool m_published;                                           // Determines if this frame of data has been published
+        private int m_publishedMeasurements;                                // Total measurements published by this frame
+        private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
+        private IMeasurement m_lastSortedMeasurement;                       // Last measurement sorted into this frame
 
         #endregion
 
@@ -44,7 +46,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
-        /// <param name="ticks">Timestamp, in ticks, for this frame.</param>
+        /// <param name="ticks">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
         public Frame(long ticks)
         {
             m_ticks = ticks;
@@ -55,16 +57,12 @@ namespace PCS.Measurements
         /// <summary>
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
-        /// <param name="ticks">Timestamp, in ticks, for this frame.</param>
-        /// <param name="measurements">Initial set of measurements to load into the frame, if any.</param>
-        /// <param name="startSortTime">Time, in ticks, of when measurements began sorting into frame, if available.</param>
-        /// <param name="lastSortTime">Time, in ticks, of when last measurement was sorted into frame, if available.</param>
-        public Frame(long ticks, Dictionary<MeasurementKey, IMeasurement> measurements, long startSortTime, long lastSortTime)
+        /// <param name="ticks">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
+        /// <param name="measurements">Initial set of measurements to load into the <see cref="Frame"/>, if any.</param>
+        public Frame(long ticks, Dictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_ticks = ticks;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
-            m_startSortTime = startSortTime;
-            m_lastSortTime = lastSortTime;
             m_publishedMeasurements = -1;
         }
 
@@ -72,7 +70,9 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
-        /// <summary>Keyed measurements in this frame.</summary>
+        /// <summary>
+        /// Keyed measurements in this <see cref="Frame"/>.
+        /// </summary>
         public IDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get
@@ -81,7 +81,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets published state of this frame.</summary>
+        /// <summary>
+        /// Gets or sets published state of this <see cref="Frame"/>.
+        /// </summary>
         public bool Published
         {
             get
@@ -94,8 +96,12 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets total number of measurements that have been published for this frame.</summary>
-        /// <remarks>If this property has not been assigned a value, the property will return measurement count.</remarks>
+        /// <summary>
+        /// Gets or sets total number of measurements that have been published for this <see cref="Frame"/>.
+        /// </summary>
+        /// <remarks>
+        /// If this property has not been assigned a value, the property will return measurement count.
+        /// </remarks>
         public int PublishedMeasurements
         {
             get
@@ -111,8 +117,12 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets exact timestamp, in ticks, of the data represented in this frame.</summary>
-        /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented in this <see cref="Frame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         public long Ticks
         {
             get
@@ -125,7 +135,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the DateTime representation of ticks of this frame.</summary>
+        /// <summary>
+        /// Gets the <see cref="DateTime"/> representation of ticks of this <see cref="Frame"/>.
+        /// </summary>
         public DateTime Timestamp
         {
             get
@@ -134,7 +146,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets reference to last measurement that was sorted into this frame.</summary>
+        /// <summary>
+        /// Gets or sets reference to last measurement that was sorted into this <see cref="Frame"/>.
+        /// </summary>
         public IMeasurement LastSortedMeasurement
         {
             get
@@ -151,13 +165,17 @@ namespace PCS.Measurements
 
         #region [ Methods ]
 
-        /// <summary>Create a copy of this frame and its measurements.</summary>
-        /// <remarks>This frame's measurement dictionary is synclocked during copy.</remarks>
+        /// <summary>
+        /// Create a copy of this <see cref="Frame"/> and its measurements.
+        /// </summary>
+        /// <remarks>
+        /// The measurement dictionary of this <see cref="Frame"/> is synclocked during copy.
+        /// </remarks>
         public Frame Clone()
         {
             lock (m_measurements)
             {
-                return new Frame(m_ticks, m_measurements, m_startSortTime, m_lastSortTime);
+                return new Frame(m_ticks, m_measurements);
             }
         }
 
@@ -186,7 +204,10 @@ namespace PCS.Measurements
         public override bool Equals(object obj)
         {
             IFrame other = obj as IFrame;
-            if (other != null) return Equals(other);
+            
+            if (other != null)
+                return Equals(other);
+
             throw new ArgumentException("Object is not an IFrame");
         }
 
@@ -211,7 +232,10 @@ namespace PCS.Measurements
         public int CompareTo(object obj)
         {
             IFrame other = obj as IFrame;
-            if (other != null) return CompareTo(other);
+
+            if (other != null)
+                return CompareTo(other);
+
             throw new ArgumentException("Frame can only be compared with other IFrames...");
         }
 
