@@ -24,7 +24,12 @@
 
 namespace PCS.NumericalAnalysis
 {
-    /// <summary>Temporarily caches composite values until all values been received, so that a compound value can be created.</summary>
+    /// <summary>
+    /// Represents a collection of composite values.
+    /// </summary>
+    /// <remarks>
+    /// Composite values can be cumulated until all values have been received so that a compound value can be created.
+    /// </remarks>
     public class CompositeValues
     {
         #region [ Members ]
@@ -44,7 +49,9 @@ namespace PCS.NumericalAnalysis
 
         #region [ Constructors ]
 
-        /// <summary>Creates a new instance of the CompositeValues class, specifing the total number of composite values to track.</summary>
+        /// <summary>
+        /// Creates a new instance of the CompositeValues class, specifing the total number of composite values to track.
+        /// </summary>
         /// <param name="count">Total number of composite values to track.</param>
         public CompositeValues(int count)
         {
@@ -55,7 +62,9 @@ namespace PCS.NumericalAnalysis
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets the composite value at the specified index in composite value collection.</summary>
+        /// <summary>
+        /// Gets or sets the composite value at the specified index in composite value collection.
+        /// </summary>
         /// <param name="index">The zero-based index of the composite value to get or set.</param>
         /// <returns>The composite value at the specified index in composite value collection.</returns>
         public double this[int index]
@@ -72,8 +81,10 @@ namespace PCS.NumericalAnalysis
             }
         }
 
-        /// <summary>Gets the number of composite values in the composite value collection.</summary>
-        /// <returns>To be provided.</returns>
+        /// <summary>
+        /// Gets the number of composite values in the composite value collection.
+        /// </summary>
+        /// <returns>Total number of composite values in the collection.</returns>
         public int Count
         {
             get
@@ -82,7 +93,9 @@ namespace PCS.NumericalAnalysis
             }
         }
 
-        /// <summary>Gets a boolean value indicating if all composite values are received.</summary>
+        /// <summary>
+        /// Gets a boolean value indicating if all composite values are received.
+        /// </summary>
         /// <returns>True, if all composite values are received; otherwise, false.</returns>
         public bool AllReceived
         {
@@ -117,7 +130,9 @@ namespace PCS.NumericalAnalysis
 
         #region [ Methods ]
 
-        /// <summary>Gets a boolean value indicating if composite value at the specified index is received.</summary>
+        /// <summary>
+        /// Gets a boolean value indicating if composite value at the specified index is received.
+        /// </summary>
         /// <param name="index">The zero-based index of the composite value.</param>
         /// <returns>True, if composite value at the specified index is received; otherwise, false.</returns>
         public bool Received(int index)
