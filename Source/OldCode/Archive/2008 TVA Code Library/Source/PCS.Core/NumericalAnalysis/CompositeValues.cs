@@ -21,41 +21,46 @@
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.ObjectModel;
 
 namespace PCS.NumericalAnalysis
 {
     /// <summary>
-    /// Represents a collection of composite values.
+    /// Represents a collection of individual values that together represent a compound value once all their values have been assigned.
     /// </summary>
     /// <remarks>
-    /// Composite values can be cumulated until all values have been received so that a compound value can be created.
+    /// Composite values can be cumulated until all values have been assigned so that a compound value can be created.
     /// </remarks>
-    public class CompositeValues
+    /// <typeparam name="T"><see cref="Type"/> of composite values.</typeparam>
+    public class CompositeValues<T> : Collection<AssignedValue<T>>
     {
         #region [ Members ]
 
-        // Nested Types
-        private struct CompositeValue
-        {
-            public double Value;
-            public bool Received;
-        }
-
         // Fields
-        private CompositeValue[] m_compositeValues;
-        private bool m_allReceived;
+        private bool m_allAssigned;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the CompositeValues class, specifing the total number of composite values to track.
+        /// Creates a new <see cref="CompositeValues{T}"/>.
+        /// </summary>
+        public CompositeValues()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CompositeValues{T}"/> specifing the total number of composite values to track.
         /// </summary>
         /// <param name="count">Total number of composite values to track.</param>
         public CompositeValues(int count)
         {
-            m_compositeValues = new CompositeValue[count];
+            for (int i = 0; i < count; i++)
+            {
+                Add(new AssignedValue<T>());
+            }
         }
 
         #endregion
@@ -63,65 +68,34 @@ namespace PCS.NumericalAnalysis
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the composite value at the specified index in composite value collection.
+        /// Gets a boolean value indicating if all composite values have been assigned a value.
         /// </summary>
-        /// <param name="index">The zero-based index of the composite value to get or set.</param>
-        /// <returns>The composite value at the specified index in composite value collection.</returns>
-        public double this[int index]
+        /// <returns>True, if all composite values have been assigned a value; otherwise, false.</returns>
+        public bool AllAssigned
         {
             get
             {
-                return m_compositeValues[index].Value;
-            }
-            set
-            {
-                CompositeValue compositeValue = m_compositeValues[index];
-                compositeValue.Value = value;
-                compositeValue.Received = true;
-            }
-        }
-
-        /// <summary>
-        /// Gets the number of composite values in the composite value collection.
-        /// </summary>
-        /// <returns>Total number of composite values in the collection.</returns>
-        public int Count
-        {
-            get
-            {
-                return m_compositeValues.Length;
-            }
-        }
-
-        /// <summary>
-        /// Gets a boolean value indicating if all composite values are received.
-        /// </summary>
-        /// <returns>True, if all composite values are received; otherwise, false.</returns>
-        public bool AllReceived
-        {
-            get
-            {
-                if (m_allReceived)
+                if (m_allAssigned)
                 {
                     return true;
                 }
                 else
                 {
-                    bool allValuesReceived = true;
+                    bool allAssigned = true;
 
-                    for (int x = 0; x <= m_compositeValues.Length - 1; x++)
+                    for (int x = 0; x < Count; x++)
                     {
-                        if (!m_compositeValues[x].Received)
+                        if (!this[x].Assigned)
                         {
-                            allValuesReceived = false;
+                            allAssigned = false;
                             break;
                         }
                     }
 
-                    if (allValuesReceived)
-                        m_allReceived = true;
+                    if (allAssigned)
+                        m_allAssigned = true;
 
-                    return allValuesReceived;
+                    return allAssigned;
                 }
             }
         }
@@ -131,13 +105,86 @@ namespace PCS.NumericalAnalysis
         #region [ Methods ]
 
         /// <summary>
-        /// Gets a boolean value indicating if composite value at the specified index is received.
+        /// Inserts an element into the <see cref="CompositeValues{T}"/> at the specified index.
         /// </summary>
-        /// <param name="index">The zero-based index of the composite value.</param>
-        /// <returns>True, if composite value at the specified index is received; otherwise, false.</returns>
-        public bool Received(int index)
+        /// <param name="index">The zero-based index at which item should be inserted.</param>
+        /// <param name="item">The object to insert.</param>
+        protected override void InsertItem(int index, AssignedValue<T> item)
         {
-            return m_compositeValues[index].Received;
+            // Subscribe to item's changed event
+            item.Changed += OnValueChanged;
+
+            // Maintain state of all assigned flag
+            OnValueChanged(item, EventArgs.Empty);
+
+            // Add item to base class
+            base.InsertItem(index, item);
+        }
+
+        /// <summary>
+        /// Replaces the element at the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to replace.</param>
+        /// <param name="item">The new value for the element at the specified index.</param>
+        protected override void SetItem(int index, AssignedValue<T> item)
+        {
+            // See if user is assigning a new item
+            if (!object.ReferenceEquals(item, this[index]))
+            {
+                // Unsubscribe from old item's changed event
+                this[index].Changed -= OnValueChanged;
+
+                // Subscribe to new item's changed event
+                item.Changed += OnValueChanged;
+
+                // Maintain state of all assigned flag
+                OnValueChanged(item, EventArgs.Empty);
+
+                // Assign new value to base class
+                base.SetItem(index, item);
+            }
+        }
+
+        /// <summary>
+        /// Removes the element at the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to remove.</param>
+        protected override void RemoveItem(int index)
+        {
+            // Unsubscribe from item's changed event
+            this[index].Changed -= OnValueChanged;
+
+            // Remove item from base class
+            base.RemoveItem(index);
+        }
+
+        /// <summary>
+        /// Removes all elements from the <see cref="CompositeValues{T}"/>.
+        /// </summary>
+        protected override void ClearItems()
+        {
+            foreach (AssignedValue<T> item in this)
+            {
+                // Unsubscribe from item's changed event
+                item.Changed -= OnValueChanged;
+            }
+
+            m_allAssigned = false;
+
+            // Clear items from base class
+            base.ClearItems();
+        }
+
+        private void OnValueChanged(object sender, EventArgs e)
+        {
+            // Maintain state of all assigned flag
+            if (m_allAssigned || Count == 0)
+            {
+                AssignedValue<T> value = sender as AssignedValue<T>;
+
+                if (value != null)
+                    m_allAssigned = value.Assigned;
+            }
         }
 
         #endregion
