@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  CompositeValues.cs
+//  CompoundValue.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -33,7 +33,7 @@ namespace PCS.NumericalAnalysis
     /// Composite values can be cumulated until all values have been assigned so that a compound value can be created.
     /// </remarks>
     /// <typeparam name="T"><see cref="Type"/> of composite values.</typeparam>
-    public class CompositeValues<T> : Collection<AssignedValue<T>>
+    public class CompoundValue<T> : Collection<AssignedValue<T>>
     {
         #region [ Members ]
 
@@ -45,17 +45,17 @@ namespace PCS.NumericalAnalysis
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="CompositeValues{T}"/>.
+        /// Creates a new <see cref="CompoundValue{T}"/>.
         /// </summary>
-        public CompositeValues()
+        public CompoundValue()
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="CompositeValues{T}"/> specifing the total number of composite values to track.
+        /// Creates a new <see cref="CompoundValue{T}"/> specifing the total number of composite values to track.
         /// </summary>
         /// <param name="count">Total number of composite values to track.</param>
-        public CompositeValues(int count)
+        public CompoundValue(int count)
         {
             for (int i = 0; i < count; i++)
             {
@@ -105,7 +105,7 @@ namespace PCS.NumericalAnalysis
         #region [ Methods ]
 
         /// <summary>
-        /// Inserts an element into the <see cref="CompositeValues{T}"/> at the specified index.
+        /// Inserts an element into the <see cref="CompoundValue{T}"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>
         /// <param name="item">The object to insert.</param>
@@ -159,7 +159,7 @@ namespace PCS.NumericalAnalysis
         }
 
         /// <summary>
-        /// Removes all elements from the <see cref="CompositeValues{T}"/>.
+        /// Removes all elements from the <see cref="CompoundValue{T}"/>.
         /// </summary>
         protected override void ClearItems()
         {
@@ -175,6 +175,7 @@ namespace PCS.NumericalAnalysis
             base.ClearItems();
         }
 
+        // AssignedValue<T>.Changed event handler
         private void OnValueChanged(object sender, EventArgs e)
         {
             // Maintain state of all assigned flag
