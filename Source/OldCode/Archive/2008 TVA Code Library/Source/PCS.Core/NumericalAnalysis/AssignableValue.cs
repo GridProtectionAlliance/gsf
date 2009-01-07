@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  AssignedValue.cs
+//  Assignable.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -20,10 +20,10 @@ using System;
 namespace PCS.NumericalAnalysis
 {
     /// <summary>
-    /// Represents a value that tracks if its value has been assigned.
+    /// Represents an object that tracks if its value has been assigned.
     /// </summary>
-    /// <typeparam name="T"><see cref="Type"/> of the value needing assignment tracking.</typeparam>
-    public class AssignedValue<T>
+    /// <typeparam name="T"><see cref="Type"/> of the object needing assignment tracking.</typeparam>
+    public class Assignable<T>
     {
         #region [ Members ]
 
@@ -41,19 +41,19 @@ namespace PCS.NumericalAnalysis
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="AssignedValue{T}"/> with a default <see cref="Value"/> and <c><see cref="Assigned"/> = false</c>.
+        /// Creates a new <see cref="Assignable{T}"/> with a default <see cref="Value"/> and <c><see cref="Assigned"/> = false</c>.
         /// </summary>
-        public AssignedValue()
+        public Assignable()
         {
             m_value = default(T);
             m_assigned = false;
         }
 
         /// <summary>
-        /// Creates a new <see cref="AssignedValue{T}"/> with the specified <paramref name="value"/> and <c><see cref="Assigned"/> = true</c>.
+        /// Creates a new <see cref="Assignable{T}"/> with the specified <paramref name="value"/> and <c><see cref="Assigned"/> = true</c>.
         /// </summary>
         /// <param name="value">Actual assigned value.</param>
-        public AssignedValue(T value)
+        public Assignable(T value)
         {
             m_value = value;
             m_assigned = true;
@@ -64,7 +64,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         /// <param name="value"></param>
         /// <param name="received"></param>
-        public AssignedValue(T value, bool received)
+        public Assignable(T value, bool received)
         {
             m_value = value;
             m_assigned = received;
@@ -75,7 +75,7 @@ namespace PCS.NumericalAnalysis
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets value of <see cref="AssignedValue{T}"/>.
+        /// Gets or sets value of <see cref="Assignable{T}"/>.
         /// </summary>
         /// <remarks>
         /// Assigning any value to the <see cref="Value"/> property automatically sets <c><see cref="Assigned"/> = true</c>.
@@ -95,7 +95,7 @@ namespace PCS.NumericalAnalysis
         }
 
         /// <summary>
-        /// Gets or sets assigned state of <see cref="AssignedValue{T}"/>.
+        /// Gets or sets assigned state of <see cref="Assignable{T}"/>.
         /// </summary>
         public bool Assigned
         {
