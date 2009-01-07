@@ -27,7 +27,7 @@ using System.Collections.ObjectModel;
 namespace PCS.NumericalAnalysis
 {
     /// <summary>
-    /// Represents a collection of individual values that together represent a compound value once all their values have been assigned.
+    /// Represents a collection of individual values that together represent a compound value once all the values have been assigned.
     /// </summary>
     /// <remarks>
     /// Composite values can be cumulated until all values have been assigned so that a compound value can be created.
