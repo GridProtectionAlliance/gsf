@@ -105,6 +105,22 @@ namespace PCS.NumericalAnalysis
         #region [ Methods ]
 
         /// <summary>
+        /// Gets an array of all the <see cref="Assignable{T}.Value"/> elements of the <see cref="CompoundValue{T}"/>.
+        /// </summary>
+        /// <returns>A new array containing copies of the <see cref="Assignable{T}.Value"/> elements of the <see cref="CompoundValue{T}"/>.</returns>
+        public T[] GetCompositeValues()
+        {
+            T[] values = new T[Count];
+
+            for (int i = 0; i < Count; i++)
+            {
+                values[i] = this[i].Value;
+            }
+
+            return values;
+        }
+
+        /// <summary>
         /// Inserts an element into the <see cref="CompoundValue{T}"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>
