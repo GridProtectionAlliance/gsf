@@ -39,6 +39,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Linq;
 
 namespace PCS.Measurements
 {
@@ -62,17 +63,36 @@ namespace PCS.Measurements
         #region [ Members ]
 
         // Events
-        /// <summary>This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.</summary>
-        public event Action<int> UnpublishedSamples;
 
-        /// <summary>This event is raised if there is an exception encountered while attempting to process a frame in the sample queue.</summary>
-        /// <remarks>Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will be exposed through this event.</remarks>
-        public event Action<Exception> ProcessException;
+        /// <summary>
+        /// This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
+        /// </remarks>
+        public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
-        /// <summary>Raised, for the benefit of dependent classes, when lead time is updated.</summary> 
+        /// <summary>
+        /// This event is raised if there is an exception encountered while attempting to process a frame in the sample queue.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered while parsing the data stream.
+        /// </para>
+        /// <para>
+        /// Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will be exposed through this event.
+        /// </para>
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> ProcessException;
+
+        /// <summary>
+        /// Raised, for the benefit of dependent classes, when lead time is updated.
+        /// </summary> 
         internal event Action<double> LeadTimeUpdated;
 
-        /// <summary>Raised, for the benefit of dependent classes, when lag time is updated.</summary> 
+        /// <summary>
+        /// Raised, for the benefit of dependent classes, when lag time is updated.
+        /// </summary> 
         internal event Action<double> LagTimeUpdated;
 
         // Fields
@@ -109,23 +129,30 @@ namespace PCS.Measurements
 
         #region [ Constructors ]
 
-        /// <summary>Creates a new measurement concentrator.</summary>
+        /// <summary>
+        /// Creates a new <see cref="ConcentratorBase"/>.
+        /// </summary>
         /// <param name="framesPerSecond">Number of frames to publish per second.</param>
-        /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of
-        /// time to wait before publishing begins.</param>
-        /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the
-        /// tolerated +/- accuracy of the local clock to real-time.</param>
+        /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
+        /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         /// <remarks>
-        /// <para>framesPerSecond must be at least one.</para>
-        /// <para>lagTime must be greater than zero, but can be specified in sub-second intervals (e.g., set
-        /// to .25 for a quarter-second lag time). Note that this defines time sensitivity to past timestamps.</para>
-        /// <para>leadTime must be greater than zero, but can be specified in sub-second intervals (e.g., set
-        /// to .5 for a half-second lead time). Note that this defines time sensitivity to future timestamps.</para>
-        /// <para>Note that concentration will not begin until consumer "Starts" concentrator (i.e., calling
-        /// Start method or setting Enabled = True).</para>
+        /// <para>
+        /// <paramref name="framesPerSecond"/> must be at least one.
+        /// </para>
+        /// <para>
+        /// <paramref name="lagTime"/> must be greater than zero, but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time).
+        /// Note that this defines time sensitivity to past timestamps.
+        /// </para>
+        /// <para>
+        /// <paramref name="leadTime"/> must be greater than zero, but can be specified in sub-second intervals (e.g., set to .5 for a half-second lead time).
+        /// Note that this defines time sensitivity to future timestamps.
+        /// </para>
+        /// <para>
+        /// Concentration will not begin until consumer "Starts" concentrator (i.e., calling <see cref="ConcentratorBase.Start"/> method or setting
+        /// <c><see cref="ConcentratorBase.Enabled"/> = true</c>).
+        /// </para>
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range
-        /// (see remarks).</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
         protected ConcentratorBase(int framesPerSecond, double lagTime, double leadTime)
         {
             if (framesPerSecond < 1)
@@ -166,9 +193,12 @@ namespace PCS.Measurements
             m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
         }
 
-        /// <summary>We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion.</summary>
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="ConcentratorBase"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~ConcentratorBase()
         {
+            // We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion.
             Dispose(false);
         }
 
@@ -176,15 +206,15 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).</summary>
+        /// <summary>
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to past measurement timestamps.</para>
         /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
-        /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow
-        /// into the system.</para>
+        /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less
-        /// than one.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
         public double LagTime
         {
             get
@@ -204,7 +234,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets defined past time deviation tolerance, in ticks.</summary>
+        /// <summary>
+        /// Gets defined past time deviation tolerance, in ticks.
+        /// </summary>
         public long LagTicks
         {
             get
@@ -213,14 +245,15 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).</summary>
+        /// <summary>
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to future measurement timestamps.</para>
         /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
         /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less
-        /// than one.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         public double LeadTime
         {
             get
@@ -239,8 +272,12 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets flag to start tracking the absolute latest received measurement values.</summary>
-        /// <remarks>Enabling this option will slightly increase the required sorting time.</remarks>
+        /// <summary>
+        /// Gets or sets flag to start tracking the absolute latest received measurement values.
+        /// </summary>
+        /// <remarks>
+        /// Enabling this option will slightly increase the required sorting time.
+        /// </remarks>
         public bool TrackLatestMeasurements
         {
             get
@@ -253,7 +290,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets reference to the collection of absolute latest received measurement values.</summary>
+        /// <summary>
+        /// Gets reference to the collection of absolute latest received measurement values.
+        /// </summary>
         public ImmediateMeasurements LatestMeasurements
         {
             get
@@ -262,7 +301,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the last published frame.</summary>
+        /// <summary>
+        /// Gets reference to the last published <see cref="IFrame"/>.
+        /// </summary>
         public IFrame LastFrame
         {
             get
@@ -271,7 +312,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the number of frames per second.</summary>
+        /// <summary>
+        /// Gets or sets the number of frames per second.
+        /// </summary>
         public int FramesPerSecond
         {
             get
@@ -298,7 +341,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the number of ticks per frame.</summary>
+        /// <summary>
+        /// Gets the number of ticks per frame.
+        /// </summary>
         public decimal TicksPerFrame
         {
             get
@@ -307,10 +352,14 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the current enabled state of concentrator.</summary>
+        /// <summary>
+        /// Gets or sets the current enabled state of concentrator.
+        /// </summary>
         /// <returns>Current enabled state of concentrator</returns>
-        /// <remarks>Concentrator must be started (e.g., call Start method or set Enabled = True) before
-        /// concentration will begin.</remarks>
+        /// <remarks>
+        /// Concentrator must be started by calling <see cref="ConcentratorBase.Start"/> method or setting
+        /// <c><see cref="ConcentratorBase.Enabled"/> = true</c>) before concentration will begin.
+        /// </remarks>
         public virtual bool Enabled
         {
             get
@@ -356,12 +405,14 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets flag that determines whether or not to allow incoming measurements with
-        /// bad timestamps to be sorted by arrival time.</summary>
+        /// <summary>
+        /// Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps
+        /// to be sorted by arrival time.
+        /// </summary>
         /// <remarks>
-        /// Defaults to True, so that any incoming measurement with a bad timestamp quality
-        /// will be sorted according to its arrival time. Setting the property to False will cause all
-        /// measurements with a bad timestamp quality to be discarded.
+        /// Value defaults to <c>true</c>, so any incoming measurement with a bad timestamp quality will be sorted
+        /// according to its arrival time. Setting the property to <c>false</c> will cause all measurements with a
+        /// bad timestamp quality to be discarded.
         /// </remarks>
         public bool AllowSortsByArrival
         {
@@ -375,8 +426,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets flag that determines whether or not to use the local clock time as
-        /// real time.</summary>
+        /// <summary>
+        /// Gets or sets flag that determines whether or not to use the local clock time as real time.
+        /// </summary>
         /// <remarks>
         /// Use your local system clock as real time only if the time is locally GPS-synchronized,
         /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
@@ -394,23 +446,20 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// If using local clock as real time, this function will return UtcNow.Ticks. Otherwise, this function
-        /// will return ticks of most recent measurement, or local clock ticks if no measurements are within
-        /// time deviation tolerances.
+        /// If using local clock as real time, this function will return UtcNow.Ticks. Otherwise, this function will return ticks
+        /// of most recent measurement, or local clock ticks if no measurements are within time deviation tolerances.
         /// </summary>
         /// <remarks>
-        /// Because the measurements being received by remote devices are often measured relative to GPS time,
-        /// these timestamps are typically more accurate than the local clock. As a result, we can use the
-        /// latest received timestamp as the best local time measurement we have (this method ignores
-        /// transmission delays); but, even these times can be incorrect so we still have to apply reasonability
-        /// checks to these times. To do this, we use the local time and the lead time value to validate the
-        /// latest measured timestamp. If the newest received measurement timestamp gets too old or creeps too
-        /// far into the future (both validated + and - against defined lead time property value), we will fall
-        /// back on local system time. Note that this creates a dependency on a fairly accurate local clock - the
-        /// smaller the lead time deviation tolerance, the better the needed local clock acuracy. For example, a
-        /// lead time deviation tolerance of a few seconds might only require keeping the local clock
-        /// synchronized to an NTP time source; but, a sub-second tolerance would require that the local clock be
-        /// very close to GPS time.
+        /// Because the measurements being received by remote devices are often measured relative to GPS time, these timestamps
+        /// are typically more accurate than the local clock. As a result, we can use the latest received timestamp as the best
+        /// local time measurement we have (this method ignores transmission delays); but, even these times can be incorrect so
+        /// we still have to apply reasonability checks to these times. To do this, we use the local system time and the
+        /// <see cref="ConcentratorBase.LeadTime"/> value to validate the latest measured timestamp. If the newest received
+        /// measurement timestamp gets too old or creeps too far into the future (both validated + and - against defined lead
+        /// time property value), we will fall back on local system time. Note that this creates a dependency on a fairly accurate
+        /// local clock - the smaller the lead time deviation tolerance, the better the needed local clock acuracy. For example, a
+        /// lead time deviation tolerance of a few seconds might only require keeping the local clock synchronized to an NTP time
+        /// source; but, a sub-second tolerance would require that the local clock be very close to GPS time.
         /// </remarks>
         public long RealTimeTicks
         {
@@ -457,7 +506,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the total number of measurements that have ever been requested for sorting.</summary>
+        /// <summary>
+        /// Gets the total number of measurements that have ever been requested for sorting.
+        /// </summary>
         public long TotalMeasurements
         {
             get
@@ -466,8 +517,10 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the total number of measurements that have been discarded because of old timestamps
-        /// (i.e., measurements that were outside the time deviation tolerance from base time, past or future).</summary>
+        /// <summary>
+        /// Gets the total number of measurements that have been discarded because of old timestamps
+        /// (i.e., measurements that were outside the time deviation tolerance from base time, past or future).
+        /// </summary>
         public long DiscardedMeasurements
         {
             get
@@ -476,7 +529,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the last measurement that was discarded by the concentrator.</summary>
+        /// <summary>
+        /// Gets a reference the last <see cref="IMeasurement"/> that was discarded by the concentrator.
+        /// </summary>
         public IMeasurement LastDiscardedMeasurement
         {
             get
@@ -485,7 +540,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the total number of published measurements.</summary>
+        /// <summary>
+        /// Gets the total number of published measurements.
+        /// </summary>
         public long PublishedMeasurements
         {
             get
@@ -494,7 +551,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the total number of published frames.</summary>
+        /// <summary>
+        /// Gets the total number of published frames.
+        /// </summary>
         public long PublishedFrames
         {
             get
@@ -503,8 +562,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the total number of measurements that were sorted by arrival because the measurement
-        /// reported a bad timestamp quality.</summary>
+        /// <summary>
+        /// Gets the total number of measurements that were sorted by arrival because the measurement reported a bad timestamp quality.
+        /// </summary>
         public long MeasurementsSortedByArrival
         {
             get
@@ -513,7 +573,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the total number of milliseconds frames have spent in the publication process since concentrator started.</summary>
+        /// <summary>
+        /// Gets the total number of milliseconds frames have spent in the publication process since concentrator started.
+        /// </summary>
         public double TotalPublicationTime
         {
             get
@@ -522,8 +584,13 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the average required frame publication time, in milliseconds.</summary>
-        /// <remarks>If user publication function consistently exceeds available publishing time (1 / framesPerSecond), concentration will fall behind.</remarks>
+        /// <summary>
+        /// Gets the average required frame publication time, in milliseconds.
+        /// </summary>
+        /// <remarks>
+        /// If user publication function, <see cref="ConcentratorBase.PublishFrame"/>, consistently exceeds available publishing time
+        /// (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c>), concentration will fall behind.
+        /// </remarks>
         public double AveratePublicationTimePerFrame
         {
             get
@@ -532,7 +599,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets detailed current state and status of concentrator.</summary>
+        /// <summary>
+        /// Gets current detailed state and status of concentrator for display purposes.
+        /// </summary>
         public virtual string Status
         {
             get
@@ -665,9 +734,68 @@ namespace PCS.Measurements
 
         #region [ Methods ]
 
-        // Public Methods
+        /// <summary>
+        /// Releases all the resources used by the <see cref="ConcentratorBase"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-        /// <summary>Starts the concentrator, if it is not already running.</summary>
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ConcentratorBase"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_publicationTimer != null)
+                        {
+                            m_publicationTimer.Tick -= PublishFrames;
+                            m_publicationTimer.Dispose();
+                        }
+                        m_publicationTimer = null;
+
+                        if (m_frameQueue != null)
+                        {
+                            m_frameQueue.Dispose();
+                        }
+                        m_frameQueue = null;
+
+                        if (m_monitorTimer != null)
+                        {
+                            m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
+                            m_monitorTimer.Dispose();
+                        }
+                        m_monitorTimer = null;
+
+                        if (m_latestMeasurements != null)
+                        {
+                            m_latestMeasurements.Dispose();
+                        }
+                        m_latestMeasurements = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Starts the concentrator, if it is not already running.
+        /// </summary>
+        /// <remarks>
+        /// Concentrator must be started by calling <see cref="ConcentratorBase.Start"/> method or setting
+        /// <c><see cref="ConcentratorBase.Enabled"/> = true</c>) before concentration will begin.
+        /// </remarks>
         public virtual void Start()
         {
             if (!m_enabled)
@@ -699,7 +827,9 @@ namespace PCS.Measurements
             m_enabled = true;
         }
 
-        /// <summary>Stops the concentrator.</summary>
+        /// <summary>
+        /// Stops the concentrator.
+        /// </summary>
         public virtual void Stop()
         {
             if (m_enabled)
@@ -717,26 +847,38 @@ namespace PCS.Measurements
 #endif
         }
 
-        /// <summary>Returns the deviation, in seconds, that the given number of ticks is from real time.</summary>
+        /// <summary>
+        /// Returns the deviation, in seconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTimeTicks"/>).
+        /// </summary>
+        /// <param name="ticks">Ticks of timestamp to calculate distance from real-time.</param>
         public double SecondsFromRealTime(long ticks)
         {
             return (RealTimeTicks - ticks) / (double)Ticks.PerSecond;
         }
 
-        /// <summary>Returns the deviation, in milliseconds, that the given number of ticks is from real time.</summary>
+        /// <summary>
+        /// Returns the deviation, in milliseconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTimeTicks"/>).
+        /// </summary>
+        /// <param name="ticks">Ticks of timestamp to calculate distance from real-time.</param>
         public double MillisecondsFromRealTime(long ticks)
         {
             return (RealTimeTicks - ticks) / (double)Ticks.PerMillisecond;
         }
 
-        /// <summary>Places measurement data point in its proper row/cell position.</summary>
+        /// <summary>
+        /// Sort the <see cref="IMeasurement"/> placing the data point in its proper <see cref="IFrame"/>.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> to sort.</param>
         public virtual void SortMeasurement(IMeasurement measurement)
         {
             SortMeasurements(new IMeasurement[] { measurement });
         }
 
-        /// <summary>Places multiple measurement data points in their proper row/cell positions.</summary>
-        public virtual void SortMeasurements(ICollection<IMeasurement> measurements)
+        /// <summary>
+        /// Sort each <see cref="IMeasurement"/> placing each data point in its proper <see cref="IFrame"/>.
+        /// </summary>
+        /// <param name="measurements">Collection of <see cref="IMeasurement"/>'s to sort.</param>
+        public virtual void SortMeasurements(IEnumerable<IMeasurement> measurements)
         {
             // This function is called continually with new measurements and handles the "time-alignment"
             // (i.e., sorting) of these new values. Many threads will be waiting for frames of time aligned data
@@ -752,8 +894,8 @@ namespace PCS.Measurements
             double distance;
             bool discardMeasurement;
 
-            // Tracks the total number of measurements requested for sorting.
-            Interlocked.Add(ref m_totalMeasurements, measurements.Count);
+            // Track the total number of measurements ever requested for sorting.
+            Interlocked.Add(ref m_totalMeasurements, measurements.Count());
 
             // Measurements usually come in groups. This function processes all available measurements in the
             // collection here directly as an optimization which avoids the overhead of a function call for
@@ -913,93 +1055,60 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Shuts down concentrator in an orderly fashion.</summary>
-        public virtual void Dispose()
-        {
-            // Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) below.
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        // Protected Methods
-
-        /// <summary>Shuts down concentrator in an orderly fashion.</summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                if (disposing)
-                {
-                    if (m_publicationTimer != null)
-                    {
-                        m_publicationTimer.Tick -= PublishFrames;
-                        m_publicationTimer.Dispose();
-                    }
-                    m_publicationTimer = null;
-
-                    if (m_frameQueue != null)
-                    {
-                        m_frameQueue.Dispose();
-                    }
-                    m_frameQueue = null;
-
-                    if (m_monitorTimer != null)
-                    {
-                        m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
-                        m_monitorTimer.Dispose();
-                    }
-                    m_monitorTimer = null;
-
-                    if (m_latestMeasurements != null)
-                    {
-                        m_latestMeasurements.Dispose();
-                    }
-                    m_latestMeasurements = null;
-                }
-            }
-
-            m_disposed = true;
-        }
-
-        /// <summary>Consumers must override this method in order to publish a frame.</summary>
+        /// <summary>
+        /// Consumers override this method in order to publish a <see cref="IFrame"/> which contains a time-aligned collection of <see cref="IMeasurement"/> values
+        /// that arrived within the concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
+        /// </summary>
+        /// <remarks>
+        /// If user implemented publication function consistently exceeds available publishing time (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds),
+        /// concentration will fall behind. A small amount of this time is required by the <see cref="ConcentratorBase"/> for processing overhead, so actual total time
+        /// available for user function process will always be slightly less than <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds.
+        /// </remarks>
+        /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
+        /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected abstract void PublishFrame(IFrame frame, int index);
 
-        /// <summary>Consumers can choose to override this method to create a new custom frame.</summary>
-        /// <remarks>Override is optional. The base class will create a basic frame to hold synchronized
-        /// measurements.</remarks>
+        /// <summary>
+        /// Consumers can choose to override this method to create a new custom <see cref="IFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// Override is optional. By default, the base class will create a basic <see cref="Frame"/> to hold synchronized measurements.
+        /// </remarks>
         protected internal virtual IFrame CreateNewFrame(long ticks)
         {
             return new Frame(ticks);
         }
 
         /// <summary>
-        /// Consumers can choose to override this method to handle custom assignment of a measurement
-        /// to its frame.
+        /// Consumers can choose to override this method to handle custom assignment of a <see cref="IMeasurement"/> to its <see cref="IFrame"/>.
         /// </summary>
-        /// <returns>True if measurement was successfully assigned to frame</returns>
+        /// <returns>True if <see cref="IMeasurement"/> was successfully assigned to its <see cref="IFrame"/>.</returns>
         /// <remarks>
         /// <para>
-        /// Override is optional. A measurement will simply be assigned to frame's keyed measurement
-        /// dictionary otherwise.
+        /// Override is optional. By default, a measurement will simply be assigned to frame's keyed measurement dictionary.
         /// </para>
         /// <example>
         /// If overridden user must perform their own synchronization as needed, for example:
         /// <code>
-        /// SyncLock frame.Measurements
-        ///     If Not frame.Published Then
-        ///         frame.Measurements(measurement.Key) = measurement
-        ///         Return True
-        ///     Else
-        ///         Return False
-        ///     End If
-        /// End Synclock
+        /// lock (frame.Measurements)
+        /// {
+        ///     if (!frame.Published)
+        ///     {
+        ///         frame.Measurements[measurement.Key] = measurement;
+        ///         return true;
+        ///     }
+        ///     else
+        ///     {
+        ///         return false;
+        ///     }
+        /// }
         /// </code>
         /// </example>
         /// <para>
-        /// Note that the frame.Measurements dictionary is used internally to synchrnonize assignment
-        /// of the frame.Published flag. If your custom frame makes use of the frame.Measurements
-        /// dictionary you must implement a locking scheme similar to the sample code above to
-        /// prevent changes to the measurement dictionary during frame publication.
+        /// Note that the <see cref="IFrame.Measurements"/> dictionary is used internally to synchrnonize assignment
+        /// of the <see cref="IFrame.Published"/> flag. If your custom <see cref="IFrame"/> makes use of the
+        /// <see cref="IFrame.Measurements"/> dictionary you must implement a locking scheme similar to the sample
+        /// code to prevent changes to the measurement dictionary during frame publication.
         /// </para>
         /// </remarks>
         protected virtual bool AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
@@ -1020,7 +1129,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Allows derived class access to frame queue.</summary>
+        /// <summary>
+        /// Gets a reference to the <see cref="FrameQueue"/>.
+        /// </summary>
         protected FrameQueue FrameQueue
         {
             get
@@ -1029,24 +1140,26 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Allows derived classes to raise a processing exception.</summary>
-        protected void RaiseProcessException(Exception ex)
+        /// <summary>
+        /// Raises the <see cref="ProcessException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ProcessException"/> event.</param>
+        /// <remarks>
+        /// Allows derived classes to raise a processing exception.
+        /// </remarks>
+        protected void OnProcessException(Exception ex)
         {
             if (ProcessException != null)
-                ProcessException(ex);
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
-
-        // Private Methods
 
         // Member variables being updated are only updated here so we don't worry about atomic operations on these variables.
         // Note that this is the PrecisionTimer "Tick" delgate handler.
         private void PublishFrames(object sender, EventArgs e)
         {
             IFrame frame;
-            int frameIndex;
-            int period;
-            long ticks;
-            long distance;
+            int frameIndex, period;
+            long ticks, distance;
 
             // First things first, prepare timer period for next call...
             m_frameIndex++;
@@ -1057,7 +1170,8 @@ namespace PCS.Measurements
             // Get the frame period for this frame index
             period = m_framePeriods[m_frameIndex];
 
-            // We only update timer period if it has changed since last call
+            // We only update timer period if it has changed since last call. Note that this is necessary since
+            // timer periods are defined as integers but actual period is typically uneven (33.333 ms)
             if (m_lastFramePeriod != period)
                 m_publicationTimer.Period = period;
 
@@ -1098,7 +1212,7 @@ namespace PCS.Measurements
                         distance = DateTime.UtcNow.Ticks;
 #endif
 
-                        // Mark the frame as published to prevent any further sorting into this frame.
+                        // Mark the frame as published to prevent any further sorting into this frame
                         lock (frame.Measurements)
                         {
                             // Setting this flag needs is in a critcal section to ensure that
@@ -1111,7 +1225,7 @@ namespace PCS.Measurements
 
                         try
                         {
-                            // Publish the current frame (i.e., call user implemented publication function).
+                            // Publish the current frame (i.e., call user implemented publication function)
                             PublishFrame(frame, frameIndex);
                         }
                         finally
@@ -1119,7 +1233,7 @@ namespace PCS.Measurements
                             // Remove the frame from the queue whether it is successfully published or not
                             m_frameQueue.Pop();
 
-                            // Update publication statistics.
+                            // Update publication statistics
                             m_publishedFrames++;
                             m_publishedMeasurements += frame.PublishedMeasurements;
                         }
@@ -1135,9 +1249,7 @@ namespace PCS.Measurements
                 catch (Exception ex)
                 {
                     // Not stopping for exceptions - but we'll let user know there are issues...
-                    if (ProcessException != null)
-                        ProcessException(ex);
-
+                    OnProcessException(ex);
                     break;
                 }
             }
@@ -1151,11 +1263,11 @@ namespace PCS.Measurements
             if (secondsOfData < 0) secondsOfData = 0;
 
             if (UnpublishedSamples != null)
-                UnpublishedSamples(secondsOfData);
+                UnpublishedSamples(this, new EventArgs<int>(secondsOfData));
         }
 
-        // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.3333 milliseconds)
-        // so we use this function to evenly distribute wait times across a second...
+        // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.3333... milliseconds)
+        // so we use this function to evenly distribute wait times across a second.
         private int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
         {
             // Jian Zuo...
