@@ -1171,13 +1171,13 @@ namespace PCS.Measurements
             period = m_framePeriods[m_frameIndex];
 
             // We only update timer period if it has changed since last call. Note that this is necessary since
-            // timer periods are defined as integers but actual period is typically uneven (33.333 ms)
+            // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
             if (m_lastFramePeriod != period)
                 m_publicationTimer.Period = period;
 
             m_lastFramePeriod = period;
 
-            // Keep publishing frames so long as they are ready for publication, handles case where
+            // Keep publishing frames so long as they are ready for publication. This handles case where
             // system may be falling behind because user function is taking too long - exit when no
             // other frames are available to process
 
@@ -1215,7 +1215,7 @@ namespace PCS.Measurements
                         // Mark the frame as published to prevent any further sorting into this frame
                         lock (frame.Measurements)
                         {
-                            // Setting this flag needs is in a critcal section to ensure that
+                            // Setting this flag is in a critcal section to ensure that
                             // sorting into this frame has ceased prior to publication...
                             frame.Published = true;
                         }
@@ -1266,7 +1266,7 @@ namespace PCS.Measurements
                 UnpublishedSamples(this, new EventArgs<int>(secondsOfData));
         }
 
-        // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.3333... milliseconds)
+        // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.333... milliseconds)
         // so we use this function to evenly distribute wait times across a second.
         private int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
         {
