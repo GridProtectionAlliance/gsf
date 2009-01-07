@@ -33,7 +33,7 @@ namespace PCS.NumericalAnalysis
     /// Composite values can be cumulated until all values have been assigned so that a compound value can be created.
     /// </remarks>
     /// <typeparam name="T"><see cref="Type"/> of composite values.</typeparam>
-    public class CompoundValue<T> : Collection<AssignedValue<T>>
+    public class CompoundValue<T> : Collection<Assignable<T>>
     {
         #region [ Members ]
 
@@ -59,7 +59,7 @@ namespace PCS.NumericalAnalysis
         {
             for (int i = 0; i < count; i++)
             {
-                Add(new AssignedValue<T>());
+                Add(new Assignable<T>());
             }
         }
 
@@ -109,7 +109,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>
         /// <param name="item">The object to insert.</param>
-        protected override void InsertItem(int index, AssignedValue<T> item)
+        protected override void InsertItem(int index, Assignable<T> item)
         {
             // Subscribe to item's changed event
             item.Changed += OnValueChanged;
@@ -126,7 +126,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         /// <param name="index">The zero-based index of the element to replace.</param>
         /// <param name="item">The new value for the element at the specified index.</param>
-        protected override void SetItem(int index, AssignedValue<T> item)
+        protected override void SetItem(int index, Assignable<T> item)
         {
             // See if user is assigning a new item
             if (!object.ReferenceEquals(item, this[index]))
@@ -163,7 +163,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         protected override void ClearItems()
         {
-            foreach (AssignedValue<T> item in this)
+            foreach (Assignable<T> item in this)
             {
                 // Unsubscribe from item's changed event
                 item.Changed -= OnValueChanged;
@@ -181,7 +181,7 @@ namespace PCS.NumericalAnalysis
             // Maintain state of all assigned flag
             if (m_allAssigned || Count == 0)
             {
-                AssignedValue<T> value = sender as AssignedValue<T>;
+                Assignable<T> value = sender as Assignable<T>;
 
                 if (value != null)
                     m_allAssigned = value.Assigned;
