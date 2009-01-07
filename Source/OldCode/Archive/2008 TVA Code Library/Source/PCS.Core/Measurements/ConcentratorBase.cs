@@ -176,16 +176,16 @@ namespace PCS.Measurements
             m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
             m_latestMeasurements = new ImmediateMeasurements(this);
 
-            // Creates a new queue for managing real-time frames
-            m_frameQueue = new FrameQueue(m_ticksPerFrame, (int)((1.0D + m_lagTime + m_leadTime) * framesPerSecond), CreateNewFrame);
+            // Create a new queue for managing real-time frames
+            m_frameQueue = new FrameQueue(this);
 
             // Create high precision timer used for frame processing
             m_publicationTimer = new PrecisionTimer();
             m_publicationTimer.AutoReset = true;
             m_publicationTimer.Tick += PublishFrames;
 
-            // Monitors the total number of unpublished samples every second. This is a useful statistic to
-            // monitor, if total number of unpublished samples exceed lag time, measurement concentration could
+            // This timer monitors the total number of unpublished samples every second. This is a useful statistic
+            // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
             // be falling behind.
             m_monitorTimer = new System.Timers.Timer();
             m_monitorTimer.Interval = 1000;
@@ -780,6 +780,8 @@ namespace PCS.Measurements
                             m_latestMeasurements.Dispose();
                         }
                         m_latestMeasurements = null;
+
+                        m_lastDiscardedMeasurement = null;
                     }
                 }
                 finally
@@ -816,7 +818,7 @@ namespace PCS.Measurements
 #endif
                 m_frameQueue.Clear();
 
-                // Start real-time frame publication thread
+                // Start real-time frame publication
                 m_frameIndex = 0;
                 m_lastFramePeriod = (int)(m_ticksPerFrame / (decimal)Ticks.PerMillisecond);
                 m_publicationTimer.Period = m_lastFramePeriod;
@@ -866,7 +868,7 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Sort the <see cref="IMeasurement"/> placing the data point in its proper <see cref="IFrame"/>.
+        /// Sorts the <see cref="IMeasurement"/> placing the data point in its proper <see cref="IFrame"/>.
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> to sort.</param>
         public virtual void SortMeasurement(IMeasurement measurement)
@@ -875,7 +877,7 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Sort each <see cref="IMeasurement"/> placing each data point in its proper <see cref="IFrame"/>.
+        /// Sorts each <see cref="IMeasurement"/> placing each data point in its proper <see cref="IFrame"/>.
         /// </summary>
         /// <param name="measurements">Collection of <see cref="IMeasurement"/>'s to sort.</param>
         public virtual void SortMeasurements(IEnumerable<IMeasurement> measurements)

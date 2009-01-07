@@ -12,12 +12,6 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/01/2007 - J. Ritchie Carroll
 //       Initial version of source generated
-//  11/08/2007 - J. Ritchie Carroll
-//       Optimized "Pop" call to be a no-wait operation
-//  02/19/2008 - J. Ritchie Carroll
-//       Added code to detect and avoid redundant calls to Dispose().
-//  08/20/2008 - J. Ritchie Carroll
-//       Removed process queue for thread reduction optimization
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
 //
@@ -36,26 +30,32 @@ namespace PCS.Measurements
         #region [ Members ]
 
         // Fields
+        private ConcentratorBase m_parent;              // Reference to parent concentrator instance
         private LinkedList<IFrame> m_frameList;         // We keep this list sorted by timestamp so frames are processed in order
         private Dictionary<long, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
-        private long m_publishedTicks;
-        private IFrame m_head;
-        private IFrame m_last;
-        private decimal m_ticksPerFrame;
-        private Func<long, IFrame> m_createNewFrameFunction;
-        private bool m_disposed;
+        private long m_publishedTicks;                  // Timstamp of last published frame
+        private IFrame m_head;                          // Reference to current top of the frame collection
+        private IFrame m_last;                          // Reference to last published frame
+        private decimal m_ticksPerFrame;                // Cached ticks per frame
+        private bool m_disposed;                        // Object disposed flag
 
         #endregion
 
         #region [ Constructors ]
 
-        internal FrameQueue(decimal ticksPerFrame, int initialCapacity, Func<long, IFrame> createNewFrameFunction)
+        /// <summary>
+        /// Creates a new <see cref="FrameQueue"/>.
+        /// </summary>
+        /// <param name="parent">Reference to parent concentrator instance.</param>
+        internal FrameQueue(ConcentratorBase parent)
         {
+            // Calculate initial dictionary capacity based on concentrator specifications
+            int initialCapacity = (int)((1.0D + parent.LagTime + parent.LeadTime) * parent.FramesPerSecond);
+
+            m_parent = parent;
             m_frameList = new LinkedList<IFrame>();
             m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
-
-            m_ticksPerFrame = ticksPerFrame;
-            m_createNewFrameFunction = createNewFrameFunction;
+            m_ticksPerFrame = parent.TicksPerFrame;
         }
 
         /// <summary>
@@ -84,28 +84,13 @@ namespace PCS.Measurements
                 m_ticksPerFrame = value;
             }
         }
-
-        /// <summary>
-        /// Gets or sets the create frame function delegate used by <see cref="FrameQueue"/>.
-        /// </summary>
-        /// <remarks>
-        /// Function signature: <see cref="IFrame"/> CreateFrame(long ticks).
-        /// </remarks>
-        public Func<long, IFrame> CreateNewFrameFunction
-        {
-            get
-            {
-                return m_createNewFrameFunction;
-            }
-            set
-            {
-                m_createNewFrameFunction = value;
-            }
-        }
-
         /// <summary>
         /// Returns the next <see cref="IFrame"/> in the <see cref="FrameQueue"/>, if any.
         /// </summary>
+        /// <remarks>
+        /// This property is tracked separately from the internal <see cref="IFrame"/> collection, as a
+        /// result this property may be called at any time without a locking penalty.
+        /// </remarks>
         public IFrame Head
         {
             get
@@ -118,6 +103,10 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets the last processed <see cref="IFrame"/> in the <see cref="FrameQueue"/>.
         /// </summary>
+        /// <remarks>
+        /// This property is tracked separately from the internal <see cref="IFrame"/> collection, as a
+        /// result this property may be called at any time without a locking penalty.
+        /// </remarks>
         public IFrame Last
         {
             get
@@ -171,7 +160,10 @@ namespace PCS.Measurements
                             m_frameHash.Clear();
 
                         m_frameHash = null;
-                        m_createNewFrameFunction = null;
+
+                        m_parent = null;
+                        m_head = null;
+                        m_last = null;
                     }
                 }
                 finally
@@ -197,7 +189,7 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Removes current <see cref="Head"/> frame <see cref="FrameQueue"/> from the queue after it has been processed and assigns a new <see cref="Head"/>.
+        /// Removes current <see cref="Head"/> frame from the <see cref="FrameQueue"/> after it has been processed and assigns a new <see cref="Head"/>.
         /// </summary>
         public void Pop()
         {
@@ -208,8 +200,8 @@ namespace PCS.Measurements
             m_head = null;
             m_publishedTicks = m_last.Ticks;
 
-            // Assign next node, if any, as quickly as possible. We wait for queue lock because
-            // times-a-wastin and user function needs a frame to publish.
+            // Assign next node, if any, as quickly as possible. Still have to wait for queue
+            // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
             lock (m_frameList)
             {
                 LinkedListNode<IFrame> nextNode = m_frameList.First.Next;
@@ -254,7 +246,7 @@ namespace PCS.Measurements
                         return frame;
 
                     // Didn't find frame for this timestamp so we create one
-                    frame = m_createNewFrameFunction(destinationTicks);
+                    frame = m_parent.CreateNewFrame(destinationTicks);
 
                     if (m_frameList.Count > 0)
                     {
@@ -343,3 +335,25 @@ namespace PCS.Measurements
         #endregion
     }
 }
+
+#region [ Old Code ]
+
+///// <summary>
+///// Gets or sets the create frame function delegate used by <see cref="FrameQueue"/>.
+///// </summary>
+///// <remarks>
+///// Function signature: <see cref="IFrame"/> CreateFrame(long ticks).
+///// </remarks>
+//public Func<long, IFrame> CreateNewFrameFunction
+//{
+//    get
+//    {
+//        return m_createNewFrameFunction;
+//    }
+//    set
+//    {
+//        m_createNewFrameFunction = value;
+//    }
+//}
+
+#endregion
