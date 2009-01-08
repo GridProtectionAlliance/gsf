@@ -101,11 +101,11 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                return m_rectangularValues[RealComponent].Value;
+                return m_rectangularValues[RealComponent].GetValueOrDefault();
             }
             set
             {
-                m_rectangularValues[RealComponent].Value = value;
+                m_rectangularValues[RealComponent] = value;
             }
         }
 
@@ -116,11 +116,11 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                return m_rectangularValues[ImaginaryComponent].Value;
+                return m_rectangularValues[ImaginaryComponent].GetValueOrDefault();
             }
             set
             {
-                m_rectangularValues[ImaginaryComponent].Value = value;
+                m_rectangularValues[ImaginaryComponent] = value;
             }
         }
 
@@ -142,7 +142,7 @@ namespace PCS.NumericalAnalysis
                 else if (m_polarValues != null)
                 {
                     // Return any assigned value if magnitude can't be calculated
-                    return m_polarValues[MagnitudeComponent].Value;
+                    return m_polarValues[MagnitudeComponent].GetValueOrDefault();
                 }
                 else
                     return double.NaN;
@@ -160,7 +160,7 @@ namespace PCS.NumericalAnalysis
                         m_polarValues = new CompoundValue<double>(2);
 
                     // Assign absolute value component of compound value
-                    m_polarValues[MagnitudeComponent].Value = value;
+                    m_polarValues[MagnitudeComponent] = value;
 
                     // If all composite polar values have been received, we can calculate real and imaginary values
                     CalculateRectangularFromPolar();
@@ -172,8 +172,8 @@ namespace PCS.NumericalAnalysis
                     // coordinates and then update the real and imaginary components
                     ComplexNumber updatedValue = new ComplexNumber(Angle, value);
 
-                    m_rectangularValues[RealComponent].Value = updatedValue.Real;
-                    m_rectangularValues[ImaginaryComponent].Value = updatedValue.Imaginary;
+                    m_rectangularValues[RealComponent] = updatedValue.Real;
+                    m_rectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace PCS.NumericalAnalysis
                 else if (m_polarValues != null)
                 {
                     // Return any assigned value if angle can't be calculated
-                    return m_polarValues[AngleComponent].Value;
+                    return m_polarValues[AngleComponent].GetValueOrDefault();
                 }
                 else
                     return double.NaN;
@@ -211,7 +211,7 @@ namespace PCS.NumericalAnalysis
                         m_polarValues = new CompoundValue<double>(2);
 
                     // Assign angle component of compound value
-                    m_polarValues[AngleComponent].Value = value;
+                    m_polarValues[AngleComponent] = value;
 
                     // If all composite polar values have been received, we can calculate real and imaginary values
                     CalculateRectangularFromPolar();
@@ -223,8 +223,8 @@ namespace PCS.NumericalAnalysis
                     // coordinates and then update the real and imaginary components
                     ComplexNumber updatedValue = new ComplexNumber(value, AbsoluteValue);
 
-                    m_rectangularValues[RealComponent].Value = updatedValue.Real;
-                    m_rectangularValues[ImaginaryComponent].Value = updatedValue.Imaginary;
+                    m_rectangularValues[RealComponent] = updatedValue.Real;
+                    m_rectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
                 }
             }
         }
