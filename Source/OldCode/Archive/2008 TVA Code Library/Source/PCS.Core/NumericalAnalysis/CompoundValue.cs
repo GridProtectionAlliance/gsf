@@ -22,6 +22,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -59,6 +60,24 @@ namespace PCS.NumericalAnalysis
             {
                 Add(null);
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CompoundValue{T}"/> from the specified list.
+        /// </summary>
+        /// <param name="values">List of values used to initialize <see cref="CompoundValue{T}"/>.</param>
+        public CompoundValue(IEnumerable<T> values)
+            : base(values.ToList().ConvertAll<T?>(item => item))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CompoundValue{T}"/> from the specified list.
+        /// </summary>
+        /// <param name="values">List of values used to initialize <see cref="CompoundValue{T}"/>.</param>
+        public CompoundValue(IEnumerable<T?> values)
+            : base(values.ToList())
+        {
         }
 
         #endregion
