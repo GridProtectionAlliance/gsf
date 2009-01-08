@@ -49,8 +49,8 @@ namespace PCS.NumericalAnalysis
         /// Creates a new <see cref="CompoundValue{T}"/> specifing the total number of composite values to track.
         /// </summary>
         /// <remarks>
-        /// The specified <paramref name="count"/> of items are added to the <see cref="CompoundValue{T}"/>, each
-        /// item will have a default value (e.g., null or zero) and will be marked as unassigned.
+        /// The specified <paramref name="count"/> of items are added to the <see cref="CompoundValue{T}"/>,
+        /// each item will be marked as unassigned (i.e., null).
         /// </remarks>
         /// <param name="count">Total number of composite values to track.</param>
         public CompoundValue(int count)
