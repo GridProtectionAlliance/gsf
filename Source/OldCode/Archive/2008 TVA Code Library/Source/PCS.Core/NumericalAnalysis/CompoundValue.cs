@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace PCS.NumericalAnalysis
 {
@@ -72,18 +73,7 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                bool allAssigned = true;
-
-                for (int x = 0; x < Count; x++)
-                {
-                    if (!this[x].HasValue)
-                    {
-                        allAssigned = false;
-                        break;
-                    }
-                }
-
-                return allAssigned;
+                return this.All<T?>(item => item.HasValue);
             }
         }
 
@@ -95,18 +85,7 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                bool noneAssigned = true;
-
-                for (int x = 0; x < Count; x++)
-                {
-                    if (this[x].HasValue)
-                    {
-                        noneAssigned = false;
-                        break;
-                    }
-                }
-
-                return noneAssigned;
+                return this.All<T?>(item => !item.HasValue);
             }
         }
 
