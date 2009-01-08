@@ -17,6 +17,7 @@
 
 using System;
 using System.Text;
+using System.Linq;
 
 namespace PCS.NumericalAnalysis
 {
@@ -79,8 +80,14 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         /// <param name="z"><see cref="ComplexNumber"/> to be copied.</param>
         public ComplexNumber(ComplexNumber z)
-            : this(z.Real, z.Imaginary)
+            : this()
         {
+            // Make sure state of source complex number is replicated extactly
+            m_rectangularValues[RealComponent] = z.m_rectangularValues[RealComponent];
+            m_rectangularValues[ImaginaryComponent] = z.m_rectangularValues[ImaginaryComponent];
+
+            if (z.m_polarValues != null)
+                m_polarValues = new CompoundValue<double>(z.m_polarValues);
         }
 
         #endregion
