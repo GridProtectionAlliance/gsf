@@ -321,8 +321,8 @@ namespace PCS.NumericalAnalysis
             if (m_polarValues.AllAssigned)
             {
                 // All values assigned, calculate a new rectangular based complex number from its polar composite values
-                double angle = m_polarValues[AngleComponent].Value;
-                double magnitude = m_polarValues[MagnitudeComponent].Value;
+                double angle = (double)m_polarValues[AngleComponent];
+                double magnitude = (double)m_polarValues[MagnitudeComponent];
 
                 Real = magnitude * Math.Cos(angle);
                 Imaginary = magnitude * Math.Sin(angle);
