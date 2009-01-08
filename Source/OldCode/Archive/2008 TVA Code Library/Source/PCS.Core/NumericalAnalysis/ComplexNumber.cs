@@ -213,26 +213,14 @@ namespace PCS.NumericalAnalysis
         }
 
         /// <summary>
-        /// Gets a boolean value indicating if each composite rectangular value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has been assigned a value.
+        /// Gets a boolean value indicating if each composite value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has been assigned a value.
         /// </summary>
-        /// <returns>True, if all composite rectangular values have been assigned a value; otherwise, false.</returns>
-        public bool RectangularCompositesAssigned
+        /// <returns>True, if all composite values have been assigned a value; otherwise, false.</returns>
+        public bool CompositesAssigned
         {
             get
             {
                 return m_rectangularValues.AllAssigned;
-            }
-        }
-
-        /// <summary>
-        /// Gets a boolean value indicating if each composite polar value of the <see cref="ComplexNumber"/> (i.e., <see cref="Angle"/> and <see cref="AbsoluteValue"/>) has been assigned a value.
-        /// </summary>
-        /// <returns>True, if all composite polar values have been assigned a value; otherwise, false.</returns>
-        public bool PolarCompositesAssigned
-        {
-            get
-            {
-                return m_polarValues.AllAssigned;
             }
         }
 
