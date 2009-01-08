@@ -131,11 +131,21 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
-                double real = m_rectangularValues[RealComponent].Value;
-                double imaginary = m_rectangularValues[ImaginaryComponent].Value;
+                if (m_rectangularValues.AllAssigned)
+                {
+                    // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
+                    double real = m_rectangularValues[RealComponent].Value;
+                    double imaginary = m_rectangularValues[ImaginaryComponent].Value;
 
-                return Math.Sqrt(real * real + imaginary * imaginary);
+                    return Math.Sqrt(real * real + imaginary * imaginary);
+                }
+                else if (m_polarValues != null)
+                {
+                    // Return any assigned value if magnitude can't be calculated
+                    return m_polarValues[MagnitudeComponent].Value;
+                }
+                else
+                    return double.NaN;
             }
             set
             {
@@ -161,8 +171,18 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                // Complex number is internally represented in rectangluar coordinates, so we return calculated angle
-                return Math.Atan2(Imaginary, Real);
+                if (m_rectangularValues.AllAssigned)
+                {
+                    // Complex number is internally represented in rectangluar coordinates, so we return calculated angle
+                    return Math.Atan2(Imaginary, Real);
+                }
+                else if (m_polarValues != null)
+                {
+                    // Return any assigned value if angle can't be calculated
+                    return m_polarValues[AngleComponent].Value;
+                }
+                else
+                    return double.NaN;
             }
             set
             {
