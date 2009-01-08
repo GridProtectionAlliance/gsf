@@ -138,7 +138,7 @@ namespace System
         }
 
         /// <summary>
-        /// Compares this instance to a specified 32-bit unsigned integer and returns an indication of their
+        /// Compares this instance to a specified 24-bit unsigned integer and returns an indication of their
         /// relative values.
         /// </summary>
         /// <param name="value">An integer to compare.</param>
@@ -249,7 +249,7 @@ namespace System
         /// specified culture-specific format information.
         /// </summary>
         /// <param name="provider">
-        /// An System.IFormatProvider that supplies culture-specific formatting information.
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
         /// </param>
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
@@ -265,7 +265,7 @@ namespace System
         /// </summary>
         /// <param name="format">A format specification.</param>
         /// <param name="provider">
-        /// An System.IFormatProvider that supplies culture-specific formatting information.
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
         /// </param>
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
@@ -323,7 +323,7 @@ namespace System
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="provider">
-        /// An System.IFormatProvider that supplies culture-specific formatting information about s.
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
         /// A 24-bit unsigned integer equivalent to the number contained in s.
@@ -348,7 +348,7 @@ namespace System
         /// A typical value to specify is System.Globalization.NumberStyles.Integer.
         /// </param>
         /// <param name="provider">
-        /// An System.IFormatProvider that supplies culture-specific formatting information about s.
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
         /// A 24-bit unsigned integer equivalent to the number contained in s.
@@ -415,7 +415,7 @@ namespace System
         /// UInt24.MaxValue. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
-        /// An System.IFormatProvider objectthat supplies culture-specific formatting information about s.
+        /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         /// <exception cref="ArgumentException">
