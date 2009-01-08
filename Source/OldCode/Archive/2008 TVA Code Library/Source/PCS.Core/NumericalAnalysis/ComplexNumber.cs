@@ -47,7 +47,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public ComplexNumber()
         {
-            // Create a new compound value with two composite components; complex number is internally
+            // Create a new compound value with two uninitialized composite components; complex number is internally
             // stored in rectagular coordinates.
             m_rectangularValues = new CompoundValue<double>(2);
         }
@@ -59,10 +59,7 @@ namespace PCS.NumericalAnalysis
         /// <param name="imaginary">The imaginary component of the <see cref="ComplexNumber"/>.</param>
         public ComplexNumber(double real, double imaginary)
         {
-            m_rectangularValues = new CompoundValue<double>();
-            
-            m_rectangularValues.Add(real);          // Real component added at index zero
-            m_rectangularValues.Add(imaginary);     // Imaginary component added at index one
+            m_rectangularValues = new CompoundValue<double>(new double[] {real, imaginary});
         }
 
         /// <summary>
@@ -73,11 +70,7 @@ namespace PCS.NumericalAnalysis
         public ComplexNumber(Angle angle, double absoluteValue)
             : this()
         {
-            m_polarValues = new CompoundValue<double>();
-            
-            m_polarValues.Add(angle);               // Angle component added at index zero
-            m_polarValues.Add(absoluteValue);       // Magnitude component added at index one
-
+            m_polarValues = new CompoundValue<double>(new double[] {angle, absoluteValue});
             CalculateRectangularFromPolar();
         }
 
