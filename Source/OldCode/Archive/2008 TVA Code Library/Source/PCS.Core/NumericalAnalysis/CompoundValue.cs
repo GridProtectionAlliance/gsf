@@ -65,7 +65,7 @@ namespace PCS.NumericalAnalysis
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a boolean value indicating if all composite values have been assigned a value.
+        /// Gets a boolean value indicating if all of the composite values have been assigned a value.
         /// </summary>
         /// <returns>True, if all composite values have been assigned a value; otherwise, false.</returns>
         public bool AllAssigned
@@ -84,6 +84,29 @@ namespace PCS.NumericalAnalysis
                 }
 
                 return allAssigned;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value indicating if none of the composite values have been assigned a value.
+        /// </summary>
+        /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
+        public bool NoneAssigned
+        {
+            get
+            {
+                bool noneAssigned = true;
+
+                for (int x = 0; x < Count; x++)
+                {
+                    if (this[x].Assigned)
+                    {
+                        noneAssigned = false;
+                        break;
+                    }
+                }
+
+                return noneAssigned;
             }
         }
 
