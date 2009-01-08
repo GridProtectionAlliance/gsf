@@ -20,7 +20,7 @@ using System;
 namespace PCS.NumericalAnalysis
 {
     /// <summary>
-    /// Represents an object that tracks if its value has been assigned.
+    /// Extends an object so that it can track if its value has been assigned.
     /// </summary>
     /// <typeparam name="T"><see cref="Type"/> of the object needing assignment tracking.</typeparam>
     public class Assignable<T>
@@ -41,7 +41,7 @@ namespace PCS.NumericalAnalysis
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="Assignable{T}"/> with a default <see cref="Value"/> and <c><see cref="Assigned"/> = false</c>.
+        /// Creates a new <see cref="Assignable{T}"/> with a default <see cref="Value"/> (e.g., null or zero) and <c><see cref="Assigned"/> = false</c>.
         /// </summary>
         public Assignable()
         {

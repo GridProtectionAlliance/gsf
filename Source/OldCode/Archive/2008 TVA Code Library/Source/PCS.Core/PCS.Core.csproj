@@ -92,6 +92,7 @@
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
+    <Compile Include="NumericalAnalysis\Angle.cs" />
     <Compile Include="NumericalAnalysis\Assignable.cs" />
     <Compile Include="NumericalAnalysis\ComplexNumber.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />

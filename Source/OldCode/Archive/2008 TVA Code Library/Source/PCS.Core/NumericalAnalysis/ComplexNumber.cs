@@ -23,27 +23,62 @@ namespace PCS.NumericalAnalysis
     /// <summary>
     /// Represents a complex number.
     /// </summary>
-    public struct ComplexNumber : IEquatable<ComplexNumber>
+    public class ComplexNumber : IEquatable<ComplexNumber>
     {
         #region [ Members ]
 
-        // Fields
-        private double m_real;          // real component of this complex number
-        private double m_imaginary;     // imaginary component of this complex number
+        // Constants
+        private const int RealComponent = 0;                // Index of real component within rectangular based compound value
+        private const int ImaginaryComponent = 1;           // Index of imaginary component within rectangular based compound value
+        
+        private const int AngleComponent = 0;               // Index of angle component within polar based compound value
+        private const int MagnitudeComponent = 1;           // Index of magnitude component within polar based compound value
 
+        // Fields
+        private CompoundValue<double> m_rectangularValues;  // Compound value containing the real and imaginary components of this complex number
+        private CompoundValue<double> m_polarValues;        // Compound value containing the angle and absolute value components of this complex number
+        
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Constructs a <see cref="ComplexNumber"/> from the given values. 
+        /// Constructs a <see cref="ComplexNumber"/>. 
+        /// </summary>
+        public ComplexNumber()
+        {
+            // Create a new compound value with two composite components; complex number is internally
+            // stored in rectagular coordinates.
+            m_rectangularValues = new CompoundValue<double>(2);
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="ComplexNumber"/> from the given rectangular values. 
         /// </summary>
         /// <param name="real">The real component of the <see cref="ComplexNumber"/>.</param>
         /// <param name="imaginary">The imaginary component of the <see cref="ComplexNumber"/>.</param>
         public ComplexNumber(double real, double imaginary)
         {
-            m_real = real;
-            m_imaginary = imaginary;
+            m_rectangularValues = new CompoundValue<double>();
+            
+            m_rectangularValues.Add(real);          // Real component added at index zero
+            m_rectangularValues.Add(imaginary);     // Imaginary component added at index one
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="ComplexNumber"/> from the given polar values.
+        /// </summary>
+        /// <param name="angle">The angle component, in radians, of the <see cref="ComplexNumber"/>.</param>
+        /// <param name="absoluteValue">The absolute value component of the <see cref="ComplexNumber"/>.</param>
+        public ComplexNumber(Angle angle, double absoluteValue)
+            : this()
+        {
+            m_polarValues = new CompoundValue<double>();
+            
+            m_polarValues.Add(angle);               // Angle component added at index zero
+            m_polarValues.Add(absoluteValue);       // Magnitude component added at index one
+
+            CalculateRectangularFromPolar();
         }
 
         /// <summary>
@@ -51,9 +86,8 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         /// <param name="z"><see cref="ComplexNumber"/> to be copied.</param>
         public ComplexNumber(ComplexNumber z)
+            : this(z.Real, z.Imaginary)
         {
-            m_real = z.m_real;
-            m_imaginary = z.m_imaginary;
         }
 
         #endregion
@@ -67,11 +101,11 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                return m_real;
+                return m_rectangularValues[RealComponent].Value;
             }
             set
             {
-                m_real = value;
+                m_rectangularValues[RealComponent].Value = value;
             }
         }
 
@@ -82,33 +116,68 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                return m_imaginary;
+                return m_rectangularValues[ImaginaryComponent].Value;
             }
             set
             {
-                m_imaginary = value;
+                m_rectangularValues[ImaginaryComponent].Value = value;
             }
         }
 
         /// <summary>
-        /// Gets the calculated absolute value (or modulus, a.k.a. the magnitude) of this <see cref="ComplexNumber"/>.
+        /// Gets or sets the absolute value (a.k.a. the modulus or magnitude) of this <see cref="ComplexNumber"/>.
         /// </summary>
         public double AbsoluteValue
         {
             get
             {
-                return Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary);
+                // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
+                double real = m_rectangularValues[RealComponent].Value;
+                double imaginary = m_rectangularValues[ImaginaryComponent].Value;
+
+                return Math.Sqrt(real * real + imaginary * imaginary);
+            }
+            set
+            {
+                // Complex number is internally represented in rectangluar coordinates, so we cache magnitude so we can calculate
+                // real and imaginary components once we also receive angle
+
+                // Create a compound value for polar coordinates if it hasn't been created yet (only created if needed)
+                if (m_polarValues == null)
+                    m_polarValues = new CompoundValue<double>(2);
+
+                // Assign absolute value component of compound value
+                m_polarValues[MagnitudeComponent].Value = value;
+
+                // If all composite polar values have been received, we can calculate real and imaginary values
+                CalculateRectangularFromPolar();
             }
         }
 
         /// <summary>
-        /// Gets the calculated angle (or argument) in radians of this <see cref="ComplexNumber"/>.
+        /// Gets or sets the <see cref="NumericalAnalysis.Angle"/> (a.k.a. the argument) in radians of this <see cref="ComplexNumber"/>.
         /// </summary>
-        public double Angle
+        public Angle Angle
         {
             get
             {
-                return Math.Atan2(m_imaginary, m_real);
+                // Complex number is internally represented in rectangluar coordinates, so we return calculated angle
+                return Math.Atan2(Imaginary, Real);
+            }
+            set
+            {
+                // Complex number is internally represented in rectangluar coordinates, so we cache angle so we can calculate
+                // real and imaginary components once we also receive magnitude
+
+                // Create a compound value for polar coordinates if it hasn't been created yet (only created if needed)
+                if (m_polarValues == null)
+                    m_polarValues = new CompoundValue<double>(2);
+
+                // Assign angle component of compound value
+                m_polarValues[AngleComponent].Value = value;
+
+                // If all composite polar values have been received, we can calculate real and imaginary values
+                CalculateRectangularFromPolar();
             }
         }
 
@@ -119,7 +188,31 @@ namespace PCS.NumericalAnalysis
         {
             get
             {
-                return new ComplexNumber(m_real, -m_imaginary);
+                return new ComplexNumber(Real, -Imaginary);
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value indicating if each composite rectangular value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has been assigned a value.
+        /// </summary>
+        /// <returns>True, if all composite rectangular values have been assigned a value; otherwise, false.</returns>
+        public bool RectangularCompositesAssigned
+        {
+            get
+            {
+                return m_rectangularValues.AllAssigned;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value indicating if each composite polar value of the <see cref="ComplexNumber"/> (i.e., <see cref="Angle"/> and <see cref="AbsoluteValue"/>) has been assigned a value.
+        /// </summary>
+        /// <returns>True, if all composite polar values have been assigned a value; otherwise, false.</returns>
+        public bool PolarCompositesAssigned
+        {
+            get
+            {
+                return m_polarValues.AllAssigned;
             }
         }
 
@@ -161,7 +254,7 @@ namespace PCS.NumericalAnalysis
         /// </returns>
         public override int GetHashCode()
         {
-            return (m_real.GetHashCode() ^ m_imaginary.GetHashCode());
+            return (Real.GetHashCode() ^ Imaginary.GetHashCode());
         }
 
         /// <summary>
@@ -174,16 +267,33 @@ namespace PCS.NumericalAnalysis
         {
             StringBuilder image = new StringBuilder();
 
-            image.Append(m_real);
+            image.Append(Real);
 
-            if (m_imaginary != 0.0D)
+            if (Imaginary != 0.0D)
             {
-                image.Append(m_imaginary > 0.0D ? " + " : " - ");
-                image.Append(Math.Abs(m_imaginary));
+                image.Append(Imaginary > 0.0D ? " + " : " - ");
+                image.Append(Math.Abs(Imaginary));
                 image.Append("i");
             }
 
             return image.ToString();
+        }
+
+        // Calculate real and imaginary components from angle and magnitude
+        private void CalculateRectangularFromPolar()
+        {
+            if (m_polarValues.AllAssigned)
+            {
+                // All values assigned, calculate a new rectangular based complex number from its polar composite values
+                double angle = m_polarValues[AngleComponent].Value;
+                double magnitude = m_polarValues[MagnitudeComponent].Value;
+
+                Real = magnitude * Math.Cos(angle);
+                Imaginary = magnitude * Math.Sin(angle);
+
+                // Once rectangular values are available, polar values are no longer needed
+                m_polarValues = null;
+            }
         }
 
         #endregion
@@ -203,7 +313,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static bool operator ==(ComplexNumber value1, ComplexNumber value2)
         {
-            return (value1.m_real == value2.m_real && value1.m_imaginary == value2.m_imaginary);
+            return (value1.Real == value2.Real && value1.Imaginary == value2.Imaginary);
         }
 
         /// <summary>
@@ -219,7 +329,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static ComplexNumber operator -(ComplexNumber z)
         {
-            return new ComplexNumber(-z.m_real, -z.m_imaginary);
+            return new ComplexNumber(-z.Real, -z.Imaginary);
         }
 
         /// <summary>
@@ -227,7 +337,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static ComplexNumber operator +(ComplexNumber value1, ComplexNumber value2)
         {
-            return new ComplexNumber(value1.m_real + value2.m_real, value1.m_imaginary + value2.m_imaginary);
+            return new ComplexNumber(value1.Real + value2.Real, value1.Imaginary + value2.Imaginary);
         }
 
         /// <summary>
@@ -235,7 +345,7 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static ComplexNumber operator -(ComplexNumber value1, ComplexNumber value2)
         {
-            return new ComplexNumber(value1.m_real - value2.m_real, value1.m_imaginary - value2.m_imaginary);
+            return new ComplexNumber(value1.Real - value2.Real, value1.Imaginary - value2.Imaginary);
         }
 
         /// <summary>
@@ -243,8 +353,8 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static ComplexNumber operator *(ComplexNumber value1, ComplexNumber value2)
         {
-            double real = value1.m_real * value2.m_real - value1.m_imaginary * value2.m_imaginary;
-            double imaginary = value1.m_imaginary * value2.m_real + value1.m_real * value2.m_imaginary;
+            double real = value1.Real * value2.Real - value1.Imaginary * value2.Imaginary;
+            double imaginary = value1.Imaginary * value2.Real + value1.Real * value2.Imaginary;
 
             return new ComplexNumber(real, imaginary);
         }
@@ -254,13 +364,13 @@ namespace PCS.NumericalAnalysis
         /// </summary>
         public static ComplexNumber operator /(ComplexNumber value1, ComplexNumber value2)
         {
-            double divisor = Math.Pow(value2.m_real, 2) + Math.Pow(value2.m_imaginary, 2);
-            double real = (value1.m_real * value2.m_real + value1.m_imaginary * value2.m_imaginary) / divisor;
-            double imaginary = (value1.m_imaginary * value2.m_real - value1.m_real * value2.m_imaginary) / divisor;
+            double divisor = Math.Pow(value2.Real, 2) + Math.Pow(value2.Imaginary, 2);
+            double real = (value1.Real * value2.Real + value1.Imaginary * value2.Imaginary) / divisor;
+            double imaginary = (value1.Imaginary * value2.Real - value1.Real * value2.Imaginary) / divisor;
 
             return new ComplexNumber(real, imaginary);
         }
 
         #endregion
-    }
+   }
 }
