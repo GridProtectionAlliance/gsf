@@ -27,7 +27,8 @@ namespace PCS.NumericalAnalysis
     /// This class behaves just like a <see cref="Double"/> representing an angle in radians; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other angle representations, specifically
-    /// degrees and grads (a.k.a., gon, grade or gradian).
+    /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
+    /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
     /// </remarks>
     [Serializable()]
     public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<Double>, IEquatable<Angle>, IEquatable<Double>
@@ -37,8 +38,18 @@ namespace PCS.NumericalAnalysis
         // Constants
         private const double DegreesToRadians = Math.PI / 180.0D;
         private const double RadiansToDegrees = 180.0D / Math.PI;
+
         private const double GradsToRadians = Math.PI / 200.0D;
         private const double RadiansToGrads = 200.0D / Math.PI;
+
+        private const double ArcMinutesToRadians = Math.PI / 180.0D / 60.0D;
+        private const double RadiansToArcMinutes = 180.0D / Math.PI * 60.0D;
+
+        private const double ArcSecondsToRadians = Math.PI / 180.0D / 3600.0D;
+        private const double RadiansToArcSeconds = 180.0D / Math.PI * 3600.0D;
+
+        private const double AngularMilToRadians = 2.0D * Math.PI / 6400.0D;
+        private const double RadiansToAngularMil = 6400.0D / (2.0D * Math.PI);
 
         // Fields
         private double m_value; // Angle value stored in radians
@@ -77,6 +88,35 @@ namespace PCS.NumericalAnalysis
         {
             return m_value * RadiansToGrads;
         }
+
+        /// <summary>
+        /// Gets the <see cref="Angle"/> value in arcminutes.
+        /// </summary>
+        /// <returns>Value of <see cref="Angle"/> in arcminutes.</returns>
+        public double ToArcMinutes()
+        {
+            return m_value * RadiansToArcMinutes;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Angle"/> value in arcseconds.
+        /// </summary>
+        /// <returns>Value of <see cref="Angle"/> in arcseconds.</returns>
+        public double ToArcSeconds()
+        {
+            return m_value * RadiansToArcSeconds;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Angle"/> value in angular mil.
+        /// </summary>
+        /// <returns>Value of <see cref="Angle"/> in angular mil.</returns>
+        public double ToAngularMil()
+        {
+            return m_value * RadiansToAngularMil;
+        }
+
+        #region [ Numeric Interface Implementations ]
 
         /// <summary>
         /// Compares this instance to a specified object and returns an indication of their relative values.
@@ -472,6 +512,8 @@ namespace PCS.NumericalAnalysis
 
         #endregion
 
+        #endregion
+
         #region [ Operators ]
 
         /// <summary>
@@ -527,6 +569,36 @@ namespace PCS.NumericalAnalysis
         /// <param name="value">New <see cref="Angle"/> value in grads.</param>
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in grads.</returns>
         public static Angle FromGrads(double value)
+        {
+            return new Angle(value * GradsToRadians);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in arcminutes.
+        /// </summary>
+        /// <param name="value">New <see cref="Angle"/> value in arcminutes.</param>
+        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcminutes.</returns>
+        public static Angle FromArcMinutes(double value)
+        {
+            return new Angle(value * GradsToRadians);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in arcseconds.
+        /// </summary>
+        /// <param name="value">New <see cref="Angle"/> value in arcseconds.</param>
+        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcseconds.</returns>
+        public static Angle FromArcSeconds(double value)
+        {
+            return new Angle(value * GradsToRadians);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in angular mil.
+        /// </summary>
+        /// <param name="value">New <see cref="Angle"/> value in angular mil.</param>
+        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in angular mil.</returns>
+        public static Angle FromAngularMil(double value)
         {
             return new Angle(value * GradsToRadians);
         }
