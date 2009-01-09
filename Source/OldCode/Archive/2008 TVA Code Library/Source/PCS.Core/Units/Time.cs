@@ -23,9 +23,8 @@ using System.Runtime.CompilerServices;
 namespace PCS.Units
 {
     /// <summary>
-    /// Represents an instant in time, in ticks (i.e., 100-nanosecond intervals), as a 64-bit signed integer
-    /// with a value that is expressed as the number of 100-nanosecond intervals that have elapsed since
-    /// 12:00:00 midnight, January 1, 0001.
+    /// Represents an instant in time as a 64-bit signed integer with a value that is expressed as the
+    /// number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
     /// </summary>
     /// <remarks>
     /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implictly
