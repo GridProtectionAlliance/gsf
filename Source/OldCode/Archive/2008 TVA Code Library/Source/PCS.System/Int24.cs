@@ -960,6 +960,22 @@ namespace System
             return ((int)value1 ^ value2);
         }
 
+        /// <summary>
+        /// Returns value after right shifts of first value by the number of bits specified by second value.
+        /// </summary>
+        public static Int24 operator >>(Int24 value, int shifts)
+        {
+            return (Int24)(ApplyBitMask((int)value >> shifts));
+        }
+
+        /// <summary>
+        /// Returns value after left shifts of first value by the number of bits specified by second value.
+        /// </summary>
+        public static Int24 operator <<(Int24 value, int shifts)
+        {
+            return (Int24)(ApplyBitMask((int)value << shifts));
+        }
+
         #endregion
 
         #region [ Arithmetic Operators ]
@@ -1101,22 +1117,6 @@ namespace System
         //{
         //    return ((double)value1 / (double)value2);
         //}
-
-        /// <summary>
-        /// Returns value after right shifts of first value by the number of bits specified by second value.
-        /// </summary>
-        public static Int24 operator >>(Int24 value, int shifts)
-        {
-            return (Int24)(ApplyBitMask((int)value >> shifts));
-        }
-
-        /// <summary>
-        /// Returns value after left shifts of first value by the number of bits specified by second value.
-        /// </summary>
-        public static Int24 operator <<(Int24 value, int shifts)
-        {
-            return (Int24)(ApplyBitMask((int)value << shifts));
-        }
 
         // C# doesn't expose an exponent operator but some other .NET languages do,
         // so we expose the operator via its native special IL function name
