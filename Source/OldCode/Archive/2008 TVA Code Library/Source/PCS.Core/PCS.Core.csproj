@@ -92,7 +92,7 @@
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
-    <Compile Include="NumericalAnalysis\Angle.cs" />
+    <Compile Include="Units\Angle.cs" />
     <Compile Include="NumericalAnalysis\ComplexNumber.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
@@ -204,6 +204,7 @@
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicManaged.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TypeExtensions.cs" />
+    <Compile Include="Units\Temperature.cs" />
     <Compile Include="USTimeZones.cs" />
     <Compile Include="Diagnostics\PerformanceCounter.cs" />
     <Compile Include="Diagnostics\PerformanceMonitor.cs" />
@@ -314,9 +315,6 @@
       <Project>{4B228C40-17E8-4751-B580-D5E052A5A53E}</Project>
       <Name>PCS.System</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Units\" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

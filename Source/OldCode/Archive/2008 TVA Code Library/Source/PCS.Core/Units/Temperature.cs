@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  Angle.cs
+//  Temperature.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -10,7 +10,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/08/2009 - James R Carroll
+//  01/09/2009 - James R Carroll
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -22,47 +22,59 @@ using System.Runtime.CompilerServices;
 
 namespace PCS.Units
 {
-    /// <summary>Represents an angle, in radians, as a double-precision floating-point number.</summary>
+    /// <summary>Represents a temperature, in kelvin, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing an angle in radians; it is implictly
+    /// This class behaves just like a <see cref="Double"/> representing a temperature in kelvin; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
-    /// has the advantage of handling conversions to and from other angle representations, specifically
-    /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
-    /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
+    /// has the advantage of handling conversions to and from other temperature representations, specifically
+    /// Celsius, Fahrenheit, Newton, Rankine, Delisle, Réaumur and Rømer.
     /// </remarks>
     [Serializable()]
-    public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<Double>, IEquatable<Angle>, IEquatable<Double>
+    public struct Temperature : IComparable, IFormattable, IConvertible, IComparable<Temperature>, IComparable<Double>, IEquatable<Temperature>, IEquatable<Double>
     {
         #region [ Members ]
 
         // Constants
-        private const double DegreesToRadians = Math.PI / 180.0D;
-        private const double RadiansToDegrees = 180.0D / Math.PI;
+        private const double CelsiusFactor = 1.0D;
+        private const double CelsiusOffset = 273.15D;
+        private const double CelsiusStep = 0.0D;
 
-        private const double GradsToRadians = Math.PI / 200.0D;
-        private const double RadiansToGrads = 200.0D / Math.PI;
+        private const double FahrenheitFactor = 5.0D / 9.0D;
+        private const double FahrenheitOffset = 459.67D;
+        private const double FahrenheitStep = 0.0D;
 
-        private const double ArcMinutesToRadians = Math.PI / 180.0D / 60.0D;
-        private const double RadiansToArcMinutes = 180.0D / Math.PI * 60.0D;
+        private const double NewtonFactor = 100.0D / 33.0D;
+        private const double NewtonOffset = CelsiusOffset;
+        private const double NewtonStep = 0.0D;
 
-        private const double ArcSecondsToRadians = Math.PI / 180.0D / 3600.0D;
-        private const double RadiansToArcSeconds = 180.0D / Math.PI * 3600.0D;
+        private const double RankineFactor = FahrenheitFactor;
+        private const double RankineOffset = 0.0D;
+        private const double RankineStep = 0.0D;
 
-        private const double AngularMilToRadians = 2.0D * Math.PI / 6400.0D;
-        private const double RadiansToAngularMil = 6400.0D / (2.0D * Math.PI);
+        private const double DelisleFactor = -2.0D / 3.0D;
+        private const double DelisleOffset = 373.15D;
+        private const double DelisleStep = 0.0D;
+
+        private const double RéaumurFactor = 5.0D / 4.0D;
+        private const double RéaumurOffset = CelsiusOffset;
+        private const double RéaumurStep = 0.0D;
+
+        private const double RømerFactor = 40.0D / 21.0D;
+        private const double RømerOffset = CelsiusOffset;
+        private const double RømerStep = -7.5D;
 
         // Fields
-        private double m_value; // Angle value stored in radians
+        private double m_value; // Temperature value stored in kelvin
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/>.
+        /// Creates a new <see cref="Temperature"/>.
         /// </summary>
-        /// <param name="value">New angle value in radians.</param>
-        public Angle(double value)
+        /// <param name="value">New temperature value in kelvin.</param>
+        public Temperature(double value)
         {
             m_value = value;
         }
@@ -72,48 +84,72 @@ namespace PCS.Units
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in degrees.
+        /// Gets the <see cref="Temperature"/> value in Celsius.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in degrees.</returns>
-        public double ToDegrees()
+        /// <returns>Value of <see cref="Temperature"/> in Celsius.</returns>
+        public double ToCelsius()
         {
-            return m_value * RadiansToDegrees;
+            return ToTemperature(CelsiusFactor, CelsiusOffset, CelsiusStep);
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in grads.
+        /// Gets the <see cref="Temperature"/> value in Fahrenheit.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in grads.</returns>
-        public double ToGrads()
+        /// <returns>Value of <see cref="Temperature"/> in Fahrenheit.</returns>
+        public double ToFahrenheit()
         {
-            return m_value * RadiansToGrads;
+            return ToTemperature(FahrenheitFactor, FahrenheitOffset, FahrenheitStep);
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in arcminutes.
+        /// Gets the <see cref="Temperature"/> value in Newton.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in arcminutes.</returns>
-        public double ToArcMinutes()
+        /// <returns>Value of <see cref="Temperature"/> in Newton.</returns>
+        public double ToNewton()
         {
-            return m_value * RadiansToArcMinutes;
+            return ToTemperature(NewtonFactor, NewtonOffset, NewtonStep);
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in arcseconds.
+        /// Gets the <see cref="Temperature"/> value in Rankine.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in arcseconds.</returns>
-        public double ToArcSeconds()
+        /// <returns>Value of <see cref="Temperature"/> in Rankine.</returns>
+        public double ToRankine()
         {
-            return m_value * RadiansToArcSeconds;
+            return ToTemperature(RankineFactor, RankineOffset, RankineStep);
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in angular mil.
+        /// Gets the <see cref="Temperature"/> value in Delisle.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in angular mil.</returns>
-        public double ToAngularMil()
+        /// <returns>Value of <see cref="Temperature"/> in Delisle.</returns>
+        public double ToDelisle()
         {
-            return m_value * RadiansToAngularMil;
+            return ToTemperature(DelisleFactor, DelisleOffset, DelisleStep);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Temperature"/> value in Réaumur.
+        /// </summary>
+        /// <returns>Value of <see cref="Temperature"/> in Réaumur.</returns>
+        public double ToRéaumur()
+        {
+            return ToTemperature(RéaumurFactor, RéaumurOffset, RéaumurStep);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Temperature"/> value in Rømer.
+        /// </summary>
+        /// <returns>Value of <see cref="Temperature"/> in Rømer.</returns>
+        public double ToRømer()
+        {
+            return ToTemperature(RømerFactor, RømerOffset, RømerStep);
+        }
+
+        // Calculate temperature based on value = (K - offset) / factor - step
+        private Temperature ToTemperature(double factor, double offset, double step)
+        {
+            return (m_value - offset) / factor - step;
         }
 
         #region [ Numeric Interface Implementations ]
@@ -127,29 +163,29 @@ namespace PCS.Units
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not an <see cref="Double"/> or <see cref="Angle"/>.</exception>
+        /// <exception cref="ArgumentException">value is not an <see cref="Double"/> or <see cref="Temperature"/>.</exception>
         public int CompareTo(object value)
         {
             if (value == null) return 1;
 
-            if (!(value is double) && !(value is Angle))
-                throw new ArgumentException("Argument must be an Double or an Angle");
+            if (!(value is double) && !(value is Temperature))
+                throw new ArgumentException("Argument must be an Double or a Temperature");
 
             double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 
         /// <summary>
-        /// Compares this instance to a specified <see cref="Angle"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="Temperature"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">An <see cref="Angle"/> to compare.</param>
+        /// <param name="value">A <see cref="Temperature"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        public int CompareTo(Angle value)
+        public int CompareTo(Temperature value)
         {
             return CompareTo((double)value);
         }
@@ -174,25 +210,25 @@ namespace PCS.Units
         /// </summary>
         /// <param name="obj">An object to compare, or null.</param>
         /// <returns>
-        /// True if obj is an instance of <see cref="Double"/> or <see cref="Angle"/> and equals the value of this instance;
+        /// True if obj is an instance of <see cref="Double"/> or <see cref="Temperature"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Angle)
+            if (obj is double || obj is Temperature)
                 return Equals((double)obj);
 
             return false;
         }
 
         /// <summary>
-        /// Returns a value indicating whether this instance is equal to a specified <see cref="Angle"/> value.
+        /// Returns a value indicating whether this instance is equal to a specified <see cref="Temperature"/> value.
         /// </summary>
-        /// <param name="obj">An <see cref="Angle"/> value to compare to this instance.</param>
+        /// <param name="obj">A <see cref="Temperature"/> value to compare to this instance.</param>
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(Angle obj)
+        public bool Equals(Temperature obj)
         {
             return Equals((double)obj);
         }
@@ -277,31 +313,31 @@ namespace PCS.Units
         }
 
         /// <summary>
-        /// Converts the string representation of a number to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number to its <see cref="Temperature"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Temperature"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Angle Parse(string s)
+        public static Temperature Parse(string s)
         {
-            return (Angle)double.Parse(s);
+            return (Temperature)double.Parse(s);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified style to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number in a specified style to its <see cref="Temperature"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Temperature"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -309,36 +345,36 @@ namespace PCS.Units
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Angle Parse(string s, NumberStyles style)
+        public static Temperature Parse(string s, NumberStyles style)
         {
-            return (Angle)double.Parse(s, style);
+            return (Temperature)double.Parse(s, style);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Temperature"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Temperature"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Angle Parse(string s, IFormatProvider provider)
+        public static Temperature Parse(string s, IFormatProvider provider)
         {
-            return (Angle)double.Parse(s, provider);
+            return (Temperature)double.Parse(s, provider);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Temperature"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
@@ -348,7 +384,7 @@ namespace PCS.Units
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Temperature"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -356,27 +392,27 @@ namespace PCS.Units
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Angle Parse(string s, NumberStyles style, IFormatProvider provider)
+        public static Temperature Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Angle)double.Parse(s, style, provider);
+            return (Temperature)double.Parse(s, style, provider);
         }
 
         /// <summary>
-        /// Converts the string representation of a number to its <see cref="Angle"/> equivalent. A return value
+        /// Converts the string representation of a number to its <see cref="Temperature"/> equivalent. A return value
         /// indicates whether the conversion succeeded or failed.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
-        /// When this method returns, contains the <see cref="Angle"/> value equivalent to the number contained in s,
+        /// When this method returns, contains the <see cref="Temperature"/> value equivalent to the number contained in s,
         /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not of the correct format, or represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// is not of the correct format, or represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        public static bool TryParse(string s, out Angle result)
+        public static bool TryParse(string s, out Temperature result)
         {
             double parseResult;
             bool parseResponse;
@@ -389,17 +425,17 @@ namespace PCS.Units
 
         /// <summary>
         /// Converts the string representation of a number in a specified style and culture-specific format to its
-        /// <see cref="Angle"/> equivalent. A return value indicates whether the conversion succeeded or failed.
+        /// <see cref="Temperature"/> equivalent. A return value indicates whether the conversion succeeded or failed.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <param name="result">
-        /// When this method returns, contains the <see cref="Angle"/> value equivalent to the number contained in s,
+        /// When this method returns, contains the <see cref="Temperature"/> value equivalent to the number contained in s,
         /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not in a format compliant with style, or represents a number less than <see cref="Angle.MinValue"/> or
-        /// greater than <see cref="Angle.MaxValue"/>. This parameter is passed uninitialized.
+        /// is not in a format compliant with style, or represents a number less than <see cref="Temperature.MinValue"/> or
+        /// greater than <see cref="Temperature.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -409,7 +445,7 @@ namespace PCS.Units
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Angle result)
+        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Temperature result)
         {
             double parseResult;
             bool parseResponse;
@@ -517,17 +553,17 @@ namespace PCS.Units
         #region [ Operators ]
 
         /// <summary>
-        /// Implicitly converts value, represented in radians, to an <see cref="Angle"/>.
+        /// Implicitly converts value, represented in kelvin, to a <see cref="Temperature"/>.
         /// </summary>
-        public static implicit operator Angle(Double value)
+        public static implicit operator Temperature(Double value)
         {
-            return new Angle(value);
+            return new Temperature(value);
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Angle"/>, represented in radians, to a <see cref="Double"/>.
+        /// Implicitly converts <see cref="Temperature"/>, represented in kelvin, to a <see cref="Double"/>.
         /// </summary>
-        public static implicit operator Double(Angle value)
+        public static implicit operator Double(Temperature value)
         {
             return value.m_value;
         }
@@ -538,69 +574,95 @@ namespace PCS.Units
 
         // Static Fields
 
-        /// <summary>Represents the largest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MaxValue;
+        /// <summary>Represents the largest possible value of a <see cref="Temperature"/>. This field is constant.</summary>
+        public static readonly Temperature MaxValue;
 
-        /// <summary>Represents the smallest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MinValue;
+        /// <summary>Represents the smallest possible value of a <see cref="Temperature"/>. This field is constant.</summary>
+        public static readonly Temperature MinValue;
 
         // Static Constructor
-        static Angle()
+        static Temperature()
         {
-            MaxValue = (Angle)double.MaxValue;
-            MinValue = (Angle)double.MinValue;
+            MaxValue = (Temperature)double.MaxValue;
+            MinValue = (Temperature)double.MinValue;
         }
 
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in degrees.
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Celsius.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in degrees.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in degrees.</returns>
-        public static Angle FromDegrees(double value)
+        /// <param name="value">New <see cref="Temperature"/> value in Celsius.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Celsius.</returns>
+        public static Temperature FromCelsius(double value)
         {
-            return new Angle(value * DegreesToRadians);
+            return FromTemperature(value, CelsiusFactor, CelsiusOffset, CelsiusStep);
+        }
+        
+        /// <summary>
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Fahrenheit.
+        /// </summary>
+        /// <param name="value">New <see cref="Temperature"/> value in Fahrenheit.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Fahrenheit.</returns>
+        public static Temperature FromFahrenheit(double value)
+        {
+            return FromTemperature(value, FahrenheitFactor, FahrenheitOffset, FahrenheitStep);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in grads.
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Newton.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in grads.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in grads.</returns>
-        public static Angle FromGrads(double value)
+        /// <param name="value">New <see cref="Temperature"/> value in Newton.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Newton.</returns>
+        public static Temperature FromNewton(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return FromTemperature(value, NewtonFactor, NewtonOffset, NewtonStep);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in arcminutes.
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Rankine.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in arcminutes.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcminutes.</returns>
-        public static Angle FromArcMinutes(double value)
+        /// <param name="value">New <see cref="Temperature"/> value in Rankine.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rankine.</returns>
+        public static Temperature FromRankine(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return FromTemperature(value, RankineFactor, RankineOffset, RankineStep);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in arcseconds.
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Delisle.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in arcseconds.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcseconds.</returns>
-        public static Angle FromArcSeconds(double value)
+        /// <param name="value">New <see cref="Temperature"/> value in Delisle.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Delisle.</returns>
+        public static Temperature FromDelisle(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return FromTemperature(value, DelisleFactor, DelisleOffset, DelisleStep);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> from the specified <paramref name="value"/> in angular mil.
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Réaumur.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in angular mil.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in angular mil.</returns>
-        public static Angle FromAngularMil(double value)
+        /// <param name="value">New <see cref="Temperature"/> value in Réaumur.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Réaumur.</returns>
+        public static Temperature FromRéaumur(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return FromTemperature(value, RéaumurFactor, RéaumurOffset, RéaumurStep);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Rømer.
+        /// </summary>
+        /// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
+        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
+        public static Temperature FromRømer(double value)
+        {
+            return FromTemperature(value, RømerFactor, RømerOffset, RømerStep);
+        }
+
+        // Calculate temperature based on K = (value + step) * factor + offset
+        private static Temperature FromTemperature(double value, double factor, double offset, double step)
+        {
+            return new Temperature((value + step) * factor + offset);
         }
 
         #endregion        
