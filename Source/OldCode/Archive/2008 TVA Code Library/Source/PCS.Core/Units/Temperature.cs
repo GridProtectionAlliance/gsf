@@ -40,8 +40,8 @@ namespace PCS.Units
         private const double CelsiusStep = 0.0D;
 
         private const double FahrenheitFactor = 5.0D / 9.0D;
-        private const double FahrenheitOffset = 459.67D;
-        private const double FahrenheitStep = 0.0D;
+        private const double FahrenheitOffset = 0.0D;
+        private const double FahrenheitStep = 459.67D;
 
         private const double NewtonFactor = 100.0D / 33.0D;
         private const double NewtonOffset = CelsiusOffset;
