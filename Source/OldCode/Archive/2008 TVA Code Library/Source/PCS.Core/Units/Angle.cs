@@ -36,20 +36,15 @@ namespace PCS.Units
         #region [ Members ]
 
         // Constants
-        private const double DegreesToRadians = Math.PI / 180.0D;
-        private const double RadiansToDegrees = 180.0D / Math.PI;
+        private const double DegreesFactor = Math.PI / 180.0D;
 
-        private const double GradsToRadians = Math.PI / 200.0D;
-        private const double RadiansToGrads = 200.0D / Math.PI;
+        private const double GradsFactor = Math.PI / 200.0D;
 
-        private const double ArcMinutesToRadians = Math.PI / 180.0D / 60.0D;
-        private const double RadiansToArcMinutes = 180.0D / Math.PI * 60.0D;
+        private const double ArcMinutesFactor = Math.PI / 180.0D / 60.0D;
 
-        private const double ArcSecondsToRadians = Math.PI / 180.0D / 3600.0D;
-        private const double RadiansToArcSeconds = 180.0D / Math.PI * 3600.0D;
+        private const double ArcSecondsFactor = Math.PI / 180.0D / 3600.0D;
 
-        private const double AngularMilToRadians = 2.0D * Math.PI / 6400.0D;
-        private const double RadiansToAngularMil = 6400.0D / (2.0D * Math.PI);
+        private const double AngularMilFactor = 2.0D * Math.PI / 6400.0D;
 
         // Fields
         private double m_value; // Angle value stored in radians
@@ -77,7 +72,7 @@ namespace PCS.Units
         /// <returns>Value of <see cref="Angle"/> in degrees.</returns>
         public double ToDegrees()
         {
-            return m_value * RadiansToDegrees;
+            return m_value / DegreesFactor;
         }
 
         /// <summary>
@@ -86,7 +81,7 @@ namespace PCS.Units
         /// <returns>Value of <see cref="Angle"/> in grads.</returns>
         public double ToGrads()
         {
-            return m_value * RadiansToGrads;
+            return m_value / GradsFactor;
         }
 
         /// <summary>
@@ -95,7 +90,7 @@ namespace PCS.Units
         /// <returns>Value of <see cref="Angle"/> in arcminutes.</returns>
         public double ToArcMinutes()
         {
-            return m_value * RadiansToArcMinutes;
+            return m_value / ArcMinutesFactor;
         }
 
         /// <summary>
@@ -104,7 +99,7 @@ namespace PCS.Units
         /// <returns>Value of <see cref="Angle"/> in arcseconds.</returns>
         public double ToArcSeconds()
         {
-            return m_value * RadiansToArcSeconds;
+            return m_value / ArcSecondsFactor;
         }
 
         /// <summary>
@@ -113,7 +108,7 @@ namespace PCS.Units
         /// <returns>Value of <see cref="Angle"/> in angular mil.</returns>
         public double ToAngularMil()
         {
-            return m_value * RadiansToAngularMil;
+            return m_value / AngularMilFactor;
         }
 
         #region [ Numeric Interface Implementations ]
@@ -560,7 +555,7 @@ namespace PCS.Units
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in degrees.</returns>
         public static Angle FromDegrees(double value)
         {
-            return new Angle(value * DegreesToRadians);
+            return new Angle(value * DegreesFactor);
         }
 
         /// <summary>
@@ -570,7 +565,7 @@ namespace PCS.Units
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in grads.</returns>
         public static Angle FromGrads(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return new Angle(value * GradsFactor);
         }
 
         /// <summary>
@@ -580,7 +575,7 @@ namespace PCS.Units
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcminutes.</returns>
         public static Angle FromArcMinutes(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return new Angle(value * ArcMinutesFactor);
         }
 
         /// <summary>
@@ -590,7 +585,7 @@ namespace PCS.Units
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcseconds.</returns>
         public static Angle FromArcSeconds(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return new Angle(value * ArcSecondsFactor);
         }
 
         /// <summary>
@@ -600,7 +595,7 @@ namespace PCS.Units
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in angular mil.</returns>
         public static Angle FromAngularMil(double value)
         {
-            return new Angle(value * GradsToRadians);
+            return new Angle(value * AngularMilFactor);
         }
 
         #endregion        
