@@ -40,6 +40,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using PCS.Units;
 
 namespace PCS.Measurements
 {
@@ -106,7 +107,7 @@ namespace PCS.Measurements
         private int m_frameIndex;                           // Determines current frame index
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
-        private long m_lagTicks;                            // Current lag time calculated in ticks
+        private Time m_lagTicks;                            // Current lag time calculated in ticks
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
         private long m_stopTime;                            // Stop time of concentrator
@@ -227,7 +228,7 @@ namespace PCS.Measurements
                     throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
-                m_lagTicks = (int)(m_lagTime * Ticks.PerSecond);
+                m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
 
                 if (LagTimeUpdated != null)
                     LagTimeUpdated(m_lagTime);
@@ -237,7 +238,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets defined past time deviation tolerance, in ticks.
         /// </summary>
-        public long LagTicks
+        public Time LagTicks
         {
             get
             {
@@ -916,7 +917,7 @@ namespace PCS.Measurements
                         // delayed by prior concentration or long network distance, this function assumes
                         // that our local real time value is better than the device measurement, so we set
                         // the measurement's timestamp to real time and sort the measurement by arrival time.
-                        measurement.Ticks = RealTimeTicks;
+                        measurement.Timestamp = RealTimeTicks;
                         Interlocked.Increment(ref m_measurementsSortedByArrival);
                     }
                     else
@@ -929,7 +930,7 @@ namespace PCS.Measurements
                 if (!discardMeasurement)
                 {
                     // Get ticks for this measurement.
-                    ticks = measurement.Ticks;
+                    ticks = measurement.Timestamp;
 
                     //
                     // *** Sort the measurement into proper frame ***
@@ -1160,8 +1161,9 @@ namespace PCS.Measurements
         private void PublishFrames(object sender, EventArgs e)
         {
             IFrame frame;
+            Time ticks;
             int frameIndex, period;
-            long ticks, distance;
+            long distance;
 
             // First things first, prepare timer period for next call...
             m_frameIndex++;
@@ -1198,7 +1200,7 @@ namespace PCS.Measurements
                     else
                     {
                         // Get ticks for this frame
-                        ticks = frame.Ticks;
+                        ticks = frame.Timestamp;
 
                         // See if any lagtime needs to pass before we begin publishing,
                         // distance is calculated in ticks

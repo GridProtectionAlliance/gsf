@@ -511,6 +511,8 @@ namespace PCS.Units
 
         #region [ Operators ]
 
+        #region [ Type Conversion Operators ]
+
         /// <summary>
         /// Implicitly converts value, represented in radians, to an <see cref="Angle"/>.
         /// </summary>
@@ -526,6 +528,66 @@ namespace PCS.Units
         {
             return value.m_value;
         }
+
+        #endregion
+
+        #region [ Arithmetic Operators ]
+
+        /// <summary>
+        /// Returns computed remainder after dividing first value by the second.
+        /// </summary>
+        public static Angle operator %(Angle value1, Angle value2)
+        {
+            return value1.m_value % value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns computed sum of values.
+        /// </summary>
+        public static Angle operator +(Angle value1, Angle value2)
+        {
+            return value1.m_value + value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns computed difference of values.
+        /// </summary>
+        public static Angle operator -(Angle value1, Angle value2)
+        {
+            return value1.m_value - value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns computed product of values.
+        /// </summary>
+        public static Angle operator *(Angle value1, Angle value2)
+        {
+            return value1.m_value * value2.m_value;
+        }
+
+        // Integer division operators
+
+        /// <summary>
+        /// Returns computed division of values.
+        /// </summary>
+        public static Angle operator /(Angle value1, Angle value2)
+        {
+            return value1.m_value / value2.m_value;
+        }
+
+        // C# doesn't expose an exponent operator but some other .NET languages do,
+        // so we expose the operator via its native special IL function name
+
+        /// <summary>
+        /// Returns result of first value raised to power of second value.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(Angle value1, Angle value2)
+        {
+            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+        }
+
+        #endregion
 
         #endregion
 

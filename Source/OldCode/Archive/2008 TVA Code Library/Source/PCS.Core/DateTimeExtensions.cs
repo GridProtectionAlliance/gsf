@@ -37,6 +37,7 @@
 
 using System;
 using System.Globalization;
+using PCS.Units;
 
 namespace PCS
 {
@@ -80,11 +81,11 @@ namespace PCS
         /// be less than one.</exception>
         public static bool UtcTimeIsValid(this DateTime utcTime, double lagTime, double leadTime)
         {
-            return utcTime.Ticks.UtcTimeIsValid(lagTime, leadTime);
+            return ((Time)utcTime).UtcTimeIsValid(lagTime, leadTime);
         }
 
-        /// <summary>Determines if the specified UTC time ticks are valid, by comparing them to the system clock.</summary>
-        /// <param name="utcTicks">Ticks of time to test for validity.</param>
+        /// <summary>Determines if the specified UTC time is valid, by comparing it to the system clock.</summary>
+        /// <param name="utcTime">UTC time to test for validity.</param>
         /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
         /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
         /// valid.</param>
@@ -97,9 +98,9 @@ namespace PCS
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can
         /// be less than one.</exception>
-        public static bool UtcTimeIsValid(this long utcTicks, double lagTime, double leadTime)
+        public static bool UtcTimeIsValid(this Time utcTime, double lagTime, double leadTime)
         {
-            return utcTicks.TimeIsValid(DateTime.UtcNow.Ticks, lagTime, leadTime);
+            return utcTime.TimeIsValid(DateTime.UtcNow.Ticks, lagTime, leadTime);
         }
 
         /// <summary>Determines if the specified local time is valid, by comparing it to the system clock.</summary>
@@ -118,11 +119,11 @@ namespace PCS
         /// be less than one.</exception>
         public static bool LocalTimeIsValid(this DateTime localTime, double lagTime, double leadTime)
         {
-            return localTime.Ticks.LocalTimeIsValid(lagTime, leadTime);
+            return ((Time)localTime).LocalTimeIsValid(lagTime, leadTime);
         }
 
-        /// <summary>Determines if the specified local time ticks are valid, by comparing them to the system clock.</summary>
-        /// <param name="localTicks">Ticks of time to test for validity.</param>
+        /// <summary>Determines if the specified local time is valid, by comparing it to the system clock.</summary>
+        /// <param name="localTime">Time to test for validity.</param>
         /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
         /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
         /// valid.</param>
@@ -135,14 +136,14 @@ namespace PCS
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can
         /// be less than one.</exception>
-        public static bool LocalTimeIsValid(this long localTicks, double lagTime, double leadTime)
+        public static bool LocalTimeIsValid(this Time localTime, double lagTime, double leadTime)
         {
-            return localTicks.TimeIsValid(DateTime.Now.Ticks, lagTime, leadTime);
+            return localTime.TimeIsValid(DateTime.Now.Ticks, lagTime, leadTime);
         }
 
         /// <summary>Determines if time is valid, by comparing it to the specified current time.</summary>
-        /// <param name="currentTime">Specified current time (e.g., could be Date.Now or Date.UtcNow).</param>
         /// <param name="testTime">Time to test for validity.</param>
+        /// <param name="currentTime">Specified current time (e.g., could be Date.Now or Date.UtcNow).</param>
         /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
         /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
         /// valid.</param>
@@ -157,13 +158,12 @@ namespace PCS
         /// be less than one.</exception>
         public static bool TimeIsValid(this DateTime testTime, DateTime currentTime, double lagTime, double leadTime)
         {
-            return testTime.Ticks.TimeIsValid(currentTime.Ticks, lagTime, leadTime);
+            return ((Time)testTime).TimeIsValid(currentTime, lagTime, leadTime);
         }
 
         /// <summary>Determines if time is valid, by comparing it to the specified current time.</summary>
-        /// <param name="currentTicks">Specified ticks of current time (e.g., could be Date.Now.Ticks or
-        /// Date.UtcNow.Ticks).</param>
-        /// <param name="testTicks">Ticks of time to test for validity.</param>
+        /// <param name="testTime">Time to test for validity.</param>
+        /// <param name="currentTime">Specified current time (e.g., could be Date.Now or Date.UtcNow).</param>
         /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
         /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
         /// valid.</param>
@@ -176,37 +176,38 @@ namespace PCS
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can
         /// be less than one.</exception>
-        public static bool TimeIsValid(this long testTicks, long currentTicks, double lagTime, double leadTime)
+        public static bool TimeIsValid(this Time testTime, Time currentTime, double lagTime, double leadTime)
         {
             if (lagTime <= 0) throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
             if (leadTime <= 0) throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            double distance = Ticks.ToSeconds(currentTicks - testTicks);
+            double distance = Ticks.ToSeconds((long)currentTime - (long)testTime);
+            //double distance = (currentTime - testTime).ToSeconds(); slower?
 
             return (distance >= -leadTime && distance <= lagTime);
         }
 
         /// <summary>Gets the distance, in ticks, beyond the top of the timestamp second.</summary>
-        /// <param name="ticks">Ticks of timestamp to evaluate.</param>
+        /// <param name="timestamp">Timestamp to evaluate.</param>
         /// <returns>Timestamp's tick distance from the top of the second.</returns>
-        public static long TicksBeyondSecond(this long ticks)
+        public static Time TicksBeyondSecond(this Time timestamp)
         {
             // Removed function call to BaselinedTimestamp just as an optimization...
-            return ticks - (ticks - ticks % Ticks.PerSecond);
             //return ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second);
+            long ticks = timestamp;
+            return ticks - (ticks - ticks % Ticks.PerSecond);
         }
 
         /// <summary>Gets the distance, in ticks, beyond the top of the timestamp second.</summary>
         /// <param name="timestamp">Timestamp to evaluate.</param>
         /// <returns>Timestamp's tick distance from the top of the second.</returns>
-        public static long TicksBeyondSecond(this DateTime timestamp)
+        public static Time TicksBeyondSecond(this DateTime timestamp)
         {
-            return TicksBeyondSecond(timestamp.Ticks);
-            //return timestamp.Ticks - BaselinedTimestamp(timestamp.Ticks, BaselineTimeInterval.Second);
+            return ((Time)timestamp).TicksBeyondSecond();
         }
 
         /// <summary>Creates a baselined timestamp which begins at the specified time interval.</summary>
-        /// <param name="ticks">Ticks of timestamp to baseline.</param>
+        /// <param name="timestamp">Timestamp to baseline.</param>
         /// <param name="baselineTo">Time interval to which timestamp should be baselined.</param>
         /// <returns>Baselined timestamp, in ticks, which begins at the specified time interval.</returns>
         /// <remarks>
@@ -221,8 +222,10 @@ namespace PCS
         /// <para>Baselining to the year would return the timestamp starting at month one, day one, zero hours,
         /// minutes, seconds and milliseconds.</para>
         /// </remarks>
-        public static long BaselinedTimestamp(this long ticks, BaselineTimeInterval baselineTo)
+        public static Time BaselinedTimestamp(this Time timestamp, BaselineTimeInterval baselineTo)
         {
+            long ticks = timestamp;
+
             switch (baselineTo)
             {
                 case BaselineTimeInterval.Second:
@@ -240,7 +243,7 @@ namespace PCS
                     DateTime toYear = new DateTime(ticks);
                     return new DateTime(toYear.Year, 1, 1, 0, 0, 0, 0).Ticks;
                 default:
-                    return ticks;
+                    return timestamp;
             }
         }
 
@@ -262,7 +265,7 @@ namespace PCS
         /// </remarks>
         public static DateTime BaselinedTimestamp(this DateTime timestamp, BaselineTimeInterval baselineTo)
         {
-            return new DateTime(timestamp.Ticks.BaselinedTimestamp(baselineTo));
+            return ((Time)timestamp).BaselinedTimestamp(baselineTo);
         }
 
         /// <summary>Converts given local time to Eastern time.</summary>

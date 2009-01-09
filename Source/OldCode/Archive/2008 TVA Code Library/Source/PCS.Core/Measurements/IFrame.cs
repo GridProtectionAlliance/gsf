@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using PCS.Units;
 
 namespace PCS.Measurements
 {
@@ -54,12 +55,7 @@ namespace PCS.Measurements
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        long Ticks { get; set; }
-
-        /// <summary>
-        /// Gets the <see cref="DateTime"/> representation of ticks of this <see cref="IFrame"/>.
-        /// </summary>
-        DateTime Timestamp { get; }
+        Time Timestamp { get; set; }
 
         /// <summary>
         /// Gets ot sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.

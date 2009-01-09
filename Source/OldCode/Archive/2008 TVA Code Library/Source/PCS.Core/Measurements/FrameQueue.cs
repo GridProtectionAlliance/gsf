@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using PCS.Units;
 
 namespace PCS.Measurements
 {
@@ -32,8 +33,8 @@ namespace PCS.Measurements
         // Fields
         private ConcentratorBase m_parent;              // Reference to parent concentrator instance
         private LinkedList<IFrame> m_frameList;         // We keep this list sorted by timestamp so frames are processed in order
-        private Dictionary<long, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
-        private long m_publishedTicks;                  // Timstamp of last published frame
+        private Dictionary<Time, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
+        private Time m_publishedTicks;                  // Timstamp of last published frame
         private IFrame m_head;                          // Reference to current top of the frame collection
         private IFrame m_last;                          // Reference to last published frame
         private decimal m_ticksPerFrame;                // Cached ticks per frame
@@ -54,7 +55,7 @@ namespace PCS.Measurements
 
             m_parent = parent;
             m_frameList = new LinkedList<IFrame>();
-            m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
+            m_frameHash = new Dictionary<Time, IFrame>(initialCapacity);
             m_ticksPerFrame = parent.TicksPerFrame;
         }
 
@@ -198,7 +199,7 @@ namespace PCS.Measurements
             // avoids any possible out-of-sequence frame publication...
             m_last = m_head;
             m_head = null;
-            m_publishedTicks = m_last.Ticks;
+            m_publishedTicks = m_last.Timestamp;
 
             // Assign next node, if any, as quickly as possible. Still have to wait for queue
             // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
@@ -220,7 +221,7 @@ namespace PCS.Measurements
         /// Gets <see cref="IFrame"/> from the queue with the specified timestamp, in ticks.  If no <see cref="IFrame"/> exists for
         /// the specified timestamp, one will be created.
         /// </summary>
-        /// <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="IFrame"/>.</param>
+        /// <param name="timestamp">Timestamp, in ticks, for which to get or create <see cref="IFrame"/>.</param>
         /// <remarks>
         /// Ticks can be any point in time so long time requested is greater than time of last published frame; this queue
         /// is used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null
@@ -228,10 +229,10 @@ namespace PCS.Measurements
         /// <see cref="ConcentratorBase.FramesPerSecond"/> of the parent <see cref="ConcentratorBase"/> implementation.
         /// </remarks>
         /// <returns>An existing or new <see cref="IFrame"/> from the queue for the specified timestamp.</returns>
-        public IFrame GetFrame(long ticks)
+        public IFrame GetFrame(Time timestamp)
         {
             // Calculate destination ticks for this frame
-            long destinationTicks = (long)((long)(ticks / m_ticksPerFrame) * m_ticksPerFrame);
+            Time destinationTicks = (long)((long)(timestamp / m_ticksPerFrame) * m_ticksPerFrame);
             IFrame frame = null;
             bool nodeAdded = false;
 
@@ -255,7 +256,7 @@ namespace PCS.Measurements
 
                         do
                         {
-                            if (destinationTicks > node.Value.Ticks)
+                            if (destinationTicks > node.Value.Timestamp)
                             {
                                 m_frameList.AddAfter(node, frame);
                                 nodeAdded = true;

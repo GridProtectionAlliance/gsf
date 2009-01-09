@@ -214,7 +214,7 @@ namespace PCS.Measurements
         /// <summary>We only store a new measurement value that is newer than the cached value.</summary>
         internal void UpdateMeasurementValue(IMeasurement newMeasurement)
         {
-            Measurement(newMeasurement.Key).SetValue(newMeasurement.Ticks, newMeasurement.Value);
+            Measurement(newMeasurement.Key).SetValue(newMeasurement.Timestamp, newMeasurement.Value);
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>

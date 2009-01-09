@@ -581,6 +581,8 @@ namespace PCS.Units
 
         #region [ Operators ]
 
+        #region [ Type Conversion Operators ]
+
         /// <summary>
         /// Implicitly converts value, represented in ticks, to a <see cref="Time"/>.
         /// </summary>
@@ -628,6 +630,134 @@ namespace PCS.Units
         {
             return new TimeSpan(value.m_value);
         }
+
+        #endregion
+
+        #region [ Boolean and Bitwise Operators ]
+
+        /// <summary>
+        /// Returns true if value is not zero.
+        /// </summary>
+        public static bool operator true(Time value)
+        {
+            return (value.m_value != 0);
+        }
+
+        /// <summary>
+        /// Returns true if value is equal to zero.
+        /// </summary>
+        public static bool operator false(Time value)
+        {
+            return (value.m_value == 0);
+        }
+
+        /// <summary>
+        /// Returns bitwise complement of value.
+        /// </summary>
+        public static Time operator ~(Time value)
+        {
+            return ~value.m_value;
+        }
+
+        /// <summary>
+        /// Returns logical bitwise AND of values.
+        /// </summary>
+        public static Time operator &(Time value1, Time value2)
+        {
+            return value1.m_value & value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns logical bitwise OR of values.
+        /// </summary>
+        public static Time operator |(Time value1, Time value2)
+        {
+            return value1.m_value | value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns logical bitwise exclusive-OR of values.
+        /// </summary>
+        public static Time operator ^(Time value1, Time value2)
+        {
+            return value1.m_value ^ value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns value after right shifts of first value by the number of bits specified by second value.
+        /// </summary>
+        public static Time operator >>(Time value, int shifts)
+        {
+            return (Time)(value.m_value >> shifts);
+        }
+
+        /// <summary>
+        /// Returns value after left shifts of first value by the number of bits specified by second value.
+        /// </summary>
+        public static Time operator <<(Time value, int shifts)
+        {
+            return (Time)(value.m_value << shifts);
+        }
+
+        #endregion
+
+        #region [ Arithmetic Operators ]
+
+        /// <summary>
+        /// Returns computed remainder after dividing first value by the second.
+        /// </summary>
+        public static Time operator %(Time value1, Time value2)
+        {
+            return value1.m_value % value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns computed sum of values.
+        /// </summary>
+        public static Time operator +(Time value1, Time value2)
+        {
+            return value1.m_value + value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns computed difference of values.
+        /// </summary>
+        public static Time operator -(Time value1, Time value2)
+        {
+            return value1.m_value - value2.m_value;
+        }
+
+        /// <summary>
+        /// Returns computed product of values.
+        /// </summary>
+        public static Time operator *(Time value1, Time value2)
+        {
+            return value1.m_value * value2.m_value;
+        }
+
+        // Integer division operators
+
+        /// <summary>
+        /// Returns computed division of values.
+        /// </summary>
+        public static Time operator /(Time value1, Time value2)
+        {
+            return value1.m_value / value2.m_value;
+        }
+
+        // C# doesn't expose an exponent operator but some other .NET languages do,
+        // so we expose the operator via its native special IL function name
+
+        /// <summary>
+        /// Returns result of first value raised to power of second value.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        public static double op_Exponent(Time value1, Time value2)
+        {
+            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+        }
+
+        #endregion
 
         #endregion
 

@@ -19,6 +19,7 @@
 
 using System;
 using System.ComponentModel;
+using PCS.Units;
 
 namespace PCS.Measurements
 {
@@ -33,10 +34,10 @@ namespace PCS.Measurements
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
+        private Time m_timestamp;
         private double m_value;
         private double m_adder;
         private double m_multiplier;
-        private long m_ticks;
         private bool m_valueQualityIsGood;
         private bool m_timestampQualityIsGood;
 
@@ -68,20 +69,8 @@ namespace PCS.Measurements
         /// <param name="id"></param>
         /// <param name="source"></param>
         /// <param name="value"></param>
-        /// <param name="timestamp"></param>
-        public Measurement(int id, string source, double value, DateTime timestamp)
-            : this(id, source, value, timestamp.Ticks)
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="source"></param>
-        /// <param name="value"></param>
         /// <param name="ticks"></param>
-        public Measurement(int id, string source, double value, long ticks)
+        public Measurement(int id, string source, double value, Time ticks)
             : this(id, source, value, 0.0, 1.0, ticks)
         {
         }
@@ -108,8 +97,8 @@ namespace PCS.Measurements
         /// <param name="value"></param>
         /// <param name="adder"></param>
         /// <param name="multiplier"></param>
-        /// <param name="ticks"></param>
-        public Measurement(int id, string source, double value, double adder, double multiplier, long ticks)
+        /// <param name="timestamp"></param>
+        public Measurement(int id, string source, double value, double adder, double multiplier, Time timestamp)
         {
             m_id = id;
             m_source = source;
@@ -117,7 +106,7 @@ namespace PCS.Measurements
             m_value = value;
             m_adder = adder;
             m_multiplier = multiplier;
-            m_ticks = ticks;
+            m_timestamp = timestamp;
             m_valueQualityIsGood = true;
             m_timestampQualityIsGood = true;
         }
@@ -246,24 +235,15 @@ namespace PCS.Measurements
 
         /// <summary>Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.</summary>
         /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
-        public virtual long Ticks
+        public virtual Time Timestamp
         {
             get
             {
-                return m_ticks;
+                return m_timestamp;
             }
             set
             {
-                m_ticks = value;
-            }
-        }
-
-        /// <summary>Gets the DateTime representation of the ticks of this <see cref="Measurement"/>.</summary>
-        public virtual DateTime Timestamp
-        {
-            get
-            {
-                return new DateTime(m_ticks);
+                m_timestamp = value;
             }
         }
 
@@ -430,24 +410,24 @@ namespace PCS.Measurements
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         public static Measurement Clone(IMeasurement measurementToClone)
         {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Ticks);
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
         }
 
         /// <summary>Creates a copy of the specified measurement using a new timestamp.</summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
-        /// <param name="ticks">New timestamp, in ticks, for cloned measurement.</param>
-        public static Measurement Clone(IMeasurement measurementToClone, long ticks)
+        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        public static Measurement Clone(IMeasurement measurementToClone, Time timestamp)
         {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }
 
         /// <summary>Creates a copy of the specified measurement using a new value and timestamp.</summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="value">New value for cloned measurement.</param>
-        /// <param name="ticks">New timestamp, in ticks, for cloned measurement.</param>
-        public static Measurement Clone(IMeasurement measurementToClone, double value, long ticks)
+        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        public static Measurement Clone(IMeasurement measurementToClone, double value, Time timestamp)
         {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, ticks);
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }
 
         /// <summary>

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using PCS.Units;
 
 namespace PCS.Measurements
 {
@@ -33,7 +34,7 @@ namespace PCS.Measurements
         #region [ Members ]
 
         // Fields
-        private long m_ticks;                                               // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Time m_timestamp;                                           // Time, represented as 100-nanosecond ticks, of this frame of data
         private bool m_published;                                           // Determines if this frame of data has been published
         private int m_publishedMeasurements;                                // Total measurements published by this frame
         private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
@@ -46,10 +47,10 @@ namespace PCS.Measurements
         /// <summary>
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
-        /// <param name="ticks">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
-        public Frame(long ticks)
+        /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
+        public Frame(Time timestamp)
         {
-            m_ticks = ticks;
+            m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(100);
             m_publishedMeasurements = -1;
         }
@@ -57,11 +58,11 @@ namespace PCS.Measurements
         /// <summary>
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
-        /// <param name="ticks">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
+        /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
         /// <param name="measurements">Initial set of measurements to load into the <see cref="Frame"/>, if any.</param>
-        public Frame(long ticks, Dictionary<MeasurementKey, IMeasurement> measurements)
+        public Frame(Time timestamp, Dictionary<MeasurementKey, IMeasurement> measurements)
         {
-            m_ticks = ticks;
+            m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
             m_publishedMeasurements = -1;
         }
@@ -123,26 +124,15 @@ namespace PCS.Measurements
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public long Ticks
+        public Time Timestamp
         {
             get
             {
-                return m_ticks;
+                return m_timestamp;
             }
             set
             {
-                m_ticks = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="DateTime"/> representation of ticks of this <see cref="Frame"/>.
-        /// </summary>
-        public DateTime Timestamp
-        {
-            get
-            {
-                return new DateTime(m_ticks);
+                m_timestamp = value;
             }
         }
 
@@ -175,7 +165,7 @@ namespace PCS.Measurements
         {
             lock (m_measurements)
             {
-                return new Frame(m_ticks, m_measurements);
+                return new Frame(m_timestamp, m_measurements);
             }
         }
 
@@ -219,7 +209,7 @@ namespace PCS.Measurements
         /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
         public int CompareTo(IFrame other)
         {
-            return m_ticks.CompareTo(other.Ticks);
+            return m_timestamp.CompareTo(other.Timestamp);
         }
 
         /// <summary>
@@ -246,7 +236,7 @@ namespace PCS.Measurements
         /// <remarks>Hash code based on timestamp of frame.</remarks>
         public override int GetHashCode()
         {
-            return m_ticks.GetHashCode();
+            return m_timestamp.GetHashCode();
         }
 
         #endregion
