@@ -16,9 +16,9 @@
 //*******************************************************************************************************
 
 using System;
+using System.Units;
 using System.Text;
 using System.Linq;
-using PCS.Units;
 
 namespace PCS.NumericalAnalysis
 {
@@ -180,7 +180,7 @@ namespace PCS.NumericalAnalysis
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Units.Angle"/> (a.k.a. the argument) in radians of this <see cref="ComplexNumber"/>.
+        /// Gets or sets the <see cref="System.Units.Angle"/> (a.k.a. the argument) in radians of this <see cref="ComplexNumber"/>.
         /// </summary>
         public Angle Angle
         {

@@ -92,7 +92,6 @@
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
-    <Compile Include="Units\Angle.cs" />
     <Compile Include="NumericalAnalysis\ComplexNumber.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
@@ -174,7 +173,6 @@
     <Compile Include="IO\Compression\Zip\ZipNameTransform.cs" />
     <Compile Include="IO\Compression\Zip\ZipOutputStream.cs" />
     <Compile Include="IProvideStatus.cs" />
-    <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\IFtpFile.cs" />
     <Compile Include="Net\Ftp\FtpInputDataStream.cs" />
     <Compile Include="Net\Ftp\IFtpSessionState.cs" />
@@ -195,17 +193,13 @@
     <Compile Include="Parsing\CommonHeaderBase.cs" />
     <Compile Include="ProcessProgressHandler.cs" />
     <Compile Include="Random.cs" />
-    <Compile Include="Seconds.cs" />
     <Compile Include="IO\StreamExtensions.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassic.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicCryptoBase.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicDecryptCryptoTransform.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicEncryptCryptoTransform.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicManaged.cs" />
-    <Compile Include="Ticks.cs" />
     <Compile Include="TypeExtensions.cs" />
-    <Compile Include="Units\Time.cs" />
-    <Compile Include="Units\Temperature.cs" />
     <Compile Include="USTimeZones.cs" />
     <Compile Include="Diagnostics\PerformanceCounter.cs" />
     <Compile Include="Diagnostics\PerformanceMonitor.cs" />
@@ -248,7 +242,6 @@
     </Compile>
     <Compile Include="Scheduling\SchedulePart.cs" />
     <Compile Include="IdentifiableItem.cs" />
-    <Compile Include="TimeTagBase.cs" />
     <Compile Include="Measurements\Frame.cs" />
     <Compile Include="Security\Cryptography\Cipher.cs" />
     <Compile Include="Configuration\ConfigurationFile.cs" />
@@ -268,8 +261,6 @@
     <Compile Include="Identity\UserInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DateTimeExtensions.cs" />
-    <Compile Include="NtpTimeTag.cs" />
-    <Compile Include="UnixTimeTag.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="Interop\IniFile.cs" />
     <Compile Include="IO\FilePath.cs" />

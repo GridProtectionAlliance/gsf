@@ -36,11 +36,11 @@
 #define UseHighResolutionTime
 
 using System;
+using System.Units;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
-using PCS.Units;
 
 namespace PCS.Measurements
 {

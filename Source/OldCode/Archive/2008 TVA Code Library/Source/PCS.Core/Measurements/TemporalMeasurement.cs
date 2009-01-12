@@ -18,7 +18,7 @@
 //*******************************************************************************************************
 
 using System;
-using PCS.Units;
+using System.Units;
 
 namespace PCS.Measurements
 {
@@ -144,7 +144,7 @@ namespace PCS.Measurements
         /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder).</returns>
         public double GetAdjustedValue(DateTime timestamp)
         {
-            return GetAdjustedValue(timestamp.Ticks);
+            return GetAdjustedValue((Time)timestamp);
         }
 
         /// <summary>Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
