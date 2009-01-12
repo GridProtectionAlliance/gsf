@@ -31,7 +31,7 @@ namespace PCS.Units
     /// castable to and from an <see cref="Int64"/>, a <see cref="DateTime"/> and a <see cref="TimeSpan"/>
     /// therefore can be generally used "as" an Int64, DateTime or TimeSpan directly, but it has the
     /// advantage of handling conversions to and from other time representations, specifically seconds,
-    /// milliseconds, minutes, hours, etc.
+    /// milliseconds, <see cref="NtpTimeTag"/>, <see cref="UnixTimeTag"/>, etc.
     /// </remarks>
     [Serializable()]
     public struct Time : IComparable, IFormattable, IConvertible, IComparable<Time>, IComparable<Int64>, IComparable<DateTime>, IComparable<TimeSpan>, IEquatable<Time>, IEquatable<Int64>, IEquatable<DateTime>, IEquatable<TimeSpan>
