@@ -92,7 +92,6 @@
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
-    <Compile Include="NumericalAnalysis\ComplexNumber.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>
@@ -264,7 +263,6 @@
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="Interop\IniFile.cs" />
     <Compile Include="IO\FilePath.cs" />
-    <Compile Include="NumericalAnalysis\CompoundValue.cs" />
     <Compile Include="Measurements\IFrame.cs" />
     <Compile Include="Measurements\IMeasurement.cs" />
     <Compile Include="Measurements\Measurement.cs" />

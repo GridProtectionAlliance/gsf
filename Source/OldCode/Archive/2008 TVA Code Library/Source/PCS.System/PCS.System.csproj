@@ -49,6 +49,8 @@
     <Compile Include="Bit.cs" />
     <Compile Include="BitwiseCast.cs" />
     <Compile Include="ByteEncoding.cs" />
+    <Compile Include="ComplexNumber.cs" />
+    <Compile Include="CompoundValue.cs" />
     <Compile Include="EndianOrder.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="Int24.cs" />
