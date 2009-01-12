@@ -30,8 +30,12 @@
 
 namespace System
 {
-    /// <summary>Defines functions related to ticks.</summary>
-    /// <remarks>Ticks are defined as 100-nanosecond intervals, there are 10,000,000 ticks in every second.</remarks>
+    /// <summary>
+    /// Defines constants and functions related to ticks.
+    /// </summary>
+    /// <remarks>
+    /// Ticks are defined as 100-nanosecond intervals, there are 10,000,000 ticks in every second.
+    /// </remarks>
     public static class Ticks
     {
         /// <summary>Number of 100-nanosecond ticks in one second.</summary>

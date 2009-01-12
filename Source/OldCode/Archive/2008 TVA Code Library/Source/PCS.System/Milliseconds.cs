@@ -30,8 +30,12 @@
 
 namespace System
 {
-    /// <summary>Defines functions related to milliseconds.</summary>
-    /// <remarks>One millisecond is defined as 1/1000th of a second.</remarks>
+    /// <summary>
+    /// Defines constants and functions related to milliseconds.
+    /// </summary>
+    /// <remarks>
+    /// One millisecond is defined as 1/1000th of a second.
+    /// </remarks>
     public static class Milliseconds
     {
         /// <summary>Number of milliseconds in one second.</summary>

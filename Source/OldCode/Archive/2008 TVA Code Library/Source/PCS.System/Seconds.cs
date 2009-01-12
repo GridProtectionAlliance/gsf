@@ -32,7 +32,9 @@ using System.Text;
 
 namespace System
 {
-    /// <summary>Defines functions related to seconds.</summary>
+    /// <summary>
+    /// Defines constants and functions related to seconds.
+    /// </summary>
     public static class Seconds
     {
         private struct TimeName
