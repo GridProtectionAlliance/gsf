@@ -188,7 +188,7 @@ namespace System.Units
             for (int i = 5; i >= 0; i--)
             {
                 // See if total number of units ranges in 1024^n range
-                factor = totalUnits / Math.Pow(1024, i + 1);
+                factor = totalUnits / Math.Pow(1024.0D, i + 1);
 
                 if (factor >= 1.0D)
                 {
