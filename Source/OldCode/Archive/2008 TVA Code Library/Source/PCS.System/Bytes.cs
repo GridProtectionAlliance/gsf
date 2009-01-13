@@ -50,7 +50,7 @@ namespace System
             static readonly public int Bytes = 6;
         }
 
-        // Standard factor names used by ToText function
+        // Standard factor suffix names used by ToText function
         private static string[] m_standardFactorSuffixes = new string[] { "kB", "MB", "GB", "TB", "PB", "EB", "bytes" };
 
         /// <summary>

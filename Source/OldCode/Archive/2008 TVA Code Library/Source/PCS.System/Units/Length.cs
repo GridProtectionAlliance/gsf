@@ -629,8 +629,6 @@ namespace System.Units
             return value1.m_value * value2.m_value;
         }
 
-        // Integer division operators
-
         /// <summary>
         /// Returns computed division of values.
         /// </summary>

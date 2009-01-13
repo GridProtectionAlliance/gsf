@@ -43,7 +43,7 @@ namespace System.Units
     /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
     /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
     /// <example>
-    /// This example converts Degrees to Grads:
+    /// This example converts degrees to grads:
     /// <code>
     /// public double GetGrads(double degrees)
     /// {
@@ -586,8 +586,6 @@ namespace System.Units
         {
             return value1.m_value * value2.m_value;
         }
-
-        // Integer division operators
 
         /// <summary>
         /// Returns computed division of values.

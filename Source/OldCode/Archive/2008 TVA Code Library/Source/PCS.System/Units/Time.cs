@@ -127,18 +127,6 @@ namespace System.Units
             return new UnixTimeTag((DateTime)this);
         }
 
-        /// <summary>
-        /// Returns textual representation of <see cref="Time"/> in years, days, hours, minutes and seconds.
-        /// </summary>
-        /// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
-        /// <remarks>
-        /// Set second precision to -1 to suppress seconds display.
-        /// </remarks>
-        public string ToText(int secondPrecision)
-        {
-            return Ticks.ToText(m_value, secondPrecision);
-        }
-
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
