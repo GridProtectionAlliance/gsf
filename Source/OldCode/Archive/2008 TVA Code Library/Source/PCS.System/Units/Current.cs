@@ -35,13 +35,13 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents a current measurement, in amperes, as a double-precision floating-point number.</summary>
+    /// <summary>Represents an electric current measurement, in amperes, as a double-precision floating-point number.</summary>
     /// <remarks>
     /// This class behaves just like a <see cref="Double"/> representing a current in amperes; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other current representations, specifically
-    /// abampere and statampere. Metric conversions are handled simply by applying the needed <see cref="SI"/>
-    /// conversion factor, for example:
+    /// abampere (a.k.a., an electromagnetic unit) and statampere (a.k.a., esu per second). Metric conversions are handled
+    /// simply by applying the needed <see cref="SI"/> conversion factor, for example:
     /// <example>
     /// Convert current, in amperes, to kiloamperes:
     /// <code>

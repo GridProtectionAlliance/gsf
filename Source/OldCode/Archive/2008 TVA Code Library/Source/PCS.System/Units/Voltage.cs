@@ -35,7 +35,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents a voltage measurement, in volts, as a double-precision floating-point number.</summary>
+    /// <summary>Represents a electromotive force, or voltage, measurement, in volts, as a double-precision floating-point number.</summary>
     /// <remarks>
     /// This class behaves just like a <see cref="Double"/> representing a voltage in volts; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
