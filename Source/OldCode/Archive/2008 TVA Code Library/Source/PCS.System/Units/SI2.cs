@@ -158,9 +158,9 @@ namespace System.Units
         /// <param name="totalUnits">Total units (e.g., bytes) to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for byte).</param>
-        public static string ToBestFitString(long totalUnits, int decimalPlaces, string unitName)
+        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName)
         {
-            return ToBestFitString(totalUnits, decimalPlaces, unitName, m_commonPrefixes);
+            return ToScaledString(totalUnits, decimalPlaces, unitName, m_commonPrefixes);
         }
 
         /// <summary>
@@ -170,9 +170,9 @@ namespace System.Units
         /// <param name="totalUnits">Total units (e.g., bytes) to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for byte).</param>
-        public static string ToBestFitIECString(long totalUnits, int decimalPlaces, string unitName)
+        public static string ToScaledIECString(long totalUnits, int decimalPlaces, string unitName)
         {
-            return ToBestFitString(totalUnits, decimalPlaces, unitName, m_commonPrefixes);
+            return ToScaledString(totalUnits, decimalPlaces, unitName, m_commonPrefixes);
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace System.Units
         /// "kilo", "mega", "giga", "tera", "peta", "exa".
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
-        public static string ToBestFitString(long totalUnits, int decimalPlaces, string unitName, string[] prefixNames)
+        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] prefixNames)
         {
             if (decimalPlaces < 0)
                 throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative.");
