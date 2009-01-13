@@ -81,6 +81,7 @@
     <Compile Include="TimeTagBase.cs" />
     <Compile Include="UInt24.cs" />
     <Compile Include="Units\Angle.cs" />
+    <Compile Include="Units\Power.cs" />
     <Compile Include="Units\Length.cs" />
     <Compile Include="Units\Temperature.cs" />
     <Compile Include="Units\SI.cs" />
