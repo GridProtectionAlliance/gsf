@@ -172,7 +172,7 @@ namespace System.Units
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for byte).</param>
         public static string ToScaledIECString(long totalUnits, int decimalPlaces, string unitName)
         {
-            return ToScaledString(totalUnits, decimalPlaces, unitName, m_commonPrefixes);
+            return ToScaledString(totalUnits, decimalPlaces, unitName, m_iecPrefixes);
         }
 
         /// <summary>
