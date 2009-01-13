@@ -48,7 +48,7 @@ namespace System.Units
     /// <code>
     /// public double GetMegawatts(Power watts)
     /// {
-    ///     return SI.Mega * watts;
+    ///     return watts / SI.Mega;
     /// }
     /// </code>
     /// </example>
@@ -57,7 +57,7 @@ namespace System.Units
     /// <code>
     /// public double GetHorsepower(double megawatts)
     /// {
-    ///     return (new Power(megawatts / SI.Mega)).ToMechanicalHorsepower();
+    ///     return (new Power(megawatts * SI.Mega)).ToMechanicalHorsepower();
     /// }
     /// </code>
     /// </example>
@@ -128,7 +128,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Gets the <see cref="Power"/> value in BTU per second.
+        /// Gets the <see cref="Power"/> value in BTU (International Table) per second.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in BTU per second.</returns>
         public double ToBTUPerSecond()
@@ -137,7 +137,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Gets the <see cref="Power"/> value in calories per second.
+        /// Gets the <see cref="Power"/> value in calories (International Table) per second.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in calories per second.</returns>
         public double ToCaloriesPerSecond()
@@ -682,7 +682,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in BTU per second.
+        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in BTU (International Table) per second.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in BTU per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in BTU per second.</returns>
@@ -692,7 +692,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in calories per second.
+        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in calories (International Table) per second.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in calories per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in calories per second.</returns>

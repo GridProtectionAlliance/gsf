@@ -35,66 +35,61 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents a length measurement, in meters, as a double-precision floating-point number.</summary>
+    /// <summary>Represents an energy measurement, in joules, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a length in meters; it is implictly
+    /// This class behaves just like a <see cref="Double"/> representing an energy in joules; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
-    /// has the advantage of handling conversions to and from other length representations, specifically
-    /// inches, feet, yards, miles, US survey feet, US survey miles, light-seconds, and nautical miles.
+    /// has the advantage of handling conversions to and from other energy representations, specifically
+    /// watt-hours, BTU, Celsius heat unit, liter-atmosphere, calorie, horsepower-hour, barrel of oil and ton of coal
     /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
     /// <example>
-    /// Convert length in meters to kilometers:
+    /// Convert energy in joules to megajoules:
     /// <code>
-    /// public double GetKilometers(Length meters)
+    /// public double GetMegajoules(Energy joules)
     /// {
-    ///     return meters / SI.Kilo;
+    ///     return SI.Mega * joules;
     /// }
     /// </code>
     /// </example>
     /// <example>
-    /// This example converts feet to inches:
+    /// This example converts megajoules to kilowatt-hours:
     /// <code>
-    /// public double GetFeet(double inches)
+    /// public double GetKilowattHours(double megajoules)
     /// {
-    ///     return Length.FromInches(inches).ToFeet();
+    ///     return (new Energy(megajoules * SI.Mega)).ToWattHours() / SI.Kilo;
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This example converts kilowatt-hours to megawatt-hours:
+    /// <code>
+    /// public double GetMegawattHours(double kilowattHours)
+    /// {
+    ///     return (kilowattHours * SI.Kilo) / SI.Mega;
     /// }
     /// </code>
     /// </example>
     /// </remarks>
     [Serializable()]
-    public struct Length : IComparable, IFormattable, IConvertible, IComparable<Length>, IComparable<Double>, IEquatable<Length>, IEquatable<Double>
+    public struct Energy : IComparable, IFormattable, IConvertible, IComparable<Energy>, IComparable<Double>, IEquatable<Energy>, IEquatable<Double>
     {
         #region [ Members ]
 
         // Constants
-        private const double FeetFactor = 0.3048D;
-
-        private const double InchesFactor = 0.0254D;
-
-        private const double MilesFactor = 1609.344D;
-
-        private const double LightSecondsFactor = 2.99792458E8;
-
-        private const double USSurveyFeetFactor = 0.304800610D;
-
-        private const double USSurveyMilesFactor = 1609.347219D;
-
-        private const double NauticalMilesFactor = 1852.0D;
-
-        private const double YardsFactor = 0.9144D;
+        private const double WattHoursFactor = Seconds.PerHour; // 1 joule = 1 watt-second
 
         // Fields
-        private double m_value; // Length value stored in meters
+        private double m_value; // Energy value stored in joules
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="Length"/>.
+        /// Creates a new <see cref="Energy"/>.
         /// </summary>
-        /// <param name="value">New length value in meters.</param>
-        public Length(double value)
+        /// <param name="value">New energy value in joules.</param>
+        public Energy(double value)
         {
             m_value = value;
         }
@@ -103,77 +98,14 @@ namespace System.Units
 
         #region [ Methods ]
 
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in feet.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in feet.</returns>
-        public double ToFeet()
-        {
-            return m_value / FeetFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in yards.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in yards.</returns>
-        public double ToYards()
-        {
-            return m_value / YardsFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in inches.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in inches.</returns>
-        public double ToInches()
-        {
-            return m_value / InchesFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in miles.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in miles.</returns>
-        public double ToMiles()
-        {
-            return m_value / MilesFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in light-seconds.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in light-seconds.</returns>
-        public double ToLightSeconds()
-        {
-            return m_value / LightSecondsFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in US survey feet.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in US survey feet.</returns>
-        public double ToUSSurveyFeet()
-        {
-            return m_value / USSurveyFeetFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in US survey miles.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in US survey miles.</returns>
-        public double ToUSSurveyMiles()
-        {
-            return m_value / USSurveyMilesFactor;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Length"/> value in nautical miles.
-        /// </summary>
-        /// <returns>Value of <see cref="Length"/> in nautical miles.</returns>
-        public double ToNauticalMiles()
-        {
-            return m_value / NauticalMilesFactor;
-        }
+        ///// <summary>
+        ///// Gets the <see cref="Energy"/> value in mechanical horseenergy (Imperial).
+        ///// </summary>
+        ///// <returns>Value of <see cref="Energy"/> in mechanical horseenergy.</returns>
+        //public double ToMechanicalHorseenergy()
+        //{
+        //    return m_value / MechanicalHorseenergyFactor;
+        //}
 
         #region [ Numeric Interface Implementations ]
 
@@ -186,29 +118,29 @@ namespace System.Units
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Length"/>.</exception>
+        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Energy"/>.</exception>
         public int CompareTo(object value)
         {
             if (value == null) return 1;
 
-            if (!(value is double) && !(value is Length))
-                throw new ArgumentException("Argument must be a Double or a Length");
+            if (!(value is double) && !(value is Energy))
+                throw new ArgumentException("Argument must be a Double or an Energy");
 
             double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 
         /// <summary>
-        /// Compares this instance to a specified <see cref="Length"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="Energy"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">A <see cref="Length"/> to compare.</param>
+        /// <param name="value">An <see cref="Energy"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        public int CompareTo(Length value)
+        public int CompareTo(Energy value)
         {
             return CompareTo((double)value);
         }
@@ -233,25 +165,25 @@ namespace System.Units
         /// </summary>
         /// <param name="obj">An object to compare, or null.</param>
         /// <returns>
-        /// True if obj is an instance of <see cref="Double"/> or <see cref="Length"/> and equals the value of this instance;
+        /// True if obj is an instance of <see cref="Double"/> or <see cref="Energy"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Length)
+            if (obj is double || obj is Energy)
                 return Equals((double)obj);
 
             return false;
         }
 
         /// <summary>
-        /// Returns a value indicating whether this instance is equal to a specified <see cref="Length"/> value.
+        /// Returns a value indicating whether this instance is equal to a specified <see cref="Energy"/> value.
         /// </summary>
-        /// <param name="obj">A <see cref="Length"/> value to compare to this instance.</param>
+        /// <param name="obj">An <see cref="Energy"/> value to compare to this instance.</param>
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(Length obj)
+        public bool Equals(Energy obj)
         {
             return Equals((double)obj);
         }
@@ -336,31 +268,31 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Converts the string representation of a number to its <see cref="Length"/> equivalent.
+        /// Converts the string representation of a number to its <see cref="Energy"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <returns>
-        /// A <see cref="Length"/> equivalent to the number contained in s.
+        /// An <see cref="Energy"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Length.MinValue"/> or greater than <see cref="Length.MaxValue"/>.
+        /// s represents a number less than <see cref="Energy.MinValue"/> or greater than <see cref="Energy.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Length Parse(string s)
+        public static Energy Parse(string s)
         {
-            return (Length)double.Parse(s);
+            return (Energy)double.Parse(s);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified style to its <see cref="Length"/> equivalent.
+        /// Converts the string representation of a number in a specified style to its <see cref="Energy"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <returns>
-        /// A <see cref="Length"/> equivalent to the number contained in s.
+        /// An <see cref="Energy"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -368,36 +300,36 @@ namespace System.Units
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Length.MinValue"/> or greater than <see cref="Length.MaxValue"/>.
+        /// s represents a number less than <see cref="Energy.MinValue"/> or greater than <see cref="Energy.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Length Parse(string s, NumberStyles style)
+        public static Energy Parse(string s, NumberStyles style)
         {
-            return (Length)double.Parse(s, style);
+            return (Energy)double.Parse(s, style);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Length"/> equivalent.
+        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Energy"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// A <see cref="Length"/> equivalent to the number contained in s.
+        /// An <see cref="Energy"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Length.MinValue"/> or greater than <see cref="Length.MaxValue"/>.
+        /// s represents a number less than <see cref="Energy.MinValue"/> or greater than <see cref="Energy.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Length Parse(string s, IFormatProvider provider)
+        public static Energy Parse(string s, IFormatProvider provider)
         {
-            return (Length)double.Parse(s, provider);
+            return (Energy)double.Parse(s, provider);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Length"/> equivalent.
+        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Energy"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
@@ -407,7 +339,7 @@ namespace System.Units
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// A <see cref="Length"/> equivalent to the number contained in s.
+        /// An <see cref="Energy"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -415,27 +347,27 @@ namespace System.Units
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Length.MinValue"/> or greater than <see cref="Length.MaxValue"/>.
+        /// s represents a number less than <see cref="Energy.MinValue"/> or greater than <see cref="Energy.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Length Parse(string s, NumberStyles style, IFormatProvider provider)
+        public static Energy Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Length)double.Parse(s, style, provider);
+            return (Energy)double.Parse(s, style, provider);
         }
 
         /// <summary>
-        /// Converts the string representation of a number to its <see cref="Length"/> equivalent. A return value
+        /// Converts the string representation of a number to its <see cref="Energy"/> equivalent. A return value
         /// indicates whether the conversion succeeded or failed.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
-        /// When this method returns, contains the <see cref="Length"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not of the correct format, or represents a number less than <see cref="Length.MinValue"/> or greater than <see cref="Length.MaxValue"/>.
-        /// This parameter is passed uninitialized.
+        /// When this method returns, contains the <see cref="Energy"/> value equivalent to the number contained in s,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parajoule is null,
+        /// is not of the correct format, or represents a number less than <see cref="Energy.MinValue"/> or greater than <see cref="Energy.MaxValue"/>.
+        /// This parajoule is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        public static bool TryParse(string s, out Length result)
+        public static bool TryParse(string s, out Energy result)
         {
             double parseResult;
             bool parseResponse;
@@ -448,17 +380,17 @@ namespace System.Units
 
         /// <summary>
         /// Converts the string representation of a number in a specified style and culture-specific format to its
-        /// <see cref="Length"/> equivalent. A return value indicates whether the conversion succeeded or failed.
+        /// <see cref="Energy"/> equivalent. A return value indicates whether the conversion succeeded or failed.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <param name="result">
-        /// When this method returns, contains the <see cref="Length"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not in a format compliant with style, or represents a number less than <see cref="Length.MinValue"/> or
-        /// greater than <see cref="Length.MaxValue"/>. This parameter is passed uninitialized.
+        /// When this method returns, contains the <see cref="Energy"/> value equivalent to the number contained in s,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parajoule is null,
+        /// is not in a format compliant with style, or represents a number less than <see cref="Energy.MinValue"/> or
+        /// greater than <see cref="Energy.MaxValue"/>. This parajoule is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -468,7 +400,7 @@ namespace System.Units
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Length result)
+        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Energy result)
         {
             double parseResult;
             bool parseResponse;
@@ -578,17 +510,17 @@ namespace System.Units
         #region [ Type Conversion Operators ]
 
         /// <summary>
-        /// Implicitly converts value, represented in meters, to a <see cref="Length"/>.
+        /// Implicitly converts value, represented in joules, to an <see cref="Energy"/>.
         /// </summary>
-        public static implicit operator Length(Double value)
+        public static implicit operator Energy(Double value)
         {
-            return new Length(value);
+            return new Energy(value);
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Length"/>, represented in meters, to a <see cref="Double"/>.
+        /// Implicitly converts <see cref="Energy"/>, represented in joules, to a <see cref="Double"/>.
         /// </summary>
-        public static implicit operator Double(Length value)
+        public static implicit operator Double(Energy value)
         {
             return value.m_value;
         }
@@ -600,7 +532,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
-        public static Length operator %(Length value1, Length value2)
+        public static Energy operator %(Energy value1, Energy value2)
         {
             return value1.m_value % value2.m_value;
         }
@@ -608,7 +540,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
-        public static Length operator +(Length value1, Length value2)
+        public static Energy operator +(Energy value1, Energy value2)
         {
             return value1.m_value + value2.m_value;
         }
@@ -616,7 +548,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
-        public static Length operator -(Length value1, Length value2)
+        public static Energy operator -(Energy value1, Energy value2)
         {
             return value1.m_value - value2.m_value;
         }
@@ -624,7 +556,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
-        public static Length operator *(Length value1, Length value2)
+        public static Energy operator *(Energy value1, Energy value2)
         {
             return value1.m_value * value2.m_value;
         }
@@ -632,7 +564,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
-        public static Length operator /(Length value1, Length value2)
+        public static Energy operator /(Energy value1, Energy value2)
         {
             return value1.m_value / value2.m_value;
         }
@@ -644,7 +576,7 @@ namespace System.Units
         /// Returns result of first value raised to power of second value.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
-        public static double op_Exponent(Length value1, Length value2)
+        public static double op_Exponent(Energy value1, Energy value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);
         }
@@ -657,100 +589,30 @@ namespace System.Units
 
         // Static Fields
 
-        /// <summary>Represents the largest possible value of an <see cref="Length"/>. This field is constant.</summary>
-        public static readonly Length MaxValue;
+        /// <summary>Represents the largest possible value of an <see cref="Energy"/>. This field is constant.</summary>
+        public static readonly Energy MaxValue;
 
-        /// <summary>Represents the smallest possible value of an <see cref="Length"/>. This field is constant.</summary>
-        public static readonly Length MinValue;
+        /// <summary>Represents the smallest possible value of an <see cref="Energy"/>. This field is constant.</summary>
+        public static readonly Energy MinValue;
 
         // Static Constructor
-        static Length()
+        static Energy()
         {
-            MaxValue = (Length)double.MaxValue;
-            MinValue = (Length)double.MinValue;
+            MaxValue = (Energy)double.MaxValue;
+            MinValue = (Energy)double.MinValue;
         }
 
         // Static Methods
         
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in feet.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in feet.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in feet.</returns>
-        public static Length FromFeet(double value)
-        {
-            return new Length(value * FeetFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in yards.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in yards.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in yards.</returns>
-        public static Length FromYards(double value)
-        {
-            return new Length(value * YardsFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in inches.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in inches.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in inches.</returns>
-        public static Length FromInches(double value)
-        {
-            return new Length(value * InchesFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in miles.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in miles.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in miles.</returns>
-        public static Length FromMiles(double value)
-        {
-            return new Length(value * MilesFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in light-seconds.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in light-seconds.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in light-seconds.</returns>
-        public static Length FromLightSeconds(double value)
-        {
-            return new Length(value * LightSecondsFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in US survey feet.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in US survey feet.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey feet.</returns>
-        public static Length FromUSSurveyFeet(double value)
-        {
-            return new Length(value * USSurveyFeetFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in US survey miles.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in US survey miles.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey miles.</returns>
-        public static Length FromUSSurveyMiles(double value)
-        {
-            return new Length(value * USSurveyMilesFactor);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in nautical miles.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in nautical miles.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in nautical miles.</returns>
-        public static Length FromNauticalMiles(double value)
-        {
-            return new Length(value * NauticalMilesFactor);
-        }
+        ///// <summary>
+        ///// Creates a new <see cref="Energy"/> from the specified <paramref name="value"/> in mechanical horseenergy (Imperial).
+        ///// </summary>
+        ///// <param name="value">New <see cref="Energy"/> value in mechanical horseenergy.</param>
+        ///// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in mechanical horseenergy.</returns>
+        //public static Energy FromMechanicalHorseenergy(double value)
+        //{
+        //    return new Energy(value * MechanicalHorseenergyFactor);
+        //}
 
         #endregion        
     }

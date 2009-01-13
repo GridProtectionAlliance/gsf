@@ -82,6 +82,7 @@
     <Compile Include="UInt24.cs" />
     <Compile Include="Units\Angle.cs" />
     <Compile Include="Units\Charge.cs" />
+    <Compile Include="Units\Energy.cs" />
     <Compile Include="Units\Speed.cs" />
     <Compile Include="Units\Current.cs" />
     <Compile Include="Units\Voltage.cs" />

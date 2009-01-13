@@ -47,7 +47,7 @@ namespace System.Units
     /// <code>
     /// public double GetMegavolts(Voltage volts)
     /// {
-    ///     return SI.Mega * volts;
+    ///     return volts / SI.Mega;
     /// }
     /// </code>
     /// </example>

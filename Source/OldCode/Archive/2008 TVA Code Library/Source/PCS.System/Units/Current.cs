@@ -47,7 +47,7 @@ namespace System.Units
     /// <code>
     /// public double GetKiloamperes(Current amperes)
     /// {
-    ///     return SI.Kilo * amperes;
+    ///     return amperes / SI.Kilo;
     /// }
     /// </code>
     /// </example>

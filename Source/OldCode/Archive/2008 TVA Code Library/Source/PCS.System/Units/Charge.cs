@@ -47,7 +47,7 @@ namespace System.Units
     /// <code>
     /// public double GetKilocoulombs(Charge coulombs)
     /// {
-    ///     return SI.Kilo * coulombs;
+    ///     return coulombs / SI.Kilo;
     /// }
     /// </code>
     /// </example>
