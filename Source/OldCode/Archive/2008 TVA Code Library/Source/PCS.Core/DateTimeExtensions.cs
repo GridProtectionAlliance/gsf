@@ -24,12 +24,8 @@
 //       Updated BaselinedTimestamp function to support multiple time intervals.
 //  09/18/2006 - J. Ritchie Carroll
 //       Added TicksBeyondSecond function to support high-resolution timestamp intervals.
-//  07/17/2007 - J. Ritchie Carroll
-//       Exposed TicksPerSecond as public shared constant.
 //  08/31/2007 - Darrell Zuercher
 //       Edited code comments.
-//  08/22/2008 - J. Ritchie Carroll
-//       Added TicksPerMillisecond constant and TicksToMilliseconds property.
 //  09/08/2008 - J. Ritchie Carroll
 //      Converted to C# extensions.
 //
@@ -181,8 +177,8 @@ namespace PCS
             if (lagTime <= 0) throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
             if (leadTime <= 0) throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            double distance = Ticks.ToSeconds((long)currentTime - (long)testTime);
-            //double distance = (currentTime - testTime).ToSeconds(); slower?
+            //double distance = (currentTime - testTime).ToSeconds();
+            double distance = ((long)currentTime - (long)testTime) / (double)Ticks.PerSecond;
 
             return (distance >= -leadTime && distance <= lagTime);
         }
