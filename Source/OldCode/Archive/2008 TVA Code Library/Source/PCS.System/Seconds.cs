@@ -155,7 +155,7 @@ namespace System
         /// <remarks>
         /// <para>Set second precision to -1 to suppress seconds display.</para>
         /// <para>
-        /// Time names array needs one string entry for each of the following names:<br/>
+        /// <paramref name="timeNames"/> array needs one string entry for each of the following names:<br/>
         /// "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds",
         /// "Less Than 60 Seconds", "0 Seconds".
         /// </para>

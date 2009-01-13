@@ -51,7 +51,7 @@ namespace System
         }
 
         // Standard factor names used by ToText function
-        private static string[] m_standardFactorNames = new string[] { "kB", "MB", "GB", "TB", "PB", "EB", "bytes" };
+        private static string[] m_standardFactorSuffixes = new string[] { "kB", "MB", "GB", "TB", "PB", "EB", "bytes" };
 
         /// <summary>
         /// 1 exabyte (EB) = 1,152,921,504,606,846,976 bytes
@@ -91,34 +91,36 @@ namespace System
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         public static string ToText(long totalBytes, int decimalPlaces)
         {
-            return ToText(totalBytes, decimalPlaces, m_standardFactorNames);
+            return ToText(totalBytes, decimalPlaces, m_standardFactorSuffixes);
         }
 
         /// <summary>
         /// Turns the given number of bytes into a textual representation with an appropriate
-        /// SI scaling representation given string array of factor names.
+        /// SI scaling representation given string array of factor suffix names.
         /// </summary>
         /// <param name="totalBytes">Total bytes to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
-        /// <param name="factorNames">Factor names array to use during textual conversion.</param>
+        /// <param name="suffixNames">Factor suffix name array to use during textual conversion.</param>
         /// <remarks>
-        /// Factor names array needs one string entry for each of the following names:<br/>
+        /// Factor <paramref name="suffixNames"/> array needs one string entry for each of the following names:<br/>
         /// "kilobyte", "megabyte", "gigabyte", "terabyte", "petabyte", "exabyte", "bytes".
         /// </remarks>
-        public static string ToText(long totalBytes, int decimalPlaces, string[] factorNames)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
+        public static string ToText(long totalBytes, int decimalPlaces, string[] suffixNames)
         {
+            if (decimalPlaces < 0)
+                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative.");
+
             StringBuilder bytesImage = new StringBuilder();
 
-            double factor;
-
             // See if total number of bytes ranges in exabytes
-            factor = totalBytes / (double)Bytes.PerExabyte;
+            double factor = totalBytes / (double)Bytes.PerExabyte;
 
             if (factor >= 1.0D)
             {
                 bytesImage.Append(factor.ToString(Format(decimalPlaces)));
                 bytesImage.Append(' ');
-                bytesImage.Append(factorNames[Factor.Exa]);
+                bytesImage.Append(suffixNames[Factor.Exa]);
             }
             else
             {
@@ -129,7 +131,7 @@ namespace System
                 {
                     bytesImage.Append(factor.ToString(Format(decimalPlaces)));
                     bytesImage.Append(' ');
-                    bytesImage.Append(factorNames[Factor.Peta]);
+                    bytesImage.Append(suffixNames[Factor.Peta]);
                 }
                 else
                 {
@@ -140,7 +142,7 @@ namespace System
                     {
                         bytesImage.Append(factor.ToString(Format(decimalPlaces)));
                         bytesImage.Append(' ');
-                        bytesImage.Append(factorNames[Factor.Tera]);
+                        bytesImage.Append(suffixNames[Factor.Tera]);
                     }
                     else
                     {
@@ -151,7 +153,7 @@ namespace System
                         {
                             bytesImage.Append(factor.ToString(Format(decimalPlaces)));
                             bytesImage.Append(' ');
-                            bytesImage.Append(factorNames[Factor.Giga]);
+                            bytesImage.Append(suffixNames[Factor.Giga]);
                         }
                         else
                         {
@@ -162,7 +164,7 @@ namespace System
                             {
                                 bytesImage.Append(factor.ToString(Format(decimalPlaces)));
                                 bytesImage.Append(' ');
-                                bytesImage.Append(factorNames[Factor.Mega]);
+                                bytesImage.Append(suffixNames[Factor.Mega]);
                             }
                             else
                             {
@@ -173,13 +175,14 @@ namespace System
                                 {
                                     bytesImage.Append(factor.ToString(Format(decimalPlaces)));
                                     bytesImage.Append(' ');
-                                    bytesImage.Append(factorNames[Factor.Kilo]);
+                                    bytesImage.Append(suffixNames[Factor.Kilo]);
                                 }
                                 else
                                 {
                                     // Display total number of bytes
                                     bytesImage.Append(totalBytes);
-                                    bytesImage.Append(factorNames[Factor.Bytes]);
+                                    bytesImage.Append(' ');
+                                    bytesImage.Append(suffixNames[Factor.Bytes]);
                                 }
                             }
                         }
