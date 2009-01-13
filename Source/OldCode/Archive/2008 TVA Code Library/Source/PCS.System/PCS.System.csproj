@@ -49,7 +49,6 @@
     <Compile Include="Bit.cs" />
     <Compile Include="BitwiseCast.cs" />
     <Compile Include="ByteEncoding.cs" />
-    <Compile Include="Bytes.cs" />
     <Compile Include="ComplexNumber.cs" />
     <Compile Include="CompoundValue.cs" />
     <Compile Include="EndianOrder.cs" />
@@ -82,6 +81,7 @@
     <Compile Include="UInt24.cs" />
     <Compile Include="Units\Angle.cs" />
     <Compile Include="Units\Charge.cs" />
+    <Compile Include="Units\SI2.cs" />
     <Compile Include="Units\Energy.cs" />
     <Compile Include="Units\Speed.cs" />
     <Compile Include="Units\Current.cs" />
