@@ -40,7 +40,7 @@ namespace System
         private struct TimeName
         {
             // Note that this is a structure so elements may be used as an index in
-            // a string array with having to cast as (int)
+            // a string array without having to cast as (int)
             static readonly public int Year = 0;
             static readonly public int Years = 1;
             static readonly public int Day = 2;
@@ -55,10 +55,10 @@ namespace System
             static readonly public int NoSeconds = 11;
         }
 
-        /// <summary>Standard time names used by SecondsToText function.</summary>
+        // Standard time names used by ToText function
         private static string[] m_standardTimeNames = new string[] { "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds" };
 
-        /// <summary>Standard time names, without seconds, used by SecondsToText function.</summary>
+        // Standard time names, without seconds, used by ToText function
         private static string[] m_standardTimeNamesWithoutSeconds = new string[] { "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes" };
 
         /// <summary>Fractional number of seconds in one tick.</summary>
@@ -145,15 +145,20 @@ namespace System
                 return ToText(seconds, secondPrecision, m_standardTimeNames);
         }
 
-        /// <summary>Turns the given number of seconds into textual representation of years, days, hours, minutes
-        /// and seconds given string array of time names. Need one for each TimeName enum item.</summary>
+        /// <summary>
+        /// Turns the given number of seconds into textual representation of years, days, hours, minutes
+        /// and seconds given string array of time names.
+        /// </summary>
         /// <param name="seconds">Seconds to be converted.</param>
         /// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
-        /// <param name="timeNames">Time names array to use during textal conversion.</param>
+        /// <param name="timeNames">Time names array to use during textual conversion.</param>
         /// <remarks>
         /// <para>Set second precision to -1 to suppress seconds display.</para>
-        /// <para>Time names array needs one string entry for each of the following names:</para>
-        /// <para>"Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds".</para>
+        /// <para>
+        /// Time names array needs one string entry for each of the following names:<br/>
+        /// "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds",
+        /// "Less Than 60 Seconds", "0 Seconds".
+        /// </para>
         /// </remarks>
         public static string ToText(double seconds, int secondPrecision, string[] timeNames)
         {
@@ -167,7 +172,7 @@ namespace System
             int hours;
             int minutes;
 
-            // checks if number of seconds ranges in years.
+            // Checks if number of seconds ranges in years.
             years = (int)(seconds / SecondsPerYear);
 
             if (years >= 1)

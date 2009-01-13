@@ -41,6 +41,15 @@ namespace System.Units
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other temperature representations, specifically
     /// Celsius, Fahrenheit, Newton, Rankine, Delisle, Réaumur and Rømer.
+    /// <example>
+    /// This example converts Celsius to Fahrenheit:
+    /// <code>
+    /// public double GetFahrenheit(double celsius)
+    /// {
+    ///     return Temperature.FromCelsius(celsius).ToFahrenheit();
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     [Serializable()]
     public struct Temperature : IComparable, IFormattable, IConvertible, IComparable<Temperature>, IComparable<Double>, IEquatable<Temperature>, IEquatable<Double>
@@ -176,13 +185,13 @@ namespace System.Units
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not an <see cref="Double"/> or <see cref="Temperature"/>.</exception>
+        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Temperature"/>.</exception>
         public int CompareTo(object value)
         {
             if (value == null) return 1;
 
             if (!(value is double) && !(value is Temperature))
-                throw new ArgumentException("Argument must be an Double or a Temperature");
+                throw new ArgumentException("Argument must be a Double or a Temperature");
 
             double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));

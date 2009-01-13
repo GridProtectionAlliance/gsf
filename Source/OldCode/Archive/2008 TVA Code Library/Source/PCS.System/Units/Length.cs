@@ -40,8 +40,26 @@ namespace System.Units
     /// This class behaves just like a <see cref="Double"/> representing a length in meters; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other length representations, specifically
-    /// feet, US survey feet, inches, light seconds, miles, US survey miles, nautical miles, and yards.
-    /// See <see cref="SI"/> for metric conversion factors.
+    /// inches, feet, yards, miles, US survey feet, US survey miles, light-seconds, and nautical miles.
+    /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
+    /// <example>
+    /// Convert length in meters to kilometers:
+    /// <code>
+    /// public double GetKilometers(Length meters)
+    /// {
+    ///     return SI.Kilo * meters;
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This example converts feet to inches:
+    /// <code>
+    /// public double GetFeet(double inches)
+    /// {
+    ///     return Length.FromInches(inches).ToFeet();
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     [Serializable()]
     public struct Length : IComparable, IFormattable, IConvertible, IComparable<Length>, IComparable<Double>, IEquatable<Length>, IEquatable<Double>
@@ -57,9 +75,9 @@ namespace System.Units
 
         private const double LightSecondsFactor = 2.99792458E8;
 
-        private const double USSurveyFeetFactor = 0.304800610D;     // Approximate
+        private const double USSurveyFeetFactor = 0.304800610D;
 
-        private const double USSurveyMilesFactor = 1609.347219D;    // Approximate
+        private const double USSurveyMilesFactor = 1609.347219D;
 
         private const double NauticalMilesFactor = 1852.0D;
 
@@ -86,12 +104,75 @@ namespace System.Units
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the <see cref="Length"/> value in Feet.
+        /// Gets the <see cref="Length"/> value in feet.
         /// </summary>
-        /// <returns>Value of <see cref="Length"/> in Feet.</returns>
+        /// <returns>Value of <see cref="Length"/> in feet.</returns>
         public double ToFeet()
         {
             return m_value / FeetFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in yards.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in yards.</returns>
+        public double ToYards()
+        {
+            return m_value / YardsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in inches.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in inches.</returns>
+        public double ToInches()
+        {
+            return m_value / InchesFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in miles.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in miles.</returns>
+        public double ToMiles()
+        {
+            return m_value / MilesFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in light-seconds.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in light-seconds.</returns>
+        public double ToLightSeconds()
+        {
+            return m_value / LightSecondsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in US survey feet.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in US survey feet.</returns>
+        public double ToUSSurveyFeet()
+        {
+            return m_value / USSurveyFeetFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in US survey miles.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in US survey miles.</returns>
+        public double ToUSSurveyMiles()
+        {
+            return m_value / USSurveyMilesFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Length"/> value in nautical miles.
+        /// </summary>
+        /// <returns>Value of <see cref="Length"/> in nautical miles.</returns>
+        public double ToNauticalMiles()
+        {
+            return m_value / NauticalMilesFactor;
         }
 
         #region [ Numeric Interface Implementations ]
@@ -105,13 +186,13 @@ namespace System.Units
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not an <see cref="Double"/> or <see cref="Length"/>.</exception>
+        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Length"/>.</exception>
         public int CompareTo(object value)
         {
             if (value == null) return 1;
 
             if (!(value is double) && !(value is Length))
-                throw new ArgumentException("Argument must be an Double or a Length");
+                throw new ArgumentException("Argument must be a Double or a Length");
 
             double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
@@ -121,7 +202,7 @@ namespace System.Units
         /// Compares this instance to a specified <see cref="Length"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">An <see cref="Length"/> to compare.</param>
+        /// <param name="value">A <see cref="Length"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
@@ -166,7 +247,7 @@ namespace System.Units
         /// <summary>
         /// Returns a value indicating whether this instance is equal to a specified <see cref="Length"/> value.
         /// </summary>
-        /// <param name="obj">An <see cref="Length"/> value to compare to this instance.</param>
+        /// <param name="obj">A <see cref="Length"/> value to compare to this instance.</param>
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
@@ -259,7 +340,7 @@ namespace System.Units
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <returns>
-        /// An <see cref="Length"/> equivalent to the number contained in s.
+        /// A <see cref="Length"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
@@ -279,7 +360,7 @@ namespace System.Units
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <returns>
-        /// An <see cref="Length"/> equivalent to the number contained in s.
+        /// A <see cref="Length"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -303,7 +384,7 @@ namespace System.Units
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// An <see cref="Length"/> equivalent to the number contained in s.
+        /// A <see cref="Length"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
@@ -326,7 +407,7 @@ namespace System.Units
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// An <see cref="Length"/> equivalent to the number contained in s.
+        /// A <see cref="Length"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -497,7 +578,7 @@ namespace System.Units
         #region [ Type Conversion Operators ]
 
         /// <summary>
-        /// Implicitly converts value, represented in meters, to an <see cref="Length"/>.
+        /// Implicitly converts value, represented in meters, to a <see cref="Length"/>.
         /// </summary>
         public static implicit operator Length(Double value)
         {
@@ -601,6 +682,76 @@ namespace System.Units
         public static Length FromFeet(double value)
         {
             return new Length(value * FeetFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in yards.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in yards.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in yards.</returns>
+        public static Length FromYards(double value)
+        {
+            return new Length(value * YardsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in inches.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in inches.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in inches.</returns>
+        public static Length FromInches(double value)
+        {
+            return new Length(value * InchesFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in miles.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in miles.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in miles.</returns>
+        public static Length FromMiles(double value)
+        {
+            return new Length(value * MilesFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in light-seconds.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in light-seconds.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in light-seconds.</returns>
+        public static Length FromLightSeconds(double value)
+        {
+            return new Length(value * LightSecondsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in US survey feet.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in US survey feet.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey feet.</returns>
+        public static Length FromUSSurveyFeet(double value)
+        {
+            return new Length(value * USSurveyFeetFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in US survey miles.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in US survey miles.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey miles.</returns>
+        public static Length FromUSSurveyMiles(double value)
+        {
+            return new Length(value * USSurveyMilesFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in nautical miles.
+        /// </summary>
+        /// <param name="value">New <see cref="Length"/> value in nautical miles.</param>
+        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in nautical miles.</returns>
+        public static Length FromNauticalMiles(double value)
+        {
+            return new Length(value * NauticalMilesFactor);
         }
 
         #endregion        

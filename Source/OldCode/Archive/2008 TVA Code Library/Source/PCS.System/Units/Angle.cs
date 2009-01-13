@@ -42,6 +42,15 @@ namespace System.Units
     /// has the advantage of handling conversions to and from other angle representations, specifically
     /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
     /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
+    /// <example>
+    /// This example converts Degrees to Grads:
+    /// <code>
+    /// public double GetGrads(double degrees)
+    /// {
+    ///     return Angle.FromDegrees(degrees).ToGrads();
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     [Serializable()]
     public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<Double>, IEquatable<Angle>, IEquatable<Double>
@@ -135,13 +144,13 @@ namespace System.Units
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not an <see cref="Double"/> or <see cref="Angle"/>.</exception>
+        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Angle"/>.</exception>
         public int CompareTo(object value)
         {
             if (value == null) return 1;
 
             if (!(value is double) && !(value is Angle))
-                throw new ArgumentException("Argument must be an Double or an Angle");
+                throw new ArgumentException("Argument must be a Double or an Angle");
 
             double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
