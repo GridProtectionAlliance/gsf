@@ -87,13 +87,13 @@ namespace System
         /// <summary>Converts 100-nanosecond tick intervals to seconds.</summary>
         public static double ToSeconds(long ticks)
         {
-            return ticks / (double)PerSecond;
+            return ticks / (double)Ticks.PerSecond;
         }
 
         /// <summary>Converts 100-nanosecond tick intervals to milliseconds.</summary>
         public static double ToMilliseconds(long ticks)
         {
-            return ticks / (double)PerMillisecond;
+            return ticks / (double)Ticks.PerMillisecond;
         }
 
         /// <summary>Turns the given number of ticks into textual representation of years, days, hours, minutes and seconds.</summary>
