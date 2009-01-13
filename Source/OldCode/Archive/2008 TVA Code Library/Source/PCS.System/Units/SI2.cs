@@ -37,18 +37,6 @@ namespace System.Units
     /// </summary>
     public static class SI2
     {
-        private struct Factor
-        {
-            // Note that this is a structure so elements may be used as an index in
-            // a string array without having to cast as (int)
-            static readonly public int Kilo = 0;
-            static readonly public int Mega = 1;
-            static readonly public int Giga = 2;
-            static readonly public int Tera = 3;
-            static readonly public int Peta = 4;
-            static readonly public int Exa = 5;
-        }
-
         // Common factor prefix names used by GetBestFit function
         private static string[] m_commonPrefixes = new string[] { "K", "M", "G", "T", "P", "E" };
 
@@ -195,98 +183,36 @@ namespace System.Units
 
             StringBuilder bytesImage = new StringBuilder();
 
-            // See if total number of units ranges in exaunits
-            double factor = totalUnits / (double)SI2.Exa;
+            double factor;
 
-            if (factor >= 1.0D)
+            for (int i = 5; i >= 0; i--)
             {
-                bytesImage.Append(factor.ToString(Format(decimalPlaces)));
-                bytesImage.Append(' ');
-                bytesImage.Append(prefixNames[Factor.Exa]);
-                bytesImage.Append(unitName);
-            }
-            else
-            {
-                // See if total number of units ranges in petaunits
-                factor = totalUnits / (double)SI2.Peta;
+                // See if total number of units ranges in 1024^n range
+                factor = totalUnits / Math.Pow(1024, i + 1);
 
                 if (factor >= 1.0D)
                 {
-                    bytesImage.Append(factor.ToString(Format(decimalPlaces)));
-                    bytesImage.Append(' ');
-                    bytesImage.Append(prefixNames[Factor.Peta]);
-                    bytesImage.Append(unitName);
-                }
-                else
-                {
-                    // See if total number of units ranges in teraunits
-                    factor = totalUnits / (double)SI2.Tera;
-
-                    if (factor >= 1.0D)
-                    {
-                        bytesImage.Append(factor.ToString(Format(decimalPlaces)));
-                        bytesImage.Append(' ');
-                        bytesImage.Append(prefixNames[Factor.Tera]);
-                        bytesImage.Append(unitName);
-                    }
+                    if (decimalPlaces > 0)
+                        bytesImage.Append(factor.ToString("0." + new string('0', decimalPlaces)));
                     else
-                    {
-                        // See if total number of units ranges in gigaunits
-                        factor = totalUnits / (double)SI2.Giga;
+                        bytesImage.Append(factor.ToString("0"));
 
-                        if (factor >= 1.0D)
-                        {
-                            bytesImage.Append(factor.ToString(Format(decimalPlaces)));
-                            bytesImage.Append(' ');
-                            bytesImage.Append(prefixNames[Factor.Giga]);
-                            bytesImage.Append(unitName);
-                        }
-                        else
-                        {
-                            // See if total number of units ranges in megaunits
-                            factor = totalUnits / (double)SI2.Mega;
-
-                            if (factor >= 1.0D)
-                            {
-                                bytesImage.Append(factor.ToString(Format(decimalPlaces)));
-                                bytesImage.Append(' ');
-                                bytesImage.Append(prefixNames[Factor.Mega]);
-                                bytesImage.Append(unitName);
-                            }
-                            else
-                            {
-                                // See if total number of units ranges in kilounits
-                                factor = totalUnits / (double)SI2.Kilo;
-
-                                if (factor >= 1.0D)
-                                {
-                                    bytesImage.Append(factor.ToString(Format(decimalPlaces)));
-                                    bytesImage.Append(' ');
-                                    bytesImage.Append(prefixNames[Factor.Kilo]);
-                                    bytesImage.Append(unitName);
-                                }
-                                else
-                                {
-                                    // Display total number of units
-                                    bytesImage.Append(totalUnits);
-                                    bytesImage.Append(' ');
-                                    bytesImage.Append(unitName);
-                                }
-                            }
-                        }
-                    }
+                    bytesImage.Append(' ');
+                    bytesImage.Append(prefixNames[i]);
+                    bytesImage.Append(unitName);
+                    break;
                 }
             }
 
-            return bytesImage.ToString();
-        }
+            if (bytesImage.Length == 0)
+            {
+                // Display total number of units
+                bytesImage.Append(totalUnits);
+                bytesImage.Append(' ');
+                bytesImage.Append(unitName);
+            }
 
-        private static string Format(int decimalPlaces)
-        {
-            if (decimalPlaces > 0)
-                return "0." + new string('0', decimalPlaces);
-            else
-                return "0";
+            return bytesImage.ToString();
         }
     }
 }
