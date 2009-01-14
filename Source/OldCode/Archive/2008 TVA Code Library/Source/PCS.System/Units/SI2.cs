@@ -35,6 +35,9 @@ namespace System.Units
     /// <summary>
     /// Defines constant factors based on 1024 for computationally related binary SI units of measure.
     /// </summary>
+    /// <remarks>
+    /// See <a href="http://physics.nist.gov/cuu/Units/binary.html">NIST Reference</a> for information on IEC standard names.
+    /// </remarks>
     public static class SI2
     {
         // Common unit factor SI names
@@ -207,12 +210,12 @@ namespace System.Units
         /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
         /// and common named representation (e.g., KB, MB, GB, TB, etc.).
         /// </summary>
+        /// <param name="totalUnits">Total units to represent textually.</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
         public static string ToScaledString(long totalUnits, string unitName)
         {
             return ToScaledString(totalUnits, 3, unitName);
@@ -224,7 +227,7 @@ namespace System.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
@@ -239,7 +242,7 @@ namespace System.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
@@ -262,12 +265,12 @@ namespace System.Units
         /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
         /// and IEC named representation (e.g., KiB, MiB, GiB, TiB, etc.).
         /// </summary>
+        /// <param name="totalUnits">Total units to represent textually.</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
         public static string ToScaledIECString(long totalUnits, string unitName)
         {
             return ToScaledIECString(totalUnits, 3, unitName);
@@ -279,7 +282,7 @@ namespace System.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
@@ -294,7 +297,7 @@ namespace System.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
@@ -320,7 +323,7 @@ namespace System.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <param name="symbolNames">SI factor symbol or name array to use during textual conversion.</param>
         /// <remarks>
         /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from

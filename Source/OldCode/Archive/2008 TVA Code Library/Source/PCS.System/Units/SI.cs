@@ -182,12 +182,12 @@ namespace System.Units
         /// <summary>
         /// Turns the given number of units into a textual representation with an appropriate unit scaling.
         /// </summary>
+        /// <param name="totalUnits">Total units to represent textually.</param>
+        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
         public static string ToScaledString(double totalUnits, string unitName)
         {
             return ToScaledString(totalUnits, 3, unitName);
