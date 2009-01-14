@@ -268,7 +268,7 @@ namespace System.Units
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
+        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
         public static string ToScaledIECString(long totalUnits, string unitName)
@@ -284,7 +284,7 @@ namespace System.Units
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
+        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         public static string ToScaledIECString(long totalUnits, string format, string unitName)
         {
@@ -299,7 +299,7 @@ namespace System.Units
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
+        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         public static string ToScaledIECString(long totalUnits, int decimalPlaces, string unitName)
