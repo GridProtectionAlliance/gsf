@@ -19,6 +19,7 @@
 
 using System;
 using System.Text;
+using System.Units;
 using System.Threading;
 using System.Collections.Generic;
 using PCS.Threading;
@@ -159,7 +160,7 @@ namespace PCS.Services
             }
         }
 
-        public double LastExecutionTime
+        public Time LastExecutionTime
         {
             get
             {
@@ -204,7 +205,7 @@ namespace PCS.Services
 
                 status.AppendLine();
                 status.Append("       Last Execution Time: ");
-                status.Append(Seconds.ToText(LastExecutionTime));
+                status.Append(LastExecutionTime.ToString());
                 status.AppendLine();
 
                 return status.ToString();

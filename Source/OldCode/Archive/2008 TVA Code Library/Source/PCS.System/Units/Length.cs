@@ -673,7 +673,7 @@ namespace System.Units
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in feet.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in feet.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in feet.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in feet.</returns>
@@ -683,7 +683,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in yards.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in yards.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in yards.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in yards.</returns>
@@ -693,7 +693,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in inches.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in inches.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in inches.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in inches.</returns>
@@ -703,7 +703,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in miles.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in miles.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in miles.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in miles.</returns>
@@ -713,7 +713,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in light-seconds.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in light-seconds.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in light-seconds.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in light-seconds.</returns>
@@ -723,7 +723,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in US survey feet.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in US survey feet.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in US survey feet.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey feet.</returns>
@@ -733,7 +733,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in US survey miles.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in US survey miles.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in US survey miles.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey miles.</returns>
@@ -743,7 +743,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Length"/> from the specified <paramref name="value"/> in nautical miles.
+        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in nautical miles.
         /// </summary>
         /// <param name="value">New <see cref="Length"/> value in nautical miles.</param>
         /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in nautical miles.</returns>

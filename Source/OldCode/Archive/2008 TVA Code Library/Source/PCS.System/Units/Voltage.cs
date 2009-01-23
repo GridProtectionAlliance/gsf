@@ -35,7 +35,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents a electromotive force, or voltage, measurement, in volts, as a double-precision floating-point number.</summary>
+    /// <summary>Represents an electromotive force (i.e., voltage) measurement, in volts, as a double-precision floating-point number.</summary>
     /// <remarks>
     /// This class behaves just like a <see cref="Double"/> representing a voltage in volts; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
@@ -598,7 +598,7 @@ namespace System.Units
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Voltage"/> from the specified <paramref name="value"/> in abvolts.
+        /// Creates a new <see cref="Voltage"/> value from the specified <paramref name="value"/> in abvolts.
         /// </summary>
         /// <param name="value">New <see cref="Voltage"/> value in abvolts.</param>
         /// <returns>New <see cref="Voltage"/> object from the specified <paramref name="value"/> in abvolts.</returns>
@@ -608,7 +608,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Voltage"/> from the specified <paramref name="value"/> in statvolts.
+        /// Creates a new <see cref="Voltage"/> value from the specified <paramref name="value"/> in statvolts.
         /// </summary>
         /// <param name="value">New <see cref="Voltage"/> value in statvolts.</param>
         /// <returns>New <see cref="Voltage"/> object from the specified <paramref name="value"/> in statvolts.</returns>

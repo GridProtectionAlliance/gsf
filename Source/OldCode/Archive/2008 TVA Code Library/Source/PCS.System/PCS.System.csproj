@@ -72,15 +72,15 @@
     <Compile Include="Media\WaveFile.cs" />
     <Compile Include="Media\WaveFormatChunk.cs" />
     <Compile Include="Media\WaveFormatExtensible.cs" />
-    <Compile Include="Milliseconds.cs" />
     <Compile Include="NtpTimeTag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Seconds.cs" />
-    <Compile Include="Ticks.cs" />
     <Compile Include="TimeTagBase.cs" />
     <Compile Include="UInt24.cs" />
     <Compile Include="Units\Angle.cs" />
     <Compile Include="Units\Charge.cs" />
+    <Compile Include="Units\Volume.cs" />
+    <Compile Include="Units\Mass.cs" />
+    <Compile Include="Units\Time.cs" />
     <Compile Include="Units\SI2.cs" />
     <Compile Include="Units\Energy.cs" />
     <Compile Include="Units\Speed.cs" />
@@ -90,7 +90,7 @@
     <Compile Include="Units\Length.cs" />
     <Compile Include="Units\Temperature.cs" />
     <Compile Include="Units\SI.cs" />
-    <Compile Include="Units\Time.cs" />
+    <Compile Include="Ticks.cs" />
     <Compile Include="UnixTimeTag.cs" />
   </ItemGroup>
   <ItemGroup>

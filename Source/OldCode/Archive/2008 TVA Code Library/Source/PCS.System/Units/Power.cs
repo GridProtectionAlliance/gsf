@@ -40,9 +40,9 @@ namespace System.Units
     /// This class behaves just like a <see cref="Double"/> representing a power in watts; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other power representations, specifically
-    /// mechanical horsepower, metric horsepower, boiler horsepower, BTU per second, calorie per second, and
-    /// liter-atmosphere per second.
-    /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
+    /// horsepower, metric horsepower, boiler horsepower, BTU per second, calorie per second, and liter-atmosphere
+    /// per second. Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor,
+    /// for example:
     /// <example>
     /// Convert power in watts to megawatts:
     /// <code>
@@ -57,7 +57,7 @@ namespace System.Units
     /// <code>
     /// public double GetHorsepower(double megawatts)
     /// {
-    ///     return (new Power(megawatts * SI.Mega)).ToMechanicalHorsepower();
+    ///     return (new Power(megawatts * SI.Mega)).ToHorsepower();
     /// }
     /// </code>
     /// </example>
@@ -68,7 +68,7 @@ namespace System.Units
         #region [ Members ]
 
         // Constants
-        private const double MechanicalHorsepowerFactor = 745.69987158227022D;
+        private const double HorsepowerFactor = 745.69987158227022D;
 
         private const double MetricHorsepowerFactor = 735.49875D;
 
@@ -104,9 +104,9 @@ namespace System.Units
         /// Gets the <see cref="Power"/> value in mechanical horsepower (Imperial).
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in mechanical horsepower.</returns>
-        public double ToMechanicalHorsepower()
+        public double ToHorsepower()
         {
-            return m_value / MechanicalHorsepowerFactor;
+            return m_value / HorsepowerFactor;
         }
 
         /// <summary>
@@ -652,17 +652,17 @@ namespace System.Units
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in mechanical horsepower (Imperial).
+        /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in mechanical horsepower (Imperial).
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in mechanical horsepower.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in mechanical horsepower.</returns>
-        public static Power FromMechanicalHorsepower(double value)
+        public static Power FromHorsepower(double value)
         {
-            return new Power(value * MechanicalHorsepowerFactor);
+            return new Power(value * HorsepowerFactor);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in metric horsepower.
+        /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in metric horsepower.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in metric horsepower.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in metric horsepower.</returns>
@@ -672,7 +672,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in boiler horsepower.
+        /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in boiler horsepower.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in boiler horsepower.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in boiler horsepower.</returns>
@@ -682,7 +682,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in BTU (International Table) per second.
+        /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in BTU (International Table) per second.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in BTU per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in BTU per second.</returns>
@@ -692,7 +692,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in calories (International Table) per second.
+        /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in calories (International Table) per second.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in calories per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in calories per second.</returns>
@@ -702,7 +702,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Power"/> from the specified <paramref name="value"/> in liters-atmosphere per second.
+        /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in liters-atmosphere per second.
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in liters-atmosphere per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in liters-atmosphere per second.</returns>

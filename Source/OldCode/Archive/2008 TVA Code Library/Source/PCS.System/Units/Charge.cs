@@ -35,12 +35,12 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents an electric charge measurement, in coulombs, as a double-precision floating-point number.</summary>
+    /// <summary>Represents an electric charge measurement, in coulombs (i.e., ampere-seconds), as a double-precision floating-point number.</summary>
     /// <remarks>
     /// This class behaves just like a <see cref="Double"/> representing a charge in coulombs; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other charge representations, specifically
-    /// abcoulomb (a.k.a., an electromagnetic unit), statcoulomb (a.k.a., electrostatic unit or franklin), atomic unit of charge
+    /// ampere-hours, abcoulomb (a.k.a., an electromagnetic unit), statcoulomb (a.k.a., electrostatic unit or franklin), atomic unit of charge
     /// and faraday. Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
     /// <example>
     /// Convert charge, in coulombs, to kilocoulombs:
@@ -58,6 +58,8 @@ namespace System.Units
         #region [ Members ]
 
         // Constants
+        private const double AmpereHoursFactor = Time.SecondsPerHour; // 1 coulomb = 1 ampere-second
+
         private const double AbcoulombsFactor = 10.0D;
 
         private const double StatcoulombsFactor = 3.335641e-10D;
@@ -85,6 +87,15 @@ namespace System.Units
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in ampere-hours.
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in ampere-hours.</returns>
+        public double ToAmpereHours()
+        {
+            return m_value / AmpereHoursFactor;
+        }
 
         /// <summary>
         /// Gets the <see cref="Charge"/> value in abcoulombs.
@@ -618,9 +629,19 @@ namespace System.Units
         }
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a new <see cref="Charge"/> value from the specified <paramref name="value"/> in ampere-hours.
+        /// </summary>
+        /// <param name="value">New <see cref="Charge"/> value in ampere-hours.</param>
+        /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in ampere-hours.</returns>
+        public static Charge FromAmpereHours(double value)
+        {
+            return new Charge(value * AmpereHoursFactor);
+        }
         
         /// <summary>
-        /// Creates a new <see cref="Charge"/> from the specified <paramref name="value"/> in abcoulombs.
+        /// Creates a new <see cref="Charge"/> value from the specified <paramref name="value"/> in abcoulombs.
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in abcoulombs.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in abcoulombs.</returns>
@@ -630,7 +651,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Charge"/> from the specified <paramref name="value"/> in statcoulombs.
+        /// Creates a new <see cref="Charge"/> value from the specified <paramref name="value"/> in statcoulombs.
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in statcoulombs.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in statcoulombs.</returns>
@@ -640,7 +661,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Charge"/> from the specified <paramref name="value"/> in atomic units of charge.
+        /// Creates a new <see cref="Charge"/> value from the specified <paramref name="value"/> in atomic units of charge.
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in atomic units of charge.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in atomic units of charge.</returns>
@@ -650,7 +671,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Charge"/> from the specified <paramref name="value"/> in faraday.
+        /// Creates a new <see cref="Charge"/> value from the specified <paramref name="value"/> in faraday.
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in faraday.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in faraday.</returns>

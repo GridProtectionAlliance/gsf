@@ -35,7 +35,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents an energy measurement, in joules, as a double-precision floating-point number.</summary>
+    /// <summary>Represents an energy measurement, in joules (i.e., watt-seconds), as a double-precision floating-point number.</summary>
     /// <remarks>
     /// This class behaves just like a <see cref="Double"/> representing an energy in joules; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
@@ -47,7 +47,7 @@ namespace System.Units
     /// <code>
     /// public double GetMegajoules(Energy joules)
     /// {
-    ///     return SI.Mega * joules;
+    ///     return joules / SI.Mega;
     /// }
     /// </code>
     /// </example>
@@ -76,7 +76,21 @@ namespace System.Units
         #region [ Members ]
 
         // Constants
-        private const double WattHoursFactor = Seconds.PerHour; // 1 joule = 1 watt-second
+        private const double WattHoursFactor = Time.SecondsPerHour; // 1 joule = 1 watt-second
+
+        private const double BTUFactor = 1.05505585262E+3D;
+
+        private const double CelsiusHeatUnitsFactor = 1.899100534716E+3D;
+
+        private const double LitersAtmosphereFactor = 101.325D;
+
+        private const double CaloriesFactor = 4.1868D;
+
+        private const double HorsepowerHoursFactor = 2.684519537696172792E+6D;
+
+        private const double BarrelsOfOilFactor = 6.12E+9D;
+
+        private const double TonsOfCoalFactor = 29.3076E+9D;
 
         // Fields
         private double m_value; // Energy value stored in joules
@@ -98,14 +112,87 @@ namespace System.Units
 
         #region [ Methods ]
 
-        ///// <summary>
-        ///// Gets the <see cref="Energy"/> value in mechanical horseenergy (Imperial).
-        ///// </summary>
-        ///// <returns>Value of <see cref="Energy"/> in mechanical horseenergy.</returns>
-        //public double ToMechanicalHorseenergy()
-        //{
-        //    return m_value / MechanicalHorseenergyFactor;
-        //}
+        /// <summary>
+        /// Gets the <see cref="Charge"/> value in coulombs given the specified <paramref name="volts"/>.
+        /// </summary>
+        /// <param name="volts">Source <see cref="Voltage"/> used to calculate <see cref="Charge"/> value.</param>
+        /// <returns><see cref="Charge"/> value in coulombs given the specified <paramref name="volts"/>.</returns>
+        public Charge ToCoulombs(Voltage volts)
+        {
+            return m_value / (double)volts;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in watt-hours.
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in watt-hours.</returns>
+        public double ToWattHours()
+        {
+            return m_value / WattHoursFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in BTU (International Table).
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in BTU.</returns>
+        public double ToBTU()
+        {
+            return m_value / BTUFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in Celsius heat units (International Table).
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in Celsius heat units.</returns>
+        public double ToCelsiusHeatUnits()
+        {
+            return m_value / CelsiusHeatUnitsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in liters-atmosphere.
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in liters-atmosphere.</returns>
+        public double ToLitersAtmosphere()
+        {
+            return m_value / LitersAtmosphereFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in calories (International Table).
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in calories.</returns>
+        public double ToCalories()
+        {
+            return m_value / CaloriesFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in horsepower-hours.
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in horsepower-hours.</returns>
+        public double ToHorsepowerHours()
+        {
+            return m_value / HorsepowerHoursFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in equivalent barrels of oil.
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in equivalent barrels of oil.</returns>
+        public double ToBarrelsOfOil()
+        {
+            return m_value / BarrelsOfOilFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Energy"/> value in equivalent tons of coal.
+        /// </summary>
+        /// <returns>Value of <see cref="Energy"/> in equivalent tons of coal.</returns>
+        public double ToTonsOfCoal()
+        {
+            return m_value / TonsOfCoalFactor;
+        }
 
         #region [ Numeric Interface Implementations ]
 
@@ -603,16 +690,86 @@ namespace System.Units
         }
 
         // Static Methods
-        
-        ///// <summary>
-        ///// Creates a new <see cref="Energy"/> from the specified <paramref name="value"/> in mechanical horseenergy (Imperial).
-        ///// </summary>
-        ///// <param name="value">New <see cref="Energy"/> value in mechanical horseenergy.</param>
-        ///// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in mechanical horseenergy.</returns>
-        //public static Energy FromMechanicalHorseenergy(double value)
-        //{
-        //    return new Energy(value * MechanicalHorseenergyFactor);
-        //}
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in watt-hours.
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in watt-hours.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in watt-hours.</returns>
+        public static Energy FromWattHours(double value)
+        {
+            return new Energy(value * WattHoursFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in BTU (International Table).
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in BTU.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in BTU.</returns>
+        public static Energy FromBTU(double value)
+        {
+            return new Energy(value * BTUFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in Celsius heat units (International Table).
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in Celsius heat units.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in Celsius heat units.</returns>
+        public static Energy FromCelsiusHeatUnits(double value)
+        {
+            return new Energy(value * CelsiusHeatUnitsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in liters-atmosphere.
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in liters-atmosphere.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in liters-atmosphere.</returns>
+        public static Energy FromLitersAtmosphere(double value)
+        {
+            return new Energy(value * LitersAtmosphereFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in calories (International Table).
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in calories.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in calories.</returns>
+        public static Energy FromCalories(double value)
+        {
+            return new Energy(value * CaloriesFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in horsepower-hours.
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in horsepower-hours.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in horsepower-hours.</returns>
+        public static Energy FromHorsepowerHours(double value)
+        {
+            return new Energy(value * HorsepowerHoursFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in equivalent barrels of oil.
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in equivalent barrels of oil.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in equivalent barrels of oil.</returns>
+        public static Energy FromBarrelsOfOil(double value)
+        {
+            return new Energy(value * BarrelsOfOilFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Energy"/> value from the specified <paramref name="value"/> in equivalent tons of coal.
+        /// </summary>
+        /// <param name="value">New <see cref="Energy"/> value in equivalent tons of coal.</param>
+        /// <returns>New <see cref="Energy"/> object from the specified <paramref name="value"/> in equivalent tons of coal.</returns>
+        public static Energy FromTonOfCoal(double value)
+        {
+            return new Energy(value * TonsOfCoalFactor);
+        }
 
         #endregion        
     }

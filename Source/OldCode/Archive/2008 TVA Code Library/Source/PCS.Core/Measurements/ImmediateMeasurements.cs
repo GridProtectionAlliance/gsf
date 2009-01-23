@@ -75,7 +75,7 @@ namespace PCS.Measurements
         {
             get
             {
-                return Measurement(key).GetAdjustedValue(m_parent.RealTimeTicks);
+                return Measurement(key).GetAdjustedValue(m_parent.RealTime);
             }
         }
 
@@ -233,7 +233,7 @@ namespace PCS.Measurements
                 if (!m_measurements.TryGetValue(key, out value))
                 {
                     // Create new temporal measurement if it doesn't exist
-                    value = new TemporalMeasurement(key.ID, key.Source, double.NaN, m_parent.RealTimeTicks, m_parent.LagTime, m_parent.LeadTime);
+                    value = new TemporalMeasurement(key.ID, key.Source, double.NaN, m_parent.RealTime, m_parent.LagTime, m_parent.LeadTime);
                     m_measurements.Add(key, value);
                 }
 

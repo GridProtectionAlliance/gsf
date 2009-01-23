@@ -18,6 +18,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Units;
 using System.Threading;
 using System.ComponentModel;
 
@@ -143,11 +144,11 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets the total amount of time, in seconds, that the <see cref="BinaryImageParserBase"/> has been active.
         /// </summary>
-        public virtual double RunTime
+        public Time RunTime
         {
             get
             {
-                long processingTime = 0;
+                Ticks processingTime = 0;
 
                 if (m_startTime > 0)
                 {
@@ -160,7 +161,7 @@ namespace PCS.Parsing
                 if (processingTime < 0)
                     processingTime = 0;
 
-                return Ticks.ToSeconds(processingTime);
+                return processingTime.ToSeconds();
             }
         }
 
@@ -239,7 +240,7 @@ namespace PCS.Parsing
                 }
 
                 status.Append("     Total parser run-time: ");
-                status.Append(Seconds.ToText(RunTime));
+                status.Append(RunTime.ToString());
                 status.AppendLine();
                 status.Append("   Total buffers processed: ");
                 status.Append(m_buffersProcessed);

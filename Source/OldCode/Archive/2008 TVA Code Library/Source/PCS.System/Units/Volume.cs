@@ -35,51 +35,85 @@ using System.Runtime.CompilerServices;
 
 namespace System.Units
 {
-    /// <summary>Represents an angle, in radians, as a double-precision floating-point number.</summary>
+    /// <summary>Represents a volume measurement, in cubic meters, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing an angle in radians; it is implictly
+    /// This class behaves just like a <see cref="Double"/> representing a volume in cubic meters; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
-    /// has the advantage of handling conversions to and from other angle representations, specifically
-    /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
-    /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
+    /// has the advantage of handling conversions to and from other volume representations, specifically
+    /// liters, teaspoons, tablespoons, cubic inches, fluid ounces, cups, pints, quarts, gallons and cubic feet.
+    /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
     /// <example>
-    /// This example converts degrees to grads:
+    /// Convert volume, in cubic meters, to cubic kilometers:
     /// <code>
-    /// public double GetGrads(double degrees)
+    /// public double GetCubicKilometers(Volume cubicmeters)
     /// {
-    ///     return Angle.FromDegrees(degrees).ToGrads();
+    ///     return cubicmeters / SI.Kilo;
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This example converts teaspoons to cups:
+    /// <code>
+    /// public double GetCups(double teaspoons)
+    /// {
+    ///     return Volume.FromTeaspoons(teaspoons).ToCups();
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This example converts liters to fluid ounces:
+    /// <code>
+    /// public double GetFluidOunces(double liters)
+    /// {
+    ///     return Volume.FromLiters(liters).ToFluidOunces();
     /// }
     /// </code>
     /// </example>
     /// </remarks>
     [Serializable()]
-    public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<Double>, IEquatable<Angle>, IEquatable<Double>
+    public struct Volume : IComparable, IFormattable, IConvertible, IComparable<Volume>, IComparable<Double>, IEquatable<Volume>, IEquatable<Double>
     {
         #region [ Members ]
 
         // Constants
-        private const double DegreesFactor = Math.PI / 180.0D;
+        private const double LitersFactor = 0.001D;
 
-        private const double GradsFactor = Math.PI / 200.0D;
+        private const double TeaspoonsFactor = 4.928921595e-6D;
 
-        private const double ArcMinutesFactor = Math.PI / 180.0D / 60.0D;
+        private const double MetricTeaspoonsFactor = 5.0e-6D;
 
-        private const double ArcSecondsFactor = Math.PI / 180.0D / 3600.0D;
+        private const double TablespoonsFactor = 14.7867647825e-6D;
 
-        private const double AngularMilFactor = 2.0D * Math.PI / 6400.0D;
+        private const double MetricTablespoonsFactor = 15.0e-6D;
+
+        private const double CupsFactor = 236.5882365e-6D;
+
+        private const double MetricCupsFactor = 250.0e-6D;
+
+        private const double FluidOuncesFactor = 29.5735295625e-6D;
+
+        private const double PintsFactor = 473.176473e-6D;
+
+        private const double QuartsFactor = 946.352946e-6D;
+
+        private const double GallonsFactor = 3.785411784e-3D;
+
+        private const double CubicInchesFactor = 16.387064e-6D;
+
+        private const double CubicFeetFactor = 0.028316846592D;
 
         // Fields
-        private double m_value; // Angle value stored in radians
+        private double m_value; // Volume value stored in cubic meters
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/>.
+        /// Creates a new <see cref="Volume"/>.
         /// </summary>
-        /// <param name="value">New angle value in radians.</param>
-        public Angle(double value)
+        /// <param name="value">New volume value in cubic meters.</param>
+        public Volume(double value)
         {
             m_value = value;
         }
@@ -89,48 +123,120 @@ namespace System.Units
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in degrees.
+        /// Gets the <see cref="Volume"/> value in liters.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in degrees.</returns>
-        public double ToDegrees()
+        /// <returns>Value of <see cref="Volume"/> in liters.</returns>
+        public double ToLiters()
         {
-            return m_value / DegreesFactor;
+            return m_value / LitersFactor;
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in grads.
+        /// Gets the <see cref="Volume"/> value in US teaspoons.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in grads.</returns>
-        public double ToGrads()
+        /// <returns>Value of <see cref="Volume"/> in US teaspoons.</returns>
+        public double ToTeaspoons()
         {
-            return m_value / GradsFactor;
+            return m_value / TeaspoonsFactor;
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in arcminutes.
+        /// Gets the <see cref="Volume"/> value in metric teaspoons.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in arcminutes.</returns>
-        public double ToArcMinutes()
+        /// <returns>Value of <see cref="Volume"/> in metric teaspoons.</returns>
+        public double ToMetricTeaspoons()
         {
-            return m_value / ArcMinutesFactor;
+            return m_value / MetricTeaspoonsFactor;
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in arcseconds.
+        /// Gets the <see cref="Volume"/> value in US tablespoons.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in arcseconds.</returns>
-        public double ToArcSeconds()
+        /// <returns>Value of <see cref="Volume"/> in US tablespoons.</returns>
+        public double ToTablespoons()
         {
-            return m_value / ArcSecondsFactor;
+            return m_value / TablespoonsFactor;
         }
 
         /// <summary>
-        /// Gets the <see cref="Angle"/> value in angular mil.
+        /// Gets the <see cref="Volume"/> value in metric tablespoons.
         /// </summary>
-        /// <returns>Value of <see cref="Angle"/> in angular mil.</returns>
-        public double ToAngularMil()
+        /// <returns>Value of <see cref="Volume"/> in metric tablespoons.</returns>
+        public double ToMetricTablespoons()
         {
-            return m_value / AngularMilFactor;
+            return m_value / MetricTablespoonsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in US cups.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in US cups.</returns>
+        public double ToCups()
+        {
+            return m_value / CupsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in metric cups.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in metric cups.</returns>
+        public double ToMetricCups()
+        {
+            return m_value / MetricCupsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in US fluid ounces.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in US fluid ounces.</returns>
+        public double ToFluidOunces()
+        {
+            return m_value / FluidOuncesFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in US fluid pints.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in US fluid pints.</returns>
+        public double ToPints()
+        {
+            return m_value / PintsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in US fluid quarts.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in US fluid quarts.</returns>
+        public double ToQuarts()
+        {
+            return m_value / QuartsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in US fluid gallons.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in US fluid gallons.</returns>
+        public double ToGallons()
+        {
+            return m_value / GallonsFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in cubic inches.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in cubic inches.</returns>
+        public double ToCubicInches()
+        {
+            return m_value / CubicInchesFactor;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Volume"/> value in cubic feet.
+        /// </summary>
+        /// <returns>Value of <see cref="Volume"/> in cubic feet.</returns>
+        public double ToCubicFeet()
+        {
+            return m_value / CubicFeetFactor;
         }
 
         #region [ Numeric Interface Implementations ]
@@ -144,29 +250,29 @@ namespace System.Units
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Angle"/>.</exception>
+        /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Volume"/>.</exception>
         public int CompareTo(object value)
         {
             if (value == null) return 1;
 
-            if (!(value is double) && !(value is Angle))
-                throw new ArgumentException("Argument must be a Double or an Angle");
+            if (!(value is double) && !(value is Volume))
+                throw new ArgumentException("Argument must be a Double or a Volume");
 
             double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 
         /// <summary>
-        /// Compares this instance to a specified <see cref="Angle"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="Volume"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">An <see cref="Angle"/> to compare.</param>
+        /// <param name="value">A <see cref="Volume"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        public int CompareTo(Angle value)
+        public int CompareTo(Volume value)
         {
             return CompareTo((double)value);
         }
@@ -191,25 +297,25 @@ namespace System.Units
         /// </summary>
         /// <param name="obj">An object to compare, or null.</param>
         /// <returns>
-        /// True if obj is an instance of <see cref="Double"/> or <see cref="Angle"/> and equals the value of this instance;
+        /// True if obj is an instance of <see cref="Double"/> or <see cref="Volume"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Angle)
+            if (obj is double || obj is Volume)
                 return Equals((double)obj);
 
             return false;
         }
 
         /// <summary>
-        /// Returns a value indicating whether this instance is equal to a specified <see cref="Angle"/> value.
+        /// Returns a value indicating whether this instance is equal to a specified <see cref="Volume"/> value.
         /// </summary>
-        /// <param name="obj">An <see cref="Angle"/> value to compare to this instance.</param>
+        /// <param name="obj">A <see cref="Volume"/> value to compare to this instance.</param>
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(Angle obj)
+        public bool Equals(Volume obj)
         {
             return Equals((double)obj);
         }
@@ -294,31 +400,31 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Converts the string representation of a number to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number to its <see cref="Volume"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Volume"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Volume.MinValue"/> or greater than <see cref="Volume.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Angle Parse(string s)
+        public static Volume Parse(string s)
         {
-            return (Angle)double.Parse(s);
+            return (Volume)double.Parse(s);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified style to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number in a specified style to its <see cref="Volume"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Volume"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -326,36 +432,36 @@ namespace System.Units
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Volume.MinValue"/> or greater than <see cref="Volume.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Angle Parse(string s, NumberStyles style)
+        public static Volume Parse(string s, NumberStyles style)
         {
-            return (Angle)double.Parse(s, style);
+            return (Volume)double.Parse(s, style);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Volume"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Volume"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Volume.MinValue"/> or greater than <see cref="Volume.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Angle Parse(string s, IFormatProvider provider)
+        public static Volume Parse(string s, IFormatProvider provider)
         {
-            return (Angle)double.Parse(s, provider);
+            return (Volume)double.Parse(s, provider);
         }
 
         /// <summary>
-        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Angle"/> equivalent.
+        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Volume"/> equivalent.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
@@ -365,7 +471,7 @@ namespace System.Units
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
         /// </param>
         /// <returns>
-        /// An <see cref="Angle"/> equivalent to the number contained in s.
+        /// A <see cref="Volume"/> equivalent to the number contained in s.
         /// </returns>
         /// <exception cref="ArgumentException">
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
@@ -373,27 +479,27 @@ namespace System.Units
         /// </exception>
         /// <exception cref="ArgumentNullException">s is null.</exception>
         /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
+        /// s represents a number less than <see cref="Volume.MinValue"/> or greater than <see cref="Volume.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Angle Parse(string s, NumberStyles style, IFormatProvider provider)
+        public static Volume Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Angle)double.Parse(s, style, provider);
+            return (Volume)double.Parse(s, style, provider);
         }
 
         /// <summary>
-        /// Converts the string representation of a number to its <see cref="Angle"/> equivalent. A return value
+        /// Converts the string representation of a number to its <see cref="Volume"/> equivalent. A return value
         /// indicates whether the conversion succeeded or failed.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
-        /// When this method returns, contains the <see cref="Angle"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not of the correct format, or represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
-        /// This parameter is passed uninitialized.
+        /// When this method returns, contains the <see cref="Volume"/> value equivalent to the number contained in s,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        /// is not of the correct format, or represents a number less than <see cref="Volume.MinValue"/> or greater than <see cref="Volume.MaxValue"/>.
+        /// This paraampere is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        public static bool TryParse(string s, out Angle result)
+        public static bool TryParse(string s, out Volume result)
         {
             double parseResult;
             bool parseResponse;
@@ -406,17 +512,17 @@ namespace System.Units
 
         /// <summary>
         /// Converts the string representation of a number in a specified style and culture-specific format to its
-        /// <see cref="Angle"/> equivalent. A return value indicates whether the conversion succeeded or failed.
+        /// <see cref="Volume"/> equivalent. A return value indicates whether the conversion succeeded or failed.
         /// </summary>
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="style">
         /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
         /// </param>
         /// <param name="result">
-        /// When this method returns, contains the <see cref="Angle"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not in a format compliant with style, or represents a number less than <see cref="Angle.MinValue"/> or
-        /// greater than <see cref="Angle.MaxValue"/>. This parameter is passed uninitialized.
+        /// When this method returns, contains the <see cref="Volume"/> value equivalent to the number contained in s,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        /// is not in a format compliant with style, or represents a number less than <see cref="Volume.MinValue"/> or
+        /// greater than <see cref="Volume.MaxValue"/>. This paraampere is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -426,7 +532,7 @@ namespace System.Units
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Angle result)
+        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Volume result)
         {
             double parseResult;
             bool parseResponse;
@@ -536,17 +642,17 @@ namespace System.Units
         #region [ Type Conversion Operators ]
 
         /// <summary>
-        /// Implicitly converts value, represented in radians, to an <see cref="Angle"/>.
+        /// Implicitly converts value, represented in cubic meters, to a <see cref="Volume"/>.
         /// </summary>
-        public static implicit operator Angle(Double value)
+        public static implicit operator Volume(Double value)
         {
-            return new Angle(value);
+            return new Volume(value);
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Angle"/>, represented in radians, to a <see cref="Double"/>.
+        /// Implicitly converts <see cref="Volume"/>, represented in cubic meters, to a <see cref="Double"/>.
         /// </summary>
-        public static implicit operator Double(Angle value)
+        public static implicit operator Double(Volume value)
         {
             return value.m_value;
         }
@@ -558,7 +664,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
-        public static Angle operator %(Angle value1, Angle value2)
+        public static Volume operator %(Volume value1, Volume value2)
         {
             return value1.m_value % value2.m_value;
         }
@@ -566,7 +672,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
-        public static Angle operator +(Angle value1, Angle value2)
+        public static Volume operator +(Volume value1, Volume value2)
         {
             return value1.m_value + value2.m_value;
         }
@@ -574,7 +680,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
-        public static Angle operator -(Angle value1, Angle value2)
+        public static Volume operator -(Volume value1, Volume value2)
         {
             return value1.m_value - value2.m_value;
         }
@@ -582,7 +688,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
-        public static Angle operator *(Angle value1, Angle value2)
+        public static Volume operator *(Volume value1, Volume value2)
         {
             return value1.m_value * value2.m_value;
         }
@@ -590,7 +696,7 @@ namespace System.Units
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
-        public static Angle operator /(Angle value1, Angle value2)
+        public static Volume operator /(Volume value1, Volume value2)
         {
             return value1.m_value / value2.m_value;
         }
@@ -599,10 +705,10 @@ namespace System.Units
         // so we expose the operator via its native special IL function name
 
         /// <summary>
-        /// Returns result of first value raised to power of second value.
+        /// Returns result of first value raised to volume of second value.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
-        public static double op_Exponent(Angle value1, Angle value2)
+        public static double op_Exponent(Volume value1, Volume value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);
         }
@@ -615,71 +721,151 @@ namespace System.Units
 
         // Static Fields
 
-        /// <summary>Represents the largest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MaxValue;
+        /// <summary>Represents the largest possible value of an <see cref="Volume"/>. This field is constant.</summary>
+        public static readonly Volume MaxValue;
 
-        /// <summary>Represents the smallest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MinValue;
+        /// <summary>Represents the smallest possible value of an <see cref="Volume"/>. This field is constant.</summary>
+        public static readonly Volume MinValue;
 
         // Static Constructor
-        static Angle()
+        static Volume()
         {
-            MaxValue = (Angle)double.MaxValue;
-            MinValue = (Angle)double.MinValue;
+            MaxValue = (Volume)double.MaxValue;
+            MinValue = (Volume)double.MinValue;
         }
 
         // Static Methods
-        
+
         /// <summary>
-        /// Creates a new <see cref="Angle"/> value from the specified <paramref name="value"/> in degrees.
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in liters.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in degrees.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in degrees.</returns>
-        public static Angle FromDegrees(double value)
+        /// <param name="value">New <see cref="Volume"/> value in liters.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in liters.</returns>
+        public static Volume FromLiters(double value)
         {
-            return new Angle(value * DegreesFactor);
+            return new Volume(value * LitersFactor);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> value from the specified <paramref name="value"/> in grads.
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US teaspoons.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in grads.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in grads.</returns>
-        public static Angle FromGrads(double value)
+        /// <param name="value">New <see cref="Volume"/> value in US teaspoons.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US teaspoons.</returns>
+        public static Volume FromTeaspoons(double value)
         {
-            return new Angle(value * GradsFactor);
+            return new Volume(value * TeaspoonsFactor);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> value from the specified <paramref name="value"/> in arcminutes.
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in metric teaspoons.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in arcminutes.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcminutes.</returns>
-        public static Angle FromArcMinutes(double value)
+        /// <param name="value">New <see cref="Volume"/> value in metric teaspoons.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in metric teaspoons.</returns>
+        public static Volume FromMetricTeaspoons(double value)
         {
-            return new Angle(value * ArcMinutesFactor);
+            return new Volume(value * MetricTeaspoonsFactor);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> value from the specified <paramref name="value"/> in arcseconds.
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US tablespoons.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in arcseconds.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcseconds.</returns>
-        public static Angle FromArcSeconds(double value)
+        /// <param name="value">New <see cref="Volume"/> value in US tablespoons.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US tablespoons.</returns>
+        public static Volume FromTablespoons(double value)
         {
-            return new Angle(value * ArcSecondsFactor);
+            return new Volume(value * TablespoonsFactor);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Angle"/> value from the specified <paramref name="value"/> in angular mil.
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in metric tablespoons.
         /// </summary>
-        /// <param name="value">New <see cref="Angle"/> value in angular mil.</param>
-        /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in angular mil.</returns>
-        public static Angle FromAngularMil(double value)
+        /// <param name="value">New <see cref="Volume"/> value in metric tablespoons.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in metric tablespoons.</returns>
+        public static Volume FromMetricTablespoons(double value)
         {
-            return new Angle(value * AngularMilFactor);
+            return new Volume(value * MetricTablespoonsFactor);
         }
 
-        #endregion        
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US cups.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in US cups.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US cups.</returns>
+        public static Volume FromCups(double value)
+        {
+            return new Volume(value * CupsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in metric cups.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in metric cups.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in metric cups.</returns>
+        public static Volume FromMetricCups(double value)
+        {
+            return new Volume(value * MetricCupsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US fluid ounces.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in US fluid ounces.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US fluid ounces.</returns>
+        public static Volume FromFluidOunces(double value)
+        {
+            return new Volume(value * FluidOuncesFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US fluid pints.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in US fluid pints.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US fluid pints.</returns>
+        public static Volume FromPints(double value)
+        {
+            return new Volume(value * PintsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US fluid quarts.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in US fluid quarts.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US fluid quarts.</returns>
+        public static Volume FromQuarts(double value)
+        {
+            return new Volume(value * QuartsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in US fluid gallons.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in US fluid gallons.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in US fluid gallons.</returns>
+        public static Volume FromGallons(double value)
+        {
+            return new Volume(value * GallonsFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in cubic inches.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in cubic inches.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in cubic inches.</returns>
+        public static Volume FromCubicInches(double value)
+        {
+            return new Volume(value * CubicInchesFactor);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Volume"/> value from the specified <paramref name="value"/> in cubic feet.
+        /// </summary>
+        /// <param name="value">New <see cref="Volume"/> value in cubic feet.</param>
+        /// <returns>New <see cref="Volume"/> object from the specified <paramref name="value"/> in cubic feet.</returns>
+        public static Volume FromCubicFeet(double value)
+        {
+            return new Volume(value * CubicFeetFactor);
+        }
+
+        #endregion
     }
 }

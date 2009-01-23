@@ -12,18 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/23/2003 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  06/10/2004 - J. Ritchie Carroll
-//       Added SecondsToText overload to allow custom time names, e.g., 1 Min 2 Secs.
-//  01/05/2005 - J. Ritchie Carroll
-//       Added BaselinedTimestamp function.
 //  12/21/2005 - J. Ritchie Carroll
 //       Migrated 2.0 version of source code from 1.1 source (PCS.Shared.DateTime).
-//  08/28/2006 - J. Ritchie Carroll
-//       Added TimeIsValid, LocalTimeIsValid and UtcTimeIsValid functions.
-//  09/15/2006 - J. Ritchie Carroll
-//       Updated BaselinedTimestamp function to support multiple time intervals.
-//  09/18/2006 - J. Ritchie Carroll
-//       Added TicksBeyondSecond function to support high-resolution timestamp intervals.
 //  08/31/2007 - Darrell Zuercher
 //       Edited code comments.
 //  09/08/2008 - J. Ritchie Carroll
@@ -32,32 +22,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Units;
 using System.Globalization;
 
 namespace PCS
 {
-    #region [ Enumerations ]
-
-    /// <summary>Time intervals enumeration used by BaselinedTimestamp function.</summary>
-    public enum BaselineTimeInterval
-    {
-        /// <summary>Baseline timestamp to the second (i.e., starting at zero milliseconds).</summary>
-        Second,
-        /// <summary>Baseline timestamp to the minute (i.e., starting at zero seconds and milliseconds).</summary>
-        Minute,
-        /// <summary>Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds).</summary>
-        Hour,
-        /// <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and milliseconds).</summary>
-        Day,
-        /// <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds and milliseconds).</summary>
-        Month,
-        /// <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, seconds and milliseconds).</summary>
-        Year
-    }
-
-    #endregion
-
     /// <summary>Defines extension functions related to Date/Time manipulation.</summary>
     public static class DateTimeExtensions
     {
@@ -77,26 +45,7 @@ namespace PCS
         /// be less than one.</exception>
         public static bool UtcTimeIsValid(this DateTime utcTime, double lagTime, double leadTime)
         {
-            return ((Time)utcTime).UtcTimeIsValid(lagTime, leadTime);
-        }
-
-        /// <summary>Determines if the specified UTC time is valid, by comparing it to the system clock.</summary>
-        /// <param name="utcTime">UTC time to test for validity.</param>
-        /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
-        /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
-        /// valid.</param>
-        /// <returns>True, if time is within the specified range.</returns>
-        /// <remarks>
-        /// <para>Time is considered valid if it exists within the specified lag time/lead time range of current
-        /// time.</para>
-        /// <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second
-        /// intervals.</para>
-        /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can
-        /// be less than one.</exception>
-        public static bool UtcTimeIsValid(this Time utcTime, double lagTime, double leadTime)
-        {
-            return utcTime.TimeIsValid(DateTime.UtcNow.Ticks, lagTime, leadTime);
+            return ((Ticks)utcTime).UtcTimeIsValid(lagTime, leadTime);
         }
 
         /// <summary>Determines if the specified local time is valid, by comparing it to the system clock.</summary>
@@ -115,26 +64,7 @@ namespace PCS
         /// be less than one.</exception>
         public static bool LocalTimeIsValid(this DateTime localTime, double lagTime, double leadTime)
         {
-            return ((Time)localTime).LocalTimeIsValid(lagTime, leadTime);
-        }
-
-        /// <summary>Determines if the specified local time is valid, by comparing it to the system clock.</summary>
-        /// <param name="localTime">Time to test for validity.</param>
-        /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
-        /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
-        /// valid.</param>
-        /// <returns>True, if time is within the specified range.</returns>
-        /// <remarks>
-        /// <para>Time is considered valid if it exists within the specified lag time/lead time range of current
-        /// time.</para>
-        /// <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second
-        /// intervals.</para>
-        /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can
-        /// be less than one.</exception>
-        public static bool LocalTimeIsValid(this Time localTime, double lagTime, double leadTime)
-        {
-            return localTime.TimeIsValid(DateTime.Now.Ticks, lagTime, leadTime);
+            return ((Ticks)localTime).LocalTimeIsValid(lagTime, leadTime);
         }
 
         /// <summary>Determines if time is valid, by comparing it to the specified current time.</summary>
@@ -154,114 +84,44 @@ namespace PCS
         /// be less than one.</exception>
         public static bool TimeIsValid(this DateTime testTime, DateTime currentTime, double lagTime, double leadTime)
         {
-            return ((Time)testTime).TimeIsValid(currentTime, lagTime, leadTime);
+            return ((Ticks)testTime).TimeIsValid(currentTime, lagTime, leadTime);
         }
 
-        /// <summary>Determines if time is valid, by comparing it to the specified current time.</summary>
-        /// <param name="testTime">Time to test for validity.</param>
-        /// <param name="currentTime">Specified current time (e.g., could be Date.Now or Date.UtcNow).</param>
-        /// <param name="lagTime">The allowed lag time, in seconds, before assuming time is too old to be valid.</param>
-        /// <param name="leadTime">The allowed lead time, in seconds, before assuming time is too advanced to be
-        /// valid.</param>
-        /// <returns>True, if time is within the specified range.</returns>
-        /// <remarks>
-        /// <para>Time is considered valid if it exists within the specified lag time/lead time range of current
-        /// time.</para>
-        /// <para>Note that lag time and lead time must be greater than zero, but can be set to sub-second
-        /// intervals.</para>
-        /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">LagTime and LeadTime must be greater than zero, but can
-        /// be less than one.</exception>
-        public static bool TimeIsValid(this Time testTime, Time currentTime, double lagTime, double leadTime)
-        {
-            if (lagTime <= 0) throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
-            if (leadTime <= 0) throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            //double distance = (currentTime - testTime).ToSeconds();
-            double distance = ((long)currentTime - (long)testTime) / (double)Ticks.PerSecond;
-
-            return (distance >= -leadTime && distance <= lagTime);
-        }
-
-        /// <summary>Gets the distance, in ticks, beyond the top of the timestamp second.</summary>
+        /// <summary>Gets the distance, in <see cref="Ticks"/>, beyond the top of the <paramref name="timestamp"/> second.</summary>
         /// <param name="timestamp">Timestamp to evaluate.</param>
         /// <returns>Timestamp's tick distance from the top of the second.</returns>
-        public static Time TicksBeyondSecond(this Time timestamp)
+        public static Ticks DistanceBeyondSecond(this DateTime timestamp)
         {
-            // Removed function call to BaselinedTimestamp just as an optimization...
-            //return ticks - BaselinedTimestamp(ticks, BaselineTimeInterval.Second);
-            long ticks = timestamp;
-            return ticks - (ticks - ticks % Ticks.PerSecond);
-        }
-
-        /// <summary>Gets the distance, in ticks, beyond the top of the timestamp second.</summary>
-        /// <param name="timestamp">Timestamp to evaluate.</param>
-        /// <returns>Timestamp's tick distance from the top of the second.</returns>
-        public static Time TicksBeyondSecond(this DateTime timestamp)
-        {
-            return ((Time)timestamp).TicksBeyondSecond();
+            return ((Ticks)timestamp).DistanceBeyondSecond();
         }
 
         /// <summary>Creates a baselined timestamp which begins at the specified time interval.</summary>
         /// <param name="timestamp">Timestamp to baseline.</param>
-        /// <param name="baselineTo">Time interval to which timestamp should be baselined.</param>
-        /// <returns>Baselined timestamp, in ticks, which begins at the specified time interval.</returns>
+        /// <param name="interval">
+        /// <see cref="BaselineTimeInterval"/> to which <paramref name="timestamp"/> should be baselined.
+        /// </param>
+        /// <returns>
+        /// A new <see cref="DateTime"/> value that represents a baselined timestamp that begins at the
+        /// specified <see cref="BaselineTimeInterval"/>.
+        /// </returns>
         /// <remarks>
-        /// <para>Baselining to the second would return the timestamp starting at zero milliseconds.</para>
-        /// <para>Baselining to the minute would return the timestamp starting at zero seconds and milliseconds.</para>
-        /// <para>Baselining to the hour would return the timestamp starting at zero minutes, seconds and
-        /// milliseconds.</para>
-        /// <para>Baselining to the day would return the timestamp starting at zero hours, minutes, seconds and
-        /// milliseconds.</para>
-        /// <para>Baselining to the month would return the timestamp starting at day one, zero hours, minutes,
-        /// seconds and milliseconds.</para>
-        /// <para>Baselining to the year would return the timestamp starting at month one, day one, zero hours,
-        /// minutes, seconds and milliseconds.</para>
+        /// Baselining to the <see cref="BaselineTimeInterval.Second"/> would return the <see cref="DateTime"/>
+        /// value starting at zero milliseconds.<br/>
+        /// Baselining to the <see cref="BaselineTimeInterval.Minute"/> would return the <see cref="DateTime"/>
+        /// value starting at zero seconds and milliseconds.<br/>
+        /// Baselining to the <see cref="BaselineTimeInterval.Hour"/> would return the <see cref="DateTime"/>
+        /// value starting at zero minutes, seconds and milliseconds.<br/>
+        /// Baselining to the <see cref="BaselineTimeInterval.Day"/> would return the <see cref="DateTime"/>
+        /// value starting at zero hours, minutes, seconds and milliseconds.<br/>
+        /// Baselining to the <see cref="BaselineTimeInterval.Month"/> would return the <see cref="DateTime"/>
+        /// value starting at day one, zero hours, minutes, seconds and milliseconds.<br/>
+        /// Baselining to the <see cref="BaselineTimeInterval.Year"/> would return the <see cref="DateTime"/>
+        /// value starting at month one, day one, zero hours, minutes, seconds and milliseconds.
         /// </remarks>
-        public static Time BaselinedTimestamp(this Time timestamp, BaselineTimeInterval baselineTo)
+        public static DateTime BaselinedTimestamp(this DateTime timestamp, BaselineTimeInterval interval)
         {
-            long ticks = timestamp;
-
-            switch (baselineTo)
-            {
-                case BaselineTimeInterval.Second:
-                    return ticks - ticks % Ticks.PerSecond;
-                case BaselineTimeInterval.Minute:
-                    return ticks - ticks % Ticks.PerMinute;
-                case BaselineTimeInterval.Hour:
-                    return ticks - ticks % Ticks.PerHour;
-                case BaselineTimeInterval.Day:
-                    return ticks - ticks % Ticks.PerDay;
-                case BaselineTimeInterval.Month:
-                    DateTime toMonth = new DateTime(ticks);
-                    return new DateTime(toMonth.Year, toMonth.Month, 1, 0, 0, 0, 0).Ticks;
-                case BaselineTimeInterval.Year:
-                    DateTime toYear = new DateTime(ticks);
-                    return new DateTime(toYear.Year, 1, 1, 0, 0, 0, 0).Ticks;
-                default:
-                    return timestamp;
-            }
-        }
-
-        /// <summary>Creates a baselined timestamp which begins at the specified time interval.</summary>
-        /// <param name="timestamp">Timestamp to baseline.</param>
-        /// <param name="baselineTo">Time interval to which timestamp should be baselined.</param>
-        /// <returns>Baselined timestamp which begins at the specified time interval.</returns>
-        /// <remarks>
-        /// <para>Baselining to the second would return the timestamp starting at zero milliseconds.</para>
-        /// <para>Baselining to the minute would return the timestamp starting at zero seconds and milliseconds.</para>
-        /// <para>Baselining to the hour would return the timestamp starting at zero minutes, seconds and
-        /// milliseconds.</para>
-        /// <para>Baselining to the day would return the timestamp starting at zero hours, minutes, seconds and
-        /// milliseconds.</para>
-        /// <para>Baselining to the month would return the timestamp starting at day one, zero hours, minutes,
-        /// seconds and milliseconds.</para>
-        /// <para>Baselining to the year would return the timestamp starting at month one, day one, zero hours,
-        /// minutes, seconds and milliseconds.</para>
-        /// </remarks>
-        public static DateTime BaselinedTimestamp(this DateTime timestamp, BaselineTimeInterval baselineTo)
-        {
-            return ((Time)timestamp).BaselinedTimestamp(baselineTo);
+            return ((Ticks)timestamp).BaselinedTimestamp(interval);
         }
 
         /// <summary>Converts given local time to Eastern time.</summary>

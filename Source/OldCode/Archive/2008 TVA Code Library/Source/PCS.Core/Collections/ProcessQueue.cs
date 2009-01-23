@@ -43,9 +43,10 @@
 //*******************************************************************************************************
 
 using System;
+using System.Text;
+using System.Units;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using PCS.Threading;
 
@@ -747,11 +748,11 @@ namespace PCS.Collections
         /// <summary>
         /// Gets the total amount of time, in seconds, that the <see cref="ProcessQueue{T}"/> has been active.
         /// </summary>
-        public virtual double RunTime
+        public virtual Time RunTime
         {
             get
             {
-                long processingTime = 0;
+                Ticks processingTime = 0;
 
                 if (m_startTime > 0)
                 {
@@ -764,7 +765,7 @@ namespace PCS.Collections
                 if (processingTime < 0)
                     processingTime = 0;
 
-                return Ticks.ToSeconds(processingTime);
+                return processingTime.ToSeconds();
             }
         }
 
@@ -969,7 +970,7 @@ namespace PCS.Collections
                 status.Append(ProcessingStyle == QueueProcessingStyle.OneAtATime ? "One at a time" : "Many at once");
                 status.AppendLine();
                 status.Append("    Total process run time: ");
-                status.Append(Seconds.ToText(RunTime));
+                status.Append(RunTime.ToString());
                 status.AppendLine();
                 status.Append("      Total active threads: ");
                 status.Append(m_threadCount);

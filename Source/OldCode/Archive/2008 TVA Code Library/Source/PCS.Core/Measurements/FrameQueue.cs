@@ -33,8 +33,8 @@ namespace PCS.Measurements
         // Fields
         private ConcentratorBase m_parent;              // Reference to parent concentrator instance
         private LinkedList<IFrame> m_frameList;         // We keep this list sorted by timestamp so frames are processed in order
-        private Dictionary<Time, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
-        private Time m_publishedTicks;                  // Timstamp of last published frame
+        private Dictionary<Ticks, IFrame> m_frameHash;  // This list not guaranteed to be sorted, but used for fast frame lookup
+        private Ticks m_publishedTicks;                 // Timstamp of last published frame
         private IFrame m_head;                          // Reference to current top of the frame collection
         private IFrame m_last;                          // Reference to last published frame
         private decimal m_ticksPerFrame;                // Cached ticks per frame
@@ -55,7 +55,7 @@ namespace PCS.Measurements
 
             m_parent = parent;
             m_frameList = new LinkedList<IFrame>();
-            m_frameHash = new Dictionary<Time, IFrame>(initialCapacity);
+            m_frameHash = new Dictionary<Ticks, IFrame>(initialCapacity);
             m_ticksPerFrame = parent.TicksPerFrame;
         }
 
@@ -229,10 +229,10 @@ namespace PCS.Measurements
         /// <see cref="ConcentratorBase.FramesPerSecond"/> of the parent <see cref="ConcentratorBase"/> implementation.
         /// </remarks>
         /// <returns>An existing or new <see cref="IFrame"/> from the queue for the specified timestamp.</returns>
-        public IFrame GetFrame(Time timestamp)
+        public IFrame GetFrame(Ticks timestamp)
         {
             // Calculate destination ticks for this frame
-            Time destinationTicks = (long)((long)(timestamp / m_ticksPerFrame) * m_ticksPerFrame);
+            Ticks destinationTicks = (long)((long)(timestamp / m_ticksPerFrame) * m_ticksPerFrame);
             IFrame frame = null;
             bool nodeAdded = false;
 

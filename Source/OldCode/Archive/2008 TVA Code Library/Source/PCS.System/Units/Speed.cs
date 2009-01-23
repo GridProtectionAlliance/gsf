@@ -641,7 +641,7 @@ namespace System.Units
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Speed"/> from the specified <paramref name="value"/> in miles per hour.
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in miles per hour.
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in miles per hour.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in miles per hour.</returns>
@@ -651,7 +651,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Speed"/> from the specified <paramref name="value"/> in kilometers per hour.
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in kilometers per hour.
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in kilometers per hour.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in kilometers per hour.</returns>
@@ -661,7 +661,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Speed"/> from the specified <paramref name="value"/> in feet per minute.
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in feet per minute.
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in feet per minute.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in feet per minute.</returns>
@@ -671,7 +671,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Speed"/> from the specified <paramref name="value"/> in inches per second.
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in inches per second.
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in inches per second.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in inches per second.</returns>
@@ -681,7 +681,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Speed"/> from the specified <paramref name="value"/> in knots (International).
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in knots (International).
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in knots.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in knots.</returns>
@@ -691,7 +691,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Speed"/> from the specified <paramref name="value"/> in mach.
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in mach.
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in mach.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in mach.</returns>

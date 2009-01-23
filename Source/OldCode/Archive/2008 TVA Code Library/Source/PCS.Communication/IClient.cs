@@ -27,6 +27,7 @@
 
 using System;
 using System.Text;
+using System.Units;
 using System.Threading;
 using PCS.IO.Compression;
 using PCS.Security.Cryptography;
@@ -215,7 +216,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the total number of seconds for which the client has been connected to the server.
         /// </summary>
-        double ConnectionTime { get; }
+        Time ConnectionTime { get; }
 
         /// <summary>
         /// Connects client to the server synchronously.

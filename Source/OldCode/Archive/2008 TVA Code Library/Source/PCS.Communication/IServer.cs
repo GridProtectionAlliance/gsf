@@ -23,6 +23,7 @@
 
 using System;
 using System.Text;
+using System.Units;
 using System.Threading;
 using PCS.IO.Compression;
 using PCS.Security.Cryptography;
@@ -223,7 +224,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the time in seconds for which the server has been running.
         /// </summary>
-        double RunTime { get; }
+        Time RunTime { get; }
 
         /// <summary>
         /// Starts the server.

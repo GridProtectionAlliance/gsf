@@ -18,6 +18,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Units;
 using System.Collections.Generic;
 using PCS.Threading;
 
@@ -88,7 +89,7 @@ namespace PCS.NumericalAnalysis
 
         /// <summary>Gets run-time, in seconds, for which slope has maintained a continuous positive or negative
         /// trend.</summary>
-        public double RunTime
+        public Time RunTime
         {
             get
             {

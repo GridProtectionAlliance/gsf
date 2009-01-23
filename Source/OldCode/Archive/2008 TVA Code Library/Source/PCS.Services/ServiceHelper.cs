@@ -479,7 +479,7 @@ namespace PCS.Services
 
                 if (m_remotingServer != null)
                 {
-                    status.AppendFormat("System Uptime: {0}", Seconds.ToText(m_remotingServer.RunTime));
+                    status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime.ToString());
                     status.AppendLine();
                     status.AppendLine();
                 }

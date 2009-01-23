@@ -672,7 +672,7 @@ namespace System.Units
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Celsius.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Celsius.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Celsius.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Celsius.</returns>
@@ -682,7 +682,7 @@ namespace System.Units
         }
         
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Fahrenheit.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Fahrenheit.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Fahrenheit.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Fahrenheit.</returns>
@@ -692,7 +692,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Newton.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Newton.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Newton.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Newton.</returns>
@@ -702,7 +702,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Rankine.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rankine.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Rankine.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rankine.</returns>
@@ -712,7 +712,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Delisle.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Delisle.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Delisle.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Delisle.</returns>
@@ -722,7 +722,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Réaumur.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Réaumur.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Réaumur.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Réaumur.</returns>
@@ -732,7 +732,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Temperature"/> from the specified <paramref name="value"/> in Rømer.
+        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rømer.
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>

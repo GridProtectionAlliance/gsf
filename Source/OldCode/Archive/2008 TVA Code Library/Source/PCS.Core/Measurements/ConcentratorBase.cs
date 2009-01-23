@@ -107,11 +107,11 @@ namespace PCS.Measurements
         private int m_frameIndex;                           // Determines current frame index
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
-        private Time m_lagTicks;                            // Current lag time calculated in ticks
+        private Ticks m_lagTicks;                           // Current lag time calculated in ticks
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
         private long m_stopTime;                            // Stop time of concentrator
-        private long m_realTimeTicks;                       // Ticks of the most recently received measurement
+        private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
         private long m_totalMeasurements;                   // Total number of measurements ever requested for sorting
@@ -120,7 +120,7 @@ namespace PCS.Measurements
         private long m_publishedMeasurements;               // Total number of published measurements
         private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
         private long m_publishedFrames;                     // Total number of published frames
-        private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
+        private Ticks m_totalPublishTime;                   // Total cumulative frame user function publication time (in ticks) - used to calculate average
         private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
         private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
         private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
@@ -169,7 +169,7 @@ namespace PCS.Measurements
 #if UseHighResolutionTime
             m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
-            m_realTimeTicks = DateTime.UtcNow.Ticks;
+            m_realTime = DateTime.UtcNow.Ticks;
 #endif
             m_allowSortsByArrival = true;
             m_lagTime = lagTime;
@@ -238,7 +238,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets defined past time deviation tolerance, in ticks.
         /// </summary>
-        public Time LagTicks
+        public Ticks LagTicks
         {
             get
             {
@@ -325,7 +325,7 @@ namespace PCS.Measurements
             set
             {
                 m_framesPerSecond = value;
-                m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond; ;
+                m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
 
                 if (m_frameQueue != null)
                     m_frameQueue.TicksPerFrame = m_ticksPerFrame;
@@ -378,11 +378,11 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets the total amount of time, in seconds, that the concentrator has been active.
         /// </summary>
-        public virtual double RunTime
+        public virtual Time RunTime
         {
             get
             {
-                long processingTime = 0;
+                Ticks processingTime = 0;
 
                 if (m_startTime > 0)
                 {
@@ -402,7 +402,7 @@ namespace PCS.Measurements
 
                 if (processingTime < 0) processingTime = 0;
 
-                return Ticks.ToSeconds(processingTime);
+                return processingTime.ToSeconds();
             }
         }
 
@@ -462,7 +462,7 @@ namespace PCS.Measurements
         /// lead time deviation tolerance of a few seconds might only require keeping the local clock synchronized to an NTP time
         /// source; but, a sub-second tolerance would require that the local clock be very close to GPS time.
         /// </remarks>
-        public long RealTimeTicks
+        public Ticks RealTime
         {
             get
             {
@@ -479,12 +479,9 @@ namespace PCS.Measurements
                 {
                     // If the current value for real-time is outside of the time deviation tolerance of the local
                     // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
-                    // time. Because of the frequency with which this function gets called, we do not call the
-                    // TimeIsValid nor the DistanceFromRealTime functions to determine if the real-time ticks are
-                    // valid. Instead, we manually implement the code here to avoid function call overhead. Since
-                    // the lead time typically defines the tolerated accuracy of the local clock to real-time
-                    // we will use this value as the + and - timestamp tolerance to validate if the measurement
-                    // time is reasonable.
+                    // time. Since the lead time typically defines the tolerated accuracy of the local clock to
+                    // real-time we will use this value as the + and - timestamp tolerance to validate if the
+                    // measurement time is reasonable.
 #if UseHighResolutionTime
                     long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
@@ -575,24 +572,24 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Gets the total number of milliseconds frames have spent in the publication process since concentrator started.
+        /// Gets the total number of seconds frames have spent in the publication process since concentrator started.
         /// </summary>
-        public double TotalPublicationTime
+        public Time TotalPublicationTime
         {
             get
             {
-                return Ticks.ToMilliseconds(m_totalPublishTime);
+                return m_totalPublishTime.ToSeconds();
             }
         }
 
         /// <summary>
-        /// Gets the average required frame publication time, in milliseconds.
+        /// Gets the average required frame publication time, in seconds.
         /// </summary>
         /// <remarks>
         /// If user publication function, <see cref="ConcentratorBase.PublishFrame"/>, consistently exceeds available publishing time
         /// (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c>), concentration will fall behind.
         /// </remarks>
-        public double AveratePublicationTimePerFrame
+        public Time AveratePublicationTimePerFrame
         {
             get
             {
@@ -622,7 +619,7 @@ namespace PCS.Measurements
                     status.Append("Disabled");
                 status.AppendLine();
                 status.Append("    Total process run time: ");
-                status.Append(Seconds.ToText(RunTime));
+                status.Append(RunTime.ToString());
                 status.AppendLine();
                 status.Append("    Measurement wait delay: ");
                 status.Append(m_lagTime);
@@ -680,11 +677,11 @@ namespace PCS.Measurements
                 status.Append(m_missedSortsByTimeout);
                 status.AppendLine();
                 status.Append("  Average publication time: ");
-                status.Append(AveratePublicationTimePerFrame.ToString("0.0000"));
+                status.Append(((double)AveratePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.Append(" milliseconds");
                 status.AppendLine();
                 status.Append(" User function utilization: ");
-                status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)Milliseconds.ToTicks(AveratePublicationTimePerFrame)) / m_ticksPerFrame).ToString("##0.0000%"));
+                status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)AveratePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.Append(" of available time used");
                 status.AppendLine();
                 status.Append("Published measurement loss: ");
@@ -706,7 +703,7 @@ namespace PCS.Measurements
                 status.Append(" ticks/frame");
                 status.AppendLine();
                 status.Append("    Actual mean frame rate: ");
-                status.Append((m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
+                status.Append((m_publishedFrames / ((double)RunTime - m_lagTime)).ToString("0.00"));
                 status.Append(" frames/sec");
                 status.AppendLine();
                 status.Append("        Queued frame count: ");
@@ -851,21 +848,21 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Returns the deviation, in seconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTimeTicks"/>).
+        /// Returns the deviation, in seconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTime"/>).
         /// </summary>
-        /// <param name="ticks">Ticks of timestamp to calculate distance from real-time.</param>
-        public double SecondsFromRealTime(long ticks)
+        /// <param name="timestamp">Timestamp to calculate distance from real-time.</param>
+        public double SecondsFromRealTime(Ticks timestamp)
         {
-            return (RealTimeTicks - ticks) / (double)Ticks.PerSecond;
+            return (RealTime - timestamp).ToSeconds();
         }
 
         /// <summary>
-        /// Returns the deviation, in milliseconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTimeTicks"/>).
+        /// Returns the deviation, in milliseconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTime"/>).
         /// </summary>
-        /// <param name="ticks">Ticks of timestamp to calculate distance from real-time.</param>
-        public double MillisecondsFromRealTime(long ticks)
+        /// <param name="timestamp">Timestamp to calculate distance from real-time.</param>
+        public double MillisecondsFromRealTime(Ticks timestamp)
         {
-            return (RealTimeTicks - ticks) / (double)Ticks.PerMillisecond;
+            return (RealTime - timestamp).ToMilliseconds();
         }
 
         /// <summary>
@@ -892,8 +889,8 @@ namespace PCS.Measurements
             // put the code into one larger more complex function...
 
             IFrame frame = null;
-            long ticks = 0;
-            long lastTicks = 0;
+            Ticks timestamp = 0;
+            Ticks lastTimestamp = 0;
             double distance;
             bool discardMeasurement;
 
@@ -917,7 +914,7 @@ namespace PCS.Measurements
                         // delayed by prior concentration or long network distance, this function assumes
                         // that our local real time value is better than the device measurement, so we set
                         // the measurement's timestamp to real time and sort the measurement by arrival time.
-                        measurement.Timestamp = RealTimeTicks;
+                        measurement.Timestamp = RealTime;
                         Interlocked.Increment(ref m_measurementsSortedByArrival);
                     }
                     else
@@ -930,7 +927,7 @@ namespace PCS.Measurements
                 if (!discardMeasurement)
                 {
                     // Get ticks for this measurement.
-                    ticks = measurement.Timestamp;
+                    timestamp = measurement.Timestamp;
 
                     //
                     // *** Sort the measurement into proper frame ***
@@ -939,12 +936,12 @@ namespace PCS.Measurements
                     // Get the destination frame for the measurement. Note that groups of parsed measurements will
                     // typically be coming in from the same source and will have the same ticks. If we have already
                     // found the destination frame for the same ticks, then there is no need to lookup frame again.
-                    if (frame == null || ticks != lastTicks)
+                    if (frame == null || timestamp != lastTimestamp)
                     {
                         // Badly time-aligned measurements, or those coming in at a higher sample rate, may fall
                         // outside available frame buckets. To check for this, the difference between the measurement
                         // timestamp and real-time in seconds is calculated and validated between lag and lead times.
-                        distance = SecondsFromRealTime(ticks);
+                        distance = SecondsFromRealTime(timestamp);
 
                         if (distance > m_lagTime || distance < -m_leadTime)
                         {
@@ -957,8 +954,8 @@ namespace PCS.Measurements
                         else
                         {
                             // Get a frame for this measurement
-                            frame = m_frameQueue.GetFrame(ticks);
-                            lastTicks = ticks;
+                            frame = m_frameQueue.GetFrame(timestamp);
+                            lastTimestamp = timestamp;
                         }
                     }
 
@@ -966,7 +963,7 @@ namespace PCS.Measurements
                     {
                         // Discards the data item if no bucket for it is found.
                         discardMeasurement = true;
-                        lastTicks = 0;
+                        lastTimestamp = 0;
                     }
                     else
                     {
@@ -1010,23 +1007,18 @@ namespace PCS.Measurements
                         // measurement time as real time.
                         long realTimeTicks = m_realTimeTicks;
 
-                        if (ticks > m_realTimeTicks)
+                        if (timestamp > m_realTimeTicks)
                         {
                             // Applies a resonability check to this value. This is done using the local clock.
-                            // Because of the frequency with which this function gets called, it does not call the
-                            // TimeIsValid nor the DistanceFromRealTime functions to determine if the real time
-                            // ticks are valid. Instead, it manually implements the code here to avoid the function
-                            // call overhead. Since the lead time typically defines the tolerated accuracy of the
-                            // local clock to real time, it uses this value as the + and - timestamp tolerance to
-                            // validate if the measurement time is reasonable.
+                            // Since the lead time typically defines the tolerated accuracy of the local clock
+                            // to real time, it uses this value as the + and - timestamp tolerance to validate
+                            // if the measurement time is reasonable.
 #if UseHighResolutionTime
                             long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
                             long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
-                            distance = (currentTimeTicks - ticks) / (double)Ticks.PerSecond;
-
-                            if (distance <= m_leadTime && distance >= -m_leadTime)
+                            if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                             {
                                 // The new time measurement looks good, so this function assumes the time is
                                 // "real time," so long as another thread has not changed the real time value
@@ -1036,7 +1028,7 @@ namespace PCS.Measurements
                                 // were greater than current real-time ticks in all threads that got to this
                                 // point. Besides, newer measurements are always coming in anyway and the compare
                                 // exchange method saves a call to a monitor lock reducing possible contention.
-                                Interlocked.CompareExchange(ref m_realTimeTicks, ticks, realTimeTicks);
+                                Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
                             }
                             else
                             {
@@ -1161,7 +1153,7 @@ namespace PCS.Measurements
         private void PublishFrames(object sender, EventArgs e)
         {
             IFrame frame;
-            Time ticks;
+            Ticks ticks;
             int frameIndex, period;
             long distance;
 
@@ -1204,7 +1196,7 @@ namespace PCS.Measurements
 
                         // See if any lagtime needs to pass before we begin publishing,
                         // distance is calculated in ticks
-                        distance = m_lagTicks - (RealTimeTicks - ticks);
+                        distance = m_lagTicks - (RealTime - ticks);
 
                         // Exit if it's not time to publish
                         if (distance > 0) break;
@@ -1224,8 +1216,10 @@ namespace PCS.Measurements
                             frame.Published = true;
                         }
 
-                        // Calculate index of this frame within its second
-                        frameIndex = (int)((decimal)ticks.TicksBeyondSecond() / m_ticksPerFrame);
+                        // Calculate index of this frame within its second - note that we have to calculate this
+                        // value instead of using m_frameIndex since it is is possible for multiple frames to be
+                        // published within one frame period if the system is stressed
+                        frameIndex = (int)((decimal)ticks.DistanceBeyondSecond() / m_ticksPerFrame);
 
                         try
                         {
@@ -1239,7 +1233,7 @@ namespace PCS.Measurements
 
                             // Update publication statistics
                             m_publishedFrames++;
-                            m_publishedMeasurements += frame.PublishedMeasurements;
+                            m_publishedMeasurements += frame.PublishedMeasurements; 
                         }
 
                         // Track total publication time

@@ -598,7 +598,7 @@ namespace System.Units
         // Static Methods
         
         /// <summary>
-        /// Creates a new <see cref="Current"/> from the specified <paramref name="value"/> in abamperes.
+        /// Creates a new <see cref="Current"/> value from the specified <paramref name="value"/> in abamperes.
         /// </summary>
         /// <param name="value">New <see cref="Current"/> value in abamperes.</param>
         /// <returns>New <see cref="Current"/> object from the specified <paramref name="value"/> in abamperes.</returns>
@@ -608,7 +608,7 @@ namespace System.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Current"/> from the specified <paramref name="value"/> in statamperes.
+        /// Creates a new <see cref="Current"/> value from the specified <paramref name="value"/> in statamperes.
         /// </summary>
         /// <param name="value">New <see cref="Current"/> value in statamperes.</param>
         /// <returns>New <see cref="Current"/> object from the specified <paramref name="value"/> in statamperes.</returns>

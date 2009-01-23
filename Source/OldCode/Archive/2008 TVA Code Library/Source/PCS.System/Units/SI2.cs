@@ -33,7 +33,7 @@ using System.Text;
 namespace System.Units
 {
     /// <summary>
-    /// Defines constant factors based on 1024 for computationally related binary SI units of measure.
+    /// Defines constant factors based on 1024 for related binary SI units of measure used in computational measurements.
     /// </summary>
     /// <remarks>
     /// See <a href="http://physics.nist.gov/cuu/Units/binary.html">NIST Reference</a> for information on IEC standard names.

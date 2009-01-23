@@ -28,6 +28,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Text;
+using System.Units;
 using System.Threading;
 using PCS.Configuration;
 using PCS.IO.Compression;
@@ -686,11 +687,11 @@ namespace PCS.Communication
         /// Gets the total number of seconds for which the client has been connected to the server.
         /// </summary>
         [Browsable(false)]
-        public virtual double ConnectionTime
+        public virtual Time ConnectionTime
         {
             get
             {
-                double clientConnectionTime = 0.0D;
+                Time clientConnectionTime = 0.0D;
 
                 if (m_connectTime > 0)
                 {
@@ -741,7 +742,7 @@ namespace PCS.Communication
                 status.Append(m_currentState);
                 status.AppendLine();
                 status.Append("           Connection time: ");
-                status.Append(Seconds.ToText(ConnectionTime));
+                status.Append(ConnectionTime.ToString());
                 status.AppendLine();
                 status.Append("            Receive buffer: ");
                 status.Append(m_receiveBufferSize.ToString());

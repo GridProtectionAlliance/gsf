@@ -34,7 +34,7 @@ namespace PCS.Measurements
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
-        private Time m_timestamp;
+        private Ticks m_timestamp;
         private double m_value;
         private double m_adder;
         private double m_multiplier;
@@ -70,7 +70,7 @@ namespace PCS.Measurements
         /// <param name="source"></param>
         /// <param name="value"></param>
         /// <param name="ticks"></param>
-        public Measurement(int id, string source, double value, Time ticks)
+        public Measurement(int id, string source, double value, Ticks ticks)
             : this(id, source, value, 0.0, 1.0, ticks)
         {
         }
@@ -98,7 +98,7 @@ namespace PCS.Measurements
         /// <param name="adder"></param>
         /// <param name="multiplier"></param>
         /// <param name="timestamp"></param>
-        public Measurement(int id, string source, double value, double adder, double multiplier, Time timestamp)
+        public Measurement(int id, string source, double value, double adder, double multiplier, Ticks timestamp)
         {
             m_id = id;
             m_source = source;
@@ -235,7 +235,7 @@ namespace PCS.Measurements
 
         /// <summary>Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.</summary>
         /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
-        public virtual Time Timestamp
+        public virtual Ticks Timestamp
         {
             get
             {
@@ -416,7 +416,7 @@ namespace PCS.Measurements
         /// <summary>Creates a copy of the specified measurement using a new timestamp.</summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-        public static Measurement Clone(IMeasurement measurementToClone, Time timestamp)
+        public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
         {
             return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }
@@ -425,7 +425,7 @@ namespace PCS.Measurements
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="value">New value for cloned measurement.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-        public static Measurement Clone(IMeasurement measurementToClone, double value, Time timestamp)
+        public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
         {
             return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }

@@ -34,7 +34,7 @@ namespace PCS.Measurements
         #region [ Members ]
 
         // Fields
-        private Time m_timestamp;                                           // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Ticks m_timestamp;                                           // Time, represented as 100-nanosecond ticks, of this frame of data
         private bool m_published;                                           // Determines if this frame of data has been published
         private int m_publishedMeasurements;                                // Total measurements published by this frame
         private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
@@ -48,7 +48,7 @@ namespace PCS.Measurements
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
         /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
-        public Frame(Time timestamp)
+        public Frame(Ticks timestamp)
         {
             m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(100);
@@ -60,7 +60,7 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
         /// <param name="measurements">Initial set of measurements to load into the <see cref="Frame"/>, if any.</param>
-        public Frame(Time timestamp, Dictionary<MeasurementKey, IMeasurement> measurements)
+        public Frame(Ticks timestamp, Dictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
@@ -124,7 +124,7 @@ namespace PCS.Measurements
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public Time Timestamp
+        public Ticks Timestamp
         {
             get
             {

@@ -111,7 +111,7 @@ namespace System
         public virtual DateTime ToDateTime()
         {
             // Converts m_seconds to 100-nanosecond ticks and add the base time offset.
-            return new DateTime(Seconds.ToTicks(m_seconds) + m_baseDateOffsetTicks);
+            return new DateTime((long)(m_seconds * Ticks.PerSecond) + m_baseDateOffsetTicks);
         }
 
         /// <summary>Returns basic textual representation for time tag.</summary>

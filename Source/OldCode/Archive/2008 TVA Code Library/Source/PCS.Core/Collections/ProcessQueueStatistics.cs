@@ -15,6 +15,8 @@
 //
 //*******************************************************************************************************
 
+using System.Units;
+
 namespace PCS.Collections
 {
     /// <summary>
@@ -55,7 +57,7 @@ namespace PCS.Collections
         /// <summary>
         /// Gets the total amount of time, in seconds, that the process <see cref="ProcessQueue{T}"/> has been active.
         /// </summary>
-        public double RunTime;
+        public Time RunTime;
 
         /// <summary>
         /// Gets the current number of active threads.

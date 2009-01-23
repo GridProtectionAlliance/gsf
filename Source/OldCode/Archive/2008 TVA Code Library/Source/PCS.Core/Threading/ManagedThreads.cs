@@ -143,7 +143,7 @@ namespace PCS.Threading
 
         private static string ThreadStatusText(ManagedThread item)
         {
-            string runtime = Seconds.ToText(item.RunTime);
+            string runtime = item.RunTime.ToString();
 
             switch (item.Status)
             {

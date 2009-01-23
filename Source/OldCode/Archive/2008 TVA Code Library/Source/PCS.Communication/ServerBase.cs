@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Text;
+using System.Units;
 using System.Threading;
 using PCS.Configuration;
 using PCS.IO.Compression;
@@ -691,11 +692,11 @@ namespace PCS.Communication
         /// Gets the time in seconds for which the server has been running.
         /// </summary>
         [Browsable(false)]
-        public virtual double RunTime
+        public virtual Time RunTime
         {
             get
             {
-                double serverRunTime = 0.0D;
+                Time serverRunTime = 0.0D;
 
                 if (m_startTime > 0)
                 {
@@ -742,7 +743,7 @@ namespace PCS.Communication
                 status.Append(m_currentState);
                 status.AppendLine();
                 status.Append("            Server runtime: ");
-                status.Append(Seconds.ToText(RunTime));
+                status.Append(RunTime.ToString());
                 status.AppendLine();
                 status.Append("      Configuration string: ");
                 status.Append(m_configurationString);

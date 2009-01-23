@@ -18,6 +18,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Units;
 using System.Threading;
 
 namespace PCS.Threading
@@ -255,11 +256,11 @@ namespace PCS.Threading
         /// <summary>
         /// Gets the total amount of time, in seconds, that the managed thread has been active.
         /// </summary>
-        public double RunTime
+        public Time RunTime
         {
             get
             {
-                long processingTime = 0;
+                Ticks processingTime = 0;
 
                 if (m_startTime > 0)
                 {
@@ -272,7 +273,7 @@ namespace PCS.Threading
                 if (processingTime < 0)
                     processingTime = 0;
 
-                return Ticks.ToSeconds(processingTime);
+                return processingTime.ToSeconds();
             }
         }
 
