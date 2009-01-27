@@ -28,7 +28,6 @@
   
 \**************************************************************************/
 
-using System;
 using System.Media.Music;
 
 namespace System.Media.Sound

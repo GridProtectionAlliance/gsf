@@ -28,8 +28,6 @@
   
 \**************************************************************************/
 
-using System;
-using System.Media;
 
 namespace System.Media.Music
 {

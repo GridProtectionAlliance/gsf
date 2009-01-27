@@ -28,10 +28,8 @@
   
 \**************************************************************************/
 
-using System;
-using System.Media;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace System.Media.Music
 {

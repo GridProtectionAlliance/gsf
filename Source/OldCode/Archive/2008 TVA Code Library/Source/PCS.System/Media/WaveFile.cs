@@ -28,12 +28,10 @@
   
 \**************************************************************************/
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
 
 namespace System.Media
 {

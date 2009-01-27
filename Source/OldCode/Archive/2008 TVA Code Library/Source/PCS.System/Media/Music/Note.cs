@@ -28,9 +28,8 @@
   
 \**************************************************************************/
 
-using System;
-using System.Reflection;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace System.Media.Music
 {

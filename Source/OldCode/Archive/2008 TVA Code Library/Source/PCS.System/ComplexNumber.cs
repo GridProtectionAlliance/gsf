@@ -28,9 +28,8 @@
   
 \**************************************************************************/
 
-using System.Units;
 using System.Text;
-using System.Linq;
+using System.Units;
 
 namespace System
 {
