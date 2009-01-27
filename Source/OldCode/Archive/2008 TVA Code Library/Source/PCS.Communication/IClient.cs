@@ -189,7 +189,7 @@ namespace PCS.Communication
         /// <remarks>
         /// arg1 in <see cref="ReceiveDataHandler"/> is the buffer containing the data received from the server.<br/>
         /// arg2 in <see cref="ReceiveDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
-        /// arg3 in <see cref="ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1) starting at index 0.
+        /// arg3 in <see cref="ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1).
         /// </remarks>
         Action<byte[],int,int> ReceiveDataHandler { get; set; }
 
