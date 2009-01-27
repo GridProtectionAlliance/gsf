@@ -18,7 +18,6 @@
 //*******************************************************************************************************
 
 using System;
-using System.Units;
 using System.Collections.Generic;
 
 namespace PCS.Measurements

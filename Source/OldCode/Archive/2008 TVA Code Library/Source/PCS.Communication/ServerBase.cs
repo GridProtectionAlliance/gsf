@@ -231,8 +231,8 @@ namespace PCS.Communication
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
         private List<Guid> m_clientIDs;
-        private long m_stopTime;
-        private long m_startTime;
+        private Ticks m_stopTime;
+        private Ticks m_startTime;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -702,10 +702,10 @@ namespace PCS.Communication
                 {
                     if (m_currentState == ServerState.Running)
                         // Server is running.
-                        serverRunTime = Ticks.ToSeconds(DateTime.Now.Ticks - m_startTime);
+                        serverRunTime = (DateTime.Now.Ticks - m_startTime).ToSeconds();
                     else
                         // Server is not running.
-                        serverRunTime = Ticks.ToSeconds(m_stopTime - m_startTime);
+                        serverRunTime = (m_stopTime - m_startTime).ToSeconds();
                 }
                 return serverRunTime;
             }

@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Units;
-using System.Threading;
-using System.ComponentModel;
 
 namespace PCS.Parsing
 {

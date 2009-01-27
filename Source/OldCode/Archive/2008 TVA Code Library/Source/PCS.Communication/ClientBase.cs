@@ -217,8 +217,8 @@ namespace PCS.Communication
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
         private Guid m_clientID;
-        private long m_connectTime;
-        private long m_disconnectTime;
+        private Ticks m_connectTime;
+        private Ticks m_disconnectTime;
         private bool m_disposed;
         private bool m_initialized;
         //private ManualResetEvent m_connectHandle;
@@ -697,10 +697,10 @@ namespace PCS.Communication
                 {
                     if (m_currentState == ClientState.Connected)
                         // Client is connected to the server.
-                        clientConnectionTime = Ticks.ToSeconds(DateTime.Now.Ticks - m_connectTime);
+                        clientConnectionTime = (DateTime.Now.Ticks - m_connectTime).ToSeconds();
                     else
                         // Client is not connected to the server.
-                        clientConnectionTime = Ticks.ToSeconds(m_disconnectTime - m_connectTime);
+                        clientConnectionTime = (m_disconnectTime - m_connectTime).ToSeconds();
                 }
 
                 return clientConnectionTime;

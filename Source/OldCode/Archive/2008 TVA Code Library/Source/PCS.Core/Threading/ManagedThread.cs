@@ -18,8 +18,8 @@
 //*******************************************************************************************************
 
 using System;
-using System.Units;
 using System.Threading;
+using System.Units;
 
 namespace PCS.Threading
 {
@@ -74,8 +74,8 @@ namespace PCS.Threading
         private ThreadType m_type;
         private ThreadStatus m_status;
         private string m_name;
-        private long m_startTime;
-        private long m_stopTime;
+        private Ticks m_startTime;
+        private Ticks m_stopTime;
         private ContextCallback m_ctxCallback;
         private ThreadStart m_tsCallback;
         private ParameterizedThreadStart m_ptsCallback;
@@ -234,7 +234,7 @@ namespace PCS.Threading
         /// <summary>
         /// Get the time, in ticks, that the thread started executing
         /// </summary>
-        public long StartTime
+        public Ticks StartTime
         {
             get
             {
@@ -245,7 +245,7 @@ namespace PCS.Threading
         /// <summary>
         /// Get the time, in ticks, that the thread finished executing
         /// </summary>
-        public long StopTime
+        public Ticks StopTime
         {
             get
             {

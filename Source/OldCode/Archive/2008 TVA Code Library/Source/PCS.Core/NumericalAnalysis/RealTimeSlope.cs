@@ -18,8 +18,8 @@
 //*******************************************************************************************************
 
 using System;
-using System.Units;
 using System.Collections.Generic;
+using System.Units;
 using PCS.Threading;
 
 namespace PCS.NumericalAnalysis

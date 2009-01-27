@@ -16,9 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using System.Text;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Text;
 using PCS.Collections;
 
 namespace PCS.Parsing

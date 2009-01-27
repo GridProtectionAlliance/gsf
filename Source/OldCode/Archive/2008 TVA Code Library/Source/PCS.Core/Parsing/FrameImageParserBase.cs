@@ -19,11 +19,11 @@
 //*******************************************************************************************************
 
 using System;
-using System.Text;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.ComponentModel;
-using System.Collections.Generic;
+using System.Text;
 
 namespace PCS.Parsing
 {
