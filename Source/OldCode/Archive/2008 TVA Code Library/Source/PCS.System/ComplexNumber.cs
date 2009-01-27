@@ -71,8 +71,10 @@ namespace System
         /// <param name="real">The real component of the <see cref="ComplexNumber"/>.</param>
         /// <param name="imaginary">The imaginary component of the <see cref="ComplexNumber"/>.</param>
         public ComplexNumber(double real, double imaginary)
+            : this()
         {
-            m_rectangularValues = new CompoundValue<double>(new double[] {real, imaginary});
+            m_rectangularValues[RealComponent] = real;
+            m_rectangularValues[ImaginaryComponent] = imaginary;
         }
 
         /// <summary>
