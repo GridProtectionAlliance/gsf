@@ -28,7 +28,6 @@
   
 \**************************************************************************/
 
-
 namespace System.Media.Music
 {
     /// <summary>American note value (♪) representing the relative duration of a note.</summary>
