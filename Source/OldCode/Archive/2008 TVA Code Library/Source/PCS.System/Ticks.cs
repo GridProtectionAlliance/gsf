@@ -166,20 +166,26 @@ namespace System
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the <see cref="Ticks"/> value in seconds representing the number of seconds that
-        /// have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// Gets the <see cref="Ticks"/> value in equivalent number of seconds.
         /// </summary>
         /// <returns>Value of <see cref="Ticks"/> in seconds.</returns>
+        /// <remarks>
+        /// If <see cref="Ticks"/> value represents an instant in time, returned value will represent the number of seconds
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         public double ToSeconds()
         {
             return m_value / (double)Ticks.PerSecond;
         }
 
         /// <summary>
-        /// Gets the <see cref="Ticks"/> value in milliseconds representing the number of milliseconds
-        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// Gets the <see cref="Ticks"/> value in equivalent number of milliseconds.
         /// </summary>
         /// <returns>Value of <see cref="Ticks"/> in milliseconds.</returns>
+        /// <remarks>
+        /// If <see cref="Ticks"/> value represents an instant in time, returned value will represent the number of milliseconds
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         public double ToMilliseconds()
         {
             return m_value / (double)Ticks.PerMillisecond;
@@ -1246,28 +1252,35 @@ namespace System
         // Static Methods
 
         /// <summary>
-        /// Converts <see cref="Ticks"/> value, in 100-nanosecond tick intervals, to seconds.
+        /// Converts <paramref name="value"/>, in 100-nanosecond tick intervals, to seconds.
         /// </summary>
         /// <param name="value">Number of ticks to convert to seconds.</param>
         /// <returns>Number seconds represented by specified <paramref name="value"/> in ticks.</returns>
+        /// <remarks>
+        /// If <paramref name="value"/> represents an instant in time, returned value will represent the number of seconds
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         public static double ToSeconds(Ticks value)
         {
             return value / (double)Ticks.PerSecond;
         }
 
         /// <summary>
-        /// Converts <see cref="Ticks"/> value, in 100-nanosecond tick intervals, to milliseconds.
+        /// Converts <paramref name="value"/>, in 100-nanosecond tick intervals, to milliseconds.
         /// </summary>
         /// <param name="value">Number of ticks to convert to milliseconds.</param>
         /// <returns>Number milliseconds represented by specified <paramref name="value"/> in ticks.</returns>
+        /// <remarks>
+        /// If <paramref name="value"/> represents an instant in time, returned value will represent the number of milliseconds
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         public static double ToMilliseconds(Ticks value)
         {
             return value / (double)Ticks.PerMillisecond;
         }
 
         /// <summary>
-        /// Creates a new <see cref="Ticks"/> from the specified <paramref name="value"/> in seconds representing
-        /// the number of seconds that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// Creates a new <see cref="Ticks"/> from the specified <paramref name="value"/> in seconds.
         /// </summary>
         /// <param name="value">New <see cref="Ticks"/> value in seconds.</param>
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in seconds.</returns>
@@ -1277,8 +1290,7 @@ namespace System
         }
 
         /// <summary>
-        /// Creates a new <see cref="Ticks"/> from the specified <paramref name="value"/> in milliseconds representing
-        /// the number of milliseconds that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// Creates a new <see cref="Ticks"/> from the specified <paramref name="value"/> in milliseconds.
         /// </summary>
         /// <param name="value">New <see cref="Ticks"/> value in milliseconds.</param>
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in milliseconds.</returns>
