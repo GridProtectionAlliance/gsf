@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Units;
+using System.Threading;
 using PCS.Threading;
 
 namespace PCS.NumericalAnalysis
