@@ -78,7 +78,10 @@ namespace PCS.Parsing
         {
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
-            m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
+            
+            if (ProtocolUsesSyncBytes)
+                m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
+
             m_unparsedBuffers = new Dictionary<TSourceIdentifier, byte[]>();
             m_parsedOutputs = new List<TOutputType>();
 
@@ -192,7 +195,10 @@ namespace PCS.Parsing
         public override void Start()
         {
             base.Start();
-            m_sourceInitialized.Clear();
+
+            if (m_sourceInitialized != null)
+                m_sourceInitialized.Clear();
+
             m_unparsedBuffers.Clear();
             m_bufferQueue.Start();
         }
@@ -302,7 +308,7 @@ namespace PCS.Parsing
                 buffer = item.Item;
 
                 // Check to see if this data source has been initialized
-                if (ProtocolUsesSyncBytes && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
+                if (m_sourceInitialized != null && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
                     m_sourceInitialized.Add(m_sourceID, true);
 
                 // Restore any unparsed buffers for this data source, if any
@@ -344,7 +350,7 @@ namespace PCS.Parsing
         // If an error occurs during parsing from a data source, we reset its initialization state
         private void ResetDataSourceInitialization(object sender, EventArgs<byte[]> data)
         {
-            if (ProtocolUsesSyncBytes)
+            if (m_sourceInitialized != null)
                 m_sourceInitialized[m_sourceID] = false;
         }
 

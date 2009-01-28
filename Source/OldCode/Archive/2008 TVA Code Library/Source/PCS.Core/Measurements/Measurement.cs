@@ -22,8 +22,9 @@ using System.ComponentModel;
 
 namespace PCS.Measurements
 {
-    /// <summary>Implementation of a basic measurement.</summary>
-    /// <remarks>A measurement represents a value, measured by a device, at an exact time interval.</remarks>
+    /// <summary>
+    /// Implementation of a basic measurement.
+    /// </summary>
     public class Measurement : IMeasurement
     {
         #region [ Members ]
@@ -48,15 +49,15 @@ namespace PCS.Measurements
         /// Constructs a new <see cref="Measurement"/> using default settings.
         /// </summary>
         public Measurement()
-            : this(-1, null, double.NaN, 0)
+            : this(-1, "__", double.NaN, 0.0, 1.0, 0)
         {
         }
 
         /// <summary>
         /// Constructs a new <see cref="Measurement"/> given the specified parameters.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="source"></param>
+        /// <param name="id">Numeric ID of the new measurement.</param>
+        /// <param name="source">Source name of the new measurement.</param>
         public Measurement(int id, string source)
             : this(id, source, double.NaN, 0.0, 1.0, 0)
         {
@@ -65,23 +66,23 @@ namespace PCS.Measurements
         /// <summary>
         /// Constructs a new <see cref="Measurement"/> given the specified parameters.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="source"></param>
-        /// <param name="value"></param>
-        /// <param name="ticks"></param>
-        public Measurement(int id, string source, double value, Ticks ticks)
-            : this(id, source, value, 0.0, 1.0, ticks)
+        /// <param name="id">Numeric ID of the new measurement.</param>
+        /// <param name="source">Source name of the new measurement.</param>
+        /// <param name="value">Value of the new measurement.</param>
+        /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
+        public Measurement(int id, string source, double value, Ticks timestamp)
+            : this(id, source, value, 0.0, 1.0, timestamp)
         {
         }
 
         /// <summary>
         /// Constructs a new <see cref="Measurement"/> given the specified parameters.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="source"></param>
-        /// <param name="tagName"></param>
-        /// <param name="adder"></param>
-        /// <param name="multiplier"></param>
+        /// <param name="id">Numeric ID of the new measurement.</param>
+        /// <param name="source">Source name of the new measurement.</param>
+        /// <param name="tagName">Text based tag name of the new measurement.</param>
+        /// <param name="adder">Defined adder to apply to the new measurement.</param>
+        /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
         public Measurement(int id, string source, string tagName, double adder, double multiplier)
             : this(id, source, double.NaN, adder, multiplier, 0)
         {
@@ -91,12 +92,12 @@ namespace PCS.Measurements
         /// <summary>
         /// Constructs a new <see cref="Measurement"/> given the specified parameters.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="source"></param>
-        /// <param name="value"></param>
-        /// <param name="adder"></param>
-        /// <param name="multiplier"></param>
-        /// <param name="timestamp"></param>
+        /// <param name="id">Numeric ID of the new measurement.</param>
+        /// <param name="source">Source name of the new measurement.</param>
+        /// <param name="value">Value of the new measurement.</param>
+        /// <param name="adder">Defined adder to apply to the new measurement.</param>
+        /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
+        /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
         public Measurement(int id, string source, double value, double adder, double multiplier, Ticks timestamp)
         {
             m_id = id;
@@ -114,7 +115,9 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets the numeric ID of this <see cref="Measurement"/>.</summary>
+        /// <summary>
+        /// Gets or sets the numeric ID of this <see cref="Measurement"/>.
+        /// </summary>
         /// <remarks>
         /// <para>In most implementations, this will be a required field.</para>
         /// <para>Note that this field, in addition to <see cref="Source"/>, typically creates the primary key for a <see cref="Measurement"/>.</para>
@@ -135,7 +138,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the source of this <see cref="Measurement"/>.</summary>
+        /// <summary>
+        /// Gets or sets the source of this <see cref="Measurement"/>.
+        /// </summary>
         /// <remarks>
         /// <para>In most implementations, this will be a required field.</para>
         /// <para>Note that this field, in addition to <see cref="ID"/>, typically creates the primary key for a <see cref="Measurement"/>.</para>
@@ -157,8 +162,10 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="Measurement"/>.</summary>
-        public MeasurementKey Key
+        /// <summary>
+        /// Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="Measurement"/>.
+        /// </summary>
+        public virtual MeasurementKey Key
         {
             get
             {
@@ -166,7 +173,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the text based tag name of this <see cref="Measurement"/>.</summary>
+        /// <summary>
+        /// Gets or sets the text based tag name of this <see cref="Measurement"/>.
+        /// </summary>
         public virtual string TagName
         {
             get
@@ -179,9 +188,11 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the raw measurement value that is not offset by adder and multiplier.</summary>
-        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by adder and multiplier).</returns>
-        public double Value
+        /// <summary>
+        /// Gets or sets the raw measurement value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
+        /// </summary>
+        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
+        public virtual double Value
         {
             get
             {
@@ -193,9 +204,13 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets the adjusted numeric value of this <see cref="Measurement"/>.</summary>
-        /// <remarks>Note that returned value will be offset by adder and multiplier.</remarks>
-        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder).</returns>
+        /// <summary>
+        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
+        /// </summary>
+        /// <remarks>
+        /// Note that returned value will be offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
+        /// </remarks>
+        /// <returns><see cref="Value"/> offset by <see cref="Adder"/> and <see cref="Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>).</returns>
         public virtual double AdjustedValue
         {
             get
@@ -204,9 +219,11 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets an offset to add to the measurement value. This defaults to 0.0.</summary>
+        /// <summary>
+        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
+        /// </summary>
         [DefaultValue(0.0)]
-        public double Adder
+        public virtual double Adder
         {
             get
             {
@@ -218,9 +235,11 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.</summary>
+        /// <summary>
+        /// Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.
+        /// </summary>
         [DefaultValue(1.0)]
-        public double Multiplier
+        public virtual double Multiplier
         {
             get
             {
@@ -232,8 +251,12 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.</summary>
-        /// <remarks>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</remarks>
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
         public virtual Ticks Timestamp
         {
             get
@@ -246,7 +269,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="Measurement"/> is good.</summary>
+        /// <summary>
+        /// Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="Measurement"/> is good.
+        /// </summary>
         public virtual bool ValueQualityIsGood
         {
             get
@@ -259,7 +284,9 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="Measurement"/> is good.</summary>
+        /// <summary>
+        /// Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="Measurement"/> is good.
+        /// </summary>
         public virtual bool TimestampQualityIsGood
         {
             get
@@ -306,11 +333,14 @@ namespace PCS.Measurements
         /// true if the specified <see cref="Object"/> is equal to the current <see cref="Measurement"/>;
         /// otherwise, false.
         /// </returns>
-        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IMeasurement"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
         public override bool Equals(object obj)
         {
             IMeasurement other = obj as IMeasurement;
-            if (other != null) return Equals(other);
+            
+            if (other != null)
+                return Equals(other);
+            
             throw new ArgumentException("Object is not a Measurement");
         }
 
@@ -330,12 +360,15 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IMeasurement"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
         /// <remarks>This implementation of a basic measurement compares itself by value.</remarks>
         public int CompareTo(object obj)
         {
             IMeasurement other = obj as IMeasurement;
-            if (other != null) return CompareTo(other);
+            
+            if (other != null)
+                return CompareTo(other);
+
             throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
         }
 
@@ -405,14 +438,18 @@ namespace PCS.Measurements
 
         #region [ Static ]
 
-        /// <summary>Creates a copy of the specified measurement.</summary>
+        /// <summary>
+        /// Creates a copy of the specified measurement.
+        /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         public static Measurement Clone(IMeasurement measurementToClone)
         {
             return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
         }
 
-        /// <summary>Creates a copy of the specified measurement using a new timestamp.</summary>
+        /// <summary>
+        /// Creates a copy of the specified measurement using a new timestamp.
+        /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
         public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
@@ -420,7 +457,9 @@ namespace PCS.Measurements
             return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }
 
-        /// <summary>Creates a copy of the specified measurement using a new value and timestamp.</summary>
+        /// <summary>
+        /// Creates a copy of the specified measurement using a new value and timestamp.
+        /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="value">New value for cloned measurement.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>

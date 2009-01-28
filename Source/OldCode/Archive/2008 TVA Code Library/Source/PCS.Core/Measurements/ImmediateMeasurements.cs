@@ -247,7 +247,7 @@ namespace PCS.Measurements
         {
             foreach (DataRow row in taggedMeasurements.Rows)
             {
-                AddTaggedMeasurement(row["Tag"].ToString(), new MeasurementKey(System.Convert.ToInt32(row["ID"]), row["Source"].ToString()));
+                AddTaggedMeasurement(row["Tag"].ToString(), new MeasurementKey(Convert.ToInt32(row["ID"]), row["Source"].ToString()));
             }
         }
 

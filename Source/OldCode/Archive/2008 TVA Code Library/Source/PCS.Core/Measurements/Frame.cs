@@ -33,7 +33,7 @@ namespace PCS.Measurements
         #region [ Members ]
 
         // Fields
-        private Ticks m_timestamp;                                           // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Ticks m_timestamp;                                          // Time, represented as 100-nanosecond ticks, of this frame of data
         private bool m_published;                                           // Determines if this frame of data has been published
         private int m_publishedMeasurements;                                // Total measurements published by this frame
         private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
@@ -59,7 +59,7 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
         /// <param name="measurements">Initial set of measurements to load into the <see cref="Frame"/>, if any.</param>
-        public Frame(Ticks timestamp, Dictionary<MeasurementKey, IMeasurement> measurements)
+        public Frame(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
@@ -73,7 +73,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Keyed measurements in this <see cref="Frame"/>.
         /// </summary>
-        public IDictionary<MeasurementKey, IMeasurement> Measurements
+        public virtual IDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get
             {
@@ -84,7 +84,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets or sets published state of this <see cref="Frame"/>.
         /// </summary>
-        public bool Published
+        public virtual bool Published
         {
             get
             {
@@ -102,7 +102,7 @@ namespace PCS.Measurements
         /// <remarks>
         /// If this property has not been assigned a value, the property will return measurement count.
         /// </remarks>
-        public int PublishedMeasurements
+        public virtual int PublishedMeasurements
         {
             get
             {
@@ -123,7 +123,7 @@ namespace PCS.Measurements
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public Ticks Timestamp
+        public virtual Ticks Timestamp
         {
             get
             {
@@ -138,7 +138,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets or sets reference to last measurement that was sorted into this <see cref="Frame"/>.
         /// </summary>
-        public IMeasurement LastSortedMeasurement
+        public virtual IMeasurement LastSortedMeasurement
         {
             get
             {
@@ -160,11 +160,13 @@ namespace PCS.Measurements
         /// <remarks>
         /// The measurement dictionary of this <see cref="Frame"/> is synclocked during copy.
         /// </remarks>
-        public Frame Clone()
+        public virtual Frame Clone()
         {
-            lock (m_measurements)
+            IDictionary<MeasurementKey, IMeasurement> measurements = Measurements;
+
+            lock (measurements)
             {
-                return new Frame(m_timestamp, m_measurements);
+                return new Frame(m_timestamp, measurements);
             }
         }
 
@@ -189,7 +191,7 @@ namespace PCS.Measurements
         /// true if the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>;
         /// otherwise, false.
         /// </returns>
-        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IFrame"/>.</exception>
         public override bool Equals(object obj)
         {
             IFrame other = obj as IFrame;
@@ -216,7 +218,7 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IFrame"/>.</exception>
         /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
         public int CompareTo(object obj)
         {

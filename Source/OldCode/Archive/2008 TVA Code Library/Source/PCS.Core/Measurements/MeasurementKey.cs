@@ -40,6 +40,7 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="id">Numeric ID of the measurement that this <see cref="MeasurementKey"/> represents.</param>
         /// <param name="source">Source of the measurement that this <see cref="MeasurementKey"/> represents (e.g., name of archive).</param>
+        /// <exception cref="ArgumentNullException">source cannot be null.</exception>
         public MeasurementKey(int id, string source)
         {
             if (string.IsNullOrEmpty(source))
@@ -56,7 +57,9 @@ namespace PCS.Measurements
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.</summary>
+        /// <summary>
+        /// Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.
+        /// </summary>
         public int ID
         {
             get
@@ -73,8 +76,12 @@ namespace PCS.Measurements
             }
         }
 
-        /// <summary>Gets or sets the source of this <see cref="MeasurementKey"/>.</summary>
-        /// <remarks>This value is typically used to track the archive name in which the measurement, that this <see cref="MeasurementKey"/> represents, is stored.</remarks>
+        /// <summary>
+        /// Gets or sets the source of this <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value is typically used to track the archive name in which the measurement, that this <see cref="MeasurementKey"/> represents, is stored.
+        /// </remarks>
         public string Source
         {
             get
@@ -123,7 +130,7 @@ namespace PCS.Measurements
         /// </returns>
         public bool Equals(MeasurementKey other)
         {
-            return (m_hashCode == other.GetHashCode());
+            return (m_hashCode == other.m_hashCode);
         }
 
         /// <summary>
@@ -134,11 +141,13 @@ namespace PCS.Measurements
         /// true if the specified <see cref="Object"/> is equal to the current <see cref="MeasurementKey"/>;
         /// otherwise, false.
         /// </returns>
-        /// <exception cref="ArgumentException"><see cref="Object"/> is not a <see cref="MeasurementKey"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MeasurementKey"/>.</exception>
         public override bool Equals(object obj)
         {
             // Can't use cast "as" on a structure...
-            if (obj is MeasurementKey) return Equals((MeasurementKey)obj);
+            if (obj is MeasurementKey)
+                return Equals((MeasurementKey)obj);
+
             throw new ArgumentException("Object is not a MeasurementKey");
         }
 
@@ -162,11 +171,13 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="MeasurementKey"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <exception cref="ArgumentException"><see cref="Object"/> is not a <see cref="MeasurementKey"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MeasurementKey"/>.</exception>
         public int CompareTo(object obj)
         {
             // Can't use cast "as" on a structure...
-            if (obj is MeasurementKey) return CompareTo((MeasurementKey)obj);
+            if (obj is MeasurementKey)
+                return CompareTo((MeasurementKey)obj);
+
             throw new ArgumentException("Object is not a MeasurementKey");
         }
 

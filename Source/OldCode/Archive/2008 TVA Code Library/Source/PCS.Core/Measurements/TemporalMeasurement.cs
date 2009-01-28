@@ -134,18 +134,6 @@ namespace PCS.Measurements
                 return double.NaN;
         }
 
-        /// <summary>Gets numeric adjusted value of this <see cref="TemporalMeasurement"/>, constrained within specified timestamp.</summary>
-        /// <remarks>
-        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances.</para>
-        /// <para>Note that returned value will be offset by adder and multiplier.</para>
-        /// </remarks>
-        /// <param name="timestamp">Timestamp used to constrain <see cref="TemporalMeasurement"/> (typically set to real-time, i.e. "now").</param>
-        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder).</returns>
-        public double GetAdjustedValue(DateTime timestamp)
-        {
-            return GetAdjustedValue((Ticks)timestamp);
-        }
-
         /// <summary>Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
         /// <remarks>
         /// <para>Operation will return NaN if ticks are outside of time deviation tolerances.</para>

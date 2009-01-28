@@ -206,7 +206,7 @@ namespace PCS.Measurements
             {
                 LinkedListNode<IFrame> nextNode = m_frameList.First.Next;
 
-                // Next frame available, go ahead and assign it...
+                // If next frame is available, go ahead and assign it...
                 if (nextNode != null)
                     m_head = nextNode.Value;
 

@@ -677,7 +677,7 @@ namespace PCS.Measurements
                 status.Append(m_missedSortsByTimeout);
                 status.AppendLine();
                 status.Append("  Average publication time: ");
-                status.Append(((double)AveratePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
+                status.Append((AveratePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.Append(" milliseconds");
                 status.AppendLine();
                 status.Append(" User function utilization: ");
@@ -685,10 +685,10 @@ namespace PCS.Measurements
                 status.Append(" of available time used");
                 status.AppendLine();
                 status.Append("Published measurement loss: ");
-                status.Append((m_discardedMeasurements / m_totalMeasurements).ToString("##0.0000%"));
+                status.Append((m_discardedMeasurements / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.Append("      Loss due to timeouts: ");
-                status.Append((m_missedSortsByTimeout / m_totalMeasurements).ToString("##0.0000%"));
+                status.Append((m_missedSortsByTimeout / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.Append(" Measurement time accuracy: ");
                 status.Append((1.0D - m_measurementsSortedByArrival / (double)m_totalMeasurements).ToString("##0.0000%"));
@@ -703,7 +703,7 @@ namespace PCS.Measurements
                 status.Append(" ticks/frame");
                 status.AppendLine();
                 status.Append("    Actual mean frame rate: ");
-                status.Append((m_publishedFrames / ((double)RunTime - m_lagTime)).ToString("0.00"));
+                status.Append((m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.Append(" frames/sec");
                 status.AppendLine();
                 status.Append("        Queued frame count: ");
@@ -725,6 +725,17 @@ namespace PCS.Measurements
                 status.AppendLine();
 
                 return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets a reference to the <see cref="FrameQueue"/>.
+        /// </summary>
+        protected FrameQueue FrameQueue
+        {
+            get
+            {
+                return m_frameQueue;
             }
         }
 
@@ -880,12 +891,12 @@ namespace PCS.Measurements
         /// <param name="measurements">Collection of <see cref="IMeasurement"/>'s to sort.</param>
         public virtual void SortMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            // This function is called continually with new measurements and handles the "time-alignment"
-            // (i.e., sorting) of these new values. Many threads will be waiting for frames of time aligned data
-            // so make sure any work to be done here is executed as efficiently as possible.
+            // This function is called continually with new measurements to handle "time-alignment" (i.e., sorting)
+            // of these new values. Many threads will be waiting for frames of time aligned data so make sure any
+            // work to be done here is executed as efficiently as possible.
 
             // Note that breaking up this function into several parts might help with readability and make it
-            // easier to maintain but to reduce function calls (and hence save time), the decision was made to
+            // easier to maintain, but to reduce function calls (and hence save time) the decision was made to
             // put the code into one larger more complex function...
 
             IFrame frame = null;
@@ -910,25 +921,27 @@ namespace PCS.Measurements
                 {
                     if (m_allowSortsByArrival)
                     {
-                        // Device reports measurement timestamp as bad. Since the measurement may have been
-                        // delayed by prior concentration or long network distance, this function assumes
-                        // that our local real time value is better than the device measurement, so we set
-                        // the measurement's timestamp to real time and sort the measurement by arrival time.
-                        measurement.Timestamp = RealTime;
+                        // Device reports measurement timestamp as bad; this typically means that the GPS timestamp of the
+                        // source device is not accurate. If the concentrator is set to allow sorts by arrival then it is
+                        // assumed that our local real time value is better than the device measurement, so we sort the
+                        // measurement by arrival time.
+                        timestamp = RealTime;
                         Interlocked.Increment(ref m_measurementsSortedByArrival);
                     }
                     else
                     {
-                        // If sorting by arrival time is not allowed, data with bad timestamps is discarded.
+                        // If sorting by arrival time is not allowed, measurements with bad timestamps are discarded.
                         discardMeasurement = true;
                     }
+                }
+                else
+                {
+                    // Timestamp quality is good, get ticks for this measurement.
+                    timestamp = measurement.Timestamp;
                 }
 
                 if (!discardMeasurement)
                 {
-                    // Get ticks for this measurement.
-                    timestamp = measurement.Timestamp;
-
                     //
                     // *** Sort the measurement into proper frame ***
                     //
@@ -961,13 +974,13 @@ namespace PCS.Measurements
 
                     if (frame == null)
                     {
-                        // Discards the data item if no bucket for it is found.
+                        // Measurement is discarded if no bucket (i.e., destination frame) was found for it.
                         discardMeasurement = true;
                         lastTimestamp = 0;
                     }
                     else
                     {
-                        // Calls user customizable function to assign new measurement to its frame.
+                        // Assign new measurement to its frame using user customizable function.
                         if (AssignMeasurementToFrame(frame, measurement))
                         {
                             frame.LastSortedMeasurement = measurement;
@@ -982,7 +995,7 @@ namespace PCS.Measurements
                             discardMeasurement = true;
                         }
 
-                        // Tracks the absolute latest measurement values.
+                        // If enabled, concentrator will track the absolute latest measurement values.
                         if (m_trackLatestMeasurements)
                             m_latestMeasurements.UpdateMeasurementValue(measurement);
                     }
@@ -1002,17 +1015,17 @@ namespace PCS.Measurements
 
                     if (!m_useLocalClockAsRealTime)
                     {
-                        // If the measurement time is newer than the current real time value, and it is within the
-                        // specified(time) deviation tolerance of the local clock time, then it sets the
-                        // measurement time as real time.
+                        // Algorithm:
+                        //      If the measurement time is newer than the current real time value and within the
+                        //      specified time deviation tolerance of the local clock time, then the measurement
+                        //      timestamp is set as real time.
                         long realTimeTicks = m_realTimeTicks;
 
                         if (timestamp > m_realTimeTicks)
                         {
-                            // Applies a resonability check to this value. This is done using the local clock.
-                            // Since the lead time typically defines the tolerated accuracy of the local clock
-                            // to real time, it uses this value as the + and - timestamp tolerance to validate
-                            // if the measurement time is reasonable.
+                            // Apply a resonability check to this value using the local clock. Since the lead time
+                            // typically defines the tolerated accuracy of the local clock to real time, this value
+                            // is used as the + and - timestamp tolerance to validate if the time is reasonable.
 #if UseHighResolutionTime
                             long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
@@ -1021,13 +1034,13 @@ namespace PCS.Measurements
                             if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                             {
                                 // The new time measurement looks good, so this function assumes the time is
-                                // "real time," so long as another thread has not changed the real time value
+                                // "real time" so long as another thread has not changed the real time value
                                 // already. Using the interlocked compare exchange method introduces the
                                 // possibility that we may have had newer ticks than another thread that just
                                 // updated real-time ticks, but if so the deviation will not be much since ticks
                                 // were greater than current real-time ticks in all threads that got to this
                                 // point. Besides, newer measurements are always coming in anyway and the compare
-                                // exchange method saves a call to a monitor lock reducing possible contention.
+                                // exchange method saves a call to a monitor lock thereby reducing contention.
                                 Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
                             }
                             else
@@ -1125,17 +1138,6 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Gets a reference to the <see cref="FrameQueue"/>.
-        /// </summary>
-        protected FrameQueue FrameQueue
-        {
-            get
-            {
-                return m_frameQueue;
-            }
-        }
-
-        /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Exception to send to <see cref="ProcessException"/> event.</param>
@@ -1208,6 +1210,11 @@ namespace PCS.Measurements
                         distance = DateTime.UtcNow.Ticks;
 #endif
 
+                        // Calculate index of this frame within its second - note that we have to calculate this
+                        // value instead of using m_frameIndex since it is is possible for multiple frames to be
+                        // published within one frame period if the system is stressed
+                        frameIndex = (int)((decimal)ticks.DistanceBeyondSecond() / m_ticksPerFrame);
+
                         // Mark the frame as published to prevent any further sorting into this frame
                         lock (frame.Measurements)
                         {
@@ -1215,11 +1222,6 @@ namespace PCS.Measurements
                             // sorting into this frame has ceased prior to publication...
                             frame.Published = true;
                         }
-
-                        // Calculate index of this frame within its second - note that we have to calculate this
-                        // value instead of using m_frameIndex since it is is possible for multiple frames to be
-                        // published within one frame period if the system is stressed
-                        frameIndex = (int)((decimal)ticks.DistanceBeyondSecond() / m_ticksPerFrame);
 
                         try
                         {
@@ -1233,15 +1235,15 @@ namespace PCS.Measurements
 
                             // Update publication statistics
                             m_publishedFrames++;
-                            m_publishedMeasurements += frame.PublishedMeasurements; 
-                        }
+                            m_publishedMeasurements += frame.PublishedMeasurements;
 
-                        // Track total publication time
+                            // Track total publication time
 #if UseHighResolutionTime
-                        m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
+                            m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
 #else
-                        m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
+                            m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
 #endif
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -1306,8 +1308,8 @@ namespace PCS.Measurements
 
         private double mod_dis(int framesIndex, double interval)
         {
-            double dis1 = interval - ((framesIndex + 1) % interval);
             double dis2 = (framesIndex + 1) % interval;
+            double dis1 = interval - dis2;
 
             return (dis1 < dis2 ? dis1 : dis2);
         }
