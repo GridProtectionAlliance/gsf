@@ -39,6 +39,8 @@ namespace System.Media.Sound
     /// </summary>
     public enum TouchToneKey
     {
+        /// <summary>Represents the number "0" on a touch tone key pad.</summary>
+        Zero,
         /// <summary>Represents the number "1" on a touch tone key pad.</summary>
         One,
         /// <summary>Represents the number "2" on a touch tone key pad.</summary>
@@ -59,8 +61,6 @@ namespace System.Media.Sound
         Nine,
         /// <summary>Represents the "*" key on a touch tone key pad.</summary>
         Asterisk,
-        /// <summary>Represents the number "0" on a touch tone key pad.</summary>
-        Zero,
         /// <summary>Represents the "#" key on a touch tone key pad.</summary>
         Pound
     }
@@ -105,7 +105,7 @@ namespace System.Media.Sound
         /// <summary>
         /// Valid touch tone keys.
         /// </summary>
-        public const string ValidTouchTones = "123456789*0#";
+        public const string ValidTouchTones = "0123456789*#";
         
         /// <summary>
         /// Default duration, in seconds, of touch tones.
@@ -131,6 +131,38 @@ namespace System.Media.Sound
         public TouchTone(TouchToneKey key)
         {
             Key = key;
+            Duration = DefaultKeyDuration;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="TouchTone"/> for specified touch tone key character.
+        /// </summary>
+        /// <param name="key">Character of touch tone to create.</param>
+        /// <exception cref="ArgumentException"><paramref name="key"/> is not a valid touch tone character.</exception>
+        public TouchTone(Char key)
+        {
+            TouchToneKey parsedKey;
+
+            if (TryParseKey(key, out parsedKey))
+            {
+                Key = parsedKey;
+                Duration = DefaultKeyDuration;
+            }
+            else
+                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), "key");
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="TouchTone"/> for specified touch tone key number.
+        /// </summary>
+        /// <param name="key">Number of touch tone to create (note that * = 10 and # = 11).</param>
+        /// <exception cref="ArgumentException"><paramref name="key"/> is not a valid touch tone number.</exception>
+        public TouchTone(int key)
+        {
+            if (key < 0 || key > 11)
+                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone number", key), "key");
+
+            Key = (TouchToneKey)key;
             Duration = DefaultKeyDuration;
         }
 
@@ -232,9 +264,11 @@ namespace System.Media.Sound
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(char key, out TouchTone result)
         {
-            if (ValidTouchTones.IndexOf(key) > -1)
+            TouchToneKey parsedKey;
+
+            if (TryParseKey(key, out parsedKey))
             {
-                result = TouchTone.Parse(key);
+                result = new TouchTone(parsedKey);
                 return true;
             }
             else
@@ -253,37 +287,31 @@ namespace System.Media.Sound
         /// An instance of the <see cref="TouchTone"/> class equivalent to the touch tone
         /// chracter contained in <paramref name="key"/>.
         /// </returns>
-        /// <exception cref="ArgumentException"><paramref name="key"/> is not a valid touch tone.</exception>
+        /// <exception cref="ArgumentException"><paramref name="key"/> is not a valid touch tone character.</exception>
         public static TouchTone Parse(char key)
         {
-            switch (key)
+            TouchToneKey parsedKey;
+
+            if (TryParseKey(key, out parsedKey))
+                return new TouchTone(parsedKey);
+            else
+                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), "key");
+        }
+
+        // Convert character into touch tone key enumeration
+        private static bool TryParseKey(char key, out TouchToneKey result)
+        {
+            int index = ValidTouchTones.IndexOf(key);
+
+            if (index > -1)
             {
-                case '1':
-                    return new TouchTone(TouchToneKey.One);
-                case '2':
-                    return new TouchTone(TouchToneKey.Two);
-                case '3':
-                    return new TouchTone(TouchToneKey.Three);
-                case '4':
-                    return new TouchTone(TouchToneKey.Four);
-                case '5':
-                    return new TouchTone(TouchToneKey.Five);
-                case '6':
-                    return new TouchTone(TouchToneKey.Six);
-                case '7':
-                    return new TouchTone(TouchToneKey.Seven);
-                case '8':
-                    return new TouchTone(TouchToneKey.Eight);
-                case '9':
-                    return new TouchTone(TouchToneKey.Nine);
-                case '*':
-                    return new TouchTone(TouchToneKey.Asterisk);
-                case '0':
-                    return new TouchTone(TouchToneKey.Zero);
-                case '#':
-                    return new TouchTone(TouchToneKey.Pound);
-                default:
-                    throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), "key");
+                result = (TouchToneKey)index;
+                return true;
+            }
+            else
+            {
+                result = default(TouchToneKey);
+                return false;
             }
         }
 
