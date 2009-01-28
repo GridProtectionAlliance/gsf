@@ -205,7 +205,7 @@ namespace PCS.Windows.Forms
             {
                 // Restore last saved window size
                 WindowSetting sizeSetting = new WindowSetting(settings[windowsForm.Name].Value);
-                windowsForm.Width = sizeSetting.ParamA(windowsForm.MinimumSize.Width, ScreenArea.TotalWidth);
+                windowsForm.Width = sizeSetting.ParamA(windowsForm.MinimumSize.Width, ScreenArea.MaximumWidth);
                 windowsForm.Height = sizeSetting.ParamB(windowsForm.MinimumSize.Height, ScreenArea.MaximumHeight);
             }
         }
