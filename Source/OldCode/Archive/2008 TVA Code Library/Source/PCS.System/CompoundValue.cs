@@ -99,7 +99,7 @@ namespace System
         {
             get
             {
-                return this.All<T?>(item => item.HasValue);
+                return this.All(item => item.HasValue);
             }
         }
 
@@ -111,7 +111,7 @@ namespace System
         {
             get
             {
-                return this.All<T?>(item => !item.HasValue);
+                return this.All(item => !item.HasValue);
             }
         }
 
