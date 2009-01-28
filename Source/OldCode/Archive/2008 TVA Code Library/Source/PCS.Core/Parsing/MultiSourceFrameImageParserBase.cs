@@ -49,7 +49,7 @@ namespace PCS.Parsing
         // Events
 
         /// <summary>
-        /// Occurs when a data image is deserialized successfully to one or more object of the <see cref="Type"/> 
+        /// Occurs when a data image is deserialized successfully to one or more objects of the <see cref="Type"/> 
         /// that the data image was for.
         /// </summary>
         /// <remarks>

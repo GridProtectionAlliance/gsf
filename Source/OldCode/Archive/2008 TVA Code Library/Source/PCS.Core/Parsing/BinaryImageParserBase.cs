@@ -74,8 +74,8 @@ namespace PCS.Parsing
         private byte[] m_protocolSyncBytes;
         private long m_buffersProcessed;
         private string m_name;
-        private long m_startTime;
-        private long m_stopTime;
+        private Ticks m_startTime;
+        private Ticks m_stopTime;
         private bool m_enabled;
 
         #endregion
