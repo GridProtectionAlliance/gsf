@@ -33,7 +33,7 @@ namespace PCS.Reflection
         /// <param name="attribute">The <see cref="Attribute"/> that was found, if any.</param>
         /// <returns><c>true</c> if <paramref name="Attribute"/> was found; otherwise <c>false</c>.</returns>
         /// <typeparam name="TMemberInfo"><see cref="MemberInfo"/> or derived type to get <see cref="Attribute"/> from.</typeparam>
-        /// <typeparam name="TAttribute"></typeparam>
+        /// <typeparam name="TAttribute"><see cref="Type"/> of <see cref="Attribute"/> to attempt to retrieve.</typeparam>
         public static bool TryGetAttribute<TMemberInfo, TAttribute>(this TMemberInfo member, out TAttribute attribute)
             where TMemberInfo : MemberInfo
             where TAttribute : Attribute
