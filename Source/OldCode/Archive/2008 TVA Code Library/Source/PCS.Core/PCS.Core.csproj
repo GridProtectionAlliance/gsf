@@ -84,6 +84,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
+    <Compile Include="Configuration\CategorizedSettingsBase.cs" />
+    <Compile Include="Configuration\AppSettingsBase.cs" />
+    <Compile Include="Configuration\SerializeSettingAttribute.cs" />
+    <Compile Include="Configuration\SettingsBase.cs" />
     <Compile Include="IO\IsamDataFileBase.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -193,6 +197,7 @@
     <Compile Include="ProcessProgressHandler.cs" />
     <Compile Include="Random.cs" />
     <Compile Include="IO\StreamExtensions.cs" />
+    <Compile Include="Reflection\MemberInfoExtensions.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassic.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicCryptoBase.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicDecryptCryptoTransform.cs" />
@@ -234,7 +239,7 @@
     <Compile Include="Net\Ftp\FtpSessionConnected.cs" />
     <Compile Include="Net\Ftp\FtpSessionDisconnected.cs" />
     <Compile Include="Net\Smtp\Mail.cs" />
-    <Compile Include="Reflection\ReflectionExtensions.cs" />
+    <Compile Include="Reflection\AssemblyExtensions.cs" />
     <Compile Include="Scheduling\Schedule.cs" />
     <Compile Include="Scheduling\ScheduleManager.cs">
       <SubType>Component</SubType>

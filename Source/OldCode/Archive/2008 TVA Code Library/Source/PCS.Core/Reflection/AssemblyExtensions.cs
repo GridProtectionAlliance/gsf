@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  ReflectionExtensions.cs
+//  AssemblyExtensions.cs
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -23,7 +23,7 @@ using System.Reflection;
 namespace PCS.Reflection
 {
     /// <summary>Defines extension functions related to Assemblies.</summary>
-    public static class ReflectionExtensions
+    public static class AssemblyExtensions
     {
         /// <summary>Returns only assembly name and version from full assembly name.</summary>
         public static string ShortName(this Assembly assemblyInstance)
