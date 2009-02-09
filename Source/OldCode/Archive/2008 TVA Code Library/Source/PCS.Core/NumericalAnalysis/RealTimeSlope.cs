@@ -132,7 +132,7 @@ namespace PCS.NumericalAnalysis
                 ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(PerformCalculation);
                 thread.Name = "PCS.Math.RealTimeSlope.PerformCalculation()";
 #else
-                ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(PerformCalculation));
+                ThreadPool.QueueUserWorkItem(PerformCalculation);
 #endif
             }
         }
