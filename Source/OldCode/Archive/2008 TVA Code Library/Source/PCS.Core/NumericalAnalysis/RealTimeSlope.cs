@@ -190,7 +190,7 @@ namespace PCS.NumericalAnalysis
                 }
 
                 // Takes new values and calculates slope (curve fit for 1st order polynomial).
-                m_slope = CurveFit.Compute(1, m_pointCount, xValues, yValues)[1];
+                m_slope = CurveFit.Compute(1, xValues, yValues)[1];
             }
             catch (Exception ex)
             {

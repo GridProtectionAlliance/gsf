@@ -18,46 +18,60 @@
 //*******************************************************************************************************
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace PCS.NumericalAnalysis
 {
-    /// <summary>Linear regression algorithm.</summary>
+    /// <summary>
+    /// Linear regression algorithm.
+    /// </summary>
     public static class CurveFit
     {
-        /// <summary>Computes linear regression over given values.</summary>
-        public static double[] Compute(int polynomialOrder, int pointCount, IList<double> xValues, IList<double> yValues)
+        /// <summary>
+        /// Computes linear regression over given values.
+        /// </summary>
+        public static double[] Compute(int polynomialOrder, IEnumerable<PointF> values)
         {
+            return Compute(polynomialOrder, values.Select(point => (double)point.X).ToList(), values.Select(point => (double)point.Y).ToList());
+        }
+
+        /// <summary>
+        /// Computes linear regression over given values.
+        /// </summary>
+        public static double[] Compute(int polynomialOrder, IList<double> xValues, IList<double> yValues)
+        {
+            if (xValues == null)
+                throw new ArgumentNullException("xValues");
+
+            if (yValues == null)
+                throw new ArgumentNullException("yValues");
+
+            if (xValues.Count != yValues.Count)
+                throw new ArgumentException("Point count for x-values and y-values must be equal");
+
+            if (!(xValues.Count >= polynomialOrder + 1))
+                throw new ArgumentException("Point count must be greater than requested polynomial order");
+
+            if (!(polynomialOrder >= 1) && (polynomialOrder <= 7))
+                throw new ArgumentOutOfRangeException("polynomialOrder", "Polynomial order must be between 1 and 7");
+
             // Curve fit function (courtesy of Brian Fox from DatAWare client code)
             double[] coeffs = new double[8];
             double[] sum = new double[22];
             double[] v = new double[12];
             double[,] b = new double[12, 13];
-            double p;
-            double divB;
-            double fMultB;
-            double sigma;
-            int ls;
-            int lb;
-            int lv;
-            int i1;
-            int i;
-            int j;
-            int k;
-            int l;
-
-            if (!(pointCount >= polynomialOrder + 1))
-                throw new ArgumentException("Point count must be greater than requested polynomial order");
-
-            if (!(polynomialOrder >= 1) && (polynomialOrder <= 7))
-                throw new ArgumentOutOfRangeException("polynomialOrder", "Polynomial order must be between 1 and 7");
+            double p, divB, fMultB, sigma;
+            int ls, lb, lv, i1, i, j, k, l;
+            int pointCount = xValues.Count;
 
             ls = polynomialOrder * 2;
             lb = polynomialOrder + 1;
             lv = polynomialOrder;
             sum[0] = pointCount;
 
-            for (i = 0; i <= pointCount - 1; i++)
+            for (i = 0; i < pointCount; i++)
             {
                 p = 1.0;
                 v[0] = v[0] + yValues[i];
