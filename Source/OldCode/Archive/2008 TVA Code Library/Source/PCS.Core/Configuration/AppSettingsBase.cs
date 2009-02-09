@@ -48,18 +48,6 @@ namespace PCS.Configuration
     ///             }
     ///         }
     /// 
-    ///         public string this[int index]
-    ///         {
-    ///             get
-    ///             {
-    ///                 return index.ToString();
-    ///             }
-    ///             set
-    ///             {
-    ///                 //
-    ///             }
-    ///         }
-    /// 
     ///         [SerializeSetting(false)]
     ///         public bool DontSerializeMe { get; set; }
     ///     }

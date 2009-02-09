@@ -72,6 +72,7 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to working configuration file.
         /// </summary>
+        /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected ConfigurationFile ConfigFile
         {
             get
@@ -80,6 +81,9 @@ namespace PCS.Configuration
             }
             set
             {
+                if (value == null)
+                    throw new NullReferenceException("value cannot be null");
+
                 m_configFile = value;
             }
         }
@@ -87,6 +91,7 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to delegate used to retireve settings values.
         /// </summary>
+        /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected Func<string, string> Getter
         {
             get
@@ -95,6 +100,9 @@ namespace PCS.Configuration
             }
             set
             {
+                if (value == null)
+                    throw new NullReferenceException("value cannot be null");
+
                 m_getter = value;
             }
         }
@@ -102,6 +110,7 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to delegate used to assign settings values.
         /// </summary>
+        /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected Action<string, string> Setter
         {
             get
@@ -110,6 +119,9 @@ namespace PCS.Configuration
             }
             set
             {
+                if (value == null)
+                    throw new NullReferenceException("value cannot be null");
+
                 m_setter = value;
             }
         }
@@ -117,6 +129,7 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to delgate used to create settings with a default value, if they don't exist.
         /// </summary>
+        /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected Action<string, string> Creator
         {
             get
@@ -125,6 +138,9 @@ namespace PCS.Configuration
             }
             set
             {
+                if (value == null)
+                    throw new NullReferenceException("value cannot be null");
+
                 m_creator = value;
             }
         }
@@ -190,7 +206,7 @@ namespace PCS.Configuration
         /// </remarks>
         public void Create(string name, string value)
         {
-            m_creator(name, value);
+            m_creator(name, value.ToNonNullString());
         }
 
         /// <summary>
@@ -203,7 +219,10 @@ namespace PCS.Configuration
         /// </remarks>
         public void Create<T>(string name, T value)
         {
-            m_creator(name, value.ToString());
+            if (value == null)
+                m_creator(name, "");
+            else
+                m_creator(name, value.ToString());
         }
 
         /// <summary>
@@ -277,7 +296,10 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         public void Set<T>(string name, T value)
         {
-            m_setter(name, value.ToString());
+            if (value == null)
+                m_setter(name, "");
+            else
+                m_setter(name, value.ToString());
         }
 
         /// <summary>
@@ -290,10 +312,10 @@ namespace PCS.Configuration
             // through of these making sure a setting exists for each field and property
 
             // Verify a configuration setting exists for each field
-            ExecuteActionForFields(field => Create(field.Name, field.GetValue(this).ToString()));
+            ExecuteActionForFields(field => Create(field.Name, field.GetValue(this).ToNonNullString()));
 
             // Verify a configuration setting exists for each property
-            ExecuteActionForProperties(property => Create(property.Name, property.GetValue(this, null).ToString()), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => Create(property.Name, property.GetValue(this, null).ToNonNullString()), BindingFlags.GetProperty);
 
             // If any new values were encountered, make sure they are flushed to config file
             m_configFile.Save();
@@ -320,10 +342,10 @@ namespace PCS.Configuration
         public virtual void Save()
         {
             // Saves setting fields into configuration file values
-            ExecuteActionForFields(field => m_setter(field.Name, field.GetValue(this).ToString()));
+            ExecuteActionForFields(field => m_setter(field.Name, field.GetValue(this).ToNonNullString()));
             
             // Saves setting properties into configuration file values
-            ExecuteActionForProperties(property => m_setter(property.Name, property.GetValue(this, null).ToString()), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => m_setter(property.Name, property.GetValue(this, null).ToNonNullString()), BindingFlags.GetProperty);
 
             // Make sure any changes are flushed to config file
             m_configFile.Save();

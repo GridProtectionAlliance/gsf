@@ -421,6 +421,16 @@ namespace System
             return new ComplexNumber(real, imaginary);
         }
 
+        ///<summary>
+        ///Returns specified <see cref="ComplexNumber"/> raised to the specified power.
+        ///</summary>
+        ///<param name="z">Complex number to be raised to power <paramref name="y"/>.</param>
+        ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
+        public static ComplexNumber Pow(ComplexNumber z, double y)
+        {
+            return new ComplexNumber(z.Angle * y, Math.Pow(z.AbsoluteValue, y));
+        }
+
         #endregion
-   }
+    }
 }

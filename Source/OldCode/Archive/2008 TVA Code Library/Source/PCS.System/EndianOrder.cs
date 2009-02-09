@@ -313,7 +313,7 @@ namespace System
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A double-precision floating point number formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public double ToDouble(byte[] value, int startIndex)
@@ -343,11 +343,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a 24-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a 24-bit signed integer converted from three bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A 24-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A 24-bit signed integer formed by three bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public Int24 ToInt24(byte[] value, int startIndex)
@@ -360,11 +360,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a 32-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a 32-bit signed integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A 32-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public int ToInt32(byte[] value, int startIndex)
@@ -377,11 +377,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a 64-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a 64-bit signed integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A 64-bit signed integer formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public long ToInt64(byte[] value, int startIndex)
@@ -394,11 +394,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a single-precision floating point number converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a single-precision floating point number converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A single-precision floating point number formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A single-precision floating point number formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public float ToSingle(byte[] value, int startIndex)
@@ -429,11 +429,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a 24-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a 24-bit unsigned integer converted from three bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A 24-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A 24-bit unsigned integer formed by three bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]
@@ -447,11 +447,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a 32-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a 32-bit unsigned integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A 32-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A 32-bit unsigned integer formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]
@@ -465,11 +465,11 @@ namespace System
         }
 
         /// <summary>
-        /// Returns a 64-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// Returns a 64-bit unsigned integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
         /// <param name="value">An array.</param>
         /// <param name="startIndex">The starting position within value.</param>
-        /// <returns>A 64-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+        /// <returns>A 64-bit unsigned integer formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [CLSCompliant(false)]

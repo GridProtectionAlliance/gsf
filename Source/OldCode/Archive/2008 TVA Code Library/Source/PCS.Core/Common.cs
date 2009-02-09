@@ -72,7 +72,9 @@ namespace PCS
 
     #endregion
 
-    //  This is the location for handy miscellaneous functions that are difficult to categorize elsewhere
+    // This is the location for handy miscellaneous functions that are difficult to categorize elsewhere. For the most
+    // part these functions may have the most value in a Visual Basic application which supports importing functions
+    // down to a class level, e.g.: Imports PCS.Common
 
     /// <summary>Defines common global functions.</summary>
     public static class Common
@@ -185,6 +187,33 @@ namespace PCS
             {
                 return ApplicationType.Web;
             }
+        }
+
+        /// <summary>
+        /// Converts value to string, null objects will return an empty string (""). 
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
+        /// <param name="value">Value to convert to string.</param>
+        /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
+        public static string ToNonNullString<T>(this T value) where T : class
+        {
+            return (value == null ? "" : value.ToString());
+        }
+
+        /// <summary>
+        /// Converts value to string, null objects will be return specified <paramref name="nonNullValue"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
+        /// <param name="value">Value to convert to string.</param>
+        /// <param name="nonNullValue"><see cref="String"/> to return if <paramref name="value"/> is null.</param>
+        /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, <paramref name="nonNullValue"/> will be returned.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="nonNullValue"/> cannot be null.</exception>
+        public static string ToNonNullString<T>(this T value, string nonNullValue) where T : class
+        {
+            if (nonNullValue == null)
+                throw new ArgumentNullException("nonNullValue");
+
+            return (value == null ? nonNullValue : value.ToString());
         }
 
         /// <summary>Gets a high-resolution number of seconds, including fractional seconds, that have
