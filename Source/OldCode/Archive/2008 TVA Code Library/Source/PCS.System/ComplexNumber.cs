@@ -144,8 +144,8 @@ namespace System
                 if (RectangularValues.AllAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
-                    double real = m_rectangularValues[RealComponent].Value;
-                    double imaginary = m_rectangularValues[ImaginaryComponent].Value;
+                    double real = RectangularValues[RealComponent].Value;
+                    double imaginary = RectangularValues[ImaginaryComponent].Value;
 
                     return Math.Sqrt(real * real + imaginary * imaginary);
                 }
