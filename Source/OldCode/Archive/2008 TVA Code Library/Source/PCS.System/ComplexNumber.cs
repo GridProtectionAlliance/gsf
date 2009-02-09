@@ -36,7 +36,7 @@ namespace System
     /// <summary>
     /// Represents a complex number.
     /// </summary>
-    public class ComplexNumber : IEquatable<ComplexNumber>
+    public struct ComplexNumber : IEquatable<ComplexNumber>
     {
         #region [ Members ]
 
@@ -48,22 +48,18 @@ namespace System
         private const int MagnitudeComponent = 1;           // Index of magnitude component within polar based compound value
 
         // Fields
+
+        // Access to rectangular values field should be handled through RectangularValues property to
+        // ensure that value has been instantiated
         private CompoundValue<double> m_rectangularValues;  // Compound value containing the real and imaginary components of this complex number
+
+        // Polar values field will only exist long enough to create equivalent rectangular properties,
+        // do not assume field has been instantied
         private CompoundValue<double> m_polarValues;        // Compound value containing the angle and magnitude components of this complex number
         
         #endregion
 
         #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a <see cref="ComplexNumber"/>. 
-        /// </summary>
-        public ComplexNumber()
-        {
-            // Create a new compound value with two uninitialized composite components; complex number is internally
-            // stored in rectagular coordinates.
-            m_rectangularValues = new CompoundValue<double>(2);
-        }
 
         /// <summary>
         /// Creates a <see cref="ComplexNumber"/> from the given rectangular values. 
@@ -73,8 +69,8 @@ namespace System
         public ComplexNumber(double real, double imaginary)
             : this()
         {
-            m_rectangularValues[RealComponent] = real;
-            m_rectangularValues[ImaginaryComponent] = imaginary;
+            RectangularValues[RealComponent] = real;
+            RectangularValues[ImaginaryComponent] = imaginary;
         }
 
         /// <summary>
@@ -97,8 +93,8 @@ namespace System
             : this()
         {
             // Make sure state of source complex number is replicated extactly
-            m_rectangularValues[RealComponent] = z.m_rectangularValues[RealComponent];
-            m_rectangularValues[ImaginaryComponent] = z.m_rectangularValues[ImaginaryComponent];
+            RectangularValues[RealComponent] = z.RectangularValues[RealComponent];
+            RectangularValues[ImaginaryComponent] = z.RectangularValues[ImaginaryComponent];
 
             if (z.m_polarValues != null)
                 m_polarValues = new CompoundValue<double>(z.m_polarValues);
@@ -115,11 +111,11 @@ namespace System
         {
             get
             {
-                return m_rectangularValues[RealComponent].GetValueOrDefault();
+                return RectangularValues[RealComponent].GetValueOrDefault();
             }
             set
             {
-                m_rectangularValues[RealComponent] = value;
+                RectangularValues[RealComponent] = value;
             }
         }
 
@@ -130,11 +126,11 @@ namespace System
         {
             get
             {
-                return m_rectangularValues[ImaginaryComponent].GetValueOrDefault();
+                return RectangularValues[ImaginaryComponent].GetValueOrDefault();
             }
             set
             {
-                m_rectangularValues[ImaginaryComponent] = value;
+                RectangularValues[ImaginaryComponent] = value;
             }
         }
 
@@ -145,7 +141,7 @@ namespace System
         {
             get
             {
-                if (m_rectangularValues.AllAssigned)
+                if (RectangularValues.AllAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
                     double real = m_rectangularValues[RealComponent].Value;
@@ -163,13 +159,11 @@ namespace System
             }
             set
             {
-                if (m_rectangularValues.NoneAssigned)
+                if (RectangularValues.NoneAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates but these values have yet to be
                     // assigned so we cache magnitude so we can calculate the real and imaginary components once we also
                     // receive the angle value
-
-                    // Create a compound value for polar coordinates if it hasn't been created yet (only created if needed)
                     if (m_polarValues == null)
                         m_polarValues = new CompoundValue<double>(2);
 
@@ -186,8 +180,8 @@ namespace System
                     // coordinates and then update the real and imaginary components
                     ComplexNumber updatedValue = new ComplexNumber(Angle, value);
 
-                    m_rectangularValues[RealComponent] = updatedValue.Real;
-                    m_rectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
+                    RectangularValues[RealComponent] = updatedValue.Real;
+                    RectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
                 }
             }
         }
@@ -199,7 +193,7 @@ namespace System
         {
             get
             {
-                if (m_rectangularValues.AllAssigned)
+                if (RectangularValues.AllAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates, so we return calculated angle
                     return Math.Atan2(Imaginary, Real);
@@ -214,13 +208,11 @@ namespace System
             }
             set
             {
-                if (m_rectangularValues.NoneAssigned)
+                if (RectangularValues.NoneAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates but these values have yet to be
                     // assigned so we cache angle so we can calculate the real and imaginary components once we also
                     // receive the magnitude value
-
-                    // Create a compound value for polar coordinates if it hasn't been created yet (only created if needed)
                     if (m_polarValues == null)
                         m_polarValues = new CompoundValue<double>(2);
 
@@ -237,8 +229,8 @@ namespace System
                     // coordinates and then update the real and imaginary components
                     ComplexNumber updatedValue = new ComplexNumber(value, AbsoluteValue);
 
-                    m_rectangularValues[RealComponent] = updatedValue.Real;
-                    m_rectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
+                    RectangularValues[RealComponent] = updatedValue.Real;
+                    RectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
                 }
             }
         }
@@ -262,7 +254,19 @@ namespace System
         {
             get
             {
-                return m_rectangularValues.AllAssigned;
+                return RectangularValues.AllAssigned;
+            }
+        }
+
+        // Gets private m_rectangularValues, creating it if it hasn't been instantiated
+        private CompoundValue<double> RectangularValues
+        {
+            get
+            {
+                if (m_rectangularValues == null)
+                    m_rectangularValues = new CompoundValue<double>(2);
+
+                return m_rectangularValues;
             }
         }
 
