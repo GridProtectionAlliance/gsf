@@ -54,7 +54,7 @@ namespace System
         private CompoundValue<double> m_rectangularValues;  // Compound value containing the real and imaginary components of this complex number
 
         // Polar values field will only exist long enough to create equivalent rectangular properties,
-        // do not assume field has been instantied
+        // do not assume field has been instantiated
         private CompoundValue<double> m_polarValues;        // Compound value containing the angle and magnitude components of this complex number
         
         #endregion
