@@ -27,6 +27,13 @@ namespace PCS.Configuration
     /// <summary>
     /// Represents the base class for application settings that are synchronized with its configuration file.
     /// </summary>
+    /// <remarks>
+    /// In order to make custom types serializable for the configuration file perform the following steps:
+    /// <ol>
+    /// <li>For serialization simply override the <see cref="Object.ToString"/> in the custom type ensuring that the returned string is XML compliant.</li>
+    /// <li>For deserialization simply implement the <see cref="IConvertible"/> interface focusing on the <see cref="IConvertible.ToString"/> implementation.</li>
+    /// </ol>
+    /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class SettingsBase : IDisposable
     {
