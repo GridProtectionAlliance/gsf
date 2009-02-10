@@ -61,7 +61,7 @@ namespace PCS.Configuration
     ///         public decimal DecimalVal;
     /// 
     ///         public MySettings()
-    ///             : base("GeneralSettings", true) {}
+    ///             : base("GeneralSettings") {}
     /// 
     ///         [Category("OtherSettings")]
     ///         public double DoubleVal
@@ -98,7 +98,6 @@ namespace PCS.Configuration
         /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
         /// </summary>
         /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for categroy names.</param>
         /// <remarks>
         /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
         /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
@@ -106,8 +105,8 @@ namespace PCS.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </remarks>
-        public CategorizedSettingsBase(string categoryName, bool useCategoryAttributes)
-            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, false)
+        public CategorizedSettingsBase(string categoryName)
+            : this(ConfigurationFile.Current, categoryName, true, false)
         {
         }
 
@@ -115,7 +114,7 @@ namespace PCS.Configuration
         /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
         /// </summary>
         /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for categroy names.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
         /// to exist before a field or property is serialized to the configuration file.
@@ -137,7 +136,7 @@ namespace PCS.Configuration
         /// </summary>
         /// <param name="configFile">Configuration file used for accessing settings.</param>
         /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for categroy names.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
         /// to exist before a field or property is serialized to the configuration file.
@@ -152,9 +151,9 @@ namespace PCS.Configuration
         public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
             : base(requireSerializeSettingAttribute)
         {
+            ConfigFile = configFile;
             m_categoryName = categoryName;
             m_useCategoryAttributes = useCategoryAttributes;
-            ConfigFile = configFile;
 
             // Define delegates used to access and create settings in configuration file
             Getter = setting => ConfigFile.Settings[GetCategoryName(setting)][setting].Value;

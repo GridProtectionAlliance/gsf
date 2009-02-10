@@ -226,7 +226,7 @@ namespace PCS.Configuration
             if (value == null)
                 m_creator(name, "");
             else
-                m_creator(name, ConvertToString(value));
+                m_creator(name, Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace PCS.Configuration
             if (value == null)
                 m_setter(name, "");
             else
-                m_setter(name, ConvertToString(value));
+                m_setter(name, Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -358,22 +358,6 @@ namespace PCS.Configuration
                     // Didn't find serialize setting attribute and it's not required, so we perform action
                     memberAction(member);
                 }
-            }
-        }
-
-        // Attempts to use converter for value's type to do string conversion; otherwise just calls object's ToString method
-        private string ConvertToString(object value)
-        {
-            try
-            {
-                // Attempt to use type converter to set field value
-                TypeConverter converter = TypeDescriptor.GetConverter(value);
-                return converter.ConvertToString(value).ToNonNullString();
-            }
-            catch
-            {
-                // Otherwise just call object's ToString method
-                return value.ToNonNullString();
             }
         }
 

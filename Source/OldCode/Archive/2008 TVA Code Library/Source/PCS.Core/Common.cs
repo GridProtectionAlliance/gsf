@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using PCS.Collections;
 using PCS.Reflection;
+using System.ComponentModel;
 
 namespace PCS
 {
@@ -189,6 +190,9 @@ namespace PCS
             }
         }
 
+        // The following "ToNonNullString" methods extend all class based objects - note that these extension methods can
+        // be called even if the base object is null - hence the value...
+
         /// <summary>
         /// Makes sure returned string value is not null; if this string is null, empty string ("") will be returned. 
         /// </summary>
@@ -224,6 +228,31 @@ namespace PCS
                 throw new ArgumentNullException("nonNullValue");
 
             return (value == null ? nonNullValue : value.ToString());
+        }
+
+        // Attempts to use converter for value's type to do string conversion; otherwise just calls object's ToString method
+
+        /// <summary>
+        /// Converts <paramref name="value"/> to a <see cref="String"/> using an appropriate <see cref="TypeConverter"/>.
+        /// </summary>
+        /// <param name="value">Value to convert to a <see cref="String"/>.</param>
+        /// <returns><paramref name="value"/> converted to a <see cref="String"/>.</returns>
+        /// <remarks>
+        /// If <see cref="TypeConverter"/> fails, the value's <c>ToString()</c> value will be returned.
+        /// </remarks>
+        public static string TypeConvertToString(object value)
+        {
+            try
+            {
+                // Attempt to use type converter to set field value
+                TypeConverter converter = TypeDescriptor.GetConverter(value);
+                return converter.ConvertToString(value).ToNonNullString();
+            }
+            catch
+            {
+                // Otherwise just call object's ToString method
+                return value.ToNonNullString();
+            }
         }
 
         /// <summary>Gets a high-resolution number of seconds, including fractional seconds, that have
