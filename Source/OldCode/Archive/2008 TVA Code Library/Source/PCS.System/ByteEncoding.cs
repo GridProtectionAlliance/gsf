@@ -33,7 +33,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace PCS
+namespace System
 {
     /// <summary>
     /// Handles conversion of byte buffers to and from user presentable data formats.
