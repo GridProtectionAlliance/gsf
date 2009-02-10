@@ -230,8 +230,6 @@ namespace PCS
             return (value == null ? nonNullValue : value.ToString());
         }
 
-        // Attempts to use converter for value's type to do string conversion; otherwise just calls object's ToString method
-
         /// <summary>
         /// Converts <paramref name="value"/> to a <see cref="String"/> using an appropriate <see cref="TypeConverter"/>.
         /// </summary>
@@ -239,6 +237,7 @@ namespace PCS
         /// <returns><paramref name="value"/> converted to a <see cref="String"/>.</returns>
         /// <remarks>
         /// If <see cref="TypeConverter"/> fails, the value's <c>ToString()</c> value will be returned.
+        /// Returned value will never be null, if no value exists an empty string ("") will be returned.
         /// </remarks>
         public static string TypeConvertToString(object value)
         {
