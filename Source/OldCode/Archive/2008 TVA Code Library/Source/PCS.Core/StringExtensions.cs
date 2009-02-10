@@ -30,21 +30,26 @@
 //  04/16/2008 - Pinal C. Patel
 //       Made the keys of the string dictionary returned by ParseKeyValuePairs function case-insensitive.
 //       Added JoinKeyValuePairs overloads that does the exact opposite of ParseKeyValuePairs.
-//  09/19/2008 - James R Carroll
+//  09/19/2008 - J. Ritchie Carroll
 //       Converted to C# extensions.
+//  02/10/2009 - J. Ritchie Carroll
+//       Added ConvertToType overloaded extensions.
 //
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Text;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace PCS
 {
     /// <summary>Defines extension functions related to string manipulation.</summary>
     public static class StringExtensions
     {
-        /// <summary>Parses a string intended to represent a boolean value.</summary>
+        /// <summary>
+        /// Parses a string intended to represent a boolean value.
+        /// </summary>
         /// <param name="value">String representing a boolean value.</param>
         /// <returns>Parsed boolean value.</returns>
         /// <remarks>
@@ -85,7 +90,61 @@ namespace PCS
             return false;
         }
 
-        /// <summary>Turns source string into an array of string segements - each with a set maximum width - for parsing or displaying.</summary>
+        /// <summary>
+        /// Converts this string into the specified type.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
+        /// <param name="value">Source string to convert to type.</param>
+        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of <paramref name="type"/> if conversion fails.</returns>
+        public static T ConvertToType<T>(this string value)
+        {
+            T obj = (T)value.ConvertToType(typeof(T));
+
+            if (obj == null)
+                obj = default(T);
+
+            return obj;
+        }
+
+        /// <summary>
+        /// Converts this string into the specified type.
+        /// </summary>
+        /// <param name="value">Source string to convert to type.</param>
+        /// <param name="type"><see cref="Type"/> to convert string to.</param>
+        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; null if conversion fails.</returns>
+        public static object ConvertToType(this string value, Type type)
+        {
+            // If the desired return type is a string, don't do anymore work...
+            if (type == typeof(string))
+                return value;
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (type == typeof(bool))
+                {
+                    // Handle booleans as a special case to allow numeric entries as well as true/false
+                    return value.ParseBoolean();
+                }
+                else
+                {
+                    if (type == typeof(IConvertible))
+                    {
+                        // This is faster for native types than using type converter...
+                        return Convert.ChangeType(value, type);
+                    }
+
+                    // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
+                    TypeConverter converter = TypeDescriptor.GetConverter(type);
+                    return converter.ConvertFromString(value);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Turns source string into an array of string segements - each with a set maximum width - for parsing or displaying.
+        /// </summary>
         /// <param name="value">Input string to break up into segements.</param>
         /// <param name="segmentSize">Maximum size of returned segment.</param>
         /// <returns>Array of string segments as parsed from source string.</returns>
@@ -137,8 +196,10 @@ namespace PCS
             return result.ToString();
         }
 
-        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple pairs separated
-        /// by a semi-colon.</summary>
+        /// <summary>
+        /// Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple pairs separated
+        /// by a semi-colon.
+        /// </summary>
         /// <param name="value">Key pair string to parse.</param>
         /// <returns>Dictionary of key/value pairs.</returns>
         /// <remarks>
@@ -161,8 +222,10 @@ namespace PCS
             return value.ParseKeyValuePairs(';', '=');
         }
 
-        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
-        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.</summary>
+        /// <summary>
+        /// Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
+        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.
+        /// </summary>
         /// <param name="value">Key pair string to parse.</param>
         /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
         /// string).</param>
@@ -187,8 +250,10 @@ namespace PCS
             return value.ParseKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
         }
 
-        /// <summary>Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
-        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.</summary>
+        /// <summary>
+        /// Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
+        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.
+        /// </summary>
         /// <param name="value">Key pair string to parse.</param>
         /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
         /// string).</param>
@@ -302,7 +367,9 @@ namespace PCS
             return keyValuePairs;
         }
 
-        /// <summary>Ensures parameter is not an empty or null string. Returns a single space if test value is empty.</summary>
+        /// <summary>
+        /// Ensures parameter is not an empty or null string. Returns a single space if test value is empty.
+        /// </summary>
         /// <param name="testValue">Value to test for null or empty.</param>
         /// <returns>A non-empty string.</returns>
         public static string NotEmpty(this string testValue)
@@ -310,7 +377,9 @@ namespace PCS
             return testValue.NotEmpty(" ");
         }
 
-        /// <summary>Ensures parameter is not an empty or null string.</summary>
+        /// <summary>
+        /// Ensures parameter is not an empty or null string.
+        /// </summary>
         /// <param name="testValue">Value to test for null or empty.</param>
         /// <param name="nonEmptyReturnValue">Value to return if <paramref name="testValue">testValue</paramref> is null or empty.</param>
         /// <returns>A non-empty string.</returns>
@@ -325,7 +394,9 @@ namespace PCS
                 return testValue;
         }
 
-        /// <summary>Replaces all characters passing delegate test with specified replacement character.</summary>
+        /// <summary>
+        /// Replaces all characters passing delegate test with specified replacement character.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="replacementCharacter">Character used to replace characters passing delegate test.</param>
         /// <param name="characterTestFunction">Delegate used to determine whether or not character should be replaced.</param>
@@ -351,7 +422,9 @@ namespace PCS
 			return result.ToString();
 		}
 
-        /// <summary>Removes all characters passing delegate test from a string.</summary>
+        /// <summary>
+        /// Removes all characters passing delegate test from a string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="characterTestFunction">Delegate used to determine whether or not character should be removed.</param>
         /// <returns>Returns <paramref name="value" /> with all characters passing delegate test removed.</returns>
@@ -373,7 +446,9 @@ namespace PCS
 			return result.ToString();
 		}
 
-        /// <summary>Removes all white space (as defined by IsWhiteSpace) from a string.</summary>
+        /// <summary>
+        /// Removes all white space (as defined by IsWhiteSpace) from a string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>Returns <paramref name="value" /> with all white space removed.</returns>
         public static string RemoveWhiteSpace(this string value)
@@ -381,7 +456,9 @@ namespace PCS
             return value.RemoveCharacters(char.IsWhiteSpace);
         }
 
-        /// <summary>Replaces all white space characters (as defined by IsWhiteSpace) with specified replacement character.</summary>
+        /// <summary>
+        /// Replaces all white space characters (as defined by IsWhiteSpace) with specified replacement character.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="replacementCharacter">Character used to "replace" white space characters.</param>
         /// <returns>Returns <paramref name="value" /> with all white space characters replaced.</returns>
@@ -391,7 +468,9 @@ namespace PCS
             return value.ReplaceCharacters(replacementCharacter, char.IsWhiteSpace);
         }
 
-        /// <summary>Removes all control characters from a string.</summary>
+        /// <summary>
+        /// Removes all control characters from a string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>Returns <paramref name="value" /> with all control characters removed.</returns>
         public static string RemoveControlCharacters(this string value)
@@ -399,7 +478,9 @@ namespace PCS
             return value.RemoveCharacters(char.IsControl);
         }
 
-        /// <summary>Replaces all control characters in a string with a single space.</summary>
+        /// <summary>
+        /// Replaces all control characters in a string with a single space.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>Returns <paramref name="value" /> with all control characters replaced as a single space.</returns>
         public static string ReplaceControlCharacters(this string value)
@@ -407,7 +488,9 @@ namespace PCS
             return value.ReplaceControlCharacters(' ');
         }
 
-        /// <summary>Replaces all control characters in a string with specified replacement character.</summary>
+        /// <summary>
+        /// Replaces all control characters in a string with specified replacement character.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="replacementCharacter">Character used to "replace" control characters.</param>
         /// <returns>Returns <paramref name="value" /> with all control characters replaced.</returns>
@@ -417,7 +500,9 @@ namespace PCS
             return value.ReplaceCharacters(replacementCharacter, char.IsControl);
         }
 
-        /// <summary>Removes all carriage returns and line feeds from a string.</summary>
+        /// <summary>
+        /// Removes all carriage returns and line feeds from a string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>Returns <paramref name="value" /> with all CR and LF characters removed.</returns>
         public static string RemoveCrLfs(this string value)
@@ -425,8 +510,9 @@ namespace PCS
             return value.RemoveCharacters(c => c == '\r' || c == '\n');
         }
 
-        /// <summary>Replaces all carriage return and line feed characters (as well as CR/LF sequences) in a string with specified replacement
-        /// character.</summary>
+        /// <summary>
+        /// Replaces all carriage return and line feed characters (as well as CR/LF sequences) in a string with specified replacement character.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="replacementCharacter">Character used to "replace" CR and LF characters.</param>
         /// <returns>Returns <paramref name="value" /> with all CR and LF characters replaced.</returns>
@@ -436,7 +522,9 @@ namespace PCS
             return value.Replace(Environment.NewLine, replacementCharacter.ToString()).ReplaceCharacters(replacementCharacter, c => c == '\r' || c == '\n');
         }
 
-        /// <summary>Removes duplicate character strings (adjoining replication) in a string.</summary>
+        /// <summary>
+        /// Removes duplicate character strings (adjoining replication) in a string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="duplicatedValue">String whose duplicates are to be removed.</param>
         /// <returns>Returns <paramref name="value" /> with all duplicated <paramref name="duplicatedValue" /> removed.</returns>
@@ -455,7 +543,9 @@ namespace PCS
             return value;
         }
 
-        /// <summary>Removes the terminator ('\0') from a null terminated string.</summary>
+        /// <summary>
+        /// Removes the terminator ('\0') from a null terminated string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>Returns <paramref name="value" /> with all characters to the left of the terminator.</returns>
         public static string RemoveNull(this string value)
@@ -470,7 +560,9 @@ namespace PCS
                 return value;
         }
 
-        /// <summary>Replaces all repeating white space with a single space.</summary>
+        /// <summary>
+        /// Replaces all repeating white space with a single space.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>Returns <paramref name="value" /> with all duplicate white space removed.</returns>
         public static string RemoveDuplicateWhiteSpace(this string value)
@@ -478,11 +570,13 @@ namespace PCS
             return value.RemoveDuplicateWhiteSpace(' ');
         }
 
-        /// <summary>Replaces all repeating white space with specified spacing character.</summary>
+        /// <summary>
+        /// Replaces all repeating white space with specified spacing character.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="spacingCharacter">Character value to use to insert as single white space value.</param>
         /// <returns>Returns <paramref name="value" /> with all duplicate white space removed.</returns>
-        /// <remarks>This function allows you to specify spacing character (e.g., you may want to use a non-breaking space: Convert.ToChar(160)).</remarks>
+        /// <remarks>This function allows you to specify spacing character (e.g., you may want to use a non-breaking space: <c>Convert.ToChar(160)</c>).</remarks>
         public static string RemoveDuplicateWhiteSpace(this string value, char spacingCharacter)
 		{
 			if (string.IsNullOrEmpty(value)) return "";
@@ -512,7 +606,9 @@ namespace PCS
 			return result.ToString();
 		}
 
-        /// <summary>Counts the total number of the occurances of a character in the given string.</summary>
+        /// <summary>
+        /// Counts the total number of the occurances of a character in the given string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="characterToCount">Character to be counted.</param>
         /// <returns>Total number of the occurances of <paramref name="characterToCount" /> in the given string.</returns>
@@ -531,7 +627,9 @@ namespace PCS
             return total;
         }
 
-        /// <summary>Tests to see if a string is contains only digits based on Char.IsDigit function.</summary>
+        /// <summary>
+        /// Tests to see if a string is contains only digits based on Char.IsDigit function.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are digits; otherwise, false.</returns>
         /// <seealso cref="char.IsDigit(char)"/>
@@ -551,7 +649,9 @@ namespace PCS
             return true;
         }
 
-        /// <summary>Tests to see if a string contains only numbers based on Char.IsNumber function.</summary>
+        /// <summary>
+        /// Tests to see if a string contains only numbers based on Char.IsNumber function.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are numbers; otherwise, false.</returns>
         /// <seealso cref="char.IsNumber(char)"/>
@@ -571,7 +671,9 @@ namespace PCS
             return true;
         }
 
-        /// <summary>Tests to see if a string's letters are all upper case.</summary>
+        /// <summary>
+        /// Tests to see if a string's letters are all upper case.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's letter characters are upper case; otherwise, false.</returns>
         public static bool IsAllUpper(this string value)
@@ -590,7 +692,9 @@ namespace PCS
             return true;
         }
 
-        /// <summary>Tests to see if a string's letters are all lower case.</summary>
+        /// <summary>
+        /// Tests to see if a string's letters are all lower case.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's letter characters are lower case; otherwise, false.</returns>
         public static bool IsAllLower(this string value)
@@ -609,7 +713,9 @@ namespace PCS
             return true;
         }
 
-        /// <summary>Tests to see if a string contains only letters.</summary>
+        /// <summary>
+        /// Tests to see if a string contains only letters.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are letters; otherwise, false.</returns>
         /// <remarks>Any non-letter character (e.g., punctuation marks) causes this function to return false (See overload to ignore punctuation
@@ -619,7 +725,9 @@ namespace PCS
             return value.IsAllLetters(false);
         }
 
-        /// <summary>Tests to see if a string contains only letters.</summary>
+        /// <summary>
+        /// Tests to see if a string contains only letters.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="ignorePunctuation">Set to True to ignore punctuation.</param>
         /// <returns>True, if all string's characters are letters; otherwise, false.</returns>
@@ -647,7 +755,9 @@ namespace PCS
             return true;
         }
 
-        /// <summary>Tests to see if a string contains only letters or digits.</summary>
+        /// <summary>
+        /// Tests to see if a string contains only letters or digits.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <returns>True, if all string's characters are either letters or digits; otherwise, false.</returns>
         /// <remarks>Any non-letter, non-digit character (e.g., punctuation marks) causes this function to return false (See overload to ignore
@@ -657,7 +767,9 @@ namespace PCS
             return value.IsAllLettersOrDigits(false);
         }
 
-        /// <summary>Tests to see if a string contains only letters or digits.</summary>
+        /// <summary>
+        /// Tests to see if a string contains only letters or digits.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="ignorePunctuation">Set to True to ignore punctuation.</param>
         /// <returns>True, if all string's characters are letters or digits; otherwise, false.</returns>
@@ -685,7 +797,9 @@ namespace PCS
             return true;
         }
 
-        /// <summary>Encodes the specified Unicode character in proper Regular Expression format.</summary>
+        /// <summary>
+        /// Encodes the specified Unicode character in proper Regular Expression format.
+        /// </summary>
         /// <param name="item">Unicode character to encode in Regular Expression format.</param>
         /// <returns>Specified Unicode character in proper Regular Expression format.</returns>
         public static string EncodeRegexChar(this char item)
@@ -693,7 +807,9 @@ namespace PCS
             return "\\u" + Convert.ToUInt16(item).ToString("x").PadLeft(4, '0');
         }
 
-        /// <summary>Decodes the specified Regular Expression character back into a standard Unicode character.</summary>
+        /// <summary>
+        /// Decodes the specified Regular Expression character back into a standard Unicode character.
+        /// </summary>
         /// <param name="value">Regular Expression character to decode back into a Unicode character.</param>
         /// <returns>Standard Unicode character representation of specified Regular Expression character.</returns>
         public static char DecodeRegexChar(this string value)
@@ -701,7 +817,9 @@ namespace PCS
             return Convert.ToChar(Convert.ToUInt16(value.Replace("\\u", "0x"), 16));
         }
 
-        /// <summary>Encodes a string into a base-64 string.</summary>
+        /// <summary>
+        /// Encodes a string into a base-64 string.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <remarks>
         /// <para>Performs a base-64 style of string encoding useful for data obfuscation or safe XML data string transmission.</para>
@@ -712,7 +830,9 @@ namespace PCS
             return Convert.ToBase64String(Encoding.Unicode.GetBytes(value));
         }
 
-        /// <summary>Decodes a given base-64 encoded string encoded with <see cref="Base64Encode" />.</summary>
+        /// <summary>
+        /// Decodes a given base-64 encoded string encoded with <see cref="Base64Encode" />.
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <remarks>Note: This function decodes value back into a "String". Use the Convert.FromBase64String function to decode a base-64 encoded
         /// string back into a binary data buffer.</remarks>
@@ -721,7 +841,9 @@ namespace PCS
             return Encoding.Unicode.GetString(Convert.FromBase64String(value));
         }
 
-        /// <summary>Converts the provided string into TitleCase (upper case first letter of each word).</summary>
+        /// <summary>
+        /// Converts the provided string into TitleCase (upper case first letter of each word).
+        /// </summary>
         /// <param name="value">Input string.</param>
         /// <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture. This way, even
         /// strings formatted in all-caps will still be properly formatted.</remarks>
@@ -767,7 +889,7 @@ namespace PCS
         /// If value is greater than specified maximum length, value returned will be truncated from the right.
         /// </summary>
         /// <remarks>
-        /// Handles multiple lines of text separated by Environment.NewLine.
+        /// Handles multiple lines of text separated by <c>Environment.NewLine</c>.
         /// </remarks>
         public static string CenterText(this string value, int maxLength, char paddingCharacter)
         {

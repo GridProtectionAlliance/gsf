@@ -28,11 +28,8 @@ namespace PCS.Configuration
     /// Represents the base class for application settings that are synchronized with its configuration file.
     /// </summary>
     /// <remarks>
-    /// In order to make custom types serializable for the configuration file perform the following steps:
-    /// <ol>
-    /// <li>For serialization simply override the <see cref="Object.ToString"/> in the custom type ensuring that the returned string is XML compliant.</li>
-    /// <li>For deserialization simply implement the <see cref="IConvertible"/> interface focusing on the <see cref="IConvertible.ToString"/> implementation.</li>
-    /// </ol>
+    /// In order to make custom types serializable for the configuration file, implement a <see cref="TypeConverter"/> for the type.<br/>
+    /// See http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx for details.
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class SettingsBase : IDisposable
@@ -211,7 +208,7 @@ namespace PCS.Configuration
         /// <remarks>
         /// Use this function to ensure a setting exists, it will not override an existing value.
         /// </remarks>
-        public void Create(string name, string value)
+        public void CreateValue(string name, string value)
         {
             m_creator(name, value.ToNonNullString());
         }
@@ -224,12 +221,12 @@ namespace PCS.Configuration
         /// <remarks>
         /// Use this function to ensure a setting exists, it will not override an existing value.
         /// </remarks>
-        public void Create<T>(string name, T value)
+        public void CreateValue<T>(string name, T value)
         {
             if (value == null)
                 m_creator(name, "");
             else
-                m_creator(name, value.ToString());
+                m_creator(name, ConvertToString(value));
         }
 
         /// <summary>
@@ -238,15 +235,9 @@ namespace PCS.Configuration
         /// <typeparam name="T">Type to use for setting conversion.</typeparam>
         /// <param name="name">Setting name.</param>
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
-        public T Value<T>(string name)
+        public T GetValue<T>(string name)
         {
-            T value = (T)Value(name, typeof(T));
-
-            // If the element's value string is not present, uses the default.
-            if (value == null)
-                return default(T);
-
-            return value;
+            return m_getter(name).ConvertToType<T>();
         }
 
         /// <summary>
@@ -255,33 +246,9 @@ namespace PCS.Configuration
         /// <param name="name">Setting name.</param>
         /// <param name="type">Setting type.</param>
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
-        public object Value(string name, Type type)
+        public object GetValue(string name, Type type)
         {
-            string stringValue = m_getter(name);
-
-            if (!string.IsNullOrEmpty(stringValue))
-            {
-                // Converts the element's value string, if present, to the proper type.
-                if (type.IsEnum)
-                {
-                    // Parses the string to the equivalent enumeration.
-                    return Enum.Parse(type, stringValue);
-                }
-                else if (type == typeof(bool))
-                {
-                    // Handles bool as a special case allowing numeric entries as well as true/false
-                    return Convert.ChangeType(stringValue.ParseBoolean(), type);
-                }
-                else
-                {
-                    // Casts the string to the specified type.
-                    return Convert.ChangeType(stringValue, type);
-                }
-            }
-            else
-            {
-                return null;
-            }
+            return m_getter(name).ConvertToType(type);
         }
 
         /// <summary>
@@ -290,9 +257,9 @@ namespace PCS.Configuration
         /// <typeparam name="T">Type to use for setting conversion.</typeparam>
         /// <param name="name">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        public void Get<T>(string name, out T value)
+        public void GetValue<T>(string name, out T value)
         {
-            value = Value<T>(name);
+            value = m_getter(name).ConvertToType<T>();
         }
 
         /// <summary>
@@ -301,12 +268,12 @@ namespace PCS.Configuration
         /// <typeparam name="T">Type to use for setting conversion.</typeparam>
         /// <param name="name">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        public void Set<T>(string name, T value)
+        public void SetValue<T>(string name, T value)
         {
             if (value == null)
                 m_setter(name, "");
             else
-                m_setter(name, value.ToString());
+                m_setter(name, ConvertToString(value));
         }
 
         /// <summary>
@@ -319,10 +286,10 @@ namespace PCS.Configuration
             // through of these making sure a setting exists for each field and property
 
             // Verify a configuration setting exists for each field
-            ExecuteActionForFields(field => Create(field.Name, field.GetValue(this).ToNonNullString()));
+            ExecuteActionForFields(field => CreateValue(field.Name, field.GetValue(this).ToNonNullString()));
 
             // Verify a configuration setting exists for each property
-            ExecuteActionForProperties(property => Create(property.Name, property.GetValue(this, null).ToNonNullString()), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => CreateValue(property.Name, property.GetValue(this, null).ToNonNullString()), BindingFlags.GetProperty);
 
             // If any new values were encountered, make sure they are flushed to config file
             m_configFile.Save();
@@ -337,10 +304,10 @@ namespace PCS.Configuration
         public virtual void Load()
         {
             // Load configuration file settings into fields
-            ExecuteActionForFields(field => field.SetValue(this, Value(field.Name, field.FieldType)));
+            ExecuteActionForFields(field => field.SetValue(this, GetValue(field.Name, field.FieldType)));
             
             // Load configuration file settings into properties
-            ExecuteActionForProperties(property => property.SetValue(this, Value(property.Name, property.PropertyType), null), BindingFlags.SetProperty);
+            ExecuteActionForProperties(property => property.SetValue(this, GetValue(property.Name, property.PropertyType), null), BindingFlags.SetProperty);
         }
 
         /// <summary>
@@ -349,10 +316,10 @@ namespace PCS.Configuration
         public virtual void Save()
         {
             // Saves setting fields into configuration file values
-            ExecuteActionForFields(field => m_setter(field.Name, field.GetValue(this).ToNonNullString()));
+            ExecuteActionForFields(field => SetValue(field.Name, field.GetValue(this)));
             
             // Saves setting properties into configuration file values
-            ExecuteActionForProperties(property => m_setter(property.Name, property.GetValue(this, null).ToNonNullString()), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => SetValue(property.Name, property.GetValue(this, null)), BindingFlags.GetProperty);
 
             // Make sure any changes are flushed to config file
             m_configFile.Save();
@@ -391,6 +358,22 @@ namespace PCS.Configuration
                     // Didn't find serialize setting attribute and it's not required, so we perform action
                     memberAction(member);
                 }
+            }
+        }
+
+        // Attempts to use converter for value's type to do string conversion; otherwise just calls object's ToString method
+        private string ConvertToString(object value)
+        {
+            try
+            {
+                // Attempt to use type converter to set field value
+                TypeConverter converter = TypeDescriptor.GetConverter(value);
+                return converter.ConvertToString(value).ToNonNullString();
+            }
+            catch
+            {
+                // Otherwise just call object's ToString method
+                return value.ToNonNullString();
             }
         }
 

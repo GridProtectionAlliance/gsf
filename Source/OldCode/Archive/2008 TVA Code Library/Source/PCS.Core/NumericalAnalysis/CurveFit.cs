@@ -20,7 +20,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Windows;
 
 namespace PCS.NumericalAnalysis
 {
@@ -32,9 +32,9 @@ namespace PCS.NumericalAnalysis
         /// <summary>
         /// Computes linear regression over given values.
         /// </summary>
-        public static double[] Compute(int polynomialOrder, IEnumerable<PointF> values)
+        public static double[] Compute(int polynomialOrder, IEnumerable<Point> values)
         {
-            return Compute(polynomialOrder, values.Select(point => (double)point.X).ToList(), values.Select(point => (double)point.Y).ToList());
+            return Compute(polynomialOrder, values.Select(point => point.X).ToList(), values.Select(point => point.Y).ToList());
         }
 
         /// <summary>

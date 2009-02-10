@@ -190,6 +190,16 @@ namespace PCS
         }
 
         /// <summary>
+        /// Makes sure returned string value is not null; if this string is null, empty string ("") will be returned. 
+        /// </summary>
+        /// <param name="value"><see cref="String"/> to verify is not null.</param>
+        /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
+        public static string ToNonNullString(this string value)
+        {
+            return (value == null ? "" : value);
+        }
+
+        /// <summary>
         /// Converts value to string, null objects will return an empty string (""). 
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>

@@ -10,11 +10,8 @@ namespace PCS.Configuration
     /// </summary>
     /// <remarks>
     /// <para>
-    /// In order to make custom types serializable for the configuration file perform the following steps:
-    /// <ol>
-    /// <li>For serialization simply override the <see cref="Object.ToString"/> in the custom type ensuring that the returned string is XML compliant.</li>
-    /// <li>For deserialization simply implement the <see cref="IConvertible"/> interface focusing on the <see cref="IConvertible.ToString"/> implementation.</li>
-    /// </ol>
+    /// In order to make custom types serializable for the configuration file, implement a <see cref="System.ComponentModel.TypeConverter"/> for the type.<br/>
+    /// See http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx for details.
     /// </para>
     /// <example>
     /// Here is an example class derived from <see cref="AppSettingsBase"/> that automatically

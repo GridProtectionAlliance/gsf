@@ -265,32 +265,7 @@ namespace PCS.Configuration
         {
             try
             {
-                string stringValue = Value;
-
-                if (!string.IsNullOrEmpty(stringValue))
-                {
-                    // Converts the element's value string, if present, to the proper type.
-                    if (typeof(T).IsEnum)
-                    {
-                        // Parses the string to the equivalent enumeration.
-                        return (T)Enum.Parse(typeof(T), stringValue);
-                    }
-                    else if (typeof(T) == typeof(bool))
-                    {
-                        // Handles bool as a special case allowing numeric entries as well as true/false
-                        return (T)Convert.ChangeType(stringValue.ParseBoolean(), typeof(T));
-                    }
-                    else
-                    {
-                        // Casts the string to the specified type.
-                        return (T)Convert.ChangeType(stringValue, typeof(T));
-                    }
-                }
-                else
-                {
-                    // If the element's value string is not present, uses the default.
-                    return defaultValue;
-                }
+                return Value.ConvertToType<T>();
             }
             catch
             {
@@ -304,7 +279,7 @@ namespace PCS.Configuration
         /// <returns>Value as string.</returns>
         public string ValueAsString()
         {
-            return ValueAsString(default(string));
+            return ValueAsString("");
         }
 
         /// <summary>
@@ -315,14 +290,11 @@ namespace PCS.Configuration
         public string ValueAsString(string defaultValue)
         {
             string setting = Value;
+
             if (string.IsNullOrEmpty(setting))
-            {
                 return defaultValue;
-            }
             else
-            {
                 return setting;
-            }
         }
 
         /// <summary>
