@@ -59,7 +59,8 @@ namespace PCS
         /// </remarks>
         public static bool ParseBoolean(this string value)
         {
-            if (string.IsNullOrEmpty(value)) return false;
+            if (string.IsNullOrEmpty(value))
+                return false;
             
             value = value.Trim();
 
@@ -209,8 +210,8 @@ namespace PCS
         }
 
         /// <summary>
-        /// Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple pairs separated
-        /// by a semi-colon.
+        /// Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple
+        /// pairs separated by a semi-colon.
         /// </summary>
         /// <param name="value">Key pair string to parse.</param>
         /// <returns>Dictionary of key/value pairs.</returns>
@@ -239,9 +240,12 @@ namespace PCS
         /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.
         /// </summary>
         /// <param name="value">Key pair string to parse.</param>
-        /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
-        /// string).</param>
-        /// <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string).</param>
+        /// <param name="parameterDelimeter">
+        /// Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection string).
+        /// </param>
+        /// <param name="keyValueDelimeter">
+        /// Character that delimits key from value (e.g., would be an "=" in a typical connection string).
+        /// </param>
         /// <returns>Dictionary of key/value pairs.</returns>
         /// <remarks>
         /// <para>
