@@ -29,7 +29,7 @@ namespace PCS.Configuration
     /// </summary>
     /// <remarks>
     /// In order to make custom types serializable for the configuration file, implement a <see cref="TypeConverter"/> for the type.<br/>
-    /// See http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx for details.
+    /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class SettingsBase : IDisposable

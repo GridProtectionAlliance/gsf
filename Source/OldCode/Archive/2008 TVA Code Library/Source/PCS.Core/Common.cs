@@ -190,18 +190,12 @@ namespace PCS
             }
         }
 
-        // The following "ToNonNullString" methods extend all class based objects - note that these extension methods can
-        // be called even if the base object is null - hence the value...
-
-        /// <summary>
-        /// Makes sure returned string value is not null; if this string is null, empty string ("") will be returned. 
-        /// </summary>
-        /// <param name="value"><see cref="String"/> to verify is not null.</param>
-        /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
-        public static string ToNonNullString(this string value)
-        {
-            return (value == null ? "" : value);
-        }
+        // The following "ToNonNullString" methods extend all class based objects. Note that these extension methods can be
+        // called even if the base object is null, hence the value of these methods. Our philosophy for this project has been
+        // "not" to apply extensions to all objects (this to avoid general namespace pollution) and make sure extensions are
+        // grouped together in their own source file (e.g., StringExtensions.cs); however these items do apply to all items
+        // are essentially type-less hence their location in the "Common" class. These extension methods are at least limited
+        // to classes and won't show up on native types and custom structs.
 
         /// <summary>
         /// Converts value to string, null objects will return an empty string (""). 
@@ -230,14 +224,32 @@ namespace PCS
             return (value == null ? nonNullValue : value.ToString());
         }
 
+        // We handle strings as a special version of the ToNullNullString extension to handle documentation a little differently
+
+        /// <summary>
+        /// Makes sure returned string value is not null; if this string is null, empty string ("") will be returned. 
+        /// </summary>
+        /// <param name="value"><see cref="String"/> to verify is not null.</param>
+        /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
+        public static string ToNonNullString(this string value)
+        {
+            return (value == null ? "" : value);
+        }
+
         /// <summary>
         /// Converts <paramref name="value"/> to a <see cref="String"/> using an appropriate <see cref="TypeConverter"/>.
         /// </summary>
         /// <param name="value">Value to convert to a <see cref="String"/>.</param>
         /// <returns><paramref name="value"/> converted to a <see cref="String"/>.</returns>
         /// <remarks>
+        /// <para>
         /// If <see cref="TypeConverter"/> fails, the value's <c>ToString()</c> value will be returned.
         /// Returned value will never be null, if no value exists an empty string ("") will be returned.
+        /// </para>
+        /// <para>
+        /// You can use the <see cref="StringExtensions.ConvertToType{T}(string)"/> string extension method to
+        /// convert the string back to its original <see cref="Type"/>.
+        /// </para>
         /// </remarks>
         public static string TypeConvertToString(object value)
         {

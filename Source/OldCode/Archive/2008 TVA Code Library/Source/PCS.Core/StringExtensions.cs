@@ -95,7 +95,13 @@ namespace PCS
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
-        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of <paramref name="type"/> if conversion fails.</returns>
+        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <remarks>
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified type T,
+        /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
+        /// <see cref="Common.TypeConvertToString"/> method for an easy way to do this.
+        /// </remarks>
         public static T ConvertToType<T>(this string value)
         {
             T obj = (T)value.ConvertToType(typeof(T));
@@ -112,6 +118,12 @@ namespace PCS
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
         /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; null if conversion fails.</returns>
+        /// <remarks>
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
+        /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
+        /// <see cref="Common.TypeConvertToString"/> method for an easy way to do this.
+        /// </remarks>
         public static object ConvertToType(this string value, Type type)
         {
             // If the desired return type is a string, don't do anymore work...

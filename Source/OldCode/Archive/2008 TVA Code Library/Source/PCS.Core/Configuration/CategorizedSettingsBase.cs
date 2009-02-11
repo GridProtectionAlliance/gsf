@@ -31,7 +31,7 @@ namespace PCS.Configuration
     /// <remarks>
     /// <para>
     /// In order to make custom types serializable for the configuration file, implement a <see cref="TypeConverter"/> for the type.<br/>
-    /// See http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx for details.
+    /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </para>
     /// <example>
     /// Here is an example class derived from <see cref="CategorizedSettingsBase"/> that automatically
