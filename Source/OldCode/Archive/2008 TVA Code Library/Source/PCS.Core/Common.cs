@@ -194,8 +194,8 @@ namespace PCS
         // called even if the base object is null, hence the value of these methods. Our philosophy for this project has been
         // "not" to apply extensions to all objects (this to avoid general namespace pollution) and make sure extensions are
         // grouped together in their own source file (e.g., StringExtensions.cs); however these items do apply to all items
-        // are essentially type-less hence their location in the "Common" class. These extension methods are at least limited
-        // to classes and won't show up on native types and custom structs.
+        // and are essentially type-less hence their location in the "Common" class. These extension methods are at least
+        // limited to classes and won't show up on native types and custom structs.
 
         /// <summary>
         /// Converts value to string, null objects will return an empty string (""). 
