@@ -277,18 +277,24 @@ namespace PCS
         }
 
         /// <summary>Determines if given item is a reference type.</summary>
+        /// <param name="item">Object to evaluate.</param>
+        /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
         public static bool IsReference(object item)
         {
             return !(item is ValueType);
         }
-
+        
         /// <summary>Determines if given item is a reference type but not a string.</summary>
+        /// <param name="item">Object to evaluate.</param>
+        /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
         public static bool IsNonStringReference(object item)
         {
             return (IsReference(item) && !(item is string));
         }
 
         /// <summary>Determines if given item is numeric.</summary>
+        /// <param name="item">Object to evaluate.</param>
+        /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
         public static bool IsNumeric(object item)
         {
             IConvertible convertible = item as IConvertible;
@@ -321,30 +327,44 @@ namespace PCS
         }
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
+        /// <typeparam name="T">Return type <see cref="Type"/> that is the minimum value in the <paramref name="itemList"/>.</typeparam>
+        /// <param name="itemList">A variable number of parameters of type <typeparam name="T"/></param>
+        /// <returns>Result is the minimum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         public static T Min<T>(params T[] itemList)
         {
             return itemList.Min<T>();
         }
 
+
         /// <summary>Returns the largest item from a list of parameters.</summary>
+        /// <typeparam name="T">Return type <see cref="Type"/> that is the maximum value in the <paramref name="itemList"/>.</typeparam>
+        /// <param name="itemList">A variable number of parameters of type <typeparam name="T"/></param>
+        /// <returns>Result is the maximum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         public static T Max<T>(params T[] itemList)
         {
             return itemList.Max<T>();
         }
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
+        /// <param name="itemList">A variable number of parameters of type <see cref="Object"/></param>
+        /// <returns>Result is the minimum value of type <see cref="Object"/> in the <paramref name="itemList"/>.</returns>
         public static object Min(params object[] itemList)
         {
             return itemList.Min<object>(CompareObjects);
         }
 
         /// <summary>Returns the largest item from a list of parameters.</summary>
+        /// <param name="itemList">A variable number of parameters of type <see cref="Object"/></param>
+        /// <returns>Result is the maximum value of type <see cref="Object"/> in the <paramref name="itemList"/>.</returns>
         public static object Max(params object[] itemList)
         {
             return itemList.Max<object>(CompareObjects);
         }
 
         /// <summary>Compares two elements of any type.</summary>
+        /// <param name="x">Object which is compared to object <paramref name="y"/>.</param>
+        /// <param name="y">Object which is compared against.</param>
+        /// <returns>Result of comparison as an <see cref="int"/>.</returns>
         public static int CompareObjects(object x, object y)
         {
             // Just using Visual Basic runtime to compare two objects of unknown types - this can be a very
