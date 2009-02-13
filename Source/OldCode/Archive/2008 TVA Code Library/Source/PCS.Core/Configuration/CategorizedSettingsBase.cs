@@ -98,13 +98,6 @@ namespace PCS.Configuration
         /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
         /// </summary>
         /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        /// <remarks>
-        /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
-        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
-        /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
-        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
-        /// </remarks>
         public CategorizedSettingsBase(string categoryName)
             : this(ConfigurationFile.Current, categoryName, true, false)
         {
