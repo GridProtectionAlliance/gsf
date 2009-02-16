@@ -14,7 +14,8 @@
 //      Generated original version of source code.
 //  12/03/2008 - James R Carroll
 //      Added "Combine" and "IndexOfSequence" overloaded extensions.
-//
+//  02/13/2009 - Josh Patterson
+//      Edited Code Comments
 //*******************************************************************************************************
 
 using System;

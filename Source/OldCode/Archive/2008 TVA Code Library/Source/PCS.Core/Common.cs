@@ -16,6 +16,8 @@
 //       Edited code comments.
 //  09/08/2008 - J. Ritchie Carroll
 //      Converted to C#.
+//  02/13/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
