@@ -28,6 +28,25 @@
   
 \**************************************************************************/
 
+
+//*******************************************************************************************************
+//  ByteEncoding.cs
+//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
+//       Phone: 423/751-2827
+//       Email: jrcarrol@tva.gov
+//
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  02/13/2009 - Josh Patterson
+//      Edited Code Comments
+//
+//*******************************************************************************************************
+
+
 using System;
 using System.ComponentModel;
 using System.Text;
