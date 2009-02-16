@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/18/2008 - James R Carroll
 //       Generated original version of source code.
+//  02/16/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -25,6 +27,7 @@ namespace PCS
         /// <summary>Ensures parameter passed to function is not zero. Returns -1
         /// if <paramref name="source">source</paramref> is zero.</summary>
         /// <param name="source">Value to test for zero.</param>
+        /// <typeparam name="T">Return type used for immediate expression</typeparam>
         /// <returns>A non-zero value.</returns>
         public static T NotZero<T>(this T source) where T : struct, IEquatable<T>
         {
@@ -35,6 +38,7 @@ namespace PCS
         /// <param name="source">Value to test for zero.</param>
         /// <param name="nonZeroReturnValue">Value to return if <paramref name="source">source</paramref> is
         /// zero.</param>
+        /// <typeparam name="T">Return type used for immediate expression</typeparam>
         /// <returns>A non-zero value.</returns>
         /// <remarks>To optimize performance, this function does not validate that the notZeroReturnValue is not
         /// zero.</remarks>
