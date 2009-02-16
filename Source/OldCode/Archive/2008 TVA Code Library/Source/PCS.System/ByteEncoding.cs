@@ -478,6 +478,7 @@ namespace System
 
         /// <summary>Encodes given buffer into a user presentable representation.</summary>
         /// <param name="bytes">Bytes to encode.</param>
+        /// <returns>String representation of byte array.</returns>
         public virtual string GetString(byte[] bytes)
         {
             return GetString(bytes, NoSpacing);
