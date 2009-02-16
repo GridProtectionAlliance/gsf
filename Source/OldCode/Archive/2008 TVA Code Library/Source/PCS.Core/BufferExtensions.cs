@@ -26,6 +26,9 @@ namespace PCS
     public static class BufferExtensions
     {
         /// <summary>Returns a copy of the specified portion of the <paramref name="source"/> buffer.</summary>
+        /// <param name="source">Source buffer.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Length of <paramref name="source"/> buffer to copy at <paramref name="startIndex"/> offset.</param>
         /// <returns>A buffer of data copied from the specified portion of the source buffer.</returns>
         /// <remarks>
         /// Returned buffer will be extended as needed to make it the specified <paramref name="length"/>, but
@@ -157,6 +160,8 @@ namespace PCS
         /// <summary>
         /// Combines array of buffers together as a single image.
         /// </summary>
+        /// <param name="buffers">Array of byte buffers.</param>
+        /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[][] buffers)
         {
             MemoryStream combinedBuffer = new MemoryStream();
