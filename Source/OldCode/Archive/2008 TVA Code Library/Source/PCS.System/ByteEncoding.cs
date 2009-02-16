@@ -528,6 +528,12 @@ namespace System
         public abstract byte[] GetBytes(string value, char spacingCharacter);
 
         /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
+        /// <param name="bytes">Encoded string to decode.</param>
+        /// <param name="offset">Offset into byte array to begin decoding straing at.</param>
+        /// <param name="length">Number of bytes to decode starting at <paramref name="offset"/></param>
+        /// <param name="spacingCharacter">Character to insert between each byte</param>
+        /// <param name="format">String decoding format.</param>
+        /// <returns>Decoded string</returns>
         protected string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
         {
             if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
