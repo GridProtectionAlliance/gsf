@@ -14,6 +14,8 @@
 //      Generated original version of source code.
 //  09/17/2008 - James R Carroll
 //      Converted to C#.
+//  02/16/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -54,7 +56,10 @@ namespace PCS
         }
 
         /// <summary>Generates a cryptographically strong random integer between specified values.</summary>
+        /// <param name="startNumber">A <see cref="double"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="double"/> that is the high end of our range.</param>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <returns>A <see cref="double"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>, or an excception.</returns>
         public static double Between(double startNumber, double stopNumber)
         {
             if (stopNumber < startNumber)
@@ -108,6 +113,9 @@ namespace PCS
 
         /// <summary>Generates a cryptographically strong 8-bit random integer between specified values.</summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="byte"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="byte"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="byte"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
         public static byte ByteBetween(byte startNumber, byte stopNumber)
         {
             if (stopNumber < startNumber)
@@ -132,6 +140,9 @@ namespace PCS
 
         /// <summary>Generates a cryptographically strong 16-bit random integer between specified values.</summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="short"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="short"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="short"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
         public static short Int16Between(short startNumber, short stopNumber)
         {
             if (stopNumber < startNumber)
@@ -156,6 +167,9 @@ namespace PCS
 
         /// <summary>Generates a cryptographically strong 24-bit random integer between specified values.</summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="System.Int24"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="System.Int24"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="System.Int24"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
         public static System.Int24 Int24Between(System.Int24 startNumber, System.Int24 stopNumber)
         {
             if (stopNumber < startNumber)
@@ -180,6 +194,9 @@ namespace PCS
 
         /// <summary>Generates a cryptographically strong 32-bit random integer between specified values.</summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="int"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="int"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="int"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
         public static int Int32Between(int startNumber, int stopNumber)
         {
             if (stopNumber < startNumber)
@@ -204,6 +221,9 @@ namespace PCS
 
         /// <summary>Generates a cryptographically strong 64-bit random integer between specified values.</summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="long"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="long"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="long"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
         public static long Int64Between(long startNumber, long stopNumber)
         {
             if (stopNumber < startNumber)
