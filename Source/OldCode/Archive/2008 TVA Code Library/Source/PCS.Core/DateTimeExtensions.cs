@@ -18,6 +18,8 @@
 //       Edited code comments.
 //  09/08/2008 - J. Ritchie Carroll
 //      Converted to C# extensions.
+//  02/16/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -291,6 +293,7 @@ namespace PCS
 
         /// <summary>Gets the abbreviated month name for month of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which month name is extracted.</param>
+        /// <returns>String representation of the month name based on <paramref name="timestamp"/></returns>
         public static string AbbreviatedMonthName(this DateTime timestamp)
         {
             return DateTimeFormatInfo.CurrentInfo.GetAbbreviatedMonthName(timestamp.Month);
@@ -298,6 +301,7 @@ namespace PCS
 
         /// <summary>Gets the full month name for month of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which month name is extracted.</param>
+        /// <returns>String representation of the month name based on <paramref name="timestamp"/></returns>
         public static string MonthName(this DateTime timestamp)
         {
             return DateTimeFormatInfo.CurrentInfo.GetMonthName(timestamp.Month);
@@ -305,6 +309,7 @@ namespace PCS
 
         /// <summary>Gets the abbreviated weekday name for weekday of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which weekday name is extracted.</param>
+        /// <returns>String representation of the weekday name based on <paramref name="timestamp"/></returns>
         public static string AbbreviatedWeekdayName(this DateTime timestamp)
         {
             return DateTimeFormatInfo.CurrentInfo.GetAbbreviatedDayName(timestamp.DayOfWeek);
@@ -312,6 +317,7 @@ namespace PCS
 
         /// <summary>Gets the shortest weekday name for weekday of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which weekday name is extracted.</param>
+        /// <returns>String representation of the short weekday name based on <paramref name="timestamp"/></returns>
         public static string ShortWeekdayName(this DateTime timestamp)
         {
             return DateTimeFormatInfo.CurrentInfo.GetShortestDayName(timestamp.DayOfWeek);
@@ -319,6 +325,7 @@ namespace PCS
 
         /// <summary>Gets the full weekday name for weekday of the timestamp.</summary>
         /// <param name="timestamp">Timestamp from which weekday name is extracted.</param>
+        /// <returns>String representation of the weekday name based on <paramref name="timestamp"/></returns>
         public static string WeekdayName(this DateTime timestamp)
         {
             return DateTimeFormatInfo.CurrentInfo.GetDayName(timestamp.DayOfWeek);
