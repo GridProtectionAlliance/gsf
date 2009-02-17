@@ -34,6 +34,8 @@
 //       Converted to C# extensions.
 //  02/10/2009 - J. Ritchie Carroll
 //       Added ConvertToType overloaded extensions.
+//  02/17/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -841,6 +843,7 @@ namespace PCS
         /// <para>Performs a base-64 style of string encoding useful for data obfuscation or safe XML data string transmission.</para>
         /// <para>Note: This function encodes a "String". Use the Convert.ToBase64String function to encode a binary data buffer.</para>
         /// </remarks>
+        /// <returns>A <see cref="String"></see> value representing the encoded input of <paramref name="value"/>.</returns>
         public static string Base64Encode(this string value)
         {
             return Convert.ToBase64String(Encoding.Unicode.GetBytes(value));
@@ -852,6 +855,7 @@ namespace PCS
         /// <param name="value">Input string.</param>
         /// <remarks>Note: This function decodes value back into a "String". Use the Convert.FromBase64String function to decode a base-64 encoded
         /// string back into a binary data buffer.</remarks>
+        /// <returns>A <see cref="String"></see> value representing the decoded input of <paramref name="value"/>.</returns>
         public static string Base64Decode(this string value)
         {
             return Encoding.Unicode.GetString(Convert.FromBase64String(value));
@@ -863,6 +867,7 @@ namespace PCS
         /// <param name="value">Input string.</param>
         /// <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture. This way, even
         /// strings formatted in all-caps will still be properly formatted.</remarks>
+        /// <returns>A <see cref="String"/> that has the first letter of each word capitalized.</returns>
         public static string TitleCase(this string value)
         {
             return System.Globalization.CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(value.ToLower());
@@ -871,6 +876,9 @@ namespace PCS
         /// <summary>
         /// Truncates the provided string from the left if it is longer that specified length.
         /// </summary>
+        /// <param name="value">A <see cref="String"/> value that is to be truncated.</param>
+        /// <param name="maxLength">The maximum number of characters that <paramref name="value"/> can be.</param>
+        /// <returns>A <see cref="String"/> that is the truncated version of the <paramref name="value"/> string.</returns>
         public static string TruncateLeft(this string value, int maxLength)
         {
             if (value.Length > maxLength) return value.Substring(value.Length - maxLength);
@@ -880,6 +888,9 @@ namespace PCS
         /// <summary>
         /// Truncates the provided string from the right if it is longer that specified length.
         /// </summary>
+        /// <param name="value">A <see cref="String"/> value that is to be truncated.</param>
+        /// <param name="maxLength">The maximum number of characters that <paramref name="value"/> can be.</param>
+        /// <returns>A <see cref="String"/> that is the truncated version of the <paramref name="value"/> string.</returns>
         public static string TruncateRight(this string value, int maxLength)
         {
             if (value.Length > maxLength) return value.Substring(0, maxLength);
@@ -894,6 +905,9 @@ namespace PCS
         /// <remarks>
         /// Handles multiple lines of text separated by Environment.NewLine.
         /// </remarks>
+        /// <param name="value">A <see cref="String"/> to be centered.</param>
+        /// <param name="maxLength">An <see cref="Int"/> that is the maximum length of padding.</param>
+        /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength)
         {
             return value.CenterText(maxLength, ' ');
@@ -907,6 +921,10 @@ namespace PCS
         /// <remarks>
         /// Handles multiple lines of text separated by <c>Environment.NewLine</c>.
         /// </remarks>
+        /// <param name="value">A <see cref="String"/> to be centered.</param>
+        /// <param name="maxLength">An <see cref="Int"/> that is the maximum length of padding.</param>
+        /// <param name="paddingCharacter">The <see cref="char"/> value to pad with.</param>
+        /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength, char paddingCharacter)
         {
             // If the text to be centered contains multiple lines, centers all the lines individually.
