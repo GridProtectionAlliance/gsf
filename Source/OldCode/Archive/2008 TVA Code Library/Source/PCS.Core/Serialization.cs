@@ -16,6 +16,8 @@
 //      Converted to C#
 //  09/09/2008 - J. Ritchie Carroll
 //      Added TryGetObject overloads
+//  02/16/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -33,6 +35,9 @@ namespace PCS
         /// <summary>
         /// Creates a clone of a serializable object.
         /// </summary>
+        /// <typeparam name="T">The type of the cloned object.</typeparam>
+        /// <param name="sourceObject">The type source to be cloned.</param>
+        /// <returns>A clone of <paramref name="sourceObject"/>.</returns>
         public static T CloneObject<T>(T sourceObject)
         {
             return GetObject<T>(GetBytes(sourceObject));
@@ -49,6 +54,9 @@ namespace PCS
         /// An error occurred during deserialization. The original exception is available using 
         /// the InnerException property.
         /// </exception>
+        /// <typeparam name="T">The type of the object to create from the serialized string <paramref name="serializedObject"/>.</typeparam>
+        /// <param name="serializedObject">A <see cref="string"/> representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <returns>A type T based on <paramref name="serializedObject"/>.</returns>
         public static T GetObject<T>(string serializedObject)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(T));
@@ -58,6 +66,10 @@ namespace PCS
         /// <summary>
         /// Attempts XML deserialization on the XML string and returns the typed object for it.
         /// </summary>
+        /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
+        /// <param name="serializedObject"><see cref="string"/> that contains the serialized representation of the object.</param>
+        /// <param name="deserializedObject">An object of type T that is passed in as the container to hold the de-serialized object from the string <paramref name="serializedObject"/>.</param>
+        /// <returns><see cref="boolean"/> value indicating if the de-serialization was successful.</returns>
         public static bool TryGetObject<T>(string serializedObject, out T deserializedObject)
         {
             try
@@ -81,6 +93,8 @@ namespace PCS
         /// </remarks>
         /// <exception cref="System.Runtime.Serialization.SerializationException">Serialized object data is invalid or length is 0.</exception>
         /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
+        /// <typeparam name="T">The type of the object to create from the serialized byte array <paramref name="serializedObject"/>.</typeparam>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         public static T GetObject<T>(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
@@ -90,6 +104,9 @@ namespace PCS
         /// <summary>
         /// Attempts binary deserialization on the byte array and returns the typed object for it.
         /// </summary>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <param name="deserializedObject">A byref type T that is passed in to be hold the de-serialized object.</param>
+        /// <returns>A <see cref="boolean"/> which indicates whether the de-serialization process was successful.</returns>
         public static bool TryGetObject<T>(byte[] serializedObject, out T deserializedObject)
         {
             try
@@ -113,6 +130,8 @@ namespace PCS
         /// </remarks>
         /// <exception cref="System.Runtime.Serialization.SerializationException">Serialized object data is invalid or length is 0.</exception>
         /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <returns>An <see cref="object"/> based on <paramref name="serializedObject"/>.</returns>
         public static object GetObject(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
@@ -122,6 +141,9 @@ namespace PCS
         /// <summary>
         /// Attempts binary deserialization on the byte array and returns the typed object for it.
         /// </summary>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <param name="deserializedObject">A byref <see cref="object"></see> that is passed in to be hold the de-serialized object.</param>
+        /// <returns>A <see cref="boolean"/> which indicates whether the de-serialization process was successful.</returns>
         public static bool TryGetObject(byte[] serializedObject, out object deserializedObject)
         {
             try
