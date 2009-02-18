@@ -22,11 +22,14 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This base class represents the common implementation of the protocol independent definition of any kind of data that can be parsed or generated.
+    /// Represents the common implementation of the protocol independent definition of any kind
+    /// of data that can be parsed or generated.<br/>
+    /// This is the base class of all parsing/generating classes in the phasor protocols library;
+    /// it is the root of the parsing/generating class hierarchy.
     /// </summary>
     /// <remarks>
-    /// This is the root class of the phasor protocol library.<br/>
-    /// This base class represents <see cref="IChannel"/> data images for parsing or generation in terms of a header, body and footer (see <see cref="BinaryImageBase"/> for details).
+    /// This base class represents <see cref="IChannel"/> data images for parsing or generation in
+    /// terms of a header, body and footer (see <see cref="BinaryImageBase"/> for details).
     /// </remarks>
     [Serializable()]
     public abstract class ChannelBase : BinaryImageBase, IChannel
@@ -43,15 +46,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the final derived type of class implementing <see cref="IChannel"/>.
-        /// </summary>
-        /// <remarks>
-        /// This is expected to be overriden by the final derived class.
-        /// </remarks>
-        public abstract Type DerivedType { get; }
-
-        /// <summary>
-        /// Gets or sets the parsing state for the <see cref="IChannel"/> object.
+        /// Gets or sets the parsing state for this <see cref="ChannelBase"/> object.
         /// </summary>
         public virtual IChannelParsingState State
         {
@@ -66,7 +61,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="ChannelBase"/> object.
         /// </summary>
         /// <remarks>
         /// The attributes dictionary is relevant to all channel properties.  This dictionary will only be instantiated with a call to
@@ -84,7 +79,7 @@ namespace PCS.PhasorProtocols
                 else
                     m_attributes.Clear();
 
-                m_attributes.Add("Derived Type", DerivedType.FullName);
+                m_attributes.Add("Derived Type", this.GetType().FullName);
                 m_attributes.Add("Binary Length", BinaryLength.ToString());
 
                 return m_attributes;
@@ -92,7 +87,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
+        /// Gets or sets a user definable reference to an object associated with this <see cref="ChannelBase"/> object.
         /// </summary>
         public virtual object Tag
         {

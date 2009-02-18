@@ -16,11 +16,12 @@
 //*******************************************************************************************************
 
 using System;
+using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This class represents the common implementation of the protocol independent definition of an analog value.
+    /// Represents the common implementation of the protocol independent definition of an analog value.
     /// </summary>
     [CLSCompliant(false), Serializable()]
     public abstract class AnalogDefinitionBase : ChannelDefinitionBase, IAnalogDefinition
