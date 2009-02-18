@@ -68,12 +68,12 @@ namespace System
 
         /// <summary>Creates a new <see cref="TimeTagBase"/>, given standard .NET DateTime.</summary>
         /// <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
-        /// <param name="timestamp">.NET DateTime used to create time tag from.</param>
-        protected TimeTagBase(long baseDateOffsetTicks, DateTime timestamp)
+        /// <param name="timestamp">Timestamp in <see cref="Ticks"/> used to create time tag from.</param>
+        protected TimeTagBase(long baseDateOffsetTicks, Ticks timestamp)
         {
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = Ticks.ToSeconds(timestamp.Ticks - m_baseDateOffsetTicks);
+            Value = Ticks.ToSeconds(timestamp - m_baseDateOffsetTicks);
         }
 
         #endregion
