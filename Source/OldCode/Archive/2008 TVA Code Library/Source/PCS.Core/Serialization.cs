@@ -69,7 +69,7 @@ namespace PCS
         /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
         /// <param name="serializedObject"><see cref="string"/> that contains the serialized representation of the object.</param>
         /// <param name="deserializedObject">An object of type T that is passed in as the container to hold the de-serialized object from the string <paramref name="serializedObject"/>.</param>
-        /// <returns><see cref="boolean"/> value indicating if the de-serialization was successful.</returns>
+        /// <returns><see cref="bool"/> value indicating if the de-serialization was successful.</returns>
         public static bool TryGetObject<T>(string serializedObject, out T deserializedObject)
         {
             try
@@ -106,7 +106,7 @@ namespace PCS
         /// </summary>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <param name="deserializedObject">A byref type T that is passed in to be hold the de-serialized object.</param>
-        /// <returns>A <see cref="boolean"/> which indicates whether the de-serialization process was successful.</returns>
+        /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
         public static bool TryGetObject<T>(byte[] serializedObject, out T deserializedObject)
         {
             try
@@ -143,7 +143,7 @@ namespace PCS
         /// </summary>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <param name="deserializedObject">A byref <see cref="object"></see> that is passed in to be hold the de-serialized object.</param>
-        /// <returns>A <see cref="boolean"/> which indicates whether the de-serialization process was successful.</returns>
+        /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
         public static bool TryGetObject(byte[] serializedObject, out object deserializedObject)
         {
             try

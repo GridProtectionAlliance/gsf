@@ -330,7 +330,7 @@ namespace PCS
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
         /// <typeparam name="T">Return type <see cref="Type"/> that is the minimum value in the <paramref name="itemList"/>.</typeparam>
-        /// <param name="itemList">A variable number of parameters of type <typeparam name="T"/></param>
+        /// <param name="itemList">A variable number of parameters of the specified type.</param>
         /// <returns>Result is the minimum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         public static T Min<T>(params T[] itemList)
         {
@@ -340,7 +340,7 @@ namespace PCS
 
         /// <summary>Returns the largest item from a list of parameters.</summary>
         /// <typeparam name="T">Return type <see cref="Type"/> that is the maximum value in the <paramref name="itemList"/>.</typeparam>
-        /// <param name="itemList">A variable number of parameters of type <typeparam name="T"/></param>
+        /// <param name="itemList">A variable number of parameters of the specified type .</param>
         /// <returns>Result is the maximum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         public static T Max<T>(params T[] itemList)
         {

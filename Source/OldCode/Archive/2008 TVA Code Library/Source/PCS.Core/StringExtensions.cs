@@ -906,7 +906,7 @@ namespace PCS
         /// Handles multiple lines of text separated by Environment.NewLine.
         /// </remarks>
         /// <param name="value">A <see cref="String"/> to be centered.</param>
-        /// <param name="maxLength">An <see cref="Int"/> that is the maximum length of padding.</param>
+        /// <param name="maxLength">An <see cref="Int32"/> that is the maximum length of padding.</param>
         /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength)
         {
@@ -922,7 +922,7 @@ namespace PCS
         /// Handles multiple lines of text separated by <c>Environment.NewLine</c>.
         /// </remarks>
         /// <param name="value">A <see cref="String"/> to be centered.</param>
-        /// <param name="maxLength">An <see cref="Int"/> that is the maximum length of padding.</param>
+        /// <param name="maxLength">An <see cref="Int32"/> that is the maximum length of padding.</param>
         /// <param name="paddingCharacter">The <see cref="char"/> value to pad with.</param>
         /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength, char paddingCharacter)
