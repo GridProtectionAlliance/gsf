@@ -1,84 +1,77 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  IPhasorValue.vb - Phasor value interface
+//  IPhasorValue.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/18/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  02/18/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System.Units;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent interface of a phasor value.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Defines function signature for creating new phasor values.
+    /// </summary>
+    /// <param name="parent">Parent <see cref="IDataCell"/>.</param>
+    /// <param name="phasorDefinition">Associated <see cref="IPhasorDefinition"/>.</param>
+    /// <param name="real">Real value of new phasor measurement.</param>
+    /// <param name="imaginary">Imaginary value of new phasor measurement.</param>
+    /// <returns>New <see cref="IPhasorValue"/> instance.</returns>
+    protected delegate IPhasorValue CreateNewPhasorValueFunctionSignature(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary);
+
+    /// <summary>
+    /// Represents the protocol independent interface of a phasor value.
+    /// </summary>
     public interface IPhasorValue : IChannelValue<IPhasorDefinition>
     {
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.CoordinateFormat"/> of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        CoordinateFormat CoordinateFormat { get; }
 
+        /// <summary>
+        /// Gets the <see cref="PhasorType"/> of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        PhasorType Type { get; }
 
-        CoordinateFormat CoordinateFormat
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets the <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="IPhasorValue"/>, in radians.
+        /// </summary>
+        Angle Angle { get; set; }
 
-        PhasorType Type
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets the magnitude value (a.k.a., the absolute value or modulus) of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        double Magnitude { get; set; }
 
-        float Angle
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets the real value of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        double Real { get; set; }
 
-        float Magnitude
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets the imaginary value of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        double Imaginary { get; set; }
 
-        float Real
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the real value of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        int UnscaledReal { get; set; }
 
-        float Imaginary
-        {
-            get;
-            set;
-        }
-
-        short UnscaledReal
-        {
-            get;
-            set;
-        }
-
-        short UnscaledImaginary
-        {
-            get;
-            set;
-        }
-
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the imaginary value of this <see cref="IPhasorValue"/>.
+        /// </summary>
+        int UnscaledImaginary { get; set; }
     }
 }
