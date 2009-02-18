@@ -22,12 +22,12 @@ using PCS.Measurements;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This interface represents the protocol independent representation of any frame of data.
+    /// Represents the protocol independent representation of any frame of data.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This phasor protocol implementation defines a "frame" as a collection of cells (logical units of data).
-    /// For example, a <see cref="IDataCell"/> could be defined as a PMU within a frame of data, a <see cref="IDataFrame"/>
+    /// The phasor protocols library defines a "frame" as a collection of cells (logical units of data).
+    /// For example, a <see cref="IDataCell"/> would be defined as a PMU within a frame of data, a <see cref="IDataFrame"/>
     /// (derived from <see cref="IChannelFrame"/>), that contains multiple PMU's coming from a PDC.
     /// </para>
     /// <para>
@@ -35,7 +35,6 @@ namespace PCS.PhasorProtocols
     /// integrated into measurement concentration (see <see cref="ConcentratorBase"/>).
     /// </para>
     /// </remarks>
-    [CLSCompliant(false)]
     public interface IChannelFrame : IChannel, IFrame, IComparable, ISerializable
     {
         // We keep this IChannelFrame as a simple non-generic interface to prevent complex circular type definitions
@@ -70,14 +69,13 @@ namespace PCS.PhasorProtocols
     }
 
     /// <summary>
-    /// This interface represents the strongly typed protocol independent representation of any frame of data.
+    /// Represents the strongly typed protocol independent representation of any frame of data.
     /// </summary>
     /// <remarks>
     /// This interface inherits <see cref="IFrame"/> so that classes implementing this interface can be cooperatively
     /// integrated into measurement concentration (see <see cref="ConcentratorBase"/>).
     /// </remarks>
     /// <typeparam name="T">Specific <see cref="IChannelCell"/> type that the <see cref="IChannelFrame{T}"/> contains.</typeparam>
-    [CLSCompliant(false)]
     public interface IChannelFrame<T> : IChannelFrame where T : IChannelCell
     {
         /// <summary>
