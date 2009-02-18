@@ -49,7 +49,7 @@ namespace PCS.Measurements
         int PublishedMeasurements { get; set; }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented in this <see cref="IFrame"/>.
+        /// Gets or sets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
