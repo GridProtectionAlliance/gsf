@@ -1,174 +1,80 @@
 //*******************************************************************************************************
-//  PhasorValueBase.vb - Phasor value base class
+//  PhasorValueBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
-//
-//  Note: Phasors are stored in rectangular format internally
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 using System;
+using System.Units;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using PCS;
-using PCS.NumericalAnalysis;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent representation of a phasor value.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the protocol independent representation of a phasor value.
+    /// </summary>
+    [Serializable()]
     public abstract class PhasorValueBase : ChannelValueBase<IPhasorDefinition>, IPhasorValue
     {
-        protected delegate IPhasorValue CreateNewPhasorValueFunctionSignature(IDataCell parent, IPhasorDefinition phasorDefinition, float real, float imaginary);
+        #region [ Members ]
 
-        private const float DegreesToRadians = (float)(System.Math.PI / 180.0D);
-        private const float RadiansToDegrees = (float)(180.0D / System.Math.PI);
+        // Fields
+        private ComplexNumber m_phasor;
 
-        private float m_real;
-        private float m_imaginary;
-        private bool m_realAssigned;
-        private bool m_imaginaryAssigned;
-        private CompositeValues m_compositeValues = new CompositeValues(2);
+        #endregion
 
-        /// <summary>Create phasor from polar coordinates (angle expected in Degrees)</summary>
-        /// <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
-        protected static IPhasorValue CreateFromPolarValues(CreateNewPhasorValueFunctionSignature createNewPhasorValueFunction, IDataCell parent, IPhasorDefinition phasorDefinition, float angle, float magnitude)
-        {
+        #region [ Constructors ]
 
-            return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, CalculateRealComponent(angle, magnitude), CalculateImaginaryComponent(angle, magnitude));
-
-        }
-
-        /// <summary>Create phasor from rectangular coordinates</summary>
-        /// <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
-        protected static IPhasorValue CreateFromRectangularValues(CreateNewPhasorValueFunctionSignature createNewPhasorValueFunction, IDataCell parent, IPhasorDefinition phasorDefinition, float real, float imaginary)
-        {
-
-            if (phasorDefinition == null) throw (new ArgumentNullException("phasorDefinition", "No phasor definition specified"));
-            return createNewPhasorValueFunction.Invoke(parent, phasorDefinition, real, imaginary);
-
-        }
-
-        /// <summary>Create phasor from unscaled rectangular coordinates</summary>
-        /// <remarks>Note: This method is expected to be implemented as a public shared method in derived class automatically passing in createNewPhasorValueFunction</remarks>
-        protected static IPhasorValue CreateFromUnscaledRectangularValues(CreateNewPhasorValueFunctionSignature createNewPhasorValueFunction, IDataCell parent, IPhasorDefinition phasorDefinition, short real, short imaginary)
-        {
-
-            float factor = phasorDefinition.ConversionFactor;
-            return CreateFromRectangularValues(createNewPhasorValueFunction, parent, phasorDefinition, (float)real * factor, (float)imaginary * factor);
-
-        }
-
-        /// <summary>Gets real component from angle (in Degrees) and magnitude</summary>
-        public static float CalculateRealComponent(float angle, float magnitude)
-        {
-
-            return magnitude * (float)System.Math.Cos(angle * DegreesToRadians);
-
-        }
-
-        /// <summary>Gets imaginary component from angle (in Degrees) and magnitude</summary>
-        public static float CalculateImaginaryComponent(float angle, float magnitude)
-        {
-
-            return magnitude * (float)System.Math.Sin(angle * DegreesToRadians);
-
-        }
-
-        /// <summary>Calculate watts from imaginary and real components of two phasors</summary>
-        public static float CalculatePower(IPhasorValue voltage, IPhasorValue current)
-        {
-            if (voltage == null) throw (new ArgumentNullException("voltage", "No voltage specified"));
-            if (current == null) throw (new ArgumentNullException("current", "No current specified"));
-
-            return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary);
-            //Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos((voltage.Angle - current.Angle) * DegreesToRadians)
-        }
-
-        /// <summary>Calculate vars from imaginary and real components of two phasors</summary>
-        public static float CalculateVars(IPhasorValue voltage, IPhasorValue current)
-        {
-            if (voltage == null) throw (new ArgumentNullException("voltage", "No voltage specified"));
-            if (current == null) throw (new ArgumentNullException("current", "No current specified"));
-
-            return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary);
-            //Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin((voltage.Angle - current.Angle) * DegreesToRadians)
-        }
-
+        /// <summary>
+        /// Creates a new <see cref="PhasorValueBase"/>.
+        /// </summary>
         protected PhasorValueBase()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="PhasorValueBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected PhasorValueBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize phasor value
-            m_real = info.GetSingle("real");
-            m_imaginary = info.GetSingle("imaginary");
-
-            m_realAssigned = true;
-            m_imaginaryAssigned = true;
-
+            m_phasor.Real = info.GetDouble("real");
+            m_phasor.Imaginary = info.GetDouble("imaginary");
         }
 
-        protected PhasorValueBase(IDataCell parent)
-            : base(parent)
-        {
-
-
-        }
-
-        // Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal real As Single, ByVal imaginary As Single)
-        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, float real, float imaginary)
+        /// <summary>
+        /// Creates a new <see cref="PhasorValueBase"/> from specified parameters.
+        /// </summary>
+        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary)
             : base(parent, phasorDefinition)
         {
-
-
-            m_real = real;
-            m_imaginary = imaginary;
-
-            m_realAssigned = !float.IsNaN(real);
-            m_imaginaryAssigned = !float.IsNaN(imaginary);
-
+            m_phasor.Real = real;
+            m_phasor.Imaginary = imaginary;
         }
 
-        // Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal unscaledReal As short, ByVal unscaledImaginary As short)
-        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, short unscaledReal, short unscaledImaginary)
-            : this(parent, phasorDefinition, (float)unscaledReal * phasorDefinition.ConversionFactor, (float)unscaledImaginary * phasorDefinition.ConversionFactor)
-        {
+        #endregion
 
+        #region [ Properties ]
 
-        }
-
-        // Derived classes are expected expose a Public Sub New(ByVal parent As IDataCell, ByVal phasorDefinition As IPhasorDefinition, ByVal binaryImage As Byte(), ByVal startIndex As int)
-        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, byte[] binaryImage, int startIndex)
-            : base(parent, phasorDefinition)
-        {
-
-            ParseBinaryImage(null, binaryImage, startIndex);
-
-        }
-
-        // Derived classes are expected to expose a Public Sub New(ByVal phasorValue As IPhasorValue)
-        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, IPhasorValue phasorValue)
-            : this(parent, phasorDefinition, phasorValue.Real, phasorValue.Imaginary)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorValueBase"/>.
+        /// </summary>
         public virtual CoordinateFormat CoordinateFormat
         {
             get
@@ -177,6 +83,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="PhasorType"/> of this <see cref="PhasorValueBase"/>.
+        /// </summary>
         public virtual PhasorType Type
         {
             get
@@ -185,180 +94,125 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual float AngleInRadians
+        /// <summary>
+        /// Gets or sets the <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
+        /// </summary>
+        public virtual Angle Angle
         {
             get
             {
-                return (float)System.Math.Atan2(m_imaginary, m_real);
-            }
-        }
-
-        public virtual float Angle
-        {
-            get
-            {
-                return AngleInRadians * RadiansToDegrees;
+                return m_phasor.Angle;
             }
             set
             {
-                // We store angle as one of our required composite values
-                m_compositeValues[CompositePhasorValue.Angle] = value;
-
-                // If all composite values have been received, we can calculate phasor's real and imaginary values
-                CalculatePhasorValueFromComposites();
+                m_phasor.Angle = value;
             }
         }
 
-        public virtual bool AngleAssigned
+        /// <summary>
+        /// Gets or sets the magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        public virtual double Magnitude
         {
             get
             {
-                return m_compositeValues.Received(CompositePhasorValue.Angle);
-            }
-        }
-
-        public virtual float Magnitude
-        {
-            get
-            {
-                return (float)System.Math.Sqrt(m_real * m_real + m_imaginary * m_imaginary);
+                return m_phasor.AbsoluteValue;
             }
             set
             {
-                m_compositeValues[CompositePhasorValue.Magnitude] = value;
-
-                // If all composite values have been received, we can calculate phasor's real and imaginary values
-                CalculatePhasorValueFromComposites();
+                m_phasor.AbsoluteValue = value;
             }
         }
 
-        public virtual bool MagnitudeAssigned
+        /// <summary>
+        /// Gets or sets the real value of this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        public virtual double Real
         {
             get
             {
-                return m_compositeValues.Received(CompositePhasorValue.Magnitude);
-            }
-        }
-
-        private void CalculatePhasorValueFromComposites()
-        {
-
-            if (m_compositeValues.AllReceived)
-            {
-                float angle;
-                float magnitude;
-
-                // All values received, create a new phasor value from composite values
-                angle = (float)m_compositeValues[CompositePhasorValue.Angle];
-                magnitude = (float)m_compositeValues[CompositePhasorValue.Magnitude];
-
-                m_real = CalculateRealComponent(angle, magnitude);
-                m_imaginary = CalculateImaginaryComponent(angle, magnitude);
-
-                m_realAssigned = true;
-                m_imaginaryAssigned = true;
-            }
-
-        }
-
-        public virtual float Real
-        {
-            get
-            {
-                return m_real;
+                return m_phasor.Real;
             }
             set
             {
-                m_real = value;
-                m_realAssigned = true;
+                m_phasor.Real = value;
             }
         }
 
-        public virtual float Imaginary
+        /// <summary>
+        /// Gets or sets the imaginary value of this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        public virtual double Imaginary
         {
             get
             {
-                return m_imaginary;
+                return m_phasor.Imaginary;
             }
             set
             {
-                m_imaginary = value;
-                m_imaginaryAssigned = true;
+                m_phasor.Imaginary = value;
             }
         }
 
-        public virtual short UnscaledReal
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the real value of this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        public virtual int UnscaledReal
         {
             get
             {
-                return (short)(m_real / Definition.ConversionFactor);
+                return (int)(m_phasor.Real / Definition.ConversionFactor);
             }
             set
             {
-                m_real = (float)value * Definition.ConversionFactor;
-                m_realAssigned = true;
+                m_phasor.Real = value * Definition.ConversionFactor;
             }
         }
 
-        public virtual short UnscaledImaginary
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the imaginary value of this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        public virtual int UnscaledImaginary
         {
             get
             {
-                return (short)(m_imaginary / Definition.ConversionFactor);
+                return (short)(m_phasor.Imaginary / Definition.ConversionFactor);
             }
             set
             {
-                m_imaginary = (float)value * Definition.ConversionFactor;
-                m_imaginaryAssigned = true;
+                m_phasor.Imaginary = value * Definition.ConversionFactor;
             }
         }
 
-        public override float this[int index]
+        /// <summary>
+        /// Gets the composite values of this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Since some channel values (e.g., phasors) can contain more than one value, this property is used to abstractly expose each value.
+        /// </remarks>
+        public override double[] CompositeValues
         {
             get
             {
-                switch (index)
-                {
-                    case CompositePhasorValue.Angle:
-                        return Angle;
-                    case CompositePhasorValue.Magnitude:
-                        return Magnitude;
-                    default:
-                        throw (new IndexOutOfRangeException("Specified phasor value composite index, " + index + ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)"));
-                }
-            }
-            set
-            {
-                switch (index)
-                {
-                    case CompositePhasorValue.Angle:
-                        Angle = value;
-                        break;
-                    case CompositePhasorValue.Magnitude:
-                        Magnitude = value;
-                        break;
-                    default:
-                        throw (new IndexOutOfRangeException("Specified phasor value composite index, " + index + ", is out of range - there are only two composite values for a phasor value: angle (0) and magnitude (1)"));
-                }
+                return new double[] { m_phasor.Angle, m_phasor.AbsoluteValue };
             }
         }
 
-        public override int CompositeValueCount
-        {
-            get
-            {
-                return 2;
-            }
-        }
-
+        /// <summary>
+        /// Gets boolean value that determines if none of the composite values of <see cref="PhasorValueBase"/> have been assigned a value.
+        /// </summary>
+        /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
         public override bool IsEmpty
         {
             get
             {
-                return (!m_realAssigned || !m_imaginaryAssigned);
+                return !m_phasor.CompositesAssigned;
             }
         }
 
+        /// <summary>
+        /// Gets the length of the <see cref="BodyImage"/>.
+        /// </summary>
         protected override int BodyLength
         {
             get
@@ -370,6 +224,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the binary body image of the <see cref="PhasorValueBase"/> object.
+        /// </summary>
         protected override byte[] BodyImage
         {
             get
@@ -380,26 +237,26 @@ namespace PCS.PhasorProtocols
                 {
                     if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
                     {
-                        EndianOrder.BigEndian.CopyBytes(UnscaledReal, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes(UnscaledImaginary, buffer, 2);
+                        EndianOrder.BigEndian.CopyBytes((short)UnscaledReal, buffer, 0);
+                        EndianOrder.BigEndian.CopyBytes((short)UnscaledImaginary, buffer, 2);
                     }
                     else
                     {
-                        EndianOrder.BigEndian.CopyBytes(m_real, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes(m_imaginary, buffer, 4);
+                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.Real, buffer, 0);
+                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.Imaginary, buffer, 4);
                     }
                 }
                 else
                 {
                     if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
                     {
-                        EndianOrder.BigEndian.CopyBytes((ushort)Magnitude, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((short)(Angle * DegreesToRadians * 10000.0F), buffer, 2);
+                        EndianOrder.BigEndian.CopyBytes((ushort)m_phasor.AbsoluteValue, buffer, 0);
+                        EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
                     }
                     else
                     {
-                        EndianOrder.BigEndian.CopyBytes(Magnitude, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes(AngleInRadians, buffer, 4);
+                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.AbsoluteValue, buffer, 0);
+                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
                     }
                 }
 
@@ -407,61 +264,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        protected override void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            if (CoordinateFormat == PhasorProtocols.CoordinateFormat.Rectangular)
-            {
-                if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
-                {
-                    UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-                    UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2);
-                }
-                else
-                {
-                    m_real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
-                    m_imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4);
-
-                    m_realAssigned = true;
-                    m_imaginaryAssigned = true;
-                }
-            }
-            else
-            {
-                float magnitude;
-                float angle;
-
-                if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
-                {
-                    magnitude = (float)EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
-                    angle = (float)EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) * RadiansToDegrees / 10000.0F;
-                }
-                else
-                {
-                    magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
-                    angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4) * RadiansToDegrees;
-                }
-
-                m_real = CalculateRealComponent(angle, magnitude);
-                m_imaginary = CalculateImaginaryComponent(angle, magnitude);
-
-                m_realAssigned = true;
-                m_imaginaryAssigned = true;
-            }
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize phasor value
-            info.AddValue("real", m_real);
-            info.AddValue("imaginary", m_imaginary);
-
-        }
-
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorValueBase"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -469,17 +274,134 @@ namespace PCS.PhasorProtocols
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Phasor Type", (int)Type + ": " + Type);
-                baseAttributes.Add("Angle Value", Angle + "°");
+                baseAttributes.Add("Angle Value", Angle.ToDegrees() + "°");
                 baseAttributes.Add("Magnitude Value", Magnitude.ToString());
                 baseAttributes.Add("Real Value", Real.ToString());
                 baseAttributes.Add("Imaginary Value", Imaginary.ToString());
                 baseAttributes.Add("Unscaled Real Value", UnscaledReal.ToString());
                 baseAttributes.Add("Unscaled Imaginary Value", UnscaledImaginary.ToString());
-                baseAttributes.Add("Angle Value was Assigned", AngleAssigned.ToString());
-                baseAttributes.Add("Magnitude Value was Assigned", MagnitudeAssigned.ToString());
+                baseAttributes.Add("Composites Assigned", m_phasor.CompositesAssigned.ToString());
 
                 return baseAttributes;
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary body image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // TODO: It is expected that parent IDataCell will validate that it has
+            // enough length to parse entire cell well in advance so that low level
+            // parsing routines do not have to re-validate that enough length is
+            // available to parse needed information as an optimization...
+
+            if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
+            {
+                if (CoordinateFormat == PhasorProtocols.CoordinateFormat.Rectangular)
+                {
+                    // Parse from fixed-integer, rectangular
+                    UnscaledReal = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+                    UnscaledImaginary = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2);
+                }
+                else
+                {
+                    // Parse from fixed-integer, polar
+                    m_phasor.AbsoluteValue = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
+                    m_phasor.Angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) / 10000.0D;
+                }
+
+                return 4;
+            }
+            else
+            {
+                if (CoordinateFormat == PhasorProtocols.CoordinateFormat.Rectangular)
+                {
+                    // Parse from single-precision floating-point, rectangular
+                    m_phasor.Real = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
+                    m_phasor.Imaginary = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4);
+                }
+                else
+                {
+                    // Parse from single-precision floating-point, polar
+                    m_phasor.AbsoluteValue = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
+                    m_phasor.Angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4);
+                }
+
+                return 8;
+            }
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize phasor value
+            info.AddValue("real", m_phasor.Real);
+            info.AddValue("imaginary", m_phasor.Imaginary);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Calculates watts from imaginary and real components of a voltage and current phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="voltage"/> and <paramref name="current"/> must not be null.</exception>
+        public static Power CalculatePower(IPhasorValue voltage, IPhasorValue current)
+        {
+            if (voltage == null)
+                throw new ArgumentNullException("voltage", "No voltage specified");
+
+            if (current == null)
+                throw new ArgumentNullException("current", "No current specified");
+
+            return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary);
+            //Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos(voltage.Angle - current.Angle)
+        }
+
+        /// <summary>
+        /// Calculates vars (total volt-amperes of reactive power) from imaginary and real components of a voltage and current phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="voltage"/> and <paramref name="current"/> must not be null.</exception>
+        /// <remarks>
+        /// Although the <see cref="Power"/> units class technically represents watts (i.e., real power) and vars (i.e., imaginary power)
+        /// are properly expressed in volt-amperes reactive (VAr), the calculated result is still a representation of power and therefore
+        /// the <see cref="Power"/> units class is used to express the return value leaving the consumer to properly apply the needed
+        /// engineering units for display purposes.
+        /// </remarks>
+        public static Power CalculateVars(IPhasorValue voltage, IPhasorValue current)
+        {
+            if (voltage == null)
+                throw new ArgumentNullException("voltage", "No voltage specified");
+
+            if (current == null)
+                throw new ArgumentNullException("current", "No current specified");
+
+            return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary);
+            //Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin(voltage.Angle - current.Angle)
+        }
+
+        #endregion
     }
 }
