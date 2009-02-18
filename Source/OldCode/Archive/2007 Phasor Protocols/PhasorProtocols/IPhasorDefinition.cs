@@ -15,14 +15,11 @@
 //
 //*******************************************************************************************************
 
-using System;
-
 namespace PCS.PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent interface of a phasor value definition.
     /// </summary>
-    [CLSCompliant(false)]
     public interface IPhasorDefinition : IChannelDefinition
     {
         /// <summary>
