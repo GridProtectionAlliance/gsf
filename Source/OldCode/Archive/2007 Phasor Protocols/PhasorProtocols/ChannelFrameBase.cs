@@ -25,7 +25,7 @@ using PCS.IO.Checksums;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This class represents the protocol independent common implementation of any frame of data that can be sent or received.
+    /// Represents the protocol independent common implementation of any frame of data that can be sent or received.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -47,7 +47,7 @@ namespace PCS.PhasorProtocols
         // Fields
         private ushort m_idCode;                                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
         private IChannelCellCollection<T> m_cells;                          // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
-        private long m_ticks;                                               // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Ticks m_timestamp;                                          // Time, represented as 100-nanosecond ticks, of this frame of data
         private int m_parsedBinaryLength;                                   // Binary length of frame as provided from parsed header
         private bool m_published;                                           // Determines if this frame of data has been published (IFrame.Published)
         private int m_publishedMeasurements;                                // Total measurements published by this frame          (IFrame.PublishedMeasurements)
@@ -75,24 +75,24 @@ namespace PCS.PhasorProtocols
             // Deserialize key frame elements...
             m_idCode = info.GetUInt16("idCode");
             m_cells = (IChannelCellCollection<T>)info.GetValue("cells", typeof(IChannelCellCollection<T>));
-            m_ticks = info.GetInt64("ticks");
+            m_timestamp = info.GetInt64("timestamp");
         }
 
         /// <summary>
         /// Creates a new <see cref="ChannelFrameBase{T}"/> from the specified parameters.
         /// </summary>
-        protected ChannelFrameBase(ushort idCode, IChannelCellCollection<T> cells, long ticks)
+        protected ChannelFrameBase(ushort idCode, IChannelCellCollection<T> cells, Ticks timestamp)
         {
             m_idCode = idCode;
             m_cells = cells;
-            m_ticks = ticks;
+            m_timestamp = timestamp;
         }
 
         /// <summary>
         /// Creates a new <see cref="ChannelFrameBase{T}"/> copied from the specified <see cref="IChannelFrame{T}"/> object.
         /// </summary>
         protected ChannelFrameBase(IChannelFrame<T> channelFrame)
-            : this(channelFrame.IDCode, channelFrame.Cells, channelFrame.Ticks)
+            : this(channelFrame.IDCode, channelFrame.Cells, channelFrame.Timestamp)
         {
         }
 
@@ -136,9 +136,8 @@ namespace PCS.PhasorProtocols
             get
             {
                 if (m_measurements == null)
-                {
                     m_measurements = new Dictionary<MeasurementKey, IMeasurement>();
-                }
+
                 return m_measurements;
             }
         }
@@ -164,26 +163,15 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public virtual long Ticks
+        public virtual Ticks Timestamp
         {
             get
             {
-                return m_ticks;
+                return m_timestamp;
             }
             set
             {
-                m_ticks = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="DateTime"/> representation of ticks of this <see cref="ChannelFrameBase{T}"/>.
-        /// </summary>
-        public virtual DateTime Timestamp
-        {
-            get
-            {
-                return new DateTime(m_ticks);
+                m_timestamp = value;
             }
         }
 
@@ -330,7 +318,7 @@ namespace PCS.PhasorProtocols
                 baseAttributes.Add("ID Code", IDCode.ToString());
                 baseAttributes.Add("Is Partial Frame", IsPartial.ToString());
                 baseAttributes.Add("Published", Published.ToString());
-                baseAttributes.Add("Ticks", Ticks.ToString());
+                baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
                 baseAttributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 return baseAttributes;
@@ -355,7 +343,7 @@ namespace PCS.PhasorProtocols
         /// Gets the binary body image of this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
         /// <remarks>
-        /// The body image of the <see cref="ChannelFrameBase{T}"/> is combined images of all the <see cref="Cells"/>.
+        /// The body image of the <see cref="ChannelFrameBase{T}"/> is the combined images of all the <see cref="Cells"/>.
         /// </remarks>
         protected override byte[] BodyImage
         {
@@ -383,7 +371,7 @@ namespace PCS.PhasorProtocols
         {
             // We override normal binary image parsing to validate frame checksum
             if (!ChecksumIsValid(binaryImage, startIndex))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + DerivedType.Name + " did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
 
             m_parsedBinaryLength = State.ParsedBinaryLength;
             return base.Initialize(binaryImage, startIndex, length);
@@ -457,12 +445,25 @@ namespace PCS.PhasorProtocols
             return buffer.CrcCCITTChecksum(offset, length);
         }
 
+        /// <summary>
+        /// Compares the <see cref="Frame"/> with an <see cref="IFrame"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+        /// <remarks>This frame implementation compares itself by timestamp.</remarks>
         public virtual int CompareTo(IFrame other)
         {
             // We sort frames by timestamp
-            return m_ticks.CompareTo(other.Ticks);
+            return m_timestamp.CompareTo(other.Timestamp);
         }
 
+        /// <summary>
+        /// Compares the <see cref="Frame"/> with the specified <see cref="Object"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
+        /// <remarks>This frame implementation compares itself by timestamp.</remarks>
         public virtual int CompareTo(object obj)
         {
             IFrame other = obj as IFrame;
@@ -473,9 +474,37 @@ namespace PCS.PhasorProtocols
             throw new ArgumentException("Frame can only be compared with other IFrames...");
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>;
+        /// otherwise, false.
+        /// </returns>
+        /// <remarks>This frame implementation compares itself by timestamp.</remarks>
         public virtual bool Equals(IFrame other)
         {
             return (CompareTo(other) == 0);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>;
+        /// otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
+        public override bool Equals(object obj)
+        {
+            IFrame other = obj as IFrame;
+
+            if (other != null)
+                return Equals(other);
+
+            throw new ArgumentException("Object is not an IFrame");
         }
 
         /// <summary>
@@ -488,7 +517,7 @@ namespace PCS.PhasorProtocols
             // Add key frame elements for serialization...
             info.AddValue("idCode", m_idCode);
             info.AddValue("cells", m_cells, typeof(IChannelCellCollection<T>));
-            info.AddValue("ticks", m_ticks);
+            info.AddValue("timestamp", (long)m_timestamp);
         }
 
         #endregion
