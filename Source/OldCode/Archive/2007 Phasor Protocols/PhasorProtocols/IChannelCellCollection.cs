@@ -23,7 +23,7 @@ namespace PCS.PhasorProtocols
     public interface IChannelCellCollection<T> : IChannelCollection<T> where T : IChannelCell
     {
         /// <summary>
-        /// Gets flag that determines if <see cref="IChannelCell"/> collection is constant.
+        /// Gets flag that determines if the lengths of <see cref="IChannelCell"/> elements in this <see cref="IChannelCellCollection{T}"/> are constant.
         /// </summary>
         bool ConstantCellLength { get; }
     }
