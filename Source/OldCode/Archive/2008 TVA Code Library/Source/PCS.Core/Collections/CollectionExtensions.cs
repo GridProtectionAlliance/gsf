@@ -18,6 +18,8 @@
 //       Edited code comments.
 //  09/11/2008 - J. Ritchie Carroll
 //      Converted to C# extension functions.
+//  02/17/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -66,6 +68,10 @@ namespace PCS.Collections
         }
 
         /// <summary>Returns the smallest item from the enumeration.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">An enumeration that is compared against.</param>
+        /// <param name="comparer">A delegate that takes two generic types to compare, and returns an integer based on the comparison.</param>
+        /// <returns>Returns a generic type.</returns>
         public static TSource Min<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, int> comparer)
         {
             TSource minItem = default(TSource);
@@ -86,12 +92,20 @@ namespace PCS.Collections
         }
 
         /// <summary>Returns the smallest item from the enumeration.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">An enumeration that is compared against.</param>
+        /// <param name="comparer">A comparer object.</param>
+        /// <returns>Returns a generic type.</returns>
         public static TSource Min<TSource>(this IEnumerable<TSource> source, IComparer<TSource> comparer)
         {
             return source.Min<TSource>(comparer.Compare);
         }
 
         /// <summary>Returns the largest item from the enumeration.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">An enumeration that is compared against.</param>
+        /// <param name="comparer">A delegate that takes two generic types to compare, and returns an integer based on the comparison.</param>
+        /// <returns>Returns a generic type.</returns>
         public static TSource Max<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, int> comparer)
         {
             TSource maxItem = default(TSource);
@@ -112,6 +126,10 @@ namespace PCS.Collections
         }
 
         /// <summary>Returns the largest item from the enumeration.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">An enumeration that is compared against.</param>
+        /// <param name="comparer">A comparer object.</param>
+        /// <returns>Returns a generic type.</returns>
         public static TSource Max<TSource>(this IEnumerable<TSource> source, IComparer<TSource> comparer)
         {
             return source.Max<TSource>(comparer.Compare);
@@ -119,6 +137,9 @@ namespace PCS.Collections
 
         /// <summary>Converts an enumeration to a string, using the default delimeter ("|") that can later be
         /// converted back to a list using LoadDelimitedString.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">The source object to be converted into a delimited string.</param>
+        /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by the '|' character.</returns>
         public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source)
         {
             return source.ToDelimitedString<TSource>('|');
@@ -126,6 +147,10 @@ namespace PCS.Collections
 
         /// <summary>Converts an enumeration to a string that can later be converted back to a list using
         /// LoadDelimitedString.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">The source object to be converted into a delimited string.</param>
+        /// <param name="delimiter">The delimiting character used.</param>
+        /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source, char delimiter)
         {
             return ToDelimitedString<TSource, char>(source, delimiter);
@@ -133,11 +158,22 @@ namespace PCS.Collections
 
         /// <summary>Converts an enumeration to a string that can later be converted back to a list using
         /// LoadDelimitedString.</summary>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="source">The source object to be converted into a delimited string.</param>
+        /// <param name="delimiter">The delimiting <see cref="string"/> used.</param>
+        /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source, string delimiter)
         {
             return ToDelimitedString<TSource, string>(source, delimiter);
         }
 
+        /// <summary>Converts an enumeration to a string that can later be converted back to a list using
+        /// LoadDelimitedString.</summary>
+        /// <typeparam name="TSource">The generic enumeration type used.</typeparam>
+        /// <typeparam name="TDelimiter">The generic delimiter type used.</typeparam>
+        /// <param name="source">The source object to be converted into a delimited string.</param>
+        /// <param name="delimiter">The delimiting <see cref="TDelimiter"/> used.</param>
+        /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
             if (Common.IsReference(delimiter) && delimiter == null) throw new ArgumentNullException("delimiter", "delimiter cannot be null");
@@ -156,6 +192,10 @@ namespace PCS.Collections
         /// <summary>Appends items parsed from delimited string, created with ToDelimitedString, using the default
         /// delimeter ("|") into the given list.</summary>
         /// <remarks>Items that are converted are added to list. The list is not cleared in advance.</remarks>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="destination">The list we are adding items to.</param>
+        /// <param name="delimitedString">The delimited string to parse for items.</param>
+        /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, Func<string, TSource> convertFromString)
         {
             destination.LoadDelimitedString(delimitedString, '|', convertFromString);
@@ -163,6 +203,11 @@ namespace PCS.Collections
 
         /// <summary>Appends items parsed from delimited string, created with ToDelimitedString, into the given list.</summary>
         /// <remarks>Items that are converted are added to list. The list is not cleared in advance.</remarks>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="destination">The list we are adding items to.</param>
+        /// <param name="delimitedString">The delimited string to parse for items.</param>
+        /// <param name="delimeter">The <see cref="char"/> value to look for in the <paramref name="delimitedString"/> as the delimiter.</param>
+        /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimeter, Func<string, TSource> convertFromString)
         {
             if (delimitedString == null) throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
@@ -176,6 +221,11 @@ namespace PCS.Collections
 
         /// <summary>Appends items parsed from delimited string, created with ToDelimitedString, into the given list.</summary>
         /// <remarks>Items that are converted are added to list. The list is not cleared in advance.</remarks>
+        /// <typeparam name="TSource">The generic type used.</typeparam>
+        /// <param name="destination">The list we are adding items to.</param>
+        /// <param name="delimitedString">The delimited string to parse for items.</param>
+        /// <param name="delimiters">An array of delimiters to look for in the <paramref name="delimitedString"/> as the delimiter.</param>
+        /// <param name="convertFromString">Delegate that takes a <see cref="String"/> and converts to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, string[] delimiters, Func<string, TSource> convertFromString)
         {
             if (delimiters == null) throw new ArgumentNullException("delimiters", "delimiters cannot be null");
@@ -189,6 +239,8 @@ namespace PCS.Collections
         }
 
         /// <summary>Rearranges all the elements in the list into a random order.</summary>
+        /// <typeparam name="TSource">The generic type of the list.</typeparam>
+        /// <param name="source">The input list of generic types to scramble.</param>
         /// <remarks>This function uses a cryptographically strong random number generator to perform the scramble.</remarks>
         public static void Scramble<TSource>(this IList<TSource> source)
         {
@@ -215,12 +267,20 @@ namespace PCS.Collections
         }
 
         /// <summary>Compares two arrays.</summary>
+        /// <param name="array1">The first type array to compare to.</param>
+        /// <param name="array2">The second type array to compare against.</param>
+        /// <returns>An <see cref="int"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
         public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2)
         {
             return CompareTo(array1, array2, Comparer<TSource>.Default);
         }
 
         /// <summary>Compares two arrays.</summary>
+        /// <param name="array1">The first <see cref="Array"/> to compare to.</param>
+        /// <param name="array2">The second <see cref="Array"/> to compare against.</param>
+        /// <param name="comparer">An interface <see cref="IComparer"/> that exposes a method to compare the two arrays.</param>
+        /// <returns>An <see cref="int"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
+        /// <remarks>This is a default comparer to make arrays comparable.</remarks>
         public static int CompareTo(this Array array1, Array array2, IComparer comparer)
         {
             if (array1 == null && array2 == null)
