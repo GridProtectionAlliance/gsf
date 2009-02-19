@@ -30,14 +30,14 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="PhasorDefinitionCollection"/>.
+        /// Creates a new <see cref="ChannelFrameCollectionBase{T}"/>.
         /// </summary>
         protected ChannelFrameCollectionBase()
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="PhasorDefinitionCollection"/> from serialization parameters.
+        /// Creates a new <see cref="ChannelFrameCollectionBase{T}"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
@@ -47,7 +47,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Creates a new <see cref="PhasorDefinitionCollection"/> from specified parameters.
+        /// Creates a new <see cref="ChannelFrameCollectionBase{T}"/> from specified parameters.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
         /// <remarks>
@@ -69,7 +69,7 @@ namespace PCS.PhasorProtocols
         /// Gets the length of the <see cref="BinaryImage"/>.
         /// </summary>
         /// <remarks>
-        /// The length of the <see cref="ChannelCollectionBase{T}"/> binary image is the combined length of all the items in the collection.
+        /// The length of the <see cref="ChannelFrameCollectionBase{T}"/> binary image is the combined length of all the items in the collection.
         /// </remarks>
         public override int BinaryLength
         {
