@@ -14,6 +14,8 @@
 //       Generated original version of source code
 //  09/10/2008 - J. Ritchie Carroll
 //      Converted to C#
+//  02/19/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -178,7 +180,7 @@ namespace PCS.Collections
         /// <summary>
         /// Adds an item to the <see cref="DictionaryList{TKey,TValue}"/>.
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="item">The key value pair item to add.</param>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
             m_list.Add(item.Key, item.Value);
