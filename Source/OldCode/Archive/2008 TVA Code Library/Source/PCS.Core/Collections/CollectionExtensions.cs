@@ -19,7 +19,9 @@
 //  09/11/2008 - J. Ritchie Carroll
 //       Converted to C# extension functions.
 //  02/17/2009 - Josh Patterson
-//       Edited Code Comments
+//       Edited Code Comments.
+//  02/20/2009 - J. Ritchie Carroll
+//       Added predicate based IndexOf that extends IList<T>.
 //
 //*******************************************************************************************************
 
@@ -33,6 +35,24 @@ namespace PCS.Collections
     /// <summary>Defines extension functions related to manipulation of arrays and collections.</summary>
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// Returns the index of the first element of the sequence that satisfies a condition or <c>-1</c> if no such element is found.
+        /// </summary>
+        /// <param name="source">An <see cref="ICollection"/> to find an index in.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <returns>Index of the first element in <paramref name="source"/> that matches the specified <paramref name="predicate"/>; otherwise, <c>-1</c>.</returns>
+        /// <typeparam name="T">The type of the elements of <paramref name="source"/>.</typeparam>
+        public static int IndexOf<T>(this IList<T> source, Func<T, bool> predicate)
+        {
+            for (int index = 0; index <= source.Count - 1; index++)
+            {
+                if (predicate(source[index]))
+                    return index;
+            }
+
+            return -1;
+        }
+
         /// <summary>
         /// Returns a copy of the <see cref="Array"/>.
         /// </summary>
