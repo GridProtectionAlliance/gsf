@@ -23,6 +23,10 @@ namespace PCS.PhasorProtocols
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IFrequencyValue"/> objects.
     /// </summary>
+    /// <remarks>
+    /// None of the phasor protocols currently define multiple frequency elements per transmission,
+    /// but if a future protocol does this collection can be used.
+    /// </remarks>
     [Serializable()]
     public class FrequencyValueCollection : ChannelValueCollectionBase<IFrequencyDefinition, IFrequencyValue>
     {
