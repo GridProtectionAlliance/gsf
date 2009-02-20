@@ -17,9 +17,9 @@
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
 //  09/11/2008 - J. Ritchie Carroll
-//      Converted to C# extension functions.
+//       Converted to C# extension functions.
 //  02/17/2009 - Josh Patterson
-//      Edited Code Comments
+//       Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -172,7 +172,7 @@ namespace PCS.Collections
         /// <typeparam name="TSource">The generic enumeration type used.</typeparam>
         /// <typeparam name="TDelimiter">The generic delimiter type used.</typeparam>
         /// <param name="source">The source object to be converted into a delimited string.</param>
-        /// <param name="delimiter">The delimiting <see cref="TDelimiter"/> used.</param>
+        /// <param name="delimiter">The delimeter of type TDelimiter used.</param>
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
