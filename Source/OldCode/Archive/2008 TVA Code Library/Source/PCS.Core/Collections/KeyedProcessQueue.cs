@@ -16,6 +16,8 @@
 //       Edited code comments.
 //  09/11/2008 - J. Ritchie Carroll
 //      Converted to C#
+//  02/19/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -104,6 +106,13 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a ProcessList based on the generic DictionaryList class.
         /// </summary>
+        /// <param name="processItemFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
+        /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
+        /// <param name="maximumThreads">An <see cref="Int32"/> that represents the max number of threads to use.</param>
+        /// <param name="processTimeout">An <see cref="Int32"/> that represents the amount of time before a process times out.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after a timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after an exception.</param>
         protected KeyedProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
