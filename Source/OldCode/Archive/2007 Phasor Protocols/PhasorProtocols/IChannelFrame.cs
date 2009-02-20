@@ -22,7 +22,8 @@ using PCS.Measurements;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent representation of any frame of data.
+    /// Represents a protocol independent interface representation of any kind of frame of data that contains
+    /// a collection of <see cref="IChannelCell"/> objects.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -38,9 +39,9 @@ namespace PCS.PhasorProtocols
     public interface IChannelFrame : IChannel, IFrame, IComparable, ISerializable
     {
         // We keep this IChannelFrame as a simple non-generic interface to prevent complex circular type definitions
-        // that would be caused by a strongly typed "parent" reference in IChannelCell. The parent reference is
+        // that would be caused by a strongly-typed "parent" reference in IChannelCell. The parent reference is
         // extremely useful in the actual protocol implementations since many of the properties of a cell and a
-        // frame may be shared. The strongly typed generic version of the IChannelFrame interface is below.
+        // frame may be shared. The strongly-typed generic version of the IChannelFrame interface is below.
 
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="IChannelFrame"/>.
@@ -69,7 +70,8 @@ namespace PCS.PhasorProtocols
     }
 
     /// <summary>
-    /// Represents the strongly typed protocol independent representation of any frame of data.
+    /// Represents a strongly-typed protocol independent interface representation of any kind of frame of data that
+    /// contains a collection of <see cref="IChannelCell"/> objects.
     /// </summary>
     /// <remarks>
     /// This interface inherits <see cref="IFrame"/> so that classes implementing this interface can be cooperatively
