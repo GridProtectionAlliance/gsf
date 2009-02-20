@@ -1,17 +1,17 @@
 //*******************************************************************************************************
-//  Common.vb - Common declarations and functions for phasor classes
+//  Common.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/18/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  02/18/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -22,35 +22,47 @@ using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>Common constants and functions for phasor classes</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Common constants and functions for phasor classes.
+    /// </summary>
     public static class Common
     {
-        /// <summary>Typical data stream synchrnonization byte.</summary>
+        /// <summary>
+        /// Typical data stream synchrnonization byte.
+        /// </summary>
         public const byte SyncByte = 0xAA;
 
-        /// <summary>Undefined measurement key.</summary>
+        /// <summary>
+        /// Undefined measurement key.
+        /// </summary>
         public static MeasurementKey UndefinedKey = new MeasurementKey(-1, "__");
 
-        /// <summary>This is a common optimized block copy function for any kind of data.</summary>
-        /// <remarks>This function automatically advances index for convenience.</remarks>
+        /// <summary>
+        /// This is a common optimized block copy function for any kind of data.
+        /// </summary>
         /// <param name="channel">Source channel with BinaryImage data to copy.</param>
         /// <param name="destination">Destination buffer to hold copied buffer data.</param>
-        /// <param name="index">Index into <paramref name="destination"/> buffer to begin copy.  Index is automatically incremented by channel's BinaryLength.</param>
+        /// <param name="index">
+        /// Index into <paramref name="destination"/> buffer to begin copy. Index is automatically incremented by <see cref="IChannel.BinaryLength"/>.
+        /// </param>
+        /// <remarks>
+        /// This function automatically advances index for convenience.
+        /// </remarks>
         public static void CopyImage(this IChannel channel, byte[] destination, ref int index)
         {
             CopyImage(channel.BinaryImage, destination, ref index, channel.BinaryLength);
         }
 
-        /// <summary>This is a common optimized block copy function for binary data.</summary>
-        /// <remarks>
-        /// Source index is always zero so hence not requested.
-        /// This function automatically advances index for convenience.
-        /// </remarks>
+        /// <summary>
+        /// This is a common optimized block copy function for binary data.
+        /// </summary>
         /// <param name="source">Source buffer to copy data from.</param>
         /// <param name="destination">Destination buffer to hold copied buffer data.</param>
         /// <param name="index">Index into <paramref name="destination"/> buffer to begin copy.  Index is automatically incremented by <paramref name="length"/>.</param>
         /// <param name="length">Number of bytes to copy from source.</param>
+        /// <remarks>
+        /// Source index is always zero so hence not requested. This function automatically advances index for convenience.
+        /// </remarks>
         public static void CopyImage(this byte[] source, byte[] destination, ref int index, int length)
         {
             if (length > 0)
@@ -60,15 +72,21 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        /// <summary>Removes duplicate white space and control characters from a string.</summary>
-        /// <remarks>Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization.</remarks>
+        /// <summary>
+        /// Removes duplicate white space and control characters from a string.
+        /// </summary>
+        /// <remarks>
+        /// Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization.
+        /// </remarks>
         public static string GetValidLabel(string value)
         {
             return value.ReplaceControlCharacters().RemoveDuplicateWhiteSpace().Trim();
         }
 
-        /// <summary>Returns display friendly protocol name.</summary>
-        public static string GetFormattedProtocolName(PhasorProtocol protocol)
+        /// <summary>
+        /// Returns display friendly protocol name.
+        /// </summary>
+        public static string GetFormattedProtocolName(this PhasorProtocol protocol)
         {
             switch (protocol)
             {
