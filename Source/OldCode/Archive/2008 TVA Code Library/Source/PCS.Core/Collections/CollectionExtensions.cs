@@ -38,7 +38,7 @@ namespace PCS.Collections
         /// <summary>
         /// Returns the index of the first element of the sequence that satisfies a condition or <c>-1</c> if no such element is found.
         /// </summary>
-        /// <param name="source">An <see cref="ICollection"/> to find an index in.</param>
+        /// <param name="source">An <see cref="IList{T}"/> to find an index in.</param>
         /// <param name="predicate">A function to test each element for a condition.</param>
         /// <returns>Index of the first element in <paramref name="source"/> that matches the specified <paramref name="predicate"/>; otherwise, <c>-1</c>.</returns>
         /// <typeparam name="T">The type of the elements of <paramref name="source"/>.</typeparam>
