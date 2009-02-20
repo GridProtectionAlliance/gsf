@@ -15,26 +15,23 @@
 //
 //*******************************************************************************************************
 
-using System;
-
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This interface represents a protocol independent parsing state used by any kind of data.
+    /// Represents a protocol independent interface representation of the parsing state used by any kind of
+    /// <see cref="IChannel"/> data.<br/>
+    /// This is the base interface implemented by all parsing state classes in the phasor protocols library;
+    /// it is the root of the parsing state interface hierarchy.
     /// </summary>
     /// <remarks>
-    /// This is the parsing state root interface of the phasor protocol library.<br/>
-    /// Data parsing is very format specific, classes implementing this interface create a common
-    /// form for parsing state information particular to a data type.
+    /// Data parsing is very format specific, classes implementing this interface create a common form for
+    /// parsing state information particular to a data type.
     /// </remarks>
     public interface IChannelParsingState
     {
         /// <summary>
-        /// Gets the final derived type of class implementing <see cref="IChannelParsingState"/>.
+        /// Gets or sets the length of associated <see cref="IChannelFrame"/> that was parsed from the binary image.
         /// </summary>
-        /// <remarks>
-        /// This is expected to be overriden by the final derived class.
-        /// </remarks>
-        Type DerivedType { get; }
+        int ParsedBinaryLength { get; set; }
     }
 }

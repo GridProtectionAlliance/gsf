@@ -1,93 +1,73 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using PCS.Measurements;
-
 //*******************************************************************************************************
-//  IChannelValue.vb - Channel data value interface
+//  IChannelValue.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/18/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  02/18/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System.Runtime.Serialization;
+using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This interface represents a protocol independent representation of any kind of data value.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Represents a protocol independent interface representation any kind of <see cref="IChannel"/> data value.
+    /// </summary>
+    /// <remarks>
+    /// Each instance of <see cref="IChannelValue{T}"/> will have a more specific derived implementation (e.g., <see cref="IDigitalValue"/> and <see cref="IPhasorValue"/>),
+    /// these specific implementations of <see cref="IChannelValue{T}"/> will be referenced children of a <see cref="IDataCell"/>.<br/>
+    /// The <see cref="IChannelValue{T}"/> uses the specified <see cref="IChannelDefinition"/> type to define its properties.
+    /// </remarks>
+    /// <typeparam name="T">Specific <see cref="IChannelDefinition"/> type that represents the <see cref="IChannelValue{T}"/> definition.</typeparam>
     public interface IChannelValue<T> : IChannel, ISerializable where T : IChannelDefinition
     {
+        /// <summary>
+        /// Gets the <see cref="IDataCell"/> parent of this <see cref="IChannelValue{T}"/>.
+        /// </summary>
+        IDataCell Parent { get; }
 
+        /// <summary>
+        /// Gets the <see cref="IChannelDefinition"/> associated with this <see cref="IChannelValue{T}"/>.
+        /// </summary>
+        T Definition { get; set; }
 
-        IDataCell Parent
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="IChannelValue{T}"/> typically derived from <see cref="IChannelDefinition.DataFormat"/>.
+        /// </summary>
+        DataFormat DataFormat { get; }
 
-        T Definition
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets text based label of this <see cref="IChannelValue{T}"/> typically derived from <see cref="IChannelDefinition.Label"/>.
+        /// </summary>
+        string Label { get; }
 
-        DataFormat DataFormat
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets boolean value that determines if none of the composite values of <see cref="IChannelValue{T}"/> have been assigned a value.
+        /// </summary>
+        /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
+        bool IsEmpty { get; }
 
-        string Label
-        {
-            get;
-        }
-
-        /// <summary>Composite measurements of channel value</summary>
+        /// <summary>
+        /// Gets the composite values of this <see cref="IChannelValue{T}"/>.
+        /// </summary>
         /// <remarks>
-        /// Because derived value classes may consist of more than one measured value,
-        /// we use the composite value properties to abstractly expose each value
+        /// Since some channel values (e.g., phasors) can contain more than one value, this property is used to abstractly expose each value.
         /// </remarks>
-        float this[int index]
-        {
-            get;
-            set;
-        }
+        double[] CompositeValues { get; }
 
-        /// <summary>Total number of composite measurements exposed by the channel value</summary>
-        /// <remarks>
-        /// Because derived value classes may consist of more than one measured value,
-        /// we use the composite value properties to abstractly expose each value
-        /// </remarks>
-        int CompositeValueCount
-        {
-            get;
-        }
-
-        bool IsEmpty
-        {
-            get;
-        }
-
-        IMeasurement[] Measurements
-        {
-            get;
-        }
-
+        /// <summary>
+        /// Gets the <see cref="CompositeValues"/> of this <see cref="IChannelValue{T}"/> as an array of <see cref="IMeasurement"/> values.
+        /// </summary>
+        IMeasurement[] Measurements { get; }
     }
 }

@@ -44,10 +44,5 @@ namespace PCS.PhasorProtocols
         /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/>.
         /// </summary>
         int CellCount { get; set; }
-
-        /// <summary>
-        /// Gets or sets the length of associated <see cref="IChannelFrame"/> that was parsed from the binary image.
-        /// </summary>
-        int ParsedBinaryLength { get; set; }
     }
 }
