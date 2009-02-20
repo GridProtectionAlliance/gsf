@@ -23,6 +23,12 @@ namespace PCS.PhasorProtocols
     /// <summary>
     /// Represents a protocol independent interface representation of a definition of any kind of <see cref="IChannel"/> data.
     /// </summary>
+    /// <remarks>
+    /// Each instance of <see cref="IChannelDefinition"/> will have a more specific derived implementation
+    /// (e.g., <see cref="IAnalogDefinition"/> and <see cref="IFrequencyDefinition"/>), these specific implementations of
+    /// <see cref="IChannelDefinition"/> will be referenced children of a <see cref="IConfigurationCell"/>.<br/>
+    /// The <see cref="IChannelDefinition"/> defines the properties of an associated <see cref="IChannelValue{T}"/>.
+    /// </remarks>
     public interface IChannelDefinition : IChannel, ISerializable, IEquatable<IChannelDefinition>, IComparable<IChannelDefinition>, IComparable
     {
         /// <summary>
@@ -56,7 +62,7 @@ namespace PCS.PhasorProtocols
         int MaximumScalingFactor { get; }
 
         /// <summary>
-        /// Gets the conversion factor of this <see cref="IChannelDefinition"/>.
+        /// Gets or sets the conversion factor of this <see cref="IChannelDefinition"/>.
         /// </summary>
         float ConversionFactor { get; set; }
 
