@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the common implementation collection of protocol independent definitions of analog values.
+    /// Represents a protocol independent collection of <see cref="IAnalogDefinition"/> objects.
     /// </summary>
     [Serializable()]
     public class AnalogDefinitionCollection : ChannelDefinitionCollectionBase<IAnalogDefinition>
@@ -46,7 +46,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Creates a new <see cref="PhasorDefinitionCollection"/> from specified parameters.
+        /// Creates a new <see cref="AnalogDefinitionCollection"/> from specified parameters.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
         /// <remarks>

@@ -18,15 +18,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Runtime.Serialization;
-using PCS;
 using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the common implementation of the protocol independent representation of a collection of any kind of data.
+    /// Represents a protocol independent collection of <see cref="IChannel"/> objects.<br/>
+    /// This is the base class of all collection classes in the phasor protocols library;
+    /// it is the root of the collection class hierarchy.
     /// </summary>
     /// <remarks>
     /// This channel collection implements <see cref="IChannel"/> (inherited via <see cref="IChannelCollection{T}"/>) for the benefit
