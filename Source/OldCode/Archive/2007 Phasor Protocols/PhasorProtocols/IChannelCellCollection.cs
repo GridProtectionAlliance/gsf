@@ -18,7 +18,7 @@
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent representation of a collection of any kind of data cell.
+    /// Represents a protocol independent interface representation of a collection of <see cref="IChannelCell"/> objects.
     /// </summary>
     public interface IChannelCellCollection<T> : IChannelCollection<T> where T : IChannelCell
     {

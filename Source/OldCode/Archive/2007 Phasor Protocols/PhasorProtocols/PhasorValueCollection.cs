@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent collection of phasor values.
+    /// Represents a protocol independent collection of <see cref="IPhasorValue"/> objects.
     /// </summary>
     [Serializable()]
     public class PhasorValueCollection : ChannelValueCollectionBase<IPhasorDefinition, IPhasorValue>
