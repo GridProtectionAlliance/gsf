@@ -22,8 +22,9 @@ using System.Linq;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent collection of any frame of data that can be sent or received from a phasor device.
+    /// Represents a protocol independent collection of <see cref="IChannelFrame"/> objects.
     /// </summary>
+    /// <typeparam name="T">Specific <see cref="IChannelFrame"/> type that the <see cref="ChannelFrameCollectionBase{T}"/> contains.</typeparam>
     [Serializable()]
     public abstract class ChannelFrameCollectionBase<T> : ChannelCollectionBase<T> where T : IChannelFrame
     {
@@ -76,7 +77,7 @@ namespace PCS.PhasorProtocols
             get
             {
                 // It is expected that frames can be different lengths, so we manually sum lengths - this represents
-                // a change in behavior from base class...
+                // a change in behavior from the base class...
                 return this.Sum(frame => frame.BinaryLength);
             }
         }
