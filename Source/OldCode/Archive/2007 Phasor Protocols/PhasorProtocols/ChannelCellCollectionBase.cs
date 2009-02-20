@@ -23,8 +23,9 @@ using System.Linq;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the common implementation of the protocol independent representation of a collection of any kind of data cell.
+    /// Represents a protocol independent collection of <see cref="IChannelCell"/> objects.
     /// </summary>
+    /// <typeparam name="T">Specific <see cref="IChannelCell"/> type that the <see cref="ChannelCellCollectionBase{T}"/> contains.</typeparam>
     [Serializable()]
     public abstract class ChannelCellCollectionBase<T> : ChannelCollectionBase<T>, IChannelCellCollection<T> where T : IChannelCell
     {
