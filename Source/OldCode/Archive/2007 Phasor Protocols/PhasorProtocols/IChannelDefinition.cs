@@ -77,7 +77,7 @@ namespace PCS.PhasorProtocols
         string Label { get; set; }
 
         /// <summary>
-        /// Gets the binary label image of this <see cref="IChannelDefinition"/>.
+        /// Gets the binary image of the <see cref="Label"/> of this <see cref="IChannelDefinition"/>.
         /// </summary>
         byte[] LabelImage { get; }
 
