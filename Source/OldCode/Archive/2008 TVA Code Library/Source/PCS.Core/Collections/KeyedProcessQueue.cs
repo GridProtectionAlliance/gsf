@@ -129,6 +129,13 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a bulk-item ProcessList based on the generic DictionaryList class.
         /// </summary>
+        /// <param name="processItemsFunction">A delegate ProcessItemsFunctionSignature that defines a function signature to process multiple items at once.</param>
+        /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
+        /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
+        /// <param name="maximumThreads">An <see cref="Int32"/> that represents the max number of threads to use.</param>
+        /// <param name="processTimeout">An <see cref="Int32"/> that represents the amount of time before a process times out.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after a timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after an exception.</param>
         protected KeyedProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(null, processItemsFunction, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
@@ -457,6 +464,7 @@ namespace PCS.Collections
         /// in case it gets called.
         /// </summary>
         ///	<param name="item">The object to locate. The value can be null for reference types.</param>
+        ///	<returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(KeyValuePair<TKey, TValue> item)
         {
@@ -473,7 +481,8 @@ namespace PCS.Collections
         ///	<param name="item">The object to locate. The value can be null for reference types.</param>
         /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
         /// null to use the default comparer: Generic.Comparer(Of T).Default</param>
-        /// </remarks>  
+        /// </remarks>
+        ///	<returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
@@ -491,6 +500,7 @@ namespace PCS.Collections
         ///	<param name="item">The object to locate. The value can be null for reference types.</param>
         /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or- null to use
         /// the default comparer: Generic.Comparer(Of T).Default</param>
+        ///	<returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(int index, int count, KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
@@ -626,6 +636,8 @@ namespace PCS.Collections
         /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -635,6 +647,9 @@ namespace PCS.Collections
         /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -644,6 +659,9 @@ namespace PCS.Collections
         /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -653,6 +671,10 @@ namespace PCS.Collections
         /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -661,6 +683,13 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
@@ -669,15 +698,28 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
+
+
+
         /// <summary>
         /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateSynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -687,6 +729,9 @@ namespace PCS.Collections
         /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -695,6 +740,12 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateSynchronousQueue(processItemFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
@@ -703,15 +754,29 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
+
+
+
+
+
         /// <summary>
         /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateRealTimeQueue(processItemFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -721,6 +786,9 @@ namespace PCS.Collections
         /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -729,6 +797,11 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateRealTimeQueue(processItemFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
@@ -737,6 +810,12 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/>, using the specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
         public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
