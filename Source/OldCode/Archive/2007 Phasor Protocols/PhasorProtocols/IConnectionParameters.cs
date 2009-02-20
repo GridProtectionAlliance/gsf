@@ -1,32 +1,32 @@
 //*******************************************************************************************************
-//  IConfigurationFrame.vb - Configuration frame interface
+//  IConnectionParameters.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
-using System;
 using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This interface represents the protocol independent representation of any specific needed connection parameters.</summary>
+    /// <summary>
+    /// Represents a protocol independent interface representation of specific connection parameters.
+    /// </summary>
     public interface IConnectionParameters : ISerializable
     {
-        /// <summary>Returns True if all connection parameters are valid</summary>
-        bool ValuesAreValid
-        {
-            get;
-        }
+        /// <summary>
+        /// Returns True if all connection parameters are valid.
+        /// </summary>
+        bool ValuesAreValid { get; }
     }
 }
