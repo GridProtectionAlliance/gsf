@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the common implementation of the protocol independent collection of definitions of any kind of data.
+    /// Represents a protocol independent collection of <see cref="IChannelDefinition"/> objects.
     /// </summary>
     /// <typeparam name="T">Specific <see cref="IChannelDefintion"/> type that the <see cref="ChannelDefinitionCollectionBase{T}"/> contains.</typeparam>
     [Serializable()]
