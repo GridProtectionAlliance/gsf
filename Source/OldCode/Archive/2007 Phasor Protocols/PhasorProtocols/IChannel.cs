@@ -22,31 +22,29 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This interface represents a protocol independent representation of any data type that can be parsed or generated.
+    /// Represents the protocol independent interface representation of any data type that can
+    /// be parsed or generated.<br/>
+    /// This is the base interface implemented by all parsing/generating classes in the phasor
+    /// protocols library; it is the root of the parsing/generating interface hierarchy.
     /// </summary>
-    /// <remarks>
-    /// This is the root interface of the phasor protocol library.
-    /// </remarks>
     public interface IChannel : ISupportBinaryImage
     {
         /// <summary>
-        /// Final derived <see cref="IChannel"/> <see cref="Type"/>.
-        /// </summary>
-        Type DerivedType { get; }
-
-        /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="IChannel"/> object.
         /// </summary>
         Dictionary<string, string> Attributes { get; }
 
         /// <summary>
-        /// Gets or sets the parsing state for the <see cref="IChannel"/> object.
+        /// Gets or sets the parsing state for this <see cref="IChannel"/> object.
         /// </summary>
         IChannelParsingState State { get; set; }
 
         /// <summary>
-        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
+        /// Gets or sets a user definable reference to an object associated with this <see cref="IChannel"/> object.
         /// </summary>
+        /// <remarks>
+        /// Classes implementing <see cref="IChannel"/> should only track this value.
+        /// </remarks>
         object Tag { get; set; }
     }
 }
