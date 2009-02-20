@@ -21,14 +21,13 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This interface represents a protocol independent representation of any kind of data cell.
+    /// Represents a protocol independent interface representation of any kind of frame cell.
     /// </summary>
     /// <remarks>
-    /// This phasor protocol implementation defines a "cell" as a portion of a frame, i.e., a logical unit of data.
+    /// This phasor protocol implementation defines a "cell" as a portion of a "frame", i.e., a logical unit of data.
     /// For example, a <see cref="IDataCell"/> (dervied from <see cref="IChannelCell"/>) could be defined as a PMU
     /// within a frame of data, a <see cref="IDataFrame"/>, that contains multiple PMU's coming from a PDC.
     /// </remarks>
-    [CLSCompliant(false)]
     public interface IChannelCell : IChannel, ISerializable
     {
         /// <summary>

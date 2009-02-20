@@ -22,7 +22,7 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent interface representation of any data type that can
+    /// Represents a protocol independent interface representation of any data type that can
     /// be parsed or generated.<br/>
     /// This is the base interface implemented by all parsing/generating classes in the phasor
     /// protocols library; it is the root of the parsing/generating interface hierarchy.
