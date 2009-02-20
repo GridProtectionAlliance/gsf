@@ -57,7 +57,7 @@ namespace PCS.PhasorProtocols
         int ScalingFactor { get; set; }
 
         /// <summary>
-        /// Gets the maximum value for the scaling factor of this <see cref="IChannelDefinition"/>.
+        /// Gets the maximum value for the <see cref="ScalingFactor"/> of this <see cref="IChannelDefinition"/>.
         /// </summary>
         int MaximumScalingFactor { get; }
 
@@ -82,7 +82,7 @@ namespace PCS.PhasorProtocols
         byte[] LabelImage { get; }
 
         /// <summary>
-        /// Gets the maximum label length of this <see cref="IChannelDefinition"/>.
+        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="IChannelDefinition"/>.
         /// </summary>
         int MaximumLabelLength { get; }
     }
