@@ -1,100 +1,83 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  IChannelDefinition.vb - Channel data definition interface
+//  IChannelDefinition.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/18/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  02/18/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This interface represents a protocol independent definition of any kind of data.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Represents a protocol independent interface representation of a definition of any kind of <see cref="IChannel"/> data.
+    /// </summary>
     public interface IChannelDefinition : IChannel, ISerializable, IEquatable<IChannelDefinition>, IComparable<IChannelDefinition>, IComparable
     {
+        /// <summary>
+        /// Gets the <see cref="IConfigurationCell"/> parent of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        IConfigurationCell Parent { get; }
+        
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        DataFormat DataFormat { get; }
 
+        /// <summary>
+        /// Gets or sets the index of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        int Index { get; set; }
 
-        IConfigurationCell Parent
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets the offset of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        float Offset { get; set; }
 
-        DataFormat DataFormat
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets the scaling factor of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        int ScalingFactor { get; set; }
 
-        int Index
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets the maximum value for the scaling factor of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        int MaximumScalingFactor { get; }
 
-        float Offset
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets the conversion factor of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        float ConversionFactor { get; set; }
 
-        int ScalingFactor
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets the scale/bit value of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        float ScalePerBit { get; }
 
-        int MaximumScalingFactor
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets the label of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        string Label { get; set; }
 
-        float ConversionFactor
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets the binary label image of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        byte[] LabelImage { get; }
 
-        float ScalePerBit
-        {
-            get;
-        }
-
-        string Label
-        {
-            get;
-            set;
-        }
-
-        byte[] LabelImage
-        {
-            get;
-        }
-
-        int MaximumLabelLength
-        {
-            get;
-        }
-
+        /// <summary>
+        /// Gets the maximum label length of this <see cref="IChannelDefinition"/>.
+        /// </summary>
+        int MaximumLabelLength { get; }
     }
 }

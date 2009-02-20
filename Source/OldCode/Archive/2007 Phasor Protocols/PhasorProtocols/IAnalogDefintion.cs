@@ -18,7 +18,7 @@
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent interface representation of an analog value definition.
+    /// Represents a protocol independent interface representation of a definition of an <see cref="IAnalogValue"/>.
     /// </summary>
     public interface IAnalogDefinition : IChannelDefinition
     {

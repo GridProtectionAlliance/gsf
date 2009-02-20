@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent interface representation of any kind of frame cell.
+    /// Represents a protocol independent interface representation of any kind of <see cref="IChannelFrame"/> cell.
     /// </summary>
     /// <remarks>
     /// This phasor protocol implementation defines a "cell" as a portion of a "frame", i.e., a logical unit of data.

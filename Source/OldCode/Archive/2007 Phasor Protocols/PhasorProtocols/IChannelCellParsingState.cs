@@ -18,7 +18,7 @@
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent interface representation of the parsing state of any kind of frame cell.
+    /// Represents a protocol independent interface representation of the parsing state of any kind of <see cref="IChannelCell"/>.
     /// </summary>
     public interface IChannelCellParsingState : IChannelParsingState
     {
