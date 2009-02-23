@@ -426,6 +426,7 @@ namespace PCS.Collections
         /// <summary>Removes the element with the specified key from the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
         /// <param name="key">The key of the element to remove.</param>
         /// <exception cref="ArgumentNullException">key is null.</exception>
+        /// <returns>This method returns a <see cref="Boolean"/> value indicating whether the item was removed.</returns>
         public bool Remove(TKey key)
         {
             lock (SyncRoot)
@@ -514,6 +515,7 @@ namespace PCS.Collections
         /// in case it gets called.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
+        ///	<returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int IndexOf(KeyValuePair<TKey, TValue> item)
         {
@@ -529,6 +531,7 @@ namespace PCS.Collections
         /// <param name="count">The number of elements in the section to search.</param>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         /// <param name="index">The zero-based starting index of the search.</param>
+        ///	<returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int IndexOf(KeyValuePair<TKey, TValue> item, int index, int count)
         {
@@ -542,6 +545,7 @@ namespace PCS.Collections
         /// in case it gets called.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
+        /// <returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int LastIndexOf(KeyValuePair<TKey, TValue> item)
         {
@@ -556,6 +560,7 @@ namespace PCS.Collections
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         /// <param name="index">The zero-based starting index of the backward search.</param>
+        /// <returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int LastIndexOf(KeyValuePair<TKey, TValue> item, int index)
         {
@@ -571,6 +576,7 @@ namespace PCS.Collections
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         /// <param name="index">The zero-based starting index of the backward search.</param>
         /// <param name="count">The number of elements in the section to search.</param>
+        /// <returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int LastIndexOf(KeyValuePair<TKey, TValue> item, int index, int count)
         {
