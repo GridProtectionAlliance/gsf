@@ -33,7 +33,7 @@
 //  09/19/2008 - J. Ritchie Carroll
 //       Converted to C# extensions.
 //  12/13/2008 - F. Russell Roberson
-//       Generalized ParseBoolean to include "Yes", "Y", and "T"
+//       Generalized ParseBoolean to include "Y", and "T"
 //       Added IndexOfRepeatedChar - Returns the index of the first character that is repeated
 //       Added Reverse - Reverses the order of characters in a string
 //       Added EnsureEnd - Ensures that a string ends with a specified char or string
