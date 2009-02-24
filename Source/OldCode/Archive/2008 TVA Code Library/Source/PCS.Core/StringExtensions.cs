@@ -78,34 +78,26 @@ namespace PCS
 
             if (value.Length > 0)
             {
-                if (Common.IsNumeric(value))
-                {
-                    // String contains a number.
-                    int result;
+                // Try to parse string a number
+                int iresult;
 
-                    if (int.TryParse(value, out result))
-                        return (result != 0);
-                    else
-                        return false;
+                if (int.TryParse(value, out iresult))
+                {
+                    return (iresult != 0);
                 }
                 else
                 {
-                    // String contains text.
-                    bool result;
+                    // Try to parse string as a boolean
+                    bool bresult;
 
-                    if (bool.TryParse(value, out result))
-                        return result;
+                    if (bool.TryParse(value, out bresult))
+                    {
+                        return bresult;
+                    }
                     else
                     {
-                        value = value.ToUpper().Trim();
-
-                        if (value.Length > 0)
-                        {
-                            char test = value[0];
-                            return (test == 'T' || test == 'Y' ? true : false);
-                        }
-
-                        return false;
+                        char test = value.ToUpper()[0];
+                        return (test == 'T' || test == 'Y' ? true : false);
                     }
                 }
             }
