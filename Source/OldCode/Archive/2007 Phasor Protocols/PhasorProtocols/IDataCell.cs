@@ -1,125 +1,111 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using PCS.Measurements;
-
 //*******************************************************************************************************
-//  IDataCell.vb - Data cell interface
+//  IDataCell.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/16/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  04/16/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using PCS.Measurements;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This interface represents the protocol independent representation of a set of phasor related data values.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Represents a protocol independent interface representation of any kind of <see cref="IDataFrame"/> cell.
+    /// </summary>
+    /// <remarks>
+    /// This phasor protocol implementation defines a "cell" as a portion of a "frame", i.e., a logical unit of data.
+    /// For example, a <see cref="IDataCell"/> could be defined as a PMU within a <see cref="IDataFrame"/> that contains
+    /// multiple PMU's coming from a PDC.
+    /// </remarks>
     public interface IDataCell : IChannelCell, IMeasurement
     {
+        /// <summary>
+        /// Gets reference to parent <see cref="IDataFrame"/> of this <see cref="IDataCell"/>.
+        /// </summary>
+        new IDataFrame Parent { get; }
 
+        /// <summary>
+        /// Gets or sets <see cref="IConfigurationCell"/> associated with this <see cref="IDataCell"/>.
+        /// </summary>
+        IConfigurationCell ConfigurationCell { get; set; }
 
-        new IDataFrame Parent
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets station name of this <see cref="IDataCell"/>.
+        /// </summary>
+        string StationName { get; }
 
-        IConfigurationCell ConfigurationCell
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets ID label of this <see cref="IDataCell"/>.
+        /// </summary>
+        string IDLabel { get; }
 
-        string StationName
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets 16-bit status flags of this <see cref="IDataCell"/>.
+        /// </summary>
+        short StatusFlags { get; set; }
 
-        string IDLabel
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets or sets command status flags of this <see cref="IDataCell"/>.
+        /// </summary>
+        int CommonStatusFlags { get; set; }
 
-        short StatusFlags
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets flag that determines if all values of this <see cref="IDataCell"/> have been assigned.
+        /// </summary>
+        bool AllValuesAssigned { get; }
 
-        int CommonStatusFlags
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets <see cref="PhasorValueCollection"/> of this <see cref="IDataCell"/>.
+        /// </summary>
+        PhasorValueCollection PhasorValues { get; }
 
-        bool AllValuesAssigned
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets <see cref="IFrequencyValue"/> of this <see cref="IDataCell"/>.
+        /// </summary>
+        IFrequencyValue FrequencyValue { get; set; }
 
-        PhasorValueCollection PhasorValues
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets <see cref="AnalogValueCollection"/>of this <see cref="IDataCell"/>.
+        /// </summary>
+        AnalogValueCollection AnalogValues { get; }
 
-        IFrequencyValue FrequencyValue
-        {
-            get;
-            set;
-        }
-
-        AnalogValueCollection AnalogValues
-        {
-            get;
-        }
-
-        DigitalValueCollection DigitalValues
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets <see cref="DigitalValueCollection"/>of this <see cref="IDataCell"/>.
+        /// </summary>
+        DigitalValueCollection DigitalValues { get; }
 
         // These properties correspond to the CommonStatusFlags enumeration
         // allowing all protocols to implement a common set of status flags
 
-        bool DataIsValid
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets flag that determines if data of this <see cref="IDataCell"/> is valid.
+        /// </summary>
+        bool DataIsValid { get; set; }
 
-        bool SynchronizationIsValid
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets flag that determines if timestamp of this <see cref="IDataCell"/> is valid based on GPS lock.
+        /// </summary>
+        bool SynchronizationIsValid { get; set; }
 
-        DataSortingType DataSortingType
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets or sets <see cref="DataSortingType"/> of this <see cref="IDataCell"/>.
+        /// </summary>
+        DataSortingType DataSortingType { get; set; }
 
-        bool PmuError
-        {
-            get;
-            set;
-        }
-
+        /// <summary>
+        /// Gets or sets flag that determines if source device of this <see cref="IDataCell"/> is reporting an error.
+        /// </summary>
+        bool DeviceError { get; set; }
     }
 }
