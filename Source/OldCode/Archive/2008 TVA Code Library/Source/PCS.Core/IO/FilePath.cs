@@ -86,14 +86,14 @@ namespace PCS.IO
             // allowing any characters except those that would not be valid as part of a filename.
             // This essentially builds the "?" wildcard pattern match.
             pattern.Append("[^");
-            pattern.Append(Path.DirectorySeparatorChar.EncodeRegexChar());
-            pattern.Append(Path.AltDirectorySeparatorChar.EncodeRegexChar());
-            pattern.Append(Path.PathSeparator.EncodeRegexChar());
-            pattern.Append(Path.VolumeSeparatorChar.EncodeRegexChar());
+            pattern.Append(Path.DirectorySeparatorChar.RegexEncode());
+            pattern.Append(Path.AltDirectorySeparatorChar.RegexEncode());
+            pattern.Append(Path.PathSeparator.RegexEncode());
+            pattern.Append(Path.VolumeSeparatorChar.RegexEncode());
 
             foreach (char c in Path.GetInvalidPathChars())
             {
-                pattern.Append(c.EncodeRegexChar());
+                pattern.Append(c.RegexEncode());
             }
 
             pattern.Append("]");

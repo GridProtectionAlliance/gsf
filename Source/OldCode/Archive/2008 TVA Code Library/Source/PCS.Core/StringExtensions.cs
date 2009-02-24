@@ -32,6 +32,15 @@
 //       Added JoinKeyValuePairs overloads that does the exact opposite of ParseKeyValuePairs.
 //  09/19/2008 - J. Ritchie Carroll
 //       Converted to C# extensions.
+//  12/13/2008 - F. Russell Roberson
+//       Generalized ParseBoolean to include "Yes", "Y", and "T"
+//       Added IndexOfRepeatedChar - Returns the index of the first character that is repeated
+//       Added Reverse - Reverses the order of characters in a string
+//       Added EnsureEnd - Ensures that a string ends with a specified char or string
+//       Added EnsureStart - Ensures that a string begins with a specified char or string
+//       Added IsNumeric - Test to see if a string only includes characters that can be interpreted as a number.
+//       Added TrimWithEllipsisMiddle - Adds an ellipsis in the middle of a string as it is reduced to a specified length
+//       Added TrimWithEllipsisEnd - Trims a string to not exceed a fixed length and adds a ellipsis to string end
 //  02/10/2009 - J. Ritchie Carroll
 //       Added ConvertToType overloaded extensions.
 //  02/17/2009 - Josh Patterson
@@ -42,6 +51,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.ComponentModel;
 
 namespace PCS
@@ -86,7 +96,17 @@ namespace PCS
                     if (bool.TryParse(value, out result))
                         return result;
                     else
+                    {
+                        value = value.ToUpper().Trim();
+
+                        if (value.Length > 0)
+                        {
+                            char test = value[0];
+                            return (test == 'T' || test == 'Y' ? true : false);
+                        }
+
                         return false;
+                    }
                 }
             }
 
@@ -309,8 +329,8 @@ namespace PCS
 
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             string[] elements;
-            string escapedParameterDelimeter = parameterDelimeter.EncodeRegexChar();
-            string escapedKeyValueDelimeter = keyValueDelimeter.EncodeRegexChar();
+            string escapedParameterDelimeter = parameterDelimeter.RegexEncode();
+            string escapedKeyValueDelimeter = keyValueDelimeter.RegexEncode();
             StringBuilder escapedValue = new StringBuilder();
             bool valueEscaped = false;
             char character;
@@ -816,21 +836,11 @@ namespace PCS
         }
 
         /// <summary>
-        /// Encodes the specified Unicode character in proper Regular Expression format.
-        /// </summary>
-        /// <param name="item">Unicode character to encode in Regular Expression format.</param>
-        /// <returns>Specified Unicode character in proper Regular Expression format.</returns>
-        public static string EncodeRegexChar(this char item)
-        {
-            return "\\u" + Convert.ToUInt16(item).ToString("x").PadLeft(4, '0');
-        }
-
-        /// <summary>
         /// Decodes the specified Regular Expression character back into a standard Unicode character.
         /// </summary>
         /// <param name="value">Regular Expression character to decode back into a Unicode character.</param>
         /// <returns>Standard Unicode character representation of specified Regular Expression character.</returns>
-        public static char DecodeRegexChar(this string value)
+        public static char RegexDecode(this string value)
         {
             return Convert.ToChar(Convert.ToUInt16(value.Replace("\\u", "0x"), 16));
         }
@@ -870,6 +880,9 @@ namespace PCS
         /// <returns>A <see cref="String"/> that has the first letter of each word capitalized.</returns>
         public static string TitleCase(this string value)
         {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
             return System.Globalization.CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(value.ToLower());
         }
 
@@ -881,7 +894,12 @@ namespace PCS
         /// <returns>A <see cref="String"/> that is the truncated version of the <paramref name="value"/> string.</returns>
         public static string TruncateLeft(this string value, int maxLength)
         {
-            if (value.Length > maxLength) return value.Substring(value.Length - maxLength);
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (value.Length > maxLength)
+                return value.Substring(value.Length - maxLength);
+
             return value;
         }
 
@@ -893,7 +911,12 @@ namespace PCS
         /// <returns>A <see cref="String"/> that is the truncated version of the <paramref name="value"/> string.</returns>
         public static string TruncateRight(this string value, int maxLength)
         {
-            if (value.Length > maxLength) return value.Substring(0, maxLength);
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (value.Length > maxLength)
+                return value.Substring(0, maxLength);
+
             return value;
         }
 
@@ -927,6 +950,8 @@ namespace PCS
         /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength, char paddingCharacter)
         {
+            if (value == null) value = "";
+
             // If the text to be centered contains multiple lines, centers all the lines individually.
             StringBuilder result = new StringBuilder();
             string[] lines = value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
@@ -967,6 +992,332 @@ namespace PCS
             }
 
             return result.ToString();
+        }
+        /// <summary>
+        /// Performs a case insensitive string replacement.
+        /// </summary>
+        /// <param name="inString">The string to examine.</param>
+        /// <param name="fromText">The value to replace.</param>
+        /// <param name="toText">The new value to be inserted</param>
+        /// <returns>A string with replacements.</returns>
+        public static string ReplaceCaseInsensitive(this string inString, string fromText, string toText)
+        {
+            return (new Regex(fromText, RegexOptions.IgnoreCase | RegexOptions.Multiline)).Replace(inString, toText);
+        }
+
+        /// <summary>
+        /// Ensures a string starts with a specific character.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="startChar">The character desired at string start.</param>
+        /// <returns>The sent string with character at the start.</returns>
+        public static string EnsureStart(this string value, char startChar)
+        {
+            return EnsureStart(value, startChar, false);
+        }
+
+        /// <summary>
+        /// Ensures a string starts with a specific character.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="startChar">The character desired at string start.</param>
+        /// <param name="removeRepeatingChar">Set to <c>true</c> to ensure one and only one instance of <paramref name="startChar"/>.</param>
+        /// <returns>The sent string with character at the start.</returns>
+        public static string EnsureStart(this string value, char startChar, bool removeRepeatingChar)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (startChar == 0)return value;
+
+            if (value[0] == startChar)
+            {
+                if (removeRepeatingChar) return value.Substring(LastIndexOfRepeatedChar(value, startChar, 0));
+                return value;
+            }
+            else
+                return string.Concat(startChar, value);
+        }
+
+        /// <summary>
+        /// Ensures a string starts with a specific string.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="startString">The string desired at string start.</param>
+        /// <returns>The sent string with string at the start.</returns>
+        public static string EnsureStart(this string value, string startString)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (string.IsNullOrEmpty(startString))
+                return value;
+
+            if (value.IndexOf(startString) == 0)
+                return value;
+            else
+                return string.Concat(startString, value);
+        }
+
+        /// <summary>
+        /// Ensures a string ends with a specific character.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="endChar">The character desired at string's end.</param>
+        /// <returns>The sent string with character at the end.</returns>
+        public static string EnsureEnd(this string value, char endChar)
+        {
+            return EnsureEnd(value, endChar, false);
+        }
+
+        /// <summary>
+        /// Ensures a string ends with a specific character.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="endChar">The character desired at string's end.</param>
+        /// <param name="removeRepeatingChar">Set to <c>true</c> to ensure one and only one instance of <paramref name="endChar"/>.</param>
+        /// <returns>The sent string with character at the end.</returns>
+        public static string EnsureEnd(this string value, char endChar, bool removeRepeatingChar)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (endChar == 0)
+                return value;
+
+            if (value[value.Length - 1] == endChar)
+            {
+                if (removeRepeatingChar)
+                {
+                    int i = LastIndexOfRepeatedChar(value.Reverse(), endChar, 0);
+                    return value.Substring(0, value.Length - i);
+                }
+                return value;
+            }
+            else
+                return string.Concat(value, endChar);
+        }
+
+        /// <summary>
+        /// Ensures a string ends with a specific string.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="endString">The string desired at string's end.</param>
+        /// <returns>The sent string with string at the end.</returns>
+        public static string EnsureEnd(this string value, string endString)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (string.IsNullOrEmpty(endString))
+                return value;
+
+            if (value.EndsWith(endString))
+               return value;
+            else
+                return string.Concat(value, endString);
+        }
+
+        /// <summary>
+        /// Reverses the order of the characters in a string.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <returns>The reversed string.</returns>
+        public static string Reverse(this string value)
+        {
+            // Experimented with several approaches.  This is the fastest.
+            // Replaced Common.DoReverse with explicid code. yielded 1.5% performance increase.
+            // DoReverse is faster than Array.Reverse.
+
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            char[] arrChar = value.ToCharArray();
+            char temp;
+            int arrLength =  arrChar.Length;
+            int j;
+
+            // works for odd and even length strings, since middle char is not swapped for an odd length string.
+            for (int i = 0; i < arrLength / 2; i++)
+            {
+                j = arrLength - i - 1;
+                temp = arrChar[i];
+                arrChar[i] = arrChar[j];
+                arrChar[j] = temp;
+            }
+
+            return new string(arrChar);
+        }
+
+        /// <summary>
+        /// Searches a string for a repeated instance of the specified <paramref name="characterToFind"/> from specified <paramref name="startIndex"/>.
+        /// </summary>
+        /// <param name="value">The string to process.</param>
+        /// <param name="characterToFind">The character of interest.</param>
+        /// <param name="startIndex">The index from which to begin the search.</param>
+        /// <returns>The index of the first instance of the character that is repeated or (-1) if no repeated chars found.</returns>
+        public static int IndexOfRepeatedChar(this string value, char characterToFind, int startIndex)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (startIndex < 0)
+                return -1;
+
+            if (characterToFind == 0)
+                return -1;
+
+            char c = (char)0;
+
+            for (int i = startIndex; i < value.Length; i++)
+            {
+                if (value[i] == characterToFind)
+                {
+                    if (value[i] != c)
+                        c = value[i];
+                    else
+                    {
+                        //at least one repeating character
+                        return i - 1;
+                    }
+                }
+                else
+                    c = (char)0;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches a string for a repeated instance of the specified <paramref name="characterToFind"/>.
+        /// </summary>
+        /// <param name="value">The string to process.</param>
+        /// <param name="characterToFind">The character of interest.</param>
+        /// <returns>The index of the first instance of the character that is repeated or (-1) if no repeated chars found.</returns>
+        public static int IndexOfRepeatedChar(this string value, char characterToFind)
+        {
+            return IndexOfRepeatedChar(value, characterToFind, 0);
+        }
+
+        /// <summary>
+        /// Searches a string for an instance of a repeated character.
+        /// </summary>
+        /// <param name="value">The string to process.</param>
+        /// <returns>The index of the first instance of any character that is repeated or (-1) if no repeated chars found.</returns>
+        public static int IndexOfRepeatedChar(this string value)
+        {
+            return IndexOfRepeatedChar(value, 0);
+        }
+
+        /// <summary>
+        /// Searches a string for an instance of a repeated character from specified <paramref name="startIndex"/>.
+        /// </summary>
+        /// <param name="value">The string to process.</param>
+        /// <param name="startIndex">The index from which to begin the search.</param>
+        /// <returns>The index of the first instance of any character that is repeated or (-1) if no repeated chars found.</returns>
+        public static int IndexOfRepeatedChar(this string value, int startIndex)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (startIndex < 0)
+                return -1;
+
+            char c = (char)0;
+           
+            for (int i = startIndex; i < value.Length; i++)
+            {
+                if (value[i] != c)
+                    c = value[i];
+                else
+                {
+                    //at least one repeating character
+                    return i - 1;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Returns the index of the last repeated index of the first group of repeated characters that begin with 'value'
+        /// </summary>
+        /// <param name="inString">String to process</param>
+        /// <param name="value">character to search for</param>
+        /// <param name="startIndex">the begin search point</param>
+        /// <returns>The index of the last instance of the character that is repeated or (-1) if no repeated chars found.</returns>
+        private static int LastIndexOfRepeatedChar(string inString, char value, int startIndex)
+        {
+            if (startIndex > inString.Length - 1)
+                return -1;
+            
+            int v = inString.IndexOf(value, startIndex);
+
+            if (v == -1)
+                return -1;
+
+            for (int j = v + 1; j < inString.Length; j++)
+            {
+                if (inString[j] != value)
+                    return j - 1;
+            }
+
+            return inString.Length - 1;
+        }
+
+        /// <summary>
+        /// Places an ellipsis in the middle of a string as it is trimmed to length specified.
+        /// </summary>
+        /// <param name="value">The string to process.</param>
+        /// <param name="length">The maximum returned string length; mimimum value is 5.</param>
+        /// <returns>
+        /// A trimmed string of the specified <paramref name="length"/> or empty string if <paramref name="value"/> is null or empty.
+        /// </returns>
+        /// <remarks>
+        /// Returned string is not padded to fill field length if <paramref name="value"/> is shorter than length.
+        /// </remarks>
+        public static string TrimWithEllipsisMiddle(this string value, int length)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (length < 5)
+                length = 5;
+
+            value = value.Trim();
+
+            if (value.Length <= length)
+                return value;
+
+            int s1_Len = (int)(length / 2) - 1;
+
+            return string.Concat(value.Substring(0, s1_Len), "...", value.Substring(value.Length - s1_Len + 1 -  length % 2));
+        }
+
+        /// <summary>
+        /// Places an ellipsis at the end of a string as it is trimmed to length specified.
+        /// </summary>
+        /// <param name="value">The string to process.</param>
+        /// <param name="length">The maximum returned string length; mimimum value is 5.</param>
+        /// <returns>
+        /// A trimmed string of the specified <paramref name="length"/> or empty string if <paramref name="value"/> is null or empty.
+        /// </returns>
+        /// <remarks>
+        /// Returned string is not padded to fill field length if <paramref name="value"/> is shorter than length.
+        /// </remarks>
+        public static string TrimWithEllipsisEnd(this string value, int length)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+            
+            if (length < 5)
+                length = 5;
+
+            value = value.Trim();
+
+            if (value.Length <= length)
+                return value;
+
+            return string.Concat(value.Substring(0, length - 3), "...");
         }
     }
 }

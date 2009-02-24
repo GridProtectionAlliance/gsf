@@ -86,6 +86,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CharExtensions.cs" />
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
     <Compile Include="Configuration\CategorizedSettingsBase.cs" />
     <Compile Include="Configuration\AppSettingsBase.cs" />
