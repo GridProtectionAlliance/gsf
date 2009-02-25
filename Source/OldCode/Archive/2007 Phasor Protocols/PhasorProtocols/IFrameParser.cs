@@ -22,7 +22,7 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This interface represents the protocol independent representation of a frame parser.
+    /// Represents a protocol independent representation of a frame parser.
     /// </summary>
     /// <remarks>
     /// This interface allows protocol specific frame parsers to be handled abstractly by the <see cref="MultiProtocolFrameParser"/>.
