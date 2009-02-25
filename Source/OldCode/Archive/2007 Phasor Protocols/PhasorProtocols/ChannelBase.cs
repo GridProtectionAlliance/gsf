@@ -15,7 +15,6 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using PCS.Parsing;
 
@@ -31,7 +30,6 @@ namespace PCS.PhasorProtocols
     /// This base class represents <see cref="IChannel"/> data images for parsing or generation in
     /// terms of a header, body and footer (see <see cref="BinaryImageBase"/> for details).
     /// </remarks>
-    [Serializable()]
     public abstract class ChannelBase : BinaryImageBase, IChannel
     {
         #region [ Members ]
