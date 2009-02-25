@@ -29,7 +29,7 @@ namespace PCS.PhasorProtocols
     /// For example, a <see cref="DataCellBase"/> (dervied from <see cref="ChannelCellBase"/>) could be defined as a PMU
     /// within a frame of data, a <see cref="DataFrameBase"/>, that contains multiple PMU's coming from a PDC.
     /// </remarks>
-    [CLSCompliant(false), Serializable()]
+    [Serializable()]
     public abstract class ChannelCellBase : ChannelBase, IChannelCell
     {
         #region [ Members ]
