@@ -24,7 +24,7 @@ using PCS;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent representation of a phasor value.
+    /// Represents the common implementation of the protocol independent representation of a phasor value.
     /// </summary>
     [Serializable()]
     public abstract class PhasorValueBase : ChannelValueBase<IPhasorDefinition>, IPhasorValue
