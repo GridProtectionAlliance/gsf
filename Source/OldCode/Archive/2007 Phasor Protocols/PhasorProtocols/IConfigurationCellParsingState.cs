@@ -24,8 +24,9 @@ namespace PCS.PhasorProtocols
     /// <param name="binaryImage">Binary image to parse <see cref="IChannelDefinition"/> from.</param>
     /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
     /// <returns>New <see cref="IChannelDefinition"/> object.</returns>
-    /// <typeparam name="T">Specific <see cref="IChannelDefinition"/> type of object that gets created by referenced function.</typeparam>
-    public delegate T CreateNewDefinitionFunctionSignature<T>(IConfigurationCell parent, byte[] binaryImage, int startIndex) where T : IChannelDefinition;
+    /// <typeparam name="T">Specific <see cref="IChannelDefinition"/> type of object that the <see cref="CreateNewDefinitionFunction{T}"/> creates.</typeparam>
+    public delegate T CreateNewDefinitionFunction<T>(IConfigurationCell parent, byte[] binaryImage, int startIndex)
+        where T : IChannelDefinition;
 
     /// <summary>
     /// Represents a protocol independent interface representation of the parsing state of any kind of <see cref="IConfigurationCell"/>.
@@ -33,23 +34,23 @@ namespace PCS.PhasorProtocols
     public interface IConfigurationCellParsingState : IChannelCellParsingState
     {
         /// <summary>
-        /// Gets reference to <see cref="CreateNewDefinitionFunctionSignature{T}"/> delegate used to create new <see cref="IPhasorDefinition"/> objects.
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IPhasorDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunctionSignature<IPhasorDefinition> CreateNewPhasorDefinitionFunction { get; }
+        CreateNewDefinitionFunction<IPhasorDefinition> CreateNewPhasorDefinition { get; }
 
         /// <summary>
-        /// Gets reference to <see cref="CreateNewDefinitionFunctionSignature{T}"/> delegate used to create new <see cref="IFrequencyDefinition"/> objects.
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IFrequencyDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunctionSignature<IFrequencyDefinition> CreateNewFrequencyDefinitionFunction { get; }
+        CreateNewDefinitionFunction<IFrequencyDefinition> CreateNewFrequencyDefinition { get; }
 
         /// <summary>
-        /// Gets reference to <see cref="CreateNewDefinitionFunctionSignature{T}"/> delegate used to create new <see cref="IAnalogDefinition"/> objects.
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IAnalogDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunctionSignature<IAnalogDefinition> CreateNewAnalogDefinitionFunction { get; }
+        CreateNewDefinitionFunction<IAnalogDefinition> CreateNewAnalogDefinition { get; }
 
         /// <summary>
-        /// Gets reference to <see cref="CreateNewDefinitionFunctionSignature{T}"/> delegate used to create new <see cref="IDigitalDefinition"/> objects.
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IDigitalDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunctionSignature<IDigitalDefinition> CreateNewDigitalDefinitionFunction { get; }
+        CreateNewDefinitionFunction<IDigitalDefinition> CreateNewDigitalDefinition { get; }
     }
 }
