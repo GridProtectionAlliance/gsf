@@ -18,7 +18,7 @@
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent interface of a phasor value definition.
+    /// Represents a protocol independent interface representation of a definition of a <see cref="IPhasorValue"/>.
     /// </summary>
     public interface IPhasorDefinition : IChannelDefinition
     {

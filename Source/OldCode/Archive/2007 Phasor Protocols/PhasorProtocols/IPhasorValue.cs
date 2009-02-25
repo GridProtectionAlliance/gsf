@@ -19,18 +19,19 @@ using System.Units;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>
-    /// Defines function signature for creating new phasor values.
-    /// </summary>
-    /// <param name="parent">Parent <see cref="IDataCell"/>.</param>
-    /// <param name="phasorDefinition">Associated <see cref="IPhasorDefinition"/>.</param>
-    /// <param name="real">Real value of new phasor measurement.</param>
-    /// <param name="imaginary">Imaginary value of new phasor measurement.</param>
-    /// <returns>New <see cref="IPhasorValue"/> instance.</returns>
-    protected delegate IPhasorValue CreateNewPhasorValueFunctionSignature(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary);
+    // TODO: Determine where this was used - and why...  If not used - delete.
+    ///// <summary>
+    ///// Defines function signature for creating new phasor values.
+    ///// </summary>
+    ///// <param name="parent">Parent <see cref="IDataCell"/>.</param>
+    ///// <param name="phasorDefinition">Associated <see cref="IPhasorDefinition"/>.</param>
+    ///// <param name="real">Real value of new phasor measurement.</param>
+    ///// <param name="imaginary">Imaginary value of new phasor measurement.</param>
+    ///// <returns>New <see cref="IPhasorValue"/> instance.</returns>
+    //protected delegate IPhasorValue CreateNewPhasorValueFunctionSignature(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary);
 
     /// <summary>
-    /// Represents the protocol independent interface of a phasor value.
+    /// Represents a protocol independent interface representation of a phasor value.
     /// </summary>
     public interface IPhasorValue : IChannelValue<IPhasorDefinition>
     {
@@ -55,12 +56,12 @@ namespace PCS.PhasorProtocols
         double Magnitude { get; set; }
 
         /// <summary>
-        /// Gets or sets the real value of this <see cref="IPhasorValue"/>.
+        /// Gets or sets the real floating point value of this <see cref="IPhasorValue"/>.
         /// </summary>
         double Real { get; set; }
 
         /// <summary>
-        /// Gets or sets the imaginary value of this <see cref="IPhasorValue"/>.
+        /// Gets or sets the imaginary floating point value of this <see cref="IPhasorValue"/>.
         /// </summary>
         double Imaginary { get; set; }
 
