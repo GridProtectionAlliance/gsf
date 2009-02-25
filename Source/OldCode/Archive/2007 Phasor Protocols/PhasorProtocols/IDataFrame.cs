@@ -18,7 +18,8 @@
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent representation of any data frame.
+    /// Represents a protocol independent interface representation of any kind of data frame that contains
+    /// a collection of <see cref="IDataCell"/> objects.
     /// </summary>
     public interface IDataFrame : IChannelFrame
     {
