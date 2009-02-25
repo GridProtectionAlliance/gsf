@@ -39,20 +39,22 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Net;
+using System.Units;
 using System.Threading;
 using System.ComponentModel;
+using System.Collections.Generic;
 using PCS;
 using PCS.Collections;
 using PCS.Communication;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>Protocol independent frame parser.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Protocol independent frame parser.
+    /// </summary>
     public class MultiProtocolFrameParser : IFrameParser
     {
         #region [ Members ]
@@ -701,7 +703,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_byteRate * 8.0D / 1048576.0D;
+                return BitRate / SI2.Mega;;
             }
         }
         /// <summary>
@@ -833,6 +835,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Starts the <see cref="MultiProtocolFrameParser"/>.
+        /// </summary>
         public void Start()
         {
             // Stop parser if is already running - thus calling start after already started will have the effect
@@ -996,7 +1001,7 @@ namespace PCS.PhasorProtocols
                 }
                 else
                 {
-                    throw (new InvalidOperationException("No communications layer was initialized, cannot start parser"));
+                    throw new InvalidOperationException("No communications layer was initialized, cannot start parser");
                 }
 
                 m_rateCalcTimer.Enabled = true;
@@ -1009,6 +1014,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Stops the <see cref="MultiProtocolFrameParser"/>.
+        /// </summary>
         public void Stop()
         {
             m_enabled = false;
@@ -1061,6 +1069,13 @@ namespace PCS.PhasorProtocols
             m_commandChannel = null;
         }
 
+        /// <summary>
+        /// Sends the specified <see cref="DeviceCommand"/> to the remote device.
+        /// </summary>
+        /// <param name="command"><see cref="DeviceCommand"/> to send to the remote device.</param>
+        /// <remarks>
+        /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
+        /// </remarks>
         public void SendDeviceCommand(DeviceCommand command)
         {
             if (m_deviceSupportsCommands && (m_communicationClient != null || m_communicationServer != null || m_commandChannel != null))
@@ -1250,16 +1265,17 @@ namespace PCS.PhasorProtocols
         {
             if (m_lastFrameReceivedTime > 0)
             {
-                // To keep precise timing on "frames per second", we wait for defined frame rate interval
+                // To maintain timing on "frames per second", we wait for defined frame rate interval
                 double sleepTime = m_definedFrameRate - ((double)(DateTime.Now.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond);
-                //double sleepTime = m_definedFrameRate - ((double)(TVA.DateTime.PrecisionTimer.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)TVA.DateTime.Common.TicksPerSecond);
 
+                // Thread sleep time is a minimum suggested sleep time depending on system activity, so we target 9/10 of a second
+                // to make this a little more accurate. Since this is just used for replay, getting close is good enough - no need
+                // to incur the overhead of using a PCS.PrecisionTimer here...
                 if (sleepTime > 0)
                     Thread.Sleep((int)(sleepTime * 900.0D));
             }
 
             m_lastFrameReceivedTime = DateTime.Now.Ticks;
-            //m_lastFrameReceivedTime = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
         }
 
         #region [ Communications Client Event Handlers ]
@@ -1375,15 +1391,14 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
-                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if (ReceivedCommandFrame != null)
                     ReceivedCommandFrame(this, e);
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedCommandFrame\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedCommandFrame\" consumer event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
@@ -1403,15 +1418,14 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
-                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if (ReceivedConfigurationFrame != null)
                     ReceivedConfigurationFrame(this, e);
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedConfigurationFrame\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedConfigurationFrame\" consumer event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
@@ -1426,15 +1440,14 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
-                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if (ReceivedDataFrame != null)
                     ReceivedDataFrame(this, e);
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedDataFrame\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedDataFrame\" consumer event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
@@ -1449,15 +1462,14 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
-                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if (ReceivedHeaderFrame != null)
                     ReceivedHeaderFrame(this, e);
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedHeaderFrame\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedHeaderFrame\" consumer event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
@@ -1472,15 +1484,14 @@ namespace PCS.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Ticks = DateTime.UtcNow.Ticks;
-                    //frame.Ticks = TVA.DateTime.PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if (ReceivedUndeterminedFrame != null)
                     ReceivedUndeterminedFrame(this, e);
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedUndeterminedFrame\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedUndeterminedFrame\" consumer event handler exception: {0}", ex.Message);
             }
 
             if (m_transportProtocol == TransportProtocol.File)
@@ -1497,7 +1508,7 @@ namespace PCS.PhasorProtocols
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ReceivedFrameBufferImage\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedFrameBufferImage\" consumer event handler exception: {0}", ex.Message);
             }
         }
 
@@ -1511,7 +1522,7 @@ namespace PCS.PhasorProtocols
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "MultiProtocolFrameParser consumer \"ConfigurationChanged\" event handler exception: {0}", ex.Message);
+                OnParsingException(ex, "MultiProtocolFrameParser \"ConfigurationChanged\" consumer event handler exception: {0}", ex.Message);
             }
         }
 
