@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols
         new ICommandFrame Parent { get; }
 
         /// <summary>
-        /// Gets or sets extended data <see cref="Byte"/> of this <see cref="ICommandCell"/>.
+        /// Gets or sets extended data <see cref="Byte"/> that represents this <see cref="ICommandCell"/>.
         /// </summary>
         byte ExtendedDataByte { get; set; }
     }

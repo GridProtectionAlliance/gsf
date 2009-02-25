@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols
         new IHeaderFrame Parent { get; }
 
         /// <summary>
-        /// Gets or sets ASCII character as a <see cref="Byte"/> of this <see cref="IHeaderCell"/>.
+        /// Gets or sets ASCII character as a <see cref="Byte"/> that represents this <see cref="IHeaderCell"/>.
         /// </summary>
         byte Character { get; set; }
     }
