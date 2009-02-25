@@ -18,7 +18,7 @@
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent representation of any configuration frame.
+    /// Represents a protocol independent representation of any configuration frame.
     /// </summary>
     public interface IConfigurationFrame : IChannelFrame
     {
