@@ -1,82 +1,87 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using PCS.Measurements;
-
 //*******************************************************************************************************
-//  ChannelValueBase.vb - Channel data value base class
+//  ChannelValueBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  3/7/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  03/07/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
+using System.Collections.Generic;
+using PCS.Measurements;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the common implementation of the protocol independent representation of any kind of data value.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the common implementation of the protocol independent representation of any kind of data value.
+    /// </summary>
+    [Serializable()]
     public abstract class ChannelValueBase<T> : ChannelBase, IChannelValue<T> where T : IChannelDefinition
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private IDataCell m_parent;
         private T m_definition;
         private IMeasurement[] m_measurements;
 
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
         protected ChannelValueBase()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ChannelValueBase{T}"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected ChannelValueBase(SerializationInfo info, StreamingContext context)
         {
-
             // Deserialize channel value
             m_parent = (IDataCell)info.GetValue("parent", typeof(IDataCell));
             m_definition = (T)info.GetValue("definition", typeof(T));
-
         }
 
-        protected ChannelValueBase(IDataCell parent)
-        {
-
-            m_parent = parent;
-
-        }
-
+        /// <summary>
+        /// Creates a new <see cref="ChannelValueBase{T}"/> from the specified parameters.
+        /// </summary>
         protected ChannelValueBase(IDataCell parent, T channelDefinition)
         {
-
             m_parent = parent;
             m_definition = channelDefinition;
-
         }
 
-        // Derived classes are expected to expose a Protected Sub New(ByVal channelValue As IChannelValue(Of T))
+        /// <summary>
+        /// Creates a new <see cref="ChannelValueBase{T}"/> copied from the specified <see cref="IChannelValue{T}"/> object.
+        /// </summary>
         protected ChannelValueBase(IChannelValue<T> channelValue)
             : this(channelValue.Parent, channelValue.Definition)
         {
-
-
         }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the <see cref="IDataCell"/> parent of this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
         public virtual IDataCell Parent
         {
             get
@@ -85,6 +90,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="IChannelDefinition"/> associated with this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
         public virtual T Definition
         {
             get
@@ -97,6 +105,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
         public virtual DataFormat DataFormat
         {
             get
@@ -105,6 +116,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets text based label of this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
         public virtual string Label
         {
             get
@@ -113,22 +127,23 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public abstract bool IsEmpty
-        {
-            get;
-        }
+        /// <summary>
+        /// Gets boolean value that determines if none of the composite values of <see cref="ChannelValueBase{T}"/> have been assigned a value.
+        /// </summary>
+        /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
+        public abstract bool IsEmpty { get; }
 
-        public abstract float this[int index]
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// Gets the composite values of this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this property is used to abstractly expose each value.
+        /// </remarks>
+        public abstract double[] CompositeValues { get; set; }
 
-        public abstract int CompositeValueCount
-        {
-            get;
-        }
-
+        /// <summary>
+        /// Gets the <see cref="CompositeValues"/> of this <see cref="ChannelValueBase{T}"/> as an array of <see cref="IMeasurement"/> values.
+        /// </summary>
         public virtual IMeasurement[] Measurements
         {
             get
@@ -136,10 +151,11 @@ namespace PCS.PhasorProtocols
                 // Create a measurement instance for each composite value the derived channel value exposes
                 if (m_measurements == null)
                 {
-                    m_measurements = new IMeasurement[CompositeValueCount];
+                    m_measurements = new IMeasurement[CompositeValues.Length];
 
-                    for (int x = 0; x <= m_measurements.Length - 1; x++)
+                    for (int x = 0; x < m_measurements.Length; x++)
                     {
+                        // ChannelValueMeasurement dynamically accesses CompositeValues[x] for its value
                         m_measurements[x] = new ChannelValueMeasurement<T>(this, x);
                     }
                 }
@@ -148,35 +164,46 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            // Serialize channel value
-            info.AddValue("parent", m_parent, typeof(IDataCell));
-            info.AddValue("definition", m_definition, typeof(T));
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelValueBase{T}"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
+                double[] compositeValues = CompositeValues;
 
                 baseAttributes.Add("Label", Label);
                 baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
                 baseAttributes.Add("Is Empty", IsEmpty.ToString());
-                baseAttributes.Add("Total Composite Values", CompositeValueCount.ToString());
+                baseAttributes.Add("Total Composite Values", compositeValues.Length.ToString());
 
-                for (int x = 0; x <= CompositeValueCount - 1; x++)
+                for (int x = 0; x < compositeValues.Length; x++)
                 {
-                    baseAttributes.Add("     Composite Value " + x, this[x].ToString());
+                    baseAttributes.Add("     Composite Value " + x, compositeValues[x].ToString());
                 }
 
                 return baseAttributes;
             }
         }
 
-    }
+        #endregion
 
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize channel value
+            info.AddValue("parent", m_parent, typeof(IDataCell));
+            info.AddValue("definition", m_definition, typeof(T));
+        }
+
+        #endregion
+    }
 }
