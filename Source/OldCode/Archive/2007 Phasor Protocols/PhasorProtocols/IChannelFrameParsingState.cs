@@ -41,7 +41,7 @@ namespace PCS.PhasorProtocols
         CreateNewCellFunctionSignature<T> CreateNewCellFunction { get; }
 
         /// <summary>
-        /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/>.
+        /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/> being parsed.
         /// </summary>
         int CellCount { get; set; }
     }

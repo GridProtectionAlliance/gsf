@@ -23,17 +23,17 @@ namespace PCS.PhasorProtocols
     public interface IChannelCellParsingState : IChannelParsingState
     {
         /// <summary>
-        /// Gets or sets the number of phasor elements associated with the <see cref="IChannelCell"/>.
+        /// Gets or sets the number of phasor elements associated with the <see cref="IChannelCell"/> being parsed.
         /// </summary>
         int PhasorCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of analog elements associated with the <see cref="IChannelCell"/>.
+        /// Gets or sets the number of analog elements associated with the <see cref="IChannelCell"/> being parsed.
         /// </summary>
         int AnalogCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of digital elements associated with the <see cref="IChannelCell"/>.
+        /// Gets or sets the number of digital elements associated with the <see cref="IChannelCell"/> being parsed.
         /// </summary>
         int DigitalCount { get; set; }
     }
