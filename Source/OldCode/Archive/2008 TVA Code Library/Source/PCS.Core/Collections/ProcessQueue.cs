@@ -39,6 +39,8 @@
 //      Converted to C#
 //  11/06/2008 - J. Ritchie Carroll
 //      Added CurrentStatistics property to return run-time statistics as a group.
+//  02/23/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -308,6 +310,13 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a <see cref="ProcessQueue{T}"/> based on the generic List(Of T) class.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that defines a method to process one item at a time.</param>
+        /// <param name="canProcessItemFunction">Delegate that determines if an item can currently be processed.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : this(processItemFunction, null, canProcessItemFunction, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
@@ -316,6 +325,13 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a bulk item <see cref="ProcessQueue{T}"/> based on the generic List(Of T) class.
         /// </summary>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <param name="canProcessItemFunction">Delegate that determines if an item can currently be processed.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : this(null, processItemsFunction, canProcessItemFunction, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
@@ -324,6 +340,15 @@ namespace PCS.Collections
         /// <summary>
         /// Allows derived classes to define their own IList instance, if desired.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that defines a method to process one item at a time.</param>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <param name="canProcessItemFunction">Delegate that determines if an item can currently be processed.</param>
+        /// <param name="processQueue">A storage list for items to be processed.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IList<T> processQueue, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             m_processItemFunction = processItemFunction;    // Defining this function creates a ProcessingStyle = OneAtATime process queue
@@ -1281,6 +1306,8 @@ namespace PCS.Collections
         /// directly, since implementation of this delegate is optional.
         /// </para>
         /// </remarks>
+        /// <param name="item">The item T to process.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating whether it can process the item or not.</returns>
         protected virtual bool CanProcessItem(T item)
         {
             if (m_canProcessItemFunction == null)
@@ -1322,6 +1349,8 @@ namespace PCS.Collections
         /// directly, since implementation of this delegate is optional.
         /// </para>
         /// </remarks>
+        /// <param name="items">An array of items of type T.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating whether the process queue can process the items.</returns>
         protected virtual bool CanProcessItems(T[] items)
         {
             if (m_canProcessItemFunction == null)
