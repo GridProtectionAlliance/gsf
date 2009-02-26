@@ -123,7 +123,7 @@ namespace System
         /// </summary>
         /// <param name="value">An object to compare, or null.</param>
         /// <returns>
-        /// An unsigned number indicating the relative values of this instance and value. Returns less than zero
+        /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
@@ -143,7 +143,7 @@ namespace System
         /// </summary>
         /// <param name="value">An integer to compare.</param>
         /// <returns>
-        /// An unsigned number indicating the relative values of this instance and value. Returns less than zero
+        /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
@@ -158,7 +158,7 @@ namespace System
         /// </summary>
         /// <param name="value">An integer to compare.</param>
         /// <returns>
-        /// An unsigned number indicating the relative values of this instance and value. Returns less than zero
+        /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
