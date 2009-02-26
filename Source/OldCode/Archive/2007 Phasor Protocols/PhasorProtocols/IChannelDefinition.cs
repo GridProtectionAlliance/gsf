@@ -49,7 +49,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the offset of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        float Offset { get; set; }
+        double Offset { get; set; }
 
         /// <summary>
         /// Gets or sets the scaling factor of this <see cref="IChannelDefinition"/>.
@@ -64,12 +64,12 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the conversion factor of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        float ConversionFactor { get; set; }
+        double ConversionFactor { get; set; }
 
         /// <summary>
         /// Gets the scale/bit value of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        float ScalePerBit { get; }
+        double ScalePerBit { get; }
 
         /// <summary>
         /// Gets or sets the label of this <see cref="IChannelDefinition"/>.
