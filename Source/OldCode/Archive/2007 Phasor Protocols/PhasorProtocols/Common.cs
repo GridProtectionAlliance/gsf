@@ -78,9 +78,9 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization.
         /// </remarks>
-        public static string GetValidLabel(string value)
+        public static string GetValidLabel(this string value)
         {
-            return value.ReplaceControlCharacters().RemoveDuplicateWhiteSpace().Trim();
+            return value.RemoveNull().ReplaceControlCharacters().RemoveDuplicateWhiteSpace().Trim();
         }
 
         /// <summary>
