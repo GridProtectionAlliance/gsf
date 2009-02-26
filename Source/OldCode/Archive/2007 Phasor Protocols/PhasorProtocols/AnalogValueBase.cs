@@ -184,7 +184,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelValueBase{T}"/> object.
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="AnalogValueBase"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {
