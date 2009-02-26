@@ -161,7 +161,10 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return (int)(m_phasor.Real / Definition.ConversionFactor);
+                unchecked
+                {
+                    return (int)(m_phasor.Real / Definition.ConversionFactor);
+                }
             }
             set
             {
@@ -176,7 +179,10 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return (short)(m_phasor.Imaginary / Definition.ConversionFactor);
+                unchecked
+                {
+                    return (int)(m_phasor.Imaginary / Definition.ConversionFactor);
+                }
             }
             set
             {
@@ -213,6 +219,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
+        /// <remarks>
+        /// The base implementation assumes fixed integer values are represented as 16-bit signed
+        /// integers and floating point values are represented as 32-bit single-precision floating-point
+        /// values (i.e., short and float data types respectively).
+        /// </remarks>
         protected override int BodyLength
         {
             get
@@ -227,36 +238,53 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the binary body image of the <see cref="PhasorValueBase"/> object.
         /// </summary>
+        /// <remarks>
+        /// The base implementation assumes fixed integer values are represented as 16-bit signed
+        /// integers and floating point values are represented as 32-bit single-precision floating-point
+        /// values (i.e., short and float data types respectively).
+        /// </remarks>
         protected override byte[] BodyImage
         {
             get
             {
                 byte[] buffer = new byte[BodyLength];
 
-                if (CoordinateFormat == PhasorProtocols.CoordinateFormat.Rectangular)
+                // Had to make a descision on usage versus typical protocol implementation when
+                // exposing values as double / int when protocols typically use float / short for
+                // transmission. Exposing values as double / int makes class more versatile by
+                // allowing future protocol implementations to support higher resolution values
+                // simply by overriding BodyLength, BodyImage and ParseBodyImage. Exposing class
+                // values as double / int runs the risk of providing values that are outside the
+                // data type limitations, hence the unchecked section below. However, risk should
+                // be low in typical usage scenarios since values being transmitted via a generated
+                // image were likely parsed previously from a binary image with the same constraints.
+                unchecked
                 {
-                    if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
+                    if (CoordinateFormat == PhasorProtocols.CoordinateFormat.Rectangular)
                     {
-                        EndianOrder.BigEndian.CopyBytes((short)UnscaledReal, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((short)UnscaledImaginary, buffer, 2);
+                        if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
+                        {
+                            EndianOrder.BigEndian.CopyBytes((short)UnscaledReal, buffer, 0);
+                            EndianOrder.BigEndian.CopyBytes((short)UnscaledImaginary, buffer, 2);
+                        }
+                        else
+                        {
+                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Real, buffer, 0);
+                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Imaginary, buffer, 4);
+                        }
                     }
                     else
                     {
-                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.Real, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.Imaginary, buffer, 4);
-                    }
-                }
-                else
-                {
-                    if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
-                    {
-                        EndianOrder.BigEndian.CopyBytes((ushort)m_phasor.AbsoluteValue, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
-                    }
-                    else
-                    {
-                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.AbsoluteValue, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
+                        if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
+                        {
+                            EndianOrder.BigEndian.CopyBytes((ushort)m_phasor.AbsoluteValue, buffer, 0);
+                            EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
+                        }
+                        else
+                        {
+                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.AbsoluteValue, buffer, 0);
+                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
+                        }
                     }
                 }
 
@@ -297,6 +325,11 @@ namespace PCS.PhasorProtocols
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
         /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// The base implementation assumes fixed integer values are represented as 16-bit signed
+        /// integers and floating point values are represented as 32-bit single-precision floating-point
+        /// values (i.e., short and float data types respectively).
+        /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
             // TODO: It is expected that parent IDataCell will validate that it has
