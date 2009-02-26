@@ -30,6 +30,6 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the integer representation of this <see cref="IAnalogValue"/> value.
         /// </summary>
-        short IntegerValue { get; set; }
+        int IntegerValue { get; set; }
     }
 }
