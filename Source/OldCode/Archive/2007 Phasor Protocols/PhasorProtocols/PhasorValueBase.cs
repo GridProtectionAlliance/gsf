@@ -308,8 +308,7 @@ namespace PCS.PhasorProtocols
                 baseAttributes.Add("Imaginary Value", Imaginary.ToString());
                 baseAttributes.Add("Unscaled Real Value", UnscaledReal.ToString());
                 baseAttributes.Add("Unscaled Imaginary Value", UnscaledImaginary.ToString());
-                baseAttributes.Add("Composites Assigned", m_phasor.CompositesAssigned.ToString());
-
+                
                 return baseAttributes;
             }
         }
