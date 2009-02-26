@@ -23,7 +23,7 @@ namespace PCS.PhasorProtocols
     public interface IDigitalValue : IChannelValue<IDigitalDefinition>
     {
         /// <summary>
-        /// Gets or sets the integer value (composed of digital bits) that represents this <see cref="IDigitalValue"/>.
+        /// Gets or sets the 16-bit integer value (composed of digital bits) that represents this <see cref="IDigitalValue"/>.
         /// </summary>
         int Value { get; set; }
     }
