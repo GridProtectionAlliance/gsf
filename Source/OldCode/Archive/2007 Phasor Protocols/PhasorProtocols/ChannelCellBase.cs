@@ -78,7 +78,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="IChannelCell"/>.
+        /// Gets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.
         /// </summary>
         public virtual IChannelFrame Parent
         {
@@ -93,7 +93,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the numeric ID code for this <see cref="IChannelCell"/>.
+        /// Gets the numeric ID code for this <see cref="ChannelCellBase"/>.
         /// </summary>
         /// <remarks>
         /// Most phasor measurement devices define some kind of numeric identifier (e.g., a hardware identifier coded into the device ROM); this is the
@@ -112,10 +112,10 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets a flag that determines if the <see cref="IChannelCell"/> is aligned on a double-word (i.e., 32-bit) boundry.
+        /// Gets a flag that determines if the <see cref="ChannelCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.
         /// </summary>
         /// <remarks>
-        /// If protocol requires this property to be true, the <see cref="ISupportBinaryImage.BinaryLength"/> of the <see cref="IChannelCell"/>
+        /// If protocol requires this property to be true, the <see cref="ISupportBinaryImage.BinaryLength"/> of the <see cref="ChannelCellBase"/>
         /// will be padded to align evenly at 4-byte intervals.
         /// </remarks>
         public virtual bool AlignOnDWordBoundary
