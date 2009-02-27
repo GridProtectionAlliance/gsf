@@ -61,7 +61,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrequencyDefinitionBase"/> using the specified parameters.
         /// </summary>
-        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, float offset, uint dfdtScale, float dfdtOffset)
+        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
             : base(parent, 0, label, scale, offset)
         {
             m_dfdtScale = dfdtScale;
