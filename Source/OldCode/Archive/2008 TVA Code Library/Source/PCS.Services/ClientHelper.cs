@@ -140,9 +140,9 @@ namespace PCS.Services
                 if (m_remotingClient != null)
                 {
                     // Detach events from any existing instance
-                    m_remotingClient.Connected -= m_remotingClient_Connected;
-                    m_remotingClient.Connecting -= m_remotingClient_Connecting;
-                    m_remotingClient.Disconnected -= m_remotingClient_Disconnected;
+                    m_remotingClient.ConnectionEstablished -= m_remotingClient_Connected;
+                    m_remotingClient.ConnectionAttempt -= m_remotingClient_Connecting;
+                    m_remotingClient.ConnectionTerminated -= m_remotingClient_Disconnected;
                     m_remotingClient.ReceiveDataComplete -= m_remotingClient_ReceiveDataComplete;
                 }
 
@@ -151,9 +151,9 @@ namespace PCS.Services
                 if (m_remotingClient != null)
                 {
                     // Attach events to new instance
-                    m_remotingClient.Connected += m_remotingClient_Connected;
-                    m_remotingClient.Connecting += m_remotingClient_Connecting;
-                    m_remotingClient.Disconnected += m_remotingClient_Disconnected;
+                    m_remotingClient.ConnectionEstablished += m_remotingClient_Connected;
+                    m_remotingClient.ConnectionAttempt += m_remotingClient_Connecting;
+                    m_remotingClient.ConnectionTerminated += m_remotingClient_Disconnected;
                     m_remotingClient.ReceiveDataComplete += m_remotingClient_ReceiveDataComplete;
                 }
             }
