@@ -88,6 +88,10 @@ namespace PCS.PhasorProtocols
             {
                 return m_parent;
             }
+            set
+            {
+                m_parent = value;
+            }
         }
 
         /// <summary>
