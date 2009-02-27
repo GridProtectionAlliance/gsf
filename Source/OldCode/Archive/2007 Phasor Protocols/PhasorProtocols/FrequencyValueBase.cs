@@ -268,7 +268,7 @@ namespace PCS.PhasorProtocols
         /// integers and floating point values are represented as 32-bit single-precision floating-point
         /// values (i.e., short and float data types respectively).
         /// </remarks>
-        protected override void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
+        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
             // TODO: It is expected that parent IDataCell will validate that it has
             // enough length to parse entire cell well in advance so that low level
@@ -279,6 +279,8 @@ namespace PCS.PhasorProtocols
             {
                 UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
                 UnscaledDfDt = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2);
+                
+                return 4;
             }
             else
             {
@@ -287,6 +289,8 @@ namespace PCS.PhasorProtocols
 
                 m_frequencyAssigned = true;
                 m_dfdtAssigned = true;
+
+                return 8;
             }
         }
 
