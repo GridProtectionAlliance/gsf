@@ -395,7 +395,7 @@ namespace PCS.PhasorProtocols
             // we are able to "automatically" parse this data out in the data cell base class - BEAUTIFUL!!!
 
             // Parse out phasor values
-            for (x = 0; x <= parsingState.PhasorCount - 1; x++)
+            for (x = 0; x < parsingState.PhasorCount; x++)
             {
                 phasorValue = parsingState.CreateNewPhasorValue(this, m_configurationCell.PhasorDefinitions[x], binaryImage, startIndex);
                 m_phasorValues.Add(phasorValue);
@@ -407,7 +407,7 @@ namespace PCS.PhasorProtocols
             startIndex += m_frequencyValue.BinaryLength;
 
             // Parse out analog values
-            for (x = 0; x <= parsingState.AnalogCount - 1; x++)
+            for (x = 0; x < parsingState.AnalogCount; x++)
             {
                 analogValue = parsingState.CreateNewAnalogValue(this, m_configurationCell.AnalogDefinitions[x], binaryImage, startIndex);
                 m_analogValues.Add(analogValue);
@@ -415,7 +415,7 @@ namespace PCS.PhasorProtocols
             }
 
             // Parse out digital values
-            for (x = 0; x <= parsingState.DigitalCount - 1; x++)
+            for (x = 0; x < parsingState.DigitalCount; x++)
             {
                 digitalValue = parsingState.CreateNewDigitalValue(this, m_configurationCell.DigitalDefinitions[x], binaryImage, startIndex);
                 m_digitalValues.Add(digitalValue);
