@@ -35,7 +35,7 @@ namespace PCS.PhasorProtocols
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
-        private long m_ticks;
+        private Ticks m_ticks;
         private int m_valueIndex;
         private double m_adder;
         private double m_multiplier;
