@@ -52,7 +52,7 @@ namespace PCS.PhasorProtocols
         double Offset { get; set; }
 
         /// <summary>
-        /// Gets or sets the scaling factor of this <see cref="IChannelDefinition"/>.
+        /// Gets or sets the integer based scaling factor of this <see cref="IChannelDefinition"/>.
         /// </summary>
         uint ScalingFactor { get; set; }
 

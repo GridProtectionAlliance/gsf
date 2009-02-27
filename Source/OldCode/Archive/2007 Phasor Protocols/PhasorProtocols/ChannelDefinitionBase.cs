@@ -23,7 +23,7 @@ using System.Text;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the common implementation of the protocol independent definition of any kind of data.
+    /// Represents the common implementation of the protocol independent definition of any kind of <see cref="IChannel"/> data.
     /// </summary>
     [Serializable()]
     public abstract class ChannelDefinitionBase : ChannelBase, IChannelDefinition
@@ -159,7 +159,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the scaling factor of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets or sets the integer based scaling factor of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         public virtual uint ScalingFactor
         {
