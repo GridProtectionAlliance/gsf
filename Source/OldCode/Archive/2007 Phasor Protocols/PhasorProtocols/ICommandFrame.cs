@@ -21,7 +21,7 @@ namespace PCS.PhasorProtocols
     /// Represents a protocol independent interface representation of any kind of command frame that contains
     /// a collection of <see cref="ICommandCell"/> objects.
     /// </summary>
-    public interface ICommandFrame : IChannelFrame<ICommandFrame>
+    public interface ICommandFrame : IChannelFrame<ICommandCell>
     {
         /// <summary>
         /// Gets reference to the <see cref="CommandCellCollection"/> for this <see cref="ICommandFrame"/>.

@@ -88,6 +88,6 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for this <see cref="IChannelFrame{T}"/>.
         /// </summary>
-        new public virtual IChannelFrameParsingState<T> State;
+        new IChannelFrameParsingState<T> State { get; set; }
    }
 }
