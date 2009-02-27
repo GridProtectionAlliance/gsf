@@ -25,7 +25,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the parent <see cref="IHeaderFrame"/> for this <see cref="IHeaderCell"/>.
         /// </summary>
-        new IHeaderFrame Parent { get; }
+        new IHeaderFrame Parent { get; set; }
 
         /// <summary>
         /// Gets or sets ASCII character as a <see cref="Byte"/> that represents this <see cref="IHeaderCell"/>.

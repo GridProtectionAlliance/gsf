@@ -33,7 +33,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets reference to parent <see cref="IDataFrame"/> of this <see cref="IDataCell"/>.
         /// </summary>
-        new IDataFrame Parent { get; }
+        new IDataFrame Parent { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="IConfigurationCell"/> associated with this <see cref="IDataCell"/>.

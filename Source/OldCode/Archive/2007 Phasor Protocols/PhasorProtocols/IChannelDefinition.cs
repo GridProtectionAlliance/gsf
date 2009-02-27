@@ -34,7 +34,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="IConfigurationCell"/> parent of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        IConfigurationCell Parent { get; }
+        IConfigurationCell Parent { get; set; }
         
         /// <summary>
         /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="IChannelDefinition"/>.

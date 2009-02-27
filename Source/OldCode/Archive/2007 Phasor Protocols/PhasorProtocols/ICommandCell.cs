@@ -25,7 +25,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="ICommandCell"/>.
         /// </summary>
-        new ICommandFrame Parent { get; }
+        new ICommandFrame Parent { get; set; }
 
         /// <summary>
         /// Gets or sets extended data <see cref="Byte"/> that represents this <see cref="ICommandCell"/>.

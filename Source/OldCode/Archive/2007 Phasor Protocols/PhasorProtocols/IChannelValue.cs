@@ -34,7 +34,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="IDataCell"/> parent of this <see cref="IChannelValue{T}"/>.
         /// </summary>
-        IDataCell Parent { get; }
+        IDataCell Parent { get; set; }
 
         /// <summary>
         /// Gets the <see cref="IChannelDefinition"/> associated with this <see cref="IChannelValue{T}"/>.

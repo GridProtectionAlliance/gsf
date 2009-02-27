@@ -33,7 +33,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="IChannelCell"/>.
         /// </summary>
-        IChannelFrame Parent { get; }
+        IChannelFrame Parent { get; set; }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="IChannelCell"/>.

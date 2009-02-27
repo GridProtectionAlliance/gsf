@@ -27,7 +27,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the parent <see cref="IConfigurationFrame"/> for this <see cref="IConfigurationCell"/>.
         /// </summary>
-        new IConfigurationFrame Parent { get; }
+        new IConfigurationFrame Parent { get; set; }
 
         /// <summary>
         /// Gets or sets the station name of this <see cref="IConfigurationCell"/>.
