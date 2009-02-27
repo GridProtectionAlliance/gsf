@@ -19,16 +19,40 @@ using System;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the common implementation of the protocol independent parsing state class used by any kind of data.</summary>
-    /// <remarks>This class is inherited by subsequent classes to provide parsing state information particular to data type needs.</remarks>
+    /// <summary>
+    /// Represents the common implementation of the protocol independent parsing state class used by any kind of data.<br/>
+    /// This is the base class of all parsing state classes in the phasor protocols library;
+    /// it is the root of the parsing state class hierarchy.
+    /// </summary>
+    /// <remarks>
+    /// This class is inherited by subsequent classes to provide parsing state information particular to data type needs.
+    /// </remarks>
     public abstract class ChannelParsingStateBase : IChannelParsingState
     {
+        #region [ Members ]
+
+        // Fields
+        private int m_parsedBinaryLength;
+
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
-        /// Gets the final derived type of class implementing <see cref="IChannelParsingState"/>.
+        /// Gets or sets the length of associated <see cref="IChannel"/> object that was parsed from the binary image.
         /// </summary>
-        /// <remarks>
-        /// This is expected to be overriden by the final derived class.
-        /// </remarks>
-        public abstract Type DerivedType { get; }
+        public virtual int ParsedBinaryLength
+        {
+            get
+            {
+                return m_parsedBinaryLength;
+            }
+            set
+            {
+                m_parsedBinaryLength = value;
+            }
+        }
+
+        #endregion
     }
 }
