@@ -122,12 +122,12 @@ namespace PCS.PhasorProtocols
             {
                 unchecked
                 {
-                    return (int)((m_frequency - Definition.Offset) * Definition.ScalingFactor);
+                    return (int)((m_frequency - Definition.Offset) * Definition.ScalingValue);
                 }
             }
             set
             {
-                m_frequency = value / (double)Definition.ScalingFactor + Definition.Offset;
+                m_frequency = value / (double)Definition.ScalingValue + Definition.Offset;
                 m_frequencyAssigned = true;
             }
         }
@@ -141,12 +141,12 @@ namespace PCS.PhasorProtocols
             {
                 unchecked
                 {
-                    return (int)((m_dfdt - Definition.DfDtOffset) * Definition.DfDtScalingFactor);
+                    return (int)((m_dfdt - Definition.DfDtOffset) * Definition.DfDtScalingValue);
                 }
             }
             set
             {
-                m_dfdt = value / (double)Definition.DfDtScalingFactor + Definition.DfDtOffset;
+                m_dfdt = value / (double)Definition.DfDtScalingValue + Definition.DfDtOffset;
                 m_dfdtAssigned = true;
             }
         }
