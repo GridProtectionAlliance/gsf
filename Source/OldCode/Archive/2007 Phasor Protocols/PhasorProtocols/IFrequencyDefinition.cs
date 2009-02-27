@@ -33,8 +33,8 @@ namespace PCS.PhasorProtocols
         double DfDtOffset { get; set; }
 
         /// <summary>
-        /// Gets or sets the df/dt scaling factor of this <see cref="IFrequencyDefinition"/>.
+        /// Gets or sets the df/dt scaling value of this <see cref="IFrequencyDefinition"/>.
         /// </summary>
-        int DfDtScalingFactor { get; set; }
+        uint DfDtScalingValue { get; set; }
     }
 }
