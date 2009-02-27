@@ -1,93 +1,80 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.ComponentModel;
-//using PhasorProtocols.Common;
-
 //*******************************************************************************************************
-//  FrequencyDefinitionBase.vb - Frequency and df/dt value definition base class
+//  FrequencyDefinitionBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/18/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  02/18/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the common implementation of the protocol independent definition of a frequency and df/dt value.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the common implementation of the protocol independent definition of a <see cref="IFrequencyValue"/>.
+    /// </summary>
+    [Serializable()]
     public abstract class FrequencyDefinitionBase : ChannelDefinitionBase, IFrequencyDefinition
     {
+        #region [ Members ]
 
+        // Fields
+        private uint m_dfdtScale;
+        private double m_dfdtOffset;
 
+        #endregion
 
-        private int m_dfdtScale;
-        private float m_dfdtOffset;
+        #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
         protected FrequencyDefinitionBase()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinitionBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected FrequencyDefinitionBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize frequency definition
-            m_dfdtScale = info.GetInt32("dfdtScale");
-            m_dfdtOffset = info.GetSingle("dfdtOffset");
-
+            m_dfdtScale = info.GetUInt32("dfdtScale");
+            m_dfdtOffset = info.GetDouble("dfdtOffset");
         }
 
-        protected FrequencyDefinitionBase(IConfigurationCell parent)
-            : base(parent)
-        {
-
-
-        }
-
-        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, int scale, float offset, int dfdtScale, float dfdtOffset)
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinitionBase"/> using the specified parameters.
+        /// </summary>
+        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, float offset, uint dfdtScale, float dfdtOffset)
             : base(parent, 0, label, scale, offset)
         {
-
-
             m_dfdtScale = dfdtScale;
             m_dfdtOffset = dfdtOffset;
-
         }
 
-        protected FrequencyDefinitionBase(IConfigurationCell parent, byte[] binaryImage, int startIndex)
-            : base(parent, binaryImage, startIndex)
-        {
+        #endregion
 
+        #region [ Properties ]
 
-        }
-
-        // Derived classes are expected to expose a Public Sub New(ByVal frequencyDefinition As IFrequencyDefinition)
-        protected FrequencyDefinitionBase(IConfigurationCell parent, IFrequencyDefinition frequencyDefinition)
-            : this(parent, frequencyDefinition.Label, frequencyDefinition.ScalingFactor, frequencyDefinition.Offset, frequencyDefinition.DfDtScalingFactor, frequencyDefinition.DfDtOffset)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
         public override DataFormat DataFormat
         {
             get
@@ -96,6 +83,12 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the nominal <see cref="LineFrequency"/> of this <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Value returned is the <see cref="IConfigurationCell.NominalFrequency"/> and is exposed here just for convenience.
+        /// </remarks>
         public virtual LineFrequency NominalFrequency
         {
             get
@@ -104,6 +97,12 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets the index of this <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Phasor protocols only define one frequency measurement per device.
+        /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int Index
         {
@@ -117,19 +116,29 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public override float Offset
+        /// <summary>
+        /// Gets or sets the offset of this <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Offset for frequency values will always be the nominal frequency as defined in parent configuration cell; assigning a value is not supported.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">Frequency offset is read-only; value is determined by nominal frequency specified in containing condiguration cell.</exception>
+        public override double Offset
         {
             get
             {
-                return (float)Parent.NominalFrequency;
+                return (double)Parent.NominalFrequency;
             }
             set
             {
-                throw (new NotSupportedException("Frequency offset is read-only - it is determined by nominal frequency specified in containing condiguration cell"));
+                throw new NotSupportedException("Frequency offset is read-only; value is determined by nominal frequency specified in containing condiguration cell");
             }
         }
 
-        public virtual float DfDtOffset
+        /// <summary>
+        /// Gets or sets the df/dt offset of this <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
+        public virtual double DfDtOffset
         {
             get
             {
@@ -141,7 +150,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual int DfDtScalingFactor
+        /// <summary>
+        /// Gets or sets the df/dt scaling value of this <see cref="FrequencyDefinitionBase"/>.
+        /// </summary>
+        public virtual uint DfDtScalingValue
         {
             get
             {
@@ -153,17 +165,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize frequency definition
-            info.AddValue("dfdtScale", m_dfdtScale);
-            info.AddValue("dfdtOffset", m_dfdtOffset);
-
-        }
-
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="FrequencyDefinitionBase"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -171,11 +175,30 @@ namespace PCS.PhasorProtocols
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("df/dt Offset", DfDtOffset.ToString());
-                baseAttributes.Add("df/dt Scaling Factor", DfDtScalingFactor.ToString());
+                baseAttributes.Add("df/dt Scaling Value", DfDtScalingValue.ToString());
 
                 return baseAttributes;
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize frequency definition
+            info.AddValue("dfdtScale", m_dfdtScale);
+            info.AddValue("dfdtOffset", m_dfdtOffset);
+        }
+
+        #endregion
     }
 }
