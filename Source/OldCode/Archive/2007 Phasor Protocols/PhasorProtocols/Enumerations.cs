@@ -165,9 +165,9 @@ namespace PCS.PhasorProtocols
         /// </summary>
         DataSortingType = Bit.Bit17,
         /// <summary>
-        /// PMU error including configuration error, 0 when no error.
+        /// Device error (including configuration error), 0 when no error.
         /// </summary>
-        PmuError = Bit.Bit16,
+        DeviceError = Bit.Bit16,
         /// <summary>
         /// Reserved bits for future common flags, presently set to 0.
         /// </summary>

@@ -99,7 +99,7 @@ namespace PCS.PhasorProtocols
         bool SynchronizationIsValid { get; set; }
 
         /// <summary>
-        /// Gets or sets <see cref="DataSortingType"/> of this <see cref="IDataCell"/>.
+        /// Gets or sets <see cref="PhasorProtocols.DataSortingType"/> of this <see cref="IDataCell"/>.
         /// </summary>
         DataSortingType DataSortingType { get; set; }
 
