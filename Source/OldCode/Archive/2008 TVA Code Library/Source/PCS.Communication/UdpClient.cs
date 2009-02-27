@@ -52,6 +52,11 @@ namespace PCS.Communication
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888; Port=8989";
 
+        /// <summary>
+        /// Specifies the constant to be used for disabling <see cref="SocketError.ConnectionReset"/> when endpoint is not listening.
+        /// </summary>
+        private const int SIO_UDP_CONNRESET = -1744830452;
+
         // Fields
         //private bool m_destinationReachableCheck;
         private EndPoint m_udpServer;
@@ -183,6 +188,9 @@ namespace PCS.Communication
                 }
                 else
                 {
+                    // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                    m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+
                     m_receivedGoodbye = NoGoodbyeCheck;
                     OnConnectionEstablished();
                     ReceivePayloadAsync(m_udpClient);
@@ -392,14 +400,12 @@ namespace PCS.Communication
                     // Terminate connection when client is disposed.
                     TerminateConnection(udpClient, true);
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
-                    if (!Handshake && ex.SocketErrorCode == SocketError.ConnectionReset)
-                        // This occurs if server is not listening for data.
-                        ReceivePayloadAsync(udpClient);
-                    else
-                        // Terminate connection on other type of exception.
-                        TerminateConnection(udpClient, true);
+                    // Terminate the connection when a socket exception is encountered. The most likely socket exception that 
+                    // could be encountered is the SocketError.ConnectionReset when Handshake is turned on and the endpoint 
+                    // is not listening for data.
+                    TerminateConnection(udpClient, true);
                 }
                 catch (Exception ex)
                 {

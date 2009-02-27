@@ -53,6 +53,11 @@ namespace PCS.Communication
 
         //public const bool DefaultDestinationReachableCheck = false;
 
+        /// <summary>
+        /// Specifies the constant to be used for disabling <see cref="SocketError.ConnectionReset"/> when endpoint is not listening.
+        /// </summary>
+        private const int SIO_UDP_CONNRESET = -1744830452;
+
         // Fields
         //private bool m_destinationReachableCheck;
         private TransportProvider<Socket> m_udpServer;
@@ -184,6 +189,9 @@ namespace PCS.Communication
                                 udpClient.Passphrase = HandshakePassphrase;
                                 udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
                                 udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
+                                // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                                udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+                                // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint.
                                 udpClient.Provider.Connect(Transport.CreateEndPoint(clientStringSegments[0], int.Parse(clientStringSegments[1])));
 
                                 lock (m_udpClients)
@@ -446,7 +454,7 @@ namespace PCS.Communication
                     clients = new TransportProvider<Socket>[m_udpClients.Count];
                     m_udpClients.Values.CopyTo(clients, 0);
                 }
-                
+
                 // Search connected clients for a client connected to the end-point from where this data is received.
                 foreach (TransportProvider<Socket> client in clients)
                 {
@@ -529,14 +537,12 @@ namespace PCS.Communication
                     // Terminate connection when client is disposed.
                     TerminateConnection(udpClient, true);
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
-                    if (!Handshake && ex.SocketErrorCode == SocketError.ConnectionReset)
-                        // This occurs if client is not listening for data.
-                        ReceivePayloadOneAsync(udpClient);
-                    else
-                        // Terminate connection on other type of exception.
-                        TerminateConnection(udpClient, true);
+                    // Terminate the connection when a socket exception is encountered. The most likely socket exception that 
+                    // could be encountered is the SocketError.ConnectionReset when Handshake is turned on and the endpoint 
+                    // is not listening for data.
+                    TerminateConnection(udpClient, true);
                 }
                 catch (Exception ex)
                 {
