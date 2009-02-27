@@ -22,7 +22,7 @@ namespace PCS.PhasorProtocols
     /// <summary>
     /// Represents a protocol independent interface representation of any kind of <see cref="IConfigurationFrame"/> cell.
     /// </summary>
-    public interface IConfigurationCell : IChannelCell, IComparable<IConfigurationCell>, IComparable
+    public interface IConfigurationCell : IChannelCell, IEquatable<IConfigurationCell>, IComparable<IConfigurationCell>, IComparable
     {
         /// <summary>
         /// Gets a reference to the parent <see cref="IConfigurationFrame"/> for this <see cref="IConfigurationCell"/>.
