@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This base class represents the common implementation of the protocol independent representation of any kind of data cell.
+    /// Represents the common implementation of the protocol independent representation of any kind of data cell.
     /// </summary>
     /// <remarks>
     /// This phasor protocol implementation defines a "cell" as a portion of a frame, i.e., a logical unit of data.
@@ -73,14 +73,6 @@ namespace PCS.PhasorProtocols
             m_idCode = idCode;
         }
 
-        /// <summary>
-        /// Creates a new <see cref="ChannelCellBase"/> copied from the specified <see cref="IChannelCell"/> object.
-        /// </summary>
-        protected ChannelCellBase(IChannelCell channelCell)
-            : this(channelCell.Parent, channelCell.AlignOnDWordBoundary, channelCell.IDCode)
-        {
-        }
-
         #endregion
 
         #region [ Properties ]
@@ -93,6 +85,10 @@ namespace PCS.PhasorProtocols
             get
             {
                 return m_parent;
+            }
+            set
+            {
+                m_parent = value;
             }
         }
 
@@ -156,7 +152,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelCellBase"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {
