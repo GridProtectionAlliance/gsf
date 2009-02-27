@@ -73,7 +73,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Removes duplicate white space and control characters from a string.
+        /// Removes duplicate white space, control characters and null from a string.
         /// </summary>
         /// <remarks>
         /// Strings reported from IED's can be full of inconsistencies, this function "cleans-up" the strings for visualization.
