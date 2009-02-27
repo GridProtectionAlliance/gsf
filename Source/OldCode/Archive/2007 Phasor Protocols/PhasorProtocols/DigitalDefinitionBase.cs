@@ -1,84 +1,71 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.ComponentModel;
-
 //*******************************************************************************************************
-//  DigitalDefinitionBase.vb - Digital value definition base class
+//  DigitalDefinitionBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/18/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  02/18/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.ComponentModel;
+using System.Runtime.Serialization;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the common implementation of the protocol independent definition of a digital value.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the common implementation of the protocol independent definition of a <see cref="IDigitalValue"/>.
+    /// </summary>
+    [Serializable()]
     public abstract class DigitalDefinitionBase : ChannelDefinitionBase, IDigitalDefinition
     {
+        #region [ Constructors ]
 
-
-
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
         protected DigitalDefinitionBase()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinitionBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected DigitalDefinitionBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
         }
 
-        protected DigitalDefinitionBase(IConfigurationCell parent)
-            : base(parent)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinitionBase"/> using the specified parameters.
+        /// </summary>
         protected DigitalDefinitionBase(IConfigurationCell parent, int index, string label)
             : base(parent, index, label, 1, 0)
         {
-
-
         }
 
-        protected DigitalDefinitionBase(IConfigurationCell parent, byte[] binaryImage, int startIndex)
-            : base(parent, binaryImage, startIndex)
-        {
+        #endregion
 
+        #region [ Properties ]
 
-        }
-
-        // Derived classes are expected to expose a Public Sub New(ByVal digitalDefinition As IDigitalDefinition)
-        protected DigitalDefinitionBase(IConfigurationCell parent, IDigitalDefinition digitalDefinition)
-            : this(parent, digitalDefinition.Index, digitalDefinition.Label)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Data format for digital values will always be <see cref="PhasorProtocols.DataFormat.FixedInteger"/>.
+        /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override DataFormat DataFormat
+        public sealed override DataFormat DataFormat
         {
             get
             {
@@ -86,8 +73,15 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets the offset of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Offset for digital values will always be 0; assigning a value other than 0 will thrown an exception.
+        /// </remarks>
+        /// <exception cref="NotImplementedException">Digital values represent bit flags and thus do not support an offset.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override float Offset
+        public sealed override double Offset
         {
             get
             {
@@ -96,18 +90,21 @@ namespace PCS.PhasorProtocols
             set
             {
                 if (value == 0)
-                {
                     base.Offset = value;
-                }
                 else
-                {
-                    throw (new NotImplementedException("Digital values represent bit flags and thus do not support an offset"));
-                }
+                    throw new NotImplementedException("Digital values represent bit flags and thus do not support an offset");
             }
         }
 
+        /// <summary>
+        /// Gets or sets the scaling factor of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Scaling factor for digital values will always be 1; assigning a value other than 1 will thrown an exception.
+        /// </remarks>
+        /// <exception cref="NotImplementedException">Digital values represent bit flags and thus are not scaled.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override int ScalingFactor
+        public sealed override uint ScalingFactor
         {
             get
             {
@@ -116,15 +113,27 @@ namespace PCS.PhasorProtocols
             set
             {
                 if (value == 1)
-                {
                     base.ScalingFactor = value;
-                }
                 else
-                {
-                    throw (new NotImplementedException("Digital values represent bit flags and thus are not scaled"));
-                }
+                    throw new NotImplementedException("Digital values represent bit flags and thus are not scaled");
             }
         }
 
+        /// <summary>
+        /// Gets the scale/bit value of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Scale/bit for digital values will always be 1.0.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public sealed override double ScalePerBit
+        {
+            get
+            {
+                return 1.0D;
+            }
+        }
+
+        #endregion
     }
 }

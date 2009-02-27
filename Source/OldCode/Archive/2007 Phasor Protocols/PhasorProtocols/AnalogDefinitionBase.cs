@@ -21,11 +21,13 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the common implementation of the protocol independent definition of an analog value.
+    /// Represents the common implementation of the protocol independent definition of an <see cref="IAnalogValue"/>.
     /// </summary>
-    [CLSCompliant(false), Serializable()]
+    [Serializable()]
     public abstract class AnalogDefinitionBase : ChannelDefinitionBase, IAnalogDefinition
     {
+        #region [ Constructors ]
+
         /// <summary>
         /// Creates a new <see cref="AnalogDefinitionBase"/>.
         /// </summary>
@@ -46,26 +48,14 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="AnalogDefinitionBase"/> using the specified parameters.
         /// </summary>
-        protected AnalogDefinitionBase(IConfigurationCell parent)
-            : base(parent)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="AnalogDefinitionBase"/> using the specified parameters.
-        /// </summary>
-        protected AnalogDefinitionBase(IConfigurationCell parent, int index, string label, int scale, float offset)
+        protected AnalogDefinitionBase(IConfigurationCell parent, int index, string label, uint scale, double offset)
             : base(parent, index, label, scale, offset)
         {
         }
 
-        /// <summary>
-        /// Creates a new <see cref="AnalogDefinitionBase"/> copied from the specified <see cref="IAnalogDefinition"/> object.
-        /// </summary>
-        protected AnalogDefinitionBase(IConfigurationCell parent, IAnalogDefinition analogDefinition)
-            : this(parent, analogDefinition.Index, analogDefinition.Label, analogDefinition.ScalingFactor, analogDefinition.Offset)
-        {
-        }
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets the <see cref="PhasorProtocols.DataFormat"/> for the <see cref="AnalogDefinitionBase"/>.
@@ -77,5 +67,7 @@ namespace PCS.PhasorProtocols
                 return Parent.AnalogDataFormat;
             }
         }
-    }
+
+        #endregion
+   }
 }

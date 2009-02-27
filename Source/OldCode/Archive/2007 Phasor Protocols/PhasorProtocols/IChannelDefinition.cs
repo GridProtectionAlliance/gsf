@@ -54,12 +54,12 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the scaling factor of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        int ScalingFactor { get; set; }
+        uint ScalingFactor { get; set; }
 
         /// <summary>
         /// Gets the maximum value for the <see cref="ScalingFactor"/> of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        int MaximumScalingFactor { get; }
+        uint MaximumScalingFactor { get; }
 
         /// <summary>
         /// Gets or sets the conversion factor of this <see cref="IChannelDefinition"/>.
