@@ -52,14 +52,14 @@ namespace PCS.PhasorProtocols
         double Offset { get; set; }
 
         /// <summary>
-        /// Gets or sets the integer based scaling factor of this <see cref="IChannelDefinition"/>.
+        /// Gets or sets the integer scaling value of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        uint ScalingFactor { get; set; }
+        uint ScalingValue { get; set; }
 
         /// <summary>
-        /// Gets the maximum value for the <see cref="ScalingFactor"/> of this <see cref="IChannelDefinition"/>.
+        /// Gets the maximum value for the <see cref="ScalingValue"/> of this <see cref="IChannelDefinition"/>.
         /// </summary>
-        uint MaximumScalingFactor { get; }
+        uint MaximumScalingValue { get; }
 
         /// <summary>
         /// Gets or sets the conversion factor of this <see cref="IChannelDefinition"/>.

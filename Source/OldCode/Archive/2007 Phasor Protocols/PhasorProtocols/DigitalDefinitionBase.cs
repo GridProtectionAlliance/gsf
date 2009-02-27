@@ -97,30 +97,30 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the scaling factor of this <see cref="DigitalDefinitionBase"/>.
+        /// Gets or sets the integer scaling value of this <see cref="DigitalDefinitionBase"/>.
         /// </summary>
         /// <remarks>
-        /// Scaling factor for digital values will always be 1; assigning a value other than 1 will thrown an exception.
+        /// Scaling value for digital values will always be 1; assigning a value other than 1 will thrown an exception.
         /// </remarks>
         /// <exception cref="NotImplementedException">Digital values represent bit flags and thus are not scaled.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override uint ScalingFactor
+        public sealed override uint ScalingValue
         {
             get
             {
-                return base.ScalingFactor;
+                return base.ScalingValue;
             }
             set
             {
                 if (value == 1)
-                    base.ScalingFactor = value;
+                    base.ScalingValue = value;
                 else
                     throw new NotImplementedException("Digital values represent bit flags and thus are not scaled");
             }
         }
 
         /// <summary>
-        /// Gets the scale/bit value of this <see cref="DigitalDefinitionBase"/>.
+        /// Gets the scale/bit for the <see cref="ScalingValue"/> of this <see cref="DigitalDefinitionBase"/>.
         /// </summary>
         /// <remarks>
         /// Scale/bit for digital values will always be 1.0.

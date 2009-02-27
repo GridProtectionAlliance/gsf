@@ -58,7 +58,7 @@ namespace PCS.PhasorProtocols
             // Deserialize channel definition
             m_parent = (IConfigurationCell)info.GetValue("parent", typeof(IConfigurationCell));
             m_index = info.GetInt32("index");
-            this.Label = info.GetString("label");
+            Label = info.GetString("label");
             m_scale = info.GetUInt32("scale");
             m_offset = info.GetDouble("offset");
         }
@@ -70,7 +70,7 @@ namespace PCS.PhasorProtocols
         {
             m_parent = parent;
             m_index = index;
-            this.Label = label;
+            Label = label;
             m_scale = scale;
             m_offset = offset;
         }
@@ -132,19 +132,19 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_scale * ScalePerBit;
+                return ScalingValue * ScalePerBit;
             }
             set
             {
                 unchecked
                 {
-                    ScalingFactor = (uint)(value / ScalePerBit);
+                    ScalingValue = (uint)(value / ScalePerBit);
                 }
             }
         }
 
         /// <summary>
-        /// Gets the scale/bit value of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets the scale/bit for the <see cref="ScalingValue"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         /// <remarks>
         /// The base implementation assumes scale/bit of 10^-5.
@@ -159,9 +159,9 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the integer based scaling factor of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets or sets the integer scaling value of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public virtual uint ScalingFactor
+        public virtual uint ScalingValue
         {
             get
             {
@@ -169,20 +169,20 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                if (value > MaximumScalingFactor)
-                    throw new OverflowException("Scaling factor value cannot exceed " + MaximumScalingFactor);
+                if (value > MaximumScalingValue)
+                    throw new OverflowException("Scaling value cannot exceed " + MaximumScalingValue);
 
                 m_scale = value;
             }
         }
 
         /// <summary>
-        /// Gets the maximum value for the <see cref="ScalingFactor"/> of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets the maximum value for the <see cref="ScalingValue"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         /// <remarks>
         /// The base implementation accomodates maximum scaling factor of 24-bits of space.
         /// </remarks>
-        public virtual uint MaximumScalingFactor
+        public virtual uint MaximumScalingValue
         {
             get
             {
@@ -221,7 +221,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return Encoding.ASCII.GetBytes(m_label.PadRight(MaximumLabelLength));
+                return Encoding.ASCII.GetBytes(Label.PadRight(MaximumLabelLength));
             }
         }
 
@@ -272,10 +272,10 @@ namespace PCS.PhasorProtocols
                 baseAttributes.Add("Index", Index.ToString());
                 baseAttributes.Add("Offset", Offset.ToString());
                 baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
-                baseAttributes.Add("Scaling Factor", ScalingFactor.ToString());
-                baseAttributes.Add("Scale per Bit", ScalePerBit.ToString());
-                baseAttributes.Add("Maximum Scaling Factor", MaximumScalingFactor.ToString());
                 baseAttributes.Add("Conversion Factor", ConversionFactor.ToString());
+                baseAttributes.Add("Scaling Value", ScalingValue.ToString());
+                baseAttributes.Add("Scale per Bit", ScalePerBit.ToString());
+                baseAttributes.Add("Maximum Scaling Value", MaximumScalingValue.ToString());
                 baseAttributes.Add("Maximum Label Length", MaximumLabelLength.ToString());
 
                 return baseAttributes;
@@ -317,6 +317,7 @@ namespace PCS.PhasorProtocols
         /// True if obj is an instance of <see cref="IChannelDefinition"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
+        /// <exception cref="ArgumentException">value is not an <see cref="IChannelDefinition"/>.</exception>
         public override bool Equals(object obj)
         {
             return Equals(obj as IChannelDefinition);
@@ -343,7 +344,7 @@ namespace PCS.PhasorProtocols
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        /// <exception cref="ArgumentException">value is not an UInt32 or UInt24.</exception>
+        /// <exception cref="ArgumentException">value is not an <see cref="IChannelDefinition"/>.</exception>
         public virtual int CompareTo(object obj)
         {
             IChannelDefinition other = obj as IChannelDefinition;
