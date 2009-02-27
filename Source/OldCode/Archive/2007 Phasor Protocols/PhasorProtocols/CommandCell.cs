@@ -129,7 +129,7 @@ namespace PCS.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Extended Data Byte", ExtendedDataByte.ToString("x"));
+                baseAttributes.Add("Extended Data Byte", "0x" + ExtendedDataByte.ToString("x"));
 
                 return baseAttributes;
             }
@@ -163,7 +163,7 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 
@@ -181,7 +181,7 @@ namespace PCS.PhasorProtocols
         // TODO: Questionable applicability, make sure this is actually used somewhere... Also, need to validate length??
         internal static ICommandCell CreateNewCommandCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex)
         {
-            return new CommandCell() { Parent = parent as ICommandFrame, ExtendedDataByte = binaryImage[startIndex] };
+            return new CommandCell() { Parent = parent as ICommandFrame, ExtendedDataByte = binaryImage[startIndex], IDCode = (ushort)index };
         }
 
         #endregion
