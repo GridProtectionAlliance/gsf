@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent common implementation of an element of extended data in a <see cref="ICommandFrame"/>.
+    /// Represents the protocol independent common implementation of an element of extended data for cells in a <see cref="ICommandFrame"/>.
     /// </summary>
     [Serializable()]
     public class CommandCell : ChannelCellBase, ICommandCell

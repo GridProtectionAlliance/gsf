@@ -23,7 +23,7 @@ using System.Collections.Generic;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent common implementation of an element of header data in a <see cref="IHeaderFrame"/>.
+    /// Represents the protocol independent common implementation of an element of header data for cells in a <see cref="IHeaderFrame"/>.
     /// </summary>
     [Serializable()]
     public class HeaderCell : ChannelCellBase, IHeaderCell

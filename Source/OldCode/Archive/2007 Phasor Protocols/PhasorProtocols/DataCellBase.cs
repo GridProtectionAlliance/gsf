@@ -24,7 +24,7 @@ using PCS.Measurements;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents the protocol independent common implementation of a set of phasor related data values that can be sent or received from a PMU.
+    /// Represents the protocol independent common implementation of all elements for cells in a <see cref="IDataFrame"/>.
     /// </summary>
     [Serializable()]
     public abstract class DataCellBase : ChannelCellBase, IDataCell
