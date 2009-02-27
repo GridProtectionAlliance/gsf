@@ -1,112 +1,91 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using System.Buffer;
-//using PhasorProtocols.Common;
-
 //*******************************************************************************************************
-//  CommandCell.vb - Command cell class
+//  CommandCell.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of an element of extended frame data of a command frame that can be received from a PMU.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the protocol independent common implementation of an element of extended data in a <see cref="ICommandFrame"/>.
+    /// </summary>
+    [Serializable()]
     public class CommandCell : ChannelCellBase, ICommandCell
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private byte m_extendedDataByte;
 
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="CommandCell"/>.
+        /// </summary>
         protected CommandCell()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="CommandCell"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected CommandCell(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize command cell value
             m_extendedDataByte = info.GetByte("extendedDataByte");
-
         }
 
-        public CommandCell(ICommandFrame parent)
-            : base(parent, false)
-        {
-
-
-        }
-
-        public CommandCell(ICommandFrame parent, byte[] binaryImage, int startIndex)
-            : this(parent)
-        {
-
-            ParseBinaryImage(null, binaryImage, startIndex);
-
-        }
-
+        /// <summary>
+        /// Creates a new <see cref="CommandCell"/> from the specified parameters.
+        /// </summary>
         public CommandCell(ICommandFrame parent, byte extendedDataByte)
-            : base(parent, false)
+            : base(parent, false, 0)
         {
-
             m_extendedDataByte = extendedDataByte;
-
         }
 
-        public CommandCell(IHeaderCell headerCell)
-            : this((ICommandFrame)headerCell.Parent, headerCell.Character)
-        {
+        #endregion
 
+        #region [ Properties ]
 
-        }
-
-        internal static ICommandCell CreateNewCommandCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex)
-        {
-
-            return new CommandCell((ICommandFrame)parent, binaryImage, startIndex);
-
-        }
-
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
+        /// <summary>
+        /// Gets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.
+        /// </summary>
         public virtual new ICommandFrame Parent
         {
             get
             {
                 return (ICommandFrame)base.Parent;
             }
+            set
+            {
+                base.Parent = value;
+            }
         }
 
+        /// <summary>
+        /// Gets or sets extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.
+        /// </summary>
         public virtual byte ExtendedDataByte
         {
             get
@@ -119,6 +98,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the length of the <see cref="BodyImage"/>.
+        /// </summary>
         protected override int BodyLength
         {
             get
@@ -127,6 +109,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets the binary body image of the <see cref="CommandCell"/> object.
+        /// </summary>
         protected override byte[] BodyImage
         {
             get
@@ -135,23 +120,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        protected override void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            m_extendedDataByte = binaryImage[startIndex];
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize command cell value
-            info.AddValue("extendedDataByte", m_extendedDataByte);
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommandCell"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -164,5 +135,55 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary body image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // TODO: It is expected that parent ICommandFrame will validate that it has
+            // enough length to parse entire cell well in advance so that low level parsing
+            // routines do not have to re-validate that enough length is available to parse
+            // needed information as an optimization...
+
+            m_extendedDataByte = binaryImage[startIndex];
+
+            return 1;
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize command cell value
+            info.AddValue("extendedDataByte", m_extendedDataByte);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Create new command cell delegate handler
+        // TODO: Questionable applicability, make sure this is actually used somewhere... Also, need to validate length??
+        internal static ICommandCell CreateNewCommandCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex)
+        {
+            return new CommandCell() { Parent = parent as ICommandFrame, ExtendedDataByte = binaryImage[startIndex] };
+        }
+
+        #endregion
     }
 }
