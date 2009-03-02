@@ -20,12 +20,12 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent interface representation of specific connection parameters.
+    /// Represents a protocol independent interface representation of custom connection parameters.
     /// </summary>
     public interface IConnectionParameters : ISerializable
     {
         /// <summary>
-        /// Returns True if all connection parameters are valid.
+        /// Determines if custom connection parameters are valid.
         /// </summary>
         bool ValuesAreValid { get; }
     }
