@@ -179,7 +179,6 @@ namespace PCS.PhasorProtocols
         // Static Methods
 
         // Create new header cell delegate handler
-        // TODO: Questionable applicability, make sure this is actually used somewhere... Also, need to validate length??
         internal static IHeaderCell CreateNewHeaderCell(IChannelFrame parent, IChannelFrameParsingState<IHeaderCell> state, int index, byte[] binaryImage, int startIndex)
         {
             return new HeaderCell() { Parent = parent as IHeaderFrame, Character = binaryImage[startIndex], IDCode = (ushort)index };
