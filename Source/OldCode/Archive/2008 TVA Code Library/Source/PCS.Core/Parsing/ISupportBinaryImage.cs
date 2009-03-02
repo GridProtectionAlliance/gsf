@@ -25,10 +25,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Gets the binary image of the object.
         /// </summary>
-        byte[] BinaryImage
-        {
-            get;
-        }
+        byte[] BinaryImage { get; }
 
         /// <summary>
         /// Gets the length of the binary image.
@@ -36,10 +33,7 @@ namespace PCS.Parsing
         /// <remarks>
         /// <see cref="BinaryLength"/> should typically be a constant value but does not have to be.
         /// </remarks>
-        int BinaryLength
-        {
-            get;
-        }
+        int BinaryLength { get; }
 
         /// <summary>
         /// Initializes object from the specified binary image.
