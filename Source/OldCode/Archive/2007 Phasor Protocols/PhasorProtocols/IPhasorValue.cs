@@ -19,17 +19,6 @@ using System.Units;
 
 namespace PCS.PhasorProtocols
 {
-    // TODO: Determine where this was used - and why...  If not used - delete.
-    ///// <summary>
-    ///// Defines function signature for creating new phasor values.
-    ///// </summary>
-    ///// <param name="parent">Parent <see cref="IDataCell"/>.</param>
-    ///// <param name="phasorDefinition">Associated <see cref="IPhasorDefinition"/>.</param>
-    ///// <param name="real">Real value of new phasor measurement.</param>
-    ///// <param name="imaginary">Imaginary value of new phasor measurement.</param>
-    ///// <returns>New <see cref="IPhasorValue"/> instance.</returns>
-    //protected delegate IPhasorValue CreateNewPhasorValueFunctionSignature(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary);
-
     /// <summary>
     /// Represents a protocol independent interface representation of a phasor value.
     /// </summary>
