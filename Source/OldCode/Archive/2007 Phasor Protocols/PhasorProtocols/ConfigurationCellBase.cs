@@ -93,7 +93,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return (IConfigurationFrame)base.Parent;
+                return base.Parent as IConfigurationFrame;
             }
             set
             {
