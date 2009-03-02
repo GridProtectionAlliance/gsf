@@ -178,7 +178,6 @@ namespace PCS.PhasorProtocols
         // Static Methods
 
         // Create new command cell delegate handler
-        // TODO: Questionable applicability, make sure this is actually used somewhere... Also, need to validate length??
         internal static ICommandCell CreateNewCommandCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex)
         {
             return new CommandCell() { Parent = parent as ICommandFrame, ExtendedDataByte = binaryImage[startIndex], IDCode = (ushort)index };
