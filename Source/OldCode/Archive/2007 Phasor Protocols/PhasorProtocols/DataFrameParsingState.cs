@@ -32,7 +32,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelFrameParsingStateBase{T}"/> from specified parameters.
+        /// Creates a new <see cref="DataFrameParsingState"/> from specified parameters.
         /// </summary>
         /// <param name="parsedBinaryLength">Binary length of the <see cref="IDataFrame"/> being parsed.</param>
         /// <param name="configurationFrame">Reference to the <see cref="IConfigurationFrame"/> associated with the <see cref="IDataFrame"/> being parsed.</param>
