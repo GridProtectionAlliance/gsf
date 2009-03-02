@@ -288,21 +288,33 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets flag that determines if data of this <see cref="DataCellBase"/> is valid.
         /// </summary>
+        /// <remarks>
+        /// This value is used to abstractly assign the protocol independent set of <see cref="CommonStatusFlags"/>.
+        /// </remarks>
         public abstract bool DataIsValid { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if timestamp of this <see cref="DataCellBase"/> is valid based on GPS lock.
         /// </summary>
+        /// <remarks>
+        /// This value is used to abstractly assign the protocol independent set of <see cref="CommonStatusFlags"/>.
+        /// </remarks>
         public abstract bool SynchronizationIsValid { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="PhasorProtocols.DataSortingType"/> of this <see cref="DataCellBase"/>.
         /// </summary>
+        /// <remarks>
+        /// This value is used to abstractly assign the protocol independent set of <see cref="CommonStatusFlags"/>.
+        /// </remarks>
         public abstract DataSortingType DataSortingType { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if source device of this <see cref="DataCellBase"/> is reporting an error.
         /// </summary>
+        /// <remarks>
+        /// This value is used to abstractly assign the protocol independent set of <see cref="CommonStatusFlags"/>.
+        /// </remarks>
         public abstract bool DeviceError { get; set; }
 
         /// <summary>
