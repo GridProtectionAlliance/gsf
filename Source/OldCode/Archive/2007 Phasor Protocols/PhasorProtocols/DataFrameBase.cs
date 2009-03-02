@@ -1,93 +1,68 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  DataFrameBase.vb - Data frame base class
+//  DataFrameBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of a data frame that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the protocol independent common implementation of any <see cref="IDataFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public abstract class DataFrameBase : ChannelFrameBase<IDataCell>, IDataFrame
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private IConfigurationFrame m_configurationFrame;
 
-        protected DataFrameBase()
-        {
-        }
+        #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="DataFrameBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected DataFrameBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize data frame
             m_configurationFrame = (IConfigurationFrame)info.GetValue("configurationFrame", typeof(IConfigurationFrame));
-
         }
 
-        protected DataFrameBase(DataCellCollection cells)
-            : base(cells)
+        /// <summary>
+        /// Creates a new <see cref="DataFrameBase"/> from the specified parameters.
+        /// </summary>
+        protected DataFrameBase(DataCellCollection cells, Ticks timestamp, IConfigurationFrame configurationFrame)
+            : base(0, cells, timestamp)
         {
-
-
-        }
-
-        protected DataFrameBase(DataCellCollection cells, long ticks, IConfigurationFrame configurationFrame)
-            : base(0, cells, ticks)
-        {
-
-
             m_configurationFrame = configurationFrame;
-
         }
 
-        //// Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame, ByVal binaryImage As Byte(), ByVal startIndex As int)
-        //// and automatically pass in parsing state
-        //protected DataFrameBase(IDataFrameParsingState state, byte[] binaryImage, int startIndex)
-        //    : base(state, binaryImage, startIndex)
-        //{
+        #endregion
 
+        #region [ Properties ]
 
-        //    m_configurationFrame = state.ConfigurationFrame;
-
-        //}
-
-        // Derived classes are expected to expose a Public Sub New(ByVal dataFrame As IDataFrame)
-        protected DataFrameBase(IDataFrame dataFrame)
-            : this(dataFrame.Cells, dataFrame.Ticks, dataFrame.ConfigurationFrame)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="DataFrameBase"/>.
+        /// </summary>
         public override FundamentalFrameType FrameType
         {
             get
@@ -96,6 +71,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="IConfigurationFrame"/> associated with this <see cref="DataFrameBase"/>.
+        /// </summary>
         public virtual IConfigurationFrame ConfigurationFrame
         {
             get
@@ -108,6 +86,25 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrameBase"/>.
+        /// </summary>
+        public virtual new DataCellCollection Cells
+        {
+            get
+            {
+                return base.Cells as DataCellCollection;
+            }
+        }
+
+        /// <summary>
+        /// Gets the numeric ID code for this <see cref="DataFrameBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value is read-only for <see cref="DataFrameBase"/>; assigning a value will throw an exception. Value returned
+        /// is the <see cref="IConfigurationFrame.IDCode"/> of the associated <see cref="ConfigurationFrame"/>.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">IDCode of a data frame is read-only, change IDCode is associated configuration frame instead.</exception>
         public override ushort IDCode
         {
             get
@@ -116,27 +113,27 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                throw (new NotSupportedException("IDCode of a data frame is read-only, change IDCode of associated configuration frame instead"));
+                throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode is associated configuration frame instead");
             }
         }
 
-        public virtual new DataCellCollection Cells
-        {
-            get
-            {
-                return (DataCellCollection)base.Cells;
-            }
-        }
+        #endregion
 
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
+        #region [ Methods ]
 
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
             base.GetObjectData(info, context);
 
             // Serialize data frame
             info.AddValue("configurationFrame", m_configurationFrame, typeof(IConfigurationFrame));
-
         }
 
+        #endregion
     }
 }
