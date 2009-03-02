@@ -68,6 +68,16 @@ namespace PCS.PhasorProtocols
             m_phasor.Imaginary = imaginary;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="PhasorValueBase"/> from specified parameters.
+        /// </summary>
+        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, Angle angle, double magnitude)
+            : base(parent, phasorDefinition)
+        {
+            m_phasor.Angle = angle;
+            m_phasor.AbsoluteValue = magnitude;
+        }
+
         #endregion
 
         #region [ Properties ]
