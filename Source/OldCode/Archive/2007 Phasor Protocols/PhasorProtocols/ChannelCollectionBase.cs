@@ -66,7 +66,7 @@ namespace PCS.PhasorProtocols
             // Deserialize collection
             m_lastValidIndex = info.GetInt32("maximumCount") - 1;
 
-            for (int x = 0; x <= info.GetInt32("count") - 1; x++)
+            for (int x = 0; x < info.GetInt32("count"); x++)
             {
                 Add((T)info.GetValue("item" + x, typeof(T)));
             }
