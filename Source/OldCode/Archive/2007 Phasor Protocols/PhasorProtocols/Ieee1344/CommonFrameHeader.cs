@@ -34,6 +34,10 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Total fixed length of <see cref="CommonFrameHeader"/>.
+        /// </summary>
         public const ushort FixedLength = 6;
 
         // Fields
