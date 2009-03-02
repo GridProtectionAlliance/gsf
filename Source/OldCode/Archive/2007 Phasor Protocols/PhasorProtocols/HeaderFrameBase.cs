@@ -1,93 +1,82 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-
 //*******************************************************************************************************
-//  HeaderFrameBase.vb - Header frame base class
+//  HeaderFrameBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Text;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of a header frame that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the protocol independent common implementation of any <see cref="IHeaderFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public abstract class HeaderFrameBase : ChannelFrameBase<IHeaderCell>, IHeaderFrame
     {
+        #region [ Constructors ]
 
-
-
-        protected HeaderFrameBase()
-        {
-        }
-
+        /// <summary>
+        /// Creates a new <see cref="HeaderFrameBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected HeaderFrameBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="HeaderFrameBase"/> from the specified parameters.
+        /// </summary>
         protected HeaderFrameBase(HeaderCellCollection cells)
-            : base(cells)
+            : base(0, cells, 0)
         {
-
-
         }
 
-        //// Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
-        //// and automatically pass in parsing state
-        //protected HeaderFrameBase(IHeaderFrameParsingState state, byte[] binaryImage, int startIndex)
-        //    : base(state, binaryImage, startIndex)
-        //{
+        #endregion
 
+        #region [ Properties ]
 
-        //}
-
-        // Derived classes are expected to expose a Public Sub New(ByVal headerFrame As IHeaderFrame)
-        protected HeaderFrameBase(IHeaderFrame headerFrame)
-            : this(headerFrame.Cells)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="HeaderFrameBase"/>.
+        /// </summary>
         public override FundamentalFrameType FrameType
         {
             get
             {
-                return PhasorProtocols.FundamentalFrameType.HeaderFrame;
+                return FundamentalFrameType.HeaderFrame;
             }
         }
 
+        /// <summary>
+        /// Gets reference to the <see cref="HeaderCellCollection"/> for this <see cref="HeaderFrameBase"/>.
+        /// </summary>
         public virtual new HeaderCellCollection Cells
         {
             get
             {
-                return (HeaderCellCollection)base.Cells;
+                return base.Cells as HeaderCellCollection;
             }
         }
 
+        /// <summary>
+        /// Gets or sets header data for this <see cref="HeaderFrameBase"/>.
+        /// </summary>
         public virtual string HeaderData
         {
             get
@@ -97,10 +86,14 @@ namespace PCS.PhasorProtocols
             set
             {
                 Cells.Clear();
-                ParseBodyImage(new HeaderFrameParsingState(/*Cells,*/ 0, (short)value.Length), Encoding.ASCII.GetBytes(value), 0);
+                State = new HeaderFrameParsingState(0, value.Length);
+                ParseBodyImage(Encoding.ASCII.GetBytes(value), 0, value.Length);
             }
         }
 
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="HeaderFrameBase"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -113,5 +106,6 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        #endregion
     }
 }
