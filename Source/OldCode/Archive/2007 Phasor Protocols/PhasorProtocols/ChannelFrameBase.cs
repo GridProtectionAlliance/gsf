@@ -444,9 +444,9 @@ namespace PCS.PhasorProtocols
         protected abstract ushort CalculateChecksum(byte[] buffer, int offset, int length);
 
         /// <summary>
-        /// Compares the <see cref="Frame"/> with an <see cref="IFrame"/>.
+        /// Compares the <see cref="ChannelFrameBase"/> with an <see cref="IFrame"/>.
         /// </summary>
-        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="ChannelFrameBase"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <remarks>This frame implementation compares itself by timestamp.</remarks>
         public virtual int CompareTo(IFrame other)
@@ -456,9 +456,9 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Compares the <see cref="Frame"/> with the specified <see cref="Object"/>.
+        /// Compares the <see cref="ChannelFrameBase"/> with the specified <see cref="Object"/>.
         /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="ChannelFrameBase"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
         /// <remarks>This frame implementation compares itself by timestamp.</remarks>
@@ -473,11 +473,11 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>.
+        /// Determines whether the specified <see cref="IFrame"/> is equal to the current <see cref="ChannelFrameBase"/>.
         /// </summary>
-        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="ChannelFrameBase"/>.</param>
         /// <returns>
-        /// true if the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>;
+        /// true if the specified <see cref="IFrame"/> is equal to the current <see cref="ChannelFrameBase"/>;
         /// otherwise, false.
         /// </returns>
         /// <remarks>This frame implementation compares itself by timestamp.</remarks>
@@ -487,11 +487,11 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>.
+        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="ChannelFrameBase"/>.
         /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="ChannelFrameBase"/>.</param>
         /// <returns>
-        /// true if the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>;
+        /// true if the specified <see cref="Object"/> is equal to the current <see cref="ChannelFrameBase"/>;
         /// otherwise, false.
         /// </returns>
         /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
