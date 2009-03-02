@@ -502,7 +502,7 @@ namespace PCS.PhasorProtocols
             if (other != null)
                 return Equals(other);
 
-            throw new ArgumentException("Object is not an IFrame");
+            return false;
         }
 
         /// <summary>
