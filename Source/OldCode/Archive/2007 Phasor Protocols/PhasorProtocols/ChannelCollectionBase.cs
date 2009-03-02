@@ -127,7 +127,7 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// The length of the <see cref="ChannelCollectionBase{T}"/> binary image is the combined length of all the items in the collection.<br/>
         /// The default implementation assumes all <see cref="IChannel"/> items in the collection have the same length, hence the value returned
-        /// is the <see cref="IChannel.BinaryLength"/> of the first item in the collection times the <see cref="List{T}.Count"/>.
+        /// is the <see cref="ISupportBinaryImage.BinaryLength"/> of the first item in the collection times the <see cref="List{T}.Count"/>.
         /// </remarks>
         public virtual int BinaryLength
         {

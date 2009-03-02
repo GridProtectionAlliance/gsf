@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using PCS;
+using PCS.Parsing;
 using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
@@ -43,7 +44,7 @@ namespace PCS.PhasorProtocols
         /// <param name="channel">Source channel with BinaryImage data to copy.</param>
         /// <param name="destination">Destination buffer to hold copied buffer data.</param>
         /// <param name="index">
-        /// Index into <paramref name="destination"/> buffer to begin copy. Index is automatically incremented by <see cref="IChannel.BinaryLength"/>.
+        /// Index into <paramref name="destination"/> buffer to begin copy. Index is automatically incremented by <see cref="ISupportBinaryImage.BinaryLength"/>.
         /// </param>
         /// <remarks>
         /// This function automatically advances index for convenience.

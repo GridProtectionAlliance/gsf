@@ -865,7 +865,7 @@ namespace PCS.PhasorProtocols
                     //    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
                     //    break;
                     case PhasorProtocols.PhasorProtocol.Ieee1344:
-                        m_frameParser = new Ieee1344.FrameParser();
+                        //m_frameParser = new Ieee1344.FrameParser();
                         break;
                     // TODO: Uncomment!
                     //case PhasorProtocols.PhasorProtocol.BpaPdcStream:
@@ -1091,12 +1091,15 @@ namespace PCS.PhasorProtocols
                     //    commandFrame = new IeeeC37_118.CommandFrame(m_deviceID, command, 1);
                     //    break;
                     case PhasorProtocols.PhasorProtocol.Ieee1344:
-                        commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);
+                        //commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);
                         break;
                     default:
                         commandFrame = null;
                         break;
                 }
+
+                // TODO: Remove this.
+                commandFrame = null;
 
                 if (commandFrame != null)
                 {

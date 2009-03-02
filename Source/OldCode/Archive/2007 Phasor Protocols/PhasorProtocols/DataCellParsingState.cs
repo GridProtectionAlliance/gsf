@@ -38,7 +38,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DataCellParsingState"/> from specified parameters.
         /// </summary>
-        /// <param name="configurationFrame">Reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.</param>
+        /// <param name="configurationCell">Reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.</param>
         /// <param name="createNewPhasorValueFunction">Reference to delegate to create new <see cref="IPhasorValue"/> instances.</param>
         /// <param name="createNewFrequencyValueFunction">Reference to delegate to create new <see cref="IFrequencyValue"/> instances.</param>
         /// <param name="createNewAnalogValueFunction">Reference to delegate to create new <see cref="IAnalogValue"/> instances.</param>

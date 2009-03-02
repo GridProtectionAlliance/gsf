@@ -328,15 +328,15 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Returns a value indicating whether this instance is equal to specified <see cref="IChannelDefintion"/> value.
+        /// Returns a value indicating whether this instance is equal to specified <see cref="IChannelDefinition"/> value.
         /// </summary>
-        /// <param name="obj">A <see cref="IChannelDefinition"/> object to compare to this instance.</param>
+        /// <param name="other">A <see cref="IChannelDefinition"/> object to compare to this instance.</param>
         /// <returns>
-        /// True if obj has the same value as this instance; otherwise, False.
+        /// True if <paramref name="other"/> has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(IChannelDefinition obj)
+        public bool Equals(IChannelDefinition other)
         {
-            return (CompareTo(obj) == 0);
+            return (CompareTo(other) == 0);
         }
 
         /// <summary>
@@ -360,10 +360,10 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Compares this instance to a specified <see cref="IChannelDefintion"/> object and returns an indication of their
+        /// Compares this instance to a specified <see cref="IChannelDefinition"/> object and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">A <see cref="IChannelDefintion"/> object to compare.</param>
+        /// <param name="other">A <see cref="IChannelDefinition"/> object to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
@@ -373,6 +373,15 @@ namespace PCS.PhasorProtocols
         {
             // We sort channel Definitions by index
             return m_index.CompareTo(other.Index);
+        }
+
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer hash code.</returns>
+        public override int GetHashCode()
+        {
+            return m_index.GetHashCode();
         }
 
         /// <summary>

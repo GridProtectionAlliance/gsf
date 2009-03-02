@@ -506,6 +506,15 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer hash code.</returns>
+        public override int GetHashCode()
+        {
+            return m_timestamp.GetHashCode();
+        }
+
+        /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>

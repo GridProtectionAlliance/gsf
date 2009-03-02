@@ -119,7 +119,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderImage
+        protected override int HeaderLength
         {
             get
             {

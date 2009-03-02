@@ -49,8 +49,6 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
-        /// <param name="id">Numeric ID of the new measurement.</param>
-        /// <param name="source">Source name of the new measurement.</param>
         public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
         {
             m_parent = parent;

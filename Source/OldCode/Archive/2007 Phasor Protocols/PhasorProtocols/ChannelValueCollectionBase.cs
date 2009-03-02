@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Linq;
@@ -82,7 +83,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="ChannelCollectionBase{T}.BinaryImage"/>.
         /// </summary>
         public override int BinaryLength
         {
@@ -173,7 +174,7 @@ namespace PCS.PhasorProtocols
         /// <param name="index">The zero-based index of the element to replace.</param>
         /// <param name="item">The new value for the element at the specified index. The value can be null for reference types.</param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero.  -or- <paramref name="index"/> is greater than <see cref="Count"/>.
+        /// <paramref name="index"/> is less than zero.  -or- <paramref name="index"/> is greater than <see cref="Collection{T}.Count"/>.
         /// </exception>
         protected override void SetItem(int index, TValue item)
         {
@@ -195,7 +196,7 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <param name="index">The zero-based index of the element to remove.</param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero.  -or- <paramref name="index"/> is equal to or greater than <see cref="Count"/>.
+        /// <paramref name="index"/> is less than zero.  -or- <paramref name="index"/> is equal to or greater than <see cref="Collection{T}.Count"/>.
         /// </exception>
         protected override void RemoveItem(int index)
         {

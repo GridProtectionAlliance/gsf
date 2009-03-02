@@ -67,7 +67,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="ChannelCollectionBase{T}.BinaryImage"/>.
         /// </summary>
         /// <remarks>
         /// The length of the <see cref="ChannelFrameCollectionBase{T}"/> binary image is the combined length of all the items in the collection.

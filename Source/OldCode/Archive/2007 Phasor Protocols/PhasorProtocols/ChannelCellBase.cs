@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {
@@ -142,7 +143,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="ISupportBinaryImage.BinaryImage"/>.
         /// </summary>
         /// <remarks>
         /// This property is overriden to extend length evenly at 4-byte intervals if <see cref="AlignOnDWordBoundary"/> is true.

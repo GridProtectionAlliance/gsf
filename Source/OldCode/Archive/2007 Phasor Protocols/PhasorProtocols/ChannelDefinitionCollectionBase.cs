@@ -23,7 +23,7 @@ namespace PCS.PhasorProtocols
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IChannelDefinition"/> objects.
     /// </summary>
-    /// <typeparam name="T">Specific <see cref="IChannelDefintion"/> type that the <see cref="ChannelDefinitionCollectionBase{T}"/> contains.</typeparam>
+    /// <typeparam name="T">Specific <see cref="IChannelDefinition"/> type that the <see cref="ChannelDefinitionCollectionBase{T}"/> contains.</typeparam>
     [Serializable()]
     public abstract class ChannelDefinitionCollectionBase<T> : ChannelCollectionBase<T> where T : IChannelDefinition
     {

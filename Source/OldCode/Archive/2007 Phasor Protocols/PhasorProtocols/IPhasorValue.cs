@@ -46,7 +46,7 @@ namespace PCS.PhasorProtocols
         PhasorType Type { get; }
 
         /// <summary>
-        /// Gets or sets the <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="IPhasorValue"/>, in radians.
+        /// Gets or sets the <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="IPhasorValue"/>, in radians.
         /// </summary>
         Angle Angle { get; set; }
 

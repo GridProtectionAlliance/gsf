@@ -85,7 +85,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Attempts to get <see cref="IConfigurationCell"/> with the specified ID code.
         /// </summary>
-        /// <param name="idCode">The <see cref="IConfigurationCell.IDCode"/> to find.</param>
+        /// <param name="idCode">The <see cref="IChannelCell.IDCode"/> to find.</param>
         /// <param name="configurationCell">
         /// When this method returns, contians the <see cref="IConfigurationCell"/> with the specified <paramref name="idCode"/>, if found;
         /// otherwise, null is returned.
@@ -110,7 +110,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Attempts to find the index of the <see cref="IConfigurationCell"/> with the specified ID code.
         /// </summary>
-        /// <param name="idCode">The <see cref="IConfigurationCell.IDCode"/> to find.</param>
+        /// <param name="idCode">The <see cref="IChannelCell.IDCode"/> to find.</param>
         /// <returns>Index of the <see cref="ConfigurationCellCollection"/> that contains the specified <paramref name="idCode"/>; otherwise, <c>-1</c>.</returns>
         public virtual int IndexOfIDCode(ushort idCode)
         {

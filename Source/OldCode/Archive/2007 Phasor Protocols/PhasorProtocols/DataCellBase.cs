@@ -172,7 +172,7 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <remarks>
         /// This value is read-only for <see cref="DataCellBase"/>; assigning a value will throw an exception. Value returned
-        /// is the <see cref="IConfigurationCell.IDCode"/> of the associated <see cref="ConfigurationCell"/>.
+        /// is the <see cref="IChannelCell.IDCode"/> of the associated <see cref="ConfigurationCell"/>.
         /// </remarks>
         /// <exception cref="NotSupportedException">IDCode of a data cell is read-only, change IDCode is associated configuration cell instead.</exception>
         public override ushort IDCode

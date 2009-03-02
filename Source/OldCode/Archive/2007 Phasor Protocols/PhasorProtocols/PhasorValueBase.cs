@@ -95,7 +95,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
+        /// Gets or sets the <see cref="Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
         /// </summary>
         public virtual Angle Angle
         {

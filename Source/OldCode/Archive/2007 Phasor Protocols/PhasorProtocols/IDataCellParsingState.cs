@@ -21,6 +21,7 @@ namespace PCS.PhasorProtocols
     /// Defines function signature for creating new <see cref="IChannelValue{T}"/> objects.
     /// </summary>
     /// <param name="parent">Reference to parent <see cref="IDataCell"/>.</param>
+    /// <param name="definition">Refrence to associated <see cref="IChannelDefinition"/> object.</param>
     /// <param name="binaryImage">Binary image to parse <see cref="IChannelValue{T}"/> from.</param>
     /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
     /// <returns>New <see cref="IChannelValue{T}"/> object.</returns>
