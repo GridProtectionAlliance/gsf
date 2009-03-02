@@ -35,7 +35,7 @@ namespace PCS.PhasorProtocols
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
-        private Ticks m_ticks;
+        private Ticks m_timestamp;
         private int m_valueIndex;
         private double m_adder;
         private double m_multiplier;
@@ -56,7 +56,7 @@ namespace PCS.PhasorProtocols
             m_id = -1;
             m_source = "__";
             m_key = Common.UndefinedKey;
-            m_ticks = -1;
+            m_timestamp = -1;
             m_multiplier = 1.0D;
             m_dataQualityIsGood = -1;
             m_timeQualityIsGood = -1;
@@ -274,14 +274,14 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                if (m_ticks == -1)
-                    m_ticks = m_parent.Parent.Parent.Timestamp;
+                if (m_timestamp == -1)
+                    m_timestamp = m_parent.Parent.Parent.Timestamp;
 
-                return m_ticks;
+                return m_timestamp;
             }
             set
             {
-                m_ticks = value;
+                m_timestamp = value;
             }
         }
 
