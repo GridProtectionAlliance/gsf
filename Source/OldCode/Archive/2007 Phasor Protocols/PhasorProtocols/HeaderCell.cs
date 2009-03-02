@@ -76,7 +76,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return (IHeaderFrame)base.Parent;
+                return base.Parent as IHeaderFrame;
             }
             set
             {
