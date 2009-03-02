@@ -641,14 +641,16 @@ namespace PCS.Communication
                         }
                     }
                 }
-                catch (ObjectDisposedException)
+                catch (ObjectDisposedException ex)
                 {
                     // Terminate connection when client is disposed.
+                    OnReceiveClientDataException(tcpClient.ID, ex);
                     TerminateConnection(tcpClient, true);
                 }
-                catch (SocketException)
+                catch (SocketException ex)
                 {
                     // Terminate connection when socket exception is encountered.
+                    OnReceiveClientDataException(tcpClient.ID, ex);
                     TerminateConnection(tcpClient, true);
                 }
                 catch (Exception ex)
@@ -656,8 +658,8 @@ namespace PCS.Communication
                     try
                     {
                         // For any other exception, notify and resume receive.
-                        ReceivePayloadAsync(tcpClient);
                         OnReceiveClientDataException(tcpClient.ID, ex);
+                        ReceivePayloadAsync(tcpClient);
                     }
                     catch
                     {
@@ -726,14 +728,16 @@ namespace PCS.Communication
                     OnReceiveClientDataComplete(tcpClient.ID, tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferLength);
                     ReceivePayloadUnawareAsync(tcpClient);
                 }
-                catch (ObjectDisposedException)
+                catch (ObjectDisposedException ex)
                 {
                     // Terminate connection when client is disposed.
+                    OnReceiveClientDataException(tcpClient.ID, ex);
                     TerminateConnection(tcpClient, true);
                 }
-                catch (SocketException)
+                catch (SocketException ex)
                 {
                     // Terminate connection when socket exception is encountered.
+                    OnReceiveClientDataException(tcpClient.ID, ex);
                     TerminateConnection(tcpClient, true);
                 }
                 catch (Exception ex)
@@ -741,8 +745,8 @@ namespace PCS.Communication
                     try
                     {
                         // For any other exception, notify and resume receive.
-                        ReceivePayloadAsync(tcpClient);
                         OnReceiveClientDataException(tcpClient.ID, ex);
+                        ReceivePayloadAsync(tcpClient);                       
                     }
                     catch
                     {
