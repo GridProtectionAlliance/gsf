@@ -1,18 +1,17 @@
-
 //*******************************************************************************************************
-//  CommandFrame.vb - IEEE1344 Command Frame
+//  CommandFrame.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -25,74 +24,67 @@ using PCS.IO.Checksums;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
-
-    [CLSCompliant(false), Serializable()]
-    public class CommandFrame : CommandFrameBase //, ICommonFrameHeader, ISupportFrameImage<FrameType>
+    /// <summary>
+    /// Represents the IEEE1344 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
+    public class CommandFrame : CommandFrameBase, ISupportFrameImage<FrameType>
     {
+        #region [ Members ]
 
-
-
+        // Constants
         public const ushort FrameLength = 16;
 
+        // Fields
         private ulong m_idCode;
 
-        protected CommandFrame()
-        {
-        }
+        #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="CommandFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected CommandFrame(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize command frame
             m_idCode = info.GetUInt64("idCode64Bit");
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="CommandFrame"/> from the specified parameters.
+        /// </summary>
         public CommandFrame(ulong idCode, DeviceCommand command)
             : base(new CommandCellCollection(0), command)
         {
-
             m_idCode = idCode;
-
         }
 
-        //public CommandFrame(byte[] binaryImage, int startIndex)
-        //    : base(new CommandFrameParsingState(new CommandCellCollection(0), FrameLength, 0), binaryImage, startIndex)
-        //{
+        #endregion
 
+        #region [ Properties ]
 
-        //}
-
-        public CommandFrame(ICommandFrame commandFrame)
-            : base(commandFrame)
-        {
-
-
-        }
-
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
-        // IEEE 1344 command frame doesn't support extended data - so we hide cell collection and extended data property...
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        /// <summary>
+        /// Gets reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrame"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)] // IEEE 1344 command frame doesn't support extended data - so we hide cell collection property...
         public override CommandCellCollection Cells
-        {
+        {            
             get
             {
                 return base.Cells;
             }
         }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        /// <summary>
+        /// Gets or sets extended binary image data for this <see cref="CommandFrame"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)] // IEEE 1344 command frame doesn't support extended data - so we hide extended data property...
         public override byte[] ExtendedData
-        {
+        {            
             get
             {
                 return base.ExtendedData;
@@ -103,6 +95,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets the ID code of this <see cref="CommandFrame"/>.
+        /// </summary>
         public new ulong IDCode
         {
             get
@@ -112,23 +107,24 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 m_idCode = value;
+                base.IDCode = value % int.MaxValue;
             }
         }
 
+        /// <summary>
+        /// Gets NTP based time representation of the ticks of this <see cref="CommandFrame"/>.
+        /// </summary>
         public new NtpTimeTag TimeTag
         {
             get
             {
-                return new NtpTimeTag(new DateTime(Ticks));
+                return new NtpTimeTag(Timestamp);
             }
         }
 
-        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
-        {
-            // IEEE 1344 uses CRC16 to calculate checksum for frames
-            return buffer.Crc16Checksum(offset, length);
-        }
-
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
         protected override int HeaderLength
         {
             get
@@ -137,6 +133,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the binary header image of the <see cref="CommandFrame"/> object.
+        /// </summary>
         protected override byte[] HeaderImage
         {
             get
@@ -150,24 +149,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        protected override void ParseHeaderImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            Ticks = (new NtpTimeTag(EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex))).ToDateTime().Ticks;
-            m_idCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex + 4);
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize command frame
-            info.AddValue("idCode64Bit", m_idCode);
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommandFrame"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -180,6 +164,51 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-    }
 
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            Timestamp = (new NtpTimeTag(EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex))).ToDateTime().Ticks;
+            m_idCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex + 4);
+            return HeaderLength;
+        }
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE 1344 uses CRC16 to calculate checksum for frames
+            return buffer.Crc16Checksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize command frame
+            info.AddValue("idCode64Bit", m_idCode);
+        }
+
+        #endregion       
+    }
 }
