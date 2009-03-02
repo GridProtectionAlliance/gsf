@@ -168,7 +168,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the numeric ID code for this <see cref="IChannelCell"/>.
+        /// Gets the numeric ID code for this <see cref="DataCellBase"/>.
         /// </summary>
         /// <remarks>
         /// This value is read-only for <see cref="DataCellBase"/>; assigning a value will throw an exception. Value returned
