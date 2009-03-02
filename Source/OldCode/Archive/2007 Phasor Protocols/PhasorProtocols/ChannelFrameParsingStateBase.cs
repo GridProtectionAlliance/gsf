@@ -1,53 +1,57 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  ChannelFrameParsingStateBase.vb - Channel data frame parsing state base class
+//  ChannelFrameParsingStateBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation the parsing state used by any frame of data that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Represents the protocol independent common implementation of the parsing state used by any <see cref="IChannelFrame"/>.
+    /// </summary>
+    /// <typeparam name="T"><see cref="Type"/> of <see cref="IChannelCell"/> referenced by <see cref="IChannelFrame"/> being parsed.</typeparam>
     public abstract class ChannelFrameParsingStateBase<T> : ChannelParsingStateBase, IChannelFrameParsingState<T> where T : IChannelCell
     {
-        //private IChannelCellCollection<T> m_cells;
+        #region [ Members ]
+
+        // Fields
         private int m_cellCount;
-        private int m_parsedBinaryLength;
-        private CreateNewCellFunctionSignature<T> m_createNewCellFunction;
-        //private object m_extraState;
+        private CreateNewCellFunction<T> m_createNewCellFunction;
 
-        protected ChannelFrameParsingStateBase(/*IChannelCellCollection<T> cells,*/ int parsedBinaryLength, CreateNewCellFunctionSignature<T> createNewCellFunction)
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ChannelFrameParsingStateBase{T}"/> from specified parameters.
+        /// </summary>
+        /// <param name="parsedBinaryLength">Binary length of the <see cref="IChannelFrame"/> being parsed.</param>
+        /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IChannelCell"/> instances.</param>
+        protected ChannelFrameParsingStateBase(int parsedBinaryLength, CreateNewCellFunction<T> createNewCellFunction)
         {
-
-            //m_cells = cells;
-            m_parsedBinaryLength = parsedBinaryLength;
+            base.ParsedBinaryLength = parsedBinaryLength;
             m_createNewCellFunction = createNewCellFunction;
-
         }
 
-        public virtual CreateNewCellFunctionSignature<T> CreateNewCellFunction
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets reference to delegate used to create a new <see cref="IChannelCell"/> object.
+        /// </summary>
+        public virtual CreateNewCellFunction<T> CreateNewCell
         {
             get
             {
@@ -55,14 +59,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        //public virtual IChannelCellCollection<T> Cells
-        //{
-        //    get
-        //    {
-        //        return m_cells;
-        //    }
-        //}
-
+        /// <summary>
+        /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/> being parsed.
+        /// </summary>
         public virtual int CellCount
         {
             get
@@ -75,31 +74,6 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual int ParsedBinaryLength
-        {
-            get
-            {
-                return m_parsedBinaryLength;
-            }
-            set
-            {
-                m_parsedBinaryLength = value;
-            }
-        }
-
-        ///// <summary>
-        ///// Gets or sets reference to extra protocol specific state.
-        ///// </summary>
-        //public object ExtraState
-        //{
-        //    get
-        //    {
-        //        return m_extraState;
-        //    }
-        //    set
-        //    {
-        //        m_extraState = value;
-        //    }
-        //}
+        #endregion
     }
 }
