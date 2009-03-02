@@ -51,15 +51,12 @@ namespace PCS.Communication
         /// </summary>
         public const string DefaultConfigurationString = "Port=8888; Clients=localhost:8989";
 
-        //public const bool DefaultDestinationReachableCheck = false;
-
         /// <summary>
         /// Specifies the constant to be used for disabling <see cref="SocketError.ConnectionReset"/> when endpoint is not listening.
         /// </summary>
         private const int SIO_UDP_CONNRESET = -1744830452;
 
         // Fields
-        //private bool m_destinationReachableCheck;
         private TransportProvider<Socket> m_udpServer;
         private Dictionary<Guid, TransportProvider<Socket>> m_udpClients;
         private EndPoint m_udpClientEndPoint;
@@ -93,30 +90,6 @@ namespace PCS.Communication
         #endregion
 
         #region [ Properties ]
-
-        ///// <summary>
-        ///// Gets or sets a boolean value indicating whether a test is to be performed to check if the destination
-        ///// endpoint that is to receive data is listening for data.
-        ///// </summary>
-        ///// <value></value>
-        ///// <returns>
-        ///// True if a test is to be performed to check if the destination endpoint that is to receive data is listening
-        ///// for data; otherwise False.
-        ///// </returns>
-        //[Category("Behavior"),
-        //DefaultValue(DefaultDestinationReachableCheck),
-        //Description("Indicates whether a test is to be performed to check if the destination endpoint that is to receive data is listening for data.")]
-        //public bool DestinationReachableCheck
-        //{
-        //    get
-        //    {
-        //        return m_destinationReachableCheck;
-        //    }
-        //    set
-        //    {
-        //        m_destinationReachableCheck = value;
-        //    }
-        //}
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="UdpServer"/>.

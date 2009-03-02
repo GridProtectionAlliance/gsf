@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Sockets;
 using System.Threading;
+using PCS.Configuration;
 
 namespace PCS.Communication
 {
@@ -238,6 +239,37 @@ namespace PCS.Communication
             else
             {
                 throw new InvalidOperationException("Client is currently not disconnected.");
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="TcpClient"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["PayloadAware", true].Update(m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="TcpClient"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                PayloadAware = settings["PayloadAware", true].ValueAs(m_payloadAware);
             }
         }
 
