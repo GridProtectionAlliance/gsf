@@ -1,106 +1,92 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using PCS.DateTime.Common;
-
 //*******************************************************************************************************
-//  ConfigurationFrameBase.vb - Configuration frame base class
+//  ConfigurationFrameBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of a configuration frame that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the protocol independent common implementation of any <see cref="IConfigurationFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public abstract class ConfigurationFrameBase : ChannelFrameBase<IConfigurationCell>, IConfigurationFrame
     {
+        #region [ Members ]
 
-
+        // Fields
         private short m_frameRate;
         private decimal m_ticksPerFrame;
 
-        protected ConfigurationFrameBase()
-        {
-        }
+        #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrameBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected ConfigurationFrameBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize configuration frame
             FrameRate = info.GetInt16("frameRate");
-
         }
 
-        protected ConfigurationFrameBase(ConfigurationCellCollection cells)
-            : base(cells)
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrameBase"/> from the specified parameters.
+        /// </summary>
+        protected ConfigurationFrameBase(ushort idCode, ConfigurationCellCollection cells, Ticks timestamp, short frameRate)
+            : base(idCode, cells, timestamp)
         {
-
-
+            FrameRate = frameRate;
         }
 
-        protected ConfigurationFrameBase(ushort idCode, ConfigurationCellCollection cells, long ticks, short frameRate)
-            : base(idCode, cells, ticks)
-        {
+        #endregion
 
-            this.FrameRate = frameRate;
+        #region [ Properties ]
 
-        }
-
-        //// Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
-        //// and automatically pass in state parameter
-        //protected ConfigurationFrameBase(IConfigurationFrameParsingState state, byte[] binaryImage, int startIndex)
-        //    : base(state, binaryImage, startIndex)
-        //{
-
-
-        //}
-
-        // Derived classes are expected to expose a Public Sub New(ByVal configurationFrame As IConfigurationFrame)
-        protected ConfigurationFrameBase(IConfigurationFrame configurationFrame)
-            : this(configurationFrame.IDCode, configurationFrame.Cells, configurationFrame.Ticks, configurationFrame.FrameRate)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="ConfigurationFrameBase"/>.
+        /// </summary>
         public override FundamentalFrameType FrameType
         {
             get
             {
-                return PhasorProtocols.FundamentalFrameType.ConfigurationFrame;
+                return FundamentalFrameType.ConfigurationFrame;
             }
         }
 
+        /// <summary>
+        /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrameBase"/>.
+        /// </summary>
         public virtual new ConfigurationCellCollection Cells
         {
             get
             {
-                return (ConfigurationCellCollection)base.Cells;
+                return base.Cells as ConfigurationCellCollection;
             }
         }
 
+        /// <summary>
+        /// Gets or sets defined frame rate of this <see cref="ConfigurationFrameBase"/>.
+        /// </summary>
         public virtual short FrameRate
         {
             get
@@ -110,10 +96,13 @@ namespace PCS.PhasorProtocols
             set
             {
                 m_frameRate = value;
-                m_ticksPerFrame = (decimal)Seconds.ToTicks(1) / (decimal)m_frameRate;
+                m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_frameRate;
             }
         }
 
+        /// <summary>
+        /// Gets the defined <see cref="Ticks"/> per frame of this <see cref="ConfigurationFrameBase"/>.
+        /// </summary>
         public virtual decimal TicksPerFrame
         {
             get
@@ -122,26 +111,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual void SetNominalFrequency(LineFrequency value)
-        {
-
-            foreach (IConfigurationCell cell in Cells)
-            {
-                cell.NominalFrequency = value;
-            }
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize configuration frame
-            info.AddValue("frameRate", m_frameRate);
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationFrameBase"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -155,5 +127,37 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Sets a new nominal <see cref="LineFrequency"/> for all <see cref="IFrequencyDefinition"/> elements of each <see cref="IConfigurationCell"/> in the <see cref="Cells"/> collection.
+        /// </summary>
+        /// <param name="value">New nominal <see cref="LineFrequency"/> for <see cref="IFrequencyDefinition"/> elements.</param>
+        public virtual void SetNominalFrequency(LineFrequency value)
+        {
+
+            foreach (IConfigurationCell cell in Cells)
+            {
+                cell.NominalFrequency = value;
+            }
+
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize configuration frame
+            info.AddValue("frameRate", m_frameRate);
+        }
+
+        #endregion
     }
 }
