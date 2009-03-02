@@ -1,49 +1,50 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  DataCellParsingState.vb - Data frame cell parsing state class
+//  DataCellParsingState.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of the parsing state of a data frame cell that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Represents the protocol independent common implementation of the parsing state used by any <see cref="IDataCell"/>.
+    /// </summary>
     public class DataCellParsingState : ChannelCellParsingStateBase, IDataCellParsingState
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private IConfigurationCell m_configurationCell;
-        private CreateNewValueFunctionSignature<IPhasorDefinition, IPhasorValue> m_createNewPhasorValueFunction;
-        private CreateNewValueFunctionSignature<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValueFunction;
-        private CreateNewValueFunctionSignature<IAnalogDefinition, IAnalogValue> m_createNewAnalogValueFunction;
-        private CreateNewValueFunctionSignature<IDigitalDefinition, IDigitalValue> m_createNewDigitalValueFunction;
+        private CreateNewValueFunction<IPhasorDefinition, IPhasorValue> m_createNewPhasorValueFunction;
+        private CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValueFunction;
+        private CreateNewValueFunction<IAnalogDefinition, IAnalogValue> m_createNewAnalogValueFunction;
+        private CreateNewValueFunction<IDigitalDefinition, IDigitalValue> m_createNewDigitalValueFunction;
 
-        public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunctionSignature<IPhasorDefinition, IPhasorValue> createNewPhasorValueFunction, CreateNewValueFunctionSignature<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValueFunction, CreateNewValueFunctionSignature<IAnalogDefinition, IAnalogValue> createNewAnalogValueFunction, CreateNewValueFunctionSignature<IDigitalDefinition, IDigitalValue> createNewDigitalValueFunction)
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="DataCellParsingState"/> from specified parameters.
+        /// </summary>
+        /// <param name="configurationFrame">Reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.</param>
+        /// <param name="createNewPhasorValueFunction">Reference to delegate to create new <see cref="IPhasorValue"/> instances.</param>
+        /// <param name="createNewFrequencyValueFunction">Reference to delegate to create new <see cref="IFrequencyValue"/> instances.</param>
+        /// <param name="createNewAnalogValueFunction">Reference to delegate to create new <see cref="IAnalogValue"/> instances.</param>
+        /// <param name="createNewDigitalValueFunction">Reference to delegate to create new <see cref="IDigitalValue"/> instances.</param>
+        public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValueFunction, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValueFunction, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValueFunction, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValueFunction)
         {
-
             m_configurationCell = configurationCell;
             m_createNewPhasorValueFunction = createNewPhasorValueFunction;
             m_createNewFrequencyValueFunction = createNewFrequencyValueFunction;
@@ -53,17 +54,15 @@ namespace PCS.PhasorProtocols
             PhasorCount = m_configurationCell.PhasorDefinitions.Count;
             AnalogCount = m_configurationCell.AnalogDefinitions.Count;
             DigitalCount = m_configurationCell.DigitalDefinitions.Count;
-
         }
 
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
+        #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.
+        /// </summary>
         public virtual IConfigurationCell ConfigurationCell
         {
             get
@@ -72,7 +71,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewValueFunctionSignature<IPhasorDefinition, IPhasorValue> CreateNewPhasorValueFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IPhasorValue"/> objects.
+        /// </summary>
+        public virtual CreateNewValueFunction<IPhasorDefinition, IPhasorValue> CreateNewPhasorValue
         {
             get
             {
@@ -80,7 +82,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewValueFunctionSignature<IFrequencyDefinition, IFrequencyValue> CreateNewFrequencyValueFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IFrequencyValue"/> objects.
+        /// </summary>
+        public virtual CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> CreateNewFrequencyValue
         {
             get
             {
@@ -88,7 +93,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewValueFunctionSignature<IAnalogDefinition, IAnalogValue> CreateNewAnalogValueFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IAnalogValue"/> objects.
+        /// </summary>
+        public virtual CreateNewValueFunction<IAnalogDefinition, IAnalogValue> CreateNewAnalogValue
         {
             get
             {
@@ -96,7 +104,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewValueFunctionSignature<IDigitalDefinition, IDigitalValue> CreateNewDigitalValueFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IDigitalValue"/> objects.
+        /// </summary>
+        public virtual CreateNewValueFunction<IDigitalDefinition, IDigitalValue> CreateNewDigitalValue
         {
             get
             {
@@ -104,5 +115,6 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        #endregion
     }
 }
