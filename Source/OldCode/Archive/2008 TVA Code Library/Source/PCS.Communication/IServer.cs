@@ -222,7 +222,7 @@ namespace PCS.Communication
         Guid[] ClientIDs { get; }
 
         /// <summary>
-        /// Gets the time in seconds for which the server has been running.
+        /// Gets the <see cref="Time"/> for which the server has been running.
         /// </summary>
         Time RunTime { get; }
 

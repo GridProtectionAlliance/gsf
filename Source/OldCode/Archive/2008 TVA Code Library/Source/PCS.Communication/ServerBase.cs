@@ -37,7 +37,7 @@ using PCS.Security.Cryptography;
 namespace PCS.Communication
 {
     /// <summary>
-    /// Represents a server involved in server-client communication.
+    /// Base class for a server involved in server-client communication.
     /// </summary>
     [ToolboxBitmap(typeof(ServerBase))]
     public abstract partial class ServerBase : Component, IServer, ISupportInitialize, IPersistSettings
@@ -336,7 +336,7 @@ namespace PCS.Communication
         /// <exception cref="InvalidOperationException"><see cref="Handshake"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
         [Category("Security"),
         DefaultValue(DefaultHandshake),
-        Description("Indicates whether the server will do a handshake with the client after accepting its connection.")]
+        Description("Indicates whether the server will do a handshake with the clients after the connection has been established.")]
         public virtual bool Handshake
         {
             get
@@ -380,7 +380,7 @@ namespace PCS.Communication
         /// </summary>
         [Category("Security"),
         DefaultValue(DefaultHandshakePassphrase),
-        Description("The passpharse that the clients must provide for authentication during the handshake process.")]
+        Description("The passpharse that the clients must provide for authentication during the Handshake process.")]
         public virtual string HandshakePassphrase
         {
             get
@@ -433,7 +433,7 @@ namespace PCS.Communication
         /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
         [Category("Data"),
         DefaultValue(DefaultReceiveTimeout),
-        Description("The number of milliseconds after which the server will raise the ReceiveClientDataTimedout event if no data is received from a client.")]
+        Description("The number of milliseconds after which the server will raise the ReceiveClientDataTimeout event if no data is received from a client. Set ReceiveTimeout to -1 to disable this feature.")]
         public virtual int ReceiveTimeout
         {
             get
@@ -474,6 +474,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
         /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="Encryption"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
         /// <remarks>
         /// <list type="table">
         ///     <listheader>
@@ -689,7 +690,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets the time in seconds for which the server has been running.
+        /// Gets the <see cref="Time"/> for which the server has been running.
         /// </summary>
         [Browsable(false)]
         public virtual Time RunTime
@@ -938,13 +939,15 @@ namespace PCS.Communication
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["ConfigurationString", true].Update(m_configurationString, "Data required by the server for initialization.");
+                settings["ConfigurationString", true].Update(m_configurationString, "Data required by the server to initialize.");
                 settings["MaxClientConnections", true].Update(m_maxClientConnections, "Maximum number of clients that can connect to the server.");
-                settings["Handshake", true].Update(m_handshake, "True if the server will do a handshake with the client; otherwise False.");
-                settings["HandshakePassphrase", true].Update(m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the handshake process.");
+                settings["Handshake", true].Update(m_handshake, "True if the server will do a handshake with the client after the connection has been established; otherwise False.");
+                settings["HandshakeTimeout", true].Update(m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
+                settings["HandshakePassphrase", true].Update(m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the Handshake process.");
                 settings["SecureSession", true].Update(m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
-                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize, "Maximum number of bytes that can be received at a time by the server from the clients.");
-                settings["Encryption", true].Update(m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for encrypting the data exchanged between the server and clients.");
+                settings["ReceiveTimeout", true].Update(m_receiveTimeout, "Number of milliseconds the server will wait for receiving data from the clients.");
+                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
+                settings["Encryption", true].Update(m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
                 settings["Compression", true].Update(m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
                 config.Save();
             }
@@ -967,7 +970,9 @@ namespace PCS.Communication
                 ConfigurationString = settings["ConfigurationString", true].ValueAs(m_configurationString);
                 MaxClientConnections = settings["MaxClientConnections", true].ValueAs(m_maxClientConnections);
                 Handshake = settings["Handshake", true].ValueAs(m_handshake);
+                HandshakeTimeout = settings["HandshakeTimeout", true].ValueAs(m_handshakeTimeout);
                 HandshakePassphrase = settings["HandshakePassphrase", true].ValueAs(m_handshakePassphrase);
+                ReceiveTimeout = settings["ReceiveTimeout", true].ValueAs(m_receiveTimeout);
                 ReceiveBufferSize = settings["ReceiveBufferSize", true].ValueAs(m_receiveBufferSize);
                 Encryption = settings["Encryption", true].ValueAs(m_encryption);
                 Compression = settings["Compression", true].ValueAs(m_compression);
