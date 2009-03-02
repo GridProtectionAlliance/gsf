@@ -107,7 +107,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return (IDataFrame)base.Parent;
+                return base.Parent as IDataFrame;
             }
             set
             {
