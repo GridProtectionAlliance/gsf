@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using PCS.Threading;
+using PCS.Configuration;
 
 namespace PCS.Communication
 {
@@ -36,7 +37,6 @@ namespace PCS.Communication
     /// <code>
     /// using System;
     /// using PCS.Communication;
-    /// using PCS.IO;
     /// 
     /// class Program
     /// {
@@ -46,47 +46,43 @@ namespace PCS.Communication
     ///     {
     ///         // Initialize the client.
     ///         m_client = new FileClient(@"File=c:\File.txt");
-    ///         m_client.StartingOffset = FilePath.GetFileLength(@"c:\File.txt");
-    ///         m_client.ReceiveOnDemand = true;
-    ///         m_client.MaxConnectionAttempts = 1;
-    /// 
     ///         // Register event handlers.
     ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
     ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
-    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         m_client.SendDataComplete += m_client_SendDataComplete;
     ///         // Connect the client.
-    ///         m_client.Connect();
+    ///         m_client.ConnectAsync();
     /// 
+    ///         // Write user input to the file.
     ///         string input;
     ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
     ///         {
-    ///             m_client.Send(input);
+    ///             m_client.Send(input + "\r\n");
     ///         }
     /// 
+    ///         // Disconnect the client on shutdown.
     ///         m_client.Disconnect();
-    /// 
-    ///         Console.ReadLine();
     ///     }
     /// 
     ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine("Client is connecting to server.");
+    ///         Console.WriteLine("Client is connecting to file.");
     ///     }
     /// 
     ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine("Client connected to server.");
+    ///         Console.WriteLine("Client connected to file.");
     ///     }
     /// 
     ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine("Client disconnected from server.");
+    ///         Console.WriteLine("Client disconnected from file.");
     ///     }
     /// 
-    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+    ///     static void m_client_SendDataComplete(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///         Console.WriteLine(string.Format("Sent data - {0}", m_client.TextEncoding.GetString(m_client.Client.SendBuffer)));
     ///     }
     /// }
     /// </code>
@@ -105,39 +101,39 @@ namespace PCS.Communication
     ///     {
     ///         // Initialize the client.
     ///         m_client = new FileClient(@"File=c:\File.txt");
-    ///         m_client.ReceiveBufferSize = 1024;
-    /// 
     ///         // Register event handlers.
     ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
     ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
     ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
-    ///         // Connect to the server.
+    ///         // Connect the client.
     ///         m_client.ConnectAsync();
     /// 
+    ///         // Wait for client to read data.
     ///         Console.ReadLine();
     /// 
+    ///         // Disconnect the client on shutdown.
     ///         m_client.Disconnect();
     ///     }
     /// 
     ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine("Client is connecting to server.");
+    ///         Console.WriteLine("Client is connecting to file.");
     ///     }
     /// 
     ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine("Client connected to server.");
+    ///         Console.WriteLine("Client connected to file.");
     ///     }
     /// 
     ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine("Client disconnected from server.");
+    ///         Console.WriteLine("Client disconnected from file.");
     ///     }
     /// 
     ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
     ///     {
-    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///         Console.WriteLine(string.Format("Received data - {0}", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
     ///     }
     /// }
     /// </code>
@@ -408,9 +404,9 @@ namespace PCS.Communication
         #region [ Methods ]
 
         /// <summary>
-        /// Receives (reads) data from the file.
+        /// Receives (reads) data from the <see cref="FileStream"/>.
         /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="FileClient"/> is disconnected.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="FileClient"/> is not connected.</exception>
         /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="ReceiveOnDemand"/> is disabled.</exception>
         public void ReceiveData()
         {
@@ -451,7 +447,7 @@ namespace PCS.Communication
         /// <summary>
         /// Connects the <see cref="FileClient"/> to the <see cref="FileStream"/> asynchronously.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="FileClient"/> when it is connected.</exception>
+        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="FileClient"/> when it is not disconnected.</exception>
         public override void ConnectAsync()
         {
             if (CurrentState == ClientState.Disconnected)
@@ -473,6 +469,49 @@ namespace PCS.Communication
             else
             {
                 throw new InvalidOperationException("Client is currently not disconnected.");
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="FileClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["AutoRepeat", true].Update(m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
+                settings["ReceiveOnDemand", true].Update(m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
+                settings["ReceiveInterval", true].Update(m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
+                settings["StartingOffset", true].Update(m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
+                settings["FileOpenMode", true].Update(m_fileOpenMode, "Mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
+                settings["FileShareMode", true].Update(m_fileShareMode, "Mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used for sharing the file.");
+                settings["FileAccessMode", true].Update(m_fileAccessMode, "Mode (Read; Write; ReadWrite) to be used for accessing the file.");
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="FileClient"/> settings from the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                AutoRepeat = settings["AutoRepeat", true].ValueAs(m_autoRepeat);
+                ReceiveOnDemand = settings["ReceiveOnDemand", true].ValueAs(m_receiveOnDemand);
+                ReceiveInterval = settings["ReceiveInterval", true].ValueAs(m_receiveInterval);
+                StartingOffset = settings["StartingOffset", true].ValueAs(m_startingOffset);
+                FileOpenMode = settings["FileOpenMode", true].ValueAs(m_fileOpenMode);
+                FileShareMode = settings["FileShareMode", true].ValueAs(m_fileShareMode);
+                FileAccessMode = settings["FileAccessMode", true].ValueAs(m_fileAccessMode);
             }
         }
 
@@ -549,7 +588,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Connects to the file.
+        /// Connects to the <see cref="FileStream"/>.
         /// </summary>
         private void OpenFile()
         {
@@ -603,7 +642,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Receive data from the file.
+        /// Receive (reads) data from the <see cref="FileStream"/>.
         /// </summary>
         private void ReadData()
         {
