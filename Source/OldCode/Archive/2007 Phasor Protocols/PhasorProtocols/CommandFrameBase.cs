@@ -117,26 +117,28 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int HeaderLength
+        protected override int BodyLength
         {
             get
             {
-                return 2;
+                return base.BodyLength + 2;
             }
         }
 
         /// <summary>
-        /// Gets the binary header image of this <see cref="CommandFrameBase"/>.
+        /// Gets the binary body image of this <see cref="CommandFrameBase"/>.
         /// </summary>
-        protected override byte[] HeaderImage
+        protected override byte[] BodyImage
         {
             get
             {
-                byte[] buffer = new byte[2];
+                byte[] buffer = new byte[BodyLength];
+                int index = 2;
 
                 EndianOrder.BigEndian.CopyBytes((short)m_command, buffer, 0);
+                base.BodyImage.CopyImage(buffer, ref index, base.BodyLength);
 
                 return buffer;
             }
@@ -167,16 +169,20 @@ namespace PCS.PhasorProtocols
         #region [ Methods ]
 
         /// <summary>
-        /// Parses the binary header image.
+        /// Parses the binary body image.
         /// </summary>
         /// <param name="binaryImage">Binary image to parse.</param>
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
         /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
-        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
+            int parsedLength = 2;
+
             m_command = (DeviceCommand)EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-            return 2;
+            parsedLength += base.ParseBodyImage(binaryImage, startIndex + 2, length);
+
+            return parsedLength;
         }
 
         /// <summary>
