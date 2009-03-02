@@ -1,100 +1,92 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-//using PhasorProtocols.Common;
-
 //*******************************************************************************************************
-//  CommandFrameBase.vb - Command frame base class
+//  CommandFrameBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Text;
+using System.Runtime.Serialization;
+using System.Collections.Generic;
+
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of a command frame that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the protocol independent common implementation of any <see cref="ICommandFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public abstract class CommandFrameBase : ChannelFrameBase<ICommandCell>, ICommandFrame
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private DeviceCommand m_command;
 
-        protected CommandFrameBase()
-        {
-        }
+        #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="CommandFrameBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected CommandFrameBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize command frame
             m_command = (DeviceCommand)info.GetValue("command", typeof(DeviceCommand));
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="CommandFrameBase"/> from the specified parameters.
+        /// </summary>
         protected CommandFrameBase(CommandCellCollection cells, DeviceCommand command)
-            : base(cells)
+            : base(0, cells, 0)
         {
-
             m_command = command;
-
         }
 
-        //// Derived classes are expected to expose a Public Sub New(ByVal binaryImage As Byte(), ByVal startIndex As int)
-        //// and automatically pass in parsing state
-        //protected CommandFrameBase(ICommandFrameParsingState state, byte[] binaryImage, int startIndex)
-        //    : base(state, binaryImage, startIndex)
-        //{
+        #endregion
 
+        #region [ Properties ]
 
-        //}
-
-        // Derived classes are expected to expose a Public Sub New(ByVal commandFrame As ICommandFrame)
-        protected CommandFrameBase(ICommandFrame commandFrame)
-            : this(commandFrame.Cells, commandFrame.Command)
-        {
-
-
-        }
-
+        /// <summary>
+        /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="CommandFrameBase"/>.
+        /// </summary>
         public override FundamentalFrameType FrameType
         {
             get
             {
-                return PhasorProtocols.FundamentalFrameType.CommandFrame;
+                return FundamentalFrameType.CommandFrame;
             }
         }
 
+        /// <summary>
+        /// Gets reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrameBase"/>.
+        /// </summary>
         public virtual new CommandCellCollection Cells
         {
             get
             {
-                return (CommandCellCollection)base.Cells;
+                return base.Cells as CommandCellCollection;
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.
+        /// </summary>
         public virtual DeviceCommand Command
         {
             get
@@ -107,6 +99,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets extended binary image data for this <see cref="CommandFrameBase"/>.
+        /// </summary>
         public virtual byte[] ExtendedData
         {
             get
@@ -116,50 +111,40 @@ namespace PCS.PhasorProtocols
             set
             {
                 Cells.Clear();
-                base.ParseBodyImage(new CommandFrameParsingState(/*Cells,*/ 0, (short)value.Length), value, 0);
+                State = new CommandFrameParsingState(0, value.Length);
+                ParseBodyImage(value, 0, value.Length);
             }
         }
 
-        protected override int BodyLength
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
+        protected override int HeaderImage
         {
             get
             {
-                return base.BodyLength + 2;
+                return 2;
             }
         }
 
-        protected override byte[] BodyImage
+        /// <summary>
+        /// Gets the binary header image of this <see cref="CommandFrameBase"/>.
+        /// </summary>
+        protected override byte[] HeaderImage
         {
             get
             {
-                byte[] buffer = new byte[BodyLength];
-                int index = 2;
+                byte[] buffer = new byte[2];
 
                 EndianOrder.BigEndian.CopyBytes((short)m_command, buffer, 0);
-                PhasorProtocols.Common.CopyImage(base.BodyImage, buffer, ref index, base.BodyLength);
 
                 return buffer;
             }
         }
 
-        protected override void ParseBodyImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            m_command = (DeviceCommand)EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-            base.ParseBodyImage(state, binaryImage, startIndex + 2);
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize command frame
-            info.AddValue("command", m_command, typeof(DeviceCommand));
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommandFrameBase"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -169,17 +154,44 @@ namespace PCS.PhasorProtocols
                 baseAttributes.Add("Device Command", (int)Command + ": " + Command);
 
                 if (Cells.Count > 0)
-                {
-                    baseAttributes.Add("Extended Data", ((ByteEncoding)ByteEncoding.Hexadecimal).GetString(Cells.BinaryImage, 0, Cells.Count));
-                }
+                    baseAttributes.Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage, 0, Cells.Count));
                 else
-                {
                     baseAttributes.Add("Extended Data", "<null>");
-                }
 
                 return baseAttributes;
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            m_command = (DeviceCommand)EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            return 2;
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize command frame
+            info.AddValue("command", m_command, typeof(DeviceCommand));
+        }
+
+        #endregion
     }
 }
