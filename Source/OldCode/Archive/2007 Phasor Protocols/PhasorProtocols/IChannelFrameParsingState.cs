@@ -27,7 +27,7 @@ namespace PCS.PhasorProtocols
     /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
     /// <returns>New <see cref="IChannelCell"/> object.</returns>
     /// <typeparam name="T">Specific <see cref="IChannelCell"/> type of object that gets created by referenced function.</typeparam>
-    public delegate T CreateNewCellFunctionSignature<T>(IChannelFrame parent, IChannelFrameParsingState<T> state, int index, byte[] binaryImage, int startIndex) where T : IChannelCell;
+    public delegate T CreateNewCellFunction<T>(IChannelFrame parent, IChannelFrameParsingState<T> state, int index, byte[] binaryImage, int startIndex) where T : IChannelCell;
 
     /// <summary>
     /// Represents a protocol independent interface representation of the parsing state of any kind of <see cref="IChannelFrame"/>.
@@ -38,7 +38,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets reference to delegate used to create a new <see cref="IChannelCell"/> object.
         /// </summary>
-        CreateNewCellFunctionSignature<T> CreateNewCellFunction { get; }
+        CreateNewCellFunction<T> CreateNewCell { get; }
 
         /// <summary>
         /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/> being parsed.
