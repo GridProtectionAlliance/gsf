@@ -39,7 +39,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the length of associated <see cref="IChannel"/> object that was parsed from the binary image.
+        /// Gets or sets the length of the associated <see cref="IChannel"/> object being parsed from the binary image.
         /// </summary>
         public virtual int ParsedBinaryLength
         {

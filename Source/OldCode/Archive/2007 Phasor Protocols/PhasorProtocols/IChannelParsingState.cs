@@ -30,7 +30,7 @@ namespace PCS.PhasorProtocols
     public interface IChannelParsingState
     {
         /// <summary>
-        /// Gets or sets the length of associated <see cref="IChannelFrame"/> that was parsed from the binary image.
+        /// Gets or sets the length of the associated <see cref="IChannel"/> object being parsed from the binary image.
         /// </summary>
         int ParsedBinaryLength { get; set; }
     }
