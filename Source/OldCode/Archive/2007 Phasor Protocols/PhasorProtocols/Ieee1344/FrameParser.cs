@@ -24,17 +24,16 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols.Ieee1344
 {
     /// <summary>
-    /// This class parses an IEEE 1344 binary data stream and returns parsed data via events.
+    /// Represents a frame parses for an IEEE 1344 binary data stream that returns parsed data via events.
     /// </summary>
     /// <remarks>
     /// Frame parser is implemented as a write-only stream - this way data can come from any source.
     /// </remarks>
-    [CLSCompliant(false)]
     public class FrameParser : FrameParserBase<FrameType>
     {
-        private ConfigurationFrame m_configurationFrame;
-        private FrameImageCollector m_configurationFrameImages;
-        private FrameImageCollector m_headerFrameImages;
+        #region [ Members ]
+
+        // Events
 
         /// <summary>
         /// Occurs when an IEEE 1344 <see cref="ConfigurationFrame"/> has been received.
@@ -71,6 +70,26 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </remarks>
         public new event EventHandler<EventArgs<CommandFrame>> ReceivedCommandFrame;
 
+        // Fields
+        private ConfigurationFrame m_configurationFrame;
+        private FrameImageCollector m_configurationFrameImages;
+        private FrameImageCollector m_headerFrameImages;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
+        /// </summary>
+        /// <remarks>
+        /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame.  Consumer can manually assign a
+        /// <see cref="IConfigurationFrame"/> to start parsing data if one has not been encountered in the stream.
+        /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
             get
@@ -83,6 +102,54 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
+        /// </summary>
+        /// <remarks>
+        /// The IEEE 1344 protocol does not use synchronization bytes, as a result this property returns <c>false</c>.
+        /// </remarks>
+        public override bool ProtocolUsesSyncBytes
+        {
+            get
+            {
+                // IEEE 1344 doesn't use synchronization bytes
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented
+        /// in the binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
+        /// <param name="commonHeader">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// <para>
+        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
+        /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
+        /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
+        /// <see cref="ISupportBinaryImage.Initialize"/> method. This header image should also be used to add needed complex state information
+        /// about the output type being parsed if needed.
+        /// </para>
+        /// <para>
+        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output
+        /// type <see cref="ISupportBinaryImage.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
+        /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
+        /// </para>
+        /// <para>
+        /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), set <paramref name="commonHeader"/>
+        /// to null and return 0.  If the protocol allows frame length to be determined at the time common header is being parsed and there is not enough
+        /// buffer to parse the entire frame, it will be optimal to prevent further parsing by executing the same action, that is set
+        /// <paramref name="commonHeader"/> = null and return 0.
+        /// </para>
+        /// </remarks>
         protected override int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<FrameType> commonHeader)
         {
             // See if there is enough data in the buffer to parse the common frame header.
@@ -97,19 +164,19 @@ namespace PCS.PhasorProtocols.Ieee1344
                 {
                     // Expose the frame buffer image in case client needs this data for any reason
                     OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
-                    commonHeader = (ICommonHeader<FrameType>)parsedFrameHeader;
+                    commonHeader = parsedFrameHeader as ICommonHeader<FrameType>;
 
                     // Handle special parsing states
                     switch (parsedFrameHeader.TypeID)
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, Ieee1344.DataCell.CreateNewDataCell);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewDataCell);
                             break;
                         case FrameType.ConfigurationFrame:
                             // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, Ieee1344.ConfigurationCell.CreateNewConfigurationCell);
-                            
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewConfigurationCell);
+
                             // Cumulate configuration frame images...
                             CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_configurationFrameImages);
                             break;
@@ -158,15 +225,10 @@ namespace PCS.PhasorProtocols.Ieee1344
                 frameImages = null;
         }
 
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                // IEEE 1344 doesn't use synchronization bytes
-                return false;
-            }
-        }
-
+        /// <summary>
+        /// Raises the <see cref="ReceivedConfigurationFrame"/> event.
+        /// </summary>
+        /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="ReceivedConfigurationFrame"/> event.</param>
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
             // IEEE 1344 configuration frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
@@ -181,6 +243,10 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Raises the <see cref="ReceivedHeaderFrame"/> event.
+        /// </summary>
+        /// <param name="frame"><see cref="IHeaderFrame"/> to send to <see cref="ReceivedHeaderFrame"/> event.</param>
         protected override void OnReceivedHeaderFrame(IHeaderFrame frame)
         {
             // IEEE 1344 header frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
@@ -195,6 +261,10 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Casts the parsed <see cref="IChannelFrame"/> to its specific implementation (i.e., <see cref="IDataFrame"/>, <see cref="IConfigurationFrame"/>, <see cref="ICommandFrame"/> or <see cref="IHeaderFrame"/>).
+        /// </summary>
+        /// <param name="frame"><see cref="IChannelFrame"/> that was parsed by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> that implements protocol specific common frame header interface.</param>
         protected override void OnReceivedChannelFrame(IChannelFrame frame)
         {
             // Raise abstract channel frame events as a priority (i.e., IDataFrame, IConfigurationFrame, etc.)
@@ -245,238 +315,18 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        // Attempts to cast given frame into an alternate configuration frame - hypothetically this would
+        // allow a configuration frame to be used in between different protocol implementations
         private ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame configurationFrame)
         {
             ConfigurationFrame derivedFrame = configurationFrame as ConfigurationFrame;
 
             if (derivedFrame == null)
-            {
                 return new ConfigurationFrame(configurationFrame);
-            }
-            else
-            {
-                return derivedFrame;
-            }
+
+            return derivedFrame;
         }
 
-        //#region " Public Member Declarations "
-
-        //// We shadow base class events with their IEEE 1344 specific derived versions for convinience in case users consume this class directly
-        //public delegate void ReceivedCommonFrameHeaderEventHandler(ICommonFrameHeader frame);
-        //public event ReceivedCommonFrameHeaderEventHandler ReceivedCommonFrameHeader;
-
-        //public delegate void ReceivedConfigurationFrameEventHandler(ConfigurationFrame frame);
-        //public new event ReceivedConfigurationFrameEventHandler ReceivedConfigurationFrame;
-
-        //public delegate void ReceivedDataFrameEventHandler(DataFrame frame);
-        //public new event ReceivedDataFrameEventHandler ReceivedDataFrame;
-
-        //public delegate void ReceivedHeaderFrameEventHandler(HeaderFrame frame);
-        //public new event ReceivedHeaderFrameEventHandler ReceivedHeaderFrame;
-
-        //#endregion
-
-        //#region " Private Member Declarations "
-
-        //private ConfigurationFrame m_configurationFrame;
-        //private CommonFrameHeader.CommonFrameHeaderInstance m_configurationFrameCollection;
-        //private CommonFrameHeader.CommonFrameHeaderInstance m_headerFrameCollection;
-
-        //#endregion
-
-        //#region " Construction Functions "
-
-        //public FrameParser()
-        //{
-
-        //}
-
-        //public FrameParser(IConfigurationFrame configurationFrame)
-        //{
-
-        //    m_configurationFrame = CastToDerivedConfigurationFrame(configurationFrame);
-
-        //}
-
-        //public FrameParser(ConfigurationFrame configurationFrame)
-        //{
-
-        //    m_configurationFrame = configurationFrame;
-
-        //}
-
-        //#endregion
-
-        //#region " Public Methods Implementation "
-
-        //public override bool ProtocolUsesSyncByte
-        //{
-        //    get
-        //    {
-        //        return false;
-        //    }
-        //}
-
-        //public override IConfigurationFrame ConfigurationFrame
-        //{
-        //    get
-        //    {
-        //        return m_configurationFrame;
-        //    }
-        //    set
-        //    {
-        //        m_configurationFrame = CastToDerivedConfigurationFrame(value);
-        //    }
-        //}
-
-        //#endregion
-
-        //#region " Protected Methods Implementation "
-
-        //[SuppressMessage("Microsoft.Performance", "CA1800")]
-        //protected override void ParseFrame(byte[] buffer, int offset, int length, ref int parsedFrameLength)
-        //{
-        //    // See if there is enough data in the buffer to parse the common frame header.
-        //    // Note that in order to get status flags (which contain frame length), we need at least two more bytes
-        //    if (length >= CommonFrameHeader.BinaryLength + 2)
-        //    {
-        //        // Parse frame header
-        //        ICommonFrameHeader parsedFrameHeader = CommonFrameHeader.ParseBinaryImage(m_configurationFrame, buffer, offset);
-
-        //        // See if there is enough data in the buffer to parse the entire frame
-        //        if (length >= parsedFrameHeader.FrameLength)
-        //        {
-        //            // Expose the frame buffer image in case client needs this data for any reason
-        //            RaiseReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength);
-
-        //            // Entire frame is availble, so we go ahead and parse it
-        //            switch (parsedFrameHeader.FrameType)
-        //            {
-        //                case FrameType.DataFrame:
-        //                    if (m_configurationFrame == null)
-        //                    {
-        //                        // Until we receive configuration frame, we at least expose the part of the data frame we have parsed
-        //                        RaiseReceivedCommonFrameHeader(parsedFrameHeader);
-        //                    }
-        //                    else
-        //                    {
-        //                        // We can only start parsing data frames once we have successfully received a configuration frame...
-        //                        RaiseReceivedDataFrame(new DataFrame(parsedFrameHeader, m_configurationFrame, buffer, offset));
-        //                    }
-        //                    break;
-        //                case FrameType.ConfigurationFrame:
-        //                    // Cumulate all partial frames together as one complete frame
-        //                    CommonFrameHeader.CommonFrameHeaderInstance configFrame = (CommonFrameHeader.CommonFrameHeaderInstance)parsedFrameHeader;
-
-        //                    if (configFrame.IsFirstFrame)
-        //                    {
-        //                        m_configurationFrameCollection = configFrame;
-        //                    }
-
-        //                    if (m_configurationFrameCollection != null)
-        //                    {
-        //                        try
-        //                        {
-        //                            m_configurationFrameCollection.AppendFrameImage(buffer, offset, configFrame.FrameLength);
-
-        //                            if (configFrame.IsLastFrame)
-        //                            {
-        //                                m_configurationFrame = new ConfigurationFrame(m_configurationFrameCollection, m_configurationFrameCollection.BinaryImage, 0);
-        //                                RaiseReceivedConfigurationFrame(m_configurationFrame);
-        //                                m_configurationFrameCollection = null;
-        //                            }
-        //                        }
-        //                        catch
-        //                        {
-        //                            // If CRC check fails or other exception occurs, we cancel frame cumulation process
-        //                            m_configurationFrameCollection = null;
-        //                            throw;
-        //                        }
-        //                    }
-        //                    break;
-        //                case FrameType.HeaderFrame:
-        //                    // Cumulate all partial frames together as one complete frame
-        //                    CommonFrameHeader.CommonFrameHeaderInstance headerFrame = (CommonFrameHeader.CommonFrameHeaderInstance)parsedFrameHeader;
-
-        //                    if (headerFrame.IsFirstFrame)
-        //                    {
-        //                        m_headerFrameCollection = headerFrame;
-        //                    }
-
-        //                    if (m_headerFrameCollection != null)
-        //                    {
-        //                        try
-        //                        {
-        //                            m_headerFrameCollection.AppendFrameImage(buffer, offset, headerFrame.FrameLength);
-
-        //                            if (headerFrame.IsLastFrame)
-        //                            {
-        //                                RaiseReceivedHeaderFrame(new HeaderFrame(m_headerFrameCollection, m_headerFrameCollection.BinaryImage, 0));
-        //                                m_headerFrameCollection = null;
-        //                            }
-        //                        }
-        //                        catch
-        //                        {
-        //                            // If CRC check fails or other exception occurs, we cancel frame cumulation process
-        //                            m_headerFrameCollection = null;
-        //                            throw;
-        //                        }
-        //                    }
-        //                    break;
-        //            }
-
-        //            parsedFrameLength = parsedFrameHeader.FrameLength;
-        //        }
-        //    }
-        //}
-
-        //// We override the base class event raisers to allow derived class to also expose the frame in native (i.e., non-interfaced) format
-        //protected override void RaiseReceivedConfigurationFrame(IConfigurationFrame frame)
-        //{
-        //    base.RaiseReceivedConfigurationFrame(frame);
-        //    if (ReceivedConfigurationFrame != null)
-        //        ReceivedConfigurationFrame((ConfigurationFrame)frame);
-        //}
-
-        //protected override void RaiseReceivedDataFrame(IDataFrame frame)
-        //{
-        //    base.RaiseReceivedDataFrame(frame);
-        //    if (ReceivedDataFrame != null)
-        //        ReceivedDataFrame((DataFrame)frame);
-        //}
-
-        //protected override void RaiseReceivedHeaderFrame(IHeaderFrame frame)
-        //{
-        //    base.RaiseReceivedHeaderFrame(frame);
-        //    if (ReceivedHeaderFrame != null)
-        //        ReceivedHeaderFrame((HeaderFrame)frame);
-        //}
-
-        //#endregion
-
-        //#region " Private Methods Implementation "
-
-        //private void RaiseReceivedCommonFrameHeader(ICommonFrameHeader frame)
-        //{
-        //    base.RaiseReceivedUndeterminedFrame(frame);
-        //    if (ReceivedCommonFrameHeader != null)
-        //        ReceivedCommonFrameHeader(frame);
-        //}
-
-        //private ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame configurationFrame)
-        //{
-        //    ConfigurationFrame derivedFrame = configurationFrame as ConfigurationFrame;
-
-        //    if (derivedFrame == null)
-        //    {
-        //        return new ConfigurationFrame(configurationFrame);
-        //    }
-        //    else
-        //    {
-        //        return derivedFrame;
-        //    }
-        //}
-
-        //#endregion
+        #endregion
     }
 }
