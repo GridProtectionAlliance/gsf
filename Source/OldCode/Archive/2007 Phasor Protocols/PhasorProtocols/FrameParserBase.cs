@@ -218,7 +218,7 @@ namespace PCS.PhasorProtocols
                     status.Append(ConfigurationFrame.Cells.Count);
                     status.Append(" total - ");
                     status.AppendLine();
-                    for (int x = 0; x <= ConfigurationFrame.Cells.Count - 1; x++)
+                    for (int x = 0; x < ConfigurationFrame.Cells.Count; x++)
                     {
                         status.Append("               (");
                         status.Append(ConfigurationFrame.Cells[x].IDCode);

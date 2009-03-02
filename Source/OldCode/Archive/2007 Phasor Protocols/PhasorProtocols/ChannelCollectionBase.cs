@@ -155,7 +155,7 @@ namespace PCS.PhasorProtocols
                 int index = 0;
 
                 // Copy in each element's binary inage
-                for (int x = 0; x <= Count - 1; x++)
+                for (int x = 0; x < Count; x++)
                 {
                     this[x].CopyImage(buffer, ref index);
                 }
