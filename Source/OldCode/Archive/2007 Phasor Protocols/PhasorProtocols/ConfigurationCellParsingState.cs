@@ -1,52 +1,62 @@
 //*******************************************************************************************************
-//  ConfigurationCellParsingState.vb - Configuration frame cell parsing state class
+//  ConfigurationCellParsingState.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
-using System;
-
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the protocol independent common implementation of a parsing state for a set of configuration related data settings that can be sent or received from a PMU.</summary>
-    [CLSCompliant(false)]
+    /// <summary>
+    /// Represents the protocol independent common implementation of the parsing state used by any <see cref="IConfigurationCell"/>.
+    /// </summary>
     public class ConfigurationCellParsingState : ChannelCellParsingStateBase, IConfigurationCellParsingState
     {
-        private CreateNewDefinitionFunctionSignature<IPhasorDefinition> m_createNewPhasorDefinitionFunction;
-        private CreateNewDefinitionFunctionSignature<IFrequencyDefinition> m_createNewFrequencyDefinitionFunction;
-        private CreateNewDefinitionFunctionSignature<IAnalogDefinition> m_createNewAnalogDefinitionFunction;
-        private CreateNewDefinitionFunctionSignature<IDigitalDefinition> m_createNewDigitalDefinitionFunction;
+        #region [ Members ]
 
-        public ConfigurationCellParsingState(CreateNewDefinitionFunctionSignature<IPhasorDefinition> createNewPhasorDefinitionFunction, CreateNewDefinitionFunctionSignature<IFrequencyDefinition> createNewFrequencyDefinitionFunction, CreateNewDefinitionFunctionSignature<IAnalogDefinition> createNewAnalogDefinitionFunction, CreateNewDefinitionFunctionSignature<IDigitalDefinition> createNewDigitalDefinitionFunction)
+        // Fields
+        private CreateNewDefinitionFunction<IPhasorDefinition> m_createNewPhasorDefinitionFunction;
+        private CreateNewDefinitionFunction<IFrequencyDefinition> m_createNewFrequencyDefinitionFunction;
+        private CreateNewDefinitionFunction<IAnalogDefinition> m_createNewAnalogDefinitionFunction;
+        private CreateNewDefinitionFunction<IDigitalDefinition> m_createNewDigitalDefinitionFunction;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationCellParsingState"/> from specified parameters.
+        /// </summary>
+        /// <param name="createNewPhasorDefinitionFunction">Reference to delegate to create new <see cref="IPhasorDefinition"/> instances.</param>
+        /// <param name="createNewFrequencyDefinitionFunction">Reference to delegate to create new <see cref="IFrequencyDefinition"/> instances.</param>
+        /// <param name="createNewAnalogDefinitionFunction">Reference to delegate to create new <see cref="IAnalogDefinition"/> instances.</param>
+        /// <param name="createNewDigitalDefinitionFunction">Reference to delegate to create new <see cref="IDigitalDefinition"/> instances.</param>
+        public ConfigurationCellParsingState(CreateNewDefinitionFunction<IPhasorDefinition> createNewPhasorDefinitionFunction, CreateNewDefinitionFunction<IFrequencyDefinition> createNewFrequencyDefinitionFunction, CreateNewDefinitionFunction<IAnalogDefinition> createNewAnalogDefinitionFunction, CreateNewDefinitionFunction<IDigitalDefinition> createNewDigitalDefinitionFunction)
         {
-
             m_createNewPhasorDefinitionFunction = createNewPhasorDefinitionFunction;
             m_createNewFrequencyDefinitionFunction = createNewFrequencyDefinitionFunction;
             m_createNewAnalogDefinitionFunction = createNewAnalogDefinitionFunction;
             m_createNewDigitalDefinitionFunction = createNewDigitalDefinitionFunction;
-
         }
 
-        public override Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
+        #endregion
 
-        public virtual CreateNewDefinitionFunctionSignature<IPhasorDefinition> CreateNewPhasorDefinitionFunction
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IPhasorDefinition"/> objects.
+        /// </summary>
+        public virtual CreateNewDefinitionFunction<IPhasorDefinition> CreateNewPhasorDefinition
         {
             get
             {
@@ -54,7 +64,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewDefinitionFunctionSignature<IFrequencyDefinition> CreateNewFrequencyDefinitionFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IFrequencyDefinition"/> objects.
+        /// </summary>
+        public virtual CreateNewDefinitionFunction<IFrequencyDefinition> CreateNewFrequencyDefinition
         {
             get
             {
@@ -62,7 +75,10 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewDefinitionFunctionSignature<IAnalogDefinition> CreateNewAnalogDefinitionFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IAnalogDefinition"/> objects.
+        /// </summary>
+        public virtual CreateNewDefinitionFunction<IAnalogDefinition> CreateNewAnalogDefinition
         {
             get
             {
@@ -70,12 +86,17 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        public virtual CreateNewDefinitionFunctionSignature<IDigitalDefinition> CreateNewDigitalDefinitionFunction
+        /// <summary>
+        /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IDigitalDefinition"/> objects.
+        /// </summary>
+        public virtual CreateNewDefinitionFunction<IDigitalDefinition> CreateNewDigitalDefinition
         {
             get
             {
                 return m_createNewDigitalDefinitionFunction;
             }
         }
+
+        #endregion
     }
 }
