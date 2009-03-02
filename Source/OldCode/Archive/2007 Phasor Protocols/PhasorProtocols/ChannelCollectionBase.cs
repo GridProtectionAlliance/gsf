@@ -133,8 +133,10 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                if (Count > 0)
-                    return this[0].BinaryLength * Count;
+                int count = Count;
+
+                if (count > 0)
+                    return this[0].BinaryLength * count;
                 else
                     return 0;
             }
