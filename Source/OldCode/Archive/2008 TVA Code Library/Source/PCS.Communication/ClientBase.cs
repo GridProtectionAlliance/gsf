@@ -38,7 +38,7 @@ using PCS.Security.Cryptography;
 namespace PCS.Communication
 {
     /// <summary>
-    /// Represents a client involved in server-client communication.
+    /// Base class for a client involved in server-client communication.
     /// </summary>
     [ToolboxBitmap(typeof(ClientBase))]
     public abstract class ClientBase : Component, IClient, ISupportInitialize, IPersistSettings
@@ -419,7 +419,7 @@ namespace PCS.Communication
         /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
         [Category("Data"),
         DefaultValue(DefaultReceiveTimeout),
-        Description("The number of milliseconds after which the client will raise the ReceiveClientDataTimedout event if no data is received from the server.")]
+        Description("The number of milliseconds after which the client will raise the ReceiveClientDataTimeout event if no data is received from the server. Set ReceiveTimeout to -1 to disable this feature.")]
         public virtual int ReceiveTimeout
         {
             get
@@ -460,6 +460,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the client and server.
         /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="Encryption"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
         /// <remarks>
         /// <list type="table">
         ///     <listheader>
@@ -605,7 +606,7 @@ namespace PCS.Communication
         /// </para>
         /// <para>
         /// arg1 in <see cref="ReceiveDataHandler"/> is the buffer containing the data received from the server.<br/>
-        /// arg2 in <see cref="ReceiveDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
+        /// arg2 in <see cref="ReceiveDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
         /// arg3 in <see cref="ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1) starting at index 0.
         /// </para>
         /// </remarks>
@@ -684,7 +685,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Gets the total number of seconds for which the client has been connected to the server.
+        /// Gets the <see cref="Time"/> for which the client has been connected to the server.
         /// </summary>
         [Browsable(false)]
         public virtual Time ConnectionTime

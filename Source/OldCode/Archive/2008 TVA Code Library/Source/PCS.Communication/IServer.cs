@@ -196,7 +196,7 @@ namespace PCS.Communication
         /// <remarks>
         /// arg1 in <see cref="ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
         /// arg2 in <see cref="ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
-        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
+        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
         /// arg4 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
         /// </remarks>
         Action<Guid,byte[],int,int> ReceiveClientDataHandler { get; set; }
