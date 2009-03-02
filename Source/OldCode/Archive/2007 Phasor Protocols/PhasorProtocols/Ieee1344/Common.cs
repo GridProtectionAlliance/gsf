@@ -1,46 +1,29 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  Common.vb - Common IEEE1344 declarations and functions
+//  Common.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace PCS.PhasorProtocols.Ieee1344
 {
-
-    [CLSCompliant(false)]
-    public sealed class Common
+    /// <summary>
+    /// Common IEEE1344 declarations and functions.
+    /// </summary>
+    public static class Common
     {
-
-
-        private Common()
-        {
-
-            // This class contains only global functions and is not meant to be instantiated
-
-        }
-
         /// <summary>Frame type mask</summary>
         public const short FrameTypeMask = Bit.Bit13 | Bit.Bit14 | Bit.Bit15;
 
@@ -77,7 +60,5 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         /// <summary>Absolute maximum number of bytes of data that could fit into a header frame</summary>
         public const int MaximumHeaderDataLength = MaximumFrameLength - CommonFrameHeader.FixedLength - 2;
-
     }
-
 }
