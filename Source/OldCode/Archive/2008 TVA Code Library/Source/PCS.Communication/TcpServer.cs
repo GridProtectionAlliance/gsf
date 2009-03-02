@@ -36,11 +36,8 @@ namespace PCS.Communication
     /// <summary>
     /// Represents a TCP-based communication server.
     /// </summary>
-    /// <remarks>
-    /// "Payload-Aware" enabled transmission can transmit up to 100MB of payload in a single transmission.
-    /// </remarks>
     /// <example>
-    /// 
+    /// This example shows how to use <see cref="TcpServer"/> component:
     /// <code>
     /// using System;
     /// using PCS.Communication;
@@ -56,11 +53,11 @@ namespace PCS.Communication
     ///         // Initialize the server.
     ///         m_server = new TcpServer("Port=8888");
     ///         m_server.Handshake = false;
-    ///         m_server.PayloadAware = true;
+    ///         m_server.PayloadAware = false;
     ///         m_server.ReceiveTimeout = -1;
-    ///         //m_server.Encryption = CipherStrength.Level1;
-    ///         //m_server.Compression = CompressionStrength.BestSpeed;
-    ///         //m_server.SecureSession = true;
+    ///         m_server.Encryption = CipherStrength.None;
+    ///         m_server.Compression = CompressionStrength.NoCompression;
+    ///         m_server.SecureSession = false;
     ///         // Register event handlers.
     ///         m_server.ServerStarted += m_server_ServerStarted;
     ///         m_server.ServerStopped += m_server_ServerStopped;
@@ -70,12 +67,14 @@ namespace PCS.Communication
     ///         // Start the server.
     ///         m_server.Start();
     /// 
+    ///         // Multicast user input to all connected clients.
     ///         string input;
     ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
     ///         {
-    ///             m_server.Multicast(System.IO.File.ReadAllText(@"C:\My Projects\CLR 3.5\Win\TVACodeLibrary\Source\TVA.Core\Collections\KeyedProcessQueue.vb"));
+    ///             m_server.Multicast(input);
     ///         }
     /// 
+    ///         // Stop the server on shutdown.
     ///         m_server.Stop();
     ///     }
     /// 
@@ -260,7 +259,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Saves <see cref="TcpServer"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Saves <see cref="TcpServer"/> settings to the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -276,7 +275,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Loads saved <see cref="TcpServer"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="TcpServer"/> settings from the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {
@@ -312,14 +311,14 @@ namespace PCS.Communication
         /// Validates the specified <paramref name="configurationString"/>.
         /// </summary>
         /// <param name="configurationString">Configuration string to be validated.</param>
-        /// <exception cref="ArgumentException">Port property is missing.</exception>
+        /// <exception cref="FormatException">Port property is missing.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConfigurationString(string configurationString)
         {
             m_configData = configurationString.ParseKeyValuePairs();
 
             if (!m_configData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConfigurationString));
+                throw new FormatException(string.Format("Port property is missing. Example: {0}.", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
                 throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));

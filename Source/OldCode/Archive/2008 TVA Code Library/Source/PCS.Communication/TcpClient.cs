@@ -35,11 +35,8 @@ namespace PCS.Communication
     /// <summary>
     /// Represents a TCP-based communication client.
     /// </summary>
-    /// <remarks>
-    /// PayloadAware enabled transmission can transmit up to 100MB of payload in a single transmission.
-    /// </remarks>
     /// <example>
-    /// 
+    /// This example shows how to use the <see cref="TcpClient"/> component:
     /// <code>
     /// using System;
     /// using PCS.Communication;
@@ -52,43 +49,45 @@ namespace PCS.Communication
     /// 
     ///     static void Main(string[] args)
     ///     {
-    ///         // Initialize the server.
-    ///         m_client = new TcpClient("Server=h51g1d1; Port=8888");
+    ///         // Initialize the client.
+    ///         m_client = new TcpClient("Server=localhost:8888");
     ///         m_client.Handshake = false;
-    ///         m_client.PayloadAware = true;
+    ///         m_client.PayloadAware = false;
     ///         m_client.ReceiveTimeout = -1;
     ///         m_client.MaxConnectionAttempts = 5;
-    ///         //m_client.Encryption = CipherStrength.Level1;
-    ///         //m_client.Compression = CompressionStrength.BestSpeed;
-    ///         //m_client.SecureSession = true;
+    ///         m_client.Encryption = CipherStrength.None;
+    ///         m_client.Compression = CompressionStrength.NoCompression;
+    ///         m_client.SecureSession = false;
     ///         // Register event handlers.
-    ///         m_client.Connecting += m_client_Connecting;
-    ///         m_client.Connected += m_client_Connected;
-    ///         m_client.Disconnected += m_client_Disconnected;
+    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
+    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
+    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
     ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
-    ///         // Start the server.
+    ///         // Connect the client.
     ///         m_client.ConnectAsync();
     /// 
+    ///         // Transmit user input to the server.
     ///         string input;
     ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
     ///         {
     ///             m_client.Send(input);
     ///         }
     /// 
+    ///         // Disconnect the client on shutdown.
     ///         m_client.Disconnect();
     ///     }
     /// 
-    ///     static void m_client_Connecting(object sender, EventArgs e)
+    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client is connecting to server.");
     ///     }
     /// 
-    ///     static void m_client_Connected(object sender, EventArgs e)
+    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client connected to server.");
     ///     }
     /// 
-    ///     static void m_client_Disconnected(object sender, EventArgs e)
+    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client disconnected from server.");
     ///     }
@@ -114,7 +113,7 @@ namespace PCS.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
-        public const string DefaultConnectionString = "Server=localhost; Port=8888";
+        public const string DefaultConnectionString = "Server=localhost:8888";
 
         // Fields
         private bool m_payloadAware;
@@ -233,8 +232,10 @@ namespace PCS.Communication
                 if (m_tcpClient.Provider == null)
                     // Create client socket to establish presence.
                     m_tcpClient.Provider = Transport.CreateSocket(0, ProtocolType.Tcp);
+
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
-                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(m_connectData["server"], int.Parse(m_connectData["port"])), ConnectAsyncCallback, m_tcpClient);
+                string[] parts = m_connectData["server"].Split(':');
+                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(parts[0], int.Parse(parts[1])), ConnectAsyncCallback, m_tcpClient);
             }
             else
             {
@@ -277,21 +278,27 @@ namespace PCS.Communication
         /// Validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">Connection string to be validated.</param>
-        /// <exception cref="ArgumentException">Server property is missing.</exception>
-        /// <exception cref="ArgumentException">Port property is missing.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
+        /// <exception cref="FormatException">Server property is missing.</exception>
+        /// <exception cref="FormatException">Server property is invalid.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Server port value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
+            // Backwards compatibility adjustments.
+            // New Format: Server=localhost:8888
+            // Old Format: Server=localhost; Port=8888
+            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("port"))
+                m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["port"];
+
             if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing. Example: {0}.", DefaultConnectionString));
+                throw new FormatException(string.Format("Server property is missing. Example: {0}.", DefaultConnectionString));
 
-            if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
+            if (!m_connectData["server"].Contains(":"))
+                throw new FormatException(string.Format("Server property is invalid. Example: {0}.", DefaultConnectionString));
 
-            if (!Transport.IsPortNumberValid(m_connectData["port"]))
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
+            if (!Transport.IsPortNumberValid(m_connectData["server"].Split(':')[1]))
+                throw new ArgumentOutOfRangeException("connectionString", string.Format("Server port must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>
