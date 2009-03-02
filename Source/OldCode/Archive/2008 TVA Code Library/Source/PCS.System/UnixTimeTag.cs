@@ -56,7 +56,7 @@ namespace System
         {
         }
 
-        /// <summary>Creates a new <see cref="UnixTimeTag"/>, given standard .NET <see cref="DateTime"/>.</summary>
+        /// <summary>Creates a new <see cref="UnixTimeTag"/>, given specified <see cref="Ticks"/>.</summary>
         /// <param name="timestamp">Timestamp in <see cref="Ticks"/> to create Unix timetag from (minimum valid date is 1/1/1970).</param>
         public UnixTimeTag(Ticks timestamp)
             : base(m_unixDateOffsetTicks, timestamp)
