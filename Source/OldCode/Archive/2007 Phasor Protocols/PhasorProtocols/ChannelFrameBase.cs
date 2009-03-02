@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using PCS.Parsing;
 using PCS.Measurements;
-using PCS.IO.Checksums;
 
 namespace PCS.PhasorProtocols
 {
@@ -39,7 +38,7 @@ namespace PCS.PhasorProtocols
     /// </para>
     /// </remarks>
     /// <typeparam name="T">Specific <see cref="IChannelCell"/> type that the <see cref="ChannelFrameBase{T}"/> contains.</typeparam>
-    [CLSCompliant(false), Serializable()]
+    [Serializable()]
     public abstract class ChannelFrameBase<T> : ChannelBase, IChannelFrame<T> where T : IChannelCell
     {
         #region [ Members ]
@@ -57,13 +56,6 @@ namespace PCS.PhasorProtocols
         #endregion
 
         #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelFrameBase{T}"/>.
-        /// </summary>
-        protected ChannelFrameBase()
-        {
-        }
 
         /// <summary>
         /// Creates a new <see cref="ChannelFrameBase{T}"/> from serialization parameters.
@@ -88,14 +80,6 @@ namespace PCS.PhasorProtocols
             m_timestamp = timestamp;
         }
 
-        /// <summary>
-        /// Creates a new <see cref="ChannelFrameBase{T}"/> copied from the specified <see cref="IChannelFrame{T}"/> object.
-        /// </summary>
-        protected ChannelFrameBase(IChannelFrame<T> channelFrame)
-            : this(channelFrame.IDCode, channelFrame.Cells, channelFrame.Timestamp)
-        {
-        }
-
         #endregion
 
         #region [ Properties ]
@@ -116,7 +100,7 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        // Gets the simple (i.e., object) reference to the cell collection to satisfy IChannelFrame.Cells
+        // Gets the simple object reference to the cell collection to satisfy IChannelFrame.Cells
         object IChannelFrame.Cells
         {
             get
@@ -295,33 +279,12 @@ namespace PCS.PhasorProtocols
                 int index = 0;
 
                 // Copy in base image
-                Common.CopyImage(base.BinaryImage, buffer, ref index, base.BinaryLength);
+                base.BinaryImage.CopyImage(buffer, ref index, base.BinaryLength);
 
                 // Add check sum
                 AppendChecksum(buffer, index);
 
                 return buffer;
-            }
-        }
-
-        /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
-        /// </summary>
-        public override Dictionary<string, string> Attributes
-        {
-            get
-            {
-                Dictionary<string, string> baseAttributes = base.Attributes;
-
-                baseAttributes.Add("Total Cells", Cells.Count.ToString());
-                baseAttributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
-                baseAttributes.Add("ID Code", IDCode.ToString());
-                baseAttributes.Add("Is Partial Frame", IsPartial.ToString());
-                baseAttributes.Add("Published", Published.ToString());
-                baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
-                baseAttributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-
-                return baseAttributes;
             }
         }
 
@@ -353,6 +316,27 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelFrameBase{T}"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Total Cells", Cells.Count.ToString());
+                baseAttributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
+                baseAttributes.Add("ID Code", IDCode.ToString());
+                baseAttributes.Add("Is Partial Frame", IsPartial.ToString());
+                baseAttributes.Add("Published", Published.ToString());
+                baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
+                baseAttributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
+                return baseAttributes;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -367,6 +351,7 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// This method is overriden to validate the checksum in the <see cref="ChannelFrameBase{T}"/>.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">Invalid binary image detected - check sum did not match.</exception>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             // We override normal binary image parsing to validate frame checksum
@@ -374,6 +359,7 @@ namespace PCS.PhasorProtocols
                 throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
 
             m_parsedBinaryLength = State.ParsedBinaryLength;
+
             return base.Initialize(binaryImage, startIndex, length);
         }
 
@@ -389,11 +375,15 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
+            IChannelFrameParsingState<T> state = State;
+            T cell;
+
             // Parse all frame cells
-            for (int x = 0; x <= State.CellCount - 1; x++)
+            for (int x = 0; x < state.CellCount; x++)
             {
-                m_cells.Add(State.CreateNewCellFunction(this, State, x, binaryImage, startIndex));
-                startIndex += m_cells[x].BinaryLength;
+                cell = state.CreateNewCell(this, state, x, binaryImage, startIndex);
+                m_cells.Add(cell);
+                startIndex += cell.BinaryLength;
             }
 
             return BodyLength;
@@ -437,13 +427,21 @@ namespace PCS.PhasorProtocols
         /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
         /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
         /// <remarks>
-        /// The default checksum calculation is a CRC-CCITT, override as needed per particular protocol.
+        /// Override with needed checksum calculation for particular protocol.
+        /// <example>
+        /// This example provides a CRC-CCITT checksum:
+        /// <code>
+        /// using PCS.IO.Checksums;
+        /// 
+        /// protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        /// {
+        ///     // Return calculated CRC-CCITT over given buffer...
+        ///     return buffer.CrcCCITTChecksum(offset, length);
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
-        protected virtual ushort CalculateChecksum(byte[] buffer, int offset, int length)
-        {
-            // We implement CRC-CCITT as the default checksum, but each protocol can override as necessary
-            return buffer.CrcCCITTChecksum(offset, length);
-        }
+        protected abstract ushort CalculateChecksum(byte[] buffer, int offset, int length);
 
         /// <summary>
         /// Compares the <see cref="Frame"/> with an <see cref="IFrame"/>.
