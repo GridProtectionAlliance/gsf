@@ -36,6 +36,68 @@ namespace PCS.Communication
     /// <remarks>
     /// Use <see cref="UdpClient"/> when the primary purpose is to receive data.
     /// </remarks>
+    /// <example>
+    /// This example shows how to use the <see cref="UdpClient"/> component:
+    /// <code>
+    /// using System;
+    /// using PCS.Communication;
+    /// using PCS.Security.Cryptography;
+    /// using PCS.IO.Compression;
+    /// 
+    /// class Program
+    /// {
+    ///     static UdpClient m_client;
+    /// 
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Initialize the server.
+    ///         m_client = new UdpClient("Server=localhost:8888; Port=8989");
+    ///         m_client.Handshake = false;
+    ///         m_client.ReceiveTimeout = -1;
+    ///         m_client.Encryption = CipherStrength.None;
+    ///         m_client.Compression = CompressionStrength.NoCompression;
+    ///         m_client.SecureSession = false;
+    ///         // Register event handlers.
+    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
+    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
+    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
+    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         // Start the server.
+    ///         m_client.ConnectAsync();
+    /// 
+    ///         // Transmit user input to the server.
+    ///         string input;
+    ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
+    ///         {
+    ///             m_client.Send(input);
+    ///         }
+    /// 
+    ///         // Disconnect the client on shutdown.
+    ///         m_client.Disconnect();
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client is connecting to server.");
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client connected to server.");
+    ///     }
+    /// 
+    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
+    ///     {
+    ///         Console.WriteLine("Client disconnected from server.");
+    ///     }
+    /// 
+    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+    ///     {
+    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class UdpClient : ClientBase
     {
         #region [ Members ]
@@ -131,7 +193,7 @@ namespace PCS.Communication
         /// <summary>
         /// Connects the <see cref="UdpClient"/> to the server asynchronously.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="UdpClient"/> when it is connected.</exception>
+        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="UdpClient"/> when it is not disconnected.</exception>
         public override void ConnectAsync()
         {
             if (CurrentState == ClientState.Disconnected)
@@ -147,6 +209,7 @@ namespace PCS.Communication
                 // Create client socket to establish presence.
                 if (m_connectData.ContainsKey("server"))
                 {
+                    // Client has a server endpoint specified.
                     string[] parts = m_connectData["server"].Split(':');
                     if (parts.Length == 2)
                     {
@@ -154,7 +217,7 @@ namespace PCS.Communication
                     }
                     else
                     {
-                        throw new FormatException("Format of Server property in ConnectionString is incorrect. Example: Server=udpserver:8888.");
+                        throw new FormatException(string.Format("Server property in ConnectionString is invalid. Example: {0}.", DefaultConnectionString));
                     }
                 }
                 else
@@ -162,6 +225,7 @@ namespace PCS.Communication
                     if (Handshake)
                         throw new InvalidOperationException("Handshake requires Server property in the ConnectionString.");
 
+                    // Create a random server endpoint since one is not specified.
                     m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
                 }
                 m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
@@ -206,7 +270,7 @@ namespace PCS.Communication
         /// Validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">Connection string to be validated.</param>
-        /// <exception cref="ArgumentException">Port property is missing.</exception>
+        /// <exception cref="FormatException">Port property is missing.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
         {
@@ -222,7 +286,7 @@ namespace PCS.Communication
                 m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["remoteport"];
 
             if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
+                throw new FormatException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
 
             if (!Transport.IsPortNumberValid(m_connectData["port"]))
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
@@ -280,6 +344,9 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Initiate method for asynchronous receive operation of handshake data.
+        /// </summary>
         private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
         {
             // Receive data asynchronously with a timeout.
@@ -294,6 +361,9 @@ namespace PCS.Communication
                                                               worker));
         }
 
+        /// <summary>
+        /// Callback method for asynchronous receive operation of handshake data.
+        /// </summary>
         private void ReceiveHandshakeAsyncCallback(IAsyncResult asyncResult)
         {
             TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
@@ -342,6 +412,9 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Initiate method for asynchronous receive operation of payload data.
+        /// </summary>
         private void ReceivePayloadAsync(TransportProvider<Socket> worker)
         {
             if (ReceiveTimeout == -1)
@@ -370,6 +443,9 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Callback method for asynchronous receive operation of payload data.
+        /// </summary>
         private void ReceivePayloadAsyncCallback(IAsyncResult asyncResult)
         {
             TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
@@ -395,16 +471,18 @@ namespace PCS.Communication
                     OnReceiveDataComplete(udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
                     ReceivePayloadAsync(udpClient);
                 }
-                catch (ObjectDisposedException)
+                catch (ObjectDisposedException ex)
                 {
                     // Terminate connection when client is disposed.
+                    OnReceiveDataException(ex);
                     TerminateConnection(udpClient, true);
                 }
-                catch (SocketException)
+                catch (SocketException ex)
                 {
                     // Terminate the connection when a socket exception is encountered. The most likely socket exception that 
                     // could be encountered is the SocketError.ConnectionReset when Handshake is turned on and the endpoint 
                     // is not listening for data.
+                    OnReceiveDataException(ex);
                     TerminateConnection(udpClient, true);
                 }
                 catch (Exception ex)
@@ -412,8 +490,8 @@ namespace PCS.Communication
                     try
                     {
                         // For any other exception, notify and resume receive.
-                        ReceivePayloadAsync(udpClient);
                         OnReceiveDataException(ex);
+                        ReceivePayloadAsync(udpClient);
                     }
                     catch
                     {
@@ -424,11 +502,17 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Delegate that gets called to verify client disconnect when <see cref="ClientBase.Handshake"/> is turned off.
+        /// </summary>
         private bool NoGoodbyeCheck(TransportProvider<Socket> client)
         {
             return false;
         }
 
+        /// <summary>
+        /// Delegate that gets called to verify client disconnect when <see cref="ClientBase.Handshake"/> is turned on.
+        /// </summary>
         private bool DoGoodbyeCheck(TransportProvider<Socket> client)
         {
             // Process data received in the buffer.
