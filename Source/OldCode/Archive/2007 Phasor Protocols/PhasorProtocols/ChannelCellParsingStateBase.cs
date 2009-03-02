@@ -1,43 +1,41 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  ChannelCellParsingStateBase.vb - Channel frame cell parsing state base class
+//  ChannelCellParsingStateBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  3/7/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  03/07/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 namespace PCS.PhasorProtocols
 {
-    /// <summary>This class represents the common implementation of the protocol independent parsing state of any kind of data cell.</summary>
+    /// <summary>
+    /// Represents the protocol independent common implementation of the parsing state used by any <see cref="IChannelCell"/>.
+    /// </summary>
     public abstract class ChannelCellParsingStateBase : ChannelParsingStateBase, IChannelCellParsingState
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private int m_phasorCount;
         private int m_analogCount;
         private int m_digitalCount;
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the number of phasor elements associated with the <see cref="IChannelCell"/> being parsed.
+        /// </summary>
         public virtual int PhasorCount
         {
             get
@@ -50,6 +48,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets the number of analog elements associated with the <see cref="IChannelCell"/> being parsed.
+        /// </summary>
         public virtual int AnalogCount
         {
             get
@@ -62,6 +63,9 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        /// <summary>
+        /// Gets or sets the number of digital elements associated with the <see cref="IChannelCell"/> being parsed.
+        /// </summary>
         public virtual int DigitalCount
         {
             get
@@ -74,5 +78,6 @@ namespace PCS.PhasorProtocols
             }
         }
 
+        #endregion
     }
 }
