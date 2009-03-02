@@ -93,6 +93,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="ChannelCellBase"/>.
+        /// </summary>
+        new public virtual IChannelCellParsingState State
+        {
+            get
+            {
+                return base.State as IChannelCellParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the numeric ID code for this <see cref="ChannelCellBase"/>.
         /// </summary>
         /// <remarks>

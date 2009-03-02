@@ -36,6 +36,11 @@ namespace PCS.PhasorProtocols
         IChannelFrame Parent { get; set; }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="ChannelCellBase"/>.
+        /// </summary>
+        new IChannelCellParsingState State { get; set; }
+
+        /// <summary>
         /// Gets the numeric ID code for this <see cref="IChannelCell"/>.
         /// </summary>
         /// <remarks>
