@@ -37,7 +37,7 @@ namespace PCS.Communication
     /// Represents a TCP-based communication server.
     /// </summary>
     /// <example>
-    /// This example shows how to use <see cref="TcpServer"/> component:
+    /// This example shows how to use the <see cref="TcpServer"/> component:
     /// <code>
     /// using System;
     /// using PCS.Communication;
@@ -159,7 +159,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the payload boundaries are to be preserved during transmission.
         /// </summary>
-        /// <remarks>This property must be set to True if either <see cref="ServerBase.Encryption"/> or <see cref="ServerBase.Compression"/> is enabled.</remarks>
+        /// <remarks><see cref="PayloadAware"/> feature must be enabled if either <see cref="ServerBase.Encryption"/> or <see cref="ServerBase.Compression"/> is enabled.</remarks>
         [Category("Data"),
         DefaultValue(DefaultPayloadAware),
         Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
@@ -430,7 +430,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Initiate method for receving handshake data.
+        /// Initiate method for asynchronous receive operation of handshake data.
         /// </summary>
         private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
         {
@@ -534,7 +534,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Initiate method for receiving payload data.
+        /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
         private void ReceivePayloadAsync(TransportProvider<Socket> worker)
         {
@@ -558,7 +558,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Initiate method for receiving payload data in "payload-aware" mode.
+        /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
         private void ReceivePayloadAwareAsync(TransportProvider<Socket> worker)
         {
@@ -669,7 +669,7 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Initiate method for receiving payload data in "payload-unaware" mode.
+        /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
         private void ReceivePayloadUnawareAsync(TransportProvider<Socket> worker)
         {
