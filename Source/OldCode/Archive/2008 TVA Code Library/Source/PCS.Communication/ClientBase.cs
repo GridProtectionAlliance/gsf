@@ -884,13 +884,14 @@ namespace PCS.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["ConnectionString", true].Update(m_connectionString, "Data required by the client to connect to the server.");
-                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize, "Maximum number of bytes that can be received at a time by the client from the server.");
-                settings["ReceiveTimeout", true].Update(m_receiveTimeout, "Time to wait in milliseconds for data to be received from the server before timing out.");
-                settings["MaximumConnectionAttempts", true].Update(m_maxConnectionAttempts, "Maximum number of times the client will attempt to connect to the server.");
+                settings["MaxConnectionAttempts", true].Update(m_maxConnectionAttempts, "Maximum number of times the client will attempt to connect to the server.");
+                settings["Handshake", true].Update(m_handshake, "True if the client will do a handshake with the server after the connection has been established; otherwise False.");
+                settings["HandshakeTimeout", true].Update(m_handshakeTimeout, "Number of milliseconds the client will wait for the server's response to the Handshake.");
+                settings["HandshakePassphrase", true].Update(m_handshakePassphrase, "Passpharse that the client will provided to the server for authentication during the Handshake process.");
                 settings["SecureSession", true].Update(m_secureSession, "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False.");
-                settings["Handshake", true].Update(m_handshake, "True if the client will do a handshake with the server; otherwise False.");
-                settings["HandshakePassphrase", true].Update(m_handshakePassphrase, "Passpharse that will provided to the server for authentication during the handshake process.");
-                settings["Encryption", true].Update(m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for encrypting the data exchanged between the client and server.");
+                settings["ReceiveTimeout", true].Update(m_receiveTimeout, "Number of milliseconds the client will wait for data to be received from the server.");
+                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize, "Size of the buffer used by the client for receiving data from the server.");
+                settings["Encryption", true].Update(m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the client and server.");
                 settings["Compression", true].Update(m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the client and server.");
                 config.Save();
             }
@@ -911,8 +912,9 @@ namespace PCS.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 ConnectionString = settings["ConnectionString", true].ValueAs(m_connectionString);
-                MaxConnectionAttempts = settings["MaximumConnectionAttempts", true].ValueAs(m_maxConnectionAttempts);
+                MaxConnectionAttempts = settings["MaxConnectionAttempts", true].ValueAs(m_maxConnectionAttempts);
                 Handshake = settings["Handshake", true].ValueAs(m_handshake);
+                HandshakeTimeout = settings["HandshakeTimeout", true].ValueAs(m_handshakeTimeout);
                 HandshakePassphrase = settings["HandshakePassphrase", true].ValueAs(m_handshakePassphrase);
                 ReceiveTimeout = settings["ReceiveTimeout", true].ValueAs(m_receiveTimeout);
                 ReceiveBufferSize = settings["ReceiveBufferSize", true].ValueAs(m_receiveBufferSize);

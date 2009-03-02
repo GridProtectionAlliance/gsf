@@ -945,7 +945,7 @@ namespace PCS.Communication
                 settings["HandshakeTimeout", true].Update(m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
                 settings["HandshakePassphrase", true].Update(m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the Handshake process.");
                 settings["SecureSession", true].Update(m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
-                settings["ReceiveTimeout", true].Update(m_receiveTimeout, "Number of milliseconds the server will wait for receiving data from the clients.");
+                settings["ReceiveTimeout", true].Update(m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
                 settings["ReceiveBufferSize", true].Update(m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
                 settings["Encryption", true].Update(m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
                 settings["Compression", true].Update(m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
