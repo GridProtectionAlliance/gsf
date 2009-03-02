@@ -67,7 +67,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return PhasorProtocols.FundamentalFrameType.DataFrame;
+                return FundamentalFrameType.DataFrame;
             }
         }
 
