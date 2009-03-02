@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the common header for all IEEE 1344 frames of data.
     /// </summary>
-    [CLSCompliant(false), Serializable()]
+    [Serializable()]
     public class CommonFrameHeader : ICommonHeader<FrameType>, IChannelFrame
     {
         #region [ Members ]
@@ -39,7 +39,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Fields
         private FrameImageCollector m_frameImages;
         private ulong m_idCode;
-        private long m_ticks;
+        private Ticks m_timestamp;
         private short m_sampleCount;
         private short m_statusFlags;
         private IChannelParsingState m_state;
@@ -70,10 +70,10 @@ namespace PCS.PhasorProtocols.Ieee1344
 
             if (TypeID == Ieee1344.FrameType.DataFrame && (configurationFrame != null))
                 // Data frames have subsecond time information
-                Ticks = (new NtpTimeTag((double)secondOfCentury + (double)SampleCount / System.Math.Floor((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate)).ToDateTime().Ticks;
+                Timestamp = (new NtpTimeTag((double)secondOfCentury + (double)SampleCount / System.Math.Floor((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate)).ToDateTime().Ticks;
             else
                 // For other frames, the best timestamp you can get is down to the whole second
-                Ticks = (new NtpTimeTag(secondOfCentury)).ToDateTime().Ticks;
+                Timestamp = (new NtpTimeTag(secondOfCentury)).ToDateTime().Ticks;
         }
 
         /// <summary>
@@ -92,18 +92,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="Type"/> of this class, representing the final derived type of the root <see cref="IChannel"/> interface.
-        /// </summary>
-        public Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the 64-bit ID code of this <see cref="IChannelFrame"/>.
+        /// Gets or sets the 64-bit ID code of this <see cref="CommonFrameHeader"/>.
         /// </summary>
         public ulong IDCode
         {
@@ -214,7 +203,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
         
         /// <summary>
-        /// Gets or sets the parsing state for the <see cref="IChannel"/> object.
+        /// Gets or sets the parsing state for the <see cref="CommonFrameHeader"/> object.
         /// </summary>
         public IChannelParsingState State
         {
@@ -326,15 +315,15 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public long Ticks
+        public Ticks Timestamp
         {
             get
             {
-                return m_ticks;
+                return m_timestamp;
             }
             set
             {
-                m_ticks = value;
+                m_timestamp = value;
             }
         }
 
@@ -479,17 +468,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Gets the DateTime representation of ticks of this frame.
-        /// </summary>
-        public DateTime Timestamp
-        {
-            get
-            {
-                return new DateTime(m_ticks);
-            }
-        }
-
-        /// <summary>
         /// Returns a value indicating whether this instance is equal to a specified <see cref="IFrame"/>.
         /// </summary>
         /// <param name="other">An <see cref="IFrame"/> value to compare to this instance.</param>
@@ -513,7 +491,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </returns>
         public int CompareTo(IFrame other)
         {
-            return m_ticks.CompareTo(other.Ticks);
+            return m_timestamp.CompareTo(other.Timestamp);
         }
 
         /// <summary>
@@ -569,7 +547,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="IChannel"/> object.
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommonFrameHeader"/> object.
         /// </summary>
         public Dictionary<string, string> Attributes
         {
@@ -581,14 +559,14 @@ namespace PCS.PhasorProtocols.Ieee1344
                 else
                     m_attributes.Clear();
 
-                m_attributes.Add("Derived Type", DerivedType.Name);
+                m_attributes.Add("Derived Type", this.GetType().Name);
                 m_attributes.Add("Binary Length", BinaryLength.ToString());
                 m_attributes.Add("Total Cells", "0");
                 m_attributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
                 m_attributes.Add("ID Code", IDCode.ToString());
                 m_attributes.Add("Is Partial Frame", IsPartial.ToString());
                 m_attributes.Add("Published", Published.ToString());
-                m_attributes.Add("Ticks", Ticks.ToString());
+                m_attributes.Add("Ticks", ((long)Timestamp).ToString());
                 m_attributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 m_attributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
                 m_attributes.Add("Frame Length", FrameLength.ToString());
