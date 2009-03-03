@@ -104,11 +104,16 @@ namespace PCS.PhasorProtocols.Ieee1344
 
                 if (definition != null)
                 {
+                    int startIndex = 0;
+
                     if (definition.FrequencyIsAvailable)
-                        EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, 0);
+                    {
+                        EndianOrder.BigEndian.CopyBytes(UnscaledFrequency, buffer, startIndex);
+                        startIndex += 2;
+                    }
 
                     if (definition.DfDtIsAvailable)
-                        EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, 2);
+                        EndianOrder.BigEndian.CopyBytes(UnscaledDfDt, buffer, startIndex);
                 }
 
                 return buffer;
