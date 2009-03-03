@@ -69,7 +69,7 @@ namespace PCS.Communication
         /// <summary>
         /// Determines whether or not the <paramref name="buffer"/> contains the header information of a "Payload-Aware" transmission.
         /// </summary>
-        /// <param name="buffer">The buffer to be checked at index 0.</param>
+        /// <param name="buffer">The buffer to be checked at index zero.</param>
         /// <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
         /// <returns>true if the buffer contains "Payload-Aware" transmission header; otherwise false.</returns>
         public static bool HasHeader(byte[] buffer, byte[] marker)
@@ -86,7 +86,7 @@ namespace PCS.Communication
         /// <summary>
         /// Determines the length of a payload in a "Payload-Aware" transmission from the payload header information.
         /// </summary>
-        /// <param name="buffer">The buffer containg payload header information starting at index 0.</param>
+        /// <param name="buffer">The buffer containg payload header information starting at index zero.</param>
         /// <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
         /// <returns>Length of the payload.</returns>
         public static int ExtractLength(byte[] buffer, byte[] marker)
@@ -222,97 +222,3 @@ namespace PCS.Communication
         }
     }
 }
-
-///// <summary>
-///// Size of the header that is prepended to the payload. This header has information about the payload.
-///// </summary>
-//public const int HeaderSize = 8;
-
-///// <summary>
-///// A sequence of bytes that will mark the beginning of a payload.
-///// </summary>
-//public static byte[] BeginMarker = { 0xAA, 0xBB, 0xCC, 0xDD };
-
-//public static byte[] AddHeader(byte[] payload)
-//{
-//    // The resulting buffer will be 8 bytes bigger than the payload.
-
-//    // Resulting buffer = 4 bytes for payload marker + 4 bytes for the payload size + The payload
-//    byte[] result = new byte[payload.Length + HeaderSize];
-
-//    // First, copy the the payload marker to the buffer.
-//    Buffer.BlockCopy(BeginMarker, 0, result, 0, 4);
-
-//    // Then, copy the payload's size to the buffer after the payload marker.
-//    Buffer.BlockCopy(BitConverter.GetBytes(payload.Length), 0, result, 4, 4);
-
-//    // At last, copy the payload after the payload marker and payload size.
-//    Buffer.BlockCopy(payload, 0, result, 8, payload.Length);
-
-//    return result;
-//}
-
-//public static bool HasBeginMarker(byte[] data)
-//{
-//    for (int i = 0; i <= BeginMarker.Length - 1; i++)
-//    {
-//        if (data[i] != BeginMarker[i])
-//            return false;
-//    }
-
-//    return true;
-//}
-
-//public static int GetSize(byte[] data)
-//{
-//    if (data.Length >= HeaderSize && HasBeginMarker(data))
-//    {
-//        // We have a buffer that's at least as big as the payload header and has the payload marker.
-//        return BitConverter.ToInt32(data, BeginMarker.Length);
-//    }
-//    else
-//    {
-//        return -1;
-//    }
-//}
-
-//public static byte[] Retrieve(byte[] data)
-//{
-//    if (data.Length > HeaderSize && HasBeginMarker(data))
-//    {
-//        int payloadSize = GetSize(data);
-
-//        if (payloadSize > (data.Length - HeaderSize))
-//            payloadSize = data.Length - HeaderSize;
-
-//        return data.BlockCopy(HeaderSize, payloadSize);
-//    }
-//    else
-//    {
-//        return new byte[] { };
-//    }
-//}
-
-//public static byte[] CompressData(byte[] data, int offset, int length, CompressionStrength compressionLevel)
-//{
-//    // Using streaming compression since needed uncompressed size will be serialized into destination stream
-//    return new MemoryStream(data, offset, length).Compress(compressionLevel).ToArray();
-//}
-
-//public static byte[] DecompressData(byte[] data, CompressionStrength compressionLevel)
-//{
-//    // Using streaming decompression since needed uncompressed size was serialized into source stream
-//    return new MemoryStream(data).Decompress().ToArray();
-//}
-
-//public static byte[] EncryptData(byte[] data, int offset, int length, string encryptionKey, CipherStrength encryptionLevel)
-//{
-//    byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
-//    return data.Encrypt(offset, length, key, key, encryptionLevel);
-//}
-
-//public static byte[] DecryptData(byte[] data, int offset, int length, string encryptionKey, CipherStrength encryptionLevel)
-//{
-//    byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
-//    return data.Decrypt(key, key, encryptionLevel);
-//}
