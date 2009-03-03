@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {

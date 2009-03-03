@@ -44,7 +44,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         public DataCellCollection()
             : base(0, true)
         {
-            // IEEE 1344 only supports a single PMU - so there should only be one cell
+            // IEEE 1344 only supports a single PMU - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
         }
 
         #endregion
