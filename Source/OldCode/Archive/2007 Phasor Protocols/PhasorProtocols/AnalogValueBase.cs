@@ -60,6 +60,9 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="AnalogValueBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="AnalogValueBase"/>.</param>
+        /// <param name="analogDefinition">The <see cref="IAnalogDefinition"/> associated with this <see cref="AnalogValueBase"/>.</param>
+        /// <param name="value">The floating point value that represents this <see cref="AnalogValueBase"/>.</param>
         protected AnalogValueBase(IDataCell parent, IAnalogDefinition analogDefinition, double value)
             : base(parent, analogDefinition)
         {
@@ -216,10 +219,8 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IDataCell will validate that it has
-            // enough length to parse entire cell well in advance so that low level
-            // parsing routines do not have to re-validate that enough length is
-            // available to parse needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
             {

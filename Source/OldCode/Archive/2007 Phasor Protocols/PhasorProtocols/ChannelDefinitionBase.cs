@@ -66,6 +66,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ChannelDefinitionBase"/> from specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase"/>.</param>
+        /// <param name="index">The index of this <see cref="ChannelDefinitionBase"/>.</param>
+        /// <param name="label">The label of this <see cref="ChannelDefinitionBase"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="ChannelDefinitionBase"/>.</param>
+        /// <param name="offset">The offset of this <see cref="ChannelDefinitionBase"/>.</param>
         protected ChannelDefinitionBase(IConfigurationCell parent, int index, string label, uint scale, double offset)
         {
             m_parent = parent;
@@ -80,7 +85,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets or sets the <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         public virtual IConfigurationCell Parent
         {
@@ -303,10 +308,8 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IConfigurationCell will validate that it has
-            // enough length to parse entire cell well in advance so that low level parsing
-            // routines do not have to re-validate that enough length is available to parse
-            // needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             Label = Encoding.ASCII.GetString(binaryImage, startIndex, MaximumLabelLength);
 

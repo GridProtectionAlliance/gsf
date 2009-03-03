@@ -45,13 +45,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelCellBase"/>.
-        /// </summary>
-        protected ChannelCellBase()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ChannelCellBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -67,6 +60,9 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ChannelCellBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">A reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.</param>
+        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ChannelCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
+        /// <param name="idCode">The numeric ID code for this <see cref="ChannelCellBase"/>.</param>
         protected ChannelCellBase(IChannelFrame parent, bool alignOnDWordBoundary, ushort idCode)
         {
             m_parent = parent;
@@ -79,7 +75,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.
+        /// Gets or sets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.
         /// </summary>
         public virtual IChannelFrame Parent
         {
@@ -109,7 +105,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the numeric ID code for this <see cref="ChannelCellBase"/>.
+        /// Gets or sets the numeric ID code for this <see cref="ChannelCellBase"/>.
         /// </summary>
         /// <remarks>
         /// Most phasor measurement devices define some kind of numeric identifier (e.g., a hardware identifier coded into the device ROM); this is the

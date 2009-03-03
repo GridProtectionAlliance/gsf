@@ -29,13 +29,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="HeaderCellCollection"/>.
-        /// </summary>
-        protected HeaderCellCollection()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="HeaderCellCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

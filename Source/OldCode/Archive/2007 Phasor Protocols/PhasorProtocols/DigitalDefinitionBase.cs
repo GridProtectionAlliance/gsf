@@ -34,6 +34,8 @@ namespace PCS.PhasorProtocols
         /// </summary>
         protected DigitalDefinitionBase()
         {
+            ScalingValue = 1;
+            Offset = 0.0D;
         }
 
         /// <summary>
@@ -50,7 +52,7 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="DigitalDefinitionBase"/> using the specified parameters.
         /// </summary>
         protected DigitalDefinitionBase(IConfigurationCell parent, int index, string label)
-            : base(parent, index, label, 1, 0)
+            : base(parent, index, label, 1, 0.0D)
         {
         }
 

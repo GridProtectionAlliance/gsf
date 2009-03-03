@@ -45,13 +45,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationCellBase"/>.
-        /// </summary>
-        protected ConfigurationCellBase()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ConfigurationCellBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -73,6 +66,13 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ConfigurationCellBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCellBase"/>.</param>
+        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ConfigurationCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
+        /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCellBase"/>.</param>
+        /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCellBase"/>.</param>
+        /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorDefinitions"/> collection.</param>
+        /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogDefinitions"/> collection.</param>
+        /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalDefinitions"/> collection.</param>
         protected ConfigurationCellBase(IConfigurationFrame parent, bool alignOnDWordBoundary, ushort idCode, LineFrequency nominalFrequency, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
             : base(parent, alignOnDWordBoundary, idCode)
         {
@@ -451,10 +451,8 @@ namespace PCS.PhasorProtocols
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IConfigurationFrame will validate ??? that it has
-            // enough length to parse entire cell well in advance so that low level parsing
-            // routines do not have to re-validate that enough length is available to parse
-            // needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             IConfigurationCellParsingState parsingState = State as IConfigurationCellParsingState;
             IPhasorDefinition phasorDefinition;

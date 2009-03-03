@@ -29,14 +29,13 @@ using PCS.Collections;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// This class defines the basic functionality for a protocol to parse a binary data stream and return the parsed data via events.
+    /// Represents a frame parser that defines the basic functionality for a protocol to parse a binary data stream and return the parsed data via events.
     /// </summary>
     /// <remarks>
     /// Frame parsers are implemented as a write-only streams so that data can come from any source.<br/>
     /// See <see cref="FrameImageParserBase{TFrameIdentifier, TCommonFrameHeader}"/> for more detail.
     /// </remarks>
     /// <typeparam name="TFrameIdentifier">Frame type identifier used to distinguish frames.</typeparam>
-    [CLSCompliant(false)]
     public abstract class FrameParserBase<TFrameIdentifier> : FrameImageParserBase<TFrameIdentifier, ISupportFrameImage<TFrameIdentifier>>, IFrameParser
     {
         #region [ Members ]

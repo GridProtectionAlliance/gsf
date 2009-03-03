@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using PCS;
 using PCS.Measurements;
@@ -23,9 +24,10 @@ using PCS.Measurements;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Represents an <see cref="IMeasurement"/> implementation for composite values of a given <see cref="IChannelValue{T}"/>.
+    /// Represents a <see cref="IMeasurement"/> implementation for composite values of a given <see cref="IChannelValue{T}"/>.
     /// </summary>
-    internal class ChannelValueMeasurement<T> : IMeasurement where T : IChannelDefinition
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    public class ChannelValueMeasurement<T> : IMeasurement where T : IChannelDefinition
     {
         #region [ Members ]
 
@@ -49,6 +51,8 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
+        /// <param name="parent">The reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.</param>
+        /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.CompositeValues"/> that this measurement derives its value from.</param>
         public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
         {
             m_parent = parent;

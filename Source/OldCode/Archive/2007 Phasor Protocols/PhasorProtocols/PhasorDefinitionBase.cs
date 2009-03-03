@@ -60,6 +60,13 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="PhasorDefinitionBase"/> using the specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinitionBase"/>.</param>
+        /// <param name="index">The index of this <see cref="PhasorDefinitionBase"/>.</param>
+        /// <param name="label">The label of this <see cref="PhasorDefinitionBase"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="PhasorDefinitionBase"/>.</param>
+        /// <param name="offset">The offset of this <see cref="PhasorDefinitionBase"/>.</param>
+        /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinitionBase"/>.</param>
+        /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
         protected PhasorDefinitionBase(IConfigurationCell parent, int index, string label, uint scale, double offset, PhasorType type, IPhasorDefinition voltageReference)
             : base(parent, index, label, scale, offset)
         {

@@ -73,6 +73,9 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ChannelFrameBase{T}"/> from the specified parameters.
         /// </summary>
+        /// <param name="idCode">The ID code of this <see cref="ChannelFrameBase{T}"/>.</param>
+        /// <param name="cells">The reference to the collection of cells for this <see cref="ChannelFrameBase{T}"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ChannelFrameBase{T}"/>.</param>
         protected ChannelFrameBase(ushort idCode, IChannelCellCollection<T> cells, Ticks timestamp)
         {
             m_idCode = idCode;
@@ -142,7 +145,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented in this <see cref="ChannelFrameBase{T}"/>.
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.

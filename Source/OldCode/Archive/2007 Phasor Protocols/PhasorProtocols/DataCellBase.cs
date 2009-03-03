@@ -53,13 +53,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DataCellBase"/>.
-        /// </summary>
-        protected DataCellBase()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="DataCellBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -79,7 +72,13 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DataCellBase"/> from the specified parameters.
         /// </summary>
-        protected DataCellBase(IDataFrame parent, bool alignOnDWordBoundary, IConfigurationCell configurationCell, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
+        /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCellBase"/>.</param>
+        /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCellBase"/>.</param>
+        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="DataCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
+        /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorValues"/> collection.</param>
+        /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogValues"/> collection.</param>
+        /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalValues"/> collection.</param>
+        protected DataCellBase(IDataFrame parent, IConfigurationCell configurationCell, bool alignOnDWordBoundary, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
             : base(parent, alignOnDWordBoundary, 0)
         {
             m_configurationCell = configurationCell;
@@ -101,7 +100,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets reference to parent <see cref="IDataFrame"/> of this <see cref="DataCellBase"/>.
+        /// Gets or sets the reference to parent <see cref="IDataFrame"/> of this <see cref="DataCellBase"/>.
         /// </summary>
         public virtual new IDataFrame Parent
         {
@@ -116,7 +115,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets <see cref="IConfigurationCell"/> associated with this <see cref="DataCellBase"/>.
+        /// Gets or sets the <see cref="IConfigurationCell"/> associated with this <see cref="DataCellBase"/>.
         /// </summary>
         public virtual IConfigurationCell ConfigurationCell
         {
@@ -389,10 +388,8 @@ namespace PCS.PhasorProtocols
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IDataFrame will validate ??? that it has
-            // enough length to parse entire cell well in advance so that low level parsing
-            // routines do not have to re-validate that enough length is available to parse
-            // needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             IDataCellParsingState parsingState = State as IDataCellParsingState;
             IPhasorValue phasorValue;

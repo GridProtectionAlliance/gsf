@@ -24,7 +24,7 @@ using PCS.Measurements;
 namespace PCS.PhasorProtocols
 {
     /// <summary>
-    /// Common constants and functions for phasor classes.
+    /// Common constants, functions and extensions for phasor classes.
     /// </summary>
     public static class Common
     {
@@ -76,9 +76,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Removes duplicate white space, control characters and null from a string.
         /// </summary>
+        /// <param name="value">Source <see cref="String"/> to validate.</param>
         /// <remarks>
         /// Strings reported from field devices can be full of inconsistencies, this function "cleans-up" the strings for visualization.
         /// </remarks>
+        /// <returns><paramref name="value"/> with duplicate white space, control characters and nulls removed.</returns>
         public static string GetValidLabel(this string value)
         {
             return value.RemoveNull().ReplaceControlCharacters().RemoveDuplicateWhiteSpace().Trim();
@@ -87,6 +89,8 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Returns display friendly protocol name.
         /// </summary>
+        /// <param name="protocol"><see cref="PhasorProtocol"/> to return display name for.</param>
+        /// <returns>Friendly protocol display name for specified phasor <paramref name="protocol"/>.</returns>
         public static string GetFormattedProtocolName(this PhasorProtocol protocol)
         {
             switch (protocol)

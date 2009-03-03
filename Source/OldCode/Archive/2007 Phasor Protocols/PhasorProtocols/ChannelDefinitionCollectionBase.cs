@@ -30,13 +30,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/>.
-        /// </summary>
-        protected ChannelDefinitionCollectionBase()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

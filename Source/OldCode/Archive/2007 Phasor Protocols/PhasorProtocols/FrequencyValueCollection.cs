@@ -33,13 +33,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="FrequencyValueCollection"/>.
-        /// </summary>
-        protected FrequencyValueCollection()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="FrequencyValueCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

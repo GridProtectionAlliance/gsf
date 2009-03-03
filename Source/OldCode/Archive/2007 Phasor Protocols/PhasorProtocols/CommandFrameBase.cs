@@ -52,6 +52,8 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="CommandFrameBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="cells">The reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrameBase"/>.</param>
+        /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.</param>
         protected CommandFrameBase(CommandCellCollection cells, DeviceCommand command)
             : base(0, cells, 0)
         {
@@ -85,7 +87,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.
+        /// Gets or sets the <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.
         /// </summary>
         public virtual DeviceCommand Command
         {

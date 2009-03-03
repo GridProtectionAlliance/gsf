@@ -61,18 +61,12 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ChannelValueBase{T}"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="ChannelValueBase{T}"/>.</param>
+        /// <param name="channelDefinition">The <see cref="IChannelDefinition"/> associated with this <see cref="ChannelValueBase{T}"/>.</param>
         protected ChannelValueBase(IDataCell parent, T channelDefinition)
         {
             m_parent = parent;
             m_definition = channelDefinition;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelValueBase{T}"/> copied from the specified <see cref="IChannelValue{T}"/> object.
-        /// </summary>
-        protected ChannelValueBase(IChannelValue<T> channelValue)
-            : this(channelValue.Parent, channelValue.Definition)
-        {
         }
 
         #endregion
@@ -80,7 +74,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="IDataCell"/> parent of this <see cref="ChannelValueBase{T}"/>.
+        /// Gets or sets the <see cref="IDataCell"/> parent of this <see cref="ChannelValueBase{T}"/>.
         /// </summary>
         public virtual IDataCell Parent
         {
@@ -95,7 +89,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the <see cref="IChannelDefinition"/> associated with this <see cref="ChannelValueBase{T}"/>.
+        /// Gets or sets the <see cref="IChannelDefinition"/> associated with this <see cref="ChannelValueBase{T}"/>.
         /// </summary>
         public virtual T Definition
         {
@@ -134,7 +128,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets boolean value that determines if none of the composite values of <see cref="ChannelValueBase{T}"/> have been assigned a value.
         /// </summary>
-        /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
+        /// <returns><c>true</c>, if no composite values have been assigned a value; otherwise, <c>false</c>.</returns>
         public abstract bool IsEmpty { get; }
 
         /// <summary>

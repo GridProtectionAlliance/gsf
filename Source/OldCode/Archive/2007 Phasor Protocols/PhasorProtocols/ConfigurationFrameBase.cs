@@ -52,6 +52,10 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ConfigurationFrameBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrameBase"/>.</param>
+        /// <param name="cells">The reference to the collection of cells for this <see cref="ConfigurationFrameBase"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrameBase"/>.</param>
+        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrameBase"/>.</param>
         protected ConfigurationFrameBase(ushort idCode, ConfigurationCellCollection cells, Ticks timestamp, short frameRate)
             : base(idCode, cells, timestamp)
         {

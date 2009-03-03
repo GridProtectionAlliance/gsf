@@ -109,6 +109,63 @@
     <Compile Include="ConnectionParametersBase.cs" />
     <Compile Include="FrameParserBase.cs" />
     <Compile Include="IConnectionParameters.cs" />
+    <Compile Include="Ieee1344\CommandFrame.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\Common.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\CommonFrameHeader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\ConfigurationCell.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\ConfigurationCellCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\ConfigurationFrame.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\DataCell.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\DataCellCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\DataFrame.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\DigitalDefinition.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\DigitalValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\Enumerations.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\FrameImageCollector.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\FrameParser.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\FrequencyDefinition.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\FrequencyValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\HeaderFrame.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\PhasorDefinition.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Ieee1344\PhasorValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="IFrameParser.cs" />
     <Compile Include="Enumerations.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />

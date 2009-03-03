@@ -50,6 +50,9 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DataFrameBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="cells">The reference to the collection of cells for this <see cref="DataFrameBase"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrameBase"/>.</param>
+        /// <param name="configurationFrame">The <see cref="IConfigurationFrame"/> associated with this <see cref="DataFrameBase"/>.</param>
         protected DataFrameBase(DataCellCollection cells, Ticks timestamp, IConfigurationFrame configurationFrame)
             : base(0, cells, timestamp)
         {

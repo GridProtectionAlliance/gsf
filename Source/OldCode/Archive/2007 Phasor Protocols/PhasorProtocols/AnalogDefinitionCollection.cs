@@ -29,13 +29,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="AnalogDefinitionCollection"/>.
-        /// </summary>
-        protected AnalogDefinitionCollection()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="AnalogDefinitionCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

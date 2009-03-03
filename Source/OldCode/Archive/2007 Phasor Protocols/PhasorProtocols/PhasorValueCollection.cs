@@ -29,13 +29,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="PhasorValueCollection"/>.
-        /// </summary>
-        protected PhasorValueCollection()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="PhasorValueCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

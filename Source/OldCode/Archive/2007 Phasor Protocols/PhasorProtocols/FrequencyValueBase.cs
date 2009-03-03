@@ -67,6 +67,10 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrequencyValueBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValueBase"/> over time.</param>
         protected FrequencyValueBase(IDataCell parent, IFrequencyDefinition frequencyDefinition, double frequency, double dfdt)
             : base(parent, frequencyDefinition)
         {
@@ -270,10 +274,8 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IDataCell will validate that it has
-            // enough length to parse entire cell well in advance so that low level
-            // parsing routines do not have to re-validate that enough length is
-            // available to parse needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
             {

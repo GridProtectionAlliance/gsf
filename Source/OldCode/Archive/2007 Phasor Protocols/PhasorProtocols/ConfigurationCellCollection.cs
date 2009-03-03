@@ -31,13 +31,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationCellCollection"/>.
-        /// </summary>
-        protected ConfigurationCellCollection()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ConfigurationCellCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

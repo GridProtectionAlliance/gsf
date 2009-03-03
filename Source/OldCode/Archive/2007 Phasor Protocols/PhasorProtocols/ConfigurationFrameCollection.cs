@@ -29,13 +29,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrameCollection"/>.
-        /// </summary>
-        protected ConfigurationFrameCollection()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ConfigurationFrameCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

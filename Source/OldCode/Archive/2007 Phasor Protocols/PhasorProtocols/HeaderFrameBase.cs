@@ -43,6 +43,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="HeaderFrameBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="cells">The reference to the <see cref="HeaderCellCollection"/> for this <see cref="HeaderFrameBase"/>.</param>
         protected HeaderFrameBase(HeaderCellCollection cells)
             : base(0, cells, 0)
         {

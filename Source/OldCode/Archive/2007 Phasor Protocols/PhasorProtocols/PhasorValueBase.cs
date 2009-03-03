@@ -61,6 +61,10 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="PhasorValueBase"/> from specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValueBase"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValueBase"/>.</param>
+        /// <param name="real">The real value of this <see cref="PhasorValueBase"/>.</param>
+        /// <param name="imaginary">The imaginary value of this <see cref="PhasorValueBase"/>.</param>
         protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary)
             : base(parent, phasorDefinition)
         {
@@ -71,6 +75,10 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="PhasorValueBase"/> from specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValueBase"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValueBase"/>.</param>
+        /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.</param>
+        /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValueBase"/>.</param>
         protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, Angle angle, double magnitude)
             : base(parent, phasorDefinition)
         {
@@ -105,7 +113,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
+        /// Gets or sets the <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
         /// </summary>
         public virtual Angle Angle
         {
@@ -217,7 +225,6 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets boolean value that determines if none of the composite values of <see cref="PhasorValueBase"/> have been assigned a value.
         /// </summary>
-        /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
         public override bool IsEmpty
         {
             get
@@ -341,10 +348,8 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IDataCell will validate that it has
-            // enough length to parse entire cell well in advance so that low level
-            // parsing routines do not have to re-validate that enough length is
-            // available to parse needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
             {
@@ -408,6 +413,7 @@ namespace PCS.PhasorProtocols
         /// <param name="voltage">Voltage phasor.</param>
         /// <param name="current">Current phasor.</param>
         /// <exception cref="ArgumentNullException"><paramref name="voltage"/> and <paramref name="current"/> must not be null.</exception>
+        /// <returns>Calculated watts from imaginary and real components of specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
         public static Power CalculatePower(IPhasorValue voltage, IPhasorValue current)
         {
             if (voltage == null)
@@ -432,6 +438,7 @@ namespace PCS.PhasorProtocols
         /// the <see cref="Power"/> units class is used to express the return value leaving the consumer to properly apply the needed
         /// engineering units for display purposes.
         /// </remarks>
+        /// <returns>Calculated vars (total volt-amperes of reactive power) from imaginary and real components of specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
         public static Power CalculateVars(IPhasorValue voltage, IPhasorValue current)
         {
             if (voltage == null)

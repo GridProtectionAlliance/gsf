@@ -60,6 +60,9 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DigitalValueBase"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValueBase"/>.</param>
+        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValueBase"/>.</param>
+        /// <param name="value">The 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.</param>
         protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
             : base(parent, digitalDefinition)
         {
@@ -167,13 +170,12 @@ namespace PCS.PhasorProtocols
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IDataCell will validate that it has
-            // enough length to parse entire cell well in advance so that low level
-            // parsing routines do not have to re-validate that enough length is
-            // available to parse needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
             m_valueAssigned = true;
+
             return 2;
         }
 

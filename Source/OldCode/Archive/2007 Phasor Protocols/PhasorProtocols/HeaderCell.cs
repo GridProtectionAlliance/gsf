@@ -38,13 +38,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="HeaderCell"/>.
-        /// </summary>
-        protected HeaderCell()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="HeaderCell"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -59,6 +52,8 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="HeaderCell"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.</param>
+        /// <param name="character">ASCII character as a <see cref="Byte"/> that represents this <see cref="HeaderCell"/>.</param>
         public HeaderCell(IHeaderFrame parent, byte character)
             : base(parent, false, 0)
         {
@@ -70,7 +65,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.
+        /// Gets or sets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.
         /// </summary>
         public virtual new IHeaderFrame Parent
         {
@@ -149,10 +144,8 @@ namespace PCS.PhasorProtocols
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent IHeaderFrame will validate that it has
-            // enough length to parse entire cell well in advance so that low level parsing
-            // routines do not have to re-validate that enough length is available to parse
-            // needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             m_character = binaryImage[startIndex];
 
@@ -181,7 +174,7 @@ namespace PCS.PhasorProtocols
         // Create new header cell delegate handler
         internal static IHeaderCell CreateNewHeaderCell(IChannelFrame parent, IChannelFrameParsingState<IHeaderCell> state, int index, byte[] binaryImage, int startIndex)
         {
-            return new HeaderCell() { Parent = parent as IHeaderFrame, Character = binaryImage[startIndex], IDCode = (ushort)index };
+            return new HeaderCell(parent as IHeaderFrame, binaryImage[startIndex]) { IDCode = (ushort)index };
         }
 
         #endregion

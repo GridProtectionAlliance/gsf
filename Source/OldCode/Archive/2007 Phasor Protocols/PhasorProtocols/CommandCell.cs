@@ -37,13 +37,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="CommandCell"/>.
-        /// </summary>
-        protected CommandCell()
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="CommandCell"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -58,6 +51,8 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="CommandCell"/> from the specified parameters.
         /// </summary>
+        /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.</param>
+        /// <param name="extendedDataByte">Extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.</param>
         public CommandCell(ICommandFrame parent, byte extendedDataByte)
             : base(parent, false, 0)
         {
@@ -69,7 +64,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.
+        /// Gets or sets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.
         /// </summary>
         public virtual new ICommandFrame Parent
         {
@@ -148,10 +143,8 @@ namespace PCS.PhasorProtocols
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            // TODO: It is expected that parent ICommandFrame will validate that it has
-            // enough length to parse entire cell well in advance so that low level parsing
-            // routines do not have to re-validate that enough length is available to parse
-            // needed information as an optimization...
+            // Length is validated at a frame level well in advance so that low level parsing routines do not have
+            // to re-validate that enough length is available to parse needed information as an optimization...
 
             m_extendedDataByte = binaryImage[startIndex];
 
@@ -180,7 +173,7 @@ namespace PCS.PhasorProtocols
         // Create new command cell delegate handler
         internal static ICommandCell CreateNewCommandCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex)
         {
-            return new CommandCell() { Parent = parent as ICommandFrame, ExtendedDataByte = binaryImage[startIndex], IDCode = (ushort)index };
+            return new CommandCell(parent as ICommandFrame, binaryImage[startIndex]) { IDCode = (ushort)index };
         }
 
         #endregion
