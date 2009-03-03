@@ -25,7 +25,7 @@ using PCS.IO.Checksums;
 namespace PCS.PhasorProtocols.Ieee1344
 {
     /// <summary>
-    /// Represents the IEEE1344 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
+    /// Represents the IEEE 1344 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
     /// </summary>
     [Serializable()]
     public class CommandFrame : CommandFrameBase, ISupportFrameImage<FrameType>

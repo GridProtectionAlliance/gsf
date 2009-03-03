@@ -20,6 +20,9 @@ using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
+    /// <summary>
+    /// Represents a IEEE 1344 implementation of a collection of <see cref="IDataCell"/> objects.
+    /// </summary>
     [Serializable()]
     public class DataCellCollection : PhasorProtocols.DataCellCollection
     {
