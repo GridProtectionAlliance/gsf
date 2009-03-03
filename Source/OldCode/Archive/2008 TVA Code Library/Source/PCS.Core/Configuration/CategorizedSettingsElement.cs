@@ -265,7 +265,10 @@ namespace PCS.Configuration
         {
             try
             {
-                return Value.ConvertToType<T>(defaultValue);
+                if (!string.IsNullOrEmpty(Value))
+                    return Value.ConvertToType<T>(defaultValue);
+                else
+                    return defaultValue;
             }
             catch
             {
