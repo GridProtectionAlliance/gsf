@@ -55,7 +55,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// Gets or sets <see cref="DataCell"/> at specified <paramref name="index"/>.
         /// </summary>
         /// <param name="index">Index of value to get or set.</param>
-        /// <returns><see cref="DataCell"/> at specified <paramref name="index"/>.</returns>
         public new DataCell this[int index]
         {
             get
