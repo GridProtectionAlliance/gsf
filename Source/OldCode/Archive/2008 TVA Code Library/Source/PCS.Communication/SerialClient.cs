@@ -164,9 +164,9 @@ namespace PCS.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                m_serialClient.Reset();
                 m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
                 m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
+                m_serialClient.Reset();
 
                 if (m_connectionThread != null)
                     m_connectionThread.Abort();
