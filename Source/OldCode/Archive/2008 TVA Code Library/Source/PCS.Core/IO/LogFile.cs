@@ -67,6 +67,7 @@ namespace PCS.IO
     ///     static void Main(string[] args)
     ///     {
     ///         LogFile log = new LogFile();
+    ///         log.Initialize();                       // Initialize the log file.
     ///         log.Open();                             // Open the log file.
     ///         log.WriteTimestampedLine("Test entry"); // Write message to the log file.
     ///         log.Flush();                            // Flush message to the log file.

@@ -57,6 +57,7 @@ namespace PCS.Scheduling
     ///     static void Main(string[] args)
     ///     {
     ///         ScheduleManager scheduler = new ScheduleManager();
+    ///         scheduler.Initialize();
     ///         // Add event handlers.
     ///         scheduler.Starting += scheduler_Starting;
     ///         scheduler.Started += scheduler_Started;
