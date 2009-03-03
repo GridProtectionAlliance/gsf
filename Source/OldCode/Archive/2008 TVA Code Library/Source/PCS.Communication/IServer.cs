@@ -30,6 +30,8 @@ using PCS.Security.Cryptography;
 
 namespace PCS.Communication
 {
+    #region [ Enumerations ]
+
     /// <summary>
     /// Indicates the current state of the server.
     /// </summary>
@@ -45,11 +47,17 @@ namespace PCS.Communication
         NotRunning
     }
 
+    #endregion
+
     /// <summary>
     /// Defines a server involved in server-client communication.
     /// </summary>
     public interface IServer : ISupportLifecycle, IProvideStatus
     {
+        #region [ Members ]
+
+        // Events
+
         /// <summary>
         /// Occurs when the server is started.
         /// </summary>
@@ -135,6 +143,10 @@ namespace PCS.Communication
         /// </remarks>
         event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
 
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Gets or sets the data required by the server to initialize.
         /// </summary>
@@ -199,7 +211,7 @@ namespace PCS.Communication
         /// arg3 in <see cref="ReceiveClientDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
         /// arg4 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
         /// </remarks>
-        Action<Guid,byte[],int,int> ReceiveClientDataHandler { get; set; }
+        Action<Guid, byte[], int, int> ReceiveClientDataHandler { get; set; }
 
         /// <summary>
         /// Gets the current <see cref="ServerState"/>.
@@ -225,6 +237,10 @@ namespace PCS.Communication
         /// Gets the <see cref="Time"/> for which the server has been running.
         /// </summary>
         Time RunTime { get; }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Starts the server.
@@ -282,5 +298,7 @@ namespace PCS.Communication
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
         WaitHandle[] MulticastAsync(byte[] data, int offset, int length);
+
+        #endregion
     }
 }

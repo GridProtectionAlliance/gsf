@@ -34,6 +34,8 @@ using PCS.Security.Cryptography;
 
 namespace PCS.Communication
 {
+    #region [ Enumerations ]
+
     /// <summary>
     /// Indicates the current state of the client.
     /// </summary>
@@ -53,11 +55,17 @@ namespace PCS.Communication
         Disconnected
     }
 
+    #endregion
+
     /// <summary>
     /// Defines a client involved in server-client communication.
     /// </summary>
     public interface IClient : ISupportLifecycle, IProvideStatus
     {
+        #region [ Members ]
+
+        // Events
+
         /// <summary>
         /// Occurs when client is attempting connection to the server.
         /// </summary>
@@ -128,6 +136,10 @@ namespace PCS.Communication
         /// </remarks>
         event EventHandler<EventArgs<Exception>> ReceiveDataException;
 
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Gets or sets the data required by the client to connect to the server.
         /// </summary>
@@ -191,7 +203,7 @@ namespace PCS.Communication
         /// arg2 in <see cref="ReceiveDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
         /// arg3 in <see cref="ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1).
         /// </remarks>
-        Action<byte[],int,int> ReceiveDataHandler { get; set; }
+        Action<byte[], int, int> ReceiveDataHandler { get; set; }
 
         /// <summary>
         /// Gets the server ID.
@@ -217,6 +229,10 @@ namespace PCS.Communication
         /// Gets the <see cref="Time"/> for which the client has been connected to the server.
         /// </summary>
         Time ConnectionTime { get; }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Connects client to the server synchronously.
@@ -249,5 +265,7 @@ namespace PCS.Communication
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         WaitHandle SendAsync(byte[] data, int offset, int length);
+
+        #endregion
     }
 }
