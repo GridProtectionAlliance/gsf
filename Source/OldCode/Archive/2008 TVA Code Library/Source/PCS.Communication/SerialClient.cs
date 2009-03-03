@@ -131,8 +131,8 @@ namespace PCS.Communication
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="SerialClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public SerialClient(string connectionString)
-            : base(TransportProtocol.Serial, connectionString)
+        public SerialClient(string connectString)
+            : base(TransportProtocol.Serial, connectString)
         {
             m_serialClient = new TransportProvider<SerialPort>();
         }
