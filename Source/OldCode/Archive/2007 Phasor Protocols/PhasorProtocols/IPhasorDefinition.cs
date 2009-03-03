@@ -15,8 +15,46 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Phasor coordinate formats enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum CoordinateFormat : byte
+    {
+        /// <summary>
+        /// Rectangular coordinate format.
+        /// </summary>
+        Rectangular,
+        /// <summary>
+        /// Polar coordinate format.
+        /// </summary>
+        Polar
+    }
+
+    /// <summary>
+    /// Phasor types enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum PhasorType : byte
+    {
+        /// <summary>
+        /// Voltage phasor.
+        /// </summary>
+        Voltage,
+        /// <summary>
+        /// Current phasor.
+        /// </summary>
+        Current
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of a definition of a <see cref="IPhasorValue"/>.
     /// </summary>

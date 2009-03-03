@@ -23,6 +23,25 @@ using PCS.Interop;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Composite frequency value indicies enumeration.
+    /// </summary>
+    public enum CompositeFrequencyValue
+    {
+        /// <summary>
+        /// Composite frequency value index.
+        /// </summary>
+        Frequency,
+        /// <summary>
+        /// Composite df/ft value index.
+        /// </summary>
+        DfDt
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of a frequency and df/dt value.
     /// </summary>

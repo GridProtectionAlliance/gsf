@@ -20,6 +20,26 @@ using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Data transmission formats enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum DataFormat : byte
+    {
+        /// <summary>
+        /// Fixed integer data transmission format.
+        /// </summary>
+        FixedInteger,
+        /// <summary>
+        /// Floating point data transmission format.
+        /// </summary>
+        FloatingPoint
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of a definition of any kind of <see cref="IChannel"/> data.
     /// </summary>

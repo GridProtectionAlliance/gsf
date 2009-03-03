@@ -23,6 +23,25 @@ using PCS;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Composite polar value indicies enumeration.
+    /// </summary>
+    public enum CompositePhasorValue
+    {
+        /// <summary>
+        /// Composite angle value index.
+        /// </summary>
+        Angle,
+        /// <summary>
+        /// Composite magnitude value index.
+        /// </summary>
+        Magnitude
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of a phasor value.
     /// </summary>

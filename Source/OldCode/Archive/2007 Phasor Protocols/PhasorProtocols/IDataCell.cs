@@ -20,6 +20,26 @@ using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Data sorting types enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum DataSortingType : int
+    {
+        /// <summary>
+        /// Data sorted by timestamp (typical situation).
+        /// </summary>
+        ByTimestamp,
+        /// <summary>
+        /// Data sorted by arrival (bad timestamp).
+        /// </summary>
+        ByArrival
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of any kind of <see cref="IDataFrame"/> cell.
     /// </summary>

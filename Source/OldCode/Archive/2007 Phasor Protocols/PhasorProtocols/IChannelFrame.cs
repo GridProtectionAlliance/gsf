@@ -21,6 +21,38 @@ using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Fundamental frame types enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum FundamentalFrameType
+    {
+        /// <summary>
+        /// Configuration frame.
+        /// </summary>
+        ConfigurationFrame,
+        /// <summary>
+        /// Data frame.
+        /// </summary>
+        DataFrame,
+        /// <summary>
+        /// Header frame.
+        /// </summary>
+        HeaderFrame,
+        /// <summary>
+        /// Command frame.
+        /// </summary>
+        CommandFrame,
+        /// <summary>
+        /// Undetermined frame type.
+        /// </summary>
+        Undetermined
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of any kind of frame of data that contains
     /// a collection of <see cref="IChannelCell"/> objects.

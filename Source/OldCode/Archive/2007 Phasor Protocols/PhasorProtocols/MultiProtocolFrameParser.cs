@@ -52,6 +52,38 @@ using PCS.Communication;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Phasor data protocols enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum PhasorProtocol
+    {
+        /// <summary>
+        /// IEEE C37.118-2005 protocol.
+        /// </summary>
+        IeeeC37_118V1,
+        /// <summary>
+        /// IEEE C37.118, draft 6 protocol.
+        /// </summary>
+        IeeeC37_118D6,
+        /// <summary>
+        /// IEEE 1344-1995 protocol.
+        /// </summary>
+        Ieee1344,
+        /// <summary>
+        /// BPA PDCstream protocol.
+        /// </summary>
+        BpaPdcStream,
+        /// <summary>
+        /// Virgina Tech FNET protocol.
+        /// </summary>
+        FNet
+    }
+
+    #endregion
+
     /// <summary>
     /// Protocol independent frame parser.
     /// </summary>

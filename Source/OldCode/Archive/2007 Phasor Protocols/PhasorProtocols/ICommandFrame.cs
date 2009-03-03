@@ -15,8 +15,50 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Phasor enabled device commands enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum DeviceCommand : short
+    {
+        /// <summary>
+        /// 0001 Turn off transmission of data frames.
+        /// </summary>
+        DisableRealTimeData = Bit.Bit0,
+        /// <summary>
+        /// 0010 Turn on transmission of data frames.
+        /// </summary>
+        EnableRealTimeData = Bit.Bit1,
+        /// <summary>
+        /// 0011 Send header file.
+        /// </summary>
+        SendHeaderFrame = Bit.Bit0 | Bit.Bit1,
+        /// <summary>
+        /// 0100 Send configuration file 1.
+        /// </summary>
+        SendConfigurationFrame1 = Bit.Bit2,
+        /// <summary>
+        /// 0101 Send configuration file 2.
+        /// </summary>
+        SendConfigurationFrame2 = Bit.Bit0 | Bit.Bit2,
+        /// <summary>
+        /// 1000 Receive extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344.
+        /// </summary>
+        ReceiveExtendedFrame = Bit.Bit3,
+        /// <summary>
+        /// Reserved bits.
+        /// </summary>
+        ReservedBits = short.MaxValue & ~(Bit.Bit0 | Bit.Bit1 | Bit.Bit2 | Bit.Bit3)
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of any kind of command frame that contains
     /// a collection of <see cref="ICommandCell"/> objects.

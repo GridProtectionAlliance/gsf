@@ -15,8 +15,30 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Nominal line frequencies enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum LineFrequency
+    {
+        /// <summary>
+        /// 50Hz nominal frequency.
+        /// </summary>
+        Hz50 = 50,
+        /// <summary>
+        /// 60Hz nominal frequency.
+        /// </summary>
+        Hz60 = 60
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of a definition of a <see cref="IFrequencyValue"/>.
     /// </summary>

@@ -23,6 +23,42 @@ using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Protocol independent common status flags enumeration.
+    /// </summary>
+    /// <remarks>
+    /// These flags are expected to exist in the hi-word of a double-word flag set such that original word flags remain in-tact
+    /// in lo-word of double-word flag set.
+    /// </remarks>
+    [Flags(), Serializable()]
+    public enum CommonStatusFlags
+    {
+        /// <summary>
+        /// Data is valid (0 when PMU data is valid, 1 when invalid or PMU is in test mode).
+        /// </summary>
+        DataIsValid = Bit.Bit19,
+        /// <summary>
+        /// Synchronization is valid (0 when in PMU is in sync, 1 when it is not).
+        /// </summary>
+        SynchronizationIsValid = Bit.Bit18,
+        /// <summary>
+        /// Data sorting type, 0 by timestamp, 1 by arrival.
+        /// </summary>
+        DataSortingType = Bit.Bit17,
+        /// <summary>
+        /// Device error (including configuration error), 0 when no error.
+        /// </summary>
+        DeviceError = Bit.Bit16,
+        /// <summary>
+        /// Reserved bits for future common flags, presently set to 0.
+        /// </summary>
+        ReservedFlags = Bit.Bit20 | Bit.Bit21 | Bit.Bit22 | Bit.Bit23 | Bit.Bit24 | Bit.Bit25 | Bit.Bit26 | Bit.Bit27 | Bit.Bit28 | Bit.Bit29 | Bit.Bit30 | Bit.Bit31
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents the protocol independent common implementation of all elements for cells in a <see cref="IDataFrame"/>.
     /// </summary>
