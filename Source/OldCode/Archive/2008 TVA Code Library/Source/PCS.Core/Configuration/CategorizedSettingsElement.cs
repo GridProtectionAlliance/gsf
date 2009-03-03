@@ -265,13 +265,16 @@ namespace PCS.Configuration
         {
             try
             {
-                if (!string.IsNullOrEmpty(Value))
-                    return Value.ConvertToType<T>(defaultValue);
-                else
+                if (string.IsNullOrEmpty(Value))
+                    // Value is an empty string - use default value.
                     return defaultValue;
+                else
+                    // Value is not empty string - convert to target type.
+                    return Value.ConvertToType<T>();
             }
             catch
             {
+                // Conversion to target type failed so use the default value.
                 return defaultValue;
             }
         }
