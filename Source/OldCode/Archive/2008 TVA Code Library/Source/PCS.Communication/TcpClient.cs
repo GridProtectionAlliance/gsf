@@ -58,6 +58,7 @@ namespace PCS.Communication
     ///         m_client.Encryption = CipherStrength.None;
     ///         m_client.Compression = CompressionStrength.NoCompression;
     ///         m_client.SecureSession = false;
+    ///         m_client.Initialize();
     ///         // Register event handlers.
     ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
@@ -137,7 +138,7 @@ namespace PCS.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpClient"/> class.
         /// </summary>
-        /// <param name="connectString">Connect string of the client. See <see cref="DefaultConnectionString"/> for format.</param>
+        /// <param name="connectString">Connect string of the <see cref="TcpClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public TcpClient(string connectString)
             : base(TransportProtocol.Tcp, connectString)
         {
@@ -278,7 +279,7 @@ namespace PCS.Communication
         /// Validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">Connection string to be validated.</param>
-        /// <exception cref="FormatException">Server property is missing.</exception>
+        /// <exception cref="ArgumentException">Server property is missing.</exception>
         /// <exception cref="FormatException">Server property is invalid.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Server port value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
@@ -292,7 +293,7 @@ namespace PCS.Communication
                 m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["port"];
 
             if (!m_connectData.ContainsKey("server"))
-                throw new FormatException(string.Format("Server property is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("Server property is missing. Example: {0}.", DefaultConnectionString));
 
             if (!m_connectData["server"].Contains(":"))
                 throw new FormatException(string.Format("Server property is invalid. Example: {0}.", DefaultConnectionString));

@@ -57,6 +57,7 @@ namespace PCS.Communication
     ///         m_client.Encryption = CipherStrength.None;
     ///         m_client.Compression = CompressionStrength.NoCompression;
     ///         m_client.SecureSession = false;
+    ///         m_client.Initialize();
     ///         // Register event handlers.
     ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
@@ -131,7 +132,7 @@ namespace PCS.Communication
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TcpClient"/> class.
+        /// Initializes a new instance of the <see cref="UdpClient"/> class.
         /// </summary>
         public UdpClient()
             : this(DefaultConnectionString)
@@ -139,9 +140,9 @@ namespace PCS.Communication
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TcpClient"/> class.
+        /// Initializes a new instance of the <see cref="UdpClient"/> class.
         /// </summary>
-        /// <param name="connectString">Connect string of the client. See <see cref="DefaultConnectionString"/> for format.</param>
+        /// <param name="connectString">Connect string of the <see cref="UdpClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public UdpClient(string connectString)
             : base(TransportProtocol.Udp, connectString)
         {
@@ -193,6 +194,7 @@ namespace PCS.Communication
         /// <summary>
         /// Connects the <see cref="UdpClient"/> to the server asynchronously.
         /// </summary>
+        /// <exception cref="FormatException">Server property in <see cref="ClientBase.ConnectionString"/> is invalid.</exception>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="UdpClient"/> when it is not disconnected.</exception>
         public override void ConnectAsync()
         {
@@ -270,7 +272,7 @@ namespace PCS.Communication
         /// Validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">Connection string to be validated.</param>
-        /// <exception cref="FormatException">Port property is missing.</exception>
+        /// <exception cref="ArgumentException">Port property is missing.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
         {
@@ -286,7 +288,7 @@ namespace PCS.Communication
                 m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["remoteport"];
 
             if (!m_connectData.ContainsKey("port"))
-                throw new FormatException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
 
             if (!Transport.IsPortNumberValid(m_connectData["port"]))
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));

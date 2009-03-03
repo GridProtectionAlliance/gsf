@@ -46,6 +46,7 @@ namespace PCS.Communication
     ///     {
     ///         // Initialize the client.
     ///         m_client = new FileClient(@"File=c:\File.txt");
+    ///         m_client.Initialize();
     ///         // Register event handlers.
     ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
@@ -101,6 +102,7 @@ namespace PCS.Communication
     ///     {
     ///         // Initialize the client.
     ///         m_client = new FileClient(@"File=c:\File.txt");
+    ///         m_client.Initialize();
     ///         // Register event handlers.
     ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
@@ -216,7 +218,7 @@ namespace PCS.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="FileClient"/> class.
         /// </summary>
-        /// <param name="connectString">Connect string of the client. See <see cref="DefaultConnectionString"/> for format.</param>
+        /// <param name="connectString">Connect string of the <see cref="FileClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public FileClient(string connectString)
             : base(TransportProtocol.File, connectString)
         {

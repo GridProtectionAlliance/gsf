@@ -56,6 +56,7 @@ namespace PCS.Communication
     ///         m_server.Encryption = CipherStrength.None;
     ///         m_server.Compression = CompressionStrength.NoCompression;
     ///         m_server.SecureSession = false;
+    ///         m_server.Initialize();
     ///         // Register event handlers.
     ///         m_server.ServerStarted += m_server_ServerStarted;
     ///         m_server.ServerStopped += m_server_ServerStopped;
@@ -146,7 +147,7 @@ namespace PCS.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="UdpServer"/> class.
         /// </summary>
-        /// <param name="configString">Config string of the server. See <see cref="DefaultConfigurationString"/> for format.</param>
+        /// <param name="configString">Config string of the <see cref="UdpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
         public UdpServer(string configString)
             : base(TransportProtocol.Udp, configString)
         {
@@ -300,14 +301,14 @@ namespace PCS.Communication
         /// Validates the specified <paramref name="configurationString"/>.
         /// </summary>
         /// <param name="configurationString">Configuration string to be validated.</param>
-        /// <exception cref="FormatException">Port property is missing.</exception>
+        /// <exception cref="ArgumentException">Port property is missing.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConfigurationString(string configurationString)
         {
             m_configData = configurationString.ParseKeyValuePairs();
 
             if (!m_configData.ContainsKey("port"))
-                throw new FormatException(string.Format("Port is missing. Example: {0}.", DefaultConfigurationString));
+                throw new ArgumentException(string.Format("Port is missing. Example: {0}.", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
                 throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
