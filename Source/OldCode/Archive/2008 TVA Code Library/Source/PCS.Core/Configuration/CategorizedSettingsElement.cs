@@ -265,7 +265,7 @@ namespace PCS.Configuration
         {
             try
             {
-                return Value.ConvertToType<T>();
+                return Value.ConvertToType<T>(defaultValue);
             }
             catch
             {
