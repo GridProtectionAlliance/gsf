@@ -1,112 +1,77 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  DigitalValue.vb - IEEE 1344 Digital value
+//  DigitalValue.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.Ieee1344
 {
-    namespace Ieee1344
+    /// <summary>
+    /// Represents the IEEE 1344 implementation of a <see cref="IDigitalValue"/>.
+    /// </summary>
+    [Serializable()]
+    public class DigitalValue : DigitalValueBase
     {
+        #region [ Constructors ]
 
-        [CLSCompliant(false), Serializable()]
-        public class DigitalValue : DigitalValueBase
+        /// <summary>
+        /// Creates a new <see cref="DigitalValue"/>.
+        /// </summary>
+        protected DigitalValue()
         {
-
-
-
-            protected DigitalValue()
-            {
-            }
-
-            protected DigitalValue(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public DigitalValue(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
-                : base(parent, digitalDefinition, value)
-            {
-
-
-            }
-
-            public DigitalValue(IDataCell parent, IDigitalDefinition digitalDefinition, byte[] binaryImage, int startIndex)
-                : base(parent, digitalDefinition, binaryImage, startIndex)
-            {
-
-
-            }
-
-            public DigitalValue(IDataCell parent, IDigitalDefinition digitalDefinition, IDigitalValue digitalValue)
-                : base(parent, digitalDefinition, digitalValue)
-            {
-
-
-            }
-
-            internal static IDigitalValue CreateNewDigitalValue(IDataCell parent, IDigitalDefinition definition, byte[] binaryImage, int startIndex)
-            {
-
-                return new DigitalValue(parent, definition, binaryImage, startIndex);
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new DataCell Parent
-            {
-                get
-                {
-                    return (DataCell)base.Parent;
-                }
-            }
-
-            public new DigitalDefinition Definition
-            {
-                get
-                {
-                    return (DigitalDefinition)base.Definition;
-                }
-                set
-                {
-                    base.Definition = value;
-                }
-            }
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DigitalValue"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected DigitalValue(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DigitalValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValue"/>.</param>
+        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValue"/>.</param>
+        /// <param name="value">The real value of this <see cref="DigitalValue"/>.</param>
+        public DigitalValue(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
+            : base(parent, digitalDefinition, value)
+        {
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Delegate handler to create a new IEEE 1344 digital value
+        internal static IDigitalValue CreateNewValue(IDataCell parent, IDigitalDefinition definition, byte[] binaryImage, int startIndex)
+        {
+            IDigitalValue digital = new DigitalValue() { Parent = parent, Definition = definition };
+
+            digital.Initialize(binaryImage, startIndex, 0);
+
+            return digital;
+        }
+
+        #endregion       
     }
 }
