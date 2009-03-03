@@ -24,41 +24,65 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// </summary>
     public static class Common
     {
-        /// <summary>Frame type mask</summary>
+        /// <summary>
+        /// Frame type mask constant.
+        /// </summary>
         public const short FrameTypeMask = Bit.Bit13 | Bit.Bit14 | Bit.Bit15;
 
-        /// <summary>Trigger mask</summary>
+        /// <summary>
+        /// Trigger mask constant.
+        /// </summary>
         public const short TriggerMask = Bit.Bit11 | Bit.Bit12 | Bit.Bit13;
 
-        /// <summary>Frame length mask</summary>
+        /// <summary>
+        /// Frame length mask constant.
+        /// </summary>
         public const short FrameLengthMask = ~(TriggerMask | Bit.Bit14 | Bit.Bit15);
 
-        /// <summary>Frame count mask (for multi-framed files)</summary>
+        /// <summary>
+        /// Frame count mask (for multi-framed files) constant.
+        /// </summary>
         public const short FrameCountMask = ~(FrameTypeMask | Bit.Bit11 | Bit.Bit12);
 
-        /// <summary>Maximum frame count (for multi-framed files)</summary>
+        /// <summary>
+        /// Maximum frame count (for multi-framed files) constant.
+        /// </summary>
         public const short MaximumFrameCount = ~(FrameTypeMask | Bit.Bit11 | Bit.Bit12);
 
-        /// <summary>Absolute maximum number of samples</summary>
+        /// <summary>
+        /// Absolute maximum number of samples constant.
+        /// </summary>
         public const short MaximumSampleCount = ~FrameTypeMask;
 
-        /// <summary>Absolute maximum frame length</summary>
+        /// <summary>
+        /// Absolute maximum frame length constant.
+        /// </summary>
         public const short MaximumFrameLength = ~(TriggerMask | Bit.Bit14 | Bit.Bit15);
 
-        /// <summary>Absolute maximum data length (within a frame)</summary>
+        /// <summary>
+        /// Absolute maximum data length (within a frame) constant.
+        /// </summary>
         public const short MaximumDataLength = MaximumFrameLength - (short)CommonFrameHeader.FixedLength - 2;
 
-        /// <summary>Absolute maximum number of possible phasor values that could fit into a data frame</summary>
+        /// <summary>
+        /// Absolute maximum number of possible phasor values that could fit into a data frame constant.
+        /// </summary>
         public const int MaximumPhasorValues = MaximumDataLength / 4 - 6;
 
-        /// <summary>Absolute maximum number of possible analog values that could fit into a data frame</summary>
+        /// <summary>
+        /// Absolute maximum number of possible analog values that could fit into a data frame constant.
+        /// </summary>
         /// <remarks>IEEE 1344 doesn't support analog values</remarks>
         public const int MaximumAnalogValues = 0;
 
-        /// <summary>Absolute maximum number of possible digital values that could fit into a data frame</summary>
+        /// <summary>
+        /// Absolute maximum number of possible digital values that could fit into a data frame constant.
+        /// </summary>
         public const int MaximumDigitalValues = MaximumDataLength / 2 - 6;
 
-        /// <summary>Absolute maximum number of bytes of data that could fit into a header frame</summary>
+        /// <summary>
+        /// Absolute maximum number of bytes of data that could fit into a header frame constant.
+        /// </summary>
         public const int MaximumHeaderDataLength = MaximumFrameLength - CommonFrameHeader.FixedLength - 2;
     }
 }
