@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols.Ieee1344
 {
     /// <summary>
-    /// Represents the IEEE 1344 representation of a <see cref="IPhasorValue"/>.
+    /// Represents the IEEE 1344 implementation of a <see cref="IPhasorValue"/>.
     /// </summary>
     [Serializable()]
     public class PhasorValue : PhasorValueBase
