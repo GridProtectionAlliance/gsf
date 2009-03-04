@@ -67,14 +67,12 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="ChannelDefinitionBase"/> from specified parameters.
         /// </summary>
         /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase"/>.</param>
-        /// <param name="index">The index of this <see cref="ChannelDefinitionBase"/>.</param>
         /// <param name="label">The label of this <see cref="ChannelDefinitionBase"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="ChannelDefinitionBase"/>.</param>
         /// <param name="offset">The offset of this <see cref="ChannelDefinitionBase"/>.</param>
-        protected ChannelDefinitionBase(IConfigurationCell parent, int index, string label, uint scale, double offset)
+        protected ChannelDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset)
         {
             m_parent = parent;
-            m_index = index;
             Label = label;
             m_scale = scale;
             m_offset = offset;
@@ -107,6 +105,9 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the index of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
+        /// <remarks>
+        /// Index is automatically maintained by <see cref="ChannelDefinitionCollectionBase"/>.
+        /// </remarks>
         public virtual int Index
         {
             get

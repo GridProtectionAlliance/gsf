@@ -49,12 +49,11 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="AnalogDefinitionBase"/> using the specified parameters.
         /// </summary>
         /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="AnalogDefinitionBase"/>.</param>
-        /// <param name="index">The index of this <see cref="AnalogDefinitionBase"/>.</param>
         /// <param name="label">The label of this <see cref="AnalogDefinitionBase"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinitionBase"/>.</param>
         /// <param name="offset">The offset of this <see cref="AnalogDefinitionBase"/>.</param>
-        protected AnalogDefinitionBase(IConfigurationCell parent, int index, string label, uint scale, double offset)
-            : base(parent, index, label, scale, offset)
+        protected AnalogDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset)
+            : base(parent, label, scale, offset)
         {
         }
 

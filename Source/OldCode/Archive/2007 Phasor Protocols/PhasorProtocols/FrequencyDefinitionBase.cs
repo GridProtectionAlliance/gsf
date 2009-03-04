@@ -62,14 +62,13 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="FrequencyDefinitionBase"/> using the specified parameters.
         /// </summary>
         /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="index">The index of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="label">The label of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="offset">The offset of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="dfdtScale">The df/dt scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="dfdtOffset">The df/dt offset of this <see cref="FrequencyDefinitionBase"/>.</param>
         protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
-            : base(parent, 0, label, scale, offset)
+            : base(parent, label, scale, offset)
         {
             m_dfdtScale = dfdtScale;
             m_dfdtOffset = dfdtOffset;

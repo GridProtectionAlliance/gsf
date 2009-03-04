@@ -51,8 +51,10 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DigitalDefinitionBase"/> using the specified parameters.
         /// </summary>
-        protected DigitalDefinitionBase(IConfigurationCell parent, int index, string label)
-            : base(parent, index, label, 1, 0.0D)
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinitionBase"/>.</param>
+        /// <param name="label">The label of this <see cref="DigitalDefinitionBase"/>.</param>
+        protected DigitalDefinitionBase(IConfigurationCell parent, string label)
+            : base(parent, label, 1, 0.0D)
         {
         }
 
