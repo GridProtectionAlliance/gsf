@@ -178,13 +178,13 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Static Methods
 
         // Delegate handler to create a new IEEE 1344 digital definition
-        internal static IDigitalDefinition CreateNewDigitalDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex)
+        internal static IDigitalDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex)
         {
-            IDigitalDefinition digital = new DigitalDefinition() { Parent = parent };
+            IDigitalDefinition digitalDefinition = new DigitalDefinition() { Parent = parent };
 
-            digital.Initialize(binaryImage, startIndex, 0);
+            digitalDefinition.Initialize(binaryImage, startIndex, 0);
 
-            return digital;
+            return digitalDefinition;
         }
 
         #endregion

@@ -267,7 +267,7 @@ namespace PCS.PhasorProtocols.Ieee1344
 
                 // Copy in station name
                 index += 2;
-                PhasorProtocols.Common.CopyImage(base.HeaderImage, buffer, ref index, base.HeaderLength);
+                base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
 
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index);
                 EndianOrder.BigEndian.CopyBytes((short)PhasorDefinitions.Count, buffer, index + 8);
@@ -315,16 +315,16 @@ namespace PCS.PhasorProtocols.Ieee1344
                 // Include conversion factors in configuration cell footer
                 for (x = 0; x <= PhasorDefinitions.Count - 1; x++)
                 {
-                    PhasorProtocols.Common.CopyImage(((PhasorDefinition)(PhasorDefinitions[x])).ConversionFactorImage, buffer, ref index, PhasorDefinition.ConversionFactorLength);
+                    ((PhasorDefinition)(PhasorDefinitions[x])).ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
                 }
 
                 for (x = 0; x <= DigitalDefinitions.Count - 1; x++)
                 {
-                    PhasorProtocols.Common.CopyImage(((DigitalDefinition)(DigitalDefinitions[x])).ConversionFactorImage, buffer, ref index, DigitalDefinition.ConversionFactorLength);
+                    ((DigitalDefinition)(DigitalDefinitions[x])).ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
                 }
 
                 // Include nominal frequency
-                PhasorProtocols.Common.CopyImage(base.FooterImage, buffer, ref index, base.FooterLength);
+                base.FooterImage.CopyImage(buffer, ref index, base.FooterLength);
 
                 return buffer;
             }

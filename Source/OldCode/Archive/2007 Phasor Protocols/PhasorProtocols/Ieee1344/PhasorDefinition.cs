@@ -117,8 +117,8 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         // Static Methods
 
-        // Delegate handler to create a new IEEE 1344 phasor value
-        internal static IPhasorDefinition CreateNewDigitalDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex)
+        // Delegate handler to create a new IEEE 1344 phasor definition
+        internal static IPhasorDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex)
         {
             IPhasorDefinition phasorDefinition = new PhasorDefinition() { Parent = parent };
 

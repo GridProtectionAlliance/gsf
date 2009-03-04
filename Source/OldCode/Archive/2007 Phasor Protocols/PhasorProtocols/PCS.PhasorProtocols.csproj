@@ -142,9 +142,6 @@
     <Compile Include="Ieee1344\DigitalValue.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Ieee1344\Enumerations.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Ieee1344\FrameImageCollector.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -167,7 +164,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="IFrameParser.cs" />
-    <Compile Include="Enumerations.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
     <Compile Include="ICommandFrameParsingState.cs" />
     <Compile Include="ICommandFrame.cs" />

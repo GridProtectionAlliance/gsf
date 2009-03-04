@@ -82,7 +82,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         public DataCell(IDataFrame parent, DataFrameParsingState state, int index, byte[] binaryImage, int startIndex)
-            : base(parent, false, PhasorProtocols.Ieee1344.Common.MaximumPhasorValues, PhasorProtocols.Ieee1344.Common.MaximumAnalogValues, PhasorProtocols.Ieee1344.Common.MaximumDigitalValues, new DataCellParsingState(state.ConfigurationFrame.Cells[index], Ieee1344.PhasorValue.CreateNewPhasorValue, Ieee1344.FrequencyValue.CreateNewFrequencyValue, null, Ieee1344.DigitalValue.CreateNewDigitalValue), binaryImage, startIndex)
+            : base(parent, false, PhasorProtocols.Ieee1344.Common.MaximumPhasorValues, PhasorProtocols.Ieee1344.Common.MaximumAnalogValues, PhasorProtocols.Ieee1344.Common.MaximumDigitalValues, new DataCellParsingState(state.ConfigurationFrame.Cells[index], Ieee1344.PhasorValue.CreateNewValue, Ieee1344.FrequencyValue.CreateNewValue, null, Ieee1344.DigitalValue.CreateNewValue), binaryImage, startIndex)
         {
 
 

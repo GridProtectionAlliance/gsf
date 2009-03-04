@@ -32,11 +32,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         private CommonFrameHeader m_frameHeader;
         private short m_sampleCount;
 
-        public DataFrame() :
-            base(new DataCellCollection())
-        {
-        }
-
         protected DataFrame(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
