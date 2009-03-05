@@ -3229,6 +3229,8 @@ namespace PCS.Collections
         /// Creates a new real-time, bulk item <see cref="ProcessQueue{T}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
         {
             return CreateRealTimeQueue(processItemsFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -3238,6 +3240,9 @@ namespace PCS.Collections
         /// Creates a new real-time, bulk item <see cref="ProcessQueue{T}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <param name="canProcessItemFunction">Delegate which determines whether an item can be processed.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -3246,6 +3251,11 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new real-time, bulk item <see cref="ProcessQueue{T}"/> using specified settings.
         /// </summary>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateRealTimeQueue(processItemsFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
@@ -3254,6 +3264,12 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new real-time, bulk item <see cref="ProcessQueue{T}"/> using specified settings.
         /// </summary>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <param name="canProcessItemFunction">Delegate which determines whether an item can be processed.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return new ProcessQueue<T>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
