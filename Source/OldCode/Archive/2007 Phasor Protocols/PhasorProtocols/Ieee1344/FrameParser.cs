@@ -315,14 +315,46 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        // Attempts to cast given frame into an alternate configuration frame - hypothetically this would
+        // Attempts to cast given frame into an IEEE 1344 configuration frame - hypothetically this would
         // allow a configuration frame to be used in between different protocol implementations
-        private ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame configurationFrame)
+        private ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
-            ConfigurationFrame derivedFrame = configurationFrame as ConfigurationFrame;
+            ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
             if (derivedFrame == null)
-                return new ConfigurationFrame(configurationFrame);
+            {
+                // Create a new IEEE 1344 configuration frame converted from equivalent configuration information
+                ConfigurationCell derivedCell;
+                IFrequencyDefinition sourceFrequency;
+
+                derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+
+                foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
+                {
+                    // Create new derived configuration cell
+                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.NominalFrequency);
+
+                    // Create equivalent derived phasor definitions
+                    foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
+                    {
+                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.Type, null));
+                    }
+
+                    // Create equivalent dervied frequency definition
+                    sourceFrequency = sourceCell.FrequencyDefinition;
+
+                    if (sourceFrequency != null)
+                        derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label, sourceFrequency.ScalingValue, sourceFrequency.Offset, sourceFrequency.DfDtScalingValue, sourceFrequency.DfDtOffset);
+
+                    // IEEE 1344 does not define analog values...
+
+                    // Create equivalent dervied digital definitions
+                    foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
+                    {
+                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label);
+                    }
+                }
+            }
 
             return derivedFrame;
         }

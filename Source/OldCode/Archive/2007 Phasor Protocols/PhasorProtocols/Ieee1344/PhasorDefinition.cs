@@ -55,7 +55,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="offset">The offset of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
-        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, float offset, PhasorType type, PhasorDefinition voltageReference)
+        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition voltageReference)
             : base(parent, label, scale, offset, type, voltageReference)
         {
         }
