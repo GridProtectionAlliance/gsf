@@ -23,14 +23,13 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// <summary>
     /// Collects frame images until a full IEEE 1344 frame has been received.
     /// </summary>
-    public class FrameImageCollector : IDisposable
+    public class FrameImageCollector
     {
         #region [ Members ]
 
         // Fields
         private MemoryStream m_frameQueue;
         private int m_frameCount;
-        private bool m_disposed;
 
         #endregion
 
@@ -41,15 +40,12 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         public FrameImageCollector()
         {
+            // As an optimzation in context of usage, we don't implement IDisposable for
+            // this class just for the memory stream since its Close method (i.e., Dispose)
+            // does nothing (reflect it and look for yourself). Additionally, we go ahead
+            // and suppress the finalizer for this stream to reduce that overhead too.
             m_frameQueue = new MemoryStream();
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="FrameImageCollector"/> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~FrameImageCollector()
-        {
-            Dispose(false);
+            GC.SuppressFinalize(m_frameQueue);
         }
 
         #endregion
@@ -92,40 +88,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Releases all the resources used by the <see cref="FrameImageCollector"/> object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FrameImageCollector"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_frameQueue != null)
-                            m_frameQueue.Dispose();
-
-                        m_frameQueue = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
-            }
-        }
 
         /// <summary>
         /// Appends the current frame image to the frame image collection.
