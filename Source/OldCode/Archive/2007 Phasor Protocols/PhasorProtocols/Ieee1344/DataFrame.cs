@@ -43,7 +43,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// Creates a new <see cref="DataFrame"/>.
         /// </summary>
         /// <remarks>
-        /// This constructor is used to by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE 1344 data frame.
+        /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE 1344 data frame.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public DataFrame()
