@@ -128,13 +128,8 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                // IEEE 1344 defines a 64-bit ID code - abstractly we only define a 16-bit ID code for general
-                // identification as a 16-bit ID is used for most all other phasor protocols. If the 64-bit ID
-                // code value happens to exeed 65535, then we just return 65535 for general use.
-                if (m_idCode > ushort.MaxValue)
-                    return ushort.MaxValue;
-                else
-                    return (ushort)m_idCode;
+                // Base classes constrain maximum value to 65535
+                return (m_idCode > ushort.MaxValue ? ushort.MaxValue : (ushort)m_idCode);
             }
             set
             {
@@ -572,14 +567,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                 m_attributes.Add("Published", Published.ToString());
                 m_attributes.Add("Ticks", ((long)Timestamp).ToString());
                 m_attributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                m_attributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
-                m_attributes.Add("Frame Length", FrameLength.ToString());
-                m_attributes.Add("64-Bit ID Code", IDCode.ToString());
-                m_attributes.Add("Sample Count", m_sampleCount.ToString());
-                m_attributes.Add("Status Flags", m_statusFlags.ToString());
-                m_attributes.Add("Frame Count", FrameCount.ToString());
-                m_attributes.Add("Is First Frame", IsFirstFrame.ToString());
-                m_attributes.Add("Is Last Frame", IsLastFrame.ToString());
+                AppendHeaderAttributes(m_attributes);
 
                 return m_attributes;
             }
@@ -610,6 +598,33 @@ namespace PCS.PhasorProtocols.Ieee1344
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Appends header specific attributes to <paramref name="attributes"/> dictionary.
+        /// </summary>
+        /// <param name="attributes">Dictionary to append header specific attributes to.</param>
+        internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
+        {
+            attributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
+
+            if (FrameImages != null)
+            {
+                attributes.Add("Frame Length", FrameImages.BinaryLength.ToString());
+                attributes.Add("Frame Images", FrameImages.Count.ToString());
+            }
+            else
+            {
+                attributes.Add("Frame Length", FrameLength.ToString());
+                attributes.Add("Frame Images", "0");
+            }
+            
+            attributes.Add("Frame Count", FrameCount.ToString());
+            attributes.Add("64-Bit ID Code", IDCode.ToString());
+            attributes.Add("Sample Count", m_sampleCount.ToString());
+            attributes.Add("Status Flags", m_statusFlags.ToString());
+            attributes.Add("Is First Frame", IsFirstFrame.ToString());
+            attributes.Add("Is Last Frame", IsLastFrame.ToString());
+        }
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
