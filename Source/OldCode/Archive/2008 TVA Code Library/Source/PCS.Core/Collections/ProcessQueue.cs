@@ -1893,6 +1893,7 @@ namespace PCS.Collections
         /// <returns>A generic list of the target type containing the converted elements from the current <see cref="ProcessQueue{T}"/>.</returns>
         /// <param name="converter">A Converter delegate that converts each element from one type to another type.</param>
         /// <exception cref="ArgumentNullException">converter is null.</exception>
+        /// <typeparam name="TOutput">The generic type used.</typeparam>
         public virtual List<TOutput> ConvertAll<TOutput>(Converter<T, TOutput> converter)
         {
             lock (m_processQueue)
@@ -2912,6 +2913,8 @@ namespace PCS.Collections
         /// Creates a new asynchronous <see cref="ProcessQueue{T}"/> with the default settings: ProcessInterval = 100, MaximumThreads = 5,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that processes one item at a time.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -2921,6 +2924,9 @@ namespace PCS.Collections
         /// Creates a new asynchronous <see cref="ProcessQueue{T}"/> with the default settings: ProcessInterval = 100, MaximumThreads = 5,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that processes one item at a time.</param>
+        /// <param name="canProcessItemFunction">Delegate which determines whether an item can be processed.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -2930,6 +2936,9 @@ namespace PCS.Collections
         /// Creates a new asynchronous <see cref="ProcessQueue{T}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that processes one item at a time.</param>
+        /// <param name="maximumThreads">An <see cref="Int32"/> value that determines the maximum number of threads used to process items.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -2939,6 +2948,10 @@ namespace PCS.Collections
         /// Creates a new asynchronous <see cref="ProcessQueue{T}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that processes one item at a time.</param>
+        /// <param name="canProcessItemFunction">Delegate which determines whether an item can be processed.</param>
+        /// <param name="maximumThreads">An <see cref="Int32"/> value that determines the maximum number of threads used to process items.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
@@ -2947,6 +2960,13 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new asynchronous <see cref="ProcessQueue{T}"/> using specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that processes one item at a time.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">An <see cref="Int32"/> value that determines the maximum number of threads used to process items.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
@@ -2955,6 +2975,14 @@ namespace PCS.Collections
         /// <summary>
         /// Creates a new asynchronous <see cref="ProcessQueue{T}"/> using  specified settings.
         /// </summary>
+        /// <param name="processItemFunction">Delegate that processes one item at a time.</param>
+        /// <param name="canProcessItemFunction">Delegate which determines whether an item can be processed.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">An <see cref="Int32"/> value that determines the maximum number of threads used to process items.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <returns>A ProcessQueue object based on type T.</returns>
         public static ProcessQueue<T> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return new ProcessQueue<T>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
