@@ -88,6 +88,26 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="HeaderFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public override Ticks Timestamp
+        {
+            get
+            {
+                return CommonHeader.Timestamp;
+            }
+            set
+            {
+                // Keep timestamp updates synchrnonized...
+                CommonHeader.Timestamp = value;
+                base.Timestamp = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
         public new NtpTimeTag TimeTag
@@ -116,8 +136,10 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
+                // Make sure frame header exists - using base class timestamp to
+                // prevent recursion (m_frameHeader doesn't exist yet)
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(TypeID, Timestamp);
+                    m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp);
 
                 return m_frameHeader;
             }
@@ -158,7 +180,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                // Make sure to provide proper frame length in the header image 
+                // Make sure to provide proper frame length for use in the common header image
                 unchecked
                 {
                     CommonHeader.FrameLength = (ushort)BinaryLength;
