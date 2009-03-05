@@ -191,6 +191,51 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Methods ]
 
         /// <summary>
+        /// Parses the binary image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This method is overriden to parse from cumulated frame images.
+        /// </remarks>
+        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            // If frame image collector was used, make sure and parse from entire frame image...
+            if (m_frameHeader != null)
+            {
+                // If all header frame images have been received, we can safely start parsing
+                if (m_frameHeader.IsLastFrame)
+                {
+                    FrameImageCollector frameImages = m_frameHeader.FrameImages;
+
+                    if (frameImages != null)
+                    {
+                        // Each individual frame will already have had a CRC check, so we implement standard parse to
+                        // bypass ChannelBase CRC frame validation on cumulative frame image
+                        binaryImage = frameImages.BinaryImage;
+                        length = frameImages.BinaryLength;
+                        startIndex = 0;
+
+                        // Parse out header, body and footer images
+                        startIndex += ParseHeaderImage(binaryImage, startIndex, length);
+                        startIndex += ParseBodyImage(binaryImage, startIndex, length - startIndex);
+                        startIndex += ParseFooterImage(binaryImage, startIndex, length - startIndex);
+
+                        return startIndex;
+                    }
+                }
+
+                // There are more header frame images coming, keep parser moving by returning total
+                // frame length that was already parsed.
+                return State.ParsedBinaryLength;
+            }
+
+            return base.Initialize(binaryImage, startIndex, length);
+        }
+
+        /// <summary>
         /// Calculates checksum of given <paramref name="buffer"/>.
         /// </summary>
         /// <param name="buffer">Buffer image over which to calculate checksum.</param>

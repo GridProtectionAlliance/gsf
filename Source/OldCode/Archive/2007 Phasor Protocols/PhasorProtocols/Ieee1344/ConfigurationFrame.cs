@@ -280,13 +280,12 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <remarks>
         /// This method is overriden to parse from cumulated frame images.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">Invalid binary image detected - check sum did not match.</exception>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             // If frame image collector was used, make sure and parse from entire frame image...
             if (m_frameHeader != null)
             {
-                // If all configuration frames have been received, we can safely start parsing
+                // If all configuration frame images have been received, we can safely start parsing
                 if (m_frameHeader.IsLastFrame)
                 {
                     FrameImageCollector frameImages = m_frameHeader.FrameImages;
