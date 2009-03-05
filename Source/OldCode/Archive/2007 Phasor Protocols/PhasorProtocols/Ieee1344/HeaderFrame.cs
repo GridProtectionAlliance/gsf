@@ -117,7 +117,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             get
             {
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(Ieee1344.FrameType.ConfigurationFrame, Timestamp);
+                    m_frameHeader = new CommonFrameHeader(TypeID, Timestamp);
 
                 return m_frameHeader;
             }
