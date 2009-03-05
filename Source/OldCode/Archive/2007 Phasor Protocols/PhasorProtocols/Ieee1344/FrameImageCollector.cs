@@ -122,7 +122,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             // Validate CRC of frame image being appended
             if (!CommonFrameHeader.ChecksumIsValid(binaryImage, offset, length))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of individual IEEE 1344 interleaved configuration or header frame did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of individual IEEE 1344 interleaved frame transmission did not match");
 
             // Include initial header in new stream...
             if (m_frameQueue.Length == 0)
