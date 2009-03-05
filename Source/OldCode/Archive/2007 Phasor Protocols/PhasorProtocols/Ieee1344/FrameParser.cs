@@ -182,7 +182,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                             break;
                         case FrameType.HeaderFrame:
                             // Assign header frame parsing state
-                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.FrameLength - CommonFrameHeader.FixedLength - 2);
+                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength);
 
                             // Cumulate header frame images...
                             CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_headerFrameImages);
