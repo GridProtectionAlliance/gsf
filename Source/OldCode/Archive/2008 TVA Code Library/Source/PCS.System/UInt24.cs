@@ -92,11 +92,14 @@ namespace System
 
         /// <summary>Creates 24-bit unsigned integer from three bytes at a specified position in a byte array.</summary>
         /// <param name="value">An array of bytes.</param>
-        /// <param name="startIndex">The starting position within value.</param>
+        /// <param name="startIndex">The starting position within <paramref name="value"/>.</param>
         /// <remarks>
         /// <para>You can use this constructor in-lieu of a System.BitConverter.ToUInt24 function.</para>
         /// <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
         /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="value"/> cannot be null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="startIndex"/> is greater than <paramref name="value"/> length.</exception>
+        /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent a <see cref="UInt24"/>.</exception>
         public UInt24(byte[] value, int startIndex)
         {
             m_value = UInt24.GetValue(value, startIndex).m_value;
@@ -1183,10 +1186,10 @@ namespace System
         }
 
         /// <summary>Returns the specified UInt24 value as an array of three bytes.</summary>
-        /// <param name="value">UInt24 value to </param>
+        /// <param name="value">UInt24 value to convert to bytes.</param>
         /// <returns>An array of bytes with length 3.</returns>
         /// <remarks>
-        /// <para>You can use this function in-lieu of a System.BitConverter.GetBytes function.</para>
+        /// <para>You can use this function in-lieu of a System.BitConverter.GetBytes(UInt24) function.</para>
         /// <para>Bytes will be returned in endian order of currently executing process architecture (little-endian on Intel platforms).</para>
         /// </remarks>
         public static byte[] GetBytes(UInt24 value)
@@ -1218,8 +1221,20 @@ namespace System
         /// <para>You can use this function in-lieu of a System.BitConverter.ToUInt24 function.</para>
         /// <para>Bytes endian order assumed to match that of currently executing process architecture (little-endian on Intel platforms).</para>
         /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="value"/> cannot be null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="startIndex"/> is greater than <paramref name="value"/> length.</exception>
+        /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent an <see cref="UInt24"/>.</exception>
         public static UInt24 GetValue(byte[] value, int startIndex)
         {
+            if (value == null)
+                throw new ArgumentNullException("value");
+
+            if (startIndex >= value.Length)
+                throw new ArgumentOutOfRangeException("startIndex", "startIndex is greater than value length");
+
+            if (startIndex > value.Length - 3)
+                throw new ArgumentException("value length from startIndex is too small to represent an UInt24");
+
             // We use a 32-bit integer to store 24-bit integer internally
             byte[] bytes = new byte[4];
 
