@@ -69,7 +69,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="offset">The offset of this <see cref="FrequencyDefinition"/>.</param>
         /// <param name="dfdtScale">The df/dt scaling value of this <see cref="FrequencyDefinition"/>.</param>
         /// <param name="dfdtOffset">The df/dt offset of this <see cref="FrequencyDefinition"/>.</param>
-        public FrequencyDefinition(ConfigurationCell parent, string label, uint scale, float offset, uint dfdtScale, float dfdtOffset)
+        public FrequencyDefinition(ConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
             : base(parent, label, scale, offset, dfdtScale, dfdtOffset)
         {
         }
