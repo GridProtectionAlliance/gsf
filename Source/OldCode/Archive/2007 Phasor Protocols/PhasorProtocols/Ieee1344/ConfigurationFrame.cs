@@ -1,91 +1,105 @@
 //*******************************************************************************************************
-//  ConfigurationFrame.vb - IEEE1344 Configuration Frame
+//  ConfigurationFrame.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 using System;
-using System.Runtime.Serialization;
+using System.ComponentModel;
 using System.Collections.Generic;
-using PCS;
+using System.Runtime.Serialization;
 using PCS.Parsing;
 using PCS.IO.Checksums;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public class ConfigurationFrame : ConfigurationFrameBase, ISupportFrameImage<FrameType>
     {
+        #region [ Members ]
+
+        // Fields
         private CommonFrameHeader m_frameHeader;
         private ulong m_idCode;
         private short m_sampleCount;
 
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used to by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE 1344 configuration frame.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public ConfigurationFrame()
-            : base(new ConfigurationCellCollection())
+            : base(0, new ConfigurationCellCollection(), 0, 0)
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrame"/> from the specified parameters.
+        /// </summary>
+        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrame"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame"/>.</param>
+        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE 1344 configuration frame.
+        /// </remarks>
+        public ConfigurationFrame(ulong idCode, Ticks timestamp, short frameRate)
+            : base(0, new ConfigurationCellCollection(), timestamp, frameRate)
+        {
+            IDCode = idCode;
+            m_frameHeader = new CommonFrameHeader(Ieee1344.FrameType.ConfigurationFrame, m_idCode, timestamp);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected ConfigurationFrame(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize configuration frame
             m_idCode = info.GetUInt64("idCode64Bit");
             m_sampleCount = info.GetInt16("sampleCount");
-
         }
 
-        public ConfigurationFrame(ulong idCode, long ticks, short frameRate)
-            : base((ushort)(idCode % ushort.MaxValue), new ConfigurationCellCollection(), ticks, frameRate)
-        {
+        #endregion
 
-            //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.ConfigurationFrame);
-            m_idCode = idCode;
+        #region [ Properties ]
 
-        }
-
-        //public ConfigurationFrame(ICommonFrameHeader parsedFrameHeader, byte[] binaryImage, int startIndex)
-        //    : base(new ConfigurationFrameParsingState(new ConfigurationCellCollection(), parsedFrameHeader.FrameLength, Ieee1344.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
-        //{
-        //    //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.ConfigurationFrame);
-        //    //CommonFrameHeader.Clone(parsedFrameHeader, this);
-        //    //parsedFrameHeader.Dispose();
-        //}
-
-        public ConfigurationFrame(IConfigurationFrame configurationFrame)
-            : base(configurationFrame)
-        {
-            //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.ConfigurationFrame);
-        }
-
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
+        /// <summary>
+        /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
+        /// </summary>
         public new ConfigurationCellCollection Cells
         {
             get
             {
-                return (ConfigurationCellCollection)base.Cells;
+                return base.Cells as ConfigurationCellCollection;
             }
         }
 
+        /// <summary>
+        /// Gets or sets the ID code of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
         public new ulong IDCode
         {
             get
@@ -97,13 +111,13 @@ namespace PCS.PhasorProtocols.Ieee1344
                 m_idCode = value;
 
                 // Base classes constrain maximum value to 65535
-                if (m_idCode > ushort.MaxValue)
-                    base.IDCode = ushort.MaxValue;
-                else
-                    base.IDCode = (ushort)value;
+                base.IDCode = value > ushort.MaxValue ? ushort.MaxValue : (ushort)value;
             }
         }
 
+        /// <summary>
+        /// Gets the entire length of the IEEE 1344 frame.
+        /// </summary>
         public ushort FrameLength
         {
             get
@@ -112,6 +126,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the length of the data in the IEEE 1344 frame.
+        /// </summary>
         public ushort DataLength
         {
             get
@@ -120,32 +137,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        //public short InternalSampleCount
-        //{
-        //    get
-        //    {
-        //        return m_sampleCount;
-        //    }
-        //    set
-        //    {
-        //        m_sampleCount = value;
-        //    }
-        //}
-
-        //// Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share status flags with our only child
-        //// and expose the value at the parent level for convience in determing frame length at the frame level
-        //public short InternalStatusFlags
-        //{
-        //    get
-        //    {
-        //        return Cells[0].StatusFlags;
-        //    }
-        //    set
-        //    {
-        //        Cells[0].StatusFlags = value;
-        //    }
-        //}
-
+        /// <summary>
+        /// Gets the timestamp of this frame in NTP format.
+        /// </summary>
         public new NtpTimeTag TimeTag
         {
             get
@@ -154,10 +148,13 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        // Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share nominal frequency with our only child
-        // and expose the value at the parent level for convience
+        /// <summary>
+        /// Gets or sets the nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
         public LineFrequency NominalFrequency
         {
+            // Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share nominal frequency with our only child
+            // and expose the value at the parent level for convience
             get
             {
                 return Cells[0].NominalFrequency;
@@ -168,6 +165,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets the IEEE 1344 period value.
+        /// </summary>
         public short Period
         {
             get
@@ -180,6 +180,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the identifier that can is used to identify the IEEE 1344 frame.
+        /// </summary>
         public FrameType TypeID
         {
             get
@@ -188,6 +191,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets current <see cref="CommonFrameHeader"/>.
+        /// </summary>
         public CommonFrameHeader CommonHeader
         {
             get
@@ -200,24 +206,22 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
             get
             {
-                return (ICommonHeader<FrameType>)m_frameHeader;
+                return m_frameHeader;
             }
             set
             {
-                m_frameHeader = (CommonFrameHeader)value;
+                m_frameHeader = value as CommonFrameHeader;
             }
         }
 
-        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
-        {
-            // IEEE 1344 uses CRC16 to calculate checksum for frames
-            return buffer.Xor16CheckSum(offset, length);
-        }
-
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
         protected override int HeaderLength
         {
             get
@@ -226,24 +230,26 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the binary header image of the <see cref="ConfigurationFrame"/> object.
+        /// </summary>
         protected override byte[] HeaderImage
         {
             get
             {
+                // Make sure to provide proper frame length in the header image 
+                unchecked
+                {
+                    m_frameHeader.FrameLength = (ushort)BinaryLength;
+                }
+
                 return m_frameHeader.BinaryImage;
             }
         }
 
-        protected override void ParseHeaderImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            // Header was preparsed by common frame header...
-
-            // IEEE 1344 only supports a single PMU...
-            ((IConfigurationFrameParsingState)state).CellCount = 1;
-
-        }
-
+        /// <summary>
+        /// Gets the length of the <see cref="FooterImage"/>.
+        /// </summary>
         protected override int FooterLength
         {
             get
@@ -252,6 +258,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the binary footer image of the <see cref="ConfigurationFrame"/> object.
+        /// </summary>
         protected override byte[] FooterImage
         {
             get
@@ -260,24 +269,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        protected override void ParseFooterImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            Period = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize configuration frame
-            info.AddValue("idCode64Bit", m_idCode);
-            info.AddValue("sampleCount", m_sampleCount);
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationFrame"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -285,7 +279,18 @@ namespace PCS.PhasorProtocols.Ieee1344
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
-                baseAttributes.Add("Frame Length", FrameLength.ToString());
+
+                if (CommonHeader != null && CommonHeader.FrameImages != null)
+                {
+                    baseAttributes.Add("Frame Length", CommonHeader.FrameImages.BinaryLength.ToString());
+                    baseAttributes.Add("Frame Images", CommonHeader.FrameImages.Count.ToString());
+                }
+                else
+                {
+                    baseAttributes.Add("Frame Length", FrameLength.ToString());
+                    baseAttributes.Add("Frame Images", "0");
+                }
+
                 baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
                 baseAttributes.Add("Sample Count", m_sampleCount.ToString());
                 baseAttributes.Add("Period", Period.ToString());
@@ -293,5 +298,101 @@ namespace PCS.PhasorProtocols.Ieee1344
                 return baseAttributes;
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This method is overriden to parse from cumulated frame images.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Invalid binary image detected - check sum did not match.</exception>
+        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            // If frame image collector was used, make sure and parse from entire frame image...
+            if (m_frameHeader != null)
+            {
+                // If all configuration frames have been received, we can safely start parsing
+                if (m_frameHeader.IsLastFrame)
+                {
+                    FrameImageCollector frameImages = m_frameHeader.FrameImages;
+
+                    if (frameImages != null)
+                    {
+                        // Each individual frame will already have had a CRC check, so we implement standard parse to
+                        // bypass ChannelBase CRC frame validation on cumulative frame image
+                        binaryImage = frameImages.BinaryImage;
+                        length = frameImages.BinaryLength;
+                        startIndex = 0;
+
+                        // Parse out header, body and footer images
+                        startIndex += ParseHeaderImage(binaryImage, startIndex, length);
+                        startIndex += ParseBodyImage(binaryImage, startIndex, length - startIndex);
+                        startIndex += ParseFooterImage(binaryImage, startIndex, length - startIndex);
+
+                        return startIndex;
+                    }
+                }
+
+                // There are more configuration frame images coming, keep parser moving by returning total
+                // frame length that was already parsed.
+                return State.ParsedBinaryLength;
+            }
+
+            return base.Initialize(binaryImage, startIndex, length);
+        }
+
+        /// <summary>
+        /// Parses the binary footer image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseFooterImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // Period assignment calculates FrameRate using NominalFrequency which is shared
+            // with first (and only) configuration cell, since cell was added during ParseBodyImage
+            // of ChannelFrameBase, performing the following succeeds since parsing the footer
+            // follows parsing the body :)
+            Period = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            return 2;
+        }
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE 1344 uses CRC16 to calculate checksum for frames
+            return buffer.Crc16Checksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize configuration frame
+            info.AddValue("idCode64Bit", m_idCode);
+            info.AddValue("sampleCount", m_sampleCount);
+        }
+
+        #endregion
     }
 }

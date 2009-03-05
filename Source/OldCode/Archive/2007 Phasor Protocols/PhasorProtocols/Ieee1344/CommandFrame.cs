@@ -27,13 +27,14 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
     /// </summary>
+    /// <remarks>
+    /// IEEE 1344 command frames are designed only to be sent to a device, not received from a device. As a result
+    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing.
+    /// </remarks>
     [Serializable()]
-    public class CommandFrame : CommandFrameBase, ISupportFrameImage<FrameType>
+    public class CommandFrame : CommandFrameBase
     {
         #region [ Members ]
-
-        // Constants
-        public const ushort FrameLength = 16;
 
         // Fields
         private ulong m_idCode;
@@ -41,6 +42,20 @@ namespace PCS.PhasorProtocols.Ieee1344
         #endregion
 
         #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="CommandFrame"/> from the specified parameters.
+        /// </summary>
+        /// <param name="idCode">The ID code of this <see cref="CommandFrame"/>.</param>
+        /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE 1344 command frame.
+        /// </remarks>
+        public CommandFrame(ulong idCode, DeviceCommand command)
+            : base(new CommandCellCollection(0), command)
+        {
+            m_idCode = idCode;
+        }
 
         /// <summary>
         /// Creates a new <see cref="CommandFrame"/> from serialization parameters.
@@ -52,17 +67,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             // Deserialize command frame
             m_idCode = info.GetUInt64("idCode64Bit");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="CommandFrame"/> from the specified parameters.
-        /// </summary>
-        /// <param name="idCode">The ID code of this <see cref="CommandFrame"/>.</param>
-        /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
-        public CommandFrame(ulong idCode, DeviceCommand command)
-            : base(new CommandCellCollection(0), command)
-        {
-            m_idCode = idCode;
         }
 
         #endregion
@@ -109,7 +113,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 m_idCode = value;
-                base.IDCode = value % int.MaxValue;
+
+                // Base classes constrain maximum value to 65535
+                base.IDCode = m_idCode > ushort.MaxValue ? ushort.MaxValue : (ushort)value;
             }
         }
 
@@ -179,9 +185,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
         {
-            Timestamp = (new NtpTimeTag(EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex))).ToDateTime().Ticks;
+            Timestamp = (new NtpTimeTag((double)EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex))).ToDateTime().Ticks;
             m_idCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex + 4);
-            return HeaderLength;
+            return 12;
         }
 
         /// <summary>

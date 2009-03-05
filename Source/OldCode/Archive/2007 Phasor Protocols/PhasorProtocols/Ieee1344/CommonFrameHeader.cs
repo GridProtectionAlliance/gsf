@@ -57,6 +57,19 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="CommonFrameHeader"/>.
         /// </summary>
+        public CommonFrameHeader(FrameType typeID, ulong idCode, Ticks timestamp)
+        {
+            TypeID = typeID;
+            IDCode = idCode;
+            Timestamp = timestamp;
+            FrameCount = 1;
+            IsFirstFrame = true;
+            IsLastFrame = true;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CommonFrameHeader"/> from given <paramref name="binaryImage"/>.
+        /// </summary>
         /// <param name="configurationFrame">IEEE 1344 <see cref="ConfigurationFrame"/> if already parsed.</param>
         /// <param name="binaryImage">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
@@ -72,12 +85,12 @@ namespace PCS.PhasorProtocols.Ieee1344
             // this increases needed common frame header size by 2 (i.e., BinaryLength + 2)
             m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + FixedLength);
 
-            if (TypeID == Ieee1344.FrameType.DataFrame && (configurationFrame != null))
+            if (TypeID == Ieee1344.FrameType.DataFrame && configurationFrame != null)
                 // Data frames have subsecond time information
                 Timestamp = (new NtpTimeTag((double)secondOfCentury + (double)SampleCount / System.Math.Floor((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate)).ToDateTime().Ticks;
             else
                 // For other frames, the best timestamp you can get is down to the whole second
-                Timestamp = (new NtpTimeTag(secondOfCentury)).ToDateTime().Ticks;
+                Timestamp = (new NtpTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
         }
 
         /// <summary>
@@ -307,7 +320,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value > Common.MaximumDataLength)
-                    throw (new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength));
+                    throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
                 else
                     FrameLength = (ushort)(value + FixedLength + 2);
             }
@@ -415,17 +428,6 @@ namespace PCS.PhasorProtocols.Ieee1344
             {
                 return FixedLength;
             }
-        }
-
-        /// <summary>
-        /// Parses the binary image.
-        /// </summary>
-        /// <remarks>
-        /// The common frame header is parsed during construction - so this is not implemented.
-        /// </remarks>
-        public void ParseBinaryImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
