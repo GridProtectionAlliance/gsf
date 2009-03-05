@@ -1,223 +1,221 @@
 //*******************************************************************************************************
-//  HeaderFrame.vb - IEEE1344 Header Frame
+//  HeaderFrame.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 using System;
-using System.Runtime.Serialization;
+using System.ComponentModel;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using PCS.Parsing;
 using PCS.IO.Checksums;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.Ieee1344
 {
-    namespace Ieee1344
+    /// <summary>
+    /// Represents the IEEE 1344 implementation of a <see cref="IHeaderFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
+    public class HeaderFrame : HeaderFrameBase, ISupportFrameImage<FrameType>, ICommonFrame
     {
-        /// <summary>IEEE1344 Header Frame</summary>
-        [CLSCompliant(false), Serializable()]
-        public class HeaderFrame : HeaderFrameBase, ISupportFrameImage<FrameType>
+        #region [ Members ]
+
+        // Fields
+        private CommonFrameHeader m_frameHeader;
+        private ulong m_idCode;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="HeaderFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE 1344 configuration frame and by the
+        /// <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE 1344 configuration frame.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public HeaderFrame()
+            : base(new HeaderCellCollection(Ieee1344.Common.MaximumHeaderDataLength))
         {
-            private CommonFrameHeader m_frameHeader;
-            private ulong m_idCode;
-            private short m_sampleCount;
-            private short m_statusFlags;
+        }
 
-            public HeaderFrame()
-                : base(new HeaderCellCollection(Ieee1344.Common.MaximumHeaderDataLength))
+        /// <summary>
+        /// Creates a new <see cref="HeaderFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected HeaderFrame(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize header frame
+            m_idCode = info.GetUInt64("idCode64Bit");
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the ID code of this <see cref="HeaderFrame"/>.
+        /// </summary>
+        public new ulong IDCode
+        {
+            get
             {
-
-                //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
-
+                return m_idCode;
             }
-
-            protected HeaderFrame(SerializationInfo info, StreamingContext context)
-                : base(info, context)
+            set
             {
+                m_idCode = value;
 
-
-                // Deserialize header frame
-                m_idCode = info.GetUInt64("idCode64Bit");
-                m_sampleCount = info.GetInt16("sampleCount");
-                m_statusFlags = info.GetInt16("statusFlags");
-
-            }
-
-            //public HeaderFrame(IFrameImage parsedFrameHeader, byte[] binaryImage, int startIndex)
-            //    : base(new HeaderFrameParsingState(new HeaderCellCollection(Common.MaximumHeaderDataLength), parsedFrameHeader.FrameLength, (short)(parsedFrameHeader.FrameLength - CommonFrameHeader.FixedLength - 2)), binaryImage, startIndex)
-            //{
-            //    //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
-            //    //CommonFrameHeader.Clone(parsedFrameHeader, this);
-            //    //parsedFrameHeader.Dispose();
-            //}
-
-            public HeaderFrame(IHeaderFrame headerFrame)
-                : base(headerFrame)
-            {
-
-                //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.HeaderFrame);
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ulong IDCode
-            {
-                get
-                {
-                    return m_idCode;
-                }
-                set
-                {
-                    m_idCode = value;
-                }
-            }
-
-            public new NtpTimeTag TimeTag
-            {
-                get
-                {
-                    return m_frameHeader.TimeTag;
-                }
-            }
-
-            public FrameType TypeID
-            {
-                get
-                {
-                    return Ieee1344.FrameType.HeaderFrame;
-                }
-            }
-
-            public CommonFrameHeader CommonHeader
-            {
-                get
-                {
-                    return m_frameHeader;
-                }
-                set
-                {
-                    m_frameHeader = value;
-                }
-            }
-
-            ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
-            {
-                get
-                {
-                    return (ICommonHeader<FrameType>) m_frameHeader;
-                }
-                set
-                {
-                    m_frameHeader = (CommonFrameHeader)value;
-                }
-            }
-
-            public ushort FrameLength
-            {
-                get
-                {
-                    return m_frameHeader.FrameLength;
-                }
-            }
-
-            public ushort DataLength
-            {
-                get
-                {
-                    return m_frameHeader.DataLength;
-                }
-            }
-
-            //public short InternalSampleCount
-            //{
-            //    get
-            //    {
-            //        return m_sampleCount;
-            //    }
-            //    set
-            //    {
-            //        m_sampleCount = value;
-            //    }
-            //}
-
-            //public short InternalStatusFlags
-            //{
-            //    get
-            //    {
-            //        return m_statusFlags;
-            //    }
-            //    set
-            //    {
-            //        m_statusFlags = value;
-            //    }
-            //}
-
-            protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
-            {
-                // IEEE 1344 uses CRC16 to calculate checksum for frames
-                return buffer.Crc16Checksum(offset, length);
-            }
-
-            protected override int HeaderLength
-            {
-                get
-                {
-                    return m_frameHeader.BinaryLength;
-                }
-            }
-
-            protected override byte[] HeaderImage
-            {
-                get
-                {
-                    return m_frameHeader.BinaryImage;
-                }
-            }
-
-            public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            {
-
-                base.GetObjectData(info, context);
-
-                // Serialize header frame
-                info.AddValue("idCode64Bit", m_idCode);
-                info.AddValue("sampleCount", m_sampleCount);
-                info.AddValue("statusFlags", m_statusFlags);
-
-            }
-
-            public override Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    Dictionary<string, string> baseAttributes = base.Attributes;
-
-                    baseAttributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
-                    baseAttributes.Add("Frame Length", FrameLength.ToString());
-                    baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
-                    baseAttributes.Add("Sample Count", m_sampleCount.ToString());
-
-                    return baseAttributes;
-                }
+                // Base classes constrain maximum value to 65535
+                base.IDCode = value > ushort.MaxValue ? ushort.MaxValue : (ushort)value;
             }
         }
+
+        /// <summary>
+        /// Gets the timestamp of this frame in NTP format.
+        /// </summary>
+        public new NtpTimeTag TimeTag
+        {
+            get
+            {
+                return CommonHeader.TimeTag;
+            }
+        }
+
+        /// <summary>
+        /// Gets the identifier that can is used to identify the IEEE 1344 frame.
+        /// </summary>
+        public FrameType TypeID
+        {
+            get
+            {
+                return Ieee1344.FrameType.HeaderFrame;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets current <see cref="CommonFrameHeader"/>.
+        /// </summary>
+        public CommonFrameHeader CommonHeader
+        {
+            get
+            {
+                if (m_frameHeader == null)
+                    m_frameHeader = new CommonFrameHeader(Ieee1344.FrameType.ConfigurationFrame, Timestamp);
+
+                return m_frameHeader;
+            }
+            set
+            {
+                m_frameHeader = value;
+            }
+        }
+
+        // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
+        ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
+        {
+            get
+            {
+                return CommonHeader;
+            }
+            set
+            {
+                CommonHeader = value as CommonFrameHeader;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
+        protected override int HeaderLength
+        {
+            get
+            {
+                return CommonHeader.BinaryLength;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary header image of the <see cref="HeaderFrame"/> object.
+        /// </summary>
+        protected override byte[] HeaderImage
+        {
+            get
+            {
+                // Make sure to provide proper frame length in the header image 
+                unchecked
+                {
+                    CommonHeader.FrameLength = (ushort)BinaryLength;
+                }
+
+                return CommonHeader.BinaryImage;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="HeaderFrame"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                if (m_frameHeader != null)
+                    m_frameHeader.AppendHeaderAttributes(baseAttributes);
+
+                baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE 1344 uses CRC16 to calculate checksum for frames
+            return buffer.Crc16Checksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize configuration frame
+            info.AddValue("idCode64Bit", m_idCode);
+        }
+
+        #endregion
     }
 }

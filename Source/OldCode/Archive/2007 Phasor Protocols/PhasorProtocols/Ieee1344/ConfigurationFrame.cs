@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
     [Serializable()]
-    public class ConfigurationFrame : ConfigurationFrameBase, ISupportFrameImage<FrameType>
+    public class ConfigurationFrame : ConfigurationFrameBase, ISupportFrameImage<FrameType>, ICommonFrame
     {
         #region [ Members ]
 
@@ -65,7 +65,6 @@ namespace PCS.PhasorProtocols.Ieee1344
             : base(0, new ConfigurationCellCollection(), timestamp, frameRate)
         {
             IDCode = idCode;
-            m_frameHeader = new CommonFrameHeader(Ieee1344.FrameType.ConfigurationFrame, m_idCode, timestamp);
         }
 
         /// <summary>
@@ -120,7 +119,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return m_frameHeader.TimeTag;
+                return CommonHeader.TimeTag;
             }
         }
 
@@ -174,6 +173,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
+                if (m_frameHeader == null)
+                    m_frameHeader = new CommonFrameHeader(Ieee1344.FrameType.ConfigurationFrame, Timestamp);
+
                 return m_frameHeader;
             }
             set
@@ -187,11 +189,11 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return m_frameHeader;
+                return CommonHeader;
             }
             set
             {
-                m_frameHeader = value as CommonFrameHeader;
+                CommonHeader = value as CommonFrameHeader;
             }
         }
 
@@ -202,7 +204,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return m_frameHeader.BinaryLength;
+                return CommonHeader.BinaryLength;
             }
         }
 
@@ -216,10 +218,10 @@ namespace PCS.PhasorProtocols.Ieee1344
                 // Make sure to provide proper frame length in the header image 
                 unchecked
                 {
-                    m_frameHeader.FrameLength = (ushort)BinaryLength;
+                    CommonHeader.FrameLength = (ushort)BinaryLength;
                 }
 
-                return m_frameHeader.BinaryImage;
+                return CommonHeader.BinaryImage;
             }
         }
 
@@ -254,9 +256,10 @@ namespace PCS.PhasorProtocols.Ieee1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                if (m_frameHeader != null)
-                    m_frameHeader.AppendHeaderAttributes(baseAttributes);
+                if (CommonHeader != null)
+                    CommonHeader.AppendHeaderAttributes(baseAttributes);
 
+                baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
                 baseAttributes.Add("Period", Period.ToString());
 
                 return baseAttributes;
