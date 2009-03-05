@@ -1215,6 +1215,7 @@ namespace PCS.Collections
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
+        /// <param name="item">A generic type T to be passed to ItemProcessed.</param>
         protected void RaiseItemProcessed(T item)
         {
             if (ItemProcessed != null)
@@ -1228,6 +1229,7 @@ namespace PCS.Collections
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
+        /// <param name="items">An array of generic type T to be passed to ItemsProcessed.</param>
         protected void RaiseItemsProcessed(T[] items)
         {
             if (ItemsProcessed != null)
@@ -1241,6 +1243,7 @@ namespace PCS.Collections
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
+        /// <param name="item">A generic type T to be passed to ItemProcessed.</param>
         protected void RaiseItemTimedOut(T item)
         {
             if (ItemTimedOut != null)
@@ -1254,6 +1257,7 @@ namespace PCS.Collections
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
+        /// <param name="items">An array of generic type T to be passed to ItemsProcessed.</param>
         protected void RaiseItemsTimedOut(T[] items)
         {
             if (ItemsTimedOut != null)
@@ -1267,6 +1271,7 @@ namespace PCS.Collections
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
+        /// <param name="ex"><see cref="Exception"/> to be passed to ProcessException.</param>
         protected void RaiseProcessException(Exception ex)
         {
             if (ProcessException != null)
@@ -1379,6 +1384,8 @@ namespace PCS.Collections
         /// <summary>
         /// Requeues item into <see cref="ProcessQueue{T}"/> according to specified requeue mode.
         /// </summary>
+        /// <param name="item">A generic item of type T to be requeued.</param>
+        /// <param name="mode">The method in which to requeue the object.</param>
         protected virtual void RequeueItem(T item, RequeueMode mode)
         {
             if (mode == RequeueMode.Prefix)
@@ -2731,6 +2738,7 @@ namespace PCS.Collections
 
         /// <summary>Removes the first item from the <see cref="ProcessQueue{T}"/>, and returns its value.</summary>
         /// <exception cref="IndexOutOfRangeException">There are no items in the <see cref="ProcessQueue{T}"/>.</exception>
+        /// <returns>An object of generic type T.</returns>
         public virtual T Pop()
         {
             lock (m_processQueue)
@@ -2748,7 +2756,8 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Removes the last item from the <see cref="ProcessQueue{T}"/>, and returns its value.</summary>
+        /// <summary>Removes the last item from the <see cref="ProcessQueue{T}"/>, and returns its value. (It's a dirty job, but someone has to do it.)</summary>
+        /// <returns>An object of generic type T.</returns>
         /// <exception cref="IndexOutOfRangeException">There are no items in the <see cref="ProcessQueue{T}"/>.</exception>
         public virtual T Poop()
         {
