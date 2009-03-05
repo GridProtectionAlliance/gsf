@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// Represents the IEEE 1344 implementation of a <see cref="IDataFrame"/> that can be sent or received.
     /// </summary>
     [Serializable()]
-    public class DataFrame : DataFrameBase, ISupportFrameImage<FrameType>, ICommonFrame
+    public class DataFrame : DataFrameBase, ISupportFrameImage<FrameType>
     {
         #region [ Members ]
 

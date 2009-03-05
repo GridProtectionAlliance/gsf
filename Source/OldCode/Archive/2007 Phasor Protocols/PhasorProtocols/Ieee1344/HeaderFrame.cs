@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// Represents the IEEE 1344 implementation of a <see cref="IHeaderFrame"/> that can be sent or received.
     /// </summary>
     [Serializable()]
-    public class HeaderFrame : HeaderFrameBase, ISupportFrameImage<FrameType>, ICommonFrame
+    public class HeaderFrame : HeaderFrameBase, ISupportFrameImage<FrameType>
     {
         #region [ Members ]
 
