@@ -29,6 +29,7 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         // Fields
         private MemoryStream m_frameQueue;
+        private int m_frameCount;
         private bool m_disposed;
 
         #endregion
@@ -74,6 +75,17 @@ namespace PCS.PhasorProtocols.Ieee1344
             get
             {
                 return (int)m_frameQueue.Length;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number frames appended to <see cref="FrameImageCollector"/>.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return m_frameCount;
             }
         }
 
@@ -133,6 +145,9 @@ namespace PCS.PhasorProtocols.Ieee1344
 
             // Include frame image
             m_frameQueue.Write(binaryImage, offset, length - CommonFrameHeader.FixedLength);
+
+            // Track total frame images
+            m_frameCount++;
         }
 
         #endregion
