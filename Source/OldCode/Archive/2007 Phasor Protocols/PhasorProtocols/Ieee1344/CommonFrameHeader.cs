@@ -234,9 +234,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        /// <summary>
-        /// Gets or sets any additional state information that might be needed for parsing.
-        /// </summary>
+        // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
             get
