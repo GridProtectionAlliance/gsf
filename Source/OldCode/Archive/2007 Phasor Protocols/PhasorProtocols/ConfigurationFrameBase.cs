@@ -89,6 +89,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="ConfigurationFrameBase"/>.
+        /// </summary>
+        public virtual new ConfigurationFrameParsingState State
+        {
+            get
+            {
+                return base.State as ConfigurationFrameParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets defined frame rate of this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
         public virtual short FrameRate

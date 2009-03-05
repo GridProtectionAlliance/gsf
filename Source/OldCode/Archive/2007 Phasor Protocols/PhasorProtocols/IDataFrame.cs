@@ -32,5 +32,10 @@ namespace PCS.PhasorProtocols
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="IDataFrame"/>.
         /// </summary>
         new DataCellCollection Cells { get; }
+
+        /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="IDataFrame"/>.
+        /// </summary>
+        new IDataFrameParsingState State { get; set; }
     }
 }

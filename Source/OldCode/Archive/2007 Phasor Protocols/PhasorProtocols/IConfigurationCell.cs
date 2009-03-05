@@ -30,6 +30,11 @@ namespace PCS.PhasorProtocols
         new IConfigurationFrame Parent { get; set; }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="IConfigurationCell"/>.
+        /// </summary>
+        new IConfigurationCellParsingState State { get; set; }
+
+            /// <summary>
         /// Gets or sets the station name of this <see cref="IConfigurationCell"/>.
         /// </summary>
         string StationName { get; set; }

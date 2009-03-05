@@ -101,6 +101,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="DataFrameBase"/>.
+        /// </summary>
+        public virtual new IDataFrameParsingState State
+        {
+            get
+            {
+                return base.State as IDataFrameParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the numeric ID code for this <see cref="DataFrameBase"/>.
         /// </summary>
         /// <remarks>
@@ -123,6 +138,25 @@ namespace PCS.PhasorProtocols
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This method is overriden to ensure assignment of configuration frame.
+        /// </remarks>
+        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            // Make sure configuration frame gets assigned before parsing begins...
+            ConfigurationFrame = State.ConfigurationFrame;
+
+            // Handle normal parsing
+            return base.Initialize(binaryImage, startIndex, length);
+        }
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.

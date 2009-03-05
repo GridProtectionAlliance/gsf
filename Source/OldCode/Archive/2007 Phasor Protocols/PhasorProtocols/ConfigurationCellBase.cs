@@ -102,6 +102,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="ConfigurationCellBase"/>.
+        /// </summary>
+        public virtual new IConfigurationCellParsingState State
+        {
+            get
+            {
+                return base.State as IConfigurationCellParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the station name of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual string StationName
@@ -454,7 +469,7 @@ namespace PCS.PhasorProtocols
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
 
-            IConfigurationCellParsingState parsingState = State as IConfigurationCellParsingState;
+            IConfigurationCellParsingState parsingState = State;
             IPhasorDefinition phasorDefinition;
             IAnalogDefinition analogDefinition;
             IDigitalDefinition digitalDefinition;

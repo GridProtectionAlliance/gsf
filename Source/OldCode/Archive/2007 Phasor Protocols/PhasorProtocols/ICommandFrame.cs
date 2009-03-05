@@ -71,6 +71,11 @@ namespace PCS.PhasorProtocols
         new CommandCellCollection Cells { get; }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="ICommandFrame"/>.
+        /// </summary>
+        new ICommandFrameParsingState State { get; set; }
+    
+        /// <summary>
         /// Gets or sets <see cref="DeviceCommand"/> for this <see cref="ICommandFrame"/>.
         /// </summary>
         DeviceCommand Command { get; set; }

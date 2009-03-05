@@ -29,6 +29,11 @@ namespace PCS.PhasorProtocols
         new HeaderCellCollection Cells { get; }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="IHeaderFrame"/>.
+        /// </summary>
+        new HeaderFrameParsingState State { get; set; }
+
+        /// <summary>
         /// Gets or sets header data for this <see cref="IHeaderFrame"/>.
         /// </summary>
         string HeaderData { get; set; }

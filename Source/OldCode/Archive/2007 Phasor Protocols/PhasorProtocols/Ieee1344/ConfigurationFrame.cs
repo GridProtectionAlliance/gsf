@@ -35,7 +35,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Fields
         private CommonFrameHeader m_frameHeader;
         private ulong m_idCode;
-        private short m_sampleCount;
 
         #endregion
 
@@ -79,7 +78,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             // Deserialize configuration frame
             m_idCode = info.GetUInt64("idCode64Bit");
-            m_sampleCount = info.GetInt16("sampleCount");
         }
 
         #endregion
@@ -112,28 +110,6 @@ namespace PCS.PhasorProtocols.Ieee1344
 
                 // Base classes constrain maximum value to 65535
                 base.IDCode = value > ushort.MaxValue ? ushort.MaxValue : (ushort)value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the entire length of the IEEE 1344 frame.
-        /// </summary>
-        public ushort FrameLength
-        {
-            get
-            {
-                return m_frameHeader.FrameLength;
-            }
-        }
-
-        /// <summary>
-        /// Gets the length of the data in the IEEE 1344 frame.
-        /// </summary>
-        public ushort DataLength
-        {
-            get
-            {
-                return m_frameHeader.DataLength;
             }
         }
 
@@ -278,21 +254,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
+                if (m_frameHeader != null)
+                    m_frameHeader.AppendHeaderAttributes(baseAttributes);
 
-                if (CommonHeader != null && CommonHeader.FrameImages != null)
-                {
-                    baseAttributes.Add("Frame Length", CommonHeader.FrameImages.BinaryLength.ToString());
-                    baseAttributes.Add("Frame Images", CommonHeader.FrameImages.Count.ToString());
-                }
-                else
-                {
-                    baseAttributes.Add("Frame Length", FrameLength.ToString());
-                    baseAttributes.Add("Frame Images", "0");
-                }
-
-                baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
-                baseAttributes.Add("Sample Count", m_sampleCount.ToString());
                 baseAttributes.Add("Period", Period.ToString());
 
                 return baseAttributes;
@@ -384,13 +348,12 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 
             // Serialize configuration frame
             info.AddValue("idCode64Bit", m_idCode);
-            info.AddValue("sampleCount", m_sampleCount);
         }
 
         #endregion

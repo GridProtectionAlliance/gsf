@@ -61,6 +61,11 @@ namespace PCS.PhasorProtocols
         IConfigurationCell ConfigurationCell { get; set; }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="IDataCell"/>.
+        /// </summary>
+        new IDataCellParsingState State { get; set; }
+
+        /// <summary>
         /// Gets station name of this <see cref="IDataCell"/>.
         /// </summary>
         string StationName { get; }

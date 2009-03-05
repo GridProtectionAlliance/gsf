@@ -31,6 +31,11 @@ namespace PCS.PhasorProtocols
         new ConfigurationCellCollection Cells { get; }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="IConfigurationFrame"/>.
+        /// </summary>
+        new IConfigurationFrameParsingState State { get; set; }
+
+            /// <summary>
         /// Gets or sets defined frame rate of this <see cref="IConfigurationFrame"/>.
         /// </summary>
         short FrameRate { get; set; }

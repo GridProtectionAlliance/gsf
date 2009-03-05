@@ -1,92 +1,102 @@
 //*******************************************************************************************************
-//  DataFrame.vb - IEEE1344 Data Frame
+//  DataFrame.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using PCS;
 using PCS.Parsing;
 using PCS.IO.Checksums;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
-    /// <summary>IEEE1344 Data Frame</summary>
-    /// <remarks>This is essentially a "row" of PMU data at a given timestamp</remarks>
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the IEEE 1344 implementation of a <see cref="IDataFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public class DataFrame : DataFrameBase, ISupportFrameImage<FrameType>
     {
-        private CommonFrameHeader m_frameHeader;
-        private short m_sampleCount;
+        #region [ Members ]
 
+        // Fields
+        private CommonFrameHeader m_frameHeader;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="DataFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used to by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE 1344 data frame.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public DataFrame()
+            : base(new DataCellCollection(), 0, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DataFrame"/> from the specified parameters.
+        /// </summary>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrame"/>.</param>
+        /// <param name="configurationFrame">The <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE 1344 data frame.
+        /// </remarks>
+        public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame)
+            : base(new DataCellCollection(), timestamp, configurationFrame)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DataFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected DataFrame(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
-            // Deserialize data frame
-            m_sampleCount = info.GetInt16("sampleCount");
-
         }
 
-        public DataFrame(long ticks, ConfigurationFrame configurationFrame)
-            : base(new DataCellCollection(), ticks, configurationFrame)
-        {
+        #endregion
 
-            //m_frameHeader.FrameType = Ieee1344.FrameType.DataFrame;
+        #region [ Properties ]
 
-        }
-
-        //public DataFrame(IFrameImage parsedFrameHeader, ConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
-        //    : base(new DataFrameParsingState(new DataCellCollection(), parsedFrameHeader.FrameLength, configurationFrame, Ieee1344.DataCell.CreateNewDataCell), binaryImage, startIndex)
-        //{
-        //    //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.DataFrame);
-        //    //CommonFrameHeader.Clone(parsedFrameHeader, this);
-        //    //parsedFrameHeader.Dispose();
-        //}
-
-        public DataFrame(IDataFrame dataFrame)
-            : base(dataFrame)
-        {
-
-            //CommonFrameHeader.SetFrameType(this, Ieee1344.FrameType.DataFrame);
-
-        }
-
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
+        /// <summary>
+        /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
+        /// </summary>
         public new DataCellCollection Cells
         {
             get
             {
-                return (DataCellCollection)base.Cells;
+                return base.Cells as DataCellCollection;
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
+        /// </summary>
         public new ConfigurationFrame ConfigurationFrame
         {
             get
             {
-                return (ConfigurationFrame)base.ConfigurationFrame;
+                return base.ConfigurationFrame as ConfigurationFrame;
             }
             set
             {
@@ -94,6 +104,14 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the numeric ID code for this <see cref="DataFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value is read-only for <see cref="DataFrame"/>; assigning a value will throw an exception. Value returned
+        /// is the <see cref="IChannelFrame.IDCode"/> of the associated <see cref="ConfigurationFrame"/>.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">IDCode of a data frame is read-only, change IDCode is associated configuration frame instead.</exception>
         public new ulong IDCode
         {
             get
@@ -102,66 +120,13 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
             set
             {
-                // ID code is readonly for data frames - we don't throw an exception here if someone attempts to change
-                // the ID code on a data frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                // but we don't do anything with the value either.
+                throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode is associated configuration frame instead");
             }
         }
 
-        public ushort FrameLength
-        {
-            get
-            {
-                return m_frameHeader.FrameLength;
-            }
-        }
-
-        public ushort DataLength
-        {
-            get
-            {
-                return m_frameHeader.DataLength;
-            }
-        }
-
-        public short SampleCount
-        {
-            get
-            {
-                return m_frameHeader.SampleCount;
-            }
-            set
-            {
-                m_frameHeader.SampleCount = value;
-            }
-        }
-
-        //public short InternalSampleCount
-        //{
-        //    get
-        //    {
-        //        return m_sampleCount;
-        //    }
-        //    set
-        //    {
-        //        m_sampleCount = value;
-        //    }
-        //}
-
-        //// Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share status flags with our only child
-        //// and expose the value at the parent level for convience in determing frame length at the frame level
-        //public short InternalStatusFlags
-        //{
-        //    get
-        //    {
-        //        return Cells[0].StatusFlags;
-        //    }
-        //    set
-        //    {
-        //        Cells[0].StatusFlags = value;
-        //    }
-        //}
-
+        /// <summary>
+        /// Gets the timestamp of this frame in NTP format.
+        /// </summary>
         public new NtpTimeTag TimeTag
         {
             get
@@ -170,6 +135,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the identifier that can is used to identify the IEEE 1344 frame.
+        /// </summary>
         public FrameType TypeID
         {
             get
@@ -178,6 +146,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets current <see cref="CommonFrameHeader"/>.
+        /// </summary>
         public CommonFrameHeader CommonHeader
         {
             get
@@ -190,24 +161,22 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
             get
             {
-                return (ICommonHeader<FrameType>)m_frameHeader;
+                return m_frameHeader;
             }
             set
             {
-                m_frameHeader = (CommonFrameHeader)value;
+                m_frameHeader = value as CommonFrameHeader;
             }
         }
 
-        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
-        {
-            // IEEE 1344 uses CRC16 to calculate checksum for frames
-            return buffer.Crc16Checksum(offset, length);
-        }
-
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
         protected override int HeaderLength
         {
             get
@@ -216,37 +185,56 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the binary header image of the <see cref="DataFrame"/> object.
+        /// </summary>
         protected override byte[] HeaderImage
         {
             get
             {
+                // Make sure to provide proper frame length in the header image 
+                unchecked
+                {
+                    m_frameHeader.FrameLength = (ushort)BinaryLength;
+                }
+
                 return m_frameHeader.BinaryImage;
             }
         }
 
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize data frame
-            info.AddValue("sampleCount", m_sampleCount);
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
-                baseAttributes.Add("Frame Length", FrameLength.ToString());
-                baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
-                baseAttributes.Add("Sample Count", SampleCount.ToString());
-
+                if (m_frameHeader != null)
+                    m_frameHeader.AppendHeaderAttributes(baseAttributes);
+                
                 return baseAttributes;
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE 1344 uses CRC16 to calculate checksum for frames
+            return buffer.Crc16Checksum(offset, length);
+        }
+
+        #endregion
     }
 }

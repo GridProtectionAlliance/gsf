@@ -76,6 +76,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="HeaderFrameBase"/>.
+        /// </summary>
+        public virtual new IHeaderFrameParsingState State
+        {
+            get
+            {
+                return base.State as IHeaderFrameParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets header data for this <see cref="HeaderFrameBase"/>.
         /// </summary>
         public virtual string HeaderData

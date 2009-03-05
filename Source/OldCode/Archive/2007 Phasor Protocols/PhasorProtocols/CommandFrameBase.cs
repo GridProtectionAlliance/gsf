@@ -87,6 +87,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="CommandFrameBase"/>.
+        /// </summary>
+        public virtual new ICommandFrameParsingState State
+        {
+            get
+            {
+                return base.State as ICommandFrameParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.
         /// </summary>
         public virtual DeviceCommand Command
