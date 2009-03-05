@@ -16,9 +16,9 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.ComponentModel;
 using PCS.Parsing;
 using PCS.IO.Checksums;
 
@@ -36,6 +36,11 @@ namespace PCS.PhasorProtocols.Ieee1344
     {
         #region [ Members ]
 
+        /// <summary>
+        /// Total frame length of a IEEE 1344 <see cref="CommandFrame"/>.
+        /// </summary>
+        public const ushort FrameLength = 16;
+
         // Fields
         private ulong m_idCode;
 
@@ -43,6 +48,27 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="DataFrame"/> from the given <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to parse a received IEEE 1344 data frame. Typically
+        /// command frames are sent to a device. This constructor would used if this code was being used
+        /// inside of a phasor measurement device.
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> must be at least 16.</exception>
+        public CommandFrame(byte[] binaryImage, int startIndex, int length)
+            : base(new CommandCellCollection(0), DeviceCommand.ReservedBits)
+        {
+            if (length < FrameLength)
+                throw new ArgumentOutOfRangeException("length");
+
+            Initialize(binaryImage, startIndex, length);
+        }
+ 
         /// <summary>
         /// Creates a new <see cref="CommandFrame"/> from the specified parameters.
         /// </summary>
