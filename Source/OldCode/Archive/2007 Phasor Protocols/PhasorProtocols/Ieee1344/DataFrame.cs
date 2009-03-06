@@ -37,7 +37,6 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         #endregion
 
-
         #region [ Constructors ]
 
         /// <summary>
@@ -53,7 +52,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Creates a new <see cref="DataFrame"/> from the specified parameters.
+        /// Creates a new <see cref="DataFrame"/> from specified parameters.
         /// </summary>
         /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrame"/>.</param>
         /// <param name="configurationFrame">The <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.</param>
