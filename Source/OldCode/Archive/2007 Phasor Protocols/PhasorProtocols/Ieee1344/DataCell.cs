@@ -1,121 +1,119 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using PhasorProtocols.Ieee1344.Common;
-
 //*******************************************************************************************************
-//  DataCell.vb - IEEE 1344 PMU Data Cell
+//  DataCell.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
-
-    // This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public class DataCell : DataCellBase
     {
+        #region [ Constructors ]
 
-
-
-        protected DataCell()
+        /// <summary>
+        /// Creates a new <see cref="DataCell"/>.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCell"/>.</param>
+        /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
+        public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
+            : base(parent, configurationCell, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
+            // Define new parsing state which defines contructors for key data values
+            State = new DataCellParsingState(
+                configurationCell,
+                Ieee1344.PhasorValue.CreateNewValue,
+                Ieee1344.FrequencyValue.CreateNewValue,
+                null, // IEEE 1344 doesn't define analogs
+                Ieee1344.DigitalValue.CreateNewValue);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataCell"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="DataFrame"/> of this <see cref="DataCell"/>.</param>
+        /// <param name="configurationCell">The <see cref="ConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
+        /// <param name="addEmptyValues">If <c>true</c>, adds empty values for each defined configuration cell definition.</param>
+        public DataCell(DataFrame parent, ConfigurationCell configurationCell, bool addEmptyValues)
+            : this(parent, configurationCell)
+        {
+            if (addEmptyValues)
+            {
+                int x;
+
+                // Define needed phasor values
+                for (x = 0; x < ConfigurationCell.PhasorDefinitions.Count; x++)
+                {
+                    PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x]));
+                }
+
+                // Define a frequency and df/dt
+                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
+
+                // Define any digital values
+                for (x = 0; x < ConfigurationCell.DigitalDefinitions.Count; x++)
+                {
+                    DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x]));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DataCell"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected DataCell(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
         }
 
-        public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
-            : base(parent, false, configurationCell, PhasorProtocols.Ieee1344.Common.MaximumPhasorValues, PhasorProtocols.Ieee1344.Common.MaximumAnalogValues, PhasorProtocols.Ieee1344.Common.MaximumDigitalValues)
-        {
+        #endregion
 
+        #region [ Properties ]
 
-            int x;
-
-            // Initialize phasor values and frequency value with an empty value
-            for (x = 0; x <= ConfigurationCell.PhasorDefinitions.Count - 1; x++)
-            {
-                PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x], float.NaN, float.NaN));
-            }
-
-            // Initialize frequency and df/dt
-            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition, float.NaN, float.NaN);
-
-            // Initialize any digital values
-            for (x = 0; x <= ConfigurationCell.DigitalDefinitions.Count - 1; x++)
-            {
-                DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x], -1));
-            }
-
-        }
-
-        public DataCell(IDataCell dataCell)
-            : base(dataCell)
-        {
-
-
-        }
-
-        public DataCell(IDataFrame parent, DataFrameParsingState state, int index, byte[] binaryImage, int startIndex)
-            : base(parent, false, PhasorProtocols.Ieee1344.Common.MaximumPhasorValues, PhasorProtocols.Ieee1344.Common.MaximumAnalogValues, PhasorProtocols.Ieee1344.Common.MaximumDigitalValues, new DataCellParsingState(state.ConfigurationFrame.Cells[index], Ieee1344.PhasorValue.CreateNewValue, Ieee1344.FrequencyValue.CreateNewValue, null, Ieee1344.DigitalValue.CreateNewValue), binaryImage, startIndex)
-        {
-
-
-        }
-
-        internal static IDataCell CreateNewDataCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex)
-        {
-
-            return new DataCell((IDataFrame)parent, (DataFrameParsingState)state, index, binaryImage, startIndex);
-
-        }
-
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
+        /// <summary>
+        /// Gets or sets the reference to parent <see cref="DataFrame"/> of this <see cref="DataCell"/>.
+        /// </summary>
         public new DataFrame Parent
         {
             get
             {
-                return (DataFrame)base.Parent;
+                return base.Parent as DataFrame;
+            }
+            set
+            {
+                base.Parent = value;
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> associated with this <see cref="DataCell"/>.
+        /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
             get
             {
-                return (ConfigurationCell)base.ConfigurationCell;
+                return base.ConfigurationCell as ConfigurationCell;
             }
             set
             {
@@ -123,6 +121,20 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the numeric ID code for this <see cref="DataCell"/>.
+        /// </summary>
+        public new ulong IDCode
+        {
+            get
+            {
+                return ConfigurationCell.IDCode;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if data of this <see cref="DataCell"/> is valid.
+        /// </summary>
         public override bool DataIsValid
         {
             get
@@ -132,16 +144,15 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value)
-                {
                     StatusFlags = (short)(StatusFlags & ~Bit.Bit14);
-                }
                 else
-                {
                     StatusFlags = (short)(StatusFlags | Bit.Bit14);
-                }
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag that determines if timestamp of this <see cref="DataCell"/> is valid based on GPS lock.
+        /// </summary>
         public override bool SynchronizationIsValid
         {
             get
@@ -151,16 +162,15 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value)
-                {
                     StatusFlags = (short)(StatusFlags & ~Bit.Bit15);
-                }
                 else
-                {
                     StatusFlags = (short)(StatusFlags | Bit.Bit15);
-                }
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="PhasorProtocols.DataSortingType"/> of this <see cref="DataCell"/>.
+        /// </summary>
         public override DataSortingType DataSortingType
         {
             get
@@ -173,7 +183,12 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        public override bool PmuError
+        /// <summary>
+        /// Gets or sets flag that determines if source device of this <see cref="DataCell"/> is reporting an error.
+        /// </summary>
+        /// <remarks>IEEE 1344 doesn't define bits for device error.</remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override bool DeviceError
         {
             get
             {
@@ -185,6 +200,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets trigger status of this <see cref="DataCell"/>.
+        /// </summary>
         public TriggerStatus TriggerStatus
         {
             get
@@ -197,6 +215,24 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets <see cref="AnalogValueCollection"/>of this <see cref="DataCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// IEEE 1344 doesn't define any analog values.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override AnalogValueCollection AnalogValues
+        {
+            get
+            {
+                return base.AnalogValues;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -208,5 +244,23 @@ namespace PCS.PhasorProtocols.Ieee1344
                 return baseAttributes;
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Delegate handler to create a new IEEE 1344 data cell
+        internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
+        {
+            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataCellParsingState).ConfigurationCell);
+
+            parsedLength = dataCell.Initialize(binaryImage, startIndex, 0);
+
+            return dataCell;
+        }
+
+        #endregion        
     }
 }

@@ -130,7 +130,7 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this property is used to abstractly expose each value.
         /// </remarks>
-        public abstract double[] CompositeValues { get; set; }
+        public abstract double[] CompositeValues { get; }
 
         /// <summary>
         /// Gets the <see cref="CompositeValues"/> of this <see cref="ChannelValueBase{T}"/> as an array of <see cref="IMeasurement"/> values.

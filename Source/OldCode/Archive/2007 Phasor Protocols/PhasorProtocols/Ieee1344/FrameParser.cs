@@ -197,34 +197,6 @@ namespace PCS.PhasorProtocols.Ieee1344
             return 0;
         }
 
-        // Cumulates frame images
-        private void CumulateFrameImage(CommonFrameHeader parsedFrameHeader, byte[] buffer, int offset, ref FrameImageCollector frameImages)
-        {
-            // If this is the first frame, cumulate all partial frames together as one complete frame
-            if (parsedFrameHeader.IsFirstFrame)
-                frameImages = new FrameImageCollector();
-
-            try
-            {
-                // Append next frame image
-                frameImages.AppendFrameImage(buffer, offset, parsedFrameHeader.FrameLength);
-            }
-            catch
-            {
-                // Stop accumulation if CRC check fails
-                frameImages = null;
-                throw;
-            }
-
-            // Store a reference to frame image collection in common header state so configuration frame
-            // can be parsed from entire combined binary image collection when last frame is received
-            parsedFrameHeader.FrameImages = frameImages;
-
-            // Clear local reference to frame image collection if this is the last frame
-            if (parsedFrameHeader.IsLastFrame)
-                frameImages = null;
-        }
-
         /// <summary>
         /// Raises the <see cref="ReceivedConfigurationFrame"/> event.
         /// </summary>
@@ -315,9 +287,41 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Cumulates frame images
+        internal static void CumulateFrameImage(CommonFrameHeader parsedFrameHeader, byte[] buffer, int offset, ref FrameImageCollector frameImages)
+        {
+            // If this is the first frame, cumulate all partial frames together as one complete frame
+            if (parsedFrameHeader.IsFirstFrame)
+                frameImages = new FrameImageCollector();
+
+            try
+            {
+                // Append next frame image
+                frameImages.AppendFrameImage(buffer, offset, parsedFrameHeader.FrameLength);
+            }
+            catch
+            {
+                // Stop accumulation if CRC check fails
+                frameImages = null;
+                throw;
+            }
+
+            // Store a reference to frame image collection in common header state so configuration frame
+            // can be parsed from entire combined binary image collection when last frame is received
+            parsedFrameHeader.FrameImages = frameImages;
+
+            // Clear local reference to frame image collection if this is the last frame
+            if (parsedFrameHeader.IsLastFrame)
+                frameImages = null;
+        }
+
         // Attempts to cast given frame into an IEEE 1344 configuration frame - hypothetically this would
         // allow a configuration frame to be used in between different protocol implementations
-        private ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
+        internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
@@ -332,7 +336,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                 foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
                 {
                     // Create new derived configuration cell
-                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.NominalFrequency);
+                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                     // Create equivalent derived phasor definitions
                     foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
@@ -344,21 +348,22 @@ namespace PCS.PhasorProtocols.Ieee1344
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
                     if (sourceFrequency != null)
-                        derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label, sourceFrequency.ScalingValue, sourceFrequency.Offset, sourceFrequency.DfDtScalingValue, sourceFrequency.DfDtOffset);
+                        derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // IEEE 1344 does not define analog values...
 
                     // Create equivalent dervied digital definitions
                     foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
                     {
-                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label);
+                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
                     }
                 }
             }
 
             return derivedFrame;
         }
-
+        
         #endregion
+        
     }
 }

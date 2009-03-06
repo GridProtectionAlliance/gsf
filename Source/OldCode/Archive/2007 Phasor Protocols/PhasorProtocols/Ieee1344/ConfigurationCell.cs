@@ -1,110 +1,110 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-//using PhasorProtocols.Common;
-//using PhasorProtocols.Ieee1344.Common;
-
 //*******************************************************************************************************
-//  ConfigurationCell.vb - IEEE 1344 Cconfiguration cell
+//  ConfigurationCell.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
-
-    [CLSCompliant(false), Serializable()]
+    /// <summary>
+    /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
     public class ConfigurationCell : ConfigurationCellBase
     {
+        #region [ Members ]
 
-
-
+        // Fields
         private CoordinateFormat m_coordinateFormat;
         private short m_statusFlags;
 
-        protected ConfigurationCell()
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
+        public ConfigurationCell(IConfigurationFrame parent)
+            : base(parent, false, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
+            // Define new parsing state which defines contructors for key configuration values
+            State = new ConfigurationCellParsingState(
+                Ieee1344.PhasorDefinition.CreateNewDefinition,
+                Ieee1344.FrequencyDefinition.CreateNewDefinition,
+                null, // IEEE 1344 doesn't define analogs
+                Ieee1344.DigitalDefinition.CreateNewDefinition);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationCell"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="ConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
+        /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCell"/>.</param>
+        /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
+        public ConfigurationCell(ConfigurationFrame parent, ulong idCode, LineFrequency nominalFrequency)
+            : this(parent)
+        {
+            IDCode = idCode;
+            NominalFrequency = nominalFrequency;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationCell"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected ConfigurationCell(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
-
             // Deserialize configuration cell
             m_coordinateFormat = (CoordinateFormat)info.GetValue("coordinateFormat", typeof(CoordinateFormat));
             m_statusFlags = info.GetInt16("statusFlags");
-
         }
 
-        public ConfigurationCell(ConfigurationFrame parent, LineFrequency nominalFrequency)
-            : base(parent, false, 0, nominalFrequency, PhasorProtocols.Ieee1344.Common.MaximumPhasorValues, PhasorProtocols.Ieee1344.Common.MaximumAnalogValues, PhasorProtocols.Ieee1344.Common.MaximumDigitalValues)
-        {
+        #endregion
 
+        #region [ Properties ]
 
-        }
-
-        public ConfigurationCell(IConfigurationCell configurationCell)
-            : base(configurationCell)
-        {
-
-
-        }
-
-        // This constructor satisfies ChannelCellBase class requirement:
-        //   Final dervived classes must expose Public Sub New(ByVal parent As IChannelFrame, ByVal state As IChannelFrameParsingState, ByVal index As int, ByVal binaryImage As Byte(), ByVal startIndex As int)
-        public ConfigurationCell(IConfigurationFrame parent, IConfigurationFrameParsingState state, int index, byte[] binaryImage, int startIndex)
-            : base(parent, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues, new ConfigurationCellParsingState(Ieee1344.PhasorDefinition.CreateNewPhasorDefinition, Ieee1344.FrequencyDefinition.CreateNewFrequencyDefinition, null, Ieee1344.DigitalDefinition.CreateNewDigitalDefinition), binaryImage, startIndex)
-        {
-
-            // We pass in defaults for id code and nominal frequency since these will be parsed out later
-
-        }
-
-        internal static IConfigurationCell CreateNewConfigurationCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] binaryImage, int startIndex)
-        {
-
-            return new ConfigurationCell((IConfigurationFrame)parent, (IConfigurationFrameParsingState)state, index, binaryImage, startIndex);
-
-        }
-
-        public override System.Type DerivedType
-        {
-            get
-            {
-                return this.GetType();
-            }
-        }
-
+        /// <summary>
+        /// Gets a reference to the parent <see cref="ConfigurationFrame"/> for this <see cref="ConfigurationCell"/>.
+        /// </summary>
         public new ConfigurationFrame Parent
         {
             get
             {
-                return (ConfigurationFrame)base.Parent;
+                return base.Parent as ConfigurationFrame;
+            }
+            set
+            {
+                base.Parent = value;
             }
         }
 
+        /// <summary>
+        /// Gets or sets status flags of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// These are bit flags, use properties to change basic values.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public short StatusFlags
         {
             get
@@ -117,11 +117,14 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets the ID code of this <see cref="ConfigurationCell"/>.
+        /// </summary>
         public new ulong IDCode
         {
+            // IEEE 1344 only allows one PMU, so we share ID code with parent frame...
             get
             {
-                // IEEE 1344 only allows one PMU, so we share ID code with parent frame...
                 return Parent.IDCode;
             }
             set
@@ -129,17 +132,13 @@ namespace PCS.PhasorProtocols.Ieee1344
                 Parent.IDCode = value;
 
                 // Base classes constrain maximum value to 65535
-                if (value > ushort.MaxValue)
-                {
-                    base.IDCode = ushort.MaxValue;
-                }
-                else
-                {
-                    base.IDCode = (ushort)value;
-                }
+                base.IDCode = value > ushort.MaxValue ? ushort.MaxValue : (ushort)value;
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag that determines if timestamp of this <see cref="ConfigurationCell"/> is valid based on GPS lock.
+        /// </summary>
         public bool SynchronizationIsValid
         {
             get
@@ -149,16 +148,15 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value)
-                {
                     StatusFlags = (short)(StatusFlags & ~Bit.Bit15);
-                }
                 else
-                {
                     StatusFlags = (short)(StatusFlags | Bit.Bit15);
-                }
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag that determines if data of this <see cref="ConfigurationCell"/> is valid.
+        /// </summary>
         public bool DataIsValid
         {
             get
@@ -168,16 +166,15 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value)
-                {
                     StatusFlags = (short)(StatusFlags & ~Bit.Bit14);
-                }
                 else
-                {
                     StatusFlags = (short)(StatusFlags | Bit.Bit14);
-                }
             }
         }
 
+        /// <summary>
+        /// Gets or sets trigger status of this <see cref="ConfigurationCell"/>.
+        /// </summary>
         public TriggerStatus TriggerStatus
         {
             get
@@ -190,7 +187,13 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        // IEEE 1344 only supports scaled data
+        /// <summary>
+        /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="ConfigurationCellBase.PhasorDefinitions"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property only supports scaled data; IEEE 1344 doesn't transport floating point values.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">IEEE 1344 only supports scaled data.</exception>
         public override DataFormat PhasorDataFormat
         {
             get
@@ -200,12 +203,13 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value != DataFormat.FixedInteger)
-                {
-                    throw (new NotSupportedException("IEEE 1344 only supports scaled data"));
-                }
+                    throw new NotSupportedException("IEEE 1344 only supports scaled data");
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="CoordinateFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="ConfigurationCellBase.PhasorDefinitions"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
         public override CoordinateFormat PhasorCoordinateFormat
         {
             get
@@ -218,6 +222,13 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="DataFormat"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property only supports scaled data; IEEE 1344 doesn't transport floating point values.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">IEEE 1344 only supports scaled data.</exception>
         public override DataFormat FrequencyDataFormat
         {
             get
@@ -227,12 +238,19 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value != DataFormat.FixedInteger)
-                {
-                    throw (new NotSupportedException("IEEE 1344 only supports scaled data"));
-                }
+                    throw new NotSupportedException("IEEE 1344 only supports scaled data");
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IAnalogDefinition"/> objects in the <see cref="ConfigurationCellBase.AnalogDefinitions"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>IEEE 1344 doesn't define any analog values.</para>
+        /// <para>This property only supports scaled data; IEEE 1344 doesn't transport floating point values.</para>
+        /// </remarks>
+        /// <exception cref="NotSupportedException">IEEE 1344 only supports scaled data.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override DataFormat AnalogDataFormat
         {
             get
@@ -242,12 +260,13 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 if (value != DataFormat.FixedInteger)
-                {
-                    throw (new NotSupportedException("IEEE 1344 only supports scaled data"));
-                }
+                    throw new NotSupportedException("IEEE 1344 only supports scaled data");
             }
         }
 
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
         protected override int HeaderLength
         {
             get
@@ -256,6 +275,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the binary header image of the <see cref="ConfigurationCell"/> object.
+        /// </summary>
         protected override byte[] HeaderImage
         {
             get
@@ -277,25 +299,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        protected override void ParseHeaderImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            IConfigurationCellParsingState parsingState = (IConfigurationCellParsingState)state;
-
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-            startIndex += 2;
-
-            // Parse out station name
-            base.ParseHeaderImage(state, binaryImage, startIndex);
-            startIndex += base.HeaderLength;
-
-            IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex);
-
-            parsingState.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8);
-            parsingState.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10);
-
-        }
-
+        /// <summary>
+        /// Gets the length of the <see cref="FooterImage"/>.
+        /// </summary>
         protected override int FooterLength
         {
             get
@@ -304,23 +310,33 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
+        /// <summary>
+        /// Gets the binary footer image of the <see cref="ConfigurationCell"/> object.
+        /// </summary>
         protected override byte[] FooterImage
         {
             get
             {
                 byte[] buffer = new byte[FooterLength];
-                int x;
-                int index = 0;
+                PhasorDefinition phasorDefinition;
+                DigitalDefinition digitalDefinition;
+                int x, index = 0;
 
                 // Include conversion factors in configuration cell footer
-                for (x = 0; x <= PhasorDefinitions.Count - 1; x++)
+                for (x = 0; x < PhasorDefinitions.Count; x++)
                 {
-                    ((PhasorDefinition)(PhasorDefinitions[x])).ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
+                    phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
+
+                    if (phasorDefinition != null)
+                        phasorDefinition.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
                 }
 
-                for (x = 0; x <= DigitalDefinitions.Count - 1; x++)
+                for (x = 0; x < DigitalDefinitions.Count; x++)
                 {
-                    ((DigitalDefinition)(DigitalDefinitions[x])).ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
+                    digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
+
+                    if (digitalDefinition != null)
+                        digitalDefinition.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
                 }
 
                 // Include nominal frequency
@@ -330,40 +346,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
         }
 
-        protected override void ParseFooterImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-        {
-
-            int x;
-
-            // Parse conversion factors from configuration cell footer
-            for (x = 0; x <= PhasorDefinitions.Count - 1; x++)
-            {
-                ((PhasorDefinition)(PhasorDefinitions[x])).ParseConversionFactor(binaryImage, startIndex);
-                startIndex += PhasorDefinition.ConversionFactorLength;
-            }
-
-            for (x = 0; x <= DigitalDefinitions.Count - 1; x++)
-            {
-                ((DigitalDefinition)(DigitalDefinitions[x])).ParseConversionFactor(binaryImage, startIndex);
-                startIndex += DigitalDefinition.ConversionFactorLength;
-            }
-
-            // Parse nominal frequency
-            base.ParseFooterImage(state, binaryImage, startIndex);
-
-        }
-
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-
-            base.GetObjectData(info, context);
-
-            // Serialize configuration cell
-            info.AddValue("coordinateFormat", m_coordinateFormat, typeof(CoordinateFormat));
-            info.AddValue("statusFlags", m_statusFlags);
-
-        }
-
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCell"/> object.
+        /// </summary>
         public override Dictionary<string, string> Attributes
         {
             get
@@ -378,6 +363,108 @@ namespace PCS.PhasorProtocols.Ieee1344
                 return baseAttributes;
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            IConfigurationCellParsingState state = State;
+            int originalStartIndex = startIndex;
+
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            startIndex += 2;
+
+            // Parse out station name
+            startIndex += base.ParseHeaderImage(binaryImage, startIndex, length);
+
+            IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex);
+
+            // Parse out total phasors and digitals defined for this device
+            state.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8);
+            state.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10);
+
+            return startIndex - originalStartIndex;
+        }
+
+        /// <summary>
+        /// Parses the binary footer image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseFooterImage(byte[] binaryImage, int startIndex, int length)
+        {
+            PhasorDefinition phasorDefinition;
+            DigitalDefinition digitalDefinition;
+            int x;
+
+            // Parse conversion factors from configuration cell footer
+            for (x = 0; x < PhasorDefinitions.Count; x++)
+            {
+                phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
+
+                if (phasorDefinition != null)
+                {
+                    phasorDefinition.ParseConversionFactor(binaryImage, startIndex);
+                    startIndex += PhasorDefinition.ConversionFactorLength;
+                }
+            }
+
+            for (x = 0; x < DigitalDefinitions.Count; x++)
+            {
+                digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
+
+                if (digitalDefinition != null)
+                {
+                    digitalDefinition.ParseConversionFactor(binaryImage, startIndex);
+                    startIndex += DigitalDefinition.ConversionFactorLength;
+                }
+            }
+
+            // Parse nominal frequency
+            return base.ParseFooterImage(binaryImage, startIndex, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize configuration cell
+            info.AddValue("coordinateFormat", m_coordinateFormat, typeof(CoordinateFormat));
+            info.AddValue("statusFlags", m_statusFlags);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Delegate handler to create a new IEEE 1344 configuration cell
+        internal static IConfigurationCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
+        {
+            ConfigurationCell configCell = new ConfigurationCell(parent as IConfigurationFrame);
+
+            parsedLength = configCell.Initialize(binaryImage, startIndex, 0);
+
+            return configCell;
+        }
+
+        #endregion       
     }
 }
-

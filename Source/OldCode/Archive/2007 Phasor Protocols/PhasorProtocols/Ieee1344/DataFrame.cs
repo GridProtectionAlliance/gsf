@@ -107,20 +107,11 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets the numeric ID code for this <see cref="DataFrame"/>.
         /// </summary>
-        /// <remarks>
-        /// This value is read-only for <see cref="DataFrame"/>; assigning a value will throw an exception. Value returned
-        /// is the <see cref="IChannelFrame.IDCode"/> of the associated <see cref="ConfigurationFrame"/>.
-        /// </remarks>
-        /// <exception cref="NotSupportedException">IDCode of a data frame is read-only, change IDCode is associated configuration frame instead.</exception>
         public new ulong IDCode
         {
             get
             {
                 return ConfigurationFrame.IDCode;
-            }
-            set
-            {
-                throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode is associated configuration frame instead");
             }
         }
 
@@ -260,6 +251,16 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             // IEEE 1344 uses CRC16 to calculate checksum for frames
             return buffer.Crc16Checksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
         }
 
         #endregion

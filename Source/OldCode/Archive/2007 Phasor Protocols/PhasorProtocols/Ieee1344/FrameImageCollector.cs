@@ -17,12 +17,14 @@
 
 using System;
 using System.IO;
+using System.Diagnostics.CodeAnalysis;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Collects frame images until a full IEEE 1344 frame has been received.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1001")]  // See constructor note below...
     public class FrameImageCollector
     {
         #region [ Members ]
@@ -38,6 +40,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="FrameImageCollector"/>.
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA1816")]
         public FrameImageCollector()
         {
             // As an optimzation in context of usage, we don't implement IDisposable for

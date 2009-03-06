@@ -108,7 +108,7 @@ namespace PCS.PhasorProtocols
         /// Gets or sets the index of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         /// <remarks>
-        /// Index is automatically maintained by <see cref="ChannelDefinitionCollectionBase"/>.
+        /// Index is automatically maintained by <see cref="ChannelDefinitionCollectionBase{T}"/>.
         /// </remarks>
         public virtual int Index
         {

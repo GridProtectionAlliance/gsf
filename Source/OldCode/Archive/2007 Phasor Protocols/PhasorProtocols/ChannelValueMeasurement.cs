@@ -331,7 +331,7 @@ namespace PCS.PhasorProtocols
             if (other != null)
                 return Equals(other);
 
-            throw new ArgumentException("Object is not a Measurement");
+            return false;
         }
 
         /// <summary>
