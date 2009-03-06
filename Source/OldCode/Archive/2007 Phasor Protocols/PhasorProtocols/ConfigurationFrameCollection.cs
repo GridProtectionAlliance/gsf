@@ -29,17 +29,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrameCollection"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationFrameCollection(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ConfigurationFrameCollection"/> from specified parameters.
+        /// Creates a new <see cref="ConfigurationFrameCollection"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
         /// <remarks>
@@ -50,6 +40,16 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         public ConfigurationFrameCollection(int lastValidIndex)
             : base(lastValidIndex)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrameCollection"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ConfigurationFrameCollection(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
 

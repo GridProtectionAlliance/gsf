@@ -29,17 +29,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="AnalogValueCollection"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected AnalogValueCollection(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="AnalogValueCollection"/> from specified parameters.
+        /// Creates a new <see cref="AnalogValueCollection"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
         /// <remarks>
@@ -50,6 +40,16 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         public AnalogValueCollection(int lastValidIndex)
             : base(lastValidIndex)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="AnalogValueCollection"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected AnalogValueCollection(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
 

@@ -89,24 +89,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DataCellBase"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected DataCellBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            // Deserialize data cell values
-            m_configurationCell = (IConfigurationCell)info.GetValue("configurationCell", typeof(IConfigurationCell));
-            m_statusFlags = info.GetInt16("statusFlags");
-            m_phasorValues = (PhasorValueCollection)info.GetValue("phasorValues", typeof(PhasorValueCollection));
-            m_frequencyValue = (IFrequencyValue)info.GetValue("frequencyValue", typeof(IFrequencyValue));
-            m_analogValues = (AnalogValueCollection)info.GetValue("analogValues", typeof(AnalogValueCollection));
-            m_digitalValues = (DigitalValueCollection)info.GetValue("digitalValues", typeof(DigitalValueCollection));
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DataCellBase"/> from the specified parameters.
+        /// Creates a new <see cref="DataCellBase"/> from specified parameters.
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCellBase"/>.</param>
         /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCellBase"/>.</param>
@@ -129,6 +112,23 @@ namespace PCS.PhasorProtocols
             m_key = PhasorProtocols.Common.UndefinedKey;
             m_timestamp = -1;
             m_multiplier = 1.0D;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DataCellBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected DataCellBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize data cell values
+            m_configurationCell = (IConfigurationCell)info.GetValue("configurationCell", typeof(IConfigurationCell));
+            m_statusFlags = info.GetInt16("statusFlags");
+            m_phasorValues = (PhasorValueCollection)info.GetValue("phasorValues", typeof(PhasorValueCollection));
+            m_frequencyValue = (IFrequencyValue)info.GetValue("frequencyValue", typeof(IFrequencyValue));
+            m_analogValues = (AnalogValueCollection)info.GetValue("analogValues", typeof(AnalogValueCollection));
+            m_digitalValues = (DigitalValueCollection)info.GetValue("digitalValues", typeof(DigitalValueCollection));
         }
 
         #endregion

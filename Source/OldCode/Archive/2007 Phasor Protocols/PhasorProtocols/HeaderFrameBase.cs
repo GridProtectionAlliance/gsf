@@ -31,21 +31,21 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="HeaderFrameBase"/>.
+        /// </summary>
+        /// <param name="cells">The reference to the <see cref="HeaderCellCollection"/> for this <see cref="HeaderFrameBase"/>.</param>
+        protected HeaderFrameBase(HeaderCellCollection cells)
+            : base(0, cells, 0)
+        {
+        }
+
+        /// <summary>
         /// Creates a new <see cref="HeaderFrameBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected HeaderFrameBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="HeaderFrameBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="cells">The reference to the <see cref="HeaderCellCollection"/> for this <see cref="HeaderFrameBase"/>.</param>
-        protected HeaderFrameBase(HeaderCellCollection cells)
-            : base(0, cells, 0)
         {
         }
 

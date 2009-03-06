@@ -58,6 +58,19 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="ChannelFrameBase{T}"/> from specified parameters.
+        /// </summary>
+        /// <param name="idCode">The ID code of this <see cref="ChannelFrameBase{T}"/>.</param>
+        /// <param name="cells">The reference to the collection of cells for this <see cref="ChannelFrameBase{T}"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ChannelFrameBase{T}"/>.</param>
+        protected ChannelFrameBase(ushort idCode, IChannelCellCollection<T> cells, Ticks timestamp)
+        {
+            m_idCode = idCode;
+            m_cells = cells;
+            m_timestamp = timestamp;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ChannelFrameBase{T}"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -68,19 +81,6 @@ namespace PCS.PhasorProtocols
             m_idCode = info.GetUInt16("idCode");
             m_cells = (IChannelCellCollection<T>)info.GetValue("cells", typeof(IChannelCellCollection<T>));
             m_timestamp = info.GetInt64("timestamp");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelFrameBase{T}"/> from the specified parameters.
-        /// </summary>
-        /// <param name="idCode">The ID code of this <see cref="ChannelFrameBase{T}"/>.</param>
-        /// <param name="cells">The reference to the collection of cells for this <see cref="ChannelFrameBase{T}"/>.</param>
-        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ChannelFrameBase{T}"/>.</param>
-        protected ChannelFrameBase(ushort idCode, IChannelCellCollection<T> cells, Ticks timestamp)
-        {
-            m_idCode = idCode;
-            m_cells = cells;
-            m_timestamp = timestamp;
         }
 
         #endregion

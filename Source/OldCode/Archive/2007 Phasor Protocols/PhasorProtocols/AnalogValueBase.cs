@@ -40,8 +40,22 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="AnalogValueBase"/>.
         /// </summary>
-        protected AnalogValueBase()
+        protected AnalogValueBase(IDataCell parent, IAnalogDefinition analogDefinition)
+            : base(parent, analogDefinition)
         {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="AnalogValueBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="AnalogValueBase"/>.</param>
+        /// <param name="analogDefinition">The <see cref="IAnalogDefinition"/> associated with this <see cref="AnalogValueBase"/>.</param>
+        /// <param name="value">The floating point value that represents this <see cref="AnalogValueBase"/>.</param>
+        protected AnalogValueBase(IDataCell parent, IAnalogDefinition analogDefinition, double value)
+            : base(parent, analogDefinition)
+        {
+            m_value = value;
+            m_valueAssigned = !double.IsNaN(value);
         }
 
         /// <summary>
@@ -55,19 +69,6 @@ namespace PCS.PhasorProtocols
             // Deserialize analog value
             m_value = info.GetDouble("value");
             m_valueAssigned = true;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="AnalogValueBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="AnalogValueBase"/>.</param>
-        /// <param name="analogDefinition">The <see cref="IAnalogDefinition"/> associated with this <see cref="AnalogValueBase"/>.</param>
-        /// <param name="value">The floating point value that represents this <see cref="AnalogValueBase"/>.</param>
-        protected AnalogValueBase(IDataCell parent, IAnalogDefinition analogDefinition, double value)
-            : base(parent, analogDefinition)
-        {
-            m_value = value;
-            m_valueAssigned = !double.IsNaN(value);
         }
 
         #endregion

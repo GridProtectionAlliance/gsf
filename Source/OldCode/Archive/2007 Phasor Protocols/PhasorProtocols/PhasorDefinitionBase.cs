@@ -40,25 +40,14 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="PhasorDefinitionBase"/>.
         /// </summary>
-        protected PhasorDefinitionBase()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinitionBase"/>.</param>
+        protected PhasorDefinitionBase(IConfigurationCell parent)
+            : base(parent)
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="PhasorDefinitionBase"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected PhasorDefinitionBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            // Deserialize phasor definition
-            m_type = (PhasorType)info.GetValue("type", typeof(PhasorType));
-            m_voltageReference = (IPhasorDefinition)info.GetValue("voltageReference", typeof(IPhasorDefinition));
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="PhasorDefinitionBase"/> using the specified parameters.
+        /// Creates a new <see cref="PhasorDefinitionBase"/> from specified parameters.
         /// </summary>
         /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinitionBase"/>.</param>
         /// <param name="label">The label of this <see cref="PhasorDefinitionBase"/>.</param>
@@ -75,6 +64,19 @@ namespace PCS.PhasorProtocols
                 m_voltageReference = this;
             else
                 m_voltageReference = voltageReference;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorDefinitionBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected PhasorDefinitionBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize phasor definition
+            m_type = (PhasorType)info.GetValue("type", typeof(PhasorType));
+            m_voltageReference = (IPhasorDefinition)info.GetValue("voltageReference", typeof(IPhasorDefinition));
         }
 
         #endregion

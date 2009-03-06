@@ -39,18 +39,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelCellCollectionBase{T}"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ChannelCellCollectionBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            // Deserialize extra elements
-            m_constantCellLength = info.GetBoolean("constantCellLength");
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ChannelCellCollectionBase{T}"/> from specified parameters.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
@@ -65,6 +53,18 @@ namespace PCS.PhasorProtocols
             : base(lastValidIndex)
         {
             m_constantCellLength = constantCellLength;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ChannelCellCollectionBase{T}"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ChannelCellCollectionBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize extra elements
+            m_constantCellLength = info.GetBoolean("constantCellLength");
         }
 
         #endregion

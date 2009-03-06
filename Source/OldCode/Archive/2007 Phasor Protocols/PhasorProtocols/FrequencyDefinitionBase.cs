@@ -41,8 +41,26 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrequencyDefinitionBase"/>.
         /// </summary>
-        protected FrequencyDefinitionBase()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinitionBase"/>.</param>
+        protected FrequencyDefinitionBase(IConfigurationCell parent)
+            : base(parent)
         {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinitionBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinitionBase"/>.</param>
+        /// <param name="label">The label of this <see cref="FrequencyDefinitionBase"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
+        /// <param name="offset">The offset of this <see cref="FrequencyDefinitionBase"/>.</param>
+        /// <param name="dfdtScale">The df/dt scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
+        /// <param name="dfdtOffset">The df/dt offset of this <see cref="FrequencyDefinitionBase"/>.</param>
+        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
+            : base(parent, label, scale, offset)
+        {
+            m_dfdtScale = dfdtScale;
+            m_dfdtOffset = dfdtOffset;
         }
 
         /// <summary>
@@ -56,22 +74,6 @@ namespace PCS.PhasorProtocols
             // Deserialize frequency definition
             m_dfdtScale = info.GetUInt32("dfdtScale");
             m_dfdtOffset = info.GetDouble("dfdtOffset");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="FrequencyDefinitionBase"/> using the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="label">The label of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="scale">The integer scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="offset">The offset of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="dfdtScale">The df/dt scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="dfdtOffset">The df/dt offset of this <see cref="FrequencyDefinitionBase"/>.</param>
-        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
-            : base(parent, label, scale, offset)
-        {
-            m_dfdtScale = dfdtScale;
-            m_dfdtOffset = dfdtOffset;
         }
 
         #endregion

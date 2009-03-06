@@ -40,8 +40,24 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DigitalValueBase"/>.
         /// </summary>
-        protected DigitalValueBase()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValueBase"/>.</param>
+        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValueBase"/>.</param>
+        protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition)
+            : base(parent, digitalDefinition)
         {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DigitalValueBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValueBase"/>.</param>
+        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValueBase"/>.</param>
+        /// <param name="value">The 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.</param>
+        protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
+            : base(parent, digitalDefinition)
+        {
+            m_value = value;
+            m_valueAssigned = (value != -1);
         }
 
         /// <summary>
@@ -55,19 +71,6 @@ namespace PCS.PhasorProtocols
             // Deserialize digital value
             m_value = info.GetInt16("value");
             m_valueAssigned = true;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DigitalValueBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValueBase"/>.</param>
-        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValueBase"/>.</param>
-        /// <param name="value">The 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.</param>
-        protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
-            : base(parent, digitalDefinition)
-        {
-            m_value = value;
-            m_valueAssigned = (value != -1);
         }
 
         #endregion

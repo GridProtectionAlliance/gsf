@@ -44,20 +44,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelValueCollectionBase{TDefinition,TValue}"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ChannelValueCollectionBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            // Deserialize extra elements
-            m_fixedCount = info.GetInt32("fixedCount");
-            m_floatCount = info.GetInt32("floatCount");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelValueCollectionBase{TDefinition,TValue}"/> from specified parameters.
+        /// Creates a new <see cref="ChannelValueCollectionBase{TDefinition,TValue}"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
         /// <remarks>
@@ -69,6 +56,19 @@ namespace PCS.PhasorProtocols
         protected ChannelValueCollectionBase(int lastValidIndex)
             : base(lastValidIndex)
         {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ChannelValueCollectionBase{TDefinition,TValue}"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ChannelValueCollectionBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize extra elements
+            m_fixedCount = info.GetInt32("fixedCount");
+            m_floatCount = info.GetInt32("floatCount");
         }
 
         #endregion

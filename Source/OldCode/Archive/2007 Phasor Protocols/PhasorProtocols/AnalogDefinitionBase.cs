@@ -31,7 +31,21 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="AnalogDefinitionBase"/>.
         /// </summary>
-        protected AnalogDefinitionBase()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="AnalogDefinitionBase"/>.</param>
+        protected AnalogDefinitionBase(IConfigurationCell parent)
+            : base(parent)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="AnalogDefinitionBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="AnalogDefinitionBase"/>.</param>
+        /// <param name="label">The label of this <see cref="AnalogDefinitionBase"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinitionBase"/>.</param>
+        /// <param name="offset">The offset of this <see cref="AnalogDefinitionBase"/>.</param>
+        protected AnalogDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset)
+            : base(parent, label, scale, offset)
         {
         }
 
@@ -42,18 +56,6 @@ namespace PCS.PhasorProtocols
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected AnalogDefinitionBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="AnalogDefinitionBase"/> using the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="AnalogDefinitionBase"/>.</param>
-        /// <param name="label">The label of this <see cref="AnalogDefinitionBase"/>.</param>
-        /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinitionBase"/>.</param>
-        /// <param name="offset">The offset of this <see cref="AnalogDefinitionBase"/>.</param>
-        protected AnalogDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset)
-            : base(parent, label, scale, offset)
         {
         }
 

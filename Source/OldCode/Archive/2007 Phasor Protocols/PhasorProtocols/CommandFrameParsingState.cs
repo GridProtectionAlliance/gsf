@@ -30,7 +30,7 @@ namespace PCS.PhasorProtocols
         /// <param name="parsedBinaryLength">Binary length of the <see cref="ICommandFrame"/> being parsed.</param>
         /// <param name="dataLength">Length of data in <see cref="ICommandFrame"/> being parsed (i.e., number of cells).</param>
         public CommandFrameParsingState(int parsedBinaryLength, int dataLength)
-            : base(parsedBinaryLength, CommandCell.CreateNewCommandCell)
+            : base(parsedBinaryLength, CommandCell.CreateNewCell)
         {
             CellCount = dataLength;
         }

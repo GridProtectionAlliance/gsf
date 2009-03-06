@@ -37,6 +37,17 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="CommandCell"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.</param>
+        /// <param name="extendedDataByte">Extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.</param>
+        public CommandCell(ICommandFrame parent, byte extendedDataByte)
+            : base(parent, false, 0)
+        {
+            m_extendedDataByte = extendedDataByte;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="CommandCell"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -46,17 +57,6 @@ namespace PCS.PhasorProtocols
         {
             // Deserialize command cell value
             m_extendedDataByte = info.GetByte("extendedDataByte");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="CommandCell"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.</param>
-        /// <param name="extendedDataByte">Extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.</param>
-        public CommandCell(ICommandFrame parent, byte extendedDataByte)
-            : base(parent, false, 0)
-        {
-            m_extendedDataByte = extendedDataByte;
         }
 
         #endregion
@@ -171,8 +171,9 @@ namespace PCS.PhasorProtocols
         // Static Methods
 
         // Create new command cell delegate handler
-        internal static ICommandCell CreateNewCommandCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex)
+        internal static ICommandCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<ICommandCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
         {
+            parsedLength = 1;
             return new CommandCell(parent as ICommandFrame, binaryImage[startIndex]) { IDCode = (ushort)index };
         }
 

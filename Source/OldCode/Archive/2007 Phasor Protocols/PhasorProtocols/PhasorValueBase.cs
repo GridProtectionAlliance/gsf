@@ -60,21 +60,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="PhasorValueBase"/>.
         /// </summary>
-        protected PhasorValueBase()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValueBase"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValueBase"/>.</param>
+        protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition)
+            : base(parent, phasorDefinition)
         {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="PhasorValueBase"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected PhasorValueBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            // Deserialize phasor value
-            m_phasor.Real = info.GetDouble("real");
-            m_phasor.Imaginary = info.GetDouble("imaginary");
         }
 
         /// <summary>
@@ -103,6 +93,19 @@ namespace PCS.PhasorProtocols
         {
             m_phasor.Angle = angle;
             m_phasor.AbsoluteValue = magnitude;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorValueBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected PhasorValueBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize phasor value
+            m_phasor.Real = info.GetDouble("real");
+            m_phasor.Imaginary = info.GetDouble("imaginary");
         }
 
         #endregion

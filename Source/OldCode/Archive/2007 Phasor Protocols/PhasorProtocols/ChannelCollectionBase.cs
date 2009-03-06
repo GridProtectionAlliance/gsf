@@ -57,6 +57,21 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Creates a new <see cref="ChannelCollectionBase{T}"/> using specified <paramref name="lastValidIndex"/>.
+        /// </summary>
+        /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
+        /// <remarks>
+        /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
+        /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
+        /// maximum length you can specify <see cref="Int16.MaxValue"/> (i.e., 32,767) as the last valid index
+        /// for the collection since total number of items supported would be 32,768.
+        /// </remarks>
+        protected ChannelCollectionBase(int lastValidIndex)
+        {
+            m_lastValidIndex = lastValidIndex;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ChannelCollectionBase{T}"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -70,21 +85,6 @@ namespace PCS.PhasorProtocols
             {
                 Add((T)info.GetValue("item" + x, typeof(T)));
             }
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelCollectionBase{T}"/> from specified parameters.
-        /// </summary>
-        /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
-        /// <remarks>
-        /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
-        /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
-        /// maximum length you can specify <see cref="Int16.MaxValue"/> (i.e., 32,767) as the last valid index
-        /// for the collection since total number of items supported would be 32,768.
-        /// </remarks>
-        protected ChannelCollectionBase(int lastValidIndex)
-        {
-            m_lastValidIndex = lastValidIndex;
         }
 
         #endregion
@@ -229,6 +229,7 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>
         /// <param name="item">The object to insert.</param>
+        /// <exception cref="OverflowException">Maximum collection item limit reached.</exception>
         protected override void InsertItem(int index, T item)
         {
             // Interception of inserted items occurs with this override (via Collection<T>) allowing maximum length to be validated

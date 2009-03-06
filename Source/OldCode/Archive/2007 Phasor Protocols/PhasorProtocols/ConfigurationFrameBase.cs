@@ -38,19 +38,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrameBase"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationFrameBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            // Deserialize configuration frame
-            FrameRate = info.GetInt16("frameRate");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ConfigurationFrameBase"/> from the specified parameters.
+        /// Creates a new <see cref="ConfigurationFrameBase"/> from specified parameters.
         /// </summary>
         /// <param name="idCode">The ID code of this <see cref="ConfigurationFrameBase"/>.</param>
         /// <param name="cells">The reference to the collection of cells for this <see cref="ConfigurationFrameBase"/>.</param>
@@ -60,6 +48,18 @@ namespace PCS.PhasorProtocols
             : base(idCode, cells, timestamp)
         {
             FrameRate = frameRate;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrameBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ConfigurationFrameBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize configuration frame
+            FrameRate = info.GetInt16("frameRate");
         }
 
         #endregion

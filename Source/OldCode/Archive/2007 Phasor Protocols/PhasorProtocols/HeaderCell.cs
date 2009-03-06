@@ -38,6 +38,17 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="HeaderCell"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.</param>
+        /// <param name="character">ASCII character as a <see cref="Byte"/> that represents this <see cref="HeaderCell"/>.</param>
+        public HeaderCell(IHeaderFrame parent, byte character)
+            : base(parent, false, 0)
+        {
+            m_character = character;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="HeaderCell"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -47,17 +58,6 @@ namespace PCS.PhasorProtocols
         {
             // Deserialize header cell value
             m_character = info.GetByte("character");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="HeaderCell"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.</param>
-        /// <param name="character">ASCII character as a <see cref="Byte"/> that represents this <see cref="HeaderCell"/>.</param>
-        public HeaderCell(IHeaderFrame parent, byte character)
-            : base(parent, false, 0)
-        {
-            m_character = character;
         }
 
         #endregion
@@ -172,8 +172,9 @@ namespace PCS.PhasorProtocols
         // Static Methods
 
         // Create new header cell delegate handler
-        internal static IHeaderCell CreateNewHeaderCell(IChannelFrame parent, IChannelFrameParsingState<IHeaderCell> state, int index, byte[] binaryImage, int startIndex)
+        internal static IHeaderCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IHeaderCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
         {
+            parsedLength = 1;
             return new HeaderCell(parent as IHeaderFrame, binaryImage[startIndex]) { IDCode = (ushort)index };
         }
 

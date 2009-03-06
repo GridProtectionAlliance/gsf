@@ -44,23 +44,10 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        protected ChannelDefinitionBase()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase"/>.</param>
+        protected ChannelDefinitionBase(IConfigurationCell parent)
         {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelDefinitionBase"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ChannelDefinitionBase(SerializationInfo info, StreamingContext context)
-        {
-            // Deserialize channel definition
-            m_parent = (IConfigurationCell)info.GetValue("parent", typeof(IConfigurationCell));
-            m_index = info.GetInt32("index");
-            Label = info.GetString("label");
-            m_scale = info.GetUInt32("scale");
-            m_offset = info.GetDouble("offset");
+            m_parent = parent;
         }
 
         /// <summary>
@@ -76,6 +63,21 @@ namespace PCS.PhasorProtocols
             Label = label;
             m_scale = scale;
             m_offset = offset;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ChannelDefinitionBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ChannelDefinitionBase(SerializationInfo info, StreamingContext context)
+        {
+            // Deserialize channel definition
+            m_parent = (IConfigurationCell)info.GetValue("parent", typeof(IConfigurationCell));
+            m_index = info.GetInt32("index");
+            Label = info.GetString("label");
+            m_scale = info.GetUInt32("scale");
+            m_offset = info.GetDouble("offset");
         }
 
         #endregion

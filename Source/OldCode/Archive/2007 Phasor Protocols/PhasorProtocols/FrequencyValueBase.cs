@@ -63,8 +63,28 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrequencyValueBase"/>.
         /// </summary>
-        protected FrequencyValueBase()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValueBase"/>.</param>
+        protected FrequencyValueBase(IDataCell parent, IFrequencyDefinition frequencyDefinition)
+            : base(parent, frequencyDefinition)
         {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="FrequencyValueBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValueBase"/>.</param>
+        /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValueBase"/> over time.</param>
+        protected FrequencyValueBase(IDataCell parent, IFrequencyDefinition frequencyDefinition, double frequency, double dfdt)
+            : base(parent, frequencyDefinition)
+        {
+            m_frequency = frequency;
+            m_dfdt = dfdt;
+
+            m_frequencyAssigned = !double.IsNaN(frequency);
+            m_dfdtAssigned = !double.IsNaN(dfdt);
         }
 
         /// <summary>
@@ -81,23 +101,6 @@ namespace PCS.PhasorProtocols
 
             m_frequencyAssigned = true;
             m_dfdtAssigned = true;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="FrequencyValueBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValueBase"/>.</param>
-        /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValueBase"/>.</param>
-        /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValueBase"/>.</param>
-        /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValueBase"/> over time.</param>
-        protected FrequencyValueBase(IDataCell parent, IFrequencyDefinition frequencyDefinition, double frequency, double dfdt)
-            : base(parent, frequencyDefinition)
-        {
-            m_frequency = frequency;
-            m_dfdt = dfdt;
-
-            m_frequencyAssigned = !double.IsNaN(frequency);
-            m_dfdtAssigned = !double.IsNaN(dfdt);
         }
 
         #endregion

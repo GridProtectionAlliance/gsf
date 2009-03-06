@@ -32,10 +32,22 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="DigitalDefinitionBase"/>.
         /// </summary>
-        protected DigitalDefinitionBase()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinitionBase"/>.</param>
+        protected DigitalDefinitionBase(IConfigurationCell parent)
+            : base(parent)
         {
             ScalingValue = 1;
             Offset = 0.0D;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinitionBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinitionBase"/>.</param>
+        /// <param name="label">The label of this <see cref="DigitalDefinitionBase"/>.</param>
+        protected DigitalDefinitionBase(IConfigurationCell parent, string label)
+            : base(parent, label, 1, 0.0D)
+        {
         }
 
         /// <summary>
@@ -45,16 +57,6 @@ namespace PCS.PhasorProtocols
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected DigitalDefinitionBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DigitalDefinitionBase"/> using the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinitionBase"/>.</param>
-        /// <param name="label">The label of this <see cref="DigitalDefinitionBase"/>.</param>
-        protected DigitalDefinitionBase(IConfigurationCell parent, string label)
-            : base(parent, label, 1, 0.0D)
         {
         }
 

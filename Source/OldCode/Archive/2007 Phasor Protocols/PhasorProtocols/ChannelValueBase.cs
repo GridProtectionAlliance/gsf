@@ -40,10 +40,14 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelValueBase{T}"/>.
+        /// Creates a new <see cref="ChannelValueBase{T}"/> from specified parameters.
         /// </summary>
-        protected ChannelValueBase()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="ChannelValueBase{T}"/>.</param>
+        /// <param name="channelDefinition">The <see cref="IChannelDefinition"/> associated with this <see cref="ChannelValueBase{T}"/>.</param>
+        protected ChannelValueBase(IDataCell parent, T channelDefinition)
         {
+            m_parent = parent;
+            m_definition = channelDefinition;
         }
 
         /// <summary>
@@ -56,17 +60,6 @@ namespace PCS.PhasorProtocols
             // Deserialize channel value
             m_parent = (IDataCell)info.GetValue("parent", typeof(IDataCell));
             m_definition = (T)info.GetValue("definition", typeof(T));
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelValueBase{T}"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="ChannelValueBase{T}"/>.</param>
-        /// <param name="channelDefinition">The <see cref="IChannelDefinition"/> associated with this <see cref="ChannelValueBase{T}"/>.</param>
-        protected ChannelValueBase(IDataCell parent, T channelDefinition)
-        {
-            m_parent = parent;
-            m_definition = channelDefinition;
         }
 
         #endregion

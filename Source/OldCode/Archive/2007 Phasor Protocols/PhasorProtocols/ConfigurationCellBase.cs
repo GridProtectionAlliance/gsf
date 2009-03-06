@@ -45,6 +45,24 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="ConfigurationCellBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCellBase"/>.</param>
+        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ConfigurationCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
+        /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCellBase"/>.</param>
+        /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorDefinitions"/> collection.</param>
+        /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogDefinitions"/> collection.</param>
+        /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalDefinitions"/> collection.</param>
+        protected ConfigurationCellBase(IConfigurationFrame parent, bool alignOnDWordBoundary, ushort idCode, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
+            : base(parent, alignOnDWordBoundary, idCode)
+        {
+            m_nominalFrequency = LineFrequency.Hz60; // Defaulting to 60Hz
+            m_phasorDefinitions = new PhasorDefinitionCollection(maximumPhasors);
+            m_analogDefinitions = new AnalogDefinitionCollection(maximumAnalogs);
+            m_digitalDefinitions = new DigitalDefinitionCollection(maximumDigitals);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ConfigurationCellBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -61,25 +79,6 @@ namespace PCS.PhasorProtocols
             m_digitalDefinitions = (DigitalDefinitionCollection)info.GetValue("digitalDefinitions", typeof(DigitalDefinitionCollection));
             m_nominalFrequency = (LineFrequency)info.GetValue("nominalFrequency", typeof(LineFrequency));
             m_revisionCount = info.GetUInt16("revisionCount");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ConfigurationCellBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCellBase"/>.</param>
-        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ConfigurationCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
-        /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCellBase"/>.</param>
-        /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCellBase"/>.</param>
-        /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorDefinitions"/> collection.</param>
-        /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogDefinitions"/> collection.</param>
-        /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalDefinitions"/> collection.</param>
-        protected ConfigurationCellBase(IConfigurationFrame parent, bool alignOnDWordBoundary, ushort idCode, LineFrequency nominalFrequency, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
-            : base(parent, alignOnDWordBoundary, idCode)
-        {
-            m_nominalFrequency = nominalFrequency;
-            m_phasorDefinitions = new PhasorDefinitionCollection(maximumPhasors);
-            m_analogDefinitions = new AnalogDefinitionCollection(maximumAnalogs);
-            m_digitalDefinitions = new DigitalDefinitionCollection(maximumDigitals);
         }
 
         #endregion

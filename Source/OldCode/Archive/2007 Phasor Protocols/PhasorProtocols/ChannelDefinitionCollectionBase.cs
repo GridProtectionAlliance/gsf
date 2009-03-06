@@ -30,17 +30,7 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ChannelDefinitionCollectionBase(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/> from specified parameters.
+        /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
         /// <remarks>
@@ -51,6 +41,16 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         protected ChannelDefinitionCollectionBase(int lastValidIndex)
             : base(lastValidIndex)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ChannelDefinitionCollectionBase(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
 

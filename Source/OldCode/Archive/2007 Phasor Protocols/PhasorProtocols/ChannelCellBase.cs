@@ -45,6 +45,19 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="ChannelCellBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">A reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.</param>
+        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ChannelCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
+        /// <param name="idCode">The numeric ID code for this <see cref="ChannelCellBase"/>.</param>
+        protected ChannelCellBase(IChannelFrame parent, bool alignOnDWordBoundary, ushort idCode)
+        {
+            m_parent = parent;
+            m_alignOnDWordBoundary = alignOnDWordBoundary;
+            m_idCode = idCode;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ChannelCellBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -55,19 +68,6 @@ namespace PCS.PhasorProtocols
             m_parent = (IChannelFrame)info.GetValue("parent", typeof(IChannelFrame));
             m_idCode = info.GetUInt16("id");
             m_alignOnDWordBoundary = info.GetBoolean("alignOnDWordBoundary");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ChannelCellBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">A reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.</param>
-        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ChannelCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
-        /// <param name="idCode">The numeric ID code for this <see cref="ChannelCellBase"/>.</param>
-        protected ChannelCellBase(IChannelFrame parent, bool alignOnDWordBoundary, ushort idCode)
-        {
-            m_parent = parent;
-            m_alignOnDWordBoundary = alignOnDWordBoundary;
-            m_idCode = idCode;
         }
 
         #endregion

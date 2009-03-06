@@ -36,6 +36,18 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="DataFrameBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="cells">The reference to the collection of cells for this <see cref="DataFrameBase"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrameBase"/>.</param>
+        /// <param name="configurationFrame">The <see cref="IConfigurationFrame"/> associated with this <see cref="DataFrameBase"/>.</param>
+        protected DataFrameBase(DataCellCollection cells, Ticks timestamp, IConfigurationFrame configurationFrame)
+            : base(0, cells, timestamp)
+        {
+            m_configurationFrame = configurationFrame;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="DataFrameBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -45,18 +57,6 @@ namespace PCS.PhasorProtocols
         {
             // Deserialize data frame
             m_configurationFrame = (IConfigurationFrame)info.GetValue("configurationFrame", typeof(IConfigurationFrame));
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DataFrameBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="cells">The reference to the collection of cells for this <see cref="DataFrameBase"/>.</param>
-        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrameBase"/>.</param>
-        /// <param name="configurationFrame">The <see cref="IConfigurationFrame"/> associated with this <see cref="DataFrameBase"/>.</param>
-        protected DataFrameBase(DataCellCollection cells, Ticks timestamp, IConfigurationFrame configurationFrame)
-            : base(0, cells, timestamp)
-        {
-            m_configurationFrame = configurationFrame;
         }
 
         #endregion

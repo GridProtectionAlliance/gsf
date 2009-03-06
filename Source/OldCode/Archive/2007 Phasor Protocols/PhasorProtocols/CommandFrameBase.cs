@@ -38,6 +38,17 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="CommandFrameBase"/> from specified parameters.
+        /// </summary>
+        /// <param name="cells">The reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrameBase"/>.</param>
+        /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.</param>
+        protected CommandFrameBase(CommandCellCollection cells, DeviceCommand command)
+            : base(0, cells, 0)
+        {
+            m_command = command;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="CommandFrameBase"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -47,17 +58,6 @@ namespace PCS.PhasorProtocols
         {
             // Deserialize command frame
             m_command = (DeviceCommand)info.GetValue("command", typeof(DeviceCommand));
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="CommandFrameBase"/> from the specified parameters.
-        /// </summary>
-        /// <param name="cells">The reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrameBase"/>.</param>
-        /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrameBase"/>.</param>
-        protected CommandFrameBase(CommandCellCollection cells, DeviceCommand command)
-            : base(0, cells, 0)
-        {
-            m_command = command;
         }
 
         #endregion

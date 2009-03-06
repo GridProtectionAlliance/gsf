@@ -31,16 +31,6 @@ namespace PCS.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationCellCollection"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="ConfigurationCellCollection"/> from specified parameters.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
@@ -53,6 +43,16 @@ namespace PCS.PhasorProtocols
         /// </remarks>
         public ConfigurationCellCollection(int lastValidIndex, bool constantCellLength)
             : base(lastValidIndex, constantCellLength)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationCellCollection"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
 
