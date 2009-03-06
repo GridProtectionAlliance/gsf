@@ -70,7 +70,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
  
         /// <summary>
-        /// Creates a new <see cref="CommandFrame"/> from the specified parameters.
+        /// Creates a new <see cref="CommandFrame"/> from specified parameters.
         /// </summary>
         /// <param name="idCode">The ID code of this <see cref="CommandFrame"/>.</param>
         /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
