@@ -39,7 +39,19 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="DigitalDefinition"/>.
         /// </summary>
-        protected DigitalDefinition()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
+        public DigitalDefinition(IConfigurationCell parent)
+            : base(parent)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="DigitalDefinition"/>.</param>
+        public DigitalDefinition(ConfigurationCell parent, string label)
+            : base(parent, label)
         {
         }
 
@@ -55,20 +67,24 @@ namespace PCS.PhasorProtocols.Ieee1344
             m_statusFlags = info.GetInt16("statusFlags");
         }
 
-        /// <summary>
-        /// Creates a new <see cref="DigitalDefinition"/> using the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
-        /// <param name="index">The index of this <see cref="DigitalDefinition"/>.</param>
-        /// <param name="label">The label of this <see cref="DigitalDefinition"/>.</param>
-        public DigitalDefinition(ConfigurationCell parent, string label)
-            : base(parent, label)
-        {
-        }
-
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets normal status for this <see cref="DigitalDefinition"/>.
@@ -180,7 +196,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Delegate handler to create a new IEEE 1344 digital definition
         internal static IDigitalDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
         {
-            IDigitalDefinition digitalDefinition = new DigitalDefinition() { Parent = parent };
+            IDigitalDefinition digitalDefinition = new DigitalDefinition(parent);
 
             parsedLength = digitalDefinition.Initialize(binaryImage, startIndex, 0);
 
