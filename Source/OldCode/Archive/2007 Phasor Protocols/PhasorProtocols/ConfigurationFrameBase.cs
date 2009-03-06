@@ -116,7 +116,11 @@ namespace PCS.PhasorProtocols
             set
             {
                 m_frameRate = value;
-                m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_frameRate;
+
+                if (m_frameRate != 0)
+                    m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_frameRate;
+                else
+                    m_ticksPerFrame = 0;
             }
         }
 
