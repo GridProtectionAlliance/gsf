@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -30,9 +31,25 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="PhasorDefinition"/>.
+        /// Creates a new <see cref="PhasorDefinition"/> from specified parameters.
         /// </summary>
-        protected PhasorDefinition()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
+        public PhasorDefinition(IConfigurationCell parent)
+            : base(parent)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="offset">The offset of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
+        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition voltageReference)
+            : base(parent, label, scale, offset, type, voltageReference)
         {
         }
 
@@ -46,23 +63,24 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
         }
 
-        /// <summary>
-        /// Creates a new <see cref="PhasorDefinition"/> using the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="label">The label of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="scale">The integer scaling value of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="offset">The offset of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
-        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition voltageReference)
-            : base(parent, label, scale, offset, type, voltageReference)
-        {
-        }
-
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
 
         /// <summary>
         /// Gets conversion factor image of this <see cref="PhasorDefinition"/>.
@@ -120,7 +138,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Delegate handler to create a new IEEE 1344 phasor definition
         internal static IPhasorDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
         {
-            IPhasorDefinition phasorDefinition = new PhasorDefinition() { Parent = parent };
+            IPhasorDefinition phasorDefinition = new PhasorDefinition(parent);
 
             parsedLength = phasorDefinition.Initialize(binaryImage, startIndex, 0);
 
