@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using PCS.Parsing;
+using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols
 {
@@ -208,23 +209,6 @@ namespace PCS.PhasorProtocols
         #region [ Methods ]
 
         /// <summary>
-        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
-        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            // Serialize collection
-            info.AddValue("maximumCount", m_lastValidIndex + 1);
-            info.AddValue("count", Count);
-
-            for (int x = 0; x < Count; x++)
-            {
-                info.AddValue("item" + x, this[x], typeof(T));
-            }
-        }
-
-        /// <summary>
         /// Inserts an element into the <see cref="ChannelCollectionBase{T}"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>
@@ -243,6 +227,24 @@ namespace PCS.PhasorProtocols
         int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize collection
+            info.AddValue("maximumCount", m_lastValidIndex + 1);
+            info.AddValue("count", Count);
+
+            for (int x = 0; x < Count; x++)
+            {
+                info.AddValue("item" + x, this[x], typeof(T));
+            }
         }
 
         #endregion
