@@ -53,11 +53,10 @@ namespace PCS.PhasorProtocols
         /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="label">The label of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
-        /// <param name="offset">The offset of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="dfdtScale">The df/dt scaling value of this <see cref="FrequencyDefinitionBase"/>.</param>
         /// <param name="dfdtOffset">The df/dt offset of this <see cref="FrequencyDefinitionBase"/>.</param>
-        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
-            : base(parent, label, scale, offset)
+        protected FrequencyDefinitionBase(IConfigurationCell parent, string label, uint scale, uint dfdtScale, double dfdtOffset)
+            : base(parent, label, scale, 0.0D)
         {
             m_dfdtScale = dfdtScale;
             m_dfdtOffset = dfdtOffset;
@@ -130,7 +129,7 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// Offset for frequency values will always be the nominal frequency as defined in parent configuration cell; assigning a value is not supported.
         /// </remarks>
-        /// <exception cref="NotSupportedException">Frequency offset is read-only; value is determined by nominal frequency specified in containing condiguration cell.</exception>
+        /// <exception cref="NotSupportedException">Frequency offset is read-only; value is determined by nominal frequency specified in containing configuration cell.</exception>
         public override double Offset
         {
             get
@@ -139,7 +138,7 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                throw new NotSupportedException("Frequency offset is read-only; value is determined by nominal frequency specified in containing condiguration cell");
+                throw new NotSupportedException("Frequency offset is read-only; value is determined by nominal frequency specified in containing configuration cell");
             }
         }
 

@@ -39,10 +39,22 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="FrequencyDefinition"/>.
         /// </summary>
-        protected FrequencyDefinition()
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
+        public FrequencyDefinition(IConfigurationCell parent)
+            : base(parent)
         {
             ScalingValue = 1000;
             DfDtScalingValue = 100;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
+        public FrequencyDefinition(ConfigurationCell parent, string label)
+            : base(parent, label, 1000, 100, 0.0D)
+        {
         }
 
         /// <summary>
@@ -53,30 +65,28 @@ namespace PCS.PhasorProtocols.Ieee1344
         protected FrequencyDefinition(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            ScalingValue = 1000;
-            DfDtScalingValue = 100;
-
             // Deserialize frequency definition
             m_statusFlags = info.GetInt16("statusFlags");
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/> using the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="scale">The integer scaling value of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="offset">The offset of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="dfdtScale">The df/dt scaling value of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="dfdtOffset">The df/dt offset of this <see cref="FrequencyDefinition"/>.</param>
-        public FrequencyDefinition(ConfigurationCell parent, string label, uint scale, double offset, uint dfdtScale, double dfdtOffset)
-            : base(parent, label, scale, offset, dfdtScale, dfdtOffset)
-        {
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if frequency measurement is available in <see cref="FrequencyValue"/>.
@@ -203,7 +213,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Delegate handler to create a new IEEE 1344 frequency definition
         internal static IFrequencyDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
         {
-            IFrequencyDefinition frequencyDefinition = new FrequencyDefinition() { Parent = parent };
+            IFrequencyDefinition frequencyDefinition = new FrequencyDefinition(parent);
 
             parsedLength = frequencyDefinition.Initialize(binaryImage, startIndex, 0);
 
