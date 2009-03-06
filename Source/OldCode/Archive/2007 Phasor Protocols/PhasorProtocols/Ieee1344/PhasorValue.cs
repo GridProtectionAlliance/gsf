@@ -32,7 +32,34 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="PhasorValue"/>.
         /// </summary>
-        protected PhasorValue()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValue"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
+        public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition)
+            : base(parent, phasorDefinition)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
+        /// <param name="real">The real value of this <see cref="PhasorValue"/>.</param>
+        /// <param name="imaginary">The imaginary value of this <see cref="PhasorValue"/>.</param>
+        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, double real, double imaginary)
+            : base(parent, phasorDefinition, real, imaginary)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
+        /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.</param>
+        /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValue"/>.</param>
+        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, Angle angle, double magnitude)
+            : base(parent, phasorDefinition, angle, magnitude)
         {
         }
 
@@ -46,28 +73,38 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
         }
 
+        #endregion
+
+        #region [ Properties ]
+        
         /// <summary>
-        /// Creates a new <see cref="PhasorValue"/> from specified parameters.
+        /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.
         /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValue"/>.</param>
-        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
-        /// <param name="real">The real value of this <see cref="PhasorValue"/>.</param>
-        /// <param name="imaginary">The imaginary value of this <see cref="PhasorValue"/>.</param>
-        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, double real, double imaginary)
-            : base(parent, phasorDefinition, real, imaginary)
+        public virtual new DataCell Parent
         {
+            get
+            {
+                return base.Parent as DataCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
         }
 
         /// <summary>
-        /// Creates a new <see cref="PhasorValue"/> from specified parameters.
+        /// Gets or sets the <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.
         /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValue"/>.</param>
-        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
-        /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.</param>
-        /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValue"/>.</param>
-        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, Angle angle, double magnitude)
-            : base(parent, phasorDefinition, angle, magnitude)
+        public virtual new PhasorDefinition Definition
         {
+            get
+            {
+                return base.Definition as PhasorDefinition;
+            }
+            set
+            {
+                base.Definition = value;
+            }
         }
 
         #endregion
@@ -79,7 +116,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Delegate handler to create a new IEEE 1344 phasor value
         internal static IPhasorValue CreateNewValue(IDataCell parent, IPhasorDefinition definition, byte[] binaryImage, int startIndex, out int parsedLength)
         {
-            IPhasorValue phasor = new PhasorValue() { Parent = parent, Definition = definition };
+            IPhasorValue phasor = new PhasorValue(parent, definition);
 
             parsedLength = phasor.Initialize(binaryImage, startIndex, 0);
 

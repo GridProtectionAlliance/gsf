@@ -31,7 +31,22 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="FrequencyValue"/>.
         /// </summary>
-        protected FrequencyValue()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValue"/>.</param>
+        /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.</param>
+        public FrequencyValue(IDataCell parent, IFrequencyDefinition frequencyDefinition)
+            : base(parent, frequencyDefinition)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="FrequencyValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="FrequencyValue"/>.</param>
+        /// <param name="frequencyDefinition">The <see cref="FrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.</param>
+        /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValue"/>.</param>
+        /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValue"/> over time.</param>
+        public FrequencyValue(DataCell parent, FrequencyDefinition frequencyDefinition, double frequency, double dfdt)
+            : base(parent, frequencyDefinition, frequency, dfdt)
         {
         }
 
@@ -45,21 +60,39 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
         }
 
-        /// <summary>
-        /// Creates a new <see cref="FrequencyValue"/> from the specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValue"/>.</param>
-        /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.</param>
-        /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValue"/>.</param>
-        /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValue"/> over time.</param>
-        public FrequencyValue(DataCell parent, FrequencyDefinition frequencyDefinition, double frequency, double dfdt)
-            : base(parent, frequencyDefinition, frequency, dfdt)
-        {
-        }
-
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="FrequencyValue"/>.
+        /// </summary>
+        public virtual new DataCell Parent
+        {
+            get
+            {
+                return base.Parent as DataCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="FrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.
+        /// </summary>
+        public virtual new FrequencyDefinition Definition
+        {
+            get
+            {
+                return base.Definition as FrequencyDefinition;
+            }
+            set
+            {
+                base.Definition = value;
+            }
+        }
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
@@ -72,7 +105,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                FrequencyDefinition definition = Definition as FrequencyDefinition;
+                FrequencyDefinition definition = Definition;
                 int length = 0;
 
                 if (definition != null)
@@ -99,7 +132,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                FrequencyDefinition definition = Definition as FrequencyDefinition;
+                FrequencyDefinition definition = Definition;
                 byte[] buffer = new byte[BodyLength];
 
                 if (definition != null)
@@ -137,7 +170,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            FrequencyDefinition definition = Definition as FrequencyDefinition;
+            FrequencyDefinition definition = Definition;
             int parsedLength = 0;
 
             if (definition != null)
@@ -169,7 +202,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Delegate handler to create a new IEEE 1344 frequency value
         internal static IFrequencyValue CreateNewValue(IDataCell parent, IFrequencyDefinition definition, byte[] binaryImage, int startIndex, out int parsedLength)
         {
-            IFrequencyValue frequency = new FrequencyValue() { Parent = parent, Definition = definition };
+            IFrequencyValue frequency = new FrequencyValue(parent, definition);
 
             parsedLength = frequency.Initialize(binaryImage, startIndex, 0);
 

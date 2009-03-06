@@ -31,7 +31,21 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Creates a new <see cref="DigitalValue"/>.
         /// </summary>
-        protected DigitalValue()
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValue"/>.</param>
+        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValue"/>.</param>
+        public DigitalValue(IDataCell parent, IDigitalDefinition digitalDefinition)
+            : base(parent, digitalDefinition)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DigitalValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="DigitalValue"/>.</param>
+        /// <param name="digitalDefinition">The <see cref="DigitalDefinition"/> associated with this <see cref="DigitalValue"/>.</param>
+        /// <param name="value">The real value of this <see cref="DigitalValue"/>.</param>
+        public DigitalValue(DataCell parent, DigitalDefinition digitalDefinition, short value)
+            : base(parent, digitalDefinition, value)
         {
         }
 
@@ -45,15 +59,38 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
         }
 
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
-        /// Creates a new <see cref="DigitalValue"/> from specified parameters.
+        /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="DigitalValue"/>.
         /// </summary>
-        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValue"/>.</param>
-        /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValue"/>.</param>
-        /// <param name="value">The real value of this <see cref="DigitalValue"/>.</param>
-        public DigitalValue(DataCell parent, DigitalDefinition digitalDefinition, short value)
-            : base(parent, digitalDefinition, value)
+        public virtual new DataCell Parent
         {
+            get
+            {
+                return base.Parent as DataCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="DigitalDefinition"/> associated with this <see cref="DigitalValue"/>.
+        /// </summary>
+        public virtual new DigitalDefinition Definition
+        {
+            get
+            {
+                return base.Definition as DigitalDefinition;
+            }
+            set
+            {
+                base.Definition = value;
+            }
         }
 
         #endregion
@@ -65,7 +102,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Delegate handler to create a new IEEE 1344 digital value
         internal static IDigitalValue CreateNewValue(IDataCell parent, IDigitalDefinition definition, byte[] binaryImage, int startIndex, out int parsedLength)
         {
-            IDigitalValue digital = new DigitalValue() { Parent = parent, Definition = definition };
+            IDigitalValue digital = new DigitalValue(parent, definition);
 
             parsedLength = digital.Initialize(binaryImage, startIndex, 0);
 
