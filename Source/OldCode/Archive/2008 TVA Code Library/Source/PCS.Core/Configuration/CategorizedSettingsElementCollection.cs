@@ -94,10 +94,17 @@ namespace PCS.Configuration
             {
                 if (ensureExistance && base.BaseGet(name) == null)
                 {
+                    // Add setting since it's not there.
                     Add(name, string.Empty);
                 }
+
                 CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(name);
-                setting.SetCryptoKey(m_cryptoKey);
+                if (setting != null)
+                {
+                    // Set the crypto key for the setting.
+                    setting.SetCryptoKey(m_cryptoKey);
+                }
+
                 return setting;
             }
         }
