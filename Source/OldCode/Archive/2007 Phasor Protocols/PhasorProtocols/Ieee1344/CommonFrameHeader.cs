@@ -42,10 +42,9 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         // Fields
         private FrameImageCollector m_frameImages;
-        private ulong m_idCode;
-        private Ticks m_timestamp;
         private short m_sampleCount;
         private short m_statusFlags;
+        private Ticks m_timestamp;
         private IChannelParsingState m_state;
         private Dictionary<string, string> m_attributes;
         private object m_tag;
@@ -55,13 +54,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="CommonFrameHeader"/>.
+        /// Creates a new <see cref="CommonFrameHeader"/> from specified parameters.
         /// </summary>
-        public CommonFrameHeader(FrameType typeID, ulong idCode, Ticks timestamp)
+        /// <param name="typeID">The IEEE 1344 specific frame type of this frame.</param>
+        /// <param name="timestamp">The timestamp of this frame.</param>
+        public CommonFrameHeader(FrameType typeID, Ticks timestamp)
         {
+            m_timestamp = timestamp;
             TypeID = typeID;
-            IDCode = idCode;
-            Timestamp = timestamp;
             FrameCount = 1;
             IsFirstFrame = true;
             IsLastFrame = true;
@@ -87,10 +87,10 @@ namespace PCS.PhasorProtocols.Ieee1344
 
             if (TypeID == Ieee1344.FrameType.DataFrame && configurationFrame != null)
                 // Data frames have subsecond time information
-                Timestamp = (new NtpTimeTag((double)secondOfCentury + (double)SampleCount / System.Math.Floor((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate)).ToDateTime().Ticks;
+                m_timestamp = (new NtpTimeTag((double)secondOfCentury + (double)SampleCount / System.Math.Floor((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate)).ToDateTime().Ticks;
             else
                 // For other frames, the best timestamp you can get is down to the whole second
-                Timestamp = (new NtpTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
+                m_timestamp = (new NtpTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
         }
 
         /// <summary>
@@ -109,31 +109,51 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the 64-bit ID code of this <see cref="CommonFrameHeader"/>.
+        /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public ulong IDCode
+        public NtpTimeTag TimeTag
         {
             get
             {
-                return m_idCode;
-            }
-            set
-            {
-                m_idCode = value;
+                return new NtpTimeTag(Timestamp);
             }
         }
 
-        // IChannelFrame defines an unsigned 16-bit integer for general frame identification...
-        ushort IChannelFrame.IDCode
+        /// <summary>
+        /// Gets or sets timestamp of this <see cref="CommonFrameHeader"/>.
+        /// </summary>
+        public Ticks Timestamp
         {
             get
             {
-                // Base classes constrain maximum value to 65535
-                return (m_idCode > ushort.MaxValue ? ushort.MaxValue : (ushort)m_idCode);
+                return m_timestamp;
             }
             set
             {
-                m_idCode = value;
+                m_timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the IEEE 1344 specific frame type of this frame.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This returns the protocol specific frame classification which uniquely identifies the frame type.
+        /// </para>
+        /// <para>
+        /// This is the <see cref="ICommonHeader{TTypeIdentifier}.TypeID"/> implementation.
+        /// </para>
+        /// </remarks>
+        public FrameType TypeID
+        {
+            get
+            {
+                return (FrameType)(m_sampleCount & Common.FrameTypeMask);
+            }
+            set
+            {
+                m_sampleCount = (short)((m_sampleCount & ~Common.FrameTypeMask) | (ushort)value);
             }
         }
 
@@ -188,29 +208,6 @@ namespace PCS.PhasorProtocols.Ieee1344
                     throw new OverflowException("Frame count value cannot exceed " + Common.MaximumFrameCount);
                 else
                     m_sampleCount = (short)((m_sampleCount & ~Common.FrameCountMask) | (ushort)value);
-            }
-        }
-
-        /// <summary>
-        /// Gets the IEEE 1344 specific frame type of this frame.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This returns the protocol specific frame classification which uniquely identifies the frame type.
-        /// </para>
-        /// <para>
-        /// This is the <see cref="ICommonHeader{TTypeIdentifier}.TypeID"/> implementation.
-        /// </para>
-        /// </remarks>
-        public FrameType TypeID
-        {
-            get
-            {
-                return (FrameType)(m_sampleCount & Common.FrameTypeMask);
-            }
-            set
-            {
-                m_sampleCount = (short)((m_sampleCount & ~Common.FrameTypeMask) | (ushort)value);
             }
         }
         
@@ -320,42 +317,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented in this frame.
-        /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        public Ticks Timestamp
-        {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets ot sets reference to last measurement that was sorted into this frame.
-        /// </summary>
-        /// <remarks>
-        /// The common header frame is only a partial frame and hence doesn't implement this property.
-        /// </remarks>
-        public IMeasurement LastSortedMeasurement
-        {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the sample number (i.e., frame count) of this frame.
         /// </summary>
         public short SampleCount
@@ -370,26 +331,6 @@ namespace PCS.PhasorProtocols.Ieee1344
                     throw new OverflowException("Sample count value cannot exceed " + Common.MaximumSampleCount);
                 else
                     m_sampleCount = (short)((m_sampleCount & Common.FrameTypeMask) | (ushort)value);
-            }
-        }
-
-        /// <summary>
-        /// Gets the timestamp of this frame in NTP format.
-        /// </summary>
-        public NtpTimeTag TimeTag
-        {
-            get
-            {
-                return new NtpTimeTag(Timestamp);
-            }
-        }
-
-        // IChannelFrame expects timestamp in Unix timetag format
-        UnixTimeTag IChannelFrame.TimeTag
-        {
-            get
-            {
-                return new UnixTimeTag(Timestamp);
             }
         }
 
@@ -424,35 +365,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Gets the collection of cells for this <see cref="IChannelFrame"/>.
-        /// </summary>
-        public object Cells
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets published state of this frame.
-        /// </summary>
-        /// <remarks>
-        /// The common header frame is only a partial frame and hence doesn't implement this property.
-        /// </remarks>
-        public bool Published
-        {
-            get
-            {
-                return false;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Determines if <see cref="IChannelFrame"/> is only partially parsed.
         /// </summary>
         /// <remarks>
@@ -465,6 +377,136 @@ namespace PCS.PhasorProtocols.Ieee1344
                 return true;
             }
         }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommonFrameHeader"/> object.
+        /// </summary>
+        public Dictionary<string, string> Attributes
+        {
+            get
+            {
+                // Create a new attributes dictionary or clear the contents of any existing one
+                if (m_attributes == null)
+                    m_attributes = new Dictionary<string, string>();
+                else
+                    m_attributes.Clear();
+
+                m_attributes.Add("Derived Type", this.GetType().Name);
+                m_attributes.Add("Binary Length", BinaryLength.ToString());
+                m_attributes.Add("Total Cells", "0");
+                m_attributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
+                m_attributes.Add("ID Code", "undefined");
+                m_attributes.Add("Is Partial Frame", IsPartial.ToString());
+                m_attributes.Add("Published", "n/a");
+                m_attributes.Add("Ticks", "undefined");
+                m_attributes.Add("Timestamp", "n/a");
+                AppendHeaderAttributes(m_attributes);
+
+                return m_attributes;
+            }
+        }
+
+        /// <summary>
+        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
+        /// </summary>
+        public object Tag
+        {
+            get
+            {
+                return m_tag;
+            }
+            set
+            {
+                m_tag = value;
+            }
+        }
+
+        #region [ IChannelFrame Implementation ]
+
+        ushort IChannelFrame.IDCode
+        {
+            get
+            {
+                return 0;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        object IChannelFrame.Cells
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        UnixTimeTag IChannelFrame.TimeTag
+        {
+            get
+            {
+                // IChannelFrame expects timestamp in Unix timetag format
+                return new UnixTimeTag(0);
+            }
+        }
+
+        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            // The common frame header is parsed during construction
+            throw new NotImplementedException();
+        }
+
+        int IFrame.PublishedMeasurements
+        {
+            get
+            {
+                return 0;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        IDictionary<MeasurementKey, IMeasurement> IFrame.Measurements
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        bool IFrame.Published
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        IMeasurement IFrame.LastSortedMeasurement
+        {
+            get
+            {
+                return null;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Returns a value indicating whether this instance is equal to a specified <see cref="IFrame"/>.
@@ -490,7 +532,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </returns>
         public int CompareTo(IFrame other)
         {
-            return m_timestamp.CompareTo(other.Timestamp);
+            return (this as IFrame).Timestamp.CompareTo(other.Timestamp);
         }
 
         /// <summary>
@@ -514,92 +556,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of keyed measurements in this frame.
-        /// </summary>
-        /// <remarks>
-        /// The common header frame is only a partial frame and hence doesn't implement this property.
-        /// </remarks>
-        public IDictionary<MeasurementKey, IMeasurement> Measurements
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets total number of measurements that have been pubilshed for this frame.
-        /// </summary>
-        /// <remarks>
-        /// The common header frame is only a partial frame and hence doesn't implement this property.
-        /// </remarks>
-        public int PublishedMeasurements
-        {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommonFrameHeader"/> object.
-        /// </summary>
-        public Dictionary<string, string> Attributes
-        {
-            get
-            {
-                // Create a new attributes dictionary or clear the contents of any existing one
-                if (m_attributes == null)
-                    m_attributes = new Dictionary<string, string>();
-                else
-                    m_attributes.Clear();
-
-                m_attributes.Add("Derived Type", this.GetType().Name);
-                m_attributes.Add("Binary Length", BinaryLength.ToString());
-                m_attributes.Add("Total Cells", "0");
-                m_attributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
-                m_attributes.Add("ID Code", IDCode.ToString());
-                m_attributes.Add("Is Partial Frame", IsPartial.ToString());
-                m_attributes.Add("Published", Published.ToString());
-                m_attributes.Add("Ticks", ((long)Timestamp).ToString());
-                m_attributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                AppendHeaderAttributes(m_attributes);
-
-                return m_attributes;
-            }
-        }
-
-        /// <summary>
-        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
-        /// </summary>
-        public object Tag
-        {
-            get
-            {
-                return m_tag;
-            }
-            set
-            {
-                m_tag = value;
-            }
-        }
-
-        // The common frame header is parsed during construction - but this method definition is required since
-        // this class implements IChannelFrame which inherits the ISupportBinaryImage interface.
-        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
         /// Appends header specific attributes to <paramref name="attributes"/> dictionary.
         /// </summary>
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
@@ -619,7 +575,6 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
             
             attributes.Add("Frame Count", FrameCount.ToString());
-            attributes.Add("64-Bit ID Code", IDCode.ToString());
             attributes.Add("Sample Count", m_sampleCount.ToString());
             attributes.Add("Status Flags", m_statusFlags.ToString());
             attributes.Add("Is First Frame", IsFirstFrame.ToString());
