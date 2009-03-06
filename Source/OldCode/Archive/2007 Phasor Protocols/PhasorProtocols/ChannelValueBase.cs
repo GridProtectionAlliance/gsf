@@ -16,10 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Runtime.Serialization;
 using System.Collections.Generic;
-using PCS.Measurements;
+using System.Runtime.Serialization;
 using System.Security.Permissions;
+using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {

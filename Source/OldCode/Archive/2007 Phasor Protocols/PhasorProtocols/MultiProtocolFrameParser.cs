@@ -39,15 +39,11 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
-using System.Text;
-using System.Net;
-using System.Units;
-using System.Threading;
-using System.ComponentModel;
 using System.Collections.Generic;
-using PCS;
-using PCS.Collections;
+using System.ComponentModel;
+using System.Text;
+using System.Threading;
+using System.Units;
 using PCS.Communication;
 
 namespace PCS.PhasorProtocols

@@ -17,8 +17,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Collections.Generic;
-using PCS;
 using PCS.Measurements;
 
 namespace PCS.PhasorProtocols

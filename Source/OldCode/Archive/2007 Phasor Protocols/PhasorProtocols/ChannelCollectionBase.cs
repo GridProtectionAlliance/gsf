@@ -19,8 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
-using PCS.Parsing;
 using System.Security.Permissions;
+using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {

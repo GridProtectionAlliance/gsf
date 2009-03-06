@@ -16,10 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using PCS;
-using PCS.Parsing;
 using PCS.Measurements;
+using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {

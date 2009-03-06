@@ -16,8 +16,6 @@
 //*******************************************************************************************************
 
 using System;
-using System.ComponentModel;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols.Ieee1344

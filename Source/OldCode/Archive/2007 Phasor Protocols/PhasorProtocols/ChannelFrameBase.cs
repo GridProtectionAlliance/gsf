@@ -18,9 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using PCS.Parsing;
-using PCS.Measurements;
 using System.Security.Permissions;
+using PCS.Measurements;
 
 namespace PCS.PhasorProtocols
 {

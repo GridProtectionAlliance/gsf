@@ -16,9 +16,6 @@
 //*******************************************************************************************************
 
 using System;
-using System.Text;
-using System.Collections.Generic;
-using System.ComponentModel;
 using PCS.Parsing;
 
 namespace PCS.PhasorProtocols.Ieee1344

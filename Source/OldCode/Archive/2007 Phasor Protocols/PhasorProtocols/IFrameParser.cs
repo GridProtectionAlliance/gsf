@@ -16,7 +16,6 @@
 //*******************************************************************************************************
 
 using System;
-using PCS;
 using PCS.Parsing;
 
 namespace PCS.PhasorProtocols

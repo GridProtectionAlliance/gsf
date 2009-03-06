@@ -16,12 +16,12 @@
 //*******************************************************************************************************
 
 using System;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.Serialization;
-using PCS.Parsing;
-using PCS.IO.Checksums;
 using System.Security.Permissions;
+using PCS.IO.Checksums;
+using PCS.Parsing;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {

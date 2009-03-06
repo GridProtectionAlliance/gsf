@@ -16,8 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using System.Runtime.Serialization;
 using System.Linq;
+using System.Runtime.Serialization;
 using PCS.Collections;
 
 namespace PCS.PhasorProtocols

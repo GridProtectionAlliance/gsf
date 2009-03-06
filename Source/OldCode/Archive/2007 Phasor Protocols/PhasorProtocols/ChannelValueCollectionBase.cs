@@ -16,10 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols

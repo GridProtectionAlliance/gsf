@@ -16,8 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using System.IO;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace PCS.PhasorProtocols.Ieee1344
 {

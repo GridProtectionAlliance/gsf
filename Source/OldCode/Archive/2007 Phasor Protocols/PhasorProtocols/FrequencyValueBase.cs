@@ -18,8 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using PCS;
-using PCS.Interop;
 using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols
