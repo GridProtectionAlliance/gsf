@@ -41,6 +41,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Units;
@@ -954,6 +955,8 @@ namespace PCS.PhasorProtocols
                 {
                     // For file based playback, we allow the option of auto-repeat
                     FileClient fileClient = new FileClient();
+                    fileClient.FileAccessMode = FileAccess.Read;
+                    fileClient.FileShareMode = FileShare.Read;
                     fileClient.AutoRepeat = m_autoRepeatCapturedPlayback;
                     m_communicationClient = fileClient;
                 }
