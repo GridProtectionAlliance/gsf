@@ -63,11 +63,11 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Static Methods
 
         // Delegate handler to create a new IEEE 1344 digital value
-        internal static IDigitalValue CreateNewValue(IDataCell parent, IDigitalDefinition definition, byte[] binaryImage, int startIndex)
+        internal static IDigitalValue CreateNewValue(IDataCell parent, IDigitalDefinition definition, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             IDigitalValue digital = new DigitalValue() { Parent = parent, Definition = definition };
 
-            digital.Initialize(binaryImage, startIndex, 0);
+            parsedLength = digital.Initialize(binaryImage, startIndex, 0);
 
             return digital;
         }

@@ -31,7 +31,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="IHeaderFrame"/>.
         /// </summary>
-        new HeaderFrameParsingState State { get; set; }
+        new IHeaderFrameParsingState State { get; set; }
 
         /// <summary>
         /// Gets or sets header data for this <see cref="IHeaderFrame"/>.

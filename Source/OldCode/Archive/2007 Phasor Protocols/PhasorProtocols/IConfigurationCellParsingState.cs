@@ -23,9 +23,10 @@ namespace PCS.PhasorProtocols
     /// <param name="parent">Reference to parent <see cref="IConfigurationCell"/>.</param>
     /// <param name="binaryImage">Binary image to parse <see cref="IChannelDefinition"/> from.</param>
     /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+    /// <param name="parsedLength">Returns the total number of bytes parsed from <paramref name="binaryImage"/>.</param>
     /// <returns>New <see cref="IChannelDefinition"/> object.</returns>
     /// <typeparam name="T">Specific <see cref="IChannelDefinition"/> type of object that the <see cref="CreateNewDefinitionFunction{T}"/> creates.</typeparam>
-    public delegate T CreateNewDefinitionFunction<T>(IConfigurationCell parent, byte[] binaryImage, int startIndex)
+    public delegate T CreateNewDefinitionFunction<T>(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
         where T : IChannelDefinition;
 
     /// <summary>

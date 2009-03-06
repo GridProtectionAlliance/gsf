@@ -201,11 +201,11 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Static Methods
 
         // Delegate handler to create a new IEEE 1344 frequency definition
-        internal static IFrequencyDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex)
+        internal static IFrequencyDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             IFrequencyDefinition frequencyDefinition = new FrequencyDefinition() { Parent = parent };
 
-            frequencyDefinition.Initialize(binaryImage, startIndex, 0);
+            parsedLength = frequencyDefinition.Initialize(binaryImage, startIndex, 0);
 
             return frequencyDefinition;
         }

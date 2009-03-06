@@ -238,7 +238,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets command status flags of this <see cref="DataCellBase"/>.
+        /// Gets or sets common status flags of this <see cref="DataCellBase"/>.
         /// </summary>
         public int CommonStatusFlags
         {
@@ -446,7 +446,7 @@ namespace PCS.PhasorProtocols
             IPhasorValue phasorValue;
             IAnalogValue analogValue;
             IDigitalValue digitalValue;
-            int x, originalStartIndex = startIndex;
+            int x, parsedLength, originalStartIndex = startIndex;
 
             StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
             startIndex += 2;
@@ -457,33 +457,33 @@ namespace PCS.PhasorProtocols
             // Parse out phasor values
             for (x = 0; x < parsingState.PhasorCount; x++)
             {
-                phasorValue = parsingState.CreateNewPhasorValue(this, m_configurationCell.PhasorDefinitions[x], binaryImage, startIndex);
+                phasorValue = parsingState.CreateNewPhasorValue(this, m_configurationCell.PhasorDefinitions[x], binaryImage, startIndex, out parsedLength);
                 m_phasorValues.Add(phasorValue);
-                startIndex += phasorValue.BinaryLength;
+                startIndex += parsedLength;
             }
 
             // Parse out frequency and df/dt values
-            m_frequencyValue = parsingState.CreateNewFrequencyValue(this, m_configurationCell.FrequencyDefinition, binaryImage, startIndex);
-            startIndex += m_frequencyValue.BinaryLength;
+            m_frequencyValue = parsingState.CreateNewFrequencyValue(this, m_configurationCell.FrequencyDefinition, binaryImage, startIndex, out parsedLength);
+            startIndex += parsedLength;
 
             // Parse out analog values
             for (x = 0; x < parsingState.AnalogCount; x++)
             {
-                analogValue = parsingState.CreateNewAnalogValue(this, m_configurationCell.AnalogDefinitions[x], binaryImage, startIndex);
+                analogValue = parsingState.CreateNewAnalogValue(this, m_configurationCell.AnalogDefinitions[x], binaryImage, startIndex, out parsedLength);
                 m_analogValues.Add(analogValue);
-                startIndex += analogValue.BinaryLength;
+                startIndex += parsedLength;
             }
 
             // Parse out digital values
             for (x = 0; x < parsingState.DigitalCount; x++)
             {
-                digitalValue = parsingState.CreateNewDigitalValue(this, m_configurationCell.DigitalDefinitions[x], binaryImage, startIndex);
+                digitalValue = parsingState.CreateNewDigitalValue(this, m_configurationCell.DigitalDefinitions[x], binaryImage, startIndex, out parsedLength);
                 m_digitalValues.Add(digitalValue);
-                startIndex += digitalValue.BinaryLength;
+                startIndex += parsedLength;
             }
 
             // Return total parsed length
-            return startIndex - originalStartIndex + 1;
+            return startIndex - originalStartIndex;
         }
 
         /// <summary>

@@ -91,11 +91,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public virtual new ConfigurationFrameParsingState State
+        public virtual new IConfigurationFrameParsingState State
         {
             get
             {
-                return base.State as ConfigurationFrameParsingState;
+                return base.State as IConfigurationFrameParsingState;
             }
             set
             {

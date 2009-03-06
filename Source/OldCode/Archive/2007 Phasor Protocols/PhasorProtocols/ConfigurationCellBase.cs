@@ -453,8 +453,11 @@ namespace PCS.PhasorProtocols
         protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
         {
             // Parse station name from header...
-            StationName = Encoding.ASCII.GetString(binaryImage, startIndex, MaximumStationNameLength);
-            return MaximumStationNameLength;
+            int stationNameLength = MaximumStationNameLength;
+
+            StationName = Encoding.ASCII.GetString(binaryImage, startIndex, stationNameLength);
+
+            return stationNameLength;
         }
 
         /// <summary>
@@ -473,7 +476,7 @@ namespace PCS.PhasorProtocols
             IPhasorDefinition phasorDefinition;
             IAnalogDefinition analogDefinition;
             IDigitalDefinition digitalDefinition;
-            int x, originalStartIndex = startIndex;
+            int x, parsedLength, originalStartIndex = startIndex;
 
             // By the very nature of the IEEE protocols supporting the same order of phasor, analog and digital labels
             // we are able to "automatically" parse this data out in the configuration cell base class - BEAUTIFUL!!!
@@ -481,29 +484,29 @@ namespace PCS.PhasorProtocols
             // Parse out phasor definitions
             for (x = 0; x < parsingState.PhasorCount; x++)
             {
-                phasorDefinition = parsingState.CreateNewPhasorDefinition(this, binaryImage, startIndex);
+                phasorDefinition = parsingState.CreateNewPhasorDefinition(this, binaryImage, startIndex, out parsedLength);
                 m_phasorDefinitions.Add(phasorDefinition);
-                startIndex += phasorDefinition.MaximumLabelLength;
+                startIndex += parsedLength;
             }
 
             // Parse out analog definitions
             for (x = 0; x < parsingState.AnalogCount; x++)
             {
-                analogDefinition = parsingState.CreateNewAnalogDefinition(this, binaryImage, startIndex);
+                analogDefinition = parsingState.CreateNewAnalogDefinition(this, binaryImage, startIndex, out parsedLength);
                 m_analogDefinitions.Add(analogDefinition);
-                startIndex += analogDefinition.MaximumLabelLength;
+                startIndex += parsedLength;
             }
 
             // Parse out digital definitions
             for (x = 0; x < parsingState.DigitalCount; x++)
             {
-                digitalDefinition = parsingState.CreateNewDigitalDefinition(this, binaryImage, startIndex);
+                digitalDefinition = parsingState.CreateNewDigitalDefinition(this, binaryImage, startIndex, out parsedLength);
                 m_digitalDefinitions.Add(digitalDefinition);
-                startIndex += digitalDefinition.MaximumLabelLength;
+                startIndex += parsedLength;
             }
 
             // Return total parsed length
-            return startIndex - originalStartIndex + 1;
+            return startIndex - originalStartIndex;
         }
 
         /// <summary>
@@ -516,8 +519,11 @@ namespace PCS.PhasorProtocols
         protected override int ParseFooterImage(byte[] binaryImage, int startIndex, int length)
         {
             // Parse nominal frequency defintion from footer...
-            m_frequencyDefinition = (State as IConfigurationCellParsingState).CreateNewFrequencyDefinition(this, binaryImage, startIndex);
-            return m_frequencyDefinition.BinaryLength;
+            int parsedLength;
+
+            m_frequencyDefinition = State.CreateNewFrequencyDefinition(this, binaryImage, startIndex, out parsedLength);
+
+            return parsedLength;
         }
 
         /// <summary>

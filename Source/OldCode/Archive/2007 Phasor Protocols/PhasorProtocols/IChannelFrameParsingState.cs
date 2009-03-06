@@ -25,9 +25,10 @@ namespace PCS.PhasorProtocols
     /// <param name="index">Index of cell within its collection.</param>
     /// <param name="binaryImage">Binary image to parse <see cref="IChannelCell"/> from.</param>
     /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+    /// <param name="parsedLength">Returns the total number of bytes parsed from <paramref name="binaryImage"/>.</param>
     /// <returns>New <see cref="IChannelCell"/> object.</returns>
     /// <typeparam name="T">Specific <see cref="IChannelCell"/> type of object that gets created by referenced function.</typeparam>
-    public delegate T CreateNewCellFunction<T>(IChannelFrame parent, IChannelFrameParsingState<T> state, int index, byte[] binaryImage, int startIndex) where T : IChannelCell;
+    public delegate T CreateNewCellFunction<T>(IChannelFrame parent, IChannelFrameParsingState<T> state, int index, byte[] binaryImage, int startIndex, out int parsedLength) where T : IChannelCell;
 
     /// <summary>
     /// Represents a protocol independent interface representation of the parsing state of any kind of <see cref="IChannelFrame"/>.

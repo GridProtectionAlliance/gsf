@@ -167,11 +167,11 @@ namespace PCS.PhasorProtocols.Ieee1344
         // Static Methods
 
         // Delegate handler to create a new IEEE 1344 frequency value
-        internal static IFrequencyValue CreateNewValue(IDataCell parent, IFrequencyDefinition definition, byte[] binaryImage, int startIndex)
+        internal static IFrequencyValue CreateNewValue(IDataCell parent, IFrequencyDefinition definition, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             IFrequencyValue frequency = new FrequencyValue() { Parent = parent, Definition = definition };
 
-            frequency.Initialize(binaryImage, startIndex, 0);
+            parsedLength = frequency.Initialize(binaryImage, startIndex, 0);
 
             return frequency;
         }
