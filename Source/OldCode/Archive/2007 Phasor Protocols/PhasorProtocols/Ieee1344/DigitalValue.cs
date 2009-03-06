@@ -51,7 +51,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValue"/>.</param>
         /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValue"/>.</param>
         /// <param name="value">The real value of this <see cref="DigitalValue"/>.</param>
-        public DigitalValue(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
+        public DigitalValue(DataCell parent, DigitalDefinition digitalDefinition, short value)
             : base(parent, digitalDefinition, value)
         {
         }

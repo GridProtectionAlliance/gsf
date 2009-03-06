@@ -53,7 +53,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
         /// <param name="real">The real value of this <see cref="PhasorValue"/>.</param>
         /// <param name="imaginary">The imaginary value of this <see cref="PhasorValue"/>.</param>
-        public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition, double real, double imaginary)
+        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, double real, double imaginary)
             : base(parent, phasorDefinition, real, imaginary)
         {
         }
@@ -65,7 +65,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
         /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.</param>
         /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValue"/>.</param>
-        public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition, Angle angle, double magnitude)
+        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, Angle angle, double magnitude)
             : base(parent, phasorDefinition, angle, magnitude)
         {
         }

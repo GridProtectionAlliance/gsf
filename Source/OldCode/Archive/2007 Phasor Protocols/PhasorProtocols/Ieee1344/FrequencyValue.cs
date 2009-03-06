@@ -52,7 +52,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.</param>
         /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValue"/>.</param>
         /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValue"/> over time.</param>
-        public FrequencyValue(IDataCell parent, IFrequencyDefinition frequencyDefinition, float frequency, float dfdt)
+        public FrequencyValue(DataCell parent, FrequencyDefinition frequencyDefinition, double frequency, double dfdt)
             : base(parent, frequencyDefinition, frequency, dfdt)
         {
         }
