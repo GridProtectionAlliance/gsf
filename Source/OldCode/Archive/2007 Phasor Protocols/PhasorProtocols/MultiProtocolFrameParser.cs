@@ -1057,6 +1057,7 @@ namespace PCS.PhasorProtocols
 
             if (m_frameParser != null)
             {
+                m_frameParser.Stop();
                 m_frameParser.ReceivedCommandFrame -= m_frameParser_ReceivedCommandFrame;
                 m_frameParser.ReceivedConfigurationFrame -= m_frameParser_ReceivedConfigurationFrame;
                 m_frameParser.ReceivedDataFrame -= m_frameParser_ReceivedDataFrame;
