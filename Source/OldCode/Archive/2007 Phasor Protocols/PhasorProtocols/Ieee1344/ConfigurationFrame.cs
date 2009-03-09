@@ -320,7 +320,9 @@ namespace PCS.PhasorProtocols.Ieee1344
                         // bypass ChannelBase CRC frame validation on cumulative frame image
                         binaryImage = frameImages.BinaryImage;
                         length = frameImages.BinaryLength;
-                        startIndex = 0;
+
+                        // Start parsing beyond common frame header
+                        startIndex = CommonFrameHeader.FixedLength;
 
                         // Parse out header, body and footer images
                         startIndex += ParseHeaderImage(binaryImage, startIndex, length);
