@@ -426,7 +426,7 @@ namespace PCS.Parsing
                 int parsedFrameLength;
 
                 // Move through buffer parsing all available frames
-                while (!(offset > endOfBuffer))
+                while (!(offset > endOfBuffer) && m_enabled)
                 {
                     // Call derived class frame parsing algorithm - this is protocol specific
                     parsedFrameLength = ParseFrame(buffer, offset, endOfBuffer - offset + 1);
