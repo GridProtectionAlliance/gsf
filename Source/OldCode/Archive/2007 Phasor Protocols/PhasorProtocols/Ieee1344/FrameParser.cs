@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using PCS.Parsing;
 
 namespace PCS.PhasorProtocols.Ieee1344
@@ -117,6 +118,15 @@ namespace PCS.PhasorProtocols.Ieee1344
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Start the data parser.
+        /// </summary>
+        public override void Start()
+        {
+            // We narrow down parsing types to just those needed...
+            base.Start(new Type[] { typeof(CommandFrame), typeof(DataFrame), typeof(HeaderFrame) });
+        }
 
         /// <summary>
         /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented
