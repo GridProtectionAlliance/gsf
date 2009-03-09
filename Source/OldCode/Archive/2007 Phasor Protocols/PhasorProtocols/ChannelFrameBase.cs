@@ -357,13 +357,15 @@ namespace PCS.PhasorProtocols
         /// <exception cref="InvalidOperationException">Invalid binary image detected - check sum did not match.</exception>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            // We override normal binary image parsing to validate frame checksum
+            // We use data length parsed from data stream if available - in many cases we'll have to as we won't enough
+            // information about cell contents at this easrly parsing stage
+            m_parsedBinaryLength = State.ParsedBinaryLength;
+            
+            // Normal binary image parsing is overriden for a frame so that checksum can be validated
             if (!ChecksumIsValid(binaryImage, startIndex))
                 throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
 
-            m_parsedBinaryLength = State.ParsedBinaryLength;
-
-            // Include 2 bytes for CRC
+            // Include 2 bytes for CRC in returned parsed length
             return base.Initialize(binaryImage, startIndex, length) + 2;
         }
 
