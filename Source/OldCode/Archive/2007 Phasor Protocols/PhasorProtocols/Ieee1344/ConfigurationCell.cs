@@ -379,21 +379,22 @@ namespace PCS.PhasorProtocols.Ieee1344
         protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
         {
             IConfigurationCellParsingState state = State;
-            int originalStartIndex = startIndex;
+            int index = startIndex;
 
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-            startIndex += 2;
+            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, index);
+            index += 2;
 
             // Parse out station name
-            startIndex += base.ParseHeaderImage(binaryImage, startIndex, length);
+            index += base.ParseHeaderImage(binaryImage, index, length);
 
-            IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex);
+            IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, index);
 
             // Parse out total phasors and digitals defined for this device
-            state.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 8);
-            state.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 10);
+            state.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, index + 8);
+            state.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, index + 10);
+            index += 12;
 
-            return startIndex - originalStartIndex;
+            return (index - startIndex);
         }
 
         /// <summary>

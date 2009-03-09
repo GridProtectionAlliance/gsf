@@ -380,17 +380,17 @@ namespace PCS.PhasorProtocols
         {
             IChannelFrameParsingState<T> state = State;
             T cell;
-            int parsedLength, originalStartIndex = startIndex;
+            int parsedLength, index = startIndex;
 
             // Parse all frame cells
             for (int x = 0; x < state.CellCount; x++)
             {
-                cell = state.CreateNewCell(this, state, x, binaryImage, startIndex, out parsedLength);
+                cell = state.CreateNewCell(this, state, x, binaryImage, index, out parsedLength);
                 m_cells.Add(cell);
-                startIndex += parsedLength;
+                index += parsedLength;
             }
 
-            return startIndex - originalStartIndex;
+            return (index - startIndex);
         }
 
         /// <summary>

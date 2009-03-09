@@ -476,7 +476,7 @@ namespace PCS.PhasorProtocols
             IPhasorDefinition phasorDefinition;
             IAnalogDefinition analogDefinition;
             IDigitalDefinition digitalDefinition;
-            int x, parsedLength, originalStartIndex = startIndex;
+            int x, parsedLength, index = startIndex;
 
             // By the very nature of the IEEE protocols supporting the same order of phasor, analog and digital labels
             // we are able to "automatically" parse this data out in the configuration cell base class - BEAUTIFUL!!!
@@ -484,29 +484,29 @@ namespace PCS.PhasorProtocols
             // Parse out phasor definitions
             for (x = 0; x < parsingState.PhasorCount; x++)
             {
-                phasorDefinition = parsingState.CreateNewPhasorDefinition(this, binaryImage, startIndex, out parsedLength);
+                phasorDefinition = parsingState.CreateNewPhasorDefinition(this, binaryImage, index, out parsedLength);
                 m_phasorDefinitions.Add(phasorDefinition);
-                startIndex += parsedLength;
+                index += parsedLength;
             }
 
             // Parse out analog definitions
             for (x = 0; x < parsingState.AnalogCount; x++)
             {
-                analogDefinition = parsingState.CreateNewAnalogDefinition(this, binaryImage, startIndex, out parsedLength);
+                analogDefinition = parsingState.CreateNewAnalogDefinition(this, binaryImage, index, out parsedLength);
                 m_analogDefinitions.Add(analogDefinition);
-                startIndex += parsedLength;
+                index += parsedLength;
             }
 
             // Parse out digital definitions
             for (x = 0; x < parsingState.DigitalCount; x++)
             {
-                digitalDefinition = parsingState.CreateNewDigitalDefinition(this, binaryImage, startIndex, out parsedLength);
+                digitalDefinition = parsingState.CreateNewDigitalDefinition(this, binaryImage, index, out parsedLength);
                 m_digitalDefinitions.Add(digitalDefinition);
-                startIndex += parsedLength;
+                index += parsedLength;
             }
 
             // Return total parsed length
-            return startIndex - originalStartIndex;
+            return (index - startIndex);
         }
 
         /// <summary>
