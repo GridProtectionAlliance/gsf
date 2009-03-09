@@ -664,7 +664,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the current <see cref="ClientState"/>.
         /// </summary>
-        public ClientState CurrentState
+        public virtual ClientState CurrentState
         {
             get
             {
