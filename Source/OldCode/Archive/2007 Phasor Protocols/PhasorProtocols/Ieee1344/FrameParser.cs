@@ -125,7 +125,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(CommandFrame), typeof(DataFrame), typeof(HeaderFrame) });
+            base.Start(new Type[] { typeof(ConfigurationFrame), typeof(DataFrame), typeof(HeaderFrame) });
         }
 
         /// <summary>
