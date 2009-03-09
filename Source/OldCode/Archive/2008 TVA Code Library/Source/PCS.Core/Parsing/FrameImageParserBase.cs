@@ -270,22 +270,15 @@ namespace PCS.Parsing
             if (parsedHeaderLength == 0 && commonHeader == null)
                 return 0;
 
-            offset += parsedHeaderLength;
-
             if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
             {
                 instance = outputType.CreateNew();
                 instance.CommonHeader = commonHeader;
                 parsedFrameLength = instance.Initialize(buffer, offset, endOfBuffer - offset + 1);
 
-                // If data type was able to be parsed, include parsed header length in parsed frame length
+                // Expose parsed type to consumer
                 if (parsedFrameLength > 0)
-                {
-                    parsedFrameLength += parsedHeaderLength;
-
-                    // Expose parsed type to consumer
                     OnDataParsed(instance);
-                }
             }
             else
             {
