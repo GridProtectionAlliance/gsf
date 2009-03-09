@@ -1186,7 +1186,7 @@ namespace PCS.PhasorProtocols
         /// <param name="ex">Exception to send to <see cref="ParsingException"/> event.</param>
         private void OnParsingException(Exception ex)
         {
-            if (ParsingException != null)
+            if (ParsingException != null && !(ex is ThreadAbortException))
                 ParsingException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1198,7 +1198,8 @@ namespace PCS.PhasorProtocols
         /// <param name="args">Arguments of message of new exception to send to <see cref="ParsingException"/> event.</param>
         private void OnParsingException(Exception innerException, string message, params object[] args)
         {
-            OnParsingException(new Exception(string.Format(message, args), innerException));
+            if (!(innerException is ThreadAbortException))
+                OnParsingException(new Exception(string.Format(message, args), innerException));
         }
 
         private void m_rateCalcTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -1327,7 +1328,7 @@ namespace PCS.PhasorProtocols
 
         private void m_communicationClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
-            if (ConnectionException != null)
+            if (ConnectionException != null && !(e.Argument is ThreadAbortException))
                 ConnectionException(this, new EventArgs<Exception,int>(e.Argument, m_connectionAttempts));
         }
 
@@ -1392,7 +1393,7 @@ namespace PCS.PhasorProtocols
 
         private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
-            if (ConnectionException != null)
+            if (ConnectionException != null && !(e.Argument is ThreadAbortException))
                 ConnectionException(this, new EventArgs<Exception,int>(e.Argument, m_connectionAttempts));
         }
 
@@ -1428,10 +1429,6 @@ namespace PCS.PhasorProtocols
                 if (ReceivedCommandFrame != null)
                     ReceivedCommandFrame(this, e);
             }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
-            }
             catch (Exception ex)
             {
                 OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedCommandFrame\" consumer event handler exception: {0}", ex.Message);
@@ -1459,10 +1456,6 @@ namespace PCS.PhasorProtocols
                 if (ReceivedConfigurationFrame != null)
                     ReceivedConfigurationFrame(this, e);
             }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
-            }
             catch (Exception ex)
             {
                 OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedConfigurationFrame\" consumer event handler exception: {0}", ex.Message);
@@ -1484,10 +1477,6 @@ namespace PCS.PhasorProtocols
 
                 if (ReceivedDataFrame != null)
                     ReceivedDataFrame(this, e);
-            }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
             }
             catch (Exception ex)
             {
@@ -1511,10 +1500,6 @@ namespace PCS.PhasorProtocols
                 if (ReceivedHeaderFrame != null)
                     ReceivedHeaderFrame(this, e);
             }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
-            }
             catch (Exception ex)
             {
                 OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedHeaderFrame\" consumer event handler exception: {0}", ex.Message);
@@ -1537,10 +1522,6 @@ namespace PCS.PhasorProtocols
                 if (ReceivedUndeterminedFrame != null)
                     ReceivedUndeterminedFrame(this, e);
             }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
-            }
             catch (Exception ex)
             {
                 OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedUndeterminedFrame\" consumer event handler exception: {0}", ex.Message);
@@ -1558,10 +1539,6 @@ namespace PCS.PhasorProtocols
                 if (ReceivedFrameBufferImage != null)
                     ReceivedFrameBufferImage(this, e);
             }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
-            }
             catch (Exception ex)
             {
                 OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedFrameBufferImage\" consumer event handler exception: {0}", ex.Message);
@@ -1575,10 +1552,6 @@ namespace PCS.PhasorProtocols
             {
                 if (ConfigurationChanged != null)
                     ConfigurationChanged(this, e);
-            }
-            catch (ThreadAbortException)
-            {
-                // This is a normal exception...
             }
             catch (Exception ex)
             {
