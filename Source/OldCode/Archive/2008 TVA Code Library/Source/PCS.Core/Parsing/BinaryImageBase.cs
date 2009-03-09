@@ -25,6 +25,28 @@ namespace PCS.Parsing
     [Serializable()]
     public abstract class BinaryImageBase : ISupportBinaryImage
     {
+        #region [ Members ]
+
+        // Fields
+        private int m_binaryLength;
+        private int m_headerLength;
+        private int m_bodyLength;
+        private int m_footerLength;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="BinaryImageBase"/>.
+        /// </summary>
+        protected BinaryImageBase()
+        {
+            m_binaryLength = -1;
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -37,7 +59,16 @@ namespace PCS.Parsing
         {
             get
             {
-                return HeaderLength + BodyLength + FooterLength;
+                // We cache lengths as an optimization since length overrides may be complex derived calculations
+                if (m_binaryLength == -1)
+                {
+                    m_headerLength = HeaderLength;
+                    m_bodyLength = BodyLength;
+                    m_footerLength = FooterLength;
+                    m_binaryLength = m_headerLength + m_bodyLength + m_footerLength;
+                }
+
+                return m_binaryLength;
             }
         }
 
@@ -51,12 +82,25 @@ namespace PCS.Parsing
         {
             get
             {
+                // Call to BinaryLength caches lengths
                 byte[] buffer = new byte[BinaryLength];
+                int index = 0;
 
-                // Copy in header, body and footer images
-                Buffer.BlockCopy(HeaderImage, 0, buffer, 0, HeaderLength);
-                Buffer.BlockCopy(BodyImage, 0, buffer, HeaderLength, BodyLength);
-                Buffer.BlockCopy(FooterImage, 0, buffer, HeaderLength + BodyLength, FooterLength);
+                // Copy in header, body and footer images                
+                if (m_headerLength > 0)
+                {
+                    Buffer.BlockCopy(HeaderImage, 0, buffer, index, m_headerLength);
+                    index += m_headerLength;
+                }
+
+                if (m_bodyLength > 0)
+                {
+                    Buffer.BlockCopy(BodyImage, 0, buffer, index, m_bodyLength);
+                    index += m_bodyLength;
+                }
+
+                if (m_footerLength > 0)
+                    Buffer.BlockCopy(FooterImage, 0, buffer, index, m_footerLength);
 
                 return buffer;
             }
