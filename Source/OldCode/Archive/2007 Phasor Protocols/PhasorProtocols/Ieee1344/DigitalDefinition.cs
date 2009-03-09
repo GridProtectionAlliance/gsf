@@ -30,6 +30,9 @@ namespace PCS.PhasorProtocols.Ieee1344
     {
         #region [ Members ]
 
+        // Constants        
+        internal const int ConversionFactorLength = 2;
+
         // Fields
         private short m_statusFlags;
 
@@ -159,9 +162,10 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         /// <param name="binaryImage">Binary image to parse.</param>
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
-        internal void ParseConversionFactor(byte[] binaryImage, int startIndex)
+        internal int ParseConversionFactor(byte[] binaryImage, int startIndex)
         {
             m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            return ConversionFactorLength;
         }
 
         /// <summary>
@@ -181,17 +185,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         #endregion
 
         #region [ Static ]
-
-        // Static Properties
-
-        // Gets length of conversion factor
-        internal static int ConversionFactorLength
-        {
-            get
-            {
-                return 2;
-            }
-        }
 
         // Static Methods
 

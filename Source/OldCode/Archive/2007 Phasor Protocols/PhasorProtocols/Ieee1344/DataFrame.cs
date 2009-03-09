@@ -199,7 +199,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return CommonHeader.BinaryLength;
+                return CommonFrameHeader.FixedLength;
             }
         }
 
@@ -241,6 +241,19 @@ namespace PCS.PhasorProtocols.Ieee1344
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // We already parsed the frame header, so we just skip past it...
+            return CommonFrameHeader.FixedLength;
+        }
 
         /// <summary>
         /// Calculates checksum of given <paramref name="buffer"/>.

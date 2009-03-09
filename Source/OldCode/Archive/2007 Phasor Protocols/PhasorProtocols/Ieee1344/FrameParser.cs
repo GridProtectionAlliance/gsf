@@ -208,7 +208,13 @@ namespace PCS.PhasorProtocols.Ieee1344
                 CommonFrameHeader commonHeader = frameImage.CommonHeader as CommonFrameHeader;
 
                 if (commonHeader != null && commonHeader.IsLastFrame)
+                {
                     base.OnReceivedConfigurationFrame(frame);
+
+                    // Cache new configuration frame for parsing subsequent data frames...
+                    if (m_configurationFrame == null)
+                        m_configurationFrame = frame as ConfigurationFrame;
+                }
             }
         }
 
@@ -257,8 +263,6 @@ namespace PCS.PhasorProtocols.Ieee1344
                     {
                         if (ReceivedConfigurationFrame != null)
                             ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-
-                        m_configurationFrame = configFrame;
                     }
                     else
                     {

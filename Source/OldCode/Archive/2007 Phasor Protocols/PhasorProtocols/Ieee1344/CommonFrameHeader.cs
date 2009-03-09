@@ -335,32 +335,32 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Gets the binary image of the common header portion of this frame.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] buffer = new byte[BinaryLength];
-
-                // Make sure frame length gets included in status flags for generated binary image
-                FrameLength = (ushort)BinaryLength;
-
-                EndianOrder.BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
-                EndianOrder.BigEndian.CopyBytes(m_sampleCount, buffer, 4);
-
-                return buffer;
-            }
-        }
-
-        /// <summary>
-        /// Gets the length of the binary image of the common header portion of this frame.
+        /// Gets the length of the <see cref="BinaryImage"/>.
         /// </summary>
         public int BinaryLength
         {
             get
             {
                 return FixedLength;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary image of the common header portion of this frame.
+        /// </summary>
+        public byte[] BinaryImage
+        {
+            get
+            {
+                byte[] buffer = new byte[FixedLength];
+
+                // Make sure frame length gets included in status flags for generated binary image
+                FrameLength = (ushort)FixedLength;
+
+                EndianOrder.BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
+                EndianOrder.BigEndian.CopyBytes(m_sampleCount, buffer, 4);
+
+                return buffer;
             }
         }
 
@@ -392,7 +392,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                     m_attributes.Clear();
 
                 m_attributes.Add("Derived Type", this.GetType().Name);
-                m_attributes.Add("Binary Length", BinaryLength.ToString());
+                m_attributes.Add("Binary Length", FixedLength.ToString());
                 m_attributes.Add("Total Cells", "0");
                 m_attributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
                 m_attributes.Add("ID Code", "undefined");

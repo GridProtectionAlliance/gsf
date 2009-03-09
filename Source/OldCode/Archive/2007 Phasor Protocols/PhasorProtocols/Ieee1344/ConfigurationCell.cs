@@ -408,7 +408,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             PhasorDefinition phasorDefinition;
             DigitalDefinition digitalDefinition;
-            int x;
+            int x, index = startIndex;
 
             // Parse conversion factors from configuration cell footer
             for (x = 0; x < PhasorDefinitions.Count; x++)
@@ -416,10 +416,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                 phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
 
                 if (phasorDefinition != null)
-                {
-                    phasorDefinition.ParseConversionFactor(binaryImage, startIndex);
-                    startIndex += PhasorDefinition.ConversionFactorLength;
-                }
+                    index += phasorDefinition.ParseConversionFactor(binaryImage, index);
             }
 
             for (x = 0; x < DigitalDefinitions.Count; x++)
@@ -427,14 +424,13 @@ namespace PCS.PhasorProtocols.Ieee1344
                 digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
 
                 if (digitalDefinition != null)
-                {
-                    digitalDefinition.ParseConversionFactor(binaryImage, startIndex);
-                    startIndex += DigitalDefinition.ConversionFactorLength;
-                }
+                    index += digitalDefinition.ParseConversionFactor(binaryImage, index);
             }
 
             // Parse nominal frequency
-            return base.ParseFooterImage(binaryImage, startIndex, length);
+            index += base.ParseFooterImage(binaryImage, index, length);
+
+            return (index - startIndex);
         }
 
         /// <summary>

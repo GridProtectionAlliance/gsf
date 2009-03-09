@@ -363,7 +363,8 @@ namespace PCS.PhasorProtocols
 
             m_parsedBinaryLength = State.ParsedBinaryLength;
 
-            return base.Initialize(binaryImage, startIndex, length);
+            // Include 2 bytes for CRC
+            return base.Initialize(binaryImage, startIndex, length) + 2;
         }
 
         /// <summary>

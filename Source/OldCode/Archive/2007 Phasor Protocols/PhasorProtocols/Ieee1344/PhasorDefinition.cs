@@ -26,6 +26,13 @@ namespace PCS.PhasorProtocols.Ieee1344
     [Serializable()]
     public class PhasorDefinition : PhasorDefinitionBase
     {
+        #region [ Members ]
+
+        // Constants        
+        internal const int ConversionFactorLength = 4;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -107,29 +114,20 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         /// <param name="binaryImage">Binary image to parse.</param>
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
-        internal void ParseConversionFactor(byte[] binaryImage, int startIndex)
+        internal int ParseConversionFactor(byte[] binaryImage, int startIndex)
         {
             // Get phasor type from first byte
             Type = (binaryImage[startIndex] == 0) ? PhasorType.Voltage : PhasorType.Current;
 
             // Last three bytes represent scaling factor
             ScalingValue = EndianOrder.BigEndian.ToUInt24(binaryImage, startIndex + 1);
+
+            return ConversionFactorLength;
         }
 
         #endregion
 
         #region [ Static ]
-
-        // Static Properties
-
-        // Gets length of conversion factor
-        internal static int ConversionFactorLength
-        {
-            get
-            {
-                return 4;
-            }
-        }
 
         // Static Methods
 

@@ -228,7 +228,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return CommonHeader.BinaryLength;
+                return CommonFrameHeader.FixedLength;
             }
         }
 
@@ -320,17 +320,15 @@ namespace PCS.PhasorProtocols.Ieee1344
                         // bypass ChannelBase CRC frame validation on cumulative frame image
                         binaryImage = frameImages.BinaryImage;
                         length = frameImages.BinaryLength;
-
-                        // Start parsing beyond common frame header
-                        startIndex = CommonFrameHeader.FixedLength;
+                        startIndex = 0;
 
                         // Parse out header, body and footer images
                         startIndex += ParseHeaderImage(binaryImage, startIndex, length);
                         startIndex += ParseBodyImage(binaryImage, startIndex, length - startIndex);
                         startIndex += ParseFooterImage(binaryImage, startIndex, length - startIndex);
-                        
-                        // Return length of parsed portion of frame...
-                        return State.ParsedBinaryLength - CommonFrameHeader.FixedLength;
+
+                        // Include 2 bytes for CRC that was already validated
+                        return startIndex + 2;
                     }
                 }
 
@@ -340,6 +338,19 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
 
             return base.Initialize(binaryImage, startIndex, length);
+        }
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // We already parsed the frame header, so we just skip past it...
+            return CommonFrameHeader.FixedLength;
         }
 
         /// <summary>
