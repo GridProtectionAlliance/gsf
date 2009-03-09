@@ -745,7 +745,7 @@ namespace System
         }
 
         /// <summary>
-        /// Converts the numeric value of this instance to its equivalent string representation, using
+        /// Converts this value as a <see cref="DateTime"/> to its equivalent string representation, using
         /// the specified format.
         /// </summary>
         /// <param name="format">A format string.</param>
@@ -754,12 +754,12 @@ namespace System
         /// </returns>
         public string ToString(string format)
         {
-            return m_value.ToString(format);
+            return ((DateTime)this).ToString(format);
         }
 
         /// <summary>
-        /// Converts the numeric value of this instance to its equivalent string representation using the
-        /// specified culture-specific format information.
+        /// Converts this value as a <see cref="DateTime"/> to its equivalent string representation, using
+        /// the specified culture-specific format information.
         /// </summary>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
@@ -769,11 +769,11 @@ namespace System
         /// </returns>
         public string ToString(IFormatProvider provider)
         {
-            return m_value.ToString(provider);
+            return ((DateTime)this).ToString(provider);
         }
 
         /// <summary>
-        /// Converts the numeric value of this instance to its equivalent string representation using the
+        /// Converts this value as a <see cref="DateTime"/> to its equivalent string representation, using
         /// specified format and culture-specific format information.
         /// </summary>
         /// <param name="format">A format specification.</param>
@@ -785,7 +785,7 @@ namespace System
         /// </returns>
         public string ToString(string format, IFormatProvider provider)
         {
-            return m_value.ToString(format, provider);
+            return ((DateTime)this).ToString(format, provider);
         }
 
         /// <summary>
