@@ -1050,26 +1050,6 @@ namespace PCS.PhasorProtocols
         /// </summary>
         public void Stop()
         {
-            m_enabled = false;
-            m_rateCalcTimer.Enabled = false;
-            m_lastFrameReceivedTime = 0;
-            m_configurationFrame = null;
-
-            if (m_frameParser != null)
-            {
-                m_frameParser.Stop();
-                m_frameParser.ReceivedCommandFrame -= m_frameParser_ReceivedCommandFrame;
-                m_frameParser.ReceivedConfigurationFrame -= m_frameParser_ReceivedConfigurationFrame;
-                m_frameParser.ReceivedDataFrame -= m_frameParser_ReceivedDataFrame;
-                m_frameParser.ReceivedHeaderFrame -= m_frameParser_ReceivedHeaderFrame;
-                m_frameParser.ReceivedUndeterminedFrame -= m_frameParser_ReceivedUndeterminedFrame;
-                m_frameParser.ReceivedFrameBufferImage -= m_frameParser_ReceivedFrameBufferImage;
-                m_frameParser.ConfigurationChanged -= m_frameParser_ConfigurationChanged;
-                m_frameParser.ParsingException -= m_frameParser_ParsingException;
-                m_frameParser.Dispose();
-            }
-            m_frameParser = null;
-
             if (m_communicationClient != null)
             {
                 m_communicationClient.ConnectionEstablished -= m_communicationClient_ConnectionEstablished;
@@ -1099,6 +1079,26 @@ namespace PCS.PhasorProtocols
                 m_commandChannel.Dispose();
             }
             m_commandChannel = null;
+
+            if (m_frameParser != null)
+            {
+                m_frameParser.Stop();
+                m_frameParser.ReceivedCommandFrame -= m_frameParser_ReceivedCommandFrame;
+                m_frameParser.ReceivedConfigurationFrame -= m_frameParser_ReceivedConfigurationFrame;
+                m_frameParser.ReceivedDataFrame -= m_frameParser_ReceivedDataFrame;
+                m_frameParser.ReceivedHeaderFrame -= m_frameParser_ReceivedHeaderFrame;
+                m_frameParser.ReceivedUndeterminedFrame -= m_frameParser_ReceivedUndeterminedFrame;
+                m_frameParser.ReceivedFrameBufferImage -= m_frameParser_ReceivedFrameBufferImage;
+                m_frameParser.ConfigurationChanged -= m_frameParser_ConfigurationChanged;
+                m_frameParser.ParsingException -= m_frameParser_ParsingException;
+                m_frameParser.Dispose();
+            }
+            m_frameParser = null;
+
+            m_enabled = false;
+            m_rateCalcTimer.Enabled = false;
+            m_lastFrameReceivedTime = 0;
+            m_configurationFrame = null;
         }
 
         /// <summary>
