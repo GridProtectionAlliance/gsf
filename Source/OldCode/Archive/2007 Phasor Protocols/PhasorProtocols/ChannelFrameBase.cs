@@ -358,7 +358,7 @@ namespace PCS.PhasorProtocols
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             // We use data length parsed from data stream if available - in many cases we'll have to as we won't enough
-            // information about cell contents at this easrly parsing stage
+            // information about cell contents at this early parsing stage
             m_parsedBinaryLength = State.ParsedBinaryLength;
             
             // Normal binary image parsing is overriden for a frame so that checksum can be validated
