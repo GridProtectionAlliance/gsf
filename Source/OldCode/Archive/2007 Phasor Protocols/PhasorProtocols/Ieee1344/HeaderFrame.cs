@@ -147,6 +147,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 m_frameHeader = value;
+                State = m_frameHeader.State as IHeaderFrameParsingState;
             }
         }
 

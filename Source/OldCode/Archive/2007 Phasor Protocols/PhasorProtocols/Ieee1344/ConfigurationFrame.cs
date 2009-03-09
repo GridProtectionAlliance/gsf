@@ -204,6 +204,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 m_frameHeader = value;
+                State = m_frameHeader.State as IConfigurationFrameParsingState;
             }
         }
 
@@ -336,6 +337,11 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
 
             return base.Initialize(binaryImage, startIndex, length);
+        }
+
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            return 0;
         }
 
         /// <summary>

@@ -171,8 +171,8 @@ namespace PCS.PhasorProtocols.Ieee1344
                             parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell);
                             break;
                         case FrameType.ConfigurationFrame:
-                            // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell);
+                            // Assign configuration frame parsing state (note that IEEE 1344 only supports a single device, hence 1 cell)
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, 1);
 
                             // Cumulate configuration frame images...
                             CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_configurationFrameImages);
