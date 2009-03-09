@@ -249,7 +249,8 @@ namespace PCS.PhasorProtocols.Ieee1344
                         startIndex += ParseBodyImage(binaryImage, startIndex, length - startIndex);
                         startIndex += ParseFooterImage(binaryImage, startIndex, length - startIndex);
 
-                        return startIndex;
+                        // Return length of parsed portion of frame...
+                        return State.ParsedBinaryLength - CommonFrameHeader.FixedLength;
                     }
                 }
 

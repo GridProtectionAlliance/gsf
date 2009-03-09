@@ -56,7 +56,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         UserDefined0 = Bit.Bit13 | Bit.Bit15,
         /// <summary>
-        /// 101 User defined flags 1.
+        /// 111 User defined flags 1.
         /// </summary>
         UserDefined1 = Bit.Bit13 | Bit.Bit14 | Bit.Bit15
     }
