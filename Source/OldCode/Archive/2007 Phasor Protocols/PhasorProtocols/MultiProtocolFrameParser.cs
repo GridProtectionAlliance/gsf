@@ -486,7 +486,13 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                m_executeParseOnSeparateThread = value;
+                // If using file based source and auto-repeat is enabled, we don't allow execution on a separate thread
+                // since file based streaming data source will continue to queue data as quickly as possible and add data
+                // data to processing queue much faster than it will be processed thereby consuming all available memory
+                if (m_transportProtocol == TransportProtocol.File && m_autoRepeatCapturedPlayback)
+                    m_executeParseOnSeparateThread = false;
+                else
+                    m_executeParseOnSeparateThread = value;
 
                 // Since frame parsers support dynamic changes in this value, we'll pass this value along to the
                 // the frame parser if one has been established...
