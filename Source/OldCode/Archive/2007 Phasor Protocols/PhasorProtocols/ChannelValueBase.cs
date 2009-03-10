@@ -173,7 +173,7 @@ namespace PCS.PhasorProtocols
 
                 for (int x = 0; x < compositeValues.Length; x++)
                 {
-                    baseAttributes.Add("     Composite Value " + x, compositeValues[x].ToString());
+                    baseAttributes.Add("     Composite Value " + x, " => " + compositeValues[x].ToString());
                 }
 
                 return baseAttributes;

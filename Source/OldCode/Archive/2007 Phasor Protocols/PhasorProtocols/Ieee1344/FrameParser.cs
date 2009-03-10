@@ -22,7 +22,7 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols.Ieee1344
 {
     /// <summary>
-    /// Represents a frame parses for an IEEE 1344 binary data stream that returns parsed data via events.
+    /// Represents a frame parser for an IEEE 1344 binary data stream that returns parsed data via events.
     /// </summary>
     /// <remarks>
     /// Frame parser is implemented as a write-only stream - this way data can come from any source.

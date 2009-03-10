@@ -347,6 +347,9 @@ namespace PCS.PhasorProtocols
             {
                 m_transportProtocol = value;
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
+
+                if (m_transportProtocol == TransportProtocol.File && m_autoRepeatCapturedPlayback)
+                    ExecuteParseOnSeparateThread = false;
             }
         }
 
@@ -497,7 +500,7 @@ namespace PCS.PhasorProtocols
                 // Since frame parsers support dynamic changes in this value, we'll pass this value along to the
                 // the frame parser if one has been established...
                 if (m_frameParser != null)
-                    m_frameParser.ExecuteParseOnSeparateThread = value;
+                    m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread;
             }
         }
 
@@ -553,6 +556,9 @@ namespace PCS.PhasorProtocols
             set
             {
                 m_autoRepeatCapturedPlayback = value;
+
+                if (m_transportProtocol == TransportProtocol.File && m_autoRepeatCapturedPlayback)
+                    ExecuteParseOnSeparateThread = false;
             }
         }
 
@@ -1058,6 +1064,8 @@ namespace PCS.PhasorProtocols
         {
             if (m_communicationClient != null)
             {
+                m_communicationClient.Disconnect();
+                m_communicationClient.ReceiveDataHandler = null;
                 m_communicationClient.ConnectionEstablished -= m_communicationClient_ConnectionEstablished;
                 m_communicationClient.ConnectionAttempt -= m_communicationClient_ConnectionAttempt;
                 m_communicationClient.ConnectionException -= m_communicationClient_ConnectionException;
@@ -1068,6 +1076,8 @@ namespace PCS.PhasorProtocols
 
             if (m_communicationServer != null)
             {
+                m_communicationServer.DisconnectAll();
+                m_communicationServer.ReceiveClientDataHandler = null;
                 m_communicationServer.ClientConnected -= m_communicationServer_ClientConnected;
                 m_communicationServer.ClientDisconnected -= m_communicationServer_ClientDisconnected;
                 m_communicationServer.ServerStarted -= m_communicationServer_ServerStarted;
@@ -1078,6 +1088,8 @@ namespace PCS.PhasorProtocols
 
             if (m_commandChannel != null)
             {
+                m_commandChannel.Disconnect();
+                m_commandChannel.ReceiveDataHandler = null;
                 m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
                 m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
                 m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;

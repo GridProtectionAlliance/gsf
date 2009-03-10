@@ -240,7 +240,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return new double[] { m_phasor.Angle, m_phasor.AbsoluteValue };
+                return new double[] { m_phasor.Angle.ToDegrees(), m_phasor.AbsoluteValue };
             }
         }
 

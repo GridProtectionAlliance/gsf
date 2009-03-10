@@ -29,7 +29,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\</OutputPath>
-    <DocumentationFile>PhasorProtocols.xml</DocumentationFile>
+    <DocumentationFile>PCS.PhasorProtocols.XML</DocumentationFile>
     <NOWARN>1591</NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <RunCodeAnalysis>true</RunCodeAnalysis>
@@ -42,7 +42,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\</OutputPath>
-    <DocumentationFile>PhasorProtocols.xml</DocumentationFile>
+    <DocumentationFile>PCS.PhasorProtocols.XML</DocumentationFile>
     <NOWARN>1591</NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <DefineConstants>
