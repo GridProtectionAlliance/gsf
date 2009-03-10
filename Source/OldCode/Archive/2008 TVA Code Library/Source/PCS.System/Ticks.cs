@@ -72,7 +72,9 @@ namespace System
     /// act like a long integer but handle time conversions. <see cref="Ticks"/> can also represent a "time period" (e.g., the
     /// number of ticks elapsed since a process started) and thus can also be used like a <see cref="TimeSpan"/>; when used in
     /// this manner the <see cref="Ticks.ToString()"/> method can be used to convert the <see cref="Ticks"/> value into a handy
-    /// textual representation of elapsed years, days, hours, minutes and seconds.
+    /// textual representation of elapsed years, days, hours, minutes and seconds. <see cref="Ticks.ToString(string)"/> overload
+    /// behaves as <see cref="DateTime.ToString(string)"/>, all other numeric methods act according to <see cref="System.Int64"/>
+    /// value that <see cref="Ticks"/> represents.
     /// </para>
     /// <para>
     /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implictly castable to and from
