@@ -650,10 +650,11 @@ namespace PCS.IO
                 try
                 {
                     // This will be done regardless of whether the object is finalized or disposed.
-                    SaveSettings();             // Saves settings to the config file.
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
                         if (m_fileStream != null)
                             m_fileStream.Dispose();
 

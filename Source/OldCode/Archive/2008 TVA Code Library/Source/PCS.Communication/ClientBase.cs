@@ -266,6 +266,15 @@ namespace PCS.Communication
 
         #region [ Properties ]
 
+        #region [ Abstract ]
+
+        /// <summary>
+        /// Gets the server URI.
+        /// </summary>
+        public abstract string ServerUri { get; }
+
+        #endregion
+
         /// <summary>
         /// Gets or sets the data required by the client to connect to the server.
         /// </summary>
@@ -1012,12 +1021,12 @@ namespace PCS.Communication
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    SaveSettings();
+                    // This will be done regardless of whether the object is finalized or disposed.                  
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         Disconnect();
+                        SaveSettings();
                     }
                 }
                 finally

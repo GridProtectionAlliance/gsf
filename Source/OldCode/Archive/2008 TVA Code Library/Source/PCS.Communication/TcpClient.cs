@@ -203,6 +203,17 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Gets the server URI of the <see cref="TcpClient"/>.
+        /// </summary>
+        public override string ServerUri
+        {
+            get 
+            {
+                return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

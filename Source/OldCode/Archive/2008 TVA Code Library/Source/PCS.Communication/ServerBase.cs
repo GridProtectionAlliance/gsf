@@ -911,7 +911,12 @@ namespace PCS.Communication
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         public virtual void Multicast(byte[] data, int offset, int length)
         {
-            WaitHandle.WaitAll(MulticastAsync(data, offset, length));
+            // Perform asynchronous transmissions.
+            WaitHandle[] handles = MulticastAsync(data, offset, length);
+
+            // Wait for transmissions to complete.
+            if (handles.Length > 0)
+                WaitHandle.WaitAll(handles);
         }
 
         /// <summary>
@@ -1122,12 +1127,12 @@ namespace PCS.Communication
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    SaveSettings();
+                    // This will be done regardless of whether the object is finalized or disposed.                  
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         Stop();
+                        SaveSettings();
                     }
                 }
                 finally

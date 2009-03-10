@@ -216,6 +216,11 @@ namespace PCS.Communication
         Guid ClientID { get; set; }
 
         /// <summary>
+        /// Gets the server URI.
+        /// </summary>
+        string ServerUri { get; }
+
+        /// <summary>
         /// Gets the current <see cref="ClientState"/>.
         /// </summary>
         ClientState CurrentState { get; }

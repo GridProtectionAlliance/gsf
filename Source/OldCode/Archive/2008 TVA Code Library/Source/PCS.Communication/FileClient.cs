@@ -401,6 +401,17 @@ namespace PCS.Communication
             }
         }
 
+        /// <summary>
+        /// Gets the server URI of the <see cref="FileClient"/>.
+        /// </summary>
+        public override string ServerUri
+        {
+            get
+            {
+                return string.Format("{0}://{1}", TransportProtocol, m_connectData["file"]).ToLower();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
