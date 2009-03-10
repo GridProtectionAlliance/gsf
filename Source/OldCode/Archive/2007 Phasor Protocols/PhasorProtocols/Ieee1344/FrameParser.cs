@@ -75,10 +75,6 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -125,7 +121,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(ConfigurationFrame), typeof(DataFrame), typeof(HeaderFrame) });
+            base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame), typeof(HeaderFrame) });
         }
 
         /// <summary>
@@ -166,7 +162,8 @@ namespace PCS.PhasorProtocols.Ieee1344
                 // Parse common frame header
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, buffer, offset);
 
-                // As an optimization, we also make sure entire frame buffer image is available to be parsed
+                // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
+                // we eliminate the need to validate length on all subsequent data elements that comprise the frame
                 if (length >= parsedFrameHeader.FrameLength)
                 {
                     // Expose the frame buffer image in case client needs this data for any reason
@@ -330,10 +327,11 @@ namespace PCS.PhasorProtocols.Ieee1344
                 frameImages = null;
         }
 
-        // Attempts to cast given frame into an IEEE 1344 configuration frame - hypothetically this would
-        // allow a configuration frame to be used in between different protocol implementations
+        // Attempts to cast given frame into an IEEE 1344 configuration frame - theoretically this will
+        // allow the same configuration frame to be used for any protocol implementation
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
+            // See if frame is already a IEEE 1344 frame (if so, we don't need to do any work)
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
             if (derivedFrame == null)
@@ -374,7 +372,6 @@ namespace PCS.PhasorProtocols.Ieee1344
             return derivedFrame;
         }
         
-        #endregion
-        
+        #endregion   
     }
 }

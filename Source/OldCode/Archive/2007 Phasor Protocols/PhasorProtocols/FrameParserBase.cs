@@ -267,7 +267,7 @@ namespace PCS.PhasorProtocols
                         m_bufferQueue = null;
 
                         // Detach from base class events
-                        base.DataParsed += base_DataParsed;
+                        base.DataParsed -= base_DataParsed;
                     }
                 }
                 finally
