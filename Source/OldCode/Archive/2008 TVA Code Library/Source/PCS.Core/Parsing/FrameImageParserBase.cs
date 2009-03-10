@@ -79,12 +79,21 @@ namespace PCS.Parsing
         public event EventHandler<EventArgs<TOutputType>> DataParsed;
 
         /// <summary>
-        /// Occurs when matching a output type for deserializing the data image cound not be found.
+        /// Occurs when matching an output type for deserializing the data image cound not be found.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the output type that could not be found.
         /// </remarks>
         public event EventHandler<EventArgs<TTypeIdentifier>> OutputTypeNotFound;
+
+        /// <summary>
+        /// Occurs when more than one type has been defined that can deserialize the specified output type.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="Type"/> that defines a type ID that has already been defined.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the ID of the output type that was defined more than once.
+        /// </remarks>
+        public event EventHandler<EventArgs<Type, TTypeIdentifier>> DuplicateTypeHandlerEncountered;
 
         // Fields
         private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
@@ -242,6 +251,8 @@ namespace PCS.Parsing
 
                 if (!m_outputTypes.ContainsKey(outputType.TypeID))
                     m_outputTypes.Add(outputType.TypeID, outputType);
+                else
+                    OnDuplicateTypeHandlerEncountered(outputType.RuntimeType, outputType.TypeID);
             }
         }
 
@@ -254,7 +265,6 @@ namespace PCS.Parsing
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFrame(byte[] buffer, int offset, int length)
         {
-            int endOfBuffer = offset + length - 1;
             int parsedHeaderLength, parsedFrameLength;
             ICommonHeader<TTypeIdentifier> commonHeader;
             TypeInfo outputType;
@@ -270,11 +280,12 @@ namespace PCS.Parsing
             if (parsedHeaderLength == 0 && commonHeader == null)
                 return 0;
 
+            // Lookup TypeID to see if it is a known type
             if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
             {
                 instance = outputType.CreateNew();
                 instance.CommonHeader = commonHeader;
-                parsedFrameLength = instance.Initialize(buffer, offset, endOfBuffer - offset + 1);
+                parsedFrameLength = instance.Initialize(buffer, offset, length);
 
                 // Expose parsed type to consumer
                 if (parsedFrameLength > 0)
@@ -282,10 +293,21 @@ namespace PCS.Parsing
             }
             else
             {
-                // If we come across data in the image that we cannot convert to a type then we move on
-                // to the next buffer of data :(
+                // We encountered an unrecognized data type that cannot be parsed
+                if (ProtocolUsesSyncBytes)
+                {
+                    // Protocol uses synchronization bytes so we scan for them in the current buffer. This effectively
+                    // scans through buffer to next frame...
+                    int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, length);
+
+                    if (syncBytesPosition > -1)
+                        return (syncBytesPosition - offset + 1);
+                }
+                
+                // Without synchronization bytes we have no choice but to move onto the next buffer of data :(
                 parsedFrameLength = length;
                 OnOutputTypeNotFound(commonHeader.TypeID);
+                OnDataDiscarded(buffer.BlockCopy(offset, length));
             }
 
             return parsedFrameLength;
@@ -325,7 +347,7 @@ namespace PCS.Parsing
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
         /// </summary>
-        /// <param name="obj">Object deserialized from binary image.</param>
+        /// <param name="obj">The object that was deserialized from binary image.</param>
         protected virtual void OnDataParsed(TOutputType obj)
         {
             if (DataParsed != null)
@@ -335,11 +357,22 @@ namespace PCS.Parsing
         /// <summary>
         /// Raises the <see cref="OutputTypeNotFound"/> event.
         /// </summary>
-        /// <param name="id">ID of the output type that was not found.</param>
+        /// <param name="id">The ID of the output type that was not found.</param>
         protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
         {
             if (OutputTypeNotFound != null)
                 OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DuplicateTypeHandlerEncountered"/> event.
+        /// </summary>
+        /// <param name="duplicateType">The <see cref="Type"/> that defines a type ID that has already been defined.</param>
+        /// <param name="id">The ID of the output type that was defined more than once.</param>
+        protected virtual void OnDuplicateTypeHandlerEncountered(Type duplicateType, TTypeIdentifier id)
+        {
+            if (DuplicateTypeHandlerEncountered != null)
+                DuplicateTypeHandlerEncountered(this, new EventArgs<Type, TTypeIdentifier>(duplicateType, id));
         }
 
         #endregion

@@ -208,8 +208,8 @@ namespace PCS.Parsing
         /// </summary>
         public override void Stop()
         {
-            base.Stop();
             m_bufferQueue.Stop();
+            base.Stop();
         }
 
         /// <summary>
@@ -235,13 +235,36 @@ namespace PCS.Parsing
         }
 
         /// <summary>
-        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[])"/> method instead to make sure data source ID gets tracked with data buffer.
+        /// Queues the object implementing the <see cref="ISupportBinaryImage"/> interface, from the specified data source, onto the stream for parsing.
+        /// </summary>
+        /// <param name="source">ID of the data source.</param>
+        /// <param name="image">Object to be parsed that implements the <see cref="ISupportBinaryImage"/> interface.</param>
+        /// <remarks>
+        /// This function takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
+        /// </remarks>
+        public void Parse(TSourceIdentifier source, ISupportBinaryImage image)
+        {
+            Parse(source, image.BinaryImage);
+        }
+
+        /// <summary>
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source ID gets tracked with data buffer.
+        /// </summary>
+        /// <exception cref="NotImplementedException">This function should not be called directly.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void Parse(ISupportBinaryImage image)
+        {
+            throw new NotImplementedException("This function should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead.");
+        }
+
+        /// <summary>
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source ID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This function should not be called directly.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("This function should not be called directly, call the Parse method to queue data for parsing instead.");
+            throw new NotImplementedException("This function should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
         }
 
         /// <summary>
