@@ -123,10 +123,22 @@ namespace PCS.Net.Ftp
         /// </summary>
         /// <param name="caseInsensitive">Set to true to not be case sensitive with FTP file and directory names.</param>
         public FtpClient(bool caseInsensitive)
+            : base()
         {
             m_caseInsensitive = caseInsensitive;
             m_waitLockTimeOut = 10;
             m_currentState = new FtpSessionDisconnected(this, m_caseInsensitive);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FtpClient"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="FtpClient"/>.</param>
+        public FtpClient(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
         }
 
         #endregion

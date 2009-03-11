@@ -673,6 +673,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the current <see cref="ClientState"/>.
         /// </summary>
+        [Browsable(false)]
         public virtual ClientState CurrentState
         {
             get
@@ -956,7 +957,14 @@ namespace PCS.Communication
         {
             if (!DesignMode)
             {
-                Initialize();
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 

@@ -642,6 +642,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the current <see cref="ServerState"/>.
         /// </summary>
+        [Browsable(false)]
         public ServerState CurrentState
         {
             get
@@ -1010,7 +1011,14 @@ namespace PCS.Communication
         {
             if (!DesignMode)
             {
-                Initialize();
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 

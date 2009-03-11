@@ -178,9 +178,21 @@ namespace PCS.IO
         /// <summary>
         /// Initializes a new instance of the <see cref="MultipleDestinationExporter"/> class.
         /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="MultipleDestinationExporter"/>.</param>
+        public MultipleDestinationExporter(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MultipleDestinationExporter"/> class.
+        /// </summary>
         /// <param name="settingsCategory">The config file settings category under which the export destinations are defined.</param>
         /// <param name="exportTimeout">The total allowed time in milliseconds for all exports to execute.</param>
         public MultipleDestinationExporter(string settingsCategory, int exportTimeout)
+            : base()
         {
             m_exportTimeout = exportTimeout;
             m_settingsCategory = settingsCategory;
@@ -490,7 +502,14 @@ namespace PCS.IO
         {
             if (!DesignMode)
             {
-                Initialize();
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 

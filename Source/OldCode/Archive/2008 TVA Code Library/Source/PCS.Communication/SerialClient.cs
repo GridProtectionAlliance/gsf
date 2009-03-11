@@ -156,6 +156,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the server URI of the <see cref="SerialClient"/>.
         /// </summary>
+        [Browsable(false)]
         public override string ServerUri
         {
             get

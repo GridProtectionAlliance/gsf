@@ -79,7 +79,7 @@ namespace PCS.IO
     /// </code>
     /// </example>
     [ToolboxBitmap(typeof(LogFile))]
-    public partial class LogFile : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
+    public class LogFile : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
         #region [ Members ]
 
@@ -158,6 +158,7 @@ namespace PCS.IO
         /// Initializes a new instance of the <see cref="LogFile"/> class.
         /// </summary>
         public LogFile()
+            : base()
         {
             m_fileName = DefaultFileName;
             m_fileSize = DefaultFileSize;
@@ -170,6 +171,17 @@ namespace PCS.IO
 
             this.FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += m_logEntryQueue_ProcessException;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogFile"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="LogFile"/>.</param>
+        public LogFile(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
         }
 
         #endregion
@@ -577,7 +589,14 @@ namespace PCS.IO
         {
             if (!DesignMode)
             {
-                Initialize();
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 

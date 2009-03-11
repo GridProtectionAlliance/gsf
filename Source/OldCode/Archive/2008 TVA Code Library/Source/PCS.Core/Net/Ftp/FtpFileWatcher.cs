@@ -97,6 +97,7 @@ namespace PCS.Net.Ftp
         /// Constructs a new FTP file watcher using the default settings.
         /// </summary>
         public FtpFileWatcher()
+            : base()
         {
             m_enabled = true;
             m_notifyOnComplete = true;
@@ -135,11 +136,14 @@ namespace PCS.Net.Ftp
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="FtpFileWatcher"/> object is reclaimed by <see cref="GC"/>.
+        /// Initializes a new instance of the <see cref="FtpFileWatcher"/> class.
         /// </summary>
-        ~FtpFileWatcher()
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="FtpFileWatcher"/>.</param>
+        public FtpFileWatcher(IContainer container)
+            : this()
         {
-            Dispose(false);
+            if (container != null)
+                container.Add(this);
         }
 
         #endregion

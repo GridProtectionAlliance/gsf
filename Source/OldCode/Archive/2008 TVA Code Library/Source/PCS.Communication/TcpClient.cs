@@ -206,6 +206,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the server URI of the <see cref="TcpClient"/>.
         /// </summary>
+        [Browsable(false)]
         public override string ServerUri
         {
             get 

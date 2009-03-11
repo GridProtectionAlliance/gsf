@@ -168,6 +168,7 @@ namespace PCS.Communication
         /// <summary>
         /// Gets the server URI of the <see cref="UdpClient"/>.
         /// </summary>
+        [Browsable(false)]
         public override string ServerUri
         {
             get

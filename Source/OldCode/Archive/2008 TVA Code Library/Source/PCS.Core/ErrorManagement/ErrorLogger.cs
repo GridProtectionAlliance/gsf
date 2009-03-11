@@ -211,8 +211,8 @@ namespace PCS.ErrorManagement
         /// Initializes a new instance of the <see cref="ErrorLogger"/> class.
         /// </summary>
         public ErrorLogger()
-        {
-            m_errorLog = new LogFile();
+            : base()
+        {          
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
@@ -231,6 +231,9 @@ namespace PCS.ErrorManagement
             m_scopeTextMethod = GetScopeText;
             m_actionTextMethod = GetActionText;
             m_moreInfoTextMethod = GetMoreInfoText;
+            // Initialize the error log file.
+            m_errorLog = new LogFile();
+            m_errorLog.FileName = "ErrorLog.txt";
             // Initialize all logger methods.
             m_loggers = new List<Action<Exception>>();
             m_loggers.Add(ExceptionToScreenshot);
@@ -238,6 +241,17 @@ namespace PCS.ErrorManagement
             m_loggers.Add(ExceptionToEmail);
             m_loggers.Add(ExceptionToFile);
             m_loggers.Add(ExceptionToUI);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorLogger"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="ErrorLogger"/>.</param>
+        public ErrorLogger(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
         }
 
         #endregion
@@ -500,6 +514,20 @@ namespace PCS.ErrorManagement
         }
 
         /// <summary>
+        /// Get the <see cref="LogFile"/> object used for logging <see cref="Exception"/> information to a file.
+        /// </summary>
+        [Category("Components"), 
+        Description("Get the LogFile object used for logging Exception information to a file."), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public LogFile ErrorLog
+        {
+            get
+            {
+                return m_errorLog;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ErrorLogger"/> object is currently enabled.
         /// </summary>
         /// <remarks>
@@ -660,18 +688,6 @@ namespace PCS.ErrorManagement
         }
 
         /// <summary>
-        /// Get the <see cref="LogFile"/> object used for logging <see cref="Exception"/> information to a file.
-        /// </summary>
-        [Browsable(false)]
-        public LogFile ErrorLog
-        {
-            get
-            {
-                return m_errorLog;
-            }
-        }
-
-        /// <summary>
         /// Get the last encountered <see cref="Exception"/>.
         /// </summary>
         [Browsable(false)]
@@ -783,8 +799,6 @@ namespace PCS.ErrorManagement
             {
                 LoadSettings();                                     // Load settings from the config file.
                 Register();                                         // Register the logger for unhandled exceptions.
-                m_errorLog.FileName = GetDefaultLogFileName();      // Assign a default filename for the error log.
-                m_errorLog.Open();                                  // Open the log file.
                 m_initialized = true;                               // Initialize only once.
             }
         }
@@ -873,7 +887,14 @@ namespace PCS.ErrorManagement
         {
             if (!DesignMode)
             {
-                Initialize();
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 
@@ -1088,6 +1109,8 @@ namespace PCS.ErrorManagement
             if (m_logToFile)
             {
                 m_logToFileOK = false;
+                if (!m_errorLog.IsOpen)
+                    m_errorLog.Open();
                 m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception));
                 m_logToFileOK = true;
             }
@@ -1340,11 +1363,6 @@ namespace PCS.ErrorManagement
             moreInfoText.Append(GetExceptionInfo(m_lastException));
 
             return moreInfoText.ToString();
-        }
-
-        private string GetDefaultLogFileName()
-        {
-            return FilePath.GetAbsolutePath(ApplicationName + ".ErrorLog.txt");
         }
 
         private string GetScreenshotFileName()

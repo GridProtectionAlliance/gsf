@@ -168,6 +168,7 @@ namespace PCS.Scheduling
         /// Initializes a new instance of the <see cref="ScheduleManager"/> class.
         /// </summary>
         public ScheduleManager()
+            : base()
         {
             m_enabled = DefaultEnabled;
             m_persistSettings = DefaultPersistSettings;
@@ -178,11 +179,14 @@ namespace PCS.Scheduling
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="ScheduleManager"/> object is reclaimed by <see cref="GC"/>.
+        /// Initializes a new instance of the <see cref="ScheduleManager"/> class.
         /// </summary>
-        ~ScheduleManager()
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="ScheduleManager"/>.</param>
+        public ScheduleManager(IContainer container)
+            : this()
         {
-            Dispose(false);
+            if (container != null)
+                container.Add(this);
         }
 
         #endregion
@@ -485,7 +489,14 @@ namespace PCS.Scheduling
         {
             if (!DesignMode)
             {
-                Initialize();
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 
