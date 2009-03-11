@@ -147,6 +147,17 @@ namespace PCS.Communication
             m_tcpClient = new TransportProvider<Socket>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpClient"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpClient"/>.</param>
+        public TcpClient(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
+
         #endregion
 
         #region [ Properties ]

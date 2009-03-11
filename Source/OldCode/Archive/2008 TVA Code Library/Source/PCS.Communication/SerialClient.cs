@@ -137,6 +137,17 @@ namespace PCS.Communication
             m_serialClient = new TransportProvider<SerialPort>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SerialClient"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="SerialClient"/>.</param>
+        public SerialClient(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
+
         #endregion
 
         #region [ Properties ]

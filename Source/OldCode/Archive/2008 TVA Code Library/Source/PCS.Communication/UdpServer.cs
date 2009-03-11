@@ -155,6 +155,17 @@ namespace PCS.Communication
             m_udpClients = new Dictionary<Guid, TransportProvider<Socket>>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UdpServer"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="UdpServer"/>.</param>
+        public UdpServer(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
+
         #endregion
 
         #region [ Properties ]

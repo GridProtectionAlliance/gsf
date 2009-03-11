@@ -231,6 +231,7 @@ namespace PCS.Communication
         /// Initializes a new instance of the client.
         /// </summary>
         protected ClientBase()
+            : base()
         {
             m_serverID = Guid.Empty;
             m_clientID = Guid.NewGuid();

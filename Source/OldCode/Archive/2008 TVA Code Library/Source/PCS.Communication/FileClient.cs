@@ -234,6 +234,16 @@ namespace PCS.Communication
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileClient"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="FileClient"/>.</param>
+        public FileClient(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
         #endregion
 
         #region [ Properties ]

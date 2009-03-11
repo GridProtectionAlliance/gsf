@@ -244,6 +244,7 @@ namespace PCS.Communication
         /// Initializes a new instance of the server.
         /// </summary>
         protected ServerBase()
+            : base()
         {
             m_serverID = Guid.NewGuid();
             m_clientIDs = new List<Guid>();

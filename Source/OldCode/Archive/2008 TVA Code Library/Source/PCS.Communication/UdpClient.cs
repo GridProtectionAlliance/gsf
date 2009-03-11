@@ -149,6 +149,17 @@ namespace PCS.Communication
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UdpClient"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="UdpClient"/>.</param>
+        public UdpClient(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
+
         #endregion
 
         #region [ Properties ]
