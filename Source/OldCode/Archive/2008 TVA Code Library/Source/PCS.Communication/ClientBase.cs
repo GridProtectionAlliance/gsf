@@ -826,17 +826,12 @@ namespace PCS.Communication
         /// <summary>
         /// Connects the client to the server synchronously.
         /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="MaxConnectionAttempts"/> is set to -1.</exception>
         public void Connect()
         {
-            // Don't allow blocking connection to be attempted when MaxConnectionAttempts = -1.
-            if (MaxConnectionAttempts == -1)
-                throw new InvalidOperationException("Synchronous connection cannot be attempted with MaxConnectionAttempts = -1.");
-
             // Start asynchronous connection attempt.
             ConnectAsync();
             // Block for connection process to complete.
-            while (m_currentState != ClientState.Connected)
+            while (m_currentState == ClientState.Connecting)
             {
                 Thread.Sleep(1000);
             }
@@ -1089,6 +1084,8 @@ namespace PCS.Communication
         /// <param name="ex">Exception to send to <see cref="ConnectionException"/> event.</param>
         protected virtual void OnConnectionException(Exception ex)
         {
+            m_currentState = ClientState.Disconnected;
+
             if (ConnectionException != null)
                 ConnectionException(this, new EventArgs<Exception>(ex));
         }
@@ -1098,6 +1095,8 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnHandshakeProcessTimeout()
         {
+            m_currentState = ClientState.Disconnected;
+
             if (HandshakeProcessTimeout != null)
                 HandshakeProcessTimeout(this, EventArgs.Empty);
         }
@@ -1107,6 +1106,8 @@ namespace PCS.Communication
         /// </summary>
         protected virtual void OnHandshakeProcessUnsuccessful()
         {
+            m_currentState = ClientState.Disconnected;
+
             if (HandshakeProcessUnsuccessful != null)
                 HandshakeProcessUnsuccessful(this, EventArgs.Empty);
         }
