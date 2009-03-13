@@ -420,7 +420,7 @@ namespace PCS.Communication
             }
             catch (Exception ex)
             {
-                // This is highly unlikely, but we must handle this situation just in-case.
+                // This is highly unlikely, but we must handle this situation just-in-case.
                 OnConnectionException(ex);
                 TerminateConnection(tcpClient, false);
             }
