@@ -53,7 +53,7 @@ namespace PCS.Communication
     ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
     ///         m_client.SendDataComplete += m_client_SendDataComplete;
     ///         // Connect the client.
-    ///         m_client.ConnectAsync();
+    ///         m_client.Connect();
     /// 
     ///         // Write user input to the file.
     ///         string input;
@@ -109,7 +109,7 @@ namespace PCS.Communication
     ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
     ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
     ///         // Connect the client.
-    ///         m_client.ConnectAsync();
+    ///         m_client.Connect();
     /// 
     ///         // Wait for client to read data.
     ///         Console.ReadLine();

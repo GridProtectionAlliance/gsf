@@ -65,7 +65,7 @@ namespace PCS.Communication
     ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
     ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
     ///         // Connect the client.
-    ///         m_client.ConnectAsync();
+    ///         m_client.Connect();
     /// 
     ///         // Transmit user input to the server.
     ///         string input;
