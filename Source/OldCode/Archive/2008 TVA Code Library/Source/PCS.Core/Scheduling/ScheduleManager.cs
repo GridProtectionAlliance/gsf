@@ -310,13 +310,12 @@ namespace PCS.Scheduling
                 status.Append("        Number of schedules: ");
                 status.Append(m_schedules.Count);
                 status.AppendLine();
-                status.AppendLine();
                 lock (m_schedules)
                 {
                     foreach (Schedule schedule in m_schedules)
                     {
-                        status.Append(schedule.Status);
                         status.AppendLine();
+                        status.Append(schedule.Status);
                     }
                 }
 
