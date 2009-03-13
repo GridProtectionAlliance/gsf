@@ -50,7 +50,7 @@ namespace PCS.Communication
     /// 
     ///     static void Main(string[] args)
     ///     {
-    ///         // Initialize the server.
+    ///         // Initialize the client.
     ///         m_client = new UdpClient("Server=localhost:8888; Port=8989");
     ///         m_client.Handshake = false;
     ///         m_client.ReceiveTimeout = -1;
@@ -63,8 +63,8 @@ namespace PCS.Communication
     ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
     ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
     ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
-    ///         // Start the server.
-    ///         m_client.ConnectAsync();
+    ///         // Connect the client.
+    ///         m_client.Connect();
     /// 
     ///         // Transmit user input to the server.
     ///         string input;
@@ -226,12 +226,12 @@ namespace PCS.Communication
                 // Initialize if unitialized.
                 Initialize();
 
-                OnConnectionAttempt();
                 m_udpClient = new TransportProvider<Socket>();
                 m_udpClient.ID = this.ClientID;
                 m_udpClient.Passphrase = HandshakePassphrase;
                 m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-                // Create client socket to establish presence.
+                
+                // Create a server endpoint.
                 if (m_connectData.ContainsKey("server"))
                 {
                     // Client has a server endpoint specified.
@@ -252,7 +252,7 @@ namespace PCS.Communication
 
                     // Create a random server endpoint since one is not specified.
                     m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
-                }              
+                }
 
                 if (Handshake)
                 {
@@ -269,11 +269,50 @@ namespace PCS.Communication
                     m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
                     Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
 
-                    // Transmit the prepared and processed handshake message.
-                    m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
+                    // Initialiate handshake process from a seperate thread.
+                    new Thread((ThreadStart)delegate()
+                    {
+                        int connectionAttempts = 0;
+                        while (true)
+                        {
+                            try
+                            {
+                                connectionAttempts++;
+                                OnConnectionAttempt();
 
-                    // Wait for the server's reponse to the handshake message.
-                    ReceiveHandshakeAsync(m_udpClient);
+                                // Transmit the prepared and processed handshake message.
+                                m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
+
+                                // Wait for the server's reponse to the handshake message.
+                                Thread.Sleep(1000);
+                                ReceiveHandshakeAsync(m_udpClient);
+                                break;
+                            }
+                            catch (SocketException ex)
+                            {
+                                OnConnectionException(ex);
+                                if (ex.SocketErrorCode == SocketError.ConnectionReset && 
+                                    (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts))
+                                {
+                                    // Server is unavailable, so keep retrying connection to the server.                                  
+                                    continue;
+                                }
+                                else
+                                {
+                                    // For any other reason, clean-up as if the client was disconnected.
+                                    TerminateConnection(m_udpClient, false);
+                                    break;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // This is highly unlikely, but we must handle this situation just-in-case.
+                                OnConnectionException(ex);
+                                TerminateConnection(m_udpClient, false);
+                                break;
+                            }
+                        }
+                    }).Start();
                 }
                 else
                 {
@@ -281,6 +320,7 @@ namespace PCS.Communication
                     m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
                     m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
+                    OnConnectionAttempt();
                     m_receivedGoodbye = NoGoodbyeCheck;
                     OnConnectionEstablished();
                     ReceivePayloadAsync(m_udpClient);
@@ -488,7 +528,7 @@ namespace PCS.Communication
                     // Update statistics and pointers.
                     udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref m_udpServer));
                     udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
-                    
+
                     // Received a goodbye message from the server.
                     if (m_receivedGoodbye(udpClient))
                         throw new SocketException((int)SocketError.Disconnecting);
