@@ -252,8 +252,7 @@ namespace PCS.Communication
 
                     // Create a random server endpoint since one is not specified.
                     m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
-                }
-                m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
+                }              
 
                 if (Handshake)
                 {
@@ -264,6 +263,7 @@ namespace PCS.Communication
                     handshake.Passphrase = this.HandshakePassphrase;
 
                     // Prepare binary image of handshake to be transmitted.
+                    m_udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
                     m_udpClient.SendBuffer = handshake.BinaryImage;
                     m_udpClient.SendBufferOffset = 0;
                     m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
@@ -278,6 +278,7 @@ namespace PCS.Communication
                 else
                 {
                     // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                    m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
                     m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
                     m_receivedGoodbye = NoGoodbyeCheck;
