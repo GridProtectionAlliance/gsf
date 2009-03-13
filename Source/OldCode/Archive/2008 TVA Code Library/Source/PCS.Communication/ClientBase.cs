@@ -831,10 +831,10 @@ namespace PCS.Communication
             // Start asynchronous connection attempt.
             ConnectAsync();
             // Block for connection process to complete.
-            while (m_currentState == ClientState.Connecting)
+            do
             {
                 Thread.Sleep(1000);
-            }
+            } while (m_currentState == ClientState.Connecting);
         }
 
         /// <summary>
