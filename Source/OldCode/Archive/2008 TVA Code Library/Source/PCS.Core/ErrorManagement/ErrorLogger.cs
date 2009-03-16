@@ -103,7 +103,7 @@ namespace PCS.ErrorManagement
     /// </example>
     /// <seealso cref="ErrorModule"/>
     [ToolboxBitmap(typeof(ErrorLogger))]
-    public class ErrorLogger : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings
+    public class ErrorLogger : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
         #region [ Members ]
 
@@ -212,7 +212,7 @@ namespace PCS.ErrorManagement
         /// </summary>
         public ErrorLogger()
             : base()
-        {          
+        {
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
@@ -516,8 +516,8 @@ namespace PCS.ErrorManagement
         /// <summary>
         /// Get the <see cref="LogFile"/> object used for logging <see cref="Exception"/> information to a file.
         /// </summary>
-        [Category("Components"), 
-        Description("Get the LogFile object used for logging Exception information to a file."), 
+        [Category("Components"),
+        Description("Get the LogFile object used for logging Exception information to a file."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public LogFile ErrorLog
         {
@@ -713,6 +713,69 @@ namespace PCS.ErrorManagement
             get
             {
                 return m_loggers;
+            }
+        }
+
+        /// <summary>
+        /// Gets the unique identifier of the <see cref="ErrorLogger"/> object.
+        /// </summary>
+        [Browsable(false)]
+        public string Name
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="ErrorLogger"/> object.
+        /// </summary>
+        [Browsable(false)]
+        public string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append("               Error to UI: ");
+                status.Append(m_logToUI ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("             Error to File: ");
+                status.Append(m_logToFile ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("            Error to Email: ");
+                status.Append(m_logToEmail ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("        Error to Event Log: ");
+                status.Append(m_logToEventLog ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("       Error to Screenshot: ");
+                status.Append(m_logToScreenshot ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("               Mail Server: ");
+                status.Append(!string.IsNullOrEmpty(m_smtpServer) ? m_smtpServer : "[Not Set]");
+                status.AppendLine();
+                status.Append("              Contact Name: ");
+                status.Append(!string.IsNullOrEmpty(m_contactName) ? m_contactName : "[Not Set]");
+                status.AppendLine();
+                status.Append("             Contact Email: ");
+                status.Append(!string.IsNullOrEmpty(m_contactEmail) ? m_contactEmail : "[Not Set]");
+                status.AppendLine();
+                status.Append("             Contact Phone: ");
+                status.Append(!string.IsNullOrEmpty(m_contactPhone) ? m_contactPhone : "[Not Set]");
+                status.AppendLine();
+                status.Append("    Handle Unhandled Error: ");
+                status.Append(m_handleUnhandledException ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("  Exit On Unhandled Errors: ");
+                status.Append(m_exitOnUnhandledException ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("    Last Encountered Error: ");
+                status.Append(m_lastException != null ? m_lastException.GetType().FullName : "[None]");
+                status.AppendLine();
+
+                return status.ToString();
             }
         }
 
@@ -1158,7 +1221,7 @@ namespace PCS.ErrorManagement
         protected virtual void ExceptionToScreenshot(Exception exception)
         {
             // Log if enabled.
-            if (m_logToScreenshot && 
+            if (m_logToScreenshot &&
                 (ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
             {
                 m_logToScreenshotOK = false;
@@ -1182,7 +1245,7 @@ namespace PCS.ErrorManagement
                 try
                 {
                     // This will be done regardless of whether the object is finalized or disposed.
-                    Unregister();                   
+                    Unregister();
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
