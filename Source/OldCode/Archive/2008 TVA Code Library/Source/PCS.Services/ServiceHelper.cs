@@ -19,124 +19,189 @@
 //       Made monitoring of service health optional via the MonitorServiceHealth property.
 //  09/30/2008 - James R Carroll
 //       Generated original version of source code.
+//  03/06/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
 using System;
-using System.Text;
-using System.Drawing;
-using System.ComponentModel;
 using System.Collections.Generic;
-using System.ServiceProcess;
+using System.ComponentModel;
 using System.Diagnostics;
-using PCS.IO;
-using PCS.ErrorManagement;
+using System.Drawing;
+using System.ServiceProcess;
+using System.Text;
 using PCS.Communication;
-using PCS.Scheduling;
 using PCS.Configuration;
 using PCS.Diagnostics;
+using PCS.ErrorManagement;
+using PCS.IO;
+using PCS.Scheduling;
 
 namespace PCS.Services
 {
-    /// <summary>Helper class for a windows service</summary>
-	[ToolboxBitmap(typeof(ServiceHelper))]
-    public class ServiceHelper : Component, IPersistSettings, ISupportInitialize, IProvideStatus
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Indicates the state of a Windows Service.
+    /// </summary>
+    public enum ServiceState
+    {
+        /// <summary>
+        /// Service has started.
+        /// </summary>
+        Started,
+        /// <summary>
+        /// Service has stopped.
+        /// </summary>
+        Stopped,
+        /// <summary>
+        /// Service has paused.
+        /// </summary>
+        Paused,
+        /// <summary>
+        /// Service has resumed.
+        /// </summary>
+        Resumed,
+        /// <summary>
+        /// Service has shutdown.
+        /// </summary>
+        Shutdown
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Component that provides added functionality to a Windows Service.
+    /// </summary>
+    /// <seealso cref="ServiceProcess"/>
+    /// <seealso cref="ServiceResponse"/>
+    /// <seealso cref="ClientInfo"/>
+    /// <seealso cref="ClientRequest"/>
+    /// <seealso cref="ClientRequestHandler"/>
+    [ToolboxBitmap(typeof(ServiceHelper))]
+    public class ServiceHelper : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
 	{
 		#region [ Members ]
 		
         // Constants
 		
 		/// <summary>
-		/// The number of CrLfs to be appended to all the updates.
-		/// </summary>
-		public const int UpdateCrlfCount = 2;
-		
-		/// <summary>
-		/// Default value for LogStatusUpdates property.
+        /// Specifies the default value for the <see cref="LogStatusUpdates"/> property.
 		/// </summary>
 		public const bool DefaultLogStatusUpdates = true;
 		
 		/// <summary>
-		/// Default value for MonitorServiceHealth property.
+        /// Specifies the default value for the <see cref="MonitorServiceHealth"/> property.
 		/// </summary>
 		public const bool DefaultMonitorServiceHealth = true;
 		
 		/// <summary>
-		/// Default value for RequestHistoryLimit property.
+        /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
 		/// </summary>
 		public const int DefaultRequestHistoryLimit = 50;
 		
 		/// <summary>
-		/// Default value for QueryableSettingsCategories property.
+        /// Specifies the default value for the <see cref="QueryableSettingsCategories"/> property.
 		/// </summary>
 		public const string DefaultQueryableSettingsCategories = "ServiceHelper, StatusLog, ErrorLogger";
 		
 		/// <summary>
-		/// Default value for PersistSettings property.
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
 		/// </summary>
 		public const bool DefaultPersistSettings = false;
 		
 		/// <summary>
-		/// Default value for SettingsCategoryName property.
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
 		/// </summary>
-		public const string DefaultSettingsCategoryName = "ServiceHelper";
+		public const string DefaultSettingsCategory = "ServiceHelper";
 
         // Events
 		
 		/// <summary>
-		/// Occurs when the service is starting.
+		/// Occurs when the <see cref="ParentService"/> is starting.
 		/// </summary>
+        [Category("Service"), 
+        Description("Occurs when the ParentService is starting.")]
         public event EventHandler<EventArgs<string[]>> ServiceStarting;
 		
 		/// <summary>
-		/// Occurs when the service has started.
+		/// Occurs when the <see cref="ParentService"/> has started.
 		/// </summary>
-		public event EventHandler ServiceStarted;
+        [Category("Service"),
+        Description("Occurs when the ParentService has started.")]		
+        public event EventHandler ServiceStarted;
 		
 		/// <summary>
-		/// Occurs when the service is stopping.
+		/// Occurs when the <see cref="ParentService"/> is stopping.
 		/// </summary>
-		public event EventHandler ServiceStopping;
+        [Category("Service"),
+        Description("Occurs when the ParentService is stopping.")]
+        public event EventHandler ServiceStopping;
 		
 		/// <summary>
-		/// Occurs when the service has stopped.
+		/// Occurs when the <see cref="ParentService"/> has stopped.
 		/// </summary>
-		public event EventHandler ServiceStopped;
+        [Category("Service"),
+        Description("Occurs when the ParentService has stopped.")]
+        public event EventHandler ServiceStopped;
 		
 		/// <summary>
-		/// Occurs when the service is pausing.
+		/// Occurs when the <see cref="ParentService"/> is pausing.
 		/// </summary>
-		public event EventHandler ServicePausing;
+        [Category("Service"),
+        Description("Occurs when the ParentService is pausing.")]		
+        public event EventHandler ServicePausing;
 		
 		/// <summary>
-		/// Occurs when the service has paused.
+		/// Occurs when the <see cref="ParentService"/> has paused.
 		/// </summary>
-		public event EventHandler ServicePaused;
+        [Category("Service"),
+        Description("Occurs when the ParentService has paused.")]
+        public event EventHandler ServicePaused;
 		
 		/// <summary>
-		/// Occurs when the service is resuming.
+		/// Occurs when the <see cref="ParentService"/> is resuming.
 		/// </summary>
-		public event EventHandler ServiceResuming;
+        [Category("Service"),
+        Description("Occurs when the ParentService is resuming.")]
+        public event EventHandler ServiceResuming;
 		
 		/// <summary>
-		/// Occurs when the service has resumed.
+		/// Occurs when the <see cref="ParentService"/> has resumed.
 		/// </summary>
-		public event EventHandler ServiceResumed;
+        [Category("Service"),
+        Description("Occurs when the ParentService has resumed.")]
+        public event EventHandler ServiceResumed;
 		
 		/// <summary>
-		/// Occurs when the system is being shutdowm.
+		/// Occurs when the system is being shutdown.
 		/// </summary>
-		public event EventHandler SystemShutdown;	
+        [Category("System"),
+        Description("Occurs when the system is being shutdown.")]
+        public event EventHandler SystemShutdown;	
 		
 		/// <summary>
-		/// Occurs when a request is received from a client.
+		/// Occurs when a request is received from one of the <see cref="RemoteClients"/>.
 		/// </summary>
-		public event EventHandler<EventArgs<IdentifiableItem<Guid, ClientRequest>>> ReceivedClientRequest;
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the remote client that sent the request.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="ClientRequest"/> sent by the remote client.
+        /// </remarks>
+        [Category("Client"),
+        Description("Occurs when a request is received from one of the RemoteClients.")]
+        public event EventHandler<EventArgs<Guid, ClientRequest>> ReceivedClientRequest;
 
         /// <summary>
-        /// Occurs when the state of a defiend service process changes.
+        /// Occurs when the state of a defiend <see cref="ServiceProcess"/> changes.
         /// </summary>
-        public event EventHandler<EventArgs<string, ProcessState>> ProcessStateChanged;
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="ServiceProcess.Name"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="ServiceProcess.CurrentState"/>
+        /// </remarks>
+        [Category("Process"),
+        Description("Occurs when the state of a defiend ServiceProcess changes.")]
+        public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
         // Fields
 		private bool m_logStatusUpdates;
@@ -145,41 +210,47 @@ namespace PCS.Services
 		private string m_queryableSettingsCategories;
 		private bool m_persistSettings;
 		private string m_settingsCategory;
-		private bool m_suppressUpdates;
-		private Guid m_remoteCommandClientID;
-		private ServiceBase m_service;
-		private List<ServiceProcess> m_processes;
-        private List<ISupportLifecycle> m_serviceComponents;
-		private List<ClientInfo> m_connectedClients;
-		private List<ClientRequestInfo> m_clientRequestHistory;
-		private List<ClientRequestHandlerInfo> m_clientRequestHandlers;
-        private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
+		private ServiceBase m_parentService;
+        private ServerBase m_remotingServer;
+        private LogFile m_statusLog;
+        private ScheduleManager m_processScheduler;
+        private ErrorLogger m_errorLogger;
         private PerformanceMonitor m_performanceMonitor;
-		private Process m_remoteCommandProcess;
-		private ServerBase m_remotingServer;
-		private LogFile m_statusLog;
-		private ScheduleManager m_scheduler;
-		private ErrorLogger m_errorLogger;
-		private string m_pursip;
+        private List<ServiceProcess> m_processes;
+        private List<ISupportLifecycle> m_serviceComponents;
+		private List<ClientInfo> m_remoteClients;
+		private List<ClientRequest.Info> m_clientRequestHistory;
+		private List<ClientRequestHandler> m_clientRequestHandlers;
+        private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
+        private bool m_enabled;
         private bool m_disposed;
+        private bool m_initialized;
+        private string m_pursip;
+        private bool m_suppressUpdates;
+        private Guid m_remoteCommandClientID;
+        private Process m_remoteCommandProcess;	
 		
         #endregion
 
         #region [ Constructors ]
         
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceHelper"/> class.
+        /// </summary>
         public ServiceHelper()
+            : base()
 		{
 			m_logStatusUpdates = DefaultLogStatusUpdates;
 			m_monitorServiceHealth = DefaultMonitorServiceHealth;
 			m_requestHistoryLimit = DefaultRequestHistoryLimit;
 			m_queryableSettingsCategories = DefaultQueryableSettingsCategories;
 			m_persistSettings = DefaultPersistSettings;
-			m_settingsCategory = DefaultSettingsCategoryName;
+			m_settingsCategory = DefaultSettingsCategory;
 			m_processes = new List<ServiceProcess>();
-			m_connectedClients = new List<ClientInfo>();
-			m_clientRequestHistory = new List<ClientRequestInfo>();
+			m_remoteClients = new List<ClientInfo>();
+			m_clientRequestHistory = new List<ClientRequest.Info>();
 			m_serviceComponents = new List<ISupportLifecycle>();
-			m_clientRequestHandlers = new List<ClientRequestHandlerInfo>();
+			m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
 			m_pursip = "s3cur3";
 
@@ -187,30 +258,40 @@ namespace PCS.Services
 			m_statusLog = new LogFile();
 			m_statusLog.LogException += m_statusLog_LogException;
 			m_statusLog.FileName = "StatusLog.txt";
-			m_statusLog.PersistSettings = true;
 			m_statusLog.SettingsCategory = "StatusLog";
 
-            m_scheduler = new ScheduleManager();
-			m_scheduler.ScheduleDue += m_scheduler_ScheduleDue;
-			m_scheduler.PersistSettings = true;
-			m_scheduler.SettingsCategory = "Scheduler";
+            m_processScheduler = new ScheduleManager();
+			m_processScheduler.ScheduleDue += m_scheduler_ScheduleDue;
+			m_processScheduler.SettingsCategory = "ProcessScheduler";
 
 			m_errorLogger = new ErrorLogger();
 			m_errorLogger.ExitOnUnhandledException = false;
-			m_errorLogger.PersistSettings = true;
 			m_errorLogger.SettingsCategory = "ErrorLogger";
+            m_errorLogger.ErrorLog.SettingsCategory = "ErrorLog";
 		}
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceHelper"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="ServiceHelper"/>.</param>
+        public ServiceHelper(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
 
         #endregion
 
         #region [ Properties ]
 		
-		/// <summary>
-		/// Gets or sets a boolean value indicating whether status updates are to be logged to a text file.
-		/// </summary>
-		/// <value></value>
-		/// <returns>True if status updates are to be logged to a text file; otherwise false.</returns>
-		[Category("Preferences"), DefaultValue(DefaultLogStatusUpdates)]
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(string,object[])"/> 
+        /// or <see cref="UpdateStatus(Guid,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
+        /// </summary>
+		[Category("Settings"), 
+        DefaultValue(DefaultLogStatusUpdates), 
+        Description("Indicates whether messages sent using UpdateStatus() method overloads are to be logged to the StatusLog.")]
         public bool LogStatusUpdates
 		{
 			get
@@ -222,13 +303,13 @@ namespace PCS.Services
 				m_logStatusUpdates = value;
 			}
 		}
-		
-		/// <summary>
-		/// Gets or sets a boolean value indicating whether the service health is to be monitored.
-		/// </summary>
-		/// <value></value>
-		/// <returns>True if the service health is to be monitored; otherwise False.</returns>
-		[Category("Preferences"), DefaultValue(DefaultMonitorServiceHealth)]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the health of the <see cref="ParentService"/> is to be monitored.
+        /// </summary>
+        [Category("Settings"), 
+        DefaultValue(DefaultMonitorServiceHealth),
+        Description("Indicates whether the health of the ParentService is to be monitored.")]
         public bool MonitorServiceHealth
 		{
 			get
@@ -241,12 +322,13 @@ namespace PCS.Services
 			}
 		}
 		
-		/// <summary>
-		/// Gets or sets the number of request entries to be kept in the history.
-		/// </summary>
-		/// <value></value>
-		/// <returns>The number of request entries to be kept in the history.</returns>
-		[Category("Preferences"), DefaultValue(DefaultRequestHistoryLimit)]
+        /// <summary>
+        /// Gets or sets the maximum number of <see cref="ClientRequest"/> entries to be maintained in the <see cref="ClientRequestHistory"/>.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being set is zero or negative.</exception>
+        [Category("Settings"), 
+        DefaultValue(DefaultRequestHistoryLimit), 
+        Description("Maximum number of ClientRequest entries to be maintained in the ClientRequestHistory.")]
         public int RequestHistoryLimit
 		{
 			get
@@ -255,23 +337,21 @@ namespace PCS.Services
 			}
 			set
 			{
-				if (value > 0)
-				{
-					m_requestHistoryLimit = value;
-				}
-				else
-				{
-					throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0.");
-				}
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0.");
+
+                m_requestHistoryLimit = value;
 			}
 		}
 		
-		/// <summary>
-		/// Gets or sets a comma seperated list of config file settings categories updateable by the service.
-		/// </summary>
-		/// <value></value>
-		/// <returns>A comma seperated list of config file settings categories updateable by the service.</returns>
-		[Category("Preferences"), DefaultValue(DefaultQueryableSettingsCategories)]
+        /// <summary>
+        /// Gets or sets a comma-seperated list of <see cref="ConfigurationFile.Settings"/> section names whose settings can 
+        /// be manupulated by the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is either a null empty string.</exception>
+        [Category("Settings"), 
+        DefaultValue(DefaultQueryableSettingsCategories), 
+        Description("Comma-seperated list of ConfigurationFile.Settings section names whose settings can be manupulated by the ServiceHelper.")]
         public string QueryableSettingsCategories
 		{
 			get
@@ -280,74 +360,76 @@ namespace PCS.Services
 			}
 			set
 			{
-				if (!string.IsNullOrEmpty(value))
-				{
-					m_queryableSettingsCategories = value;
-				}
-				else
-				{
-					throw new ArgumentNullException("QueryableSettingsCategories");
-				}
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("QueryableSettingsCategories");
+
+                m_queryableSettingsCategories = value;
 			}
 		}
-		
-		[Category("Persistance"), DefaultValue(DefaultPersistSettings)]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the settings of <see cref="ServiceHelper"/> are to be saved to the config file.
+        /// </summary>
+        [Category("Persistance"),
+        DefaultValue(DefaultPersistSettings),
+        Description("Indicates whether the settings of ServiceHelper are to be saved to the config file.")]
         public bool PersistSettings
-		{
-			get
-			{
-				return m_persistSettings;
-			}
-			set
-			{
-				m_persistSettings = value;
-			}
-		}
-		
-		[Category("Persistance"), DefaultValue(DefaultSettingsCategoryName)]
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the category under which the settings of <see cref="ServiceHelper"/> are to be saved to the config file 
+        /// if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value specified is a null or empty string.</exception>
+        [Category("Persistance"),
+        DefaultValue(DefaultSettingsCategory),
+        Description("Category under which the settings of ServiceHelper are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
+            }
+        }
+	
+		/// <summary>
+		/// Gets or sets the <see cref="ServiceBase"/> to which the <see cref="ServiceHelper"/> will provided added functionality.
+		/// </summary>
+		[Category("Components"), 
+        Description("ServiceBase to which the ServiceHelper will provided added functionality.")]
+        public ServiceBase ParentService
 		{
 			get
 			{
-				return m_settingsCategory;
+				return m_parentService;
 			}
 			set
 			{
-				if (!string.IsNullOrEmpty(value))
-				{
-					m_settingsCategory = value;
-				}
-				else
-				{
-					throw new ArgumentNullException("SettingsCategoryName");
-				}
+				m_parentService = value;
 			}
 		}
-		
+
 		/// <summary>
-		/// Gets or sets the parent service to which the service helper belongs.
+		/// Gets or sets the <see cref="ServerBase"/> component used for communicating with <see cref="RemoteClients"/>.
 		/// </summary>
-		/// <value></value>
-		/// <returns>The parent service to which the service helper belongs.</returns>
-		[Category("Components")]
-        public ServiceBase Service
-		{
-			get
-			{
-				return m_service;
-			}
-			set
-			{
-				m_service = value;
-			}
-		}
-		
-		/// <summary>
-		/// Gets or sets the instance of TCP server used for communicating with the clients.
-		/// </summary>
-		/// <value></value>
-		/// <returns>An instance of TCP server.</returns>
-		[Category("Components")]
+		[Category("Components"), 
+        Description("ServerBase component used for communicating with RemoteClients.")]
         public ServerBase RemotingServer
 		{
 			get
@@ -374,16 +456,26 @@ namespace PCS.Services
 			}
 		}
 		
-		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ScheduleManager Scheduler
+        /// <summary>
+        /// Gets the <see cref="ScheduleManager"/> component used for scheduling defined <see cref="ServiceProcess"/>.
+        /// </summary>
+		[Category("Components"), 
+        Description("ScheduleManager component used for scheduling defined ServiceProcess."), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public ScheduleManager ProcessScheduler
 		{
 			get
 			{
-				return m_scheduler;
+				return m_processScheduler;
 			}
 		}
 		
-		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        /// <summary>
+        /// Gets the <see cref="LogFile"/> component used for logging status messages to a text file.
+        /// </summary>
+		[Category("Components"), 
+        Description("LogFile component used for logging status messages to a text file."), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public LogFile StatusLog
 		{
 			get
@@ -392,7 +484,12 @@ namespace PCS.Services
 			}
 		}
 		
-		[Category("Components"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        /// <summary>
+        /// Gets the <see cref="ErrorLogger"/> component used for logging errors encountered in the <see cref="ParentService"/>.
+        /// </summary>
+		[Category("Components"), 
+        Description("ErrorLogger component used for logging errors encountered in the ParentService."), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ErrorLogger ErrorLogger
 		{
 			get
@@ -400,13 +497,61 @@ namespace PCS.Services
 				return m_errorLogger;
 			}
 		}
-		
-		/// <summary>
-        /// Gets a list of all the components that implement the PCS.ISupportLifecycle interface assigned to the service.
-		/// </summary>
-		/// <value></value>
-		/// <returns>A reference to the list of all the components (i.e., those that support ISupportLifecycle) associated with this service.</returns>
-		[Browsable(false)]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                if (value)
+                {
+                    // Re-enable all service components.
+                    bool state;
+                    foreach (ISupportLifecycle component in m_serviceComponents)
+                    {
+                        if (component != null)
+                        {
+                            // Restore previous state.
+                            if (m_componentEnabledStates.TryGetValue(component, out state))
+                                component.Enabled = state;
+                        }
+                    }
+                }
+                else
+                {
+                    // Disable all service components.
+                    m_componentEnabledStates.Clear();
+                    foreach (ISupportLifecycle component in m_serviceComponents)
+                    {
+                        if (component != null)
+                        {
+                            m_componentEnabledStates.Add(component, component.Enabled);
+                            component.Enabled = false;
+                        }
+                    }
+                }
+
+                m_enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of components that implement the <see cref="ISupportLifecycle"/> interface used by the <see cref="ParentService"/>.
+        /// </summary>
+		[Browsable(false), 
+        EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<ISupportLifecycle> ServiceComponents
 		{
 			get
@@ -414,8 +559,12 @@ namespace PCS.Services
 				return m_serviceComponents;
 			}
 		}
-		
-		[Browsable(false)]
+
+		/// <summary>
+		/// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
+		/// </summary>
+		[Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<ServiceProcess> Processes
 		{
 			get
@@ -424,17 +573,25 @@ namespace PCS.Services
 			}
 		}
 		
-		[Browsable(false)]
-        public List<ClientInfo> ConnectedClients
+        /// <summary>
+        /// Gets a list of <see cref="ClientInfo"/> for remote clients connected to the <see cref="RemotingServer"/>.
+        /// </summary>
+		[Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced)]
+        public List<ClientInfo> RemoteClients
 		{
 			get
 			{
-				return m_connectedClients;
+				return m_remoteClients;
 			}
 		}
-				
-		[Browsable(false)]
-        public List<ClientRequestInfo> ClientRequestHistory
+
+        /// <summary>
+        /// Gets a list of <see cref="ClientRequest.Info"/> for requests made by <see cref="RemoteClients"/>.
+        /// </summary>
+		[Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced)]
+        public List<ClientRequest.Info> ClientRequestHistory
 		{
 			get
 			{
@@ -442,8 +599,12 @@ namespace PCS.Services
 			}
 		}
 		
-		[Browsable(false)]
-        public List<ClientRequestHandlerInfo> ClientRequestHandlers
+        /// <summary>
+        /// Gets a list of <see cref="ClientRequestHandler"/> registered for handling requests from <see cref="RemoteClients"/>.
+        /// </summary>
+		[Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced)]
+        public List<ClientRequestHandler> ClientRequestHandlers
 		{
 			get
 			{
@@ -451,7 +612,11 @@ namespace PCS.Services
 			}
 		}
 		
-		[Browsable(false)]
+        /// <summary>
+        /// Gets the <see cref="PerformanceMonitor"/> object used for monitoring the health of the <see cref="ParentService"/>.
+        /// </summary>
+		[Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced)]
         public PerformanceMonitor PerformanceMonitor
 		{
 			get
@@ -460,23 +625,32 @@ namespace PCS.Services
 			}
 		}
 
+        /// <summary>
+        /// Gets the unique identifier of the <see cref="ServiceHelper"/>.
+        /// </summary>
+        [Browsable(false)]
         public string Name
         {
             get
             {
-                if (m_service != null)
-                    return m_service.ServiceName;
+                if (m_parentService == null)
+                    return m_settingsCategory;
                 else
-                    return this.GetType().Name;
+                    return m_parentService.ServiceName;
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="ServiceHelper"/>.
+        /// </summary>
+        [Browsable(false)]
         public string Status
         {
             get
             {
                 StringBuilder status = new StringBuilder();
 
+                // Show the uptime for the windows service.
                 if (m_remotingServer != null)
                 {
                     status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime.ToString());
@@ -484,19 +658,21 @@ namespace PCS.Services
                     status.AppendLine();
                 }
 
+                // Show the status of registered components.
                 status.AppendFormat("Status of components used by {0}:", Name);
                 status.AppendLine();
-
+                status.AppendLine();
                 foreach (ISupportLifecycle serviceComponent in m_serviceComponents)
                 {
                     IProvideStatus statusProvider = serviceComponent as IProvideStatus;
 
                     if (statusProvider != null)
                     {
-                        status.AppendLine();
+                        // This component provides status information.                       
                         status.AppendFormat("Status of {0}:", statusProvider.Name);
                         status.AppendLine();
                         status.Append(statusProvider.Status);
+                        status.AppendLine();
                     }
                 }
 
@@ -508,44 +684,517 @@ namespace PCS.Services
 
         #region [ Methods ]
 				
-		/// <summary>
-		/// Releases the unmanaged resources used by an instance of the <see cref="ServiceHelper" /> class and optionally releases the managed resources.
-		/// </summary>
-		/// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-		protected override void Dispose(bool disposing)
-		{
-			if (!m_disposed)
-			{
-			    try
-			    {			
-				    if (disposing)
-				    {
-				        SaveSettings();
+        /// <summary>
+        /// To be called from the <see cref="ServiceBase.OnStart(string[])"/> method of <see cref="ParentService"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnStart(string[] args)
+        {
+            // Ensure required components are present.
+            if (m_parentService == null)
+                throw new InvalidOperationException("ParentService property of ServiceHelper component is not set.");
+
+            if (m_remotingServer == null)
+                throw new InvalidOperationException("RemotingServer property of ServiceHelper component is not set.");
+
+            OnServiceStarting(args);
+
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Clients", "Displays list of clients connected to the service", ShowClients));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Settings", "Displays queryable service settings from config file", ShowSettings));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Processes", "Displays list of service or system processes", ShowProcesses));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Schedules", "Displays list of process schedules defined in the service", ShowSchedules));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("History", "Displays list of requests received from the clients", ShowRequestHistory));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Help", "Displays list of commands supported by the service", ShowRequestHelp));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Status", "Displays the current service status", ShowServiceStatus));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Start", "Start a service or system process", StartProcess));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Abort", "Aborts a service or system process", AbortProcess));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("UpdateSettings", "Updates service setting in the config file", UpdateSettings));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("ReloadSettings", "Reloads services settings from the config file", ReloadSettings));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Reschedule", "Reschedules a process defined in the service", RescheduleProcess));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Command", "Allows for a telnet-like remote command session", RemoteCommandSession, false));
+
+            // Define "Health" command only if monitoring service health is enabled.
+            if (m_monitorServiceHealth)
+            {
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
+                m_performanceMonitor = new PerformanceMonitor();
+            }
+
+            // Add internal components as service components by default.
+            m_serviceComponents.Add(m_processScheduler);
+            m_serviceComponents.Add(m_statusLog);
+            m_serviceComponents.Add(m_errorLogger);
+            m_serviceComponents.Add(m_remotingServer);
+
+            // Initialize all service components when service has started.
+            Initialize();
+
+            // Open log file if file logging is enabled.
+            if (m_logStatusUpdates)
+                m_statusLog.Open();
+
+            // Start the scheduler if it is not running.
+            if (!m_processScheduler.IsRunning)
+                m_processScheduler.Start();
+
+            // Start the remoting server if it is not running.
+            if (m_remotingServer.CurrentState == ServerState.NotRunning)
+                m_remotingServer.Start();
+
+            OnServiceStarted();
+        }
+
+        /// <summary>
+        /// To be called from the <see cref="ServiceBase.OnStop()"/> method of <see cref="ParentService"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnStop()
+        {
+            OnServiceStopping();
+
+            // Abort any processes that may be currently executing.
+            foreach (ServiceProcess process in m_processes)
+            {
+                if (process != null)
+                    process.Abort();
+            }
+
+            // Set flag to prevent status updates from being posted from other threads, at this point this might cause exceptions.
+            m_suppressUpdates = true;
+
+            OnServiceStopped();
+        }
+
+        /// <summary>
+        /// To be called from the <see cref="ServiceBase.OnPause()"/> method of <see cref="ParentService"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnPause()
+        {
+            OnServicePausing();
+
+            // Disable all service components when service is pausing
+            Enabled = false;
+
+            OnServicePaused();
+        }
+
+        /// <summary>
+        /// To be called from the <see cref="ServiceBase.OnContinue()"/> method of <see cref="ParentService"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnResume()
+        {
+            OnServiceResuming();
+
+            // Re-enable all service components when service is resuming
+            Enabled = true;
+
+            OnServiceResumed();
+        }
+
+        /// <summary>
+        /// To be called from the <see cref="ServiceBase.OnShutdown()"/> method of <see cref="ParentService"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void OnShutdown()
+        {
+            OnSystemShutdown();
+
+            // Abort any processes that may be currently executing.
+            foreach (ServiceProcess process in m_processes)
+            {
+                if (process != null)
+                    process.Abort();
+            }
+
+            // Dispose of all service components when service is shutting down
+            foreach (ISupportLifecycle component in m_serviceComponents)
+            {
+                if (component != null)
+                    component.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        public void AddProcess(Action<string, object[]> processExecutionMethod, string processName)
+        {
+            AddProcess(processExecutionMethod, processName, null);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <param name="processArguments">Arguments to be passed in to the <paramref name="processExecutionMethod"/> during execution.</param>
+        public void AddProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments)
+        {
+            processName = processName.Trim();
+
+            if (GetProcess(processName) == null)
+            {
+                ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
+                process.StateChanged += process_StateChanged;
+
+                m_processes.Add(process);
+            }
+            else
+            {
+                throw new InvalidOperationException(string.Format("Process \"{0}\" is already defined.", processName));
+            }
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/> that executes on a schedule.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <param name="processSchedule"><see cref="Schedule"/> for the execution of the <see cref="ServiceProcess"/>.</param>
+        public void AddScheduledProcess(Action<string, object[]> processExecutionMethod, string processName, string processSchedule)
+        {
+            AddScheduledProcess(processExecutionMethod, processName, null, processSchedule);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/> that executes on a schedule.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <param name="processArguments">Arguments to be passed in to the <paramref name="processExecutionMethod"/> during execution.</param>
+        /// <param name="processSchedule"><see cref="Schedule"/> for the execution of the <see cref="ServiceProcess"/>.</param>
+        public void AddScheduledProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments, string processSchedule)
+        {
+            AddProcess(processExecutionMethod, processName, processArguments);
+            ScheduleProcess(processName, processSchedule);
+        }
+
+        /// <summary>
+        /// Schedules an existing <see cref="ServiceProcess"/> for automatic execution.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be scheduled.</param>
+        /// <param name="scheduleRule">Rule that defines the execution pattern of the <see cref="ServiceProcess"/>.</param>
+        public void ScheduleProcess(string processName, string scheduleRule)
+        {
+            ScheduleProcess(processName, scheduleRule, false);
+        }
+
+        /// <summary>
+        /// Schedules an existing <see cref="ServiceProcess"/> for automatic execution.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be scheduled.</param>
+        /// <param name="scheduleRule">Rule that defines the execution pattern of the <see cref="ServiceProcess"/>.</param>
+        /// <param name="updateExistingSchedule">true if the <see cref="ServiceProcess"/> is to be re-scheduled; otherwise false.</param>
+        public void ScheduleProcess(string processName, string scheduleRule, bool updateExistingSchedule)
+        {
+            processName = processName.Trim();
+
+            if (GetProcess(processName) != null)
+            {
+                // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
+                Schedule existingSchedule = m_processScheduler.FindSchedule(processName);
+
+                if (existingSchedule != null)
+                {
+                    // Update the process schedule if it is already exists.
+                    if (updateExistingSchedule)
+                        existingSchedule.Rule = scheduleRule;
+                }
+                else
+                {
+                    // Schedule the process if it is not scheduled already.
+                    m_processScheduler.Schedules.Add(new Schedule(processName, scheduleRule));
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException(string.Format("Process \"{0}\" is not defined.", processName));
+            }
+        }
+
+        /// <summary>
+        /// Sends the specified <paramref name="response"/> to all <see cref="RemoteClients"/>.
+        /// </summary>
+        /// <param name="response">The <see cref="ServiceResponse"/> to be sent to all <see cref="RemoteClients"/>.</param>
+        public void SendResponse(ServiceResponse response)
+        {
+            SendResponse(Guid.Empty, response);
+        }
+
+        /// <summary>
+        /// Sends the specified <paramref name="response"/> to the specified <paramref name="client"/> only.
+        /// </summary>
+        /// <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
+        /// <param name="response">The <see cref="ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
+        public void SendResponse(Guid client, ServiceResponse response)
+        {
+            try
+            {
+                if (client == Guid.Empty)
+                {
+                    // Multicast message to all clients.
+                    if (m_remoteCommandClientID == Guid.Empty)
+                        // Process if remote command session is not in progress.
+                        m_remotingServer.MulticastAsync(response);
+                }
+                else
+                {
+                    // Send message directly to specified client.
+                    m_remotingServer.SendToAsync(client, response);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception.
+                m_errorLogger.Log(ex);
+            }
+        }
+
+        /// <summary>
+        /// Provides a status update to all <see cref="RemoteClients"/>.
+        /// </summary>
+        /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
+        /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        public void UpdateStatus(string message, params object[] args)
+        {
+            UpdateStatus(Guid.Empty, message, args);
+        }
+
+        /// <summary>
+        /// Provides a status update to the specified <paramref name="client"/>.
+        /// </summary>
+        /// <param name="client">ID of the client to whom the <paramref name="message"/> is to be sent.</param>
+        /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
+        /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        public void UpdateStatus(Guid client, string message, params object[] args)
+        {
+            if (!m_suppressUpdates)
+            {
+                // Prepare the message.
+                message = string.Format(message, args);
+
+                // Send the status update to specified client(s)
+                SendUpdateClientStatusResponse(client, message);
+
+                // Log the status update to the log file if logging is enabled.
+                if (m_logStatusUpdates)
+                    m_statusLog.WriteTimestampedLine(message);
+            }
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="ServiceHelper"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                // Initialize all service components.
+                foreach (ISupportLifecycle component in m_serviceComponents)
+                {
+                    if (component != null)
+                        component.Initialize();
+                }
+
+                m_initialized = true; // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["Pursip", true].Update(m_pursip, "", true);
+                settings["LogStatusUpdates", true].Update(m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
+                settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
+                settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
+                settings["QueryableSettingsCategories", true].Update(m_queryableSettingsCategories, "Category names under categorizedSettings section of the config file that can be managed by the service.");
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                m_pursip = settings["Pursip", true].ValueAs(m_pursip);
+                LogStatusUpdates = settings["LogStatusUpdates", true].ValueAs(m_logStatusUpdates);
+                MonitorServiceHealth = settings["MonitorServiceHealth", true].ValueAs(m_monitorServiceHealth);
+                RequestHistoryLimit = settings["RequestHistoryLimit", true].ValueAs(m_requestHistoryLimit);
+                QueryableSettingsCategories = settings["QueryableSettingsCategories", true].ValueAs(m_queryableSettingsCategories);
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="ServiceHelper"/> properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ServiceHelper"/> is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            // Nothing needs to be done before component is initialized.
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="ServiceHelper"/> properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ServiceHelper"/> is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ServiceProcess"/> for the specified <paramref name="processName"/>.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be retrieved.</param>
+        /// <returns><see cref="ServiceProcess"/> object if found; otherwise null.</returns>
+        public ServiceProcess GetProcess(string processName)
+        {
+            ServiceProcess match = null;
+
+            foreach (ServiceProcess process in m_processes)
+            {
+                if (string.Compare(process.Name, processName, true) == 0)
+                {
+                    match = process;
+                    break;
+                }
+            }
+
+            return match;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ClientInfo"/> object for the specified <paramref name="client"/>.
+        /// </summary>
+        /// <param name="client">ID of the client whose <see cref="ClientInfo"/> object is to be retrieved.</param>
+        /// <returns><see cref="ClientInfo"/> object if found; otherwise null.</returns>
+        public ClientInfo GetConnectedClient(Guid client)
+        {
+            ClientInfo match = null;
+
+            foreach (ClientInfo clientInfo in m_remoteClients)
+            {
+                if (client == clientInfo.ClientID)
+                {
+                    match = clientInfo;
+                    break;
+                }
+            }
+
+            return match;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ClientRequestHandler"/> object for the specified <paramref name="requestType"/>.
+        /// </summary>
+        /// <param name="requestType">Request type whose <see cref="ClientRequestHandler"/> object is to be retrieved.</param>
+        /// <returns><see cref="ClientRequestHandler"/> object if found; otherwise null.</returns>
+        public ClientRequestHandler GetClientRequestHandler(string requestType)
+        {
+            ClientRequestHandler match = null;
+
+            foreach (ClientRequestHandler handler in m_clientRequestHandlers)
+            {
+                if (string.Compare(handler.Command, requestType, true) == 0)
+                {
+                    match = handler;
+                    break;
+                }
+            }
+
+            return match;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ServiceHelper"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
 
                         if (m_statusLog != null)
                         {
-			                m_statusLog.LogException -= m_statusLog_LogException;
-				            m_statusLog.Dispose();
+                            m_statusLog.LogException -= m_statusLog_LogException;
+                            m_statusLog.Dispose();
                         }
                         m_statusLog = null;
 
-                        if (m_scheduler != null)
+                        if (m_processScheduler != null)
                         {
-			                m_scheduler.ScheduleDue -= m_scheduler_ScheduleDue;
-				            m_scheduler.Dispose();
+                            m_processScheduler.ScheduleDue -= m_scheduler_ScheduleDue;
+                            m_processScheduler.Dispose();
                         }
-                        m_scheduler = null;
+                        m_processScheduler = null;
 
                         if (m_errorLogger != null)
                         {
-				            m_errorLogger.Dispose();
+                            m_errorLogger.Dispose();
                         }
                         m_errorLogger = null;
 
                         if (m_performanceMonitor != null)
-			            {
-				            m_performanceMonitor.Dispose();
-			            }
+                        {
+                            m_performanceMonitor.Dispose();
+                        }
                         m_performanceMonitor = null;
 
                         if (m_remoteCommandProcess != null)
@@ -564,9 +1213,10 @@ namespace PCS.Services
                         if (m_processes != null)
                         {
                             foreach (ServiceProcess process in m_processes)
-	                        {
-                        		process.Dispose(); 
-	                        }
+                            {
+                                process.StateChanged -= process_StateChanged;
+                                process.Dispose();
+                            }
 
                             m_processes.Clear();
                         }
@@ -574,141 +1224,44 @@ namespace PCS.Services
 
                         // Detach any remoting server events, we don't own this component so we don't dispose it
                         RemotingServer = null;
-				    }
+                    }
                 }
-			    finally
-			    {
-			    	base.Dispose(disposing);    // Call base class Dispose().
-				    m_disposed = true;          // Prevent duplicate dispose.
-			    }
-			}
-		}
-        public ServiceProcess GetProcess(string processName)
-        {
-            ServiceProcess match = null;
-
-            foreach (ServiceProcess process in m_processes)
-            {
-                if (string.Compare(process.Name, processName, true) == 0)
+                finally
                 {
-                    match = process;
-                    break;
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
-            }
-
-            return match;
-        }
-
-        public ClientInfo GetConnectedClient(Guid clientID)
-        {
-            ClientInfo match = null;
-
-            foreach (ClientInfo clientInfo in m_connectedClients)
-            {
-                if (clientID == clientInfo.ClientID)
-                {
-                    match = clientInfo;
-                    break;
-                }
-            }
-
-            return match;
-        }
-
-        public ClientRequestHandlerInfo GetClientRequestHandler(string requestType)
-        {
-            ClientRequestHandlerInfo match = null;
-
-            foreach (ClientRequestHandlerInfo handler in m_clientRequestHandlers)
-            {
-                if (string.Compare(handler.Command, requestType, true) == 0)
-                {
-                    match = handler;
-                    break;
-                }
-            }
-
-            return match;
-        }
-
-        /// <summary>
-        /// To be called when the service is starts (inside the service's OnStart method).
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public void OnStart(string[] args)
-        {
-            if (m_service != null)
-            {
-                // Notify service event consumers of pending service start
-                if (ServiceStarting != null)
-                    ServiceStarting(this, new EventArgs<string[]>(args));
-
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Clients", "Displays list of clients connected to the service", ShowClients));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Settings", "Displays queryable service settings from config file", ShowSettings));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Processes", "Displays list of service or system processes", ShowProcesses));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Schedules", "Displays list of process schedules defined in the service", ShowSchedules));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("History", "Displays list of requests received from the clients", ShowRequestHistory));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Help", "Displays list of commands supported by the service", ShowRequestHelp));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Status", "Displays the current service status", ShowServiceStatus));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Start", "Start a service or system process", StartProcess));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Abort", "Aborts a service or system process", AbortProcess));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("UpdateSettings", "Updates service setting in the config file", UpdateSettings));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("ReloadSettings", "Reloads services settings from the config file", ReloadSettings));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Reschedule", "Reschedules a process defined in the service", RescheduleProcess));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
-                m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Command", "Allows for a telnet-like remote command session", RemoteCommandSession, false));
-
-                // Define "Health" command only if monitoring service health is enabled
-                if (m_monitorServiceHealth)
-                {
-                    m_clientRequestHandlers.Add(new ClientRequestHandlerInfo("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
-                    m_performanceMonitor = new PerformanceMonitor();
-                }
-
-                // Add scheduler, status log and remoting server as service components by default
-                m_serviceComponents.Add(m_scheduler);
-                m_serviceComponents.Add(m_statusLog);
-                m_serviceComponents.Add(m_remotingServer);
-
-                // JRC: Disabled override of remoting server handshake operations since ServiceHelper doesn't
-                // own remoting server - consumer does - and they may have specially defined transport options
-                //if (m_remotingServer != null)
-                //{
-                //    m_remotingServer.Handshake = true;
-                //    m_remotingServer.HandshakePassphrase = Name;
-                //}
-
-                // Open the status log
-                if (m_logStatusUpdates)
-                    m_statusLog.Open();
-
-                // Initialize all service components when service has started
-                foreach (ISupportLifecycle component in m_serviceComponents)
-                {
-                    if (component != null)
-                        component.Initialize();
-                }
-
-                // Notify all remote clients that might possibly be connected at of service start (not likely)
-                SendServiceStateChangedResponse(ServiceState.Started);
-
-                // Notify service event consumers that service has started
-                if (ServiceStarted != null)
-                    ServiceStarted(this, EventArgs.Empty);
-            }
-            else
-            {
-                throw new InvalidOperationException("Service cannot be started. The Service property of ServiceHelper is not set.");
             }
         }
 
         /// <summary>
-        /// To be called when the service is stopped (inside the service's OnStop method).
+        /// Raises the <see cref="ServiceStarting"/> event.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public void OnStop()
+        /// <param name="args">Arguments to be sent to <see cref="ServiceStarting"/> event.</param>
+        protected virtual void OnServiceStarting(string[] args)
+        {
+            // Notify service event consumers of pending service start
+            if (ServiceStarting != null)
+                ServiceStarting(this, new EventArgs<string[]>(args));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServiceStarted"/> event.
+        /// </summary>
+        protected virtual void OnServiceStarted()
+        {
+            // Notify all remote clients that might possibly be connected at of service start (not likely)
+            SendServiceStateChangedResponse(ServiceState.Started);
+
+            // Notify service event consumers that service has started
+            if (ServiceStarted != null)
+                ServiceStarted(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServiceStopping"/> event.
+        /// </summary>
+        protected virtual void OnServiceStopping()
         {
             // Notify service event consumers of pending service stop
             if (ServiceStopping != null)
@@ -716,27 +1269,22 @@ namespace PCS.Services
 
             // Notify all remote clients of service stop
             SendServiceStateChangedResponse(ServiceState.Stopped);
+        }
 
-            // Abort any processes that may be currently executing.
-            foreach (ServiceProcess process in m_processes)
-            {
-                if (process != null)
-                    process.Abort();
-            }
-
-            // Set flag to prevent status updates from being posted from other threads, at this point this might cause exceptions.
-            m_suppressUpdates = true;
-
+        /// <summary>
+        /// Raises the <see cref="ServiceStopped"/> event.
+        /// </summary>
+        protected virtual void OnServiceStopped()
+        {
             // Notify service event consumers that service has stopped
             if (ServiceStopped != null)
                 ServiceStopped(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// To be called when the service is paused (inside the service's OnPause method).
+        /// Raises the <see cref="ServicePausing"/> event.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public void OnPause()
+        protected virtual void OnServicePausing()
         {
             // Notify service event consumers of pending service stop
             if (ServicePausing != null)
@@ -744,48 +1292,33 @@ namespace PCS.Services
 
             // Notify all remote clients of service pause
             SendServiceStateChangedResponse(ServiceState.Paused);
+        }
 
-            // Track all enabled states at time of pause
-            m_componentEnabledStates.Clear();
-
-            // Disable all service components when service is pausing
-            foreach (ISupportLifecycle component in m_serviceComponents)
-            {
-                if (component != null)
-                {
-                    m_componentEnabledStates.Add(component, component.Enabled);
-                    component.Enabled = false;
-                }
-            }
-
+        /// <summary>
+        /// Raises the <see cref="ServicePaused"/> event.
+        /// </summary>
+        protected virtual void OnServicePaused()
+        {
             // Notify service event consumers that service has been paused
             if (ServicePaused != null)
                 ServicePaused(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// To be called when the service is resumed (inside the service's OnContinue method).
+        /// Raises the <see cref="ServiceResuming"/> event.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public void OnResume()
+        protected virtual void OnServiceResuming()
         {
-            bool state;
-
             // Notify service event consumers of pending service resume
             if (ServiceResuming != null)
                 ServiceResuming(this, EventArgs.Empty);
+        }
 
-            // Re-enable all service components when service is resuming
-            foreach (ISupportLifecycle component in m_serviceComponents)
-            {
-                if (component != null)
-                {
-                    // Restore previous "enabled" state
-                    if (m_componentEnabledStates.TryGetValue(component, out state))
-                        component.Enabled = state;
-                }
-            }
-
+        /// <summary>
+        /// Raises the <see cref="ServiceResumed"/> event.
+        /// </summary>
+        protected virtual void OnServiceResumed()
+        {
             // Notify all remote clients of service resume
             SendServiceStateChangedResponse(ServiceState.Resumed);
 
@@ -795,27 +1328,12 @@ namespace PCS.Services
         }
 
         /// <summary>
-        /// To be when the system is shutting down (inside the service's OnShutdown method).
+        /// Raises the <see cref="SystemShutdown"/> event.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public void OnShutdown()
+        protected virtual void OnSystemShutdown()
         {
             // Notify service event consumers of pending service shutdown
             SendServiceStateChangedResponse(ServiceState.Shutdown);
-
-            // Abort any processes that may be currently executing.
-            foreach (ServiceProcess process in m_processes)
-            {
-                if (process != null)
-                    process.Abort();
-            }
-
-            // Dispose of all service components when service is shutting down
-            foreach (ISupportLifecycle component in m_serviceComponents)
-            {
-                if (component != null)
-                    component.Dispose();
-            }
 
             // Notify service event consumers that service has shutdown
             if (SystemShutdown != null)
@@ -823,220 +1341,29 @@ namespace PCS.Services
         }
 
         /// <summary>
-        /// To be called when the state of a process changes.
+        /// Raises the <see cref="ReceivedClientRequest"/> event.
         /// </summary>
-        /// <param name="processName">Name of the process whose state changed.</param>
-        /// <param name="processState">New state of the process.</param>
-        public void OnProcessStateChanged(string processName, ProcessState processState)
+        /// <param name="request">The <see cref="ClientRequest"/> that was received.</param>
+        /// <param name="requestSender">The <see cref="ClientInfo"/> object of the <paramref name="request"/> sender.</param>
+        protected virtual void OnReceivedClientRequest(ClientRequest request, ClientInfo requestSender)
+        {
+            if (ReceivedClientRequest != null)
+                ReceivedClientRequest(this, new EventArgs<Guid, ClientRequest>(requestSender.ClientID, request));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ProcessStateChanged"/> event.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> whose state changed.</param>
+        /// <param name="processState">New <see cref="ServiceProcessState"/> of the <see cref="ServiceProcess"/>.</param>
+        protected virtual void OnProcessStateChanged(string processName, ServiceProcessState processState)
         {
             // Notify all service event consumer of change in process state
             if (ProcessStateChanged != null)
-                ProcessStateChanged(this, new EventArgs<string, ProcessState>(processName, processState));
+                ProcessStateChanged(this, new EventArgs<string, ServiceProcessState>(processName, processState));
 
             // Notify all remote clients of change in process state
             SendProcessStateChangedResponse(processName, processState);
-        }
-
-        /// <summary>
-        /// Sends the specified response to all of the connected clients.
-        /// </summary>
-        /// <param name="response">The response to be sent to the clients.</param>
-        public void SendResponse(ServiceResponse response)
-        {
-            SendResponse(Guid.Empty, response);
-        }
-
-        /// <summary>
-        /// Sends the specified resonse to the specified client only.
-        /// </summary>
-        /// <param name="clientID">ID of the client to whom the response is to be sent.</param>
-        /// <param name="response">The response to be sent to the client.</param>
-        public void SendResponse(Guid clientID, ServiceResponse response)
-        {
-            if (clientID == Guid.Empty)
-            {
-                // Multi-cast message to all connected clients if no client ID is specified
-                m_remotingServer.Multicast(response);
-            }
-            else
-            {
-                // Send message directly to specified client
-                m_remotingServer.SendTo(clientID, response);
-            }
-        }
-
-        public void UpdateStatus(string message)
-        {
-            UpdateStatus(Guid.Empty, message);
-        }
-
-        public void UpdateStatus(Guid clientID, string message)
-        {
-            UpdateStatus(clientID, message, 0);
-        }
-
-        public void UpdateStatus(string message, int crlfCount)
-        {
-            UpdateStatus(Guid.Empty, message, crlfCount);
-        }
-
-        public void UpdateStatus(Guid clientID, string message, int crlfCount)
-        {
-            if (!m_suppressUpdates)
-            {
-                // Append desired number of line feeds to message
-                StringBuilder formattedMessage = new StringBuilder();
-
-                formattedMessage.Append(message);
-
-                for (int i = 0; i < crlfCount; i++)
-                {
-                    formattedMessage.AppendLine();
-                }
-
-                // Send the status update to specified client(s)
-                SendUpdateClientStatusResponse(clientID, formattedMessage.ToString());
-
-                // Log the status update to the log file if logging is enabled.
-                if (m_logStatusUpdates)
-                    m_statusLog.WriteTimestampedLine(formattedMessage.ToString());
-            }
-        }
-
-        public void AddProcess(ProcessExecutionMethod processExecutionMethod, string processName)
-        {
-            AddProcess(processExecutionMethod, processName, null);
-        }
-
-        public void AddProcess(ProcessExecutionMethod processExecutionMethod, string processName, object[] processParameters)
-        {
-            processName = processName.Trim();
-
-            if (GetProcess(processName) == null)
-            {
-                m_processes.Add(new ServiceProcess(processExecutionMethod, processName, processParameters, this));
-            }
-            else
-            {
-                throw new InvalidOperationException(string.Format("Process \"{0}\" is already defined.", processName));
-            }
-        }
-
-        public void AddScheduledProcess(ProcessExecutionMethod processExecutionMethod, string processName, string processSchedule)
-        {
-            AddScheduledProcess(processExecutionMethod, processName, null, processSchedule);
-        }
-
-        public void AddScheduledProcess(ProcessExecutionMethod processExecutionMethod, string processName, object[] processParameters, string processSchedule)
-        {
-            AddProcess(processExecutionMethod, processName, processParameters);
-            ScheduleProcess(processName, processSchedule);
-        }
-
-        public void ScheduleProcess(string processName, string scheduleRule)
-        {
-            ScheduleProcess(processName, scheduleRule, false);
-        }
-
-        public void ScheduleProcess(string processName, string scheduleRule, bool updateExistingSchedule)
-        {
-            processName = processName.Trim();
-
-            if (GetProcess(processName) != null)
-            {
-                // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
-                Schedule existingSchedule = m_scheduler.FindSchedule(processName);
-
-                if (existingSchedule != null)
-                {
-                    // Update the process schedule if it is already exists.
-                    if (updateExistingSchedule)
-                        existingSchedule.Rule = scheduleRule;
-                }
-                else
-                {
-                    // Schedule the process if it is not scheduled already.
-                    m_scheduler.Schedules.Add(new Schedule(processName, scheduleRule));
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException(string.Format("Process \"{0}\" is not defined.", processName));
-            }
-        }
-
-        public void LoadSettings()
-        {
-            try
-            {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                if (settings.Count > 0)
-                {
-                    m_pursip = settings["Pursip"].ValueAs(m_pursip);
-                    LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
-                    MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
-                    RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
-                    QueryableSettingsCategories = settings["QueryableSettingsCategories"].ValueAs(m_queryableSettingsCategories);
-                }
-            }
-            catch
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                try
-                {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    CategorizedSettingsElement setting;
-
-                    settings.Clear();
-
-                    setting = settings["Pursip", true];
-                    setting.Value = m_pursip;
-                    setting.Description = "";
-                    setting.Encrypted = true;
-
-                    setting = settings["LogStatusUpdates", true];
-                    setting.Value = m_logStatusUpdates.ToString();
-                    setting.Description = "";
-
-                    setting = settings["MonitorServiceHealth", true];
-                    setting.Value = m_monitorServiceHealth.ToString();
-                    setting.Description = "";
-
-                    setting = settings["RequestHistoryLimit", true];
-                    setting.Value = m_requestHistoryLimit.ToString();
-                    setting.Description = "";
-
-                    setting = settings["QueryableSettingsCategories", true];
-                    setting.Value = m_queryableSettingsCategories;
-                    setting.Description = "";
-
-                    ConfigurationFile.Current.Save();
-                }
-                catch
-                {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
-                }
-            }
-        }
-
-        public void BeginInit()
-        {
-            // We don't need to do anything before the component is initialized.
-        }
-
-        public void EndInit()
-        {
-            // Load settings from the config file at run-time
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-                LoadSettings();
         }
 
         private void SendUpdateClientStatusResponse(string response)
@@ -1059,18 +1386,24 @@ namespace PCS.Services
             SendResponse(serviceResponse);
         }
 
-        private void SendProcessStateChangedResponse(string processName, ProcessState currentState)
+        private void SendProcessStateChangedResponse(string processName, ServiceProcessState currentState)
         {
             ServiceResponse serviceResponse = new ServiceResponse("PROCESSSTATECHANGED");
-            serviceResponse.Attachments.Add(new ObjectState<ProcessState>(processName, currentState));
+            serviceResponse.Attachments.Add(new ObjectState<ServiceProcessState>(processName, currentState));
             SendResponse(serviceResponse);
+        }
+
+        private void process_StateChanged(object sender, EventArgs e)
+        {
+            ServiceProcess process = sender as ServiceProcess;
+            OnProcessStateChanged(process.Name, process.CurrentState);
         }
 
         private void m_statusLog_LogException(object sender, EventArgs<System.Exception> e)
         {
             // We'll let the connected clients know that we encountered an exception while logging the status update.
             m_logStatusUpdates = false;
-            UpdateStatus(string.Format("Error occurred while logging status update - {0}", e.Argument.ToString()), UpdateCrlfCount);
+            UpdateStatus("Error occurred while logging status update - {0}\r\n\r\n", e.Argument);
             m_logStatusUpdates = true;
         }
 
@@ -1093,89 +1426,114 @@ namespace PCS.Services
                 {
                     try
                     {
-                        RemoteCommandSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Command -disconnect")));
+                        RemoteCommandSession(new ClientRequest.Info(disconnectedClient, ClientRequest.Parse("Command -disconnect")));
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         // We'll encounter an exception because we'll try to update the status of the client that had the
                         // remote command session open and this will fail since the client is disconnected.
+                        m_errorLogger.Log(ex);
                     }
                 }
 
-                m_connectedClients.Remove(disconnectedClient);
-                UpdateStatus(string.Format("Remote client disconnected - {0} from {1}.", disconnectedClient.UserName, disconnectedClient.MachineName), UpdateCrlfCount);
+                m_remoteClients.Remove(disconnectedClient);
+                UpdateStatus("Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.UserName, disconnectedClient.MachineName);
             }
         }
 
         private void m_remotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
-            ClientInfo client = Serialization.GetObject<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3));
-            ClientRequest request = Serialization.GetObject<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3));
             ClientInfo requestSender = GetConnectedClient(e.Argument1);
 
-            if (client != null)
+            if (requestSender == null)
             {
-                // We've received client information from a recently connected client.
-                client.ConnectedAt = DateTime.Now;
-                m_connectedClients.Add(client);
-                UpdateStatus(string.Format("Remote client connected - {0} from {1}.", client.UserName, client.MachineName), UpdateCrlfCount);
-            }
-            else if (request != null)
-            {
-                try
+                // First message from a remote client should be its info.
+                ClientInfo client = null;
+                Serialization.TryGetObject<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3), out client);
+                if (client != null)
                 {
-                    ClientRequestInfo requestInfo = new ClientRequestInfo(requestSender, request);
-
-                    if (m_remoteCommandClientID == Guid.Empty || requestSender.ClientID != m_remoteCommandClientID)
-                    {
-                        // Log the received request.
-                        m_clientRequestHistory.Add(requestInfo);
-
-                        // We'll remove old request entries if we've exceeded the limit for request history.
-                        if (m_clientRequestHistory.Count > m_requestHistoryLimit)
-                            m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
-
-                        // Notify the consumer about the incoming request from client.
-                        if (ReceivedClientRequest != null)
-                            ReceivedClientRequest(this, new EventArgs<IdentifiableItem<Guid, ClientRequest>>(new IdentifiableItem<Guid, ClientRequest>(requestSender.ClientID, request)));
-
-                        ClientRequestHandlerInfo requestHandler = GetClientRequestHandler(request.Command);
-
-                        if (requestHandler != null)
-                            requestHandler.HandlerMethod(requestInfo);
-                        else
-                            UpdateStatus(requestSender.ClientID, string.Format("Failed to process request \"{0}\". Request is invalid.", request.Command), UpdateCrlfCount);
-                    }
-                    else
-                    {
-                        RemoteCommandSession(requestInfo);
-                    }
+                    client.ClientID = e.Argument1;
+                    client.ConnectedAt = DateTime.Now;
+                    m_remoteClients.Add(client);
+                    UpdateStatus("Remote client connected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
                 }
-                catch (Exception ex)
+                else
                 {
-                    m_errorLogger.Log(ex);
-                    UpdateStatus(requestSender.ClientID, string.Format("Failed to process request \"{0}\". {1}.", request.Command, ex.Message), UpdateCrlfCount);
-                }
+                    try
+                    {
+                        m_remotingServer.DisconnectOne(e.Argument1);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_errorLogger.Log(ex);
+                    }
+                }               
             }
             else
-            {
-                UpdateStatus(requestSender.ClientID, "Failed to process request - Request could not be deserialized.", UpdateCrlfCount);
+            { 
+                // All subsequest messages from a remote client would be requests.
+                ClientRequest request = null;
+                Serialization.TryGetObject<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3), out request);
+                if (request != null)
+                {
+                    try
+                    {
+                        ClientRequest.Info requestInfo = new ClientRequest.Info(requestSender, request);
+                        if (m_remoteCommandClientID == Guid.Empty)
+                        {
+                            // Process all incoming requests when remote command session is not in progress.
+                            m_clientRequestHistory.Add(requestInfo);
+
+                            // We'll remove old request entries if we've exceeded the limit for request history.
+                            if (m_clientRequestHistory.Count > m_requestHistoryLimit)
+                                m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
+
+                            // Notify the consumer about the incoming request from client.
+                            OnReceivedClientRequest(request, requestSender);
+
+                            ClientRequestHandler requestHandler = GetClientRequestHandler(request.Command);
+                            if (requestHandler != null)
+                                requestHandler.HandlerMethod(requestInfo);
+                            else
+                                UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - Request is not supported.\r\n\r\n", request.Command);
+                        }
+                        else if (requestSender.ClientID == m_remoteCommandClientID)
+                        {
+                            // Redirect requests to remote command session if requests are from its originator.
+                            RemoteCommandSession(requestInfo);
+                        }
+                        else
+                        {
+                            // Reject all request from other clients since remote command session is in progress.
+                            UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - Remote command session is in progress.\r\n\r\n", request.Command);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        m_errorLogger.Log(ex);
+                        UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
+                    }
+                }
+                else
+                {
+                    UpdateStatus(requestSender.ClientID, "Failed to process request - Request could not be deserialized.\r\n\r\n");
+                }
             }
         }
 
         private void m_remoteCommandProcess_ErrorDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
-            UpdateStatus(m_remoteCommandClientID, e.Data, 1);
+            UpdateStatus(m_remoteCommandClientID, e.Data + "\r\n");
         }
 
         private void m_remoteCommandProcess_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
-            UpdateStatus(m_remoteCommandClientID, e.Data, 1);
+            UpdateStatus(m_remoteCommandClientID, e.Data + "\r\n");
         }
 
         #region [ Client Request Handlers ]
 
-        private void ShowClients(ClientRequestInfo requestInfo)
+        private void ShowClients(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1191,14 +1549,16 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
-                if (m_connectedClients.Count > 0)
+                if (m_remoteClients.Count > 0)
                 {
                     // Display info about all of the clients connected to the service.
                     StringBuilder responseMessage = new StringBuilder();
@@ -1222,7 +1582,7 @@ namespace PCS.Services
                     responseMessage.Append(' ');
                     responseMessage.Append(new string('-', 20));
 
-                    foreach (ClientInfo clientInfo in m_connectedClients)
+                    foreach (ClientInfo clientInfo in m_remoteClients)
                     {
                         responseMessage.AppendLine();
 
@@ -1246,17 +1606,19 @@ namespace PCS.Services
                         responseMessage.Append(' ');
                         responseMessage.Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
                     }
+                    responseMessage.AppendLine();
+                    responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("No clients are connected to {0}", Name), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "No clients are connected to {0}\r\n\r\n", Name);
                 }
             }
         }
 
-        private void ShowSettings(ClientRequestInfo requestInfo)
+        private void ShowSettings(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1272,10 +1634,12 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -1317,18 +1681,20 @@ namespace PCS.Services
                                 responseMessage.Append("[Not Set]".PadRight(30));
                         }
                     }
+                    responseMessage.AppendLine();
+                    responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
                 }
                 else
                 {
                     // No queryable settings are defined in the service.
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("No queryable settings are defined in {0}.", Name), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "No queryable settings are defined in {0}.\r\n\r\n", Name);
                 }
             }
         }
 
-        private void ShowProcesses(ClientRequestInfo requestInfo)
+        private void ShowProcesses(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1346,7 +1712,7 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
 
                 if (showAdvancedHelp)
@@ -1355,8 +1721,10 @@ namespace PCS.Services
                     helpMessage.Append("       -system".PadRight(20));
                     helpMessage.Append("Displays system processes instead of service processes");
                 }
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -1415,13 +1783,15 @@ namespace PCS.Services
                                     responseMessage.Append("[Not Executed]".PadRight(20));
                             }
                         }
+                        responseMessage.AppendLine();
+                        responseMessage.AppendLine();
 
-                        UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
                     }
                     else
                     {
                         // No processes defined in the service to be displayed.
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("No processes are defined in {0}.", Name), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, "No processes are defined in {0}.\r\n\r\n", Name);
                     }
                 }
                 else
@@ -1472,13 +1842,15 @@ namespace PCS.Services
                         {
                         }
                     }
+                    responseMessage.AppendLine();
+                    responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
                 }
             }
         }
 
-        private void ShowSchedules(ClientRequestInfo requestInfo)
+        private void ShowSchedules(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1494,14 +1866,16 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
-                if (m_scheduler.Schedules.Count > 0)
+                if (m_processScheduler.Schedules.Count > 0)
                 {
                     // Display info about all the process schedules defined in the service.
                     StringBuilder responseMessage = new StringBuilder();
@@ -1521,7 +1895,7 @@ namespace PCS.Services
                     responseMessage.Append(' ');
                     responseMessage.Append(new string('-', 30));
 
-                    foreach (Schedule schedule in m_scheduler.Schedules)
+                    foreach (Schedule schedule in m_processScheduler.Schedules)
                     {
                         responseMessage.AppendLine();
                         responseMessage.Append(schedule.Name.PadRight(20));
@@ -1534,17 +1908,19 @@ namespace PCS.Services
                         else
                             responseMessage.Append("[Never]".PadRight(30));
                     }
+                    responseMessage.AppendLine();
+                    responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("No process schedules are defined in {0}.", Name), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "No process schedules are defined in {0}.\r\n\r\n", Name);
                 }
             }
         }
 
-        private void ShowRequestHistory(ClientRequestInfo requestInfo)
+        private void ShowRequestHistory(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1560,10 +1936,12 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -1584,7 +1962,7 @@ namespace PCS.Services
                 responseMessage.Append(' ');
                 responseMessage.Append(new string('-', 30));
 
-                foreach (ClientRequestInfo historicRequest in m_clientRequestHistory)
+                foreach (ClientRequest.Info historicRequest in m_clientRequestHistory)
                 {
                     responseMessage.AppendLine();
                     responseMessage.Append(historicRequest.Request.Command.PadRight(20));
@@ -1593,12 +1971,14 @@ namespace PCS.Services
                     responseMessage.Append(' ');
                     responseMessage.Append(string.Format("{0} from {1}", historicRequest.Sender.UserName, historicRequest.Sender.MachineName).PadRight(30));
                 }
+                responseMessage.AppendLine();
+                responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
             }
         }
 
-        private void ShowRequestHelp(ClientRequestInfo requestInfo)
+        private void ShowRequestHelp(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1614,10 +1994,12 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -1636,7 +2018,7 @@ namespace PCS.Services
                 responseMessage.Append(' ');
                 responseMessage.Append(new string('-', 55));
 
-                foreach (ClientRequestHandlerInfo handler in m_clientRequestHandlers)
+                foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                 {
                     if (handler.IsAdvertised || showAdvancedHelp)
                     {
@@ -1646,12 +2028,14 @@ namespace PCS.Services
                         responseMessage.Append(handler.CommandDescription.PadRight(55));
                     }
                 }
+                responseMessage.AppendLine();
+                responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
             }
         }
 
-        private void ShowHealthReport(ClientRequestInfo requestInfo)
+        private void ShowHealthReport(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1667,21 +2051,23 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
                 if (m_performanceMonitor != null)
-                    UpdateStatus(requestInfo.Sender.ClientID, m_performanceMonitor.Status, UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, m_performanceMonitor.Status + "\r\n");
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, "Performance monitor is not available.", UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Performance monitor is not available.");
             }
         }
 
-        private void ShowServiceStatus(ClientRequestInfo requestInfo)
+        private void ShowServiceStatus(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1697,18 +2083,20 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
-                UpdateStatus(requestInfo.Sender.ClientID, Status, UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, Status);
             }
         }
 
-        private void ReloadSettings(ClientRequestInfo requestInfo)
+        private void ReloadSettings(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -1724,14 +2112,16 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("IMPORTANT: Category name must be defined as one of the queryable settings categories in the QueryableSettingsCategories property of ServiceHelper. ");
                 helpMessage.Append("Also, category name is case sensitive so it must be the same case as it appears in the settings listing.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -1785,23 +2175,23 @@ namespace PCS.Services
                     if (!string.IsNullOrEmpty(settingsTarget))
                     {
                         if (settingsTarget == categoryName)
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully loaded settings for category \"{1}\".", categoryName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded settings for category \"{0}\".\r\n\r\n", categoryName);
                         else
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully loaded settings for component \"{0}\" from category \"{1}\".", settingsTarget, categoryName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded settings for component \"{0}\" from category \"{1}\".\r\n\r\n", settingsTarget, categoryName);
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to load component settings from category \"{0}\". No corresponding settings category name found.", categoryName), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to load component settings from category \"{0}\". No corresponding settings category name found.\r\n\r\n", categoryName);
                     }
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to load component settings from category \"{0}\". Category is not one of the queryable settings categories.", categoryName), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to load component settings from category \"{0}\". Category is not one of the queryable settings categories.\r\n\r\n", categoryName);
                 }
             }
         }
 
-        private void UpdateSettings(ClientRequestInfo requestInfo)
+        private void UpdateSettings(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 3)
             {
@@ -1819,7 +2209,7 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -add".PadRight(20));
@@ -1837,8 +2227,10 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("IMPORTANT: Category name must be defined as one of the queryable settings categories in the QueryableSettingsCategories property of ServiceHelper. ");
                 helpMessage.Append("Also, category and setting names are case sensitive so they must be the same case as they appears in the settings listing.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -1860,24 +2252,24 @@ namespace PCS.Services
                         // The specified category is one of the defined queryable categories.
                         if (true == addSetting)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to add setting \"{0}\" under category \"{1}\"...", settingName, categoryName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                             settings.Add(settingName, settingValue);
                             ConfigurationFile.Current.Save();
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully added setting \"{0}\" under category \"{1}\".", settingName, categoryName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                         }
                         else if (true == deleteSetting)
                         {
                             setting = settings[settingName];
                             if (setting != null)
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to delete setting \"{0}\" under category \"{1}\"...", settingName, categoryName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 settings.Remove(setting);
                                 ConfigurationFile.Current.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully deleted setting \"{0}\" under category \"{1}\".", settingName, categoryName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.", settingName, categoryName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
                             }
                         }
                         else
@@ -1886,15 +2278,15 @@ namespace PCS.Services
                             if (setting != null)
                             {
                                 // The requested setting does exist under the specified category.
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to update setting \"{0}\" under category \"{1}\"...", settingName, categoryName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 setting.Value = settingValue;
                                 ConfigurationFile.Current.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully updated setting \"{0}\" under category \"{1}\".", settingName, categoryName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
                             else
                             {
                                 // The requested setting does not exist under the specified category.
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.", settingName, categoryName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
                             }
                         }
 
@@ -1915,18 +2307,18 @@ namespace PCS.Services
                     else
                     {
                         // The specified category does not exist.
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to update value of setting \"{0}\" under category \"{1}\". Category does not exist.", settingName, categoryName), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\". Category does not exist.\r\n\r\n", settingName, categoryName);
                     }
                 }
                 else
                 {
                     // The specified category is not one of the defined queryable categories.
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to update value of setting \"{0}\" under category \"{1}\". Category is not one of the queryable categories.", settingName, categoryName), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\". Category is not one of the queryable categories.\r\n\r\n", settingName, categoryName);
                 }
             }
         }
 
-        private void StartProcess(ClientRequestInfo requestInfo)
+        private void StartProcess(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -1944,8 +2336,11 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -args".PadRight(20));
+                helpMessage.Append("Arguments to be passed in to the process");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -restart".PadRight(20));
                 helpMessage.Append("Aborts the process if executing and start it again");
@@ -1958,12 +2353,15 @@ namespace PCS.Services
                     helpMessage.Append("       -system".PadRight(20));
                     helpMessage.Append("Treats the specified process as a system process");
                 }
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
                 string processName = requestInfo.Request.Arguments["orderedarg1"];
+                string processArgs = requestInfo.Request.Arguments["args"];
                 bool systemProcess = requestInfo.Request.Arguments.Exists("system");
                 bool restartProcess = requestInfo.Request.Arguments.Exists("restart");
                 bool listProcesses = requestInfo.Request.Arguments.Exists("list");
@@ -1980,37 +2378,50 @@ namespace PCS.Services
 
                     if (processToStart != null)
                     {
-                        if (processToStart.CurrentState != ProcessState.Processing)
+                        if (processToStart.CurrentState != ServiceProcessState.Processing)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to start service process \"{0}\"...", processName), UpdateCrlfCount);
-                            processToStart.Start();
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully started service process \"{0}\".", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to start service process \"{0}\"...\r\n\r\n", processName);
+                            if (string.IsNullOrEmpty(processArgs))
+                            {
+                                processToStart.Start();
+                            }
+                            else
+                            {
+                                // Prepare the arguments.
+                                string[] splitArgs = processArgs.Split(',');
+                                Array.ForEach<string>(splitArgs, (string arg) => arg.Trim());
+
+                                // Start the service process.
+                                processToStart.Start(splitArgs);
+                            }
+                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully started service process \"{0}\".\r\n\r\n", processName);
                         }
                         else
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to start process \"{0}\". Process is already executing.", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to start process \"{0}\". Process is already executing.\r\n\r\n", processName);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to start service process \"{0}\". Process is not defined.", processName), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to start service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
                 else
                 {
                     try
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to start system process \"{0}\"...", processName), UpdateCrlfCount);
-                        Process startedProcess = Process.Start(processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
+                        Process startedProcess = Process.Start(processName, processArgs);
 
                         if (startedProcess != null)
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully started system process \"{0}\".", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully started system process \"{0}\".\r\n\r\n", processName);
                         else
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to start system process \"{0}\".", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to start system process \"{0}\".\r\n\r\n", processName);
                     }
                     catch (Exception ex)
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to start system process \"{0}\". {1}.", processName, ex.Message), UpdateCrlfCount);
+                        m_errorLogger.Log(ex);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                     }
                 }
 
@@ -2022,7 +2433,7 @@ namespace PCS.Services
             }
         }
 
-        private void AbortProcess(ClientRequestInfo requestInfo)
+        private void AbortProcess(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -2040,7 +2451,7 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -list".PadRight(20));
@@ -2055,8 +2466,10 @@ namespace PCS.Services
                     helpMessage.AppendLine();
                     helpMessage.Append("NOTE: Specify process name of \"Me\" to kill current service process. ");
                 }
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -2070,20 +2483,20 @@ namespace PCS.Services
 
                     if (processToAbort != null)
                     {
-                        if (processToAbort.CurrentState == ProcessState.Processing)
+                        if (processToAbort.CurrentState == ServiceProcessState.Processing)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to abort service process \"{0}\"...", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
                             processToAbort.Abort();
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully aborted service process \"{0}\".", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
                         }
                         else
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to abort service process \"{0}\". Process is not executing.", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to abort service process \"{0}\". Process is not defined.", processName), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
                 else
@@ -2117,25 +2530,26 @@ namespace PCS.Services
                     {
                         try
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to abort system process \"{0}\"...", processName), UpdateCrlfCount);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to abort system process \"{0}\"...\r\n\r\n", processName);
                             processToAbort.Kill();
                             if (processToAbort.WaitForExit(10000))
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully aborted system process \"{0}\".", processName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully aborted system process \"{0}\".\r\n\r\n", processName);
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to abort system process \"{0}\". Process not responding.", processName), UpdateCrlfCount);
+                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort system process \"{0}\". Process not responding.\r\n\r\n", processName);
                             }
                         }
                         catch (Exception ex)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to abort system process \"{0}\". {1}.", processName, ex.Message), UpdateCrlfCount);
+                            m_errorLogger.Log(ex);
+                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to abort system process \"{0}\". Process is not running.", processName), UpdateCrlfCount);
+                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort system process \"{0}\". Process is not running.\r\n\r\n", processName);
                     }
                 }
 
@@ -2147,7 +2561,7 @@ namespace PCS.Services
             }
         }
 
-        private void RescheduleProcess(ClientRequestInfo requestInfo)
+        private void RescheduleProcess(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
             {
@@ -2163,7 +2577,7 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -save".PadRight(20));
@@ -2218,8 +2632,10 @@ namespace PCS.Services
                 helpMessage.Append("   \"0 0 31 12 *\"     - Process executes on December 31 at midnight.");
                 helpMessage.AppendLine();
                 helpMessage.Append("   \"5,10 0-2 * * *\"  - Process executes 5 and 10 past hours 12am to 2am.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -2231,9 +2647,9 @@ namespace PCS.Services
                 try
                 {
                     // Schedule the process if not scheduled or update its schedule if scheduled.
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to schedule process \"{0}\" with rule \"{1}\"...", processName, scheduleRule), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Attempting to schedule process \"{0}\" with rule \"{1}\"...\r\n\r\n", processName, scheduleRule);
                     ScheduleProcess(processName, scheduleRule, true);
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully scheduled process \"{0}\" with rule \"{1}\".", processName, scheduleRule), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Successfully scheduled process \"{0}\" with rule \"{1}\".\r\n\r\n", processName, scheduleRule);
 
                     if (saveSchedules)
                     {
@@ -2243,7 +2659,8 @@ namespace PCS.Services
                 }
                 catch (Exception ex)
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to schedule process \"{0}\". {1}", processName, ex.Message), UpdateCrlfCount);
+                    m_errorLogger.Log(ex);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
                 }
 
                 if (listSchedules)
@@ -2254,7 +2671,7 @@ namespace PCS.Services
             }
         }
 
-        private void UnscheduleProcess(ClientRequestInfo requestInfo)
+        private void UnscheduleProcess(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -2270,7 +2687,7 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -save".PadRight(20));
@@ -2278,8 +2695,10 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("       -list".PadRight(20));
                 helpMessage.Append("Displays list of all process schedules");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
@@ -2287,13 +2706,13 @@ namespace PCS.Services
                 bool saveSchedules = requestInfo.Request.Arguments.Exists("save");
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                Schedule scheduleToRemove = m_scheduler.FindSchedule(processName);
+                Schedule scheduleToRemove = m_processScheduler.FindSchedule(processName);
 
                 if (scheduleToRemove != null)
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Attempting to unschedule process \"{0}\"...", processName), UpdateCrlfCount);
-                    m_scheduler.Schedules.Remove(scheduleToRemove);
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Successfully unscheduled process \"{0}\".", processName), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
+                    m_processScheduler.Schedules.Remove(scheduleToRemove);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Successfully unscheduled process \"{0}\".\r\n\r\n", processName);
 
                     if (saveSchedules)
                     {
@@ -2303,7 +2722,7 @@ namespace PCS.Services
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, string.Format("Failed to unschedule process \"{0}\". Process is not scheduled.", null), UpdateCrlfCount);
+                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to unschedule process \"{0}\". Process is not scheduled.\r\n\r\n", processName);
                 }
 
                 if (listSchedules)
@@ -2314,7 +2733,7 @@ namespace PCS.Services
             }
         }
 
-        private void SaveSchedules(ClientRequestInfo requestInfo)
+        private void SaveSchedules(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2330,21 +2749,23 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -list".PadRight(20));
                 helpMessage.Append("Displays list of all process schedules");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to save process schedules to the config file...", UpdateCrlfCount);
-                m_scheduler.SaveSettings();
-                UpdateStatus(requestInfo.Sender.ClientID, "Successfully saved process schedules to the config file.", UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to save process schedules to the config file...\r\n\r\n");
+                m_processScheduler.SaveSettings();
+                UpdateStatus(requestInfo.Sender.ClientID, "Successfully saved process schedules to the config file.\r\n\r\n");
 
                 if (listSchedules)
                 {
@@ -2354,7 +2775,7 @@ namespace PCS.Services
             }
         }
 
-        private void LoadSchedules(ClientRequestInfo requestInfo)
+        private void LoadSchedules(ClientRequest.Info requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2370,21 +2791,23 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -list".PadRight(20));
                 helpMessage.Append("Displays list of all process schedules");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to load process schedules from the config file...", UpdateCrlfCount);
-                m_scheduler.LoadSettings();
-                UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded process schedules from the config file.", UpdateCrlfCount);
+                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to load process schedules from the config file...\r\n\r\n");
+                m_processScheduler.LoadSettings();
+                UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded process schedules from the config file.\r\n\r\n");
 
                 if (listSchedules)
                 {
@@ -2394,7 +2817,7 @@ namespace PCS.Services
             }
         }
 
-        private void RemoteCommandSession(ClientRequestInfo requestinfo)
+        private void RemoteCommandSession(ClientRequest.Info requestinfo)
         {
             if (m_remoteCommandProcess == null && requestinfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2410,30 +2833,28 @@ namespace PCS.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -".PadRight(20));
+                helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -connect".PadRight(20));
-                helpMessage.Append("Established a remote command session");
+                helpMessage.Append("Establishes a remote command session (requires password)");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -disconnect".PadRight(20));
                 helpMessage.Append("Terminates established remote command session");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -password=\"Command Session Password\"".PadRight(20));
-                helpMessage.Append("Password required to establish a remote command session");
+                helpMessage.AppendLine();
 
-                UpdateStatus(requestinfo.Sender.ClientID, helpMessage.ToString(), UpdateCrlfCount);
+                UpdateStatus(requestinfo.Sender.ClientID, helpMessage.ToString());
             }
             else
             {
                 bool connectSession = requestinfo.Request.Arguments.Exists("connect");
                 bool disconnectSession = requestinfo.Request.Arguments.Exists("disconnect");
-                bool passwordProvided = requestinfo.Request.Arguments.Exists("password");
 
-                if (string.Compare(requestinfo.Request.Command, "Command", true) == 0 && m_remoteCommandProcess == null && connectSession && passwordProvided)
+                if (m_remoteCommandProcess == null && connectSession && !string.IsNullOrEmpty(requestinfo.Request.Arguments["connect"]))
                 {
                     // User wants to establish a remote command session.
-                    string password = requestinfo.Request.Arguments["password"];
+                    string password = requestinfo.Request.Arguments["connect"];
 
                     if (password == m_pursip)
                     {
@@ -2450,15 +2871,14 @@ namespace PCS.Services
                         m_remoteCommandProcess.BeginOutputReadLine();
                         m_remoteCommandProcess.BeginErrorReadLine();
 
+                        UpdateStatus("Remote command session established - status updates are suspended.\r\n\r\n");
+
                         m_remoteCommandClientID = requestinfo.Sender.ClientID;
-
-                        UpdateStatus(requestinfo.Sender.ClientID, "Remote command session established - all entry will now be redirected to command session.", UpdateCrlfCount);
-
                         SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("CommandSession", "Established"));
                     }
                     else
                     {
-                        UpdateStatus(requestinfo.Sender.ClientID, "Failed to establish remote command session - Password is invalid.", UpdateCrlfCount);
+                        UpdateStatus(requestinfo.Sender.ClientID, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
                 else if (string.Compare(requestinfo.Request.Command, "Command", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
@@ -2472,12 +2892,11 @@ namespace PCS.Services
 
                     m_remoteCommandProcess.Dispose();
                     m_remoteCommandProcess = null;
-                    
+                 
                     m_remoteCommandClientID = Guid.Empty;
-
-                    UpdateStatus(requestinfo.Sender.ClientID, "Remote command session terminated - all entry will now be redirected back to service session.", UpdateCrlfCount);
-
                     SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("CommandSession", "Terminated"));
+
+                    UpdateStatus("Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }
                 else if (m_remoteCommandProcess != null)
                 {
@@ -2488,7 +2907,7 @@ namespace PCS.Services
                 else
                 {
                     // User has provided insufficient information.
-                    requestinfo.Request = ClientRequest.Parse("Command /");
+                    requestinfo.Request = ClientRequest.Parse("Command /?");
                     RemoteCommandSession(requestinfo);
                 }
             }

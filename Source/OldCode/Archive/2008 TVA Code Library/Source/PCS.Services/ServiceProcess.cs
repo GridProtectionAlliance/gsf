@@ -14,23 +14,60 @@
 //       Generated original version of source code.
 //  09/30/2008 - James R Carroll
 //       Converted to C#.
+//  03/03/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Text;
-using System.Units;
 using System.Threading;
-using System.Collections.Generic;
+using System.Units;
 using PCS.Threading;
 
 namespace PCS.Services
 {
-    public delegate void ProcessExecutionMethod(string name, object[] parameters);
+    /// <summary>
+    /// Indicates the current state of <see cref="ServiceProcess"/>.
+    /// </summary>
+    public enum ServiceProcessState
+    {
+        /// <summary>
+        /// <see cref="ServiceProcess"/> has not been started.
+        /// </summary>
+        Unprocessed,
+        /// <summary>
+        /// <see cref="ServiceProcess"/> is currently executing.
+        /// </summary>
+        Processing,
+        /// <summary>
+        /// <see cref="ServiceProcess"/> has completed processing.
+        /// </summary>
+        Processed,
+        /// <summary>
+        /// <see cref="ServiceProcess"/> was aborted.
+        /// </summary>
+        Aborted,
+        /// <summary>
+        /// <see cref="ServiceProcess"/> stopped due to exception.
+        /// </summary>
+        Exception
+    }
 
-    public class ServiceProcess : IDisposable
+    /// <summary>
+    /// Represents a process that executes asynchronously inside a <see cref="ServiceHelper"/>.
+    /// </summary>
+    /// <seealso cref="ServiceHelper"/>
+    public class ServiceProcess : IDisposable, IProvideStatus
 	{
         #region [ Members ]
+
+        //Events
+
+        /// <summary>
+        /// Occurs when the <see cref="CurrentState"/> of the <see cref="ServiceProcess"/> changes.
+        /// </summary>
+        public event EventHandler StateChanged;
 
         // Fields
 #if ThreadTracking
@@ -39,10 +76,9 @@ namespace PCS.Services
 		private Thread m_processThread;
 #endif
         private string m_name;
-        private object[] m_parameters;
-        private ProcessExecutionMethod m_executionMethod;
-        private ServiceHelper m_serviceHelper;
-        private ProcessState m_currentState;
+        private object[] m_arguments;
+        private Action<string, object[]> m_executionMethod;
+        private ServiceProcessState m_currentState;
         private DateTime m_executionStartTime;
         private DateTime m_executionStopTime;
         private bool m_disposed;
@@ -51,26 +87,23 @@ namespace PCS.Services
 
         #region [ Constructors ]
 
-        public ServiceProcess(ProcessExecutionMethod executionMethod, string name, ServiceHelper serviceHelper)
-            : this(executionMethod, name, null, serviceHelper)
-        {
-        }
-
-        public ServiceProcess(ProcessExecutionMethod executionMethod, string name, object[] parameters, ServiceHelper serviceHelper)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceProcess"/> class.
+        /// </summary>
+        /// <param name="executionMethod"><see cref="Delegate"/> that gets invoked when <see cref="Start()"/> is called.</param>
+        /// <param name="name">Name of the <see cref="ServiceProcess"/>.</param>
+        /// <param name="arguments">Arguments to be passed in to the <paramref name="executionMethod"/>.</param>
+        public ServiceProcess(Action<string, object[]> executionMethod, string name, params object[] arguments)
         {
             m_name = name;
-            m_parameters = parameters;
+            m_arguments = arguments;
             m_executionMethod = executionMethod;
-            m_serviceHelper = serviceHelper;
-            m_currentState = ProcessState.Unprocessed;
+            m_currentState = ServiceProcessState.Unprocessed;
         }
 
         /// <summary>
-        /// Releases unmanaged resources before an instance of the <see cref="ServiceProcess" /> class is reclaimed by garbage collection.
+        /// Releases the unmanaged resources before the <see cref="ServiceProcess" /> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        /// <remarks>
-        /// This method releases unmanaged resources by calling the virtual <see cref="Dispose(bool)" /> method, passing in <strong>false</strong>.
-        /// </remarks>
         ~ServiceProcess()
         {
             Dispose(false);
@@ -80,6 +113,10 @@ namespace PCS.Services
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets the name of the <see cref="ServiceProcess"/>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
         public string Name
         {
             get
@@ -88,26 +125,36 @@ namespace PCS.Services
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                    m_name = value;
-                else
-                    throw new ArgumentException("Name cannot be null.");
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("Name");
+
+                m_name = value;
             }
         }
 
-        public object[] Parameters
+        /// <summary>
+        /// Gets or sets the arguments to be passed in to the <see cref="ExecutionMethod"/>.
+        /// </summary>
+        public object[] Arguments
         {
             get
             {
-                return m_parameters;
+                return m_arguments;
             }
             set
             {
-                m_parameters = value;
+                m_arguments = value;
             }
         }
 
-        public ProcessExecutionMethod ExecutionMethod
+        /// <summary>
+        /// Gets or sets the <see cref="Delegate"/> that gets invoked when <see cref="Start()"/> is called.
+        /// </summary>
+        /// <remarks>
+        /// Argument1 gets the <see cref="Name"/> of the <see cref="ServiceProcess"/>.<br/>
+        /// Argument2 gets the <see cref="Arguments"/> of the <see cref="ServiceProcess"/>.
+        /// </remarks>
+        public Action<string, object[]> ExecutionMethod
         {
             get
             {
@@ -119,19 +166,10 @@ namespace PCS.Services
             }
         }
 
-        public ServiceHelper ServiceHelper
-        {
-            get
-            {
-                return m_serviceHelper;
-            }
-            set
-            {
-                m_serviceHelper = value;
-            }
-        }
-
-        public ProcessState CurrentState
+        /// <summary>
+        /// Gets the current <see cref="ServiceProcessState"/>.
+        /// </summary>
+        public ServiceProcessState CurrentState
         {
             get
             {
@@ -140,10 +178,13 @@ namespace PCS.Services
             private set
             {
                 m_currentState = value;
-                m_serviceHelper.OnProcessStateChanged(m_name, m_currentState);
+                OnStateChanged();       // Notify of the change in state.
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="DateTime"/> when execution of <see cref="ServiceProcess"/> last started.
+        /// </summary>
         public DateTime ExecutionStartTime
         {
             get
@@ -152,6 +193,9 @@ namespace PCS.Services
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="DateTime"/> when execution of <see cref="ServiceProcess"/> last completed.
+        /// </summary>
         public DateTime ExecutionStopTime
         {
             get
@@ -160,6 +204,9 @@ namespace PCS.Services
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Time"/> taken by the <see cref="ServiceProcess"/> during the last execution.
+        /// </summary>
         public Time LastExecutionTime
         {
             get
@@ -168,6 +215,9 @@ namespace PCS.Services
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="ServiceProcess"/>.
+        /// </summary>
         public string Status
         {
             get
@@ -217,45 +267,18 @@ namespace PCS.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all resources used by an instance of the <see cref="ServiceProcess" /> class.
+        /// Starts the execution of <see cref="ServiceProcess"/>.
         /// </summary>
-        /// <remarks>
-        /// This method calls the virtual <see cref="Dispose(bool)" /> method, passing in <strong>true</strong>, and then suppresses 
-        /// finalization of the instance.
-        /// </remarks>
-        public void Dispose()
+        public void Start()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Start(m_arguments);
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by an instance of the <see cref="ServiceProcess" /> class and optionally releases the managed resources.
+        /// Starts the execution of <see cref="ServiceProcess"/>.
         /// </summary>
-        /// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-
-                    if (disposing)
-                    {
-                        Abort();
-                        m_executionMethod = null;
-                        m_serviceHelper = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        public void Start()
+        /// <param name="arguments">Arguments to be passed in to the <see cref="ExecutionMethod"/>.</param>
+        public void Start(object[] arguments)
         {
             // Start the execution on a seperate thread.
 #if ThreadTracking
@@ -264,9 +287,12 @@ namespace PCS.Services
 #else
 			m_processThread = new Thread(InvokeExecutionMethod);
 #endif
-            m_processThread.Start();
+            m_processThread.Start(arguments);
         }
 
+        /// <summary>
+        /// Stops the execution of <see cref="ServiceProcess"/> if it executing.
+        /// </summary>
         public void Abort()
         {
             // We'll abort the process only if it is currently executing.
@@ -278,11 +304,54 @@ namespace PCS.Services
             m_processThread = null;
         }
 
-        private void InvokeExecutionMethod()
+        /// <summary>
+        /// Releases all the resources used by the <see cref="ServiceProcess"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ServiceProcess"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    Abort();
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        m_executionMethod = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StateChanged"/> event.
+        /// </summary>
+        protected virtual void OnStateChanged()
+        {
+            if (StateChanged != null)
+                StateChanged(this, EventArgs.Empty);
+        }
+
+        private void InvokeExecutionMethod(object state)
         {
             if (m_executionMethod != null)
             {
-                CurrentState = ProcessState.Processing;
+                CurrentState = ServiceProcessState.Processing;
                 m_executionStartTime = DateTime.Now;
                 m_executionStopTime = DateTime.MinValue;
 
@@ -290,18 +359,18 @@ namespace PCS.Services
                 {
                     // We'll keep the invocation of the delegate in Try...Catch to absorb any exceptions that
                     // were not handled by the consumer.
-                    m_executionMethod(m_name, m_parameters);
+                    m_executionMethod(m_name, state as object[]);
 
-                    CurrentState = ProcessState.Processed;
+                    CurrentState = ServiceProcessState.Processed;
                 }
                 catch (ThreadAbortException)
                 {
-                    CurrentState = ProcessState.Aborted;
+                    CurrentState = ServiceProcessState.Aborted;
                 }
                 catch (Exception)
                 {
                     // We'll absorb any exceptions if unhandled by the client.
-                    CurrentState = ProcessState.Exception;
+                    CurrentState = ServiceProcessState.Exception;
                 }
                 finally
                 {

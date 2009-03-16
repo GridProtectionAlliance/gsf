@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  09/30/2008 - James R Carroll
 //       Converted to C#.
+//  03/09/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -22,7 +24,12 @@ using System.Collections.Generic;
 
 namespace PCS.Services
 {
-    /// <summary>Service Response to Clients.</summary>
+    /// <summary>
+    /// Represents a response sent by the <see cref="ServiceHelper"/> to a <see cref="ClientRequest"/> from the <see cref="ClientHelper"/>.
+    /// </summary>
+    /// <seealso cref="ServiceHelper"/>
+    /// <seealso cref="ClientHelper"/>
+    /// <seealso cref="ClientRequest"/>
 	[Serializable()]
     public class ServiceResponse
 	{
@@ -38,7 +45,7 @@ namespace PCS.Services
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a default instance of service response.
+        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
         /// </summary>
         public ServiceResponse()
             : this("UNDETERMINED")
@@ -46,19 +53,19 @@ namespace PCS.Services
         }
 
         /// <summary>
-        /// Initializes a instance of service response with the specified type.
+        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
         /// </summary>
-        /// <param name="type">The type of service response.</param>
+        /// <param name="type">Type of the <see cref="ServiceResponse"/> in plain text.</param>
         public ServiceResponse(string type)
             : this(type, "")
         {
         }
 
         /// <summary>
-        /// Initializes a instance of service response with the specified type and message.
+        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
         /// </summary>
-        /// <param name="type">The type of service response.</param>
-        /// <param name="message">The message of the service response.</param>
+        /// <param name="type">Type of the <see cref="ServiceResponse"/> in plain-text.</param>
+        /// <param name="message">Message associated with the <see cref="ServiceResponse"/>.</param>
         public ServiceResponse(string type, string message)
         {
             m_type = type.ToUpper();
@@ -71,10 +78,9 @@ namespace PCS.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the type of response being sent to the client.
+        /// Gets or sets the plain-text type of the <see cref="ServiceResponse"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>The type of response being sent to the client.</returns>
+        /// <exception cref="ArgumentNullException">The value being set is either a null or empty string.</exception>
         public string Type
         {
             get
@@ -83,15 +89,16 @@ namespace PCS.Services
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException();
+
                 m_type = value.ToUpper();
             }
         }
 
         /// <summary>
-        /// Gets or sets the message being sent to the client.
+        /// Gets or sets the palin-text message associated with the <see cref="ServiceResponse"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>The message being sent to the client.</returns>
         public string Message
         {
             get
@@ -105,10 +112,8 @@ namespace PCS.Services
         }
 
         /// <summary>
-        /// Gets a list of attachments being sent to the client.
+        /// Gets a list of serializable attachments of the <see cref="ServiceResponse"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>A list of attachments being sent to the client.</returns>
         public List<object> Attachments
         {
             get

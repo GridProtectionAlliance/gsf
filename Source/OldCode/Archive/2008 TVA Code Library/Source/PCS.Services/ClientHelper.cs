@@ -21,114 +21,101 @@
 //*******************************************************************************************************
 
 using System;
-using System.Text;
-using System.Drawing;
 using System.ComponentModel;
-using System.Collections.Generic;
+using System.Drawing;
+using System.Text;
 using PCS.Communication;
-using PCS.Configuration;
 
 namespace PCS.Services
 {
-    /// <summary>Helper class for windows service client.</summary>
+    /// <summary>
+    /// Component that provides client-side functionality to <see cref="ServiceHelper"/>.
+    /// </summary>
 	[ToolboxBitmap(typeof(ClientHelper))]
-    public class ClientHelper : Component, IPersistSettings, ISupportInitialize
+    public class ClientHelper : Component
 	{
 	    #region [ Members ]
-
-        // Constants
-
-		/// <summary>
-        /// Default value for ServiceName property.
-        /// </summary>
-		public const string DefaultServiceName = "WindowsService";
-		
-		/// <summary>
-        /// Default value for PersistSettings property.
-        /// </summary>
-		public const bool DefaultPersistSettings = false;
-		
-		/// <summary>
-        /// Default value for SettingsCategoryName property.
-        /// </summary>
-		public const string DefaultSettingsCategoryName = "ClientHelper";
 
         // Events
 
         /// <summary>
-		/// Occurs when the service client must update its status.
+		/// Occurs when a status update is received from the <see cref="ServiceHelper"/>.
 		/// </summary>
-		public event EventHandler<EventArgs<string>> UpdateClientStatus;
+        [Category("Client"), 
+        Description("Occurs when a status update is received from the ServiceHelper.")]
+        public event EventHandler<EventArgs<string>> ReceivedServiceUpdate;
 				
 		/// <summary>
-		/// Occurs when a response is received from the service.
+		/// Occurs when a <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
 		/// </summary>
-		public event EventHandler<EventArgs<ServiceResponse>> ReceivedServiceResponse;
+        [Category("Service"), 
+        Description("Occurs when a ServiceResponse is received from the ServiceHelper.")]
+        public event EventHandler<EventArgs<ServiceResponse>> ReceivedServiceResponse;
 		
 		/// <summary>
-		/// Occurs when the service state changes.
+		/// Occurs when the state of the <see cref="ServiceHelper"/> is changed.
 		/// </summary>
-		public event EventHandler<EventArgs<ObjectState<ServiceState>>> ServiceStateChanged;
+        [Category("Service"), 
+        Description("Occurs when the state of the ServiceHelper is changed.")]
+        public event EventHandler<EventArgs<ObjectState<ServiceState>>> ServiceStateChanged;
 		
 		/// <summary>
-		/// Occurs when the state of a process changes.
+		/// Occurs when the state of a <see cref="ServiceProcess"/> is changed.
 		/// </summary>
-		public event EventHandler<EventArgs<ObjectState<ProcessState>>> ProcessStateChanged;
+        [Category("Service"), 
+        Description("Occurs when the state of a ServiceProcess is changed.")]
+        public event EventHandler<EventArgs<ObjectState<ServiceProcessState>>> ProcessStateChanged;
 		
 		/// <summary>
 		/// Occurs when a remote command session has been established.
 		/// </summary>
-		public event EventHandler CommandSessionEstablished;	
+		[Category("Command"),
+        Description("Occurs when a remote command session has been established.")]
+        public event EventHandler CommandSessionEstablished;	
 		
 		/// <summary>
 		/// Occurs when a remote command session has been terminated.
 		/// </summary>
-		public event EventHandler CommandSessionTerminated;
+        [Category("Command"),
+        Description("Occurs when a remote command session has been terminated.")]
+        public event EventHandler CommandSessionTerminated;
 
         // Fields
-		private string m_serviceName;
-		private bool m_persistSettings;
-		private string m_settingsCategory;		
 		private ClientBase m_remotingClient;
         private bool m_disposed;
 		
         #endregion
 
         #region [ Constructors ]
-		
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientHelper"/> class.
+        /// </summary>
         public ClientHelper()
-		{
-			m_serviceName = DefaultServiceName;
-			m_persistSettings = DefaultPersistSettings;
-			m_settingsCategory = DefaultSettingsCategoryName;
-		}
+            : base()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientHelper"/> class.
+        /// </summary>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="ClientHelper"/>.</param>
+        public ClientHelper(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
 
         #endregion
 
         #region [ Properties ]
 
-        [Category("Service"), DefaultValue(DefaultServiceName)]
-        public string ServiceName
-        {
-            get
-            {
-                return m_serviceName;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    m_serviceName = value;
-                else
-                    throw new ArgumentNullException("ServiceName");
-            }
-        }
-
         /// <summary>
-        /// Gets or sets the instance of TCP client used for communicating with the service.
+        /// Gets or sets the <see cref="ClientBase"/> object used for communicating with the <see cref="ServiceHelper"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>An instance of TCP client.</returns>
-        [Category("Service")]
+        [Category("Components"),
+        Description("ClientBase object used for communicating with the ServiceHelper.")]
         public ClientBase RemotingClient
         {
             get
@@ -140,9 +127,9 @@ namespace PCS.Services
                 if (m_remotingClient != null)
                 {
                     // Detach events from any existing instance
-                    m_remotingClient.ConnectionEstablished -= m_remotingClient_Connected;
-                    m_remotingClient.ConnectionAttempt -= m_remotingClient_Connecting;
-                    m_remotingClient.ConnectionTerminated -= m_remotingClient_Disconnected;
+                    m_remotingClient.ConnectionEstablished -= m_remotingClient_ConnectionEstablished;
+                    m_remotingClient.ConnectionAttempt -= m_remotingClient_ConnectionAttempt;
+                    m_remotingClient.ConnectionTerminated -= m_remotingClient_ConnectionTerminated;
                     m_remotingClient.ReceiveDataComplete -= m_remotingClient_ReceiveDataComplete;
                 }
 
@@ -151,111 +138,41 @@ namespace PCS.Services
                 if (m_remotingClient != null)
                 {
                     // Attach events to new instance
-                    m_remotingClient.ConnectionEstablished += m_remotingClient_Connected;
-                    m_remotingClient.ConnectionAttempt += m_remotingClient_Connecting;
-                    m_remotingClient.ConnectionTerminated += m_remotingClient_Disconnected;
+                    m_remotingClient.ConnectionEstablished += m_remotingClient_ConnectionEstablished;
+                    m_remotingClient.ConnectionAttempt += m_remotingClient_ConnectionAttempt;
+                    m_remotingClient.ConnectionTerminated += m_remotingClient_ConnectionTerminated;
                     m_remotingClient.ReceiveDataComplete += m_remotingClient_ReceiveDataComplete;
                 }
-            }
-        }
-
-        [Category("Persistance"), DefaultValue(DefaultPersistSettings)]
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        [Category("Persistance"), DefaultValue(DefaultSettingsCategoryName)]
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    m_settingsCategory = value;
-                else
-                    throw new ArgumentNullException("SettingsCategoryName");
             }
         }
 
         #endregion
 
         #region [ Methods ]
-				
-		/// <summary>
-		/// Releases the unmanaged resources used by an instance of the <see cref="ClientHelper" /> class and optionally releases the managed resources.
-		/// </summary>
-		/// <param name="disposing"><strong>true</strong> to release both managed and unmanaged resources; <strong>false</strong> to release only unmanaged resources.</param>
-		protected override void Dispose(bool disposing)
-		{
-			if (!m_disposed)
-			{
-			    try
-			    {			
-				    if (disposing)
-				    {
-				        Disconnect();
-				        SaveSettings();
-
-                        // Detach any remoting client events, we don't own this component so we don't dispose it
-                        RemotingClient = null;
-				    }
-			    }
-			    finally
-			    {
-			    	base.Dispose(disposing);    // Call base class Dispose().
-				    m_disposed = true;          // Prevent duplicate dispose.
-			    }
-			}
-		}
 
         /// <summary>
-        /// Attempts to connect to the service.
+        /// Connects <see cref="RemotingClient"/> to <see cref="ServiceHelper.RemotingServer"/>.
         /// </summary>
-        /// <remarks>This method must be called in order to establish connection with the service.</remarks>
         public void Connect()
         {
-            if (m_remotingClient != null)
-            {
-                StringBuilder status = new StringBuilder();
+            if (m_remotingClient == null)
+                throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set.");
 
-                status.AppendFormat("Connecting to {0} [{1}]", m_serviceName, DateTime.Now.ToString());
-                status.AppendLine();
-                status.Append(".");
-                status.AppendLine();
-                status.Append(".");
-
-                UpdateStatus(status.ToString(), 1);
-
-                // JRC: Disabled override of remoting client handshake operations since ClientHelper doesn't
-                // own remoting server - consumer does - and they may have specially defined transport options                
-                //m_remotingClient.Handshake = true;
-                //m_remotingClient.HandshakePassphrase = m_serviceName;
-
-                // Initiate connection to the service's communication server.
-                m_remotingClient.Connect();
-            }
-            else
-            {
-                UpdateStatus(string.Format("Cannot connect to {0}. No communication client is specified.", m_serviceName));
-            }
+            m_remotingClient.Connect();
         }
 
+        /// <summary>
+        /// Disconnects <see cref="RemotingClient"/> from <see cref="ServiceHelper.RemotingServer"/>.
+        /// </summary>
         public void Disconnect()
         {
             m_remotingClient.Disconnect();
         }
 
+        /// <summary>
+        /// Sends a request to the <see cref="ServiceHelper"/> using <see cref="RemotingClient"/>.
+        /// </summary>
+        /// <param name="request">Request text to be sent.</param>
         public void SendRequest(string request)
         {
             ClientRequest requestInstance = ClientRequest.Parse(request);
@@ -263,132 +180,91 @@ namespace PCS.Services
             if (requestInstance != null)
                 SendRequest(requestInstance);
             else
-                UpdateStatus(string.Format("Request command \"{0}\" is invalid", request), ServiceHelper.UpdateCrlfCount);
+                UpdateStatus(string.Format("Request command \"{0}\" is invalid\r\n\r\b", request));
         }
 
         /// <summary>
-        /// Sends a request to the service.
+        /// Sends a request to the <see cref="ServiceHelper"/> using <see cref="RemotingClient"/>.
         /// </summary>
-        /// <param name="request">The request to be sent to the service.</param>
+        /// <param name="request"><see cref="ClientRequest"/> object to be sent.</param>
         public void SendRequest(ClientRequest request)
         {
-            m_remotingClient.Send(request);
+            m_remotingClient.SendAsync(request);
         }
 
-        public void UpdateStatus(string message)
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ClientHelper"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
         {
-            UpdateStatus(message, 0);
-        }
-
-        public void UpdateStatus(string message, int crlfCount)
-        {
-            StringBuilder status = new StringBuilder();
-
-            status.Append(message);
-
-            for (int i = 0; i <= crlfCount - 1; i++)
-            {
-                status.AppendLine();
-            }
-
-            if (UpdateClientStatus != null)
-                UpdateClientStatus(this, new EventArgs<string>(status.ToString()));
-        }
-
-        public void LoadSettings()
-        {
-            try
-            {
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-
-                if (settings.Count > 0)
-                {
-                    ServiceName = settings["ServiceName"].ValueAs(m_serviceName);
-                }
-            }
-            catch
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
+            if (!m_disposed)
             {
                 try
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    CategorizedSettingsElement setting;
-
-                    settings.Clear();
-                    setting = settings["ServiceName", true];
-                    setting.Value = m_serviceName;
-                    setting.Description = "";
-
-                    ConfigurationFile.Current.Save();
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        RemotingClient = null;
+                    }
                 }
-                catch
+                finally
                 {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
         }
 
-        public void BeginInit()
+        private void UpdateStatus(string message, params object[] args)
         {
-            // We don't need to do anything before the component is initialized.
+            OnReceivedServiceUpdate(string.Format(message, args));
         }
 
-        public void EndInit()
+        private void m_remotingClient_ConnectionAttempt(object sender, System.EventArgs e)
         {
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
-            {
-                LoadSettings(); // Load settings from the config file.
-            }
+            UpdateStatus("Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
         }
 
-        private void m_remotingClient_Connected(object sender, System.EventArgs e)
+        private void m_remotingClient_ConnectionEstablished(object sender, System.EventArgs e)
         {
             // Upon establishing connection with the service's communication client, we'll send our information to the
             // service so the service can keep track of all the client that are connected to its communication server.
-            m_remotingClient.Send(new ClientInfo(m_remotingClient.ClientID));
+            m_remotingClient.Send(new ClientInfo());
 
             StringBuilder status = new StringBuilder();
 
-            status.AppendFormat("Connected to {0} [{1}]", m_serviceName, DateTime.Now.ToString());
+            status.AppendFormat("Connected to {0}:", m_remotingClient.ServerUri);
             status.AppendLine();
             status.AppendLine();
             status.Append(m_remotingClient.Status);
+            status.AppendLine();
 
-            UpdateStatus(status.ToString(), 1);
+            UpdateStatus(status.ToString());
         }
-
-        private void m_remotingClient_Connecting(object sender, System.EventArgs e)
-        {
-            UpdateStatus(".", 1);
-        }
-
-        private void m_remotingClient_Disconnected(object sender, System.EventArgs e)
+       
+        private void m_remotingClient_ConnectionTerminated(object sender, System.EventArgs e)
         {
             StringBuilder status = new StringBuilder();
 
-            status.AppendFormat("Disconnected from {0} [{1}]", m_serviceName, DateTime.Now.ToString());
+            status.AppendFormat("Disconnected from {0}:", m_remotingClient.ServerUri);
             status.AppendLine();
             status.AppendLine();
             status.Append(m_remotingClient.Status);
+            status.AppendLine();
 
-            UpdateStatus(status.ToString(), 1);
+            UpdateStatus(status.ToString());
         }
 
         private void m_remotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
-            ServiceResponse response = Serialization.GetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2));
+            ServiceResponse response = null;
+            Serialization.TryGetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), out response);
 
             if (response != null)
             {
-                if (ReceivedServiceResponse != null)
-                    ReceivedServiceResponse(this, new EventArgs<ServiceResponse>(response));
+                OnReceivedServiceResponse(response);
 
                 switch (response.Type)
                 {
@@ -403,25 +279,23 @@ namespace PCS.Services
                             if (state != null)
                             {
                                 // Notify change in service state by raising the ServiceStateChanged event.
-                                if (ServiceStateChanged != null)
-                                    ServiceStateChanged(this, new EventArgs<ObjectState<ServiceState>>(state));
+                                OnServiceStateChanged(state);
 
-                                UpdateStatus(string.Format("State of service \"{0}\" has changed to \"{1}\".", state.ObjectName, state.CurrentState), ServiceHelper.UpdateCrlfCount);
+                                UpdateStatus(string.Format("State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
                             }
                         }
                         break;
                     case "PROCESSSTATECHANGED":
                         if (response.Attachments.Count > 0)
                         {
-                            ObjectState<ProcessState> state = response.Attachments[0] as ObjectState<ProcessState>;
+                            ObjectState<ServiceProcessState> state = response.Attachments[0] as ObjectState<ServiceProcessState>;
 
                             if (state != null)
                             {
                                 // Notify change in process state by raising the ProcessStateChanged event.
-                                if (ProcessStateChanged != null)
-                                    ProcessStateChanged(this, new EventArgs<ObjectState<ProcessState>>(state));
+                                OnProcessStateChanged(state);
 
-                                UpdateStatus(string.Format("State of process \"{0}\" has changed to \"{1}\".", state.ObjectName, state.CurrentState), ServiceHelper.UpdateCrlfCount);
+                                UpdateStatus(string.Format("State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
                             }
                         }
                         break;
@@ -429,17 +303,73 @@ namespace PCS.Services
                         switch (response.Message.ToUpper())
                         {
                             case "ESTABLISHED":
-                                if (CommandSessionEstablished != null)
-                                    CommandSessionEstablished(this, EventArgs.Empty);
+                                OnCommandSessionEstablished();
                                 break;
                             case "TERMINATED":
-                                if (CommandSessionTerminated != null)
-                                    CommandSessionTerminated(this, EventArgs.Empty);
+                                OnCommandSessionTerminated();
                                 break;
                         }
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceivedServiceUpdate"/> event.
+        /// </summary>
+        /// <param name="update">Update message received.</param>
+        protected virtual void OnReceivedServiceUpdate(string update)
+        {
+            if (ReceivedServiceUpdate != null)
+                ReceivedServiceUpdate(this, new EventArgs<string>(update));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceivedServiceResponse"/> event.
+        /// </summary>
+        /// <param name="response"><see cref="ServiceResponse"/> received.</param>
+        protected virtual void OnReceivedServiceResponse(ServiceResponse response)
+        {
+            if (ReceivedServiceResponse != null)
+                ReceivedServiceResponse(this, new EventArgs<ServiceResponse>(response));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServiceStateChanged"/> event.
+        /// </summary>
+        /// <param name="state">New <see cref="ServiceState"/>.</param>
+        protected virtual void OnServiceStateChanged(ObjectState<ServiceState> state)
+        {
+            if (ServiceStateChanged != null)
+                ServiceStateChanged(this, new EventArgs<ObjectState<ServiceState>>(state));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ProcessStateChanged"/> event.
+        /// </summary>
+        /// <param name="state">New <see cref="ServiceProcessState"/>.</param>
+        protected virtual void OnProcessStateChanged(ObjectState<ServiceProcessState> state)
+        {
+            if (ProcessStateChanged != null)
+                ProcessStateChanged(this, new EventArgs<ObjectState<ServiceProcessState>>(state));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="CommandSessionEstablished"/> event.
+        /// </summary>
+        protected virtual void OnCommandSessionEstablished()
+        {
+            if (CommandSessionEstablished != null)
+                CommandSessionEstablished(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="CommandSessionTerminated"/> event.
+        /// </summary>
+        protected virtual void OnCommandSessionTerminated()
+        {
+            if (CommandSessionTerminated != null)
+                CommandSessionTerminated(this, EventArgs.Empty);
         }
 
         #endregion
