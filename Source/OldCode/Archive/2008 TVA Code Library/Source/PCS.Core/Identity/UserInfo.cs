@@ -373,6 +373,16 @@ namespace PCS.Identity
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="DirectoryEntry"/> object used for retrieving user information.
+        /// </summary>
+        public DirectoryEntry UserEntry
+        {
+            get
+            {
+                return m_userEntry;
+            }
+        }
 
         #endregion
 
