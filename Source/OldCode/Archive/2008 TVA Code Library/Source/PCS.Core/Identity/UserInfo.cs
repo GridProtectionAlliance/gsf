@@ -122,16 +122,15 @@ namespace PCS.Identity
         {
             string[] parts = loginID.Split('\\');
 
-            if (parts.Length == 2)
-            {
-                m_domain = parts[0];
-                m_username = parts[1];
-                m_settingsCategory = this.GetType().Name;
-            }
-            else
-            {
-                throw new ArgumentException("Expected login ID in format of domain\\username.");
-            }
+            if (parts.Length != 2)
+                throw new ArgumentException("Expected login ID in format of 'domain\\username'.");
+
+            if (string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
+                throw new ArgumentException("Expected login ID in format of 'domain\\username'.");
+
+            m_domain = parts[0];
+            m_username = parts[1];
+            m_settingsCategory = this.GetType().Name;
         }
 
         /// <summary>
