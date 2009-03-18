@@ -424,7 +424,9 @@ namespace PCS.Identity
                     using (DirectorySearcher searcher = new DirectorySearcher(entry))
                     {
                         searcher.Filter = "(SAMAccountName=" + m_username + ")";
-                        m_userEntry = searcher.FindOne().GetDirectoryEntry();
+                        SearchResult result = searcher.FindOne();
+                        if (result != null)
+                            m_userEntry = result.GetDirectoryEntry();
                     }
                 }
                 catch
