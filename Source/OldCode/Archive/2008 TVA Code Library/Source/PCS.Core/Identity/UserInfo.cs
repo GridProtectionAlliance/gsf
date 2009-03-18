@@ -419,7 +419,7 @@ namespace PCS.Identity
                     // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
                     // This is done to overcome "The server is not operational" COM exception that was being
                     // encountered when a domain name was being specified.
-                    DirectoryEntry entry = new DirectoryEntry();
+                    DirectoryEntry entry = new DirectoryEntry("LDAP://" + m_domain);
 
                     using (DirectorySearcher searcher = new DirectorySearcher(entry))
                     {
