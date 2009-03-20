@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  10/01/2008 - J. Ritchie Carroll
 //       Converted to C# extensions.
+//  03/20/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -23,6 +25,9 @@ using System.Reflection;
 
 namespace PCS.Windows.Forms
 {
+    /// <summary>
+    /// Defines extension functions for the <see cref="PropertyGrid"/> control.
+    /// </summary>
     public static class PropertyGridExtensions
     {
         /// <summary>
