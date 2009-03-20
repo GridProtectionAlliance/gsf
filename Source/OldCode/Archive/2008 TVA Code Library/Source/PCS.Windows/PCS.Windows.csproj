@@ -63,33 +63,32 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Forms\AboutDialog.Designer.cs">
-      <DependentUpon>AboutDialog.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Forms\PropertyGridExtensions.cs" />
     <Compile Include="Forms\AboutDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\PropertyGridExtensions.cs" />
+    <Compile Include="Forms\AboutDialog.Designer.cs">
+      <DependentUpon>AboutDialog.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\AboutDialog.resx">
-      <SubType>Designer</SubType>
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\PCS.Windows.Forms.TVALogo.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\PCS.Windows.Forms.Disclaimer.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PCS.Core\PCS.Core.csproj">
       <Project>{D56CCB1A-E38C-4FCE-97AD-9BDA76C123B4}</Project>
       <Name>PCS.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Forms\PCSDisclaimer.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Forms\PCSLogo.bmp" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
