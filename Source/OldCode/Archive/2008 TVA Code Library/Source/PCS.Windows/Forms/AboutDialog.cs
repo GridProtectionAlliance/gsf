@@ -230,8 +230,6 @@ namespace PCS.Windows.Forms
                 ComboBoxAssemblies.SelectedIndex = 0;
         }
 
-        #endregion
-
         private void PictureBoxLogo_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(m_url))
@@ -264,5 +262,7 @@ namespace PCS.Windows.Forms
             Close();
             Dispose();
         }
+
+        #endregion
     }
 }
