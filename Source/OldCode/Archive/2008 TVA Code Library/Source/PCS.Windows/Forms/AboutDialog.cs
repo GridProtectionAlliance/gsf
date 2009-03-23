@@ -53,7 +53,7 @@ namespace PCS.Windows.Forms
         {
             InitializeComponent();
 
-            AssemblyInfo executingAssembly = new AssemblyInfo(Assembly.GetExecutingAssembly());
+            AssemblyInfo executingAssembly = AssemblyInfo.ExecutingAssembly;
             SetCompanyUrl("http://www.tva.gov");
             SetCompanyLogo(executingAssembly.GetEmbeddedResource("PCS.Windows.Forms.PCSLogo.bmp"));
             SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("PCS.Windows.Forms.PCSDisclaimer.txt"));

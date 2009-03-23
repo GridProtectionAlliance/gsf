@@ -476,7 +476,24 @@ namespace PCS.Reflection
         {
             get
             {
-                if (m_callingAssembly == null) m_callingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
+                if (m_callingAssembly == null)
+                {
+                    // We have to find the calling assembly of the caller.
+                    StackTrace trace = new StackTrace();
+                    Assembly caller = Assembly.GetCallingAssembly();
+                    Assembly current = Assembly.GetExecutingAssembly();
+                    foreach (StackFrame frame in trace.GetFrames())
+                    {
+                        Assembly assembly = Assembly.GetAssembly(frame.GetMethod().DeclaringType);
+                        if (assembly != caller && assembly != current)
+                        {
+                            // Assembly is neither the current assembly or the calling assembly.
+                            m_callingAssembly = new AssemblyInfo(assembly);
+                            break;
+                        }
+                    }
+                }
+
                 return m_callingAssembly;
             }
         }
@@ -487,7 +504,9 @@ namespace PCS.Reflection
         {
             get
             {
-                if (m_entryAssembly == null) m_entryAssembly = new AssemblyInfo(Assembly.GetEntryAssembly());
+                if (m_entryAssembly == null)
+                    m_entryAssembly = new AssemblyInfo(Assembly.GetEntryAssembly());
+
                 return m_entryAssembly;
             }
         }
@@ -498,7 +517,10 @@ namespace PCS.Reflection
         {
             get
             {
-                if (m_executingAssembly == null) m_executingAssembly = new AssemblyInfo(Assembly.GetExecutingAssembly());
+                if (m_executingAssembly == null) 
+                    // Caller's assembly will be the executing assembly for the caller.
+                    m_executingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
+
                 return m_executingAssembly;
             }
         }
