@@ -553,11 +553,14 @@ namespace PCS.Identity
                                                      m_previlegedPassword);
                 }
 
-                return m_userEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
+                if (m_userEntry == null)
+                    return string.Empty;
+                else
+                    return m_userEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
             }
             catch
             {
-                return "";
+                return string.Empty;
             }
             finally
             {
