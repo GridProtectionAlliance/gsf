@@ -1,75 +1,95 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  Common.vb - Common FNet declarations and functions
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Common.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian (Ryan) Zuo
-//       Initial version of source generated
+//  02/08/2007 - James R Carroll & Jian (Ryan) Zuo
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
-namespace PCS.PhasorProtocols
+using System;
+using System.Diagnostics.CodeAnalysis;
+
+namespace PCS.PhasorProtocols.FNet
 {
-    namespace FNet
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// F-NET data elements enumeration structure.
+    /// </summary>
+    [SuppressMessage("Microsoft.Performance", "CA1815")] // This is a structure to avoid having to cast when using elements as an index
+    public struct Element
     {
+        public const int UnitID = 0;
+        public const int Date = 1;
+        public const int Time = 2;
+        public const int SampleIndex = 3;
+        public const int Analog = 4;
+        public const int Frequency = 5;
+        public const int Voltage = 6;
+        public const int Angle = 7;
+    }
 
-        [CLSCompliant(false)]
-        public sealed class Common
-        {
+    #endregion
 
+    /// <summary>
+    /// Common F-NET declarations and functions.
+    /// </summary>
+    public static class Common
+    {
+        /// <summary>
+        /// F-NET data frame start byte.
+        /// </summary>
+        public const byte StartByte = 0x1;
 
-            private Common()
-            {
+        /// <summary>
+        /// F-NET data frame start byte.
+        /// </summary>
+        public const byte EndByte = 0x0;
 
-                // This class contains only global functions and is not meant to be instantiated
+        /// <summary>
+        /// Absolute maximum number of possible phasor values that could fit into a data frame.
+        /// </summary>
+        public const int MaximumPhasorValues = 1;
 
-            }
+        /// <summary>
+        /// Absolute maximum number of possible analog values that could fit into a data frame.
+        /// </summary>
+        /// <remarks>F-NET doesn't support analog values.</remarks>
+        public const int MaximumAnalogValues = 0;
 
-            /// <summary>FNET data frame start byte</summary>
-            public const byte StartByte = 0x1;
+        /// <summary>
+        /// Absolute maximum number of possible digital values that could fit into a data frame.
+        /// </summary>
+        /// <remarks>F-NET doesn't support digital values.</remarks>
+        public const int MaximumDigitalValues = 0;
 
-            /// <summary>FNET data frame start byte</summary>
-            public const byte EndByte = 0x0;
+        /// <summary>
+        /// Default frame rate for F-NET devices is 10 frames per second.
+        /// </summary>
+        public const short DefaultFrameRate = 10;
 
-            /// <summary>Absolute maximum number of possible phasor values that could fit into a data frame</summary>
-            public const int MaximumPhasorValues = 1;
+        /// <summary>
+        /// Default nominal frequency for F-NET devices is 60Hz.
+        /// </summary>
+        public const LineFrequency DefaultNominalFrequency = LineFrequency.Hz60;
 
-            /// <summary>Absolute maximum number of possible analog values that could fit into a data frame</summary>
-            /// <remarks>FNET doesn't support analog values</remarks>
-            public const int MaximumAnalogValues = 0;
+        /// <summary>
+        /// Default real-time ticks offset for F-NET.
+        /// </summary>
+        public const long DefaultTimeOffset = 110000000;
 
-            /// <summary>Absolute maximum number of possible digital values that could fit into a data frame</summary>
-            /// <remarks>FNET doesn't support digital values</remarks>
-            public const int MaximumDigitalValues = 0;
-
-            /// <summary>Default frame rate for FNET devices is 10 frames per second</summary>
-            public const short DefaultFrameRate = 10;
-
-            /// <summary>Default nominal frequency for FNET devices is 60Hz</summary>
-            public const LineFrequency DefaultNominalFrequency = LineFrequency.Hz60;
-
-            /// <summary>Default real-time ticks offset for FNET</summary>
-            public const long DefaultTicksOffset = 110000000;
-
-        }
-
+        /// <summary>
+        /// Default F-NET station name.
+        /// </summary>
+        public const string DefaultStationName = "F-NET Unit";
     }
 }

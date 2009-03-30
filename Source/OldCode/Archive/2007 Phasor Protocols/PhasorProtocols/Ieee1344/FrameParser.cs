@@ -244,7 +244,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Casts the parsed <see cref="IChannelFrame"/> to its specific implementation (i.e., <see cref="IDataFrame"/>, <see cref="IConfigurationFrame"/>, <see cref="ICommandFrame"/> or <see cref="IHeaderFrame"/>).
+        /// Casts the parsed <see cref="IChannelFrame"/> to its specific implementation (i.e., <see cref="DataFrame"/>, <see cref="ConfigurationFrame"/>, <see cref="CommandFrame"/> or <see cref="HeaderFrame"/>).
         /// </summary>
         /// <param name="frame"><see cref="IChannelFrame"/> that was parsed by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> that implements protocol specific common frame header interface.</param>
         protected override void OnReceivedChannelFrame(IChannelFrame frame)
@@ -331,7 +331,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // allow the same configuration frame to be used for any protocol implementation
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
-            // See if frame is already a IEEE 1344 frame (if so, we don't need to do any work)
+            // See if frame is already an IEEE 1344 frame (if so, we don't need to do any work)
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
             if (derivedFrame == null)
@@ -366,6 +366,12 @@ namespace PCS.PhasorProtocols.Ieee1344
                     {
                         derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
                     }
+
+                    // Add cell to frame
+                    derivedFrame.Cells.Add(derivedCell);
+
+                    // IEEE-1344 only supports one cell
+                    break;
                 }
             }
 

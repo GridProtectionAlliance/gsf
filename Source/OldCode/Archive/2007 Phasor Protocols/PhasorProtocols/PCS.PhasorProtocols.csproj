@@ -107,6 +107,20 @@
     <Compile Include="CommandFrameBase.cs" />
     <Compile Include="ChannelValueMeasurement.cs" />
     <Compile Include="ConnectionParametersBase.cs" />
+    <Compile Include="FNet\Common.cs" />
+    <Compile Include="FNet\CommonFrameHeader.cs" />
+    <Compile Include="FNet\ConfigurationCell.cs" />
+    <Compile Include="FNet\ConfigurationCellCollection.cs" />
+    <Compile Include="FNet\ConfigurationFrame.cs" />
+    <Compile Include="FNet\ConnectionParameters.cs" />
+    <Compile Include="FNet\DataCell.cs" />
+    <Compile Include="FNet\DataCellCollection.cs" />
+    <Compile Include="FNet\DataFrame.cs" />
+    <Compile Include="FNet\FrameParser.cs" />
+    <Compile Include="FNet\FrequencyDefinition.cs" />
+    <Compile Include="FNet\FrequencyValue.cs" />
+    <Compile Include="FNet\PhasorDefinition.cs" />
+    <Compile Include="FNet\PhasorValue.cs" />
     <Compile Include="FrameParserBase.cs" />
     <Compile Include="IConnectionParameters.cs" />
     <Compile Include="Ieee1344\CommandFrame.cs">
@@ -161,6 +175,27 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Ieee1344\PhasorValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IeeeC37_118\AnalogDefinition.cs" />
+    <Compile Include="IeeeC37_118\AnalogValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IeeeC37_118\Common.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IeeeC37_118\ConfigurationCellCollection.cs" />
+    <Compile Include="IeeeC37_118\DataCell.cs" />
+    <Compile Include="IeeeC37_118\DataCellCollection.cs" />
+    <Compile Include="IeeeC37_118\DigitalValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IeeeC37_118\FrequencyDefinition.cs" />
+    <Compile Include="IeeeC37_118\FrequencyValue.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IeeeC37_118\PhasorDefinition.cs" />
+    <Compile Include="IeeeC37_118\PhasorValue.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="IFrameParser.cs" />

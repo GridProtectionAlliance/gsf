@@ -1,133 +1,112 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  PhasorValue.vb - FNet Phasor value
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  PhasorValue.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian (Ryan) Zuo
-//       Initial version of source generated
+//  02/08/2007 - James R Carroll & Jian (Ryan) Zuo
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
+using System.Units;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.FNet
 {
-    namespace FNet
+    /// <summary>
+    /// Represents the F-NET implementation of a <see cref="IPhasorValue"/>.
+    /// </summary>
+    [Serializable()]
+    public class PhasorValue : PhasorValueBase
     {
+        #region [ Constructors ]
 
-        [CLSCompliant(false), Serializable()]
-        public class PhasorValue : PhasorValueBase
+        /// <summary>
+        /// Creates a new <see cref="PhasorValue"/>.
+        /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValue"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
+        public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition)
+            : base(parent, phasorDefinition)
         {
-
-
-
-            public static PhasorValue CreateFromPolarValues(IDataCell parent, IPhasorDefinition phasorDefinition, float angle, float magnitude)
-            {
-
-                return (PhasorValue)PhasorValueBase.CreateFromPolarValues(CreateNewPhasorValue, parent, phasorDefinition, angle, magnitude);
-
-            }
-
-            public static PhasorValue CreateFromRectangularValues(IDataCell parent, IPhasorDefinition phasorDefinition, float real, float imaginary)
-            {
-
-                return (PhasorValue)PhasorValueBase.CreateFromRectangularValues(CreateNewPhasorValue, parent, phasorDefinition, real, imaginary);
-
-            }
-
-            public static PhasorValue CreateFromUnscaledRectangularValues(IDataCell parent, IPhasorDefinition phasorDefinition, short real, short imaginary)
-            {
-
-                return (PhasorValue)PhasorValueBase.CreateFromUnscaledRectangularValues(CreateNewPhasorValue, parent, phasorDefinition, real, imaginary);
-
-            }
-
-            private static IPhasorValue CreateNewPhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition, float real, float imaginary)
-            {
-
-                return new PhasorValue(parent, phasorDefinition, real, imaginary);
-
-            }
-
-            protected PhasorValue()
-            {
-            }
-
-            protected PhasorValue(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition, float real, float imaginary)
-                : base(parent, phasorDefinition, real, imaginary)
-            {
-
-
-            }
-
-            public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition, short unscaledReal, short unscaledImaginary)
-                : base(parent, phasorDefinition, unscaledReal, unscaledImaginary)
-            {
-
-
-            }
-
-            public PhasorValue(IDataCell parent, IPhasorDefinition phasorDefinition, IPhasorValue phasorValue)
-                : base(parent, phasorDefinition, phasorValue)
-            {
-
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new DataCell Parent
-            {
-                get
-                {
-                    return (DataCell)base.Parent;
-                }
-            }
-
-            public new PhasorDefinition Definition
-            {
-                get
-                {
-                    return (PhasorDefinition)base.Definition;
-                }
-                set
-                {
-                    base.Definition = value;
-                }
-            }
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="PhasorValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
+        /// <param name="real">The real value of this <see cref="PhasorValue"/>.</param>
+        /// <param name="imaginary">The imaginary value of this <see cref="PhasorValue"/>.</param>
+        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, double real, double imaginary)
+            : base(parent, phasorDefinition, real, imaginary)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorValue"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.</param>
+        /// <param name="phasorDefinition">The <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
+        /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.</param>
+        /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValue"/>.</param>
+        public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, Angle angle, double magnitude)
+            : base(parent, phasorDefinition, angle, magnitude)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PhasorValue"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected PhasorValue(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.
+        /// </summary>
+        public virtual new DataCell Parent
+        {
+            get
+            {
+                return base.Parent as DataCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.
+        /// </summary>
+        public virtual new PhasorDefinition Definition
+        {
+            get
+            {
+                return base.Definition as PhasorDefinition;
+            }
+            set
+            {
+                base.Definition = value;
+            }
+        }
+
+        #endregion
     }
 }

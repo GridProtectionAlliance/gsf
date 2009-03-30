@@ -29,6 +29,15 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="DataCellCollection"/>.
+        /// </summary>
+        public DataCellCollection()
+            : base(0, true)
+        {
+            // IEEE 1344 only supports a single device - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
+        }
+
+        /// <summary>
         /// Creates a new <see cref="DataCellCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
@@ -36,15 +45,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         protected DataCellCollection(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DataCellCollection"/>.
-        /// </summary>
-        public DataCellCollection()
-            : base(0, true)
-        {
-            // IEEE 1344 only supports a single PMU - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
         }
 
         #endregion

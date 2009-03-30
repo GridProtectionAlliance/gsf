@@ -36,11 +36,11 @@ namespace PCS.PhasorProtocols
     public enum CommonStatusFlags
     {
         /// <summary>
-        /// Data is valid (0 when PMU data is valid, 1 when invalid or PMU is in test mode).
+        /// Data is valid (0 when device data is valid, 1 when invalid or device is in test mode).
         /// </summary>
         DataIsValid = Bit.Bit19,
         /// <summary>
-        /// Synchronization is valid (0 when in PMU is in sync, 1 when it is not).
+        /// Synchronization is valid (0 when in device is in sync, 1 when it is not).
         /// </summary>
         SynchronizationIsValid = Bit.Bit18,
         /// <summary>

@@ -1,304 +1,321 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using PhasorProtocols.IeeeC37_118.Common;
-
 //*******************************************************************************************************
-//  DataCell.vb - IEEE C37.118 PMU Data Cell
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  DataCell.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.IeeeC37_118
 {
-    namespace IeeeC37_118
+    /// <summary>
+    /// Represents the IEEE C37.118 implementation of a <see cref="IDataCell"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
+    public class DataCell : DataCellBase
     {
+        #region [ Constructors ]
 
-        // This data cell represents what most might call a "field" in table of rows - it is a single unit of data for a specific PMU
-        [CLSCompliant(false), Serializable()]
-        public class DataCell : DataCellBase
+        /// <summary>
+        /// Creates a new <see cref="DataCell"/>.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCell"/>.</param>
+        /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
+        public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
+            : base(parent, configurationCell, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
-
-
-
-            protected DataCell()
-            {
-            }
-
-            protected DataCell(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
-                : base(parent, false, configurationCell, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
-            {
-
-
-                int x;
-
-                // Initialize phasor values and frequency value with an empty value
-                for (x = 0; x <= ConfigurationCell.PhasorDefinitions.Count - 1; x++)
-                {
-                    PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x], float.NaN, float.NaN));
-                }
-
-                // Initialize frequency and df/dt
-                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition, float.NaN, float.NaN);
-
-                // Initialize analog values
-                for (x = 0; x <= ConfigurationCell.AnalogDefinitions.Count - 1; x++)
-                {
-                    AnalogValues.Add(new AnalogValue(this, ConfigurationCell.AnalogDefinitions[x], float.NaN));
-                }
-
-                // Initialize any digital values
-                for (x = 0; x <= ConfigurationCell.DigitalDefinitions.Count - 1; x++)
-                {
-                    DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x], -1));
-                }
-
-            }
-
-            public DataCell(IDataCell dataCell)
-                : base(dataCell)
-            {
-
-
-            }
-
-            public DataCell(IDataFrame parent, DataFrameParsingState state, int index, byte[] binaryImage, int startIndex)
-                : base(parent, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues, new DataCellParsingState(state.ConfigurationFrame.Cells[index], PhasorValue.CreateNewPhasorValue, IeeeC37_118.FrequencyValue.CreateNewFrequencyValue, AnalogValue.CreateNewAnalogValue, DigitalValue.CreateNewDigitalValue), binaryImage, startIndex)
-            {
-
-
-            }
-
-            internal static IDataCell CreateNewDataCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex)
-            {
-
-                return new DataCell((IDataFrame)parent, (DataFrameParsingState)state, index, binaryImage, startIndex);
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new DataFrame Parent
-            {
-                get
-                {
-                    return (DataFrame)base.Parent;
-                }
-            }
-
-            public new ConfigurationCell ConfigurationCell
-            {
-                get
-                {
-                    return (ConfigurationCell)base.ConfigurationCell;
-                }
-                set
-                {
-                    base.ConfigurationCell = value;
-                }
-            }
-
-            public new StatusFlags StatusFlags
-            {
-                get
-                {
-                    return (StatusFlags)base.StatusFlags & ~(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask);
-                }
-                set
-                {
-                    base.StatusFlags = (short)((base.StatusFlags & (short)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
-                }
-            }
-
-            public UnlockedTime UnlockedTime
-            {
-                get
-                {
-                    return (UnlockedTime)(base.StatusFlags & (short)StatusFlags.UnlockedTimeMask);
-                }
-                set
-                {
-                    base.StatusFlags = (short)((base.StatusFlags & ~(short)StatusFlags.UnlockedTimeMask) | (ushort)value);
-                    SynchronizationIsValid = (value == IeeeC37_118.UnlockedTime.SyncLocked);
-                }
-            }
-
-            public TriggerReason TriggerReason
-            {
-                get
-                {
-                    return (TriggerReason)(base.StatusFlags & (short)StatusFlags.TriggerReasonMask);
-                }
-                set
-                {
-                    base.StatusFlags = (short)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
-                    PmuTriggerDetected = (value != IeeeC37_118.TriggerReason.Manual);
-                }
-            }
-
-            public override bool DataIsValid
-            {
-                get
-                {
-                    return (StatusFlags & IeeeC37_118.StatusFlags.DataIsValid) == 0;
-                }
-                set
-                {
-                    if (value)
-                    {
-                        StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DataIsValid;
-                    }
-                    else
-                    {
-                        StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DataIsValid;
-                    }
-                }
-            }
-
-            public override bool SynchronizationIsValid
-            {
-                get
-                {
-                    return (StatusFlags & IeeeC37_118.StatusFlags.PmuSynchronizationError) == 0;
-                }
-                set
-                {
-                    if (value)
-                    {
-                        StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.PmuSynchronizationError;
-                    }
-                    else
-                    {
-                        StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.PmuSynchronizationError;
-                    }
-                }
-            }
-
-            public override bool PmuError
-            {
-                get
-                {
-                    return (StatusFlags & IeeeC37_118.StatusFlags.PmuError) > 0;
-                }
-                set
-                {
-                    if (value)
-                    {
-                        StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.PmuError;
-                    }
-                    else
-                    {
-                        StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.PmuError;
-                    }
-                }
-            }
-
-            public override DataSortingType DataSortingType
-            {
-                get
-                {
-                    return (((StatusFlags & IeeeC37_118.StatusFlags.DataSortingType) == 0) ? PhasorProtocols.DataSortingType.ByTimestamp : PhasorProtocols.DataSortingType.ByArrival);
-                }
-                set
-                {
-                    if (value == PhasorProtocols.DataSortingType.ByTimestamp)
-                    {
-                        StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DataSortingType;
-                    }
-                    else
-                    {
-                        StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DataSortingType;
-                    }
-                }
-            }
-
-            public bool PmuTriggerDetected
-            {
-                get
-                {
-                    return (StatusFlags & IeeeC37_118.StatusFlags.PmuTriggerDetected) > 0;
-                }
-                set
-                {
-                    if (value)
-                    {
-                        StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.PmuTriggerDetected;
-                    }
-                    else
-                    {
-                        StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.PmuTriggerDetected;
-                    }
-                }
-            }
-
-            public bool ConfigurationChangeDetected
-            {
-                get
-                {
-                    return (StatusFlags & IeeeC37_118.StatusFlags.ConfigurationChanged) > 0;
-                }
-                set
-                {
-                    if (value)
-                    {
-                        StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.ConfigurationChanged;
-                    }
-                    else
-                    {
-                        StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.ConfigurationChanged;
-                    }
-                }
-            }
-
-            public override Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    Dictionary<string, string> baseAttributes = base.Attributes;
-
-                    baseAttributes.Add("Unlocked Time", (int)UnlockedTime + ": " + UnlockedTime);
-                    baseAttributes.Add("PMU Trigger Detected", PmuTriggerDetected.ToString());
-                    baseAttributes.Add("Trigger Reason", (int)TriggerReason + ": " + TriggerReason);
-                    baseAttributes.Add("Configuration Change Detected", ConfigurationChangeDetected.ToString());
-
-                    return baseAttributes;
-                }
-            }
-
+            // Define new parsing state which defines contructors for key data values
+            State = new DataCellParsingState(
+                configurationCell,
+                IeeeC37_118.PhasorValue.CreateNewValue,
+                IeeeC37_118.FrequencyValue.CreateNewValue,
+                IeeeC37_118.AnalogValue.CreateNewValue,
+                IeeeC37_118.DigitalValue.CreateNewValue);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataCell"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The reference to parent <see cref="DataFrame"/> of this <see cref="DataCell"/>.</param>
+        /// <param name="configurationCell">The <see cref="ConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
+        /// <param name="addEmptyValues">If <c>true</c>, adds empty values for each defined configuration cell definition.</param>
+        public DataCell(DataFrame parent, ConfigurationCell configurationCell, bool addEmptyValues)
+            : this(parent, configurationCell)
+        {
+            if (addEmptyValues)
+            {
+                int x;
+
+                // Define needed phasor values
+                for (x = 0; x < ConfigurationCell.PhasorDefinitions.Count; x++)
+                {
+                    PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x]));
+                }
+
+                // Define a frequency and df/dt
+                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
+
+                // Define any analog values
+                for (x = 0; x < ConfigurationCell.AnalogDefinitions.Count; x++)
+                {
+                    AnalogValues.Add(new AnalogValue(this, ConfigurationCell.AnalogDefinitions[x]));
+                }
+
+                // Define any digital values
+                for (x = 0; x < ConfigurationCell.DigitalDefinitions.Count; x++)
+                {
+                    DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x]));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DataCell"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected DataCell(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the reference to parent <see cref="DataFrame"/> of this <see cref="DataCell"/>.
+        /// </summary>
+        public new DataFrame Parent
+        {
+            get
+            {
+                return base.Parent as DataFrame;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> associated with this <see cref="DataCell"/>.
+        /// </summary>
+        public new ConfigurationCell ConfigurationCell
+        {
+            get
+            {
+                return base.ConfigurationCell as ConfigurationCell;
+            }
+            set
+            {
+                base.ConfigurationCell = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets status flags for this <see cref="DataCell"/>.
+        /// </summary>
+        public new StatusFlags StatusFlags
+        {
+            get
+            {
+                return (StatusFlags)base.StatusFlags & ~(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask);
+            }
+            set
+            {
+                base.StatusFlags = (short)((base.StatusFlags & (short)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets unlocked time of this <see cref="DataCell"/>.
+        /// </summary>
+        public UnlockedTime UnlockedTime
+        {
+            get
+            {
+                return (UnlockedTime)(base.StatusFlags & (short)StatusFlags.UnlockedTimeMask);
+            }
+            set
+            {
+                base.StatusFlags = (short)((base.StatusFlags & ~(short)StatusFlags.UnlockedTimeMask) | (ushort)value);
+                SynchronizationIsValid = (value == IeeeC37_118.UnlockedTime.SyncLocked);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets trigger reason of this <see cref="DataCell"/>.
+        /// </summary>
+        public TriggerReason TriggerReason
+        {
+            get
+            {
+                return (TriggerReason)(base.StatusFlags & (short)StatusFlags.TriggerReasonMask);
+            }
+            set
+            {
+                base.StatusFlags = (short)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
+                DeviceTriggerDetected = (value != IeeeC37_118.TriggerReason.Manual);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if data of this <see cref="DataCell"/> is valid.
+        /// </summary>
+        public override bool DataIsValid
+        {
+            get
+            {
+                return (StatusFlags & IeeeC37_118.StatusFlags.DataIsValid) == 0;
+            }
+            set
+            {
+                if (value)
+                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DataIsValid;
+                else
+                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DataIsValid;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if timestamp of this <see cref="DataCell"/> is valid based on GPS lock.
+        /// </summary>
+        public override bool SynchronizationIsValid
+        {
+            get
+            {
+                return (StatusFlags & IeeeC37_118.StatusFlags.DeviceSynchronizationError) == 0;
+            }
+            set
+            {
+                if (value)
+                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DeviceSynchronizationError;
+                else
+                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DeviceSynchronizationError;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="PhasorProtocols.DataSortingType"/> of this <see cref="DataCell"/>.
+        /// </summary>
+        public override DataSortingType DataSortingType
+        {
+            get
+            {
+                return (((StatusFlags & IeeeC37_118.StatusFlags.DataSortingType) == 0) ? PhasorProtocols.DataSortingType.ByTimestamp : PhasorProtocols.DataSortingType.ByArrival);
+            }
+            set
+            {
+                if (value == PhasorProtocols.DataSortingType.ByTimestamp)
+                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DataSortingType;
+                else
+                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DataSortingType;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if source device of this <see cref="DataCell"/> is reporting an error.
+        /// </summary>
+        public override bool DeviceError
+        {
+            get
+            {
+                return (StatusFlags & IeeeC37_118.StatusFlags.DeviceError) > 0;
+            }
+            set
+            {
+                if (value)
+                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DeviceError;
+                else
+                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DeviceError;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if device trigger is detected for this <see cref="DataCell"/>.
+        /// </summary>
+        public bool DeviceTriggerDetected
+        {
+            get
+            {
+                return (StatusFlags & IeeeC37_118.StatusFlags.DeviceTriggerDetected) > 0;
+            }
+            set
+            {
+                if (value)
+                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DeviceTriggerDetected;
+                else
+                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DeviceTriggerDetected;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if configuration change was detected for this <see cref="DataCell"/>.
+        /// </summary>
+        public bool ConfigurationChangeDetected
+        {
+            get
+            {
+                return (StatusFlags & IeeeC37_118.StatusFlags.ConfigurationChanged) > 0;
+            }
+            set
+            {
+                if (value)
+                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.ConfigurationChanged;
+                else
+                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.ConfigurationChanged;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Unlocked Time", (int)UnlockedTime + ": " + UnlockedTime);
+                baseAttributes.Add("Device Trigger Detected", DeviceTriggerDetected.ToString());
+                baseAttributes.Add("Trigger Reason", (int)TriggerReason + ": " + TriggerReason);
+                baseAttributes.Add("Configuration Change Detected", ConfigurationChangeDetected.ToString());
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Delegate handler to create a new IEEE C37.118 data cell
+        internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
+        {
+            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+
+            parsedLength = dataCell.Initialize(binaryImage, startIndex, 0);
+
+            return dataCell;
+        }
+
+        #endregion
     }
 }

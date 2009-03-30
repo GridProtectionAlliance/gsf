@@ -1,106 +1,81 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  FrequencyDefinition.vb - FNet Frequency definition
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  FrequencyDefinition.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian (Ryan) Zuo
-//       Initial version of source generated
+//  02/08/2007 - James R Carroll & Jian (Ryan) Zuo
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.FNet
 {
-    namespace FNet
+    /// <summary>
+    /// Represents the F-NET implementation of a <see cref="IFrequencyDefinition"/>.
+    /// </summary>
+    [Serializable()]
+    public class FrequencyDefinition : FrequencyDefinitionBase
     {
+        #region [ Constructors ]
 
-        [CLSCompliant(false), Serializable()]
-        public class FrequencyDefinition : FrequencyDefinitionBase
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinition"/>.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
+        public FrequencyDefinition(IConfigurationCell parent)
+            : base(parent)
         {
-
-
-
-            protected FrequencyDefinition()
-            {
-            }
-
-            protected FrequencyDefinition(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public FrequencyDefinition(ConfigurationCell parent)
-                : base(parent)
-            {
-
-
-            }
-
-            public FrequencyDefinition(ConfigurationCell parent, string label, int scale, float offset, int dfdtScale, float dfdtOffset)
-                : base(parent, label, scale, offset, dfdtScale, dfdtOffset)
-            {
-
-
-            }
-
-            public FrequencyDefinition(ConfigurationCell parent, IFrequencyDefinition frequencyDefinition)
-                : base(parent, frequencyDefinition)
-            {
-
-
-            }
-
-            // FNet supports no configuration frame in the data stream - so there will be nothing to parse
-            //Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As int)
-
-            //    MyBase.New(parent, binaryImage, startIndex)
-
-            //End Sub
-
-            //Friend Shared Function CreateNewFrequencyDefinition(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As int) As IFrequencyDefinition
-
-            //    Return New FrequencyDefinition(parent, binaryImage, startIndex)
-
-            //End Function
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ConfigurationCell Parent
-            {
-                get
-                {
-                    return (ConfigurationCell)base.Parent;
-                }
-            }
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
+        internal FrequencyDefinition(ConfigurationCell parent, string label)
+            : base(parent, label, 1, 1, 0.0D)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="FrequencyDefinition"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected FrequencyDefinition(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        #endregion
     }
 }

@@ -16,7 +16,7 @@
 //       Changed out the socket code with TcpClient and UdpClient components from TVA.Communication
 //  01/31/2007 - J. Ritchie Carroll
 //       Added TCP "server" support to allow listening connections from devices that act as data
-//       clients, e.g., FNET devices
+//       clients, e.g., F-NET devices
 //  05/23/2007 - Pinal C. Patel
 //       Added member variable 'm_clientConnectionAttempts' to track the number of attempts made for
 //       connecting to the server since this information is no longer provided by the event raised by
@@ -74,7 +74,7 @@ namespace PCS.PhasorProtocols
         /// </summary>
         BpaPdcStream,
         /// <summary>
-        /// Virgina Tech FNET protocol.
+        /// Virgina Tech F-NET protocol.
         /// </summary>
         FNet
     }
@@ -317,20 +317,20 @@ namespace PCS.PhasorProtocols
                 m_phasorProtocol = value;
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
 
-                // TODO: Uncomment!
-                //// Setup protocol specific connection parameters...
-                //switch (value)
-                //{
-                //    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
-                //        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
-                //        break;
-                //    case PhasorProtocols.PhasorProtocol.FNet:
-                //        m_connectionParameters = new FNet.ConnectionParameters();
-                //        break;
-                //    default:
-                //        m_connectionParameters = null;
-                //        break;
-                //}
+                // Setup protocol specific connection parameters...
+                switch (value)
+                {
+                    // TODO: Uncomment...
+                    //case PhasorProtocols.PhasorProtocol.BpaPdcStream:
+                    //    m_connectionParameters = new BpaPdcStream.ConnectionParameters();
+                    //    break;
+                    case PhasorProtocols.PhasorProtocol.FNet:
+                        m_connectionParameters = new FNet.ConnectionParameters();
+                        break;
+                    default:
+                        m_connectionParameters = null;
+                        break;
+                }
             }
         }
 
@@ -912,9 +912,9 @@ namespace PCS.PhasorProtocols
                     //case PhasorProtocols.PhasorProtocol.BpaPdcStream:
                     //    m_frameParser = new BpaPdcStream.FrameParser();
                     //    break;
-                    //case PhasorProtocols.PhasorProtocol.FNet:
-                    //    m_frameParser = new FNet.FrameParser();
-                    //    break;
+                    case PhasorProtocols.PhasorProtocol.FNet:
+                        m_frameParser = new FNet.FrameParser();
+                        break;
                 }
 
                 // Setup event handlers

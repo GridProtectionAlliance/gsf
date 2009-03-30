@@ -1,107 +1,83 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  PhasorDefinition.vb - FNet Phasor definition
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  PhasorDefinition.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian (Ryan) Zuo
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.FNet
 {
-    namespace FNet
+    /// <summary>
+    /// Represents the F-NET implementation of a <see cref="IPhasorDefinition"/>.
+    /// </summary>
+    [Serializable()]
+    public class PhasorDefinition : PhasorDefinitionBase
     {
+        #region [ Constructors ]
 
-        [CLSCompliant(false), Serializable()]
-        public class PhasorDefinition : PhasorDefinitionBase
+        /// <summary>
+        /// Creates a new <see cref="PhasorDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
+        public PhasorDefinition(IConfigurationCell parent)
+            : base(parent)
         {
-
-
-
-            protected PhasorDefinition()
-            {
-            }
-
-            protected PhasorDefinition(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public PhasorDefinition(ConfigurationCell parent)
-                : base(parent)
-            {
-
-
-            }
-
-            public PhasorDefinition(ConfigurationCell parent, int index, string label, int scale, float offset, PhasorType type, PhasorDefinition voltageReference)
-                : base(parent, index, label, scale, offset, type, voltageReference)
-            {
-
-
-            }
-
-            public PhasorDefinition(ConfigurationCell parent, IPhasorDefinition phasorDefinition)
-                : base(parent, phasorDefinition)
-            {
-
-
-            }
-
-            // FNet supports no configuration frame in the data stream - so there will be nothing to parse
-            //Public Sub New(ByVal parent As ConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As int)
-
-            //    MyBase.New(parent, binaryImage, startIndex)
-
-            //End Sub
-
-            //Friend Shared Function CreateNewPhasorDefinition(ByVal parent As IConfigurationCell, ByVal binaryImage As Byte(), ByVal startIndex As int) As IPhasorDefinition
-
-            //    Return New PhasorDefinition(parent, binaryImage, startIndex)
-
-            //End Function
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ConfigurationCell Parent
-            {
-                get
-                {
-                    return (ConfigurationCell)base.Parent;
-                }
-            }
-
         }
 
-    }
+        /// <summary>
+        /// Creates a new <see cref="PhasorDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
+        internal PhasorDefinition(ConfigurationCell parent, string label, PhasorType type, PhasorDefinition voltageReference)
+            : base(parent, label, 1, 0.0D, type, voltageReference)
+        {
+        }
 
+        /// <summary>
+        /// Creates a new <see cref="PhasorDefinition"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected PhasorDefinition(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        #endregion
+    }
 }

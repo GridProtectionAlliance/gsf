@@ -102,7 +102,7 @@ namespace PCS.PhasorProtocols
                 case PhasorProtocol.BpaPdcStream:
                     return "BPA PDCstream";
                 case PhasorProtocol.FNet:
-                    return "Virginia Tech FNET";
+                    return "Virginia Tech F-NET";
                 default:
                     return Enum.GetName(typeof(PhasorProtocol), protocol).Replace('_', '.').ToUpper();
             }

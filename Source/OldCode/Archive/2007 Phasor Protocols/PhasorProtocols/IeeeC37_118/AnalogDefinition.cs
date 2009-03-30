@@ -1,184 +1,199 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-
 //*******************************************************************************************************
-//  AnalogDefinition.vb - IEEE C37.118 Analog definition
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  AnalogDefinition.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.IeeeC37_118
 {
-    namespace IeeeC37_118
+    /// <summary>
+    /// Represents the IEEE C37.118 implementation of an <see cref="IAnalogDefinition"/>.
+    /// </summary>
+    [Serializable()]
+    public class AnalogDefinition : AnalogDefinitionBase
     {
+        #region [ Members ]
 
-        [CLSCompliant(false), Serializable()]
-        public class AnalogDefinition : AnalogDefinitionBase
+        // Constants        
+        internal const int ConversionFactorLength = 4;
+
+        // Fields
+        private AnalogType m_type;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="AnalogDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.</param>
+        public AnalogDefinition(IConfigurationCell parent)
+            : base(parent)
         {
-
-
-
-            private AnalogType m_type;
-
-            protected AnalogDefinition()
-            {
-            }
-
-            protected AnalogDefinition(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-                // Deserialize analog definition
-                m_type = (AnalogType)info.GetValue("type", typeof(AnalogType));
-
-            }
-
-            public AnalogDefinition(ConfigurationCell parent)
-                : base(parent)
-            {
-
-
-            }
-
-            public AnalogDefinition(ConfigurationCell parent, byte[] binaryImage, int startIndex)
-                : base(parent, binaryImage, startIndex)
-            {
-
-
-            }
-
-            public AnalogDefinition(ConfigurationCell parent, int index, string label)
-                : base(parent, index, label, 1, 0)
-            {
-
-
-            }
-
-            public AnalogDefinition(ConfigurationCell parent, IAnalogDefinition analogDefinition)
-                : base(parent, analogDefinition)
-            {
-
-
-            }
-
-            internal static IAnalogDefinition CreateNewAnalogDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex)
-            {
-
-                return new AnalogDefinition((ConfigurationCell)parent, binaryImage, startIndex);
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ConfigurationCell Parent
-            {
-                get
-                {
-                    return (ConfigurationCell)base.Parent;
-                }
-            }
-
-            public AnalogType Type
-            {
-                get
-                {
-                    return m_type;
-                }
-                set
-                {
-                    m_type = value;
-                }
-            }
-
-            internal static int ConversionFactorLength
-            {
-                get
-                {
-                    return 4;
-                }
-            }
-
-            internal byte[] ConversionFactorImage
-            {
-                get
-                {
-                    byte[] buffer = new byte[ConversionFactorLength];
-
-                    buffer[0] = (byte)m_type;
-
-                    EndianOrder.BigEndian.CopyBuffer(BitConverter.GetBytes(ScalingFactor), 0, buffer, 1, 3);
-
-                    return buffer;
-                }
-            }
-
-            internal void ParseConversionFactor(byte[] binaryImage, int startIndex)
-            {
-
-                byte[] buffer = new byte[4];
-
-                // Get analog type from first byte
-                m_type = (AnalogType)binaryImage[startIndex];
-
-                // Last three bytes represent scaling factor
-                EndianOrder.BigEndian.CopyBuffer(binaryImage, startIndex + 1, buffer, 0, 3);
-                ScalingFactor = BitConverter.ToInt32(buffer, 0);
-
-            }
-
-            public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            {
-
-                base.GetObjectData(info, context);
-
-                // Serialize analog definition
-                info.AddValue("type", m_type, typeof(AnalogType));
-
-            }
-
-            public override Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    Dictionary<string, string> baseAttributes = base.Attributes;
-
-                    baseAttributes.Add("Analog Type", (int)Type + ": " + Type);
-
-                    return baseAttributes;
-                }
-            }
-
         }
 
-    }
+        /// <summary>
+        /// Creates a new <see cref="AnalogDefintion"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefintion"/>.</param>
+        /// <param name="label">The label of this <see cref="AnalogDefintion"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="AnalogDefintion"/>.</param>
+        /// <param name="offset">The offset of this <see cref="AnalogDefintion"/>.</param>
+        /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefintion"/>.</param>
+        public AnalogDefinition(ConfigurationCell parent, string label, uint scale, double offset, AnalogType type)
+            : base(parent, label, scale, offset)
+        {
+            m_type = type;
+        }
 
+        /// <summary>
+        /// Creates a new <see cref="AnalogDefintion"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected AnalogDefinition(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize analog definition
+            m_type = (AnalogType)info.GetValue("type", typeof(AnalogType));
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.
+        /// </summary>
+        public AnalogType Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefintion"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets conversion factor image of this <see cref="AnalogDefintion"/>.
+        /// </summary>
+        internal byte[] ConversionFactorImage
+        {
+            get
+            {
+                byte[] buffer = new byte[ConversionFactorLength];
+                UInt24 scalingFactor = (ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue);
+
+                // Store analog type in first byte
+                buffer[0] = (byte)m_type;
+
+                // Store scaling in last three bytes
+                EndianOrder.BigEndian.CopyBytes(scalingFactor, buffer, 1);
+
+                return buffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="FrequencyDefinition"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Analog Type", (int)Type + ": " + Type);
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses conversion factor image from the specified <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        internal int ParseConversionFactor(byte[] binaryImage, int startIndex)
+        {
+            // Get analog type from first byte
+            m_type = (AnalogType)binaryImage[startIndex];
+
+            // Last three bytes represent scaling factor
+            ScalingValue = EndianOrder.BigEndian.ToUInt24(binaryImage, startIndex + 1);
+
+            return ConversionFactorLength;
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize analog definition
+            info.AddValue("type", m_type, typeof(AnalogType));
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Delegate handler to create a new IEEE C37.118 analog definition
+        internal static IAnalogDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
+        {
+            IAnalogDefinition analogDefinition = new AnalogDefinition(parent);
+
+            parsedLength = analogDefinition.Initialize(binaryImage, startIndex, 0);
+
+            return analogDefinition;
+        }
+
+        #endregion        
+    }
 }

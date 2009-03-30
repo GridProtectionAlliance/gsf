@@ -1,76 +1,72 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  DataCellCollection.vb - FNet specific data cell collection
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  DataCellCollection.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian (Ryan) Zuo
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.FNet
 {
-    namespace FNet
+    /// <summary>
+    /// Represents a F-NET implementation of a collection of <see cref="IDataCell"/> objects.
+    /// </summary>
+    [Serializable()]
+    public class DataCellCollection : PhasorProtocols.DataCellCollection
     {
+        #region [ Constructors ]
 
-        [CLSCompliant(false), Serializable()]
-        public class DataCellCollection : PhasorProtocols.DataCellCollection
+        /// <summary>
+        /// Creates a new <see cref="DataCellCollection"/>.
+        /// </summary>
+        public DataCellCollection()
+            : base(0, true)
         {
-
-
-
-            public DataCellCollection()
-                : base(1, false)
-            {
-
-                // IEEE 1344 only supports a single PMU - so there should only be one cell
-
-            }
-
-            protected DataCellCollection(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public void Add(DataCell value)
-            {
-
-                base.Add(value);
-
-            }
-
-            public new DataCell this[int index]
-            {
-                get
-                {
-                    return (DataCell)base[index];
-                }
-            }
-
+            // F-NET only supports a single device - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
         }
 
-    }
+        /// <summary>
+        /// Creates a new <see cref="DataCellCollection"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected DataCellCollection(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="DataCell"/> at specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">Index of value to get or set.</param>
+        public new DataCell this[int index]
+        {
+            get
+            {
+                return base[index] as DataCell;
+            }
+            set
+            {
+                base[index] = value;
+            }
+        }
+
+        #endregion
+    }
 }

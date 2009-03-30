@@ -58,9 +58,11 @@ namespace PCS.PhasorProtocols
             : base(parent, alignOnDWordBoundary, idCode)
         {
             m_nominalFrequency = LineFrequency.Hz60; // Defaulting to 60Hz
-            m_phasorDefinitions = new PhasorDefinitionCollection(maximumPhasors);
-            m_analogDefinitions = new AnalogDefinitionCollection(maximumAnalogs);
-            m_digitalDefinitions = new DigitalDefinitionCollection(maximumDigitals);
+
+            // We convert maximum counts to last valid indicies (count - 1):
+            m_phasorDefinitions = new PhasorDefinitionCollection(maximumPhasors - 1);
+            m_analogDefinitions = new AnalogDefinitionCollection(maximumAnalogs - 1);
+            m_digitalDefinitions = new DigitalDefinitionCollection(maximumDigitals - 1);
         }
 
         /// <summary>

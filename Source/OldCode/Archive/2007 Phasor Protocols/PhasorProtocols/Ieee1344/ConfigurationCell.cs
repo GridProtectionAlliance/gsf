@@ -123,7 +123,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         public new ulong IDCode
         {
-            // IEEE 1344 only allows one PMU, so we share ID code with parent frame...
+            // IEEE 1344 only allows one device, so we share ID code with parent frame...
             get
             {
                 return Parent.IDCode;

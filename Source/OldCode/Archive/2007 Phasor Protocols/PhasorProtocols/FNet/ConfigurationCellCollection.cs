@@ -1,78 +1,72 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  ConfigurationCellCollection.vb - FNet specific configuration cell collection
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  ConfigurationCellCollection.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian (Ryan) Zuo
-//       Initial version of source generated
+//  02/08/2007 - James R Carroll & Jian (Ryan) Zuo
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.FNet
 {
-    namespace FNet
+    /// <summary>
+    /// Represents a F-NET implementation of a collection of <see cref="IConfigurationCell"/> objects.
+    /// </summary>
+    [Serializable()]
+    public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellCollection
     {
+        #region [ Constructors ]
+
         /// <summary>
-        /// Collection of ConfigureCell
+        /// Creates a new <see cref="ConfigurationCellCollection"/>.
         /// </summary>
-        [CLSCompliant(false), Serializable()]
-        public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellCollection
+        public ConfigurationCellCollection()
+            : base(0, true)
         {
-
-
-
-            public ConfigurationCellCollection()
-                : base(1, true)
-            {
-
-                // IEEE 1344 only supports a single PMU - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
-
-            }
-
-            protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public void Add(ConfigurationCell value)
-            {
-
-                base.Add(value);
-
-            }
-
-            public new ConfigurationCell this[int index]
-            {
-                get
-                {
-                    return (ConfigurationCell)base[index];
-                }
-            }
-
+            // F-NET only supports a single device - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
         }
 
-    }
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationCellCollection"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="ConfigurationCell"/> at specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">Index of value to get or set.</param>
+        public new ConfigurationCell this[int index]
+        {
+            get
+            {
+                return base[index] as ConfigurationCell;
+            }
+            set
+            {
+                base[index] = value;
+            }
+        }
+
+        #endregion
+    }
 }

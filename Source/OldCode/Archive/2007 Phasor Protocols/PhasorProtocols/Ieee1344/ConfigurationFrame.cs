@@ -149,7 +149,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         public LineFrequency NominalFrequency
         {
-            // Since IEEE 1344 only supports a single PMU there will only be one cell, so we just share nominal frequency with our only child
+            // Since IEEE 1344 only supports a single device there will only be one cell, so we just share nominal frequency with our only child
             // and expose the value at the parent level for convience
             get
             {

@@ -23,7 +23,7 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols.Ieee1344
 {
     /// <summary>
-    /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
+    /// Represents the IEEE 1344 implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
     [Serializable()]
     public class DataCell : DataCellBase
