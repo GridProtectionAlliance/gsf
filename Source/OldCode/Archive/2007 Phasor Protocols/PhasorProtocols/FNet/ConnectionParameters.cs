@@ -79,10 +79,10 @@ namespace PCS.PhasorProtocols.FNet
         /// </summary>
         /// <remarks>
         /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
-        /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10000000 ticks.
+        /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10,000,000 ticks.
         /// </remarks>
         [Category("Optional Connection Parameters"),
-        Description("F-NET devices normally report time in 11 seconds past real-time, this parameter adjusts for this artificial delay.  Note parameter is in ticks (1 second = 10000000 ticks)."),
+        Description("F-NET devices normally report time in 11 seconds past real-time, this parameter adjusts for this artificial delay.  Note parameter is in ticks (1 second = 10,000,000 ticks)."),
         DefaultValue(Common.DefaultTimeOffset)]
         public Ticks TimeOffset
         {

@@ -96,7 +96,7 @@ namespace PCS.PhasorProtocols.FNet
         public LineFrequency NominalFrequency
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
-            // with our only child and expose the value at the parent level for convience
+            // with our only child and expose the value at the parent level for convenience
             get
             {
                 return Cells[0].NominalFrequency;
@@ -112,12 +112,12 @@ namespace PCS.PhasorProtocols.FNet
         /// </summary>
         /// <remarks>
         /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
-        /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10000000 ticks.
+        /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10,000,000 ticks.
         /// </remarks>
         public Ticks TimeOffset
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
-            // with our only child and expose the value at the parent level for convience
+            // with our only child and expose the value at the parent level for convenience
             get
             {
                 return Cells[0].TimeOffset;
@@ -134,7 +134,7 @@ namespace PCS.PhasorProtocols.FNet
         public double Longitude
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
-            // with our only child and expose the value at the parent level for convience
+            // with our only child and expose the value at the parent level for convenience
             get
             {
                 return Cells[0].Longitude;
@@ -151,7 +151,7 @@ namespace PCS.PhasorProtocols.FNet
         public double Latitude
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
-            // with our only child and expose the value at the parent level for convience
+            // with our only child and expose the value at the parent level for convenience
             get
             {
                 return Cells[0].Latitude;
@@ -168,7 +168,7 @@ namespace PCS.PhasorProtocols.FNet
         public int NumberOfSatellites
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
-            // with our only child and expose the value at the parent level for convience
+            // with our only child and expose the value at the parent level for convenience
             get
             {
                 return Cells[0].NumberOfSatellites;

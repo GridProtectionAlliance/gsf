@@ -26,7 +26,7 @@ using System.Units;
 namespace PCS.PhasorProtocols.FNet
 {
     /// <summary>
-    /// Represents the F-NET implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
+    /// Represents the F-NET implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
     [Serializable()]
     public class DataCell : DataCellBase
@@ -151,7 +151,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <summary>
         /// Gets or sets flag that determines if source device of this <see cref="DataCell"/> is reporting an error.
         /// </summary>
-        /// <remarks>IEEE 1344 doesn't define bits for device error.</remarks>
+        /// <remarks>F-NET doesn't define any flags for device errors.</remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
@@ -240,7 +240,7 @@ namespace PCS.PhasorProtocols.FNet
         {
             get
             {
-                return (ushort)FNetDataRow.Length;
+                return FNetDataRow.Length;
             }
         }
 
@@ -289,22 +289,23 @@ namespace PCS.PhasorProtocols.FNet
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            CommonFrameHeader commonHeader = Parent.CommonHeader;
+            DataFrame parent = Parent;
+            CommonFrameHeader commonHeader = parent.CommonHeader;
             string[] data = commonHeader.DataElements;
             ConfigurationCell configurationCell = ConfigurationCell;
 
             // Assign sample index
-            Parent.SampleIndex = short.Parse(data[Element.SampleIndex]);
+            parent.SampleIndex = short.Parse(data[Element.SampleIndex]);
 
             // Get timestamp of data record
-            Parent.Timestamp = configurationCell.TimeOffset + ParseTimestamp(data[Element.Date], data[Element.Time], Parent.SampleIndex, configurationCell.FrameRate);
+            parent.Timestamp = configurationCell.TimeOffset + ParseTimestamp(data[Element.Date], data[Element.Time], parent.SampleIndex, configurationCell.FrameRate);
 
             // Parse out first analog value (can be long/lat at top of minute)
             m_analogValue = double.Parse(data[Element.Analog]);
 
             if (int.Parse(data[Element.Time].Substring(4, 2)) == 0)
             {
-                switch (Parent.SampleIndex)
+                switch (parent.SampleIndex)
                 {
                     case 1:
                         configurationCell.Latitude = m_analogValue;

@@ -51,17 +51,22 @@ namespace PCS.PhasorProtocols.FNet
         {
             // Validate F-NET data image
             if (binaryImage[startIndex] != Common.StartByte)
-                throw new InvalidOperationException("Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got " + binaryImage[startIndex].ToString("x").PadLeft(2, '0').ToUpper());
+                throw new InvalidOperationException("Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
 
-            int stopIndex = 0;
+            int endIndex = 0, stopIndex = 0;
 
             for (int x = startIndex; x < length; x++)
             {
                 if (binaryImage[x] == Common.EndByte)
                 {
-                    stopIndex = x;
-                    break;
+                    // We continue to scan through duplicate end bytes
+                    endIndex = x;
+                    
+                    if (stopIndex == 0)
+                        stopIndex = x;
                 }
+                else if (endIndex != 0)
+                    break;
             }
 
             if (stopIndex == 0)
@@ -75,7 +80,7 @@ namespace PCS.PhasorProtocols.FNet
                 throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(binaryImage, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + m_data.Length + " elements, expected 8.");
 
             // Calculate total bytes parsed including start and stop bytes
-            m_parsedLength = stopIndex - startIndex + 1;
+            m_parsedLength = endIndex - startIndex + 1;
         }
 
         #endregion

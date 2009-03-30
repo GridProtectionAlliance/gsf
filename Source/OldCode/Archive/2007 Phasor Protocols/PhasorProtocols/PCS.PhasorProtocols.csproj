@@ -177,27 +177,6 @@
     <Compile Include="Ieee1344\PhasorValue.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="IeeeC37_118\AnalogDefinition.cs" />
-    <Compile Include="IeeeC37_118\AnalogValue.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IeeeC37_118\Common.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IeeeC37_118\ConfigurationCellCollection.cs" />
-    <Compile Include="IeeeC37_118\DataCell.cs" />
-    <Compile Include="IeeeC37_118\DataCellCollection.cs" />
-    <Compile Include="IeeeC37_118\DigitalValue.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IeeeC37_118\FrequencyDefinition.cs" />
-    <Compile Include="IeeeC37_118\FrequencyValue.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IeeeC37_118\PhasorDefinition.cs" />
-    <Compile Include="IeeeC37_118\PhasorValue.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="IFrameParser.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
     <Compile Include="ICommandFrameParsingState.cs" />

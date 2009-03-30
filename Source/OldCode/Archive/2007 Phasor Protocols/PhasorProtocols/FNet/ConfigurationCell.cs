@@ -48,7 +48,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
         /// <param name="timeOffset">The time offset of F-NET device in <see cref="Ticks"/>.</param>
         internal ConfigurationCell(ConfigurationFrame parent, LineFrequency nominalFrequency, Ticks timeOffset)
-            : base(parent, false, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, false, parent.IDCode, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             NominalFrequency = nominalFrequency;
             m_timeOffset = timeOffset;
@@ -190,7 +190,7 @@ namespace PCS.PhasorProtocols.FNet
         /// </summary>
         /// <remarks>
         /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
-        /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10000000 ticks.
+        /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10,000,000 ticks.
         /// </remarks>
         public Ticks TimeOffset
         {
@@ -270,7 +270,7 @@ namespace PCS.PhasorProtocols.FNet
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Time Offset (ticks)", TimeOffset.ToString());
+                baseAttributes.Add("Time Offset (ticks)", ((long)TimeOffset).ToString());
                 baseAttributes.Add("Time Offset (seconds)", Ticks.ToSeconds(TimeOffset).ToString());
                 baseAttributes.Add("Longitude", Longitude.ToString());
                 baseAttributes.Add("Latitude", Latitude.ToString());
