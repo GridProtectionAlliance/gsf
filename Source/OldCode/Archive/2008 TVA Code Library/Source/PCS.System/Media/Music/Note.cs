@@ -625,14 +625,14 @@ namespace System.Media.Music
         /// </remarks>
         /// <example>
         /// <code>
-        /// // Create a 3/8th length , middle C note
+        /// // Create a 3/8th length, middle C note
         /// Note note1 = new Note { Frequency = Note.C4, NamedValue = NoteValue.Quarter, Dots = 1 };
         /// 
         /// // Create a 1/8th length, E above middle C note
         /// Note note2 = new Note { ID = "E4", NamedValueBritish = NoteValueBritish.Quaver };
         /// 
         /// // Create a whole length, F# above middle C note, "p" soft dynamic
-        /// Note note2 = new Note { Frequency = F4S, Value = 1.0, NamedDynamic = Dynamic.Piano };
+        /// Note note3 = new Note { Frequency = Note.F4S, Value = 1.0, NamedDynamic = Dynamic.Piano };
         /// </code>
         /// </example>
         public Note()
@@ -1084,7 +1084,7 @@ namespace System.Media.Music
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
         public static double GetFrequency(string noteID)
         {
-            noteID = ValidateID(noteID);
+            noteID = ValidID(noteID);
             return GetFrequency(noteID[0], int.Parse(noteID[1].ToString()), noteID.Length > 2 && noteID[2] == 'S' ? true : false);
         }
 
@@ -1124,7 +1124,7 @@ namespace System.Media.Music
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
         public static string GetNextID(string noteID, bool includeSharps)
         {
-            noteID = ValidateID(noteID);
+            noteID = ValidID(noteID);
 
             char note = noteID[0];
             int octave = int.Parse(noteID[1].ToString());
@@ -1163,7 +1163,7 @@ namespace System.Media.Music
         /// <exception cref="ArgumentException">Invalid note ID format - expected "Note + Octave + S?" (e.g., A2 or C5S).</exception>
         public static string GetPreviousID(string noteID, bool includeSharps)
         {
-            noteID = ValidateID(noteID);
+            noteID = ValidID(noteID);
 
             char note = noteID[0];
             int octave = int.Parse(noteID[1].ToString());
@@ -1206,13 +1206,15 @@ namespace System.Media.Music
             return string.Format("{0}{1}{2}", note, octave, sharp ? "S" : "");
         }
 
-        private static string ValidateID(string noteID)
+        private static string ValidID(string noteID)
         {
             if (noteID == null)
                 throw new ArgumentNullException("noteID");
 
             if (noteID.Length < 2)
                 throw new ArgumentException("Invalid note ID format - expected \"Note + Octave + S?\" (e.g., A2 or C5S)");
+
+            // TODO: RegEx validate note format...
 
             return noteID.ToUpper();
         }

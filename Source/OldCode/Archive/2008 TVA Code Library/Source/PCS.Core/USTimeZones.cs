@@ -29,7 +29,7 @@ namespace PCS
         private static TimeZoneInfo m_pacificTimeZone;
 
         /// <summary>Gets Eastern Time Zone.</summary>
-        public static TimeZoneInfo EasternTimeZone
+        public static TimeZoneInfo Eastern
         {
             get
             {
@@ -39,7 +39,7 @@ namespace PCS
         }
 
         /// <summary>Gets Central Time Zone.</summary>
-        public static TimeZoneInfo CentralTimeZone
+        public static TimeZoneInfo Central
         {
             get
             {
@@ -49,7 +49,7 @@ namespace PCS
         }
 
         /// <summary>Gets Mountain Time Zone.</summary>
-        public static TimeZoneInfo MountainTimeZone
+        public static TimeZoneInfo Mountain
         {
             get
             {
@@ -59,7 +59,7 @@ namespace PCS
         }
 
         /// <summary>Gets Pacific Standard Time Zone.</summary>
-        public static TimeZoneInfo PacificTimeZone
+        public static TimeZoneInfo Pacific
         {
             get
             {

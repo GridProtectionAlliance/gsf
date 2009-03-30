@@ -540,7 +540,7 @@ namespace System.Media.Music
 
             // Assign sample period to note with shortest duration - all other notes
             // will remain in queue until they have completed their run
-            samplePeriod = (long)(notes.Min(note => note.ValueTime) * samplesPerSecond);
+            samplePeriod = notes.Min(note => note.SamplePeriod);
 
             // Add notes to note queue
             m_noteQueue.AddRange(notes);

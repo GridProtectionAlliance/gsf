@@ -133,7 +133,7 @@ namespace PCS
         /// </returns>
         public static DateTime LocalTimeToEasternTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.EasternTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.Eastern);
         }
 
         /// <summary>Converts given local time to Central time.</summary>
@@ -143,7 +143,7 @@ namespace PCS
         /// </returns>
         public static DateTime LocalTimeToCentralTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.CentralTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.Central);
         }
 
         /// <summary>Converts given local time to Mountain time.</summary>
@@ -153,7 +153,7 @@ namespace PCS
         /// </returns>
         public static DateTime LocalTimeToMountainTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.MountainTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.Mountain);
         }
 
         /// <summary>Converts given local time to Pacific time.</summary>
@@ -163,7 +163,7 @@ namespace PCS
         /// </returns>
         public static DateTime LocalTimeToPacificTime(this DateTime timestamp)
         {
-            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.PacificTimeZone);
+            return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, USTimeZones.Pacific);
         }
 
         /// <summary>Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time).</summary>
@@ -208,7 +208,7 @@ namespace PCS
         /// <returns>The timestamp in Eastern time.</returns>
         public static DateTime UniversalTimeToEasternTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.EasternTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.Eastern);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace PCS
         /// <returns>The timestamp in Central time.</returns>
         public static DateTime UniversalTimeToCentralTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.CentralTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.Central);
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace PCS
         /// <returns>The timestamp in Mountain time.</returns>
         public static DateTime UniversalTimeToMountainTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.MountainTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.Mountain);
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace PCS
         /// <returns>The timestamp in Pacific time.</returns>
         public static DateTime UniversalTimeToPacificTime(this DateTime universalTimestamp)
         {
-            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.PacificTimeZone);
+            return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, USTimeZones.Pacific);
         }
 
         /// <summary>
