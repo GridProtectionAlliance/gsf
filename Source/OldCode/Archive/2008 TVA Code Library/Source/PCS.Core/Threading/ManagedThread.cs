@@ -381,7 +381,7 @@ namespace PCS.Threading
                 throw new InvalidOperationException("Cannot join a thread that was queued into thread pool.");
 
             if (!IsAlive)
-                throw new InvalidOperationException("Cannont join a thread that has not been started.");
+                throw new InvalidOperationException("Cannot join a thread that has not been started.");
 
             m_thread.Join();
         }
@@ -400,7 +400,7 @@ namespace PCS.Threading
                 throw new InvalidOperationException("Cannot join a thread that was queued into thread pool.");
 
             if (!IsAlive)
-                throw new InvalidOperationException("Cannont join a thread that has not been started.");
+                throw new InvalidOperationException("Cannot join a thread that has not been started.");
 
             return m_thread.Join(millisecondsTimeout);
         }
