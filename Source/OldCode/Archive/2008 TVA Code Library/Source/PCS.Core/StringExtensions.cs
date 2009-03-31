@@ -416,7 +416,7 @@ namespace PCS
         public static string NotEmpty(this string testValue, string nonEmptyReturnValue)
         {
             if (string.IsNullOrEmpty(nonEmptyReturnValue))
-                throw new ArgumentException("nonEmptyReturnValue cannot be empty!");
+                throw new ArgumentException("nonEmptyReturnValue cannot be null or empty");
 
             if (string.IsNullOrEmpty(testValue))
                 return nonEmptyReturnValue;

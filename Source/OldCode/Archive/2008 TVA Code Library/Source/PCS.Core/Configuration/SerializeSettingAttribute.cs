@@ -22,7 +22,8 @@ namespace PCS.Configuration
 {
     /// <summary>
     /// Represents an attribute that determines if a property or field in a class derived from
-    /// <see cref="CategorizedSettingsBase"/> should be serialized to the configuration file.
+    /// <see cref="CategorizedSettingsBase"/> or <see cref="AppSettingsBase"/> should be serialized
+    /// to the configuration file.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class SerializeSettingAttribute : Attribute
@@ -48,7 +49,7 @@ namespace PCS.Configuration
         /// Creates a new <see cref="SerializeSettingAttribute"/> with the specified <paramref name="serialize"/> value.
         /// </summary>
         /// <param name="serialize">
-        /// Assignes flag that determines if the property or field this <see cref="SerializeSettingAttribute"/>
+        /// Assigns flag that determines if the property or field this <see cref="SerializeSettingAttribute"/>
         /// modifies should be serialized to the configuration file.
         /// </param>
         public SerializeSettingAttribute(bool serialize)

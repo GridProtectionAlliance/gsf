@@ -12,6 +12,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  01/30/2009 - James R Carroll
 //       Generated original version of source code.
+//  03/31/2009 - James R Carroll
+//       Added code to allow override of name used to serialize field or property to configuration file
+//          by applying a SettingNameAttribute to the member.
 //
 //*******************************************************************************************************
 
@@ -42,6 +45,7 @@ namespace PCS.Configuration
         private Func<string, string> m_getter;
         private Action<string, string> m_setter;
         private Action<string, string> m_creator;
+        private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireSerializeSettingAttribute;
         private bool m_disposed;
 
@@ -59,6 +63,7 @@ namespace PCS.Configuration
         protected SettingsBase(bool requireSerializeSettingAttribute)
         {
             m_requireSerializeSettingAttribute = requireSerializeSettingAttribute;
+            m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
         }
 
         /// <summary>
@@ -97,6 +102,7 @@ namespace PCS.Configuration
         /// Gets or sets reference to delegate used to retireve settings values.
         /// </summary>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected Func<string, string> Getter
         {
             get
@@ -116,6 +122,7 @@ namespace PCS.Configuration
         /// Gets or sets reference to delegate used to assign settings values.
         /// </summary>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected Action<string, string> Setter
         {
             get
@@ -135,6 +142,7 @@ namespace PCS.Configuration
         /// Gets or sets reference to delgate used to create settings with a default value, if they don't exist.
         /// </summary>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected Action<string, string> Creator
         {
             get
@@ -147,6 +155,25 @@ namespace PCS.Configuration
                     throw new NullReferenceException("value cannot be null");
 
                 m_creator = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="BindingFlags"/> used to access fields and properties of dervied class.
+        /// </summary>
+        /// <remarks>
+        /// Value defaults to <c><see cref="BindingFlags.Public"/> | <see cref="BindingFlags.Instance"/> | <see cref="BindingFlags.DeclaredOnly"/></c>.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected virtual BindingFlags MemberAccessBindingFlags
+        {
+            get
+            {
+                return m_memberAccessBindingFlags;
+            }
+            set
+            {
+                m_memberAccessBindingFlags = value;
             }
         }
 
@@ -202,22 +229,40 @@ namespace PCS.Configuration
         }
 
         /// <summary>
+        /// Gets setting name to use for specified field or property. 
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Setting name to use for specified field or property.</returns>
+        /// <remarks>
+        /// Field or property name will be used for setting name unless user applied a <see cref="SettingNameAttribute"/>
+        /// on the field or property to override name used to serialize value in configuration file.
+        /// </remarks>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public string GetSettingName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
+            return GetAttributeValue<SettingNameAttribute>(name, name, attribute => attribute.Name).NotEmpty(name);
+        }
+
+        /// <summary>
         /// Adds a setting to the application's configuration file, if it doesn't already exist.
         /// </summary>
-        /// <param name="name">Setting name.</param>
+        /// <param name="name">Field or property name.</param>
         /// <param name="value">Setting value.</param>
         /// <remarks>
         /// Use this function to ensure a setting exists, it will not override an existing value.
         /// </remarks>
         public void CreateValue(string name, string value)
         {
-            m_creator(name, value.ToNonNullString());
+            m_creator(GetSettingName(name), value.ToNonNullString());
         }
 
         /// <summary>
         /// Adds a setting to the application's configuration file, if it doesn't already exist.
         /// </summary>
-        /// <param name="name">Setting name.</param>
+        /// <param name="name">Field or property name.</param>
         /// <param name="value">Setting value.</param>
         /// <remarks>
         /// Use this function to ensure a setting exists, it will not override an existing value.
@@ -225,56 +270,56 @@ namespace PCS.Configuration
         public void CreateValue<T>(string name, T value)
         {
             if (value == null)
-                m_creator(name, "");
+                m_creator(GetSettingName(name), "");
             else
-                m_creator(name, Common.TypeConvertToString(value));
+                m_creator(GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>
         /// Gets the application's configuration file setting converted to the given type.
         /// </summary>
         /// <typeparam name="T">Type to use for setting conversion.</typeparam>
-        /// <param name="name">Setting name.</param>
+        /// <param name="name">Field or property name.</param>
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public T GetValue<T>(string name)
         {
-            return m_getter(name).ConvertToType<T>();
+            return m_getter(GetSettingName(name)).ConvertToType<T>();
         }
 
         /// <summary>
         /// Gets the application's configuration file setting converted to the given type.
         /// </summary>
-        /// <param name="name">Setting name.</param>
+        /// <param name="name">Field or property name.</param>
         /// <param name="type">Setting type.</param>
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public object GetValue(string name, Type type)
         {
-            return m_getter(name).ConvertToType(type);
+            return m_getter(GetSettingName(name)).ConvertToType(type);
         }
 
         /// <summary>
         /// Copies the specified application setting into the given value.
         /// </summary>
         /// <typeparam name="T">Type to use for setting conversion.</typeparam>
-        /// <param name="name">Setting name.</param>
+        /// <param name="name">Field or property name.</param>
         /// <param name="value">Setting value.</param>
         public void GetValue<T>(string name, out T value)
         {
-            value = m_getter(name).ConvertToType<T>();
+            value = m_getter(GetSettingName(name)).ConvertToType<T>();
         }
 
         /// <summary>
         /// Copies the given value into the specified application setting.
         /// </summary>
         /// <typeparam name="T">Type to use for setting conversion.</typeparam>
-        /// <param name="name">Setting name.</param>
+        /// <param name="name">Field or property name.</param>
         /// <param name="value">Setting value.</param>
         public void SetValue<T>(string name, T value)
         {
             if (value == null)
-                m_setter(name, "");
+                m_setter(GetSettingName(name), "");
             else
-                m_setter(name, Common.TypeConvertToString(value));
+                m_setter(GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -300,7 +345,7 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Returns an enumerator that iterates through a collection.
+        /// Returns an enumerator that iterates through the settings collection.
         /// </summary>
         /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
         public abstract IEnumerator GetEnumerator();
@@ -336,9 +381,10 @@ namespace PCS.Configuration
         /// Executes specified action over all public dervied class member fields.
         /// </summary>
         /// <param name="fieldAction">Action to excute for all dervied class member fields.</param>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected void ExecuteActionForFields(Action<FieldInfo> fieldAction)
         {
-            ExecuteActionForMembers(fieldAction, this.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+            ExecuteActionForMembers(fieldAction, this.GetType().GetFields(m_memberAccessBindingFlags));
         }
 
         /// <summary>
@@ -346,10 +392,11 @@ namespace PCS.Configuration
         /// </summary>
         /// <param name="propertyAction">Action to execute for all properties.</param>
         /// <param name="isGetOrSet"><see cref="BindingFlags.GetProperty"/> or <see cref="BindingFlags.SetProperty"/>.</param>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
         {
             // Make sure only non-indexer properties are used for settings
-            ExecuteActionForMembers(property => { if (property.GetIndexParameters().Length == 0) propertyAction(property); }, this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly | isGetOrSet));
+            ExecuteActionForMembers(property => { if (property.GetIndexParameters().Length == 0) propertyAction(property); }, this.GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
         }
 
         // Execute specified action over specified memembers
@@ -373,6 +420,55 @@ namespace PCS.Configuration
                     memberAction(member);
                 }
             }
+        }
+
+        /// <summary>
+        /// Attempts to find specified attribute and return specified value.
+        /// </summary>
+        /// <typeparam name="TAttribute">Type of <see cref="Attribute"/> to find.</typeparam>
+        /// <param name="name">Name of field or property to search for attribute.</param>
+        /// <param name="defaultValue">Default value to return if attribute doesn't exist.</param>
+        /// <param name="attributeValue">Function delegate used to return desired attribute property.</param>
+        /// <returns>Specified attribute value if it exists; otherwise default value.</returns>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected string GetAttributeValue<TAttribute>(string name, string defaultValue, Func<TAttribute, string> attributeValue) where TAttribute : Attribute
+        {
+            TAttribute attribute;
+
+            // See if field exists with specified name
+            FieldInfo field = this.GetType().GetField(name, m_memberAccessBindingFlags);
+
+            if (field != null)
+            {
+                // See if attribute exists on field
+                if (field.TryGetAttribute(out attribute))
+                {
+                    // Return value as specified by delegate
+                    return attributeValue(attribute);
+                }
+
+                // Attribute wasn't found, return default value
+                return defaultValue;
+            }
+
+            // See if property exists with specified name
+            PropertyInfo property = this.GetType().GetProperty(name, m_memberAccessBindingFlags);
+
+            if (property != null)
+            {
+                // See if attribute exists on property
+                if (property.TryGetAttribute(out attribute))
+                {
+                    // Return value as specified by delegate
+                    return attributeValue(attribute);
+                }
+
+                // Attribute wasn't found, return default value
+                return defaultValue;
+            }
+
+            // Return default value
+            return defaultValue;
         }
 
         #endregion

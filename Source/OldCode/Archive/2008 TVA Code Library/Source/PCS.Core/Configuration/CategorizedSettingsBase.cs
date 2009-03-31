@@ -59,6 +59,8 @@ namespace PCS.Configuration
     ///         public int IntVal = 1;
     ///         public float FloatVal = 3.14F;
     ///         public string StrVal = "This is a test...";
+    ///         
+    ///         [
     ///         public MyEnum EnumVal = MyEnum.Three;
     /// 
     ///         // Mark this field to not be serialized to configuration file...
@@ -232,47 +234,6 @@ namespace PCS.Configuration
 
             // Otherwise return default category name
             return m_categoryName;
-        }
-
-        // Attempt to find specified attribute and return value
-        private string GetAttributeValue<TAttribute>(string name, string defaultValue, Func<TAttribute, string> attributeValue) where TAttribute : Attribute
-        {
-            TAttribute attribute;
-
-            // See if field exists with specified name
-            FieldInfo field = this.GetType().GetField(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-            if (field != null)
-            {
-                // See if attribute exists on field
-                if (field.TryGetAttribute(out attribute))
-                {
-                    // Return value as specified by delegate
-                    return attributeValue(attribute);
-                }
-
-                // Attribute wasn't found, return default value
-                return defaultValue;
-            }
-
-            // See if property exists with specified name
-            PropertyInfo property = this.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-            if (property != null)
-            {
-                // See if attribute exists on property
-                if (property.TryGetAttribute(out attribute))
-                {
-                    // Return value as specified by delegate
-                    return attributeValue(attribute);
-                }
-
-                // Attribute wasn't found, return default value
-                return defaultValue;
-            }
-
-            // Return default value
-            return defaultValue;
         }
 
         /// <summary>
