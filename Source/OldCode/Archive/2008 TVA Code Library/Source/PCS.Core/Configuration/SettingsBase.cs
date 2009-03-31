@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Configuration;
 using System.Reflection;
 using System.ComponentModel;
@@ -32,7 +33,7 @@ namespace PCS.Configuration
     /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class SettingsBase : IDisposable
+    public abstract class SettingsBase : IDisposable, IEnumerable
     {
         #region [ Members ]
 
@@ -297,6 +298,12 @@ namespace PCS.Configuration
             // Load current settings
             Load();
         }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
+        public abstract IEnumerator GetEnumerator();
 
         /// <summary>
         /// Loads configuration file into setting fields.

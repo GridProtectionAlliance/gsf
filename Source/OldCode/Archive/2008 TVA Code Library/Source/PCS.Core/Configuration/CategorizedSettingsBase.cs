@@ -19,6 +19,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using PCS.Reflection;
@@ -99,7 +100,7 @@ namespace PCS.Configuration
         /// </summary>
         /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
         public CategorizedSettingsBase(string categoryName)
-            : this(ConfigurationFile.Current, categoryName, true, false)
+            : this(ConfigurationFile.Current, categoryName, true, false, true)
         {
         }
 
@@ -120,7 +121,7 @@ namespace PCS.Configuration
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </remarks>
         public CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
-            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute)
+            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true)
         {
         }
 
@@ -134,14 +135,22 @@ namespace PCS.Configuration
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
         /// to exist before a field or property is serialized to the configuration file.
         /// </param>
+        /// <param name="initialize">Determines if <see cref="SettingsBase.Initialize"/> method should be called from constructor.</param>
         /// <remarks>
+        /// <para>
         /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
         /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
         /// property then the member value will serialized into the configuration file in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
+        /// </para>
+        /// <para>
+        /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constuctor,
+        /// in this case <paramref name="initialize"/> should be set to <c>false</c>, then the <see cref="SettingsBase.Initialize"/>
+        /// method should be called manually after all properties have been initialized.
+        /// </para>
         /// </remarks>
-        public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
+        public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
             ConfigFile = configFile;
@@ -154,7 +163,8 @@ namespace PCS.Configuration
             Creator = (setting, value) => ConfigFile.Settings[GetCategoryName(setting)].Add(setting, value);
 
             // Make sure settings exist and load current values
-            Initialize();
+            if (initialize)
+                Initialize();
         }
 
         #endregion
@@ -246,6 +256,18 @@ namespace PCS.Configuration
 
             // Return default category name
             return m_categoryName;
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection of <see cref="CategorizedSettingsElement"/> objects.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
+        /// <remarks>
+        /// This enumerator only enumerates settings from the default category.
+        /// </remarks>
+        public override IEnumerator GetEnumerator()
+        {
+            return ((IEnumerable)ConfigFile.Settings[m_categoryName]).GetEnumerator();
         }
 
         #endregion
