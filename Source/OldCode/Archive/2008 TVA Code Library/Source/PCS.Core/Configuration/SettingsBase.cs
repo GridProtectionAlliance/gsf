@@ -42,9 +42,9 @@ namespace PCS.Configuration
 
         // Fields
         private ConfigurationFile m_configFile;
-        private Func<string, string> m_getter;
-        private Action<string, string> m_setter;
-        private Action<string, string> m_creator;
+        private Func<string, string, string> m_getter;
+        private Action<string, string, string> m_setter;
+        private Action<string, string, string> m_creator;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireSerializeSettingAttribute;
         private bool m_disposed;
@@ -101,9 +101,14 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to delegate used to retireve settings values.
         /// </summary>
+        /// <remarks>
+        /// Func.T1 is field or property name.<br/>
+        /// Func.T2 is setting name.<br/>
+        /// Func.TResult is returned setting value.
+        /// </remarks>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected Func<string, string> Getter
+        protected Func<string, string, string> Getter
         {
             get
             {
@@ -121,12 +126,18 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to delegate used to assign settings values.
         /// </summary>
+        /// <remarks>
+        /// Action.T1 is field or property name.<br/>
+        /// Action.T2 is setting name.<br/>
+        /// Action.T3 is setting value.
+        /// </remarks>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected Action<string, string> Setter
+        protected Action<string, string, string> Setter
         {
             get
             {
+                
                 return m_setter;
             }
             set
@@ -141,9 +152,14 @@ namespace PCS.Configuration
         /// <summary>
         /// Gets or sets reference to delgate used to create settings with a default value, if they don't exist.
         /// </summary>
+        /// <remarks>
+        /// Action.T1 is field or property name.<br/>
+        /// Action.T2 is setting name.<br/>
+        /// Action.T3 is setting value.
+        /// </remarks>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected Action<string, string> Creator
+        protected Action<string, string, string> Creator
         {
             get
             {
@@ -256,7 +272,7 @@ namespace PCS.Configuration
         /// </remarks>
         public void CreateValue(string name, string value)
         {
-            m_creator(GetSettingName(name), value.ToNonNullString());
+            m_creator(name, GetSettingName(name), value.ToNonNullString());
         }
 
         /// <summary>
@@ -270,9 +286,9 @@ namespace PCS.Configuration
         public void CreateValue<T>(string name, T value)
         {
             if (value == null)
-                m_creator(GetSettingName(name), "");
+                m_creator(name, GetSettingName(name), "");
             else
-                m_creator(GetSettingName(name), Common.TypeConvertToString(value));
+                m_creator(name, GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -283,7 +299,7 @@ namespace PCS.Configuration
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public T GetValue<T>(string name)
         {
-            return m_getter(GetSettingName(name)).ConvertToType<T>();
+            return m_getter(name, GetSettingName(name)).ConvertToType<T>();
         }
 
         /// <summary>
@@ -294,7 +310,7 @@ namespace PCS.Configuration
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public object GetValue(string name, Type type)
         {
-            return m_getter(GetSettingName(name)).ConvertToType(type);
+            return m_getter(name, GetSettingName(name)).ConvertToType(type);
         }
 
         /// <summary>
@@ -305,7 +321,7 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         public void GetValue<T>(string name, out T value)
         {
-            value = m_getter(GetSettingName(name)).ConvertToType<T>();
+            value = m_getter(name, GetSettingName(name)).ConvertToType<T>();
         }
 
         /// <summary>
@@ -317,9 +333,9 @@ namespace PCS.Configuration
         public void SetValue<T>(string name, T value)
         {
             if (value == null)
-                m_setter(GetSettingName(name), "");
+                m_setter(name, GetSettingName(name), "");
             else
-                m_setter(GetSettingName(name), Common.TypeConvertToString(value));
+                m_setter(name, GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>

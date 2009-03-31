@@ -55,6 +55,8 @@ namespace PCS.Configuration
     ///         public bool BoolVal = true;
     ///         public int IntVal = 1;
     ///         public float FloatVal = 3.14F;
+    ///         
+    ///         [SettingName("StringValue")]
     ///         public string StrVal = "This is a test...";
     ///         public MyEnum EnumVal = MyEnum.Three;
     /// 
@@ -112,9 +114,9 @@ namespace PCS.Configuration
             ConfigFile = configFile;
 
             // Define delegates used to access and create settings in configuration file
-            Getter = setting => ConfigFile.AppSettings.Settings[setting].Value;
-            Setter = (setting, value) => ConfigFile.AppSettings.Settings[setting].Value = value;
-            Creator = (setting, value) => { if (Getter(setting) == null) Setter(setting, value); };
+            Getter = (name, setting) => ConfigFile.AppSettings.Settings[setting].Value;
+            Setter = (name, setting, value) => ConfigFile.AppSettings.Settings[setting].Value = value;
+            Creator = (name, setting, value) => { if (Getter(name, setting) == null) Setter(name, setting, value); };
 
             // Make sure settings exist and load current values
             if (initialize)

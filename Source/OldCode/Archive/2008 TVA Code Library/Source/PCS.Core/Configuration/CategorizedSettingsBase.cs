@@ -58,9 +58,10 @@ namespace PCS.Configuration
     ///         public bool BoolVal = true;
     ///         public int IntVal = 1;
     ///         public float FloatVal = 3.14F;
+    ///         
+    ///         [SettingName("StringValue")]
     ///         public string StrVal = "This is a test...";
     ///         
-    ///         [
     ///         public MyEnum EnumVal = MyEnum.Three;
     /// 
     ///         // Mark this field to not be serialized to configuration file...
@@ -164,9 +165,9 @@ namespace PCS.Configuration
             m_useCategoryAttributes = useCategoryAttributes;
 
             // Define delegates used to access and create settings in configuration file
-            Getter = setting => ConfigFile.Settings[GetCategoryName(setting)][setting].Value;
-            Setter = (setting, value) => ConfigFile.Settings[GetCategoryName(setting)][setting].Value = value;
-            Creator = (setting, value) => ConfigFile.Settings[GetCategoryName(setting)].Add(setting, value, GetDescription(setting));
+            Getter = (name, setting) => ConfigFile.Settings[GetCategoryName(name)][setting].Value;
+            Setter = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)][setting].Value = value;
+            Creator = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name));
 
             // Make sure settings exist and load current values
             if (initialize)
