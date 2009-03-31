@@ -12,6 +12,10 @@
 //  -----------------------------------------------------------------------------------------------------
 //  01/30/2009 - James R Carroll
 //       Generated original version of source code.
+//  03/31/2009 - James R Carroll
+//       Made initialze during constructor optional for languages that do not initialize
+//           member variables before call to constructor (e.g., Visual Basic.NET).
+//       Updated class to pick up DesctiptionAttribute and apply value to settings.
 //
 //*******************************************************************************************************
 
@@ -64,7 +68,7 @@ namespace PCS.Configuration
     ///         public MySettings()
     ///             : base("GeneralSettings") {}
     /// 
-    ///         [Category("OtherSettings")]
+    ///         [Category("OtherSettings"), Description("My double value setting description."]
     ///         public double DoubleVal
     ///         {
     ///             get
@@ -160,7 +164,7 @@ namespace PCS.Configuration
             // Define delegates used to access and create settings in configuration file
             Getter = setting => ConfigFile.Settings[GetCategoryName(setting)][setting].Value;
             Setter = (setting, value) => ConfigFile.Settings[GetCategoryName(setting)][setting].Value = value;
-            Creator = (setting, value) => ConfigFile.Settings[GetCategoryName(setting)].Add(setting, value);
+            Creator = (setting, value) => ConfigFile.Settings[GetCategoryName(setting)].Add(setting, value, GetDescription(setting));
 
             // Make sure settings exist and load current values
             if (initialize)
@@ -213,49 +217,62 @@ namespace PCS.Configuration
 
         #region [ Methods ]
 
+        // Lookup description for field or property
+        private string GetDescription(string name)
+        {
+            return GetAttributeValue<DescriptionAttribute>(name, "", attribute => attribute.Description);
+        }
+
         // Lookup category name for field or property
         private string GetCategoryName(string name)
         {
             // If user wants to respect category attributes, we attempt to use those as configuration section names
             if (m_useCategoryAttributes)
+                return GetAttributeValue<CategoryAttribute>(name, m_categoryName, attribute => attribute.Category);
+
+            // Otherwise return default category name
+            return m_categoryName;
+        }
+
+        // Attempt to find specified attribute and return value
+        private string GetAttributeValue<TAttribute>(string name, string defaultValue, Func<TAttribute, string> attributeValue) where TAttribute : Attribute
+        {
+            TAttribute attribute;
+
+            // See if field exists with specified name
+            FieldInfo field = this.GetType().GetField(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            if (field != null)
             {
-                CategoryAttribute attribute;
-
-                // See if field exists with specified name
-                FieldInfo field = this.GetType().GetField(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-                if (field != null)
+                // See if attribute exists on field
+                if (field.TryGetAttribute(out attribute))
                 {
-                    // See if category attribute exists on field
-                    if (field.TryGetAttribute(out attribute))
-                    {
-                        // Return category name as specified in attribute (base class will make string XML compliant)
-                        return attribute.Category;
-                    }
-
-                    // Category attribute wasn't found, just use default category name
-                    return m_categoryName;
+                    // Return value as specified by delegate
+                    return attributeValue(attribute);
                 }
 
-                // See if property exists with specified name
-                PropertyInfo property = this.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-                if (property != null)
-                {
-                    // See if category attribute exists on property
-                    if (property.TryGetAttribute(out attribute))
-                    {
-                        // Return category name as specified in attribute (base class will make string XML compliant)
-                        return attribute.Category;
-                    }
-
-                    // Category attribute wasn't found, just use default category name
-                    return m_categoryName;
-                }
+                // Attribute wasn't found, return default value
+                return defaultValue;
             }
 
-            // Return default category name
-            return m_categoryName;
+            // See if property exists with specified name
+            PropertyInfo property = this.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            if (property != null)
+            {
+                // See if attribute exists on property
+                if (property.TryGetAttribute(out attribute))
+                {
+                    // Return value as specified by delegate
+                    return attributeValue(attribute);
+                }
+
+                // Attribute wasn't found, return default value
+                return defaultValue;
+            }
+
+            // Return default value
+            return defaultValue;
         }
 
         /// <summary>

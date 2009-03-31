@@ -332,14 +332,21 @@ namespace PCS.Configuration
             m_configFile.Save();
         }
 
-        // Execute specified action over all public dervied class fields
-        private void ExecuteActionForFields(Action<FieldInfo> fieldAction)
+        /// <summary>
+        /// Executes specified action over all public dervied class member fields.
+        /// </summary>
+        /// <param name="fieldAction">Action to excute for all dervied class member fields.</param>
+        protected void ExecuteActionForFields(Action<FieldInfo> fieldAction)
         {
             ExecuteActionForMembers(fieldAction, this.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly));
         }
 
-        // Execute specified action over all public dervied class "set" properties
-        private void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
+        /// <summary>
+        /// Executes specified action over all public dervied class properties.
+        /// </summary>
+        /// <param name="propertyAction">Action to execute for all properties.</param>
+        /// <param name="isGetOrSet"><see cref="BindingFlags.GetProperty"/> or <see cref="BindingFlags.SetProperty"/>.</param>
+        protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
         {
             // Make sure only non-indexer properties are used for settings
             ExecuteActionForMembers(property => { if (property.GetIndexParameters().Length == 0) propertyAction(property); }, this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly | isGetOrSet));
