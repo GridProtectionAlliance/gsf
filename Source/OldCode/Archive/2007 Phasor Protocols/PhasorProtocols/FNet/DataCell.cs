@@ -328,7 +328,7 @@ namespace PCS.PhasorProtocols.FNet
                 FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, frequency, 0.0D);
 
             // Update (or create) phasor value
-            Angle angle = Angle.FromDegrees(double.Parse(data[Element.Angle]));
+            Angle angle = double.Parse(data[Element.Angle]);
             double magnitude = double.Parse(data[Element.Voltage]);
             PhasorValue phasor = null;
 

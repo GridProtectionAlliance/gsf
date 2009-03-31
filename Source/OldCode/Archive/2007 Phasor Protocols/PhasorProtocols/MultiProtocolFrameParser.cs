@@ -1088,6 +1088,11 @@ namespace PCS.PhasorProtocols
         /// </summary>
         public void Stop()
         {
+            m_enabled = false;
+            m_rateCalcTimer.Enabled = false;
+            m_lastFrameReceivedTime = 0;
+            m_configurationFrame = null;
+
             if (m_communicationClient != null)
             {
                 m_communicationClient.Disconnect();
@@ -1138,11 +1143,6 @@ namespace PCS.PhasorProtocols
                 m_frameParser.Dispose();
             }
             m_frameParser = null;
-
-            m_enabled = false;
-            m_rateCalcTimer.Enabled = false;
-            m_lastFrameReceivedTime = 0;
-            m_configurationFrame = null;
         }
 
         /// <summary>
@@ -1379,15 +1379,6 @@ namespace PCS.PhasorProtocols
         {
             if (ConnectionTerminated != null)
                 ConnectionTerminated(this, EventArgs.Empty);
-
-            if (m_communicationClient != null)
-            {
-                m_communicationClient.ConnectionEstablished -= m_communicationClient_ConnectionEstablished;
-                m_communicationClient.ConnectionAttempt -= m_communicationClient_ConnectionAttempt;
-                m_communicationClient.ConnectionException -= m_communicationClient_ConnectionException;
-                m_communicationClient.ConnectionTerminated -= m_communicationClient_ConnectionTerminated;
-            }
-            m_communicationClient = null;
         }
 
         #endregion
@@ -1444,15 +1435,6 @@ namespace PCS.PhasorProtocols
         {
             if (ConnectionTerminated != null)
                 ConnectionTerminated(this, EventArgs.Empty);
-
-            if (m_commandChannel != null)
-            {
-                m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
-                m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
-                m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;
-                m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
-            }
-            m_commandChannel = null;
         }
 
         #endregion
