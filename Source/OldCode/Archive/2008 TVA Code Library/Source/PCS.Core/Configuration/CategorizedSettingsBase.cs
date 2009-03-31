@@ -13,7 +13,7 @@
 //  01/30/2009 - James R Carroll
 //       Generated original version of source code.
 //  03/31/2009 - James R Carroll
-//       Made initialze during constructor optional for languages that do not initialize
+//       Made initialize during constructor optional for languages that do not initialize
 //           member variables before call to constructor (e.g., Visual Basic.NET).
 //       Updated class to pick up DesctiptionAttribute and apply value to settings.
 //
