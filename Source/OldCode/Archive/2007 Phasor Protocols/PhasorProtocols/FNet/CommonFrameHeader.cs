@@ -59,7 +59,7 @@ namespace PCS.PhasorProtocols.FNet
             {
                 if (binaryImage[x] == Common.EndByte)
                 {
-                    // We continue to scan through duplicate end bytes
+                    // We continue to scan through duplicate end bytes (nulls)
                     endIndex = x;
                     
                     if (stopIndex == 0)

@@ -635,6 +635,32 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets a boolean value that determines if connection is defined as a server based connection.
+        /// </summary>
+        public bool ConnectionIsServerBased
+        {
+            get
+            {
+                if (m_communicationClient != null)
+                    return false;
+
+                if (m_communicationServer == null)
+                {
+                    // No connection is currently active, see if connection string defines a server based connection
+                    if (!string.IsNullOrEmpty(m_connectionString))
+                    {
+                        Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+                        return settings.ContainsKey("server");
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Gets a reference to the internal <see cref="IFrameParser"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -1303,8 +1329,7 @@ namespace PCS.PhasorProtocols
                     {
                         // IEEE protocols "can" use UDP connection to support devices commands, but only
                         // when remote device acts as a UDP listener (i.e., a "server" connection)
-                        if (!string.IsNullOrEmpty(m_connectionString))
-                            return settings.ContainsKey("server");
+                        return settings.ContainsKey("server");
                     }
                 }
             }

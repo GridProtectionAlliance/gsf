@@ -36,7 +36,7 @@ namespace PCS.PhasorProtocols.FNet
         #region [ Members ]
 
         // Fields
-        private Ticks m_timeOffset;
+        private long m_timeOffset;
         private short m_frameRate;
         private LineFrequency m_nominalFrequency;
         private string m_stationName;
@@ -84,7 +84,7 @@ namespace PCS.PhasorProtocols.FNet
         [Category("Optional Connection Parameters"),
         Description("F-NET devices normally report time in 11 seconds past real-time, this parameter adjusts for this artificial delay.  Note parameter is in ticks (1 second = 10,000,000 ticks)."),
         DefaultValue(Common.DefaultTimeOffset)]
-        public Ticks TimeOffset
+        public long TimeOffset
         {
             get
             {
@@ -169,7 +169,7 @@ namespace PCS.PhasorProtocols.FNet
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serialize connection parameters
-            info.AddValue("timeOffset", (long)m_timeOffset);
+            info.AddValue("timeOffset", m_timeOffset);
             info.AddValue("frameRate", m_frameRate);
             info.AddValue("nominalFrequency", m_nominalFrequency, typeof(LineFrequency));
             info.AddValue("stationName", m_stationName);
