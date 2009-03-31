@@ -287,10 +287,10 @@ namespace PCS.Configuration
             // through of these making sure a setting exists for each field and property
 
             // Verify a configuration setting exists for each field
-            ExecuteActionForFields(field => CreateValue(field.Name, field.GetValue(this).ToNonNullString()));
+            ExecuteActionForFields(field => CreateValue(field.Name, field.GetValue(this)));
 
             // Verify a configuration setting exists for each property
-            ExecuteActionForProperties(property => CreateValue(property.Name, property.GetValue(this, null).ToNonNullString()), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => CreateValue(property.Name, property.GetValue(this, null)), BindingFlags.GetProperty);
 
             // If any new values were encountered, make sure they are flushed to config file
             m_configFile.Save();
