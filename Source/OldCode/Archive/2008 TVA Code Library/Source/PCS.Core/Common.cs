@@ -286,43 +286,54 @@ namespace PCS
         /// </remarks>
         public static bool IsDefaultValue(this object item)
         {
-            IConvertible convertible = item as IConvertible;
+            // Only reference types can be null, therefore null is its default value
+            if (item == null)
+                return true;
 
-            if (convertible != null)
+            Type itemType = item.GetType();
+
+            if (itemType.IsValueType)
             {
-                switch (convertible.GetTypeCode())
+                // Handle common types
+                IConvertible convertible = item as IConvertible;
+
+                if (convertible != null)
                 {
-                    case TypeCode.Boolean:
-                        return ((bool)item == default(bool));
-                    case TypeCode.SByte:
-                        return ((sbyte)item == default(sbyte));
-                    case TypeCode.Byte:
-                        return ((byte)item == default(byte));
-                    case TypeCode.Int16:
-                        return ((short)item == default(short));
-                    case TypeCode.UInt16:
-                        return ((ushort)item == default(ushort));
-                    case TypeCode.Int32:
-                        return ((int)item == default(int));
-                    case TypeCode.UInt32:
-                        return ((uint)item == default(uint));
-                    case TypeCode.Int64:
-                        return ((long)item == default(long));
-                    case TypeCode.UInt64:
-                        return ((ulong)item == default(ulong));
-                    case TypeCode.Single:
-                        return ((float)item == default(float));
-                    case TypeCode.Double:
-                        return ((double)item == default(double));
-                    case TypeCode.Decimal:
-                        return ((decimal)item == default(decimal));
-                    case TypeCode.Char:
-                        return ((char)item == default(char));
-                    case TypeCode.DateTime:
-                        return ((DateTime)item == default(DateTime));
-                    default:
-                        return (item == null);
+                    switch (convertible.GetTypeCode())
+                    {
+                        case TypeCode.Boolean:
+                            return ((bool)item == default(bool));
+                        case TypeCode.SByte:
+                            return ((sbyte)item == default(sbyte));
+                        case TypeCode.Byte:
+                            return ((byte)item == default(byte));
+                        case TypeCode.Int16:
+                            return ((short)item == default(short));
+                        case TypeCode.UInt16:
+                            return ((ushort)item == default(ushort));
+                        case TypeCode.Int32:
+                            return ((int)item == default(int));
+                        case TypeCode.UInt32:
+                            return ((uint)item == default(uint));
+                        case TypeCode.Int64:
+                            return ((long)item == default(long));
+                        case TypeCode.UInt64:
+                            return ((ulong)item == default(ulong));
+                        case TypeCode.Single:
+                            return ((float)item == default(float));
+                        case TypeCode.Double:
+                            return ((double)item == default(double));
+                        case TypeCode.Decimal:
+                            return ((decimal)item == default(decimal));
+                        case TypeCode.Char:
+                            return ((char)item == default(char));
+                        case TypeCode.DateTime:
+                            return ((DateTime)item == default(DateTime));
+                    }
                 }
+
+                // Handle custom value types
+                return ((ValueType)item).Equals(Activator.CreateInstance(itemType));
             }
 
             return (item == null);
