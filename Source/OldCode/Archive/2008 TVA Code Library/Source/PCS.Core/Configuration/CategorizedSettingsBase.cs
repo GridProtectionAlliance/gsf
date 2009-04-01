@@ -281,7 +281,17 @@ namespace PCS.Configuration
         /// </remarks>
         public override IEnumerator GetEnumerator()
         {
-            return ((IEnumerable)ConfigFile.Settings[m_categoryName]).GetEnumerator();
+            return GetEnumerator(m_categoryName);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection of <see cref="CategorizedSettingsElement"/> objects.
+        /// </summary>
+        /// <param name="category">Category name to enumerate.</param>
+        /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
+        public IEnumerator GetEnumerator(string category)
+        {
+            return ((IEnumerable)ConfigFile.Settings[category]).GetEnumerator();
         }
 
         #endregion
