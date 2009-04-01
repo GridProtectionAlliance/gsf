@@ -116,11 +116,6 @@ namespace PCS.Configuration
         {
             ConfigFile = configFile;
 
-            // Define delegates used to access and create settings in configuration file
-            Getter = (name, setting) => ConfigFile.AppSettings.Settings[setting].Value;
-            Setter = (name, setting, value) => ConfigFile.AppSettings.Settings[setting].Value = value;
-            Creator = (name, setting, value) => { if (Getter(name, setting) == null) Setter(name, setting, value); };
-
             // Make sure settings exist and load current values
             if (initialize)
                 Initialize();
@@ -129,6 +124,43 @@ namespace PCS.Configuration
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Create setting in configuration file if it doesn't already exist.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <param name="value">Setting value.</param>
+        internal override void CreateSetting(string name, string setting, string value)
+        {
+            if (RetrieveSetting(name, setting) == null)
+                StoreSetting(name, setting, value);
+        }
+
+        /// <summary>
+        /// Retrieves setting from configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <returns>Setting value.</returns>
+        internal override string RetrieveSetting(string name, string setting)
+        {
+            return ConfigFile.AppSettings.Settings[setting].Value;
+        }
+
+        /// <summary>
+        /// Stores setting to configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <param name="value">Setting value.</param>
+        internal override void StoreSetting(string name, string setting, string value)
+        {
+            ConfigFile.AppSettings.Settings[setting].Value = value;
+        }
 
         /// <summary>
         /// Returns an enumerator that iterates through a collection of <see cref="KeyValueConfigurationElement"/> objects.

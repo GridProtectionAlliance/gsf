@@ -44,9 +44,6 @@ namespace PCS.Configuration
 
         // Fields
         private ConfigurationFile m_configFile;
-        private Func<string, string, string> m_getter;
-        private Action<string, string, string> m_setter;
-        private Action<string, string, string> m_creator;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireSerializeSettingAttribute;
         private bool m_disposed;
@@ -97,82 +94,6 @@ namespace PCS.Configuration
                     throw new NullReferenceException("value cannot be null");
 
                 m_configFile = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets reference to delegate used to retireve settings values.
-        /// This property is for internal use.
-        /// </summary>
-        /// <remarks>
-        /// Func.T1 is field or property name.<br/>
-        /// Func.T2 is setting name.<br/>
-        /// Func.TResult is returned setting value.
-        /// </remarks>
-        /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        internal Func<string, string, string> Getter
-        {
-            get
-            {
-                return m_getter;
-            }
-            set
-            {
-                if (value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_getter = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets reference to delegate used to assign settings values.
-        /// This property is for internal use.
-        /// </summary>
-        /// <remarks>
-        /// Action.T1 is field or property name.<br/>
-        /// Action.T2 is setting name.<br/>
-        /// Action.T3 is setting value.
-        /// </remarks>
-        /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        internal Action<string, string, string> Setter
-        {
-            get
-            {
-                
-                return m_setter;
-            }
-            set
-            {
-                if (value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_setter = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets reference to delgate used to create settings with a default value, if they don't exist.
-        /// This property is for internal use.
-        /// </summary>
-        /// <remarks>
-        /// Action.T1 is field or property name.<br/>
-        /// Action.T2 is setting name.<br/>
-        /// Action.T3 is setting value.
-        /// </remarks>
-        /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        internal Action<string, string, string> Creator
-        {
-            get
-            {
-                return m_creator;
-            }
-            set
-            {
-                if (value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_creator = value;
             }
         }
 
@@ -247,6 +168,33 @@ namespace PCS.Configuration
         }
 
         /// <summary>
+        /// Create setting in configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <param name="value">Setting value.</param>
+        internal abstract void CreateSetting(string name, string setting, string value);
+
+        /// <summary>
+        /// Retrieves setting from configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <returns>Setting value.</returns>
+        internal abstract string RetrieveSetting(string name, string setting);
+
+        /// <summary>
+        /// Stores setting to configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <param name="value">Setting value.</param>
+        internal abstract void StoreSetting(string name, string setting, string value);
+
+        /// <summary>
         /// Gets setting name to use for specified field or property. 
         /// </summary>
         /// <param name="name">Field or property name.</param>
@@ -289,9 +237,9 @@ namespace PCS.Configuration
         public void CreateValue(string name, object value)
         {            
             if (value == null)
-                m_creator(name, GetSettingName(name), "");
+                CreateSetting(name, GetSettingName(name), "");
             else
-                m_creator(name, GetSettingName(name), Common.TypeConvertToString(value));
+                CreateSetting(name, GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -302,9 +250,9 @@ namespace PCS.Configuration
         public void SetValue(string name, object value)
         {
             if (value == null)
-                m_setter(name, GetSettingName(name), "");
+                StoreSetting(name, GetSettingName(name), "");
             else
-                m_setter(name, GetSettingName(name), Common.TypeConvertToString(value));
+                StoreSetting(name, GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -315,7 +263,7 @@ namespace PCS.Configuration
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public T GetValue<T>(string name)
         {
-            return m_getter(name, GetSettingName(name)).ConvertToType<T>();
+            return RetrieveSetting(name, GetSettingName(name)).ConvertToType<T>();
         }
 
         /// <summary>
@@ -326,7 +274,7 @@ namespace PCS.Configuration
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public object GetValue(string name, Type type)
         {
-            return m_getter(name, GetSettingName(name)).ConvertToType(type);
+            return RetrieveSetting(name, GetSettingName(name)).ConvertToType(type);
         }
 
         /// <summary>
@@ -337,7 +285,7 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         public void GetValue<T>(string name, out T value)
         {
-            value = m_getter(name, GetSettingName(name)).ConvertToType<T>();
+            value = RetrieveSetting(name, GetSettingName(name)).ConvertToType<T>();
         }
 
         /// <summary>
@@ -364,14 +312,14 @@ namespace PCS.Configuration
 
         /// <summary>
         /// Attempts to get best default value for given member.
-        /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name.</param>
         /// <param name="value">Current field or property value.</param>
         /// <remarks>
         /// If <paramref name="value"/> is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
         /// </remarks>
-        internal object DeriveDefaultValue(string name, object value)
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected object DeriveDefaultValue(string name, object value)
         {
             // See if value is equal to its default value (i.e., uninitialized)
             if (Common.IsDefaultValue(value))

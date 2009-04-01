@@ -167,11 +167,6 @@ namespace PCS.Configuration
             m_categoryName = categoryName;
             m_useCategoryAttributes = useCategoryAttributes;
 
-            // Define delegates used to access and create settings in configuration file
-            Getter = (name, setting) => ConfigFile.Settings[GetCategoryName(name)][setting].Value;
-            Setter = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)][setting].Value = value;
-            Creator = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name));
-
             // Make sure settings exist and load current values
             if (initialize)
                 Initialize();
@@ -224,6 +219,65 @@ namespace PCS.Configuration
         #region [ Methods ]
 
         /// <summary>
+        /// Create setting in configuration file if it doesn't already exist.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <param name="value">Setting value.</param>
+        internal override void CreateSetting(string name, string setting, string value)
+        {
+            ConfigFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name));
+        }
+
+        /// <summary>
+        /// Retrieves setting from configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <returns>Setting value.</returns>
+        internal override string RetrieveSetting(string name, string setting)
+        {
+            return ConfigFile.Settings[GetCategoryName(name)][setting].Value;
+        }
+
+        /// <summary>
+        /// Stores setting to configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
+        /// <param name="setting">Setting name.</param>
+        /// <param name="value">Setting value.</param>
+        internal override void StoreSetting(string name, string setting, string value)
+        {
+            ConfigFile.Settings[GetCategoryName(name)][setting].Value = value;
+        }
+
+        /// <summary>
+        /// Gets the category name to use for the specified field or property.
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="CategoryName"/> if attribute does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        /// <remarks>
+        /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
+        /// <see cref="CategoryName"/> value will be returned.
+        /// </remarks>
+        public string GetCategoryName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
+            // If user wants to respect category attributes, we attempt to use those as configuration section names
+            if (m_useCategoryAttributes)
+                return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);
+
+            // Otherwise return default category name
+            return m_categoryName;
+        }
+
+        /// <summary>
         /// Gets the description specified by <see cref="DescriptionAttribute"/>, if any, applied to the specified field or property. 
         /// </summary>
         /// <param name="name">Field or property name.</param>
@@ -249,29 +303,6 @@ namespace PCS.Configuration
                 throw new ArgumentException("name cannot be null or empty");
 
             return GetAttributeValue<EncryptSettingAttribute, bool>(name, false, attribute => attribute.Encrypt);
-        }
-
-        /// <summary>
-        /// Gets the category name to use for the specified field or property.
-        /// </summary>
-        /// <param name="name">Field or property name.</param>
-        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="CategoryName"/> if attribute does not exist.</returns>
-        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
-        /// <remarks>
-        /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
-        /// <see cref="CategoryName"/> value will be returned.
-        /// </remarks>
-        public string GetCategoryName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
-
-            // If user wants to respect category attributes, we attempt to use those as configuration section names
-            if (m_useCategoryAttributes)
-                return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);
-
-            // Otherwise return default category name
-            return m_categoryName;
         }
 
         /// <summary>
