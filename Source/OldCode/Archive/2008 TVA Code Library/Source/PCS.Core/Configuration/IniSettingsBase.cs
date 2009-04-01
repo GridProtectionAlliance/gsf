@@ -93,7 +93,7 @@ namespace PCS.Configuration
 
         // Fields
         private IniFile m_iniFile;
-        string m_categoryName;
+        string m_sectionName;
         bool m_useCategoryAttributes;
 
         #endregion
@@ -104,9 +104,9 @@ namespace PCS.Configuration
         /// Creates a new instance of the <see cref="IniSettingsBase"/> class for the application's INI file.
         /// </summary>
         /// <param name="iniFileName">Name of INI file to use for accessing settings.</param>
-        /// <param name="categoryName">Name of default category to use to get and set settings from INI file.</param>
-        public IniSettingsBase(string iniFileName, string categoryName)
-            : this(new IniFile(iniFileName), categoryName, true, false, true)
+        /// <param name="sectionName">Name of default section to use to get and set settings from INI file.</param>
+        public IniSettingsBase(string iniFileName, string sectionName)
+            : this(new IniFile(iniFileName), sectionName, true, false, true)
         {
         }
 
@@ -114,7 +114,7 @@ namespace PCS.Configuration
         /// Creates a new instance of the <see cref="IniSettingsBase"/> class for the application's INI file.
         /// </summary>
         /// <param name="iniFileName">Name of INI file to use for accessing settings.</param>
-        /// <param name="categoryName">Name of default category to use to get and set settings from INI file.</param>
+        /// <param name="sectionName">Name of default section to use to get and set settings from INI file.</param>
         /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
@@ -127,8 +127,8 @@ namespace PCS.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </remarks>
-        public IniSettingsBase(string iniFileName, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
-            : this(new IniFile(iniFileName), categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true)
+        public IniSettingsBase(string iniFileName, string sectionName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
+            : this(new IniFile(iniFileName), sectionName, useCategoryAttributes, requireSerializeSettingAttribute, true)
         {
         }
 
@@ -136,8 +136,8 @@ namespace PCS.Configuration
         /// Creates a new instance of the <see cref="IniSettingsBase"/> class for the application's INI file.
         /// </summary>
         /// <param name="iniFile">INI file to use for accessing settings.</param>
-        /// <param name="categoryName">Name of default category to use to get and set settings from INI file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="sectionName">Name of default section to use to get and set settings from INI file.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for section names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
         /// to exist before a field or property is serialized to the INI file.
@@ -158,11 +158,11 @@ namespace PCS.Configuration
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
-        public IniSettingsBase(IniFile iniFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
+        public IniSettingsBase(IniFile iniFile, string sectionName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
             m_iniFile = iniFile;
-            m_categoryName = categoryName;
+            m_sectionName = sectionName;
             m_useCategoryAttributes = useCategoryAttributes;
 
             // Make sure settings exist and load current values
@@ -194,30 +194,30 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Gets or sets default category name of section used to access settings in INI file.
+        /// Gets or sets default name of section used to access settings in INI file.
         /// </summary>
-        public string CategoryName
+        public string SectionName
         {
             get
             {
-                return m_categoryName;
+                return m_sectionName;
             }
             set
             {
-                m_categoryName = value;
+                m_sectionName = value;
             }
         }
 
         /// <summary>
         /// Gets or sets value that determines whether a <see cref="CategoryAttribute"/> applied to a field or property
-        /// will be used for the configurtion section 
+        /// will be used for the section name.
         /// </summary>
         /// <remarks>
         /// If <see cref="UseCategoryAttributes"/> is false, all settings will be placed in section labeled by the
-        /// <see cref="CategoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// <see cref="SectionName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
         /// property then the member value will serialized into the INI file in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
-        /// will serialized into the section labeled by the <see cref="CategoryName"/> value.
+        /// will serialized into the section labeled by the <see cref="SectionName"/> value.
         /// </remarks>
         public bool UseCategoryAttributes
         {
@@ -244,8 +244,10 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         internal override void CreateSetting(string name, string setting, string value)
         {
-            if (string.IsNullOrEmpty(m_iniFile[GetCategoryName(name), setting]))
-                m_iniFile[GetCategoryName(name), setting] = value;
+            string section = GetSectionName(name);
+
+            if (string.IsNullOrEmpty(m_iniFile[section, setting]))
+                m_iniFile[section, setting] = value;
         }
 
         /// <summary>
@@ -257,7 +259,7 @@ namespace PCS.Configuration
         /// <returns>Setting value.</returns>
         internal override string RetrieveSetting(string name, string setting)
         {
-            return m_iniFile[GetCategoryName(name), setting];
+            return m_iniFile[GetSectionName(name), setting];
         }
 
         /// <summary>
@@ -269,7 +271,7 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         internal override void StoreSetting(string name, string setting, string value)
         {
-            m_iniFile[GetCategoryName(name), setting] = value;
+            m_iniFile[GetSectionName(name), setting] = value;
         }
 
         /// <summary>
@@ -282,26 +284,26 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Gets the category name to use for the specified field or property.
+        /// Gets the section name to use for the specified field or property.
         /// </summary>
         /// <param name="name">Field or property name.</param>
-        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="CategoryName"/> if attribute does not exist.</returns>
+        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="SectionName"/> if attribute does not exist.</returns>
         /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
         /// <remarks>
         /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
-        /// <see cref="CategoryName"/> value will be returned.
+        /// <see cref="SectionName"/> value will be returned.
         /// </remarks>
-        public string GetCategoryName(string name)
+        public string GetSectionName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");
 
             // If user wants to respect category attributes, we attempt to use those as configuration section names
             if (m_useCategoryAttributes)
-                return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);
+                return GetAttributeValue<CategoryAttribute, string>(name, m_sectionName, attribute => attribute.Category);
 
             // Otherwise return default category name
-            return m_categoryName;
+            return m_sectionName;
         }
 
         ///// <summary>

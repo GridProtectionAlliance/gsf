@@ -213,7 +213,7 @@ namespace PCS.Configuration
 
         /// <summary>
         /// Gets or sets value that determines whether a <see cref="CategoryAttribute"/> applied to a field or property
-        /// will be used for the configurtion section 
+        /// will be used for the category name.
         /// </summary>
         /// <remarks>
         /// If <see cref="UseCategoryAttributes"/> is false, all settings will be placed in section labeled by the
