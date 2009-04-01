@@ -348,10 +348,10 @@ namespace PCS.Configuration
             // through of these making sure a setting exists for each field and property
 
             // Verify a configuration setting exists for each field
-            ExecuteActionForFields(field => CreateValue(field.Name, DeriveFieldValue(field)));
+            ExecuteActionForFields(field => CreateValue(field.Name, DeriveDefaultValue(field.Name, field.GetValue(this))));
 
             // Verify a configuration setting exists for each property
-            ExecuteActionForProperties(property => CreateValue(property.Name, DerivePropertyValue(property)), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => CreateValue(property.Name, DeriveDefaultValue(property.Name, property.GetValue(this, null))), BindingFlags.GetProperty);
 
             // If any new values were encountered, make sure they are flushed to config file
             m_configFile.Save();
@@ -361,41 +361,27 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Attempts to get best value for given field.
+        /// Attempts to get best default value for given member.
         /// This method is for internal use.
         /// </summary>
-        /// <param name="field">Field to derive value from.</param>
+        /// <param name="name">Field or property name.</param>
+        /// <param name="value">Current field or property value.</param>
         /// <remarks>
-        /// If <paramref name="field"/> value is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
+        /// If <paramref name="value"/> is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
         /// </remarks>
-        internal object DeriveFieldValue(FieldInfo field)
+        internal object DeriveDefaultValue(string name, object value)
         {
-            object value = field.GetValue(this);
-
+            // See if value is equal to its default value (i.e., uninitialized)
             if (value.IsDefaultValue())
-                value = GetDefaultValue(field.Name);
+            {
+                // See if any value exists in a DefaultValueAttribute
+                object defaultValue = GetDefaultValue(name);
+                if (defaultValue != null)
+                    return defaultValue;
+            }
 
             return value;
         }
-
-        /// <summary>
-        /// Attempts to get best value for given property.
-        /// This method is for internal use.
-        /// </summary>
-        /// <param name="property">Property to derive value from.</param>
-        /// <remarks>
-        /// If <paramref name="property"/> value is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
-        /// </remarks>
-        internal object DerivePropertyValue(PropertyInfo property)
-        {
-            object value = property.GetValue(this, null);
-
-            if (value.IsDefaultValue())
-                value = GetDefaultValue(property.Name);
-
-            return value;
-        }
-
 
         /// <summary>
         /// Returns an enumerator that iterates through the settings collection.
