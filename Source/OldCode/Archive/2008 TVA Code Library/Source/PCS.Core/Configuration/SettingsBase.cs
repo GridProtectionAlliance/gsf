@@ -366,7 +366,7 @@ namespace PCS.Configuration
         /// </summary>
         /// <param name="field">Field to derive value from.</param>
         /// <remarks>
-        /// If <paramref name="field"/> value is null any default value derived from <see cref="DefaultValueAttribute"/> will be used instead.
+        /// If <paramref name="field"/> value is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
         /// </remarks>
         internal object DeriveFieldValue(FieldInfo field)
         {
@@ -384,7 +384,7 @@ namespace PCS.Configuration
         /// </summary>
         /// <param name="property">Property to derive value from.</param>
         /// <remarks>
-        /// If <paramref name="property"/> value is null any default value derived from <see cref="DefaultValueAttribute"/> will be used instead.
+        /// If <paramref name="property"/> value is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
         /// </remarks>
         internal object DerivePropertyValue(PropertyInfo property)
         {
