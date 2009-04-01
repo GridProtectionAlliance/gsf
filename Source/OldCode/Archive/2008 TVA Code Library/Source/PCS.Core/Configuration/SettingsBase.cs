@@ -114,9 +114,8 @@ namespace PCS.Configuration
             }
         }
 
-
         /// <summary>
-        /// Gets the value of the specified field or property.
+        /// Gets or sets the value of the specified field or property.
         /// </summary>
         /// <param name="name">Field or property name.</param>
         /// <returns>Value of setting.</returns>
@@ -340,7 +339,8 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Returns an enumerator that iterates through the settings collection.
+        /// Returns an enumerator based on <see cref="String"/> elements that iterates over the field and property names of this class
+        /// that are targeted for serialization to the configuration file.
         /// </summary>
         /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
         public IEnumerator GetEnumerator()
