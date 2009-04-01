@@ -278,6 +278,56 @@ namespace PCS
             }
         }
 
+        /// <summary>Determines if given item is equal to its default value (e.g., null or 0.0).</summary>
+        /// <param name="item">Object to evaluate.</param>
+        /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
+        /// <remarks>
+        /// Native types default to zero, not null, therefore this can be used to evaulate an item is its default (i.e., uninitialized) value.
+        /// </remarks>
+        public static bool IsDefaultValue(this object item)
+        {
+            IConvertible convertible = item as IConvertible;
+
+            if (convertible != null)
+            {
+                switch (convertible.GetTypeCode())
+                {
+                    case TypeCode.Boolean:
+                        return ((bool)item == default(bool));
+                    case TypeCode.SByte:
+                        return ((sbyte)item == default(sbyte));
+                    case TypeCode.Byte:
+                        return ((byte)item == default(byte));
+                    case TypeCode.Int16:
+                        return ((short)item == default(short));
+                    case TypeCode.UInt16:
+                        return ((ushort)item == default(ushort));
+                    case TypeCode.Int32:
+                        return ((int)item == default(int));
+                    case TypeCode.UInt32:
+                        return ((uint)item == default(uint));
+                    case TypeCode.Int64:
+                        return ((long)item == default(long));
+                    case TypeCode.UInt64:
+                        return ((ulong)item == default(ulong));
+                    case TypeCode.Single:
+                        return ((float)item == default(float));
+                    case TypeCode.Double:
+                        return ((double)item == default(double));
+                    case TypeCode.Decimal:
+                        return ((decimal)item == default(decimal));
+                    case TypeCode.Char:
+                        return ((char)item == default(char));
+                    case TypeCode.DateTime:
+                        return ((DateTime)item == default(DateTime));
+                    default:
+                        return (item == null);
+                }
+            }
+
+            return (item == null);
+        }
+
         /// <summary>Determines if given item is a reference type.</summary>
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>

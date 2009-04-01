@@ -52,7 +52,7 @@ namespace PCS.Configuration
     ///     public class MySettings : CategorizedSettingsBase
     ///     {
     ///         // Private property fields (private fields will not be serialized)
-    ///         private double m_doubleVal = 1.159D;
+    ///         private double m_doubleVal;
     /// 
     ///         // Public settings fields
     ///         public bool BoolVal = true;
@@ -71,7 +71,7 @@ namespace PCS.Configuration
     ///         public MySettings()
     ///             : base("GeneralSettings") {}
     /// 
-    ///         [Category("OtherSettings"), Description("My double value setting description."]
+    ///         [Category("OtherSettings"), Description("My double value setting description."), DefaultValue(1.159D)]
     ///         public double DoubleVal
     ///         {
     ///             get
@@ -154,7 +154,8 @@ namespace PCS.Configuration
         /// <para>
         /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constuctor,
         /// in this case <paramref name="initialize"/> should be set to <c>false</c>, then the <see cref="SettingsBase.Initialize"/>
-        /// method should be called manually after all properties have been initialized.
+        /// method should be called manually after all properties have been initialized. Alternately, consider using the
+        /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
         public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
@@ -220,21 +221,49 @@ namespace PCS.Configuration
 
         #region [ Methods ]
 
-        // Lookup description for field or property
-        private string GetDescription(string name)
+        /// <summary>
+        /// Gets the description specified by <see cref="DescriptionAttribute"/>, if any, applied to the specified field or property. 
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Description applied to specified field or property; or null if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public string GetDescription(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
             return GetAttributeValue<DescriptionAttribute, string>(name, "", attribute => attribute.Description);
         }
 
-        // Lookup encrypt status for field or property
-        private bool GetEncryptStatus(string name)
+        /// <summary>
+        /// Gets the encryption status specified by <see cref="EncryptSettingAttribute"/>, if any, applied to the specified field or property. 
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Encryption status applied to specified field or property; or <c>false</c> if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public bool GetEncryptStatus(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
             return GetAttributeValue<EncryptSettingAttribute, bool>(name, false, attribute => attribute.Encrypt);
         }
 
-        // Lookup category name for field or property
-        private string GetCategoryName(string name)
+        /// <summary>
+        /// Gets the category name to use for the specified field or property.
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="CategoryName"/> if attribute does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        /// <remarks>
+        /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
+        /// <see cref="CategoryName"/> value will be returned.
+        /// </remarks>
+        public string GetCategoryName(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
             // If user wants to respect category attributes, we attempt to use those as configuration section names
             if (m_useCategoryAttributes)
                 return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);

@@ -21,6 +21,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Linq;
 using System.Text;
@@ -49,7 +50,7 @@ namespace PCS.Configuration
     ///     public class MySettings : AppSettingsBase
     ///     {
     ///         // Private property fields (private fields will not be serialized)
-    ///         private double m_doubleVal = 1.159D;
+    ///         private double m_doubleVal;
     /// 
     ///         // Public settings fields
     ///         public bool BoolVal = true;
@@ -64,6 +65,7 @@ namespace PCS.Configuration
     ///         [SerializeSetting(false)]
     ///         public decimal DecimalVal;
     /// 
+    ///         [DefaultValue(1.159D)];
     ///         public double DoubleVal
     ///         {
     ///             get
@@ -106,7 +108,8 @@ namespace PCS.Configuration
         /// <remarks>
         /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constuctor,
         /// in this case <paramref name="initialize"/> should be set to <c>false</c>, then the <see cref="SettingsBase.Initialize"/>
-        /// method should be called manually after all properties have been initialized.
+        /// method should be called manually after all properties have been initialized. Alternately, consider using the
+        /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </remarks>
         public AppSettingsBase(ConfigurationFile configFile, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)

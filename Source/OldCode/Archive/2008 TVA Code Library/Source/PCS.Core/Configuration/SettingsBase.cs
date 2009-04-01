@@ -100,6 +100,7 @@ namespace PCS.Configuration
 
         /// <summary>
         /// Gets or sets reference to delegate used to retireve settings values.
+        /// This property is for internal use.
         /// </summary>
         /// <remarks>
         /// Func.T1 is field or property name.<br/>
@@ -107,8 +108,7 @@ namespace PCS.Configuration
         /// Func.TResult is returned setting value.
         /// </remarks>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected Func<string, string, string> Getter
+        internal Func<string, string, string> Getter
         {
             get
             {
@@ -125,6 +125,7 @@ namespace PCS.Configuration
 
         /// <summary>
         /// Gets or sets reference to delegate used to assign settings values.
+        /// This property is for internal use.
         /// </summary>
         /// <remarks>
         /// Action.T1 is field or property name.<br/>
@@ -132,8 +133,7 @@ namespace PCS.Configuration
         /// Action.T3 is setting value.
         /// </remarks>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected Action<string, string, string> Setter
+        internal Action<string, string, string> Setter
         {
             get
             {
@@ -151,6 +151,7 @@ namespace PCS.Configuration
 
         /// <summary>
         /// Gets or sets reference to delgate used to create settings with a default value, if they don't exist.
+        /// This property is for internal use.
         /// </summary>
         /// <remarks>
         /// Action.T1 is field or property name.<br/>
@@ -158,8 +159,7 @@ namespace PCS.Configuration
         /// Action.T3 is setting value.
         /// </remarks>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected Action<string, string, string> Creator
+        internal Action<string, string, string> Creator
         {
             get
             {
@@ -248,7 +248,7 @@ namespace PCS.Configuration
         /// Gets setting name to use for specified field or property. 
         /// </summary>
         /// <param name="name">Field or property name.</param>
-        /// <returns>Setting name to use for specified field or property.</returns>
+        /// <returns><see cref="SettingNameAttribute.Name"/> applied to specified field or property; or <paramref name="name"/> if attribute does not exist.</returns>
         /// <remarks>
         /// Field or property name will be used for setting name unless user applied a <see cref="SettingNameAttribute"/>
         /// on the field or property to override name used to serialize value in configuration file.
@@ -263,16 +263,17 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Adds a setting to the application's configuration file, if it doesn't already exist.
+        /// Gets the default value specified by <see cref="DefaultValueAttribute"/>, if any, applied to the specified field or property. 
         /// </summary>
         /// <param name="name">Field or property name.</param>
-        /// <param name="value">Setting value.</param>
-        /// <remarks>
-        /// Use this function to ensure a setting exists, it will not override an existing value.
-        /// </remarks>
-        public void CreateValue(string name, string value)
+        /// <returns>Default value applied to specified field or property; or null if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public object GetDefaultValue(string name)
         {
-            m_creator(name, GetSettingName(name), value.ToNonNullString());
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
+            return GetAttributeValue<DefaultValueAttribute, object>(name, null, attribute => attribute.Value);
         }
 
         /// <summary>
@@ -283,12 +284,25 @@ namespace PCS.Configuration
         /// <remarks>
         /// Use this function to ensure a setting exists, it will not override an existing value.
         /// </remarks>
-        public void CreateValue<T>(string name, T value)
-        {
+        public void CreateValue(string name, object value)
+        {            
             if (value == null)
                 m_creator(name, GetSettingName(name), "");
             else
                 m_creator(name, GetSettingName(name), Common.TypeConvertToString(value));
+        }
+
+        /// <summary>
+        /// Copies the given value into the specified application setting.
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <param name="value">Setting value.</param>
+        public void SetValue(string name, object value)
+        {
+            if (value == null)
+                m_setter(name, GetSettingName(name), "");
+            else
+                m_setter(name, GetSettingName(name), Common.TypeConvertToString(value));
         }
 
         /// <summary>
@@ -325,21 +339,7 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Copies the given value into the specified application setting.
-        /// </summary>
-        /// <typeparam name="T">Type to use for setting conversion.</typeparam>
-        /// <param name="name">Field or property name.</param>
-        /// <param name="value">Setting value.</param>
-        public void SetValue<T>(string name, T value)
-        {
-            if (value == null)
-                m_setter(name, GetSettingName(name), "");
-            else
-                m_setter(name, GetSettingName(name), Common.TypeConvertToString(value));
-        }
-
-        /// <summary>
-        /// Initializes configuration settings from derived class fields.
+        /// Initializes configuration settings from derived class fields or properties.
         /// </summary>
         protected virtual void Initialize()
         {
@@ -348,10 +348,10 @@ namespace PCS.Configuration
             // through of these making sure a setting exists for each field and property
 
             // Verify a configuration setting exists for each field
-            ExecuteActionForFields(field => CreateValue(field.Name, field.GetValue(this)));
+            ExecuteActionForFields(field => CreateValue(field.Name, DeriveFieldValue(field)));
 
             // Verify a configuration setting exists for each property
-            ExecuteActionForProperties(property => CreateValue(property.Name, property.GetValue(this, null)), BindingFlags.GetProperty);
+            ExecuteActionForProperties(property => CreateValue(property.Name, DerivePropertyValue(property)), BindingFlags.GetProperty);
 
             // If any new values were encountered, make sure they are flushed to config file
             m_configFile.Save();
@@ -359,6 +359,43 @@ namespace PCS.Configuration
             // Load current settings
             Load();
         }
+
+        /// <summary>
+        /// Attempts to get best value for given field.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="field">Field to derive value from.</param>
+        /// <remarks>
+        /// If <paramref name="field"/> value is null any default value derived from <see cref="DefaultValueAttribute"/> will be used instead.
+        /// </remarks>
+        internal object DeriveFieldValue(FieldInfo field)
+        {
+            object value = field.GetValue(this);
+
+            if (value.IsDefaultValue())
+                value = GetDefaultValue(field.Name);
+
+            return value;
+        }
+
+        /// <summary>
+        /// Attempts to get best value for given property.
+        /// This method is for internal use.
+        /// </summary>
+        /// <param name="property">Property to derive value from.</param>
+        /// <remarks>
+        /// If <paramref name="property"/> value is null any default value derived from <see cref="DefaultValueAttribute"/> will be used instead.
+        /// </remarks>
+        internal object DerivePropertyValue(PropertyInfo property)
+        {
+            object value = property.GetValue(this, null);
+
+            if (value.IsDefaultValue())
+                value = GetDefaultValue(property.Name);
+
+            return value;
+        }
+
 
         /// <summary>
         /// Returns an enumerator that iterates through the settings collection.
