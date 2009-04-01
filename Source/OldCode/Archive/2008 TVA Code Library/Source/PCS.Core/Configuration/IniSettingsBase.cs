@@ -115,7 +115,7 @@ namespace PCS.Configuration
         /// </summary>
         /// <param name="iniFileName">Name of INI file to use for accessing settings.</param>
         /// <param name="sectionName">Name of default section to use to get and set settings from INI file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for section names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
         /// to exist before a field or property is serialized to the INI file.
