@@ -58,11 +58,11 @@ namespace PCS.Configuration
     ///         public bool BoolVal = true;
     ///         public int IntVal = 1;
     ///         public float FloatVal = 3.14F;
-    ///         
-    ///         [SettingName("StringValue")]
     ///         public string StrVal = "This is a test...";
-    ///         
     ///         public MyEnum EnumVal = MyEnum.Three;
+    ///         
+    ///         [SettingName("UserOptions"), EncryptSetting()]
+    ///         public string Password = "default";
     /// 
     ///         // Mark this field to not be serialized to configuration file...
     ///         [SerializeSetting(false)]
@@ -167,7 +167,7 @@ namespace PCS.Configuration
             // Define delegates used to access and create settings in configuration file
             Getter = (name, setting) => ConfigFile.Settings[GetCategoryName(name)][setting].Value;
             Setter = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)][setting].Value = value;
-            Creator = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name));
+            Creator = (name, setting, value) => ConfigFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name));
 
             // Make sure settings exist and load current values
             if (initialize)
@@ -223,7 +223,13 @@ namespace PCS.Configuration
         // Lookup description for field or property
         private string GetDescription(string name)
         {
-            return GetAttributeValue<DescriptionAttribute>(name, "", attribute => attribute.Description);
+            return GetAttributeValue<DescriptionAttribute, string>(name, "", attribute => attribute.Description);
+        }
+
+        // Lookup encrypt status for field or property
+        private bool GetEncryptStatus(string name)
+        {
+            return GetAttributeValue<EncryptSettingAttribute, bool>(name, false, attribute => attribute.Encrypt);
         }
 
         // Lookup category name for field or property
@@ -231,7 +237,7 @@ namespace PCS.Configuration
         {
             // If user wants to respect category attributes, we attempt to use those as configuration section names
             if (m_useCategoryAttributes)
-                return GetAttributeValue<CategoryAttribute>(name, m_categoryName, attribute => attribute.Category);
+                return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);
 
             // Otherwise return default category name
             return m_categoryName;

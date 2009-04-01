@@ -259,7 +259,7 @@ namespace PCS.Configuration
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");
 
-            return GetAttributeValue<SettingNameAttribute>(name, name, attribute => attribute.Name).NotEmpty(name);
+            return GetAttributeValue<SettingNameAttribute, string>(name, name, attribute => attribute.Name).NotEmpty(name);
         }
 
         /// <summary>
@@ -442,12 +442,13 @@ namespace PCS.Configuration
         /// Attempts to find specified attribute and return specified value.
         /// </summary>
         /// <typeparam name="TAttribute">Type of <see cref="Attribute"/> to find.</typeparam>
+        /// <typeparam name="TValue">Type of value attribute delegate returns.</typeparam>
         /// <param name="name">Name of field or property to search for attribute.</param>
         /// <param name="defaultValue">Default value to return if attribute doesn't exist.</param>
         /// <param name="attributeValue">Function delegate used to return desired attribute property.</param>
         /// <returns>Specified attribute value if it exists; otherwise default value.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        protected string GetAttributeValue<TAttribute>(string name, string defaultValue, Func<TAttribute, string> attributeValue) where TAttribute : Attribute
+        protected TValue GetAttributeValue<TAttribute, TValue>(string name, TValue defaultValue, Func<TAttribute, TValue> attributeValue) where TAttribute : Attribute
         {
             TAttribute attribute;
 
