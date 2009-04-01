@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  CategorizedSettingsBase.cs
+//  IniSettingsBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -10,14 +10,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/30/2009 - James R Carroll
-//       Generated original version of source code.
-//  03/31/2009 - James R Carroll
-//       Made initialize during constructor optional for languages that do not initialize
-//           member variables before call to constructor (e.g., Visual Basic.NET).
-//       Updated class to pick up DesctiptionAttribute and apply value to settings.
 //  04/01/2009 - James R Carroll
-//       Added code to optionally encrypt settings based on EncryptSettingAttribute.
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -29,20 +23,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using PCS.Reflection;
+using PCS.Interop;
 
 namespace PCS.Configuration
 {
     /// <summary>
-    /// Represents the base class for application settings that are synchronized with a categorized section in a configuration file.
+    /// Represents the base class for application settings that are synchronized to an INI file.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// In order to make custom types serializable for the configuration file, implement a <see cref="TypeConverter"/> for the type.<br/>
+    /// In order to make custom types serializable for the INI file, implement a <see cref="TypeConverter"/> for the type.<br/>
     /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </para>
     /// <example>
-    /// Here is an example class derived from <see cref="CategorizedSettingsBase"/> that automatically
-    /// serializes its fields and properties to the configuration file.
+    /// Here is an example class derived from <see cref="IniSettingsBase"/> that automatically
+    /// serializes its fields and properties to the INI file.
     /// <code>
     ///    public enum MyEnum
     ///     {
@@ -51,7 +46,7 @@ namespace PCS.Configuration
     ///         Three
     ///     }
     /// 
-    ///     public class MySettings : CategorizedSettingsBase
+    ///     public class MySettings : IniSettingsBase
     ///     {
     ///         // Private property fields (private fields will not be serialized)
     ///         private double m_doubleVal;
@@ -66,7 +61,7 @@ namespace PCS.Configuration
     ///         [SettingName("UserOptions"), EncryptSetting()]
     ///         public string Password = "default";
     /// 
-    ///         // Mark this field to not be serialized to configuration file...
+    ///         // Mark this field to not be serialized to INI file...
     ///         [SerializeSetting(false)]
     ///         public decimal DecimalVal;
     /// 
@@ -92,12 +87,12 @@ namespace PCS.Configuration
     /// </code>
     /// </example>
     /// </remarks>
-    public abstract class CategorizedSettingsBase : SettingsBase
+    public abstract class IniSettingsBase : SettingsBase
     {
         #region [ Members ]
 
         // Fields
-        private ConfigurationFile m_configFile;
+        private IniFile m_iniFile;
         string m_categoryName;
         bool m_useCategoryAttributes;
 
@@ -106,51 +101,53 @@ namespace PCS.Configuration
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
+        /// Creates a new instance of the <see cref="IniSettingsBase"/> class for the application's INI file.
         /// </summary>
-        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        public CategorizedSettingsBase(string categoryName)
-            : this(ConfigurationFile.Current, categoryName, true, false, true)
+        /// <param name="iniFileName">Name of INI file to use for accessing settings.</param>
+        /// <param name="categoryName">Name of default category to use to get and set settings from INI file.</param>
+        public IniSettingsBase(string iniFileName, string categoryName)
+            : this(new IniFile(iniFileName), categoryName, true, false, true)
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
+        /// Creates a new instance of the <see cref="IniSettingsBase"/> class for the application's INI file.
         /// </summary>
-        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="iniFileName">Name of INI file to use for accessing settings.</param>
+        /// <param name="categoryName">Name of default category to use to get and set settings from INI file.</param>
         /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
-        /// to exist before a field or property is serialized to the configuration file.
+        /// to exist before a field or property is serialized to the INI file.
         /// </param>
         /// <remarks>
         /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
         /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// property then the member value will serialized into the INI file in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </remarks>
-        public CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
-            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true)
+        public IniSettingsBase(string iniFileName, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
+            : this(new IniFile(iniFileName), categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true)
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
+        /// Creates a new instance of the <see cref="IniSettingsBase"/> class for the application's INI file.
         /// </summary>
-        /// <param name="configFile">Configuration file used for accessing settings.</param>
-        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="iniFile">INI file to use for accessing settings.</param>
+        /// <param name="categoryName">Name of default category to use to get and set settings from INI file.</param>
         /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
-        /// to exist before a field or property is serialized to the configuration file.
+        /// to exist before a field or property is serialized to the INI file.
         /// </param>
         /// <param name="initialize">Determines if <see cref="SettingsBase.Initialize"/> method should be called from constructor.</param>
         /// <remarks>
         /// <para>
         /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
         /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// property then the member value will serialized into the INI file in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </para>
@@ -161,10 +158,10 @@ namespace PCS.Configuration
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
-        public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
+        public IniSettingsBase(IniFile iniFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
-            m_configFile = configFile;
+            m_iniFile = iniFile;
             m_categoryName = categoryName;
             m_useCategoryAttributes = useCategoryAttributes;
 
@@ -178,26 +175,26 @@ namespace PCS.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets reference to working configuration file.
+        /// Gets or sets reference to working INI file.
         /// </summary>
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        protected ConfigurationFile ConfigFile
+        protected IniFile IniFile
         {
             get
             {
-                return m_configFile;
+                return m_iniFile;
             }
             set
             {
                 if (value == null)
                     throw new NullReferenceException("value cannot be null");
 
-                m_configFile = value;
+                m_iniFile = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets default category name of section used to access settings in configuration file.
+        /// Gets or sets default category name of section used to access settings in INI file.
         /// </summary>
         public string CategoryName
         {
@@ -218,7 +215,7 @@ namespace PCS.Configuration
         /// <remarks>
         /// If <see cref="UseCategoryAttributes"/> is false, all settings will be placed in section labeled by the
         /// <see cref="CategoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// property then the member value will serialized into the INI file in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <see cref="CategoryName"/> value.
         /// </remarks>
@@ -239,7 +236,7 @@ namespace PCS.Configuration
         #region [ Methods ]
 
         /// <summary>
-        /// Create setting in configuration file if it doesn't already exist.
+        /// Create setting in INI file if it doesn't already exist.
         /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
@@ -247,11 +244,12 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         internal override void CreateSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name));
+            if (string.IsNullOrEmpty(m_iniFile[GetCategoryName(name), setting]))
+                m_iniFile[GetCategoryName(name), setting] = value;
         }
 
         /// <summary>
-        /// Retrieves setting from configuration file.
+        /// Retrieves setting from INI file.
         /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
@@ -259,11 +257,11 @@ namespace PCS.Configuration
         /// <returns>Setting value.</returns>
         internal override string RetrieveSetting(string name, string setting)
         {
-            return m_configFile.Settings[GetCategoryName(name)][setting].Value;
+            return m_iniFile[GetCategoryName(name), setting];
         }
 
         /// <summary>
-        /// Stores setting to configuration file.
+        /// Stores setting to INI file.
         /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
@@ -271,16 +269,16 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         internal override void StoreSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)][setting].Value = value;
+            m_iniFile[GetCategoryName(name), setting] = value;
         }
 
         /// <summary>
-        /// Persist any pending changes to configuration file.
+        /// Persist any pending changes to INI file.
         /// This method is for internal use.
         /// </summary>
         internal override void PersistSettings()
         {
-            m_configFile.Save();
+            // INI files flush at every update...
         }
 
         /// <summary>
@@ -306,36 +304,8 @@ namespace PCS.Configuration
             return m_categoryName;
         }
 
-        /// <summary>
-        /// Gets the description specified by <see cref="DescriptionAttribute"/>, if any, applied to the specified field or property. 
-        /// </summary>
-        /// <param name="name">Field or property name.</param>
-        /// <returns>Description applied to specified field or property; or null if one does not exist.</returns>
-        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
-        public string GetDescription(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
-
-            return GetAttributeValue<DescriptionAttribute, string>(name, "", attribute => attribute.Description);
-        }
-
-        /// <summary>
-        /// Gets the encryption status specified by <see cref="EncryptSettingAttribute"/>, if any, applied to the specified field or property. 
-        /// </summary>
-        /// <param name="name">Field or property name.</param>
-        /// <returns>Encryption status applied to specified field or property; or <c>false</c> if one does not exist.</returns>
-        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
-        public bool GetEncryptStatus(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
-
-            return GetAttributeValue<EncryptSettingAttribute, bool>(name, false, attribute => attribute.Encrypt);
-        }
-
         ///// <summary>
-        ///// Returns an enumerator that iterates through a collection of <see cref="CategorizedSettingsElement"/> objects.
+        ///// Returns an enumerator that iterates through a collection of <see cref="String"/> objects.
         ///// </summary>
         ///// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
         ///// <remarks>
@@ -347,13 +317,13 @@ namespace PCS.Configuration
         //}
 
         ///// <summary>
-        ///// Returns an enumerator that iterates through a collection of <see cref="CategorizedSettingsElement"/> objects.
+        ///// Returns an enumerator that iterates through a collection of <see cref="String"/> objects.
         ///// </summary>
         ///// <param name="category">Category name to enumerate.</param>
         ///// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
         //public IEnumerator GetEnumerator(string category)
         //{
-        //    return ((IEnumerable)m_configFile.Settings[category]).GetEnumerator();
+        //    return ((IEnumerable)m_iniFile.GetSectionKeys(category)).GetEnumerator();
         //}
 
         #endregion

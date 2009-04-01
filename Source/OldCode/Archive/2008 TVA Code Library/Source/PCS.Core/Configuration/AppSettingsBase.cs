@@ -86,6 +86,13 @@ namespace PCS.Configuration
     /// </remarks>
     public abstract class AppSettingsBase : SettingsBase
     {
+        #region [ Members ]
+
+        // Fields
+        private ConfigurationFile m_configFile;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -114,11 +121,34 @@ namespace PCS.Configuration
         public AppSettingsBase(ConfigurationFile configFile, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
-            ConfigFile = configFile;
+            m_configFile = configFile;
 
             // Make sure settings exist and load current values
             if (initialize)
                 Initialize();
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets reference to working configuration file.
+        /// </summary>
+        /// <exception cref="NullReferenceException">value cannot be null.</exception>
+        protected ConfigurationFile ConfigFile
+        {
+            get
+            {
+                return m_configFile;
+            }
+            set
+            {
+                if (value == null)
+                    throw new NullReferenceException("value cannot be null");
+
+                m_configFile = value;
+            }
         }
 
         #endregion
@@ -162,14 +192,14 @@ namespace PCS.Configuration
             ConfigFile.AppSettings.Settings[setting].Value = value;
         }
 
-        /// <summary>
-        /// Returns an enumerator that iterates through a collection of <see cref="KeyValueConfigurationElement"/> objects.
-        /// </summary>
-        /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
-        public override IEnumerator GetEnumerator()
-        {
-            return ((IEnumerable)ConfigFile.AppSettings.Settings).GetEnumerator();
-        }
+        ///// <summary>
+        ///// Returns an enumerator that iterates through a collection of <see cref="KeyValueConfigurationElement"/> objects.
+        ///// </summary>
+        ///// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
+        //public override IEnumerator GetEnumerator()
+        //{
+        //    return ((IEnumerable)m_configFile.AppSettings.Settings).GetEnumerator();
+        //}
 
         #endregion
     }

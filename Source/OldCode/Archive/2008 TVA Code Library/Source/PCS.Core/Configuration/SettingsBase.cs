@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Reflection;
 using System.ComponentModel;
@@ -43,7 +44,6 @@ namespace PCS.Configuration
         #region [ Members ]
 
         // Fields
-        private ConfigurationFile m_configFile;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireSerializeSettingAttribute;
         private bool m_disposed;
@@ -79,25 +79,6 @@ namespace PCS.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets reference to working configuration file.
-        /// </summary>
-        /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        protected ConfigurationFile ConfigFile
-        {
-            get
-            {
-                return m_configFile;
-            }
-            set
-            {
-                if (value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_configFile = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets <see cref="BindingFlags"/> used to access fields and properties of dervied class.
         /// </summary>
         /// <remarks>
@@ -130,6 +111,25 @@ namespace PCS.Configuration
             set
             {
                 m_requireSerializeSettingAttribute = value;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the value of the specified field or property.
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Value of setting.</returns>
+        /// <remarks>This is the default member of this class.</remarks>
+        public string this[string name]
+        {
+            get
+            {
+                return GetValue<string>(name);
+            }
+            set
+            {
+                SetValue(name, value);
             }
         }
 
@@ -193,6 +193,12 @@ namespace PCS.Configuration
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
         internal abstract void StoreSetting(string name, string setting, string value);
+
+        /// <summary>
+        /// Persist any pending changes to configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        internal abstract void PersistSettings();
 
         /// <summary>
         /// Gets setting name to use for specified field or property. 
@@ -304,7 +310,7 @@ namespace PCS.Configuration
             ExecuteActionForProperties(property => CreateValue(property.Name, DeriveDefaultValue(property.Name, property.GetValue(this, null))), BindingFlags.GetProperty);
 
             // If any new values were encountered, make sure they are flushed to config file
-            m_configFile.Save();
+            PersistSettings();
 
             // Load current settings
             Load();
@@ -337,7 +343,18 @@ namespace PCS.Configuration
         /// Returns an enumerator that iterates through the settings collection.
         /// </summary>
         /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
-        public abstract IEnumerator GetEnumerator();
+        public IEnumerator GetEnumerator()
+        {
+            List<string> members = new List<string>();
+
+            // Get names of fields
+            ExecuteActionForFields(field => members.Add(field.Name));
+
+            // Get names of properties
+            ExecuteActionForProperties(property => members.Add(property.Name), BindingFlags.GetProperty);
+
+            return members.ToArray().GetEnumerator();
+        }
 
         /// <summary>
         /// Loads configuration file into setting fields.
@@ -363,7 +380,7 @@ namespace PCS.Configuration
             ExecuteActionForProperties(property => SetValue(property.Name, property.GetValue(this, null)), BindingFlags.GetProperty);
 
             // Make sure any changes are flushed to config file
-            m_configFile.Save();
+            PersistSettings();
         }
 
         /// <summary>
