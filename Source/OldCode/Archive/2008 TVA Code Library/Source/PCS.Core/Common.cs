@@ -282,7 +282,7 @@ namespace PCS
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
         /// <remarks>
-        /// Native types default to zero, not null, therefore this can be used to evaulate an item is its default (i.e., uninitialized) value.
+        /// Native types default to zero, not null, therefore this can be used to evaulate if an item is its default (i.e., uninitialized) value.
         /// </remarks>
         public static bool IsDefaultValue(this object item)
         {
