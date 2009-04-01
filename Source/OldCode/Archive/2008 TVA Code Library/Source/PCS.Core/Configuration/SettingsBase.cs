@@ -372,7 +372,7 @@ namespace PCS.Configuration
         internal object DeriveDefaultValue(string name, object value)
         {
             // See if value is equal to its default value (i.e., uninitialized)
-            if (value.IsDefaultValue())
+            if (Common.IsDefaultValue(value))
             {
                 // See if any value exists in a DefaultValueAttribute
                 object defaultValue = GetDefaultValue(name);

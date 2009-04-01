@@ -284,7 +284,7 @@ namespace PCS
         /// <remarks>
         /// Native types default to zero, not null, therefore this can be used to evaulate if an item is its default (i.e., uninitialized) value.
         /// </remarks>
-        public static bool IsDefaultValue(this object item)
+        public static bool IsDefaultValue(object item)
         {
             // Only reference types can be null, therefore null is its default value
             if (item == null)
