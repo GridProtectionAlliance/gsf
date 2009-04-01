@@ -66,7 +66,7 @@ namespace PCS.Configuration
     ///         public decimal DecimalVal;
     /// 
     ///         public MySettings()
-    ///             : base("GeneralSettings") {}
+    ///             : base(FilePath.GetAbsolutePath("MySettings.ini"), "GeneralSettings") {}
     /// 
     ///         [Category("OtherSettings"), Description("My double value setting description."), DefaultValue(1.159D)]
     ///         public double DoubleVal
