@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.Linq;
 using PCS.Reflection;
 using PCS.Security.Cryptography;
+using System.Text;
 
 namespace PCS.Configuration
 {
@@ -359,7 +360,46 @@ namespace PCS.Configuration
         // Generate encryption key based on any applied private encryption key in field or property attributes plus internal key
         private string GenerateEncryptionKey(string name)
         {
-            return GetEncryptKey(name).ToNonNullString() + InternalKey;
+            string internalKey = InternalKey;
+            string encryptionKey = GetEncryptKey(name);
+
+            if (encryptionKey == null)
+                return internalKey;
+
+            // We continue to further obfuscate key provided in attribute since this is easily reflected...
+            StringBuilder generatedKey = new StringBuilder();
+            char eKey, iKeyL, iKeyR;
+            int keyLength = internalKey.Length;
+            int index;
+
+            for (int i = 0; i < encryptionKey.Length; i++)
+            {
+                eKey = encryptionKey[i];
+                index = i % keyLength;
+                iKeyL = internalKey[index];
+                iKeyR = internalKey[keyLength - index - 1];
+
+                switch ((int)eKey % 3)
+                {
+                    case 0:
+                        generatedKey.Append(iKeyL);
+                        generatedKey.Append(eKey);
+                        generatedKey.Append(iKeyR);
+                        break;
+                    case 1:
+                        generatedKey.Append(iKeyR);
+                        generatedKey.Append(eKey);
+                        generatedKey.Append(iKeyL);
+                        break;
+                    case 2:
+                        generatedKey.Append(eKey);
+                        generatedKey.Append(iKeyL);
+                        generatedKey.Append(iKeyR);
+                        break;
+                }
+            }
+
+            return generatedKey.ToString();
         }
 
         /// <summary>
