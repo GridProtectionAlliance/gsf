@@ -16,7 +16,8 @@
 //       Added code to allow override of name used to serialize field or property to configuration file
 //          by applying a SettingNameAttribute to the member.
 //  04/01/2009 - James R Carroll
-//       Added code to pickup DefaultValueAttribute value if provided and current value was uninitialized
+//       Added code to optionally encrypt settings based on EncryptSettingAttribute and to pickup
+//          DefaultValueAttribute value if provided and current value was uninitialized.
 //
 //*******************************************************************************************************
 

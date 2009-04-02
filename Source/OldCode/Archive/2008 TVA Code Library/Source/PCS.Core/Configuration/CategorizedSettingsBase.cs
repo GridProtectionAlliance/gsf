@@ -16,8 +16,6 @@
 //       Made initialize during constructor optional for languages that do not initialize
 //           member variables before call to constructor (e.g., Visual Basic.NET).
 //       Updated class to pick up DesctiptionAttribute and apply value to settings.
-//  04/01/2009 - James R Carroll
-//       Added code to optionally encrypt settings based on EncryptSettingAttribute.
 //
 //*******************************************************************************************************
 
