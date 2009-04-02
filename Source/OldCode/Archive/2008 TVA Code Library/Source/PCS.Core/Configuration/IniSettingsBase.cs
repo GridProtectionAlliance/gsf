@@ -68,7 +68,7 @@ namespace PCS.Configuration
     ///         public MySettings()
     ///             : base(FilePath.GetAbsolutePath("MySettings.ini"), "GeneralSettings") {}
     /// 
-    ///         [Category("OtherSettings"), Description("My double value setting description."), DefaultValue(1.159D)]
+    ///         [Category("OtherSettings"), DefaultValue(1.159D)]
     ///         public double DoubleVal
     ///         {
     ///             get

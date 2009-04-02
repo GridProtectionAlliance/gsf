@@ -56,16 +56,17 @@ namespace PCS.Configuration
     ///         public bool BoolVal = true;
     ///         public int IntVal = 1;
     ///         public float FloatVal = 3.14F;
-    ///         
-    ///         [SettingName("StringValue")]
     ///         public string StrVal = "This is a test...";
     ///         public MyEnum EnumVal = MyEnum.Three;
+    ///         
+    ///         [SettingName("UserOptions"), EncryptSetting()]
+    ///         public string Password = "default";
     /// 
-    ///         // Mark this field to not be serialized to configuration file...
+    ///         // Mark this field to not be serialized to INI file...
     ///         [SerializeSetting(false)]
     ///         public decimal DecimalVal;
     /// 
-    ///         [DefaultValue(1.159D)];
+    ///         [Category("OtherSettings"), DefaultValue(1.159D)]
     ///         public double DoubleVal
     ///         {
     ///             get

@@ -68,7 +68,7 @@ namespace PCS.Configuration
     ///         public MySettings()
     ///             : base("HKEY_CURRENT_USER\\Software\\My Company\\My Product\\", "General Settings") {}
     /// 
-    ///         [Category("OtherSettings"), Description("My double value setting description."), DefaultValue(1.159D)]
+    ///         [Category("OtherSettings"), DefaultValue(1.159D)]
     ///         public double DoubleVal
     ///         {
     ///             get
