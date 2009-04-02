@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  CategorizedSettingsBase.cs
+//  RegistrySettingsBase.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -10,14 +10,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/30/2009 - James R Carroll
+//  04/02/2009 - James R Carroll
 //       Generated original version of source code.
-//  03/31/2009 - James R Carroll
-//       Made initialize during constructor optional for languages that do not initialize
-//           member variables before call to constructor (e.g., Visual Basic.NET).
-//       Updated class to pick up DesctiptionAttribute and apply value to settings.
-//  04/01/2009 - James R Carroll
-//       Added code to optionally encrypt settings based on EncryptSettingAttribute.
 //
 //*******************************************************************************************************
 
@@ -28,21 +22,22 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Microsoft.Win32;
 using PCS.Reflection;
 
 namespace PCS.Configuration
 {
     /// <summary>
-    /// Represents the base class for application settings that are synchronized with a categorized section in a configuration file.
+    /// Represents the base class for application settings that are synchronized to the registry.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// In order to make custom types serializable for the configuration file, implement a <see cref="TypeConverter"/> for the type.<br/>
+    /// In order to make custom types serializable for the registry, implement a <see cref="TypeConverter"/> for the type.<br/>
     /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </para>
     /// <example>
-    /// Here is an example class derived from <see cref="CategorizedSettingsBase"/> that automatically
-    /// serializes its fields and properties to the configuration file.
+    /// Here is an example class derived from <see cref="RegistrySettingsBase"/> that automatically
+    /// serializes its fields and properties to the registry.
     /// <code>
     ///    public enum MyEnum
     ///     {
@@ -51,7 +46,7 @@ namespace PCS.Configuration
     ///         Three
     ///     }
     /// 
-    ///     public class MySettings : CategorizedSettingsBase
+    ///     public class MySettings : RegistrySettingsBase
     ///     {
     ///         // Private property fields (private fields will not be serialized)
     ///         private double m_doubleVal;
@@ -66,12 +61,12 @@ namespace PCS.Configuration
     ///         [SettingName("UserOptions"), EncryptSetting()]
     ///         public string Password = "default";
     /// 
-    ///         // Mark this field to not be serialized to configuration file...
+    ///         // Mark this field to not be serialized to registry...
     ///         [SerializeSetting(false)]
     ///         public decimal DecimalVal;
     /// 
     ///         public MySettings()
-    ///             : base("GeneralSettings") {}
+    ///             : base("HKEY_CURRENT_USER\\Software\\My Company\\My Product\\", "General Settings") {}
     /// 
     ///         [Category("OtherSettings"), Description("My double value setting description."), DefaultValue(1.159D)]
     ///         public double DoubleVal
@@ -92,13 +87,13 @@ namespace PCS.Configuration
     /// </code>
     /// </example>
     /// </remarks>
-    public abstract class CategorizedSettingsBase : SettingsBase
+    public abstract class RegistrySettingsBase : SettingsBase
     {
         #region [ Members ]
 
         // Fields
-        private ConfigurationFile m_configFile;
-        string m_categoryName;
+        string m_rootPath;
+        string m_keyName;
         bool m_useCategoryAttributes;
 
         #endregion
@@ -106,51 +101,31 @@ namespace PCS.Configuration
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
+        /// Creates a new instance of the <see cref="RegistrySettingsBase"/> class for the application's registry based settings.
         /// </summary>
-        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        public CategorizedSettingsBase(string categoryName)
-            : this(ConfigurationFile.Current, categoryName, true, false, true)
+        /// <param name="rootPath">Defines the root registry path used to access settings in the registry (e.g., "HKEY_CURRENT_USER\\Software\\My Company\\My Product\\").</param>
+        /// <param name="keyName">Defines the name of default key used to access settings in the registry (e.g., "General Settings").</param>
+        public RegistrySettingsBase(string rootPath, string keyName)
+            : this(rootPath, keyName, true, false, true)
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
+        /// Creates a new instance of the <see cref="RegistrySettingsBase"/> class for the application's registry based settings.
         /// </summary>
-        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="rootPath">Defines the root registry path used to access settings in the registry (e.g., "HKEY_CURRENT_USER\\Software\\My Company\\My Product\\").</param>
+        /// <param name="keyName">Defines the name of default key used to access settings in the registry (e.g., "General Settings").</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for the registry key names.</param>
         /// <param name="requireSerializeSettingAttribute">
         /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
-        /// to exist before a field or property is serialized to the configuration file.
-        /// </param>
-        /// <remarks>
-        /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
-        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
-        /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
-        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
-        /// </remarks>
-        public CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
-            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
-        /// </summary>
-        /// <param name="configFile">Configuration file used for accessing settings.</param>
-        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
-        /// <param name="requireSerializeSettingAttribute">
-        /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
-        /// to exist before a field or property is serialized to the configuration file.
+        /// to exist before a field or property is serialized to the registry.
         /// </param>
         /// <param name="initialize">Determines if <see cref="SettingsBase.Initialize"/> method should be called from constructor.</param>
         /// <remarks>
         /// <para>
         /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
         /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// property then the member value will serialized into the registry in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </para>
@@ -161,11 +136,11 @@ namespace PCS.Configuration
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
-        public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
+        public RegistrySettingsBase(string rootPath, string keyName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
-            m_configFile = configFile;
-            m_categoryName = categoryName;
+            m_rootPath = rootPath;
+            m_keyName = keyName;
             m_useCategoryAttributes = useCategoryAttributes;
 
             // Make sure settings exist and load current values
@@ -178,49 +153,45 @@ namespace PCS.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets reference to working configuration file.
+        /// Gets or sets root registry path used to access settings in the registry (e.g., "HKEY_CURRENT_USER\\Software\\My Company\\My Product\\").
         /// </summary>
-        /// <exception cref="NullReferenceException">value cannot be null.</exception>
-        protected ConfigurationFile ConfigFile
+        public string RootPath
         {
             get
             {
-                return m_configFile;
+                return m_rootPath;
             }
             set
             {
-                if (value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_configFile = value;
+                m_rootPath = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets default category name of section used to access settings in configuration file.
+        /// Gets or sets name of default key used to access settings in the registry (e.g., "General Settings").
         /// </summary>
-        public string CategoryName
+        public string KeyName
         {
             get
             {
-                return m_categoryName;
+                return m_keyName;
             }
             set
             {
-                m_categoryName = value;
+                m_keyName = value;
             }
         }
 
         /// <summary>
         /// Gets or sets value that determines whether a <see cref="CategoryAttribute"/> applied to a field or property
-        /// will be used for the category name.
+        /// will be used for the registry key names.
         /// </summary>
         /// <remarks>
         /// If <see cref="UseCategoryAttributes"/> is false, all settings will be placed in section labeled by the
-        /// <see cref="CategoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
-        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// <see cref="KeyName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// property then the member value will serialized into the registry in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
-        /// will serialized into the section labeled by the <see cref="CategoryName"/> value.
+        /// will stored in the registry key identified by the <see cref="KeyName"/> value.
         /// </remarks>
         public bool UseCategoryAttributes
         {
@@ -239,7 +210,7 @@ namespace PCS.Configuration
         #region [ Methods ]
 
         /// <summary>
-        /// Create setting in configuration file if it doesn't already exist.
+        /// Create setting in registry if it doesn't already exist.
         /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
@@ -248,11 +219,14 @@ namespace PCS.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void CreateSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name));
+            string keyName = GetKeyName(name);
+
+            if (Registry.GetValue(keyName, setting, null) == null)
+                Registry.SetValue(keyName, setting, value, RegistryValueKind.String);
         }
 
         /// <summary>
-        /// Retrieves setting from configuration file.
+        /// Retrieves setting from registry.
         /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
@@ -261,11 +235,11 @@ namespace PCS.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override string RetrieveSetting(string name, string setting)
         {
-            return m_configFile.Settings[GetCategoryName(name)][setting].Value;
+            return (string)Registry.GetValue(GetKeyName(name), setting, "");
         }
 
         /// <summary>
-        /// Stores setting to configuration file.
+        /// Stores setting to registry.
         /// This method is for internal use.
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
@@ -274,54 +248,40 @@ namespace PCS.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void StoreSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)][setting].Value = value;
+            Registry.SetValue(GetKeyName(name), setting, value, RegistryValueKind.String);
         }
 
         /// <summary>
-        /// Persist any pending changes to configuration file.
+        /// Persist any pending changes to registry.
         /// This method is for internal use.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void PersistSettings()
         {
-            m_configFile.Save();
+            // Registry API's flush at every update...
         }
 
         /// <summary>
-        /// Gets the category name to use for the specified field or property.
+        /// Gets the key name to use for storing the specified field or property in the registry.
         /// </summary>
         /// <param name="name">Field or property name.</param>
-        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="CategoryName"/> if attribute does not exist.</returns>
+        /// <returns><see cref="CategoryAttribute.Category"/> applied to specified field or property; or <see cref="KeyName"/> if attribute does not exist.</returns>
         /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
         /// <remarks>
         /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
-        /// <see cref="CategoryName"/> value will be returned.
+        /// <see cref="KeyName"/> value will be returned.
         /// </remarks>
-        public string GetCategoryName(string name)
+        public string GetKeyName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");
 
             // If user wants to respect category attributes, we attempt to use those as configuration section names
             if (m_useCategoryAttributes)
-                return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);
+                return m_rootPath + GetAttributeValue<CategoryAttribute, string>(name, m_keyName, attribute => attribute.Category);
 
             // Otherwise return default category name
-            return m_categoryName;
-        }
-
-        /// <summary>
-        /// Gets the description specified by <see cref="DescriptionAttribute"/>, if any, applied to the specified field or property. 
-        /// </summary>
-        /// <param name="name">Field or property name.</param>
-        /// <returns>Description applied to specified field or property; or null if one does not exist.</returns>
-        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
-        public string GetDescription(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
-
-            return GetAttributeValue<DescriptionAttribute, string>(name, "", attribute => attribute.Description);
+            return m_rootPath + m_keyName;
         }
 
         #endregion

@@ -242,7 +242,8 @@ namespace PCS.Configuration
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        internal override void CreateSetting(string name, string setting, string value)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void CreateSetting(string name, string setting, string value)
         {
             string section = GetSectionName(name);
 
@@ -257,7 +258,8 @@ namespace PCS.Configuration
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
-        internal override string RetrieveSetting(string name, string setting)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override string RetrieveSetting(string name, string setting)
         {
             return m_iniFile[GetSectionName(name), setting];
         }
@@ -269,16 +271,18 @@ namespace PCS.Configuration
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        internal override void StoreSetting(string name, string setting, string value)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void StoreSetting(string name, string setting, string value)
         {
             m_iniFile[GetSectionName(name), setting] = value;
         }
 
         /// <summary>
-        /// Persist any pending changes to INI file.
+        /// Persists any pending changes to INI file.
         /// This method is for internal use.
         /// </summary>
-        internal override void PersistSettings()
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void PersistSettings()
         {
             // INI files flush at every update...
         }
@@ -305,28 +309,6 @@ namespace PCS.Configuration
             // Otherwise return default category name
             return m_sectionName;
         }
-
-        ///// <summary>
-        ///// Returns an enumerator that iterates through a collection of <see cref="String"/> objects.
-        ///// </summary>
-        ///// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
-        ///// <remarks>
-        ///// This enumerator only enumerates settings from the default category.
-        ///// </remarks>
-        //public override IEnumerator GetEnumerator()
-        //{
-        //    return GetEnumerator(m_categoryName);
-        //}
-
-        ///// <summary>
-        ///// Returns an enumerator that iterates through a collection of <see cref="String"/> objects.
-        ///// </summary>
-        ///// <param name="category">Category name to enumerate.</param>
-        ///// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
-        //public IEnumerator GetEnumerator(string category)
-        //{
-        //    return ((IEnumerable)m_iniFile.GetSectionKeys(category)).GetEnumerator();
-        //}
 
         #endregion
     }

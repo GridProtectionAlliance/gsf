@@ -162,10 +162,13 @@ namespace PCS.Configuration
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        internal override void CreateSetting(string name, string setting, string value)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void CreateSetting(string name, string setting, string value)
         {
-            if (RetrieveSetting(name, setting) == null)
-                StoreSetting(name, setting, value);
+            KeyValueConfigurationCollection settings = m_configFile.AppSettings.Settings;
+
+            if (settings[setting] == null)
+                settings.Add(setting, value);
         }
 
         /// <summary>
@@ -175,9 +178,10 @@ namespace PCS.Configuration
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
-        internal override string RetrieveSetting(string name, string setting)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override string RetrieveSetting(string name, string setting)
         {
-            return ConfigFile.AppSettings.Settings[setting].Value;
+            return m_configFile.AppSettings.Settings[setting].Value;
         }
 
         /// <summary>
@@ -187,19 +191,21 @@ namespace PCS.Configuration
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        internal override void StoreSetting(string name, string setting, string value)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void StoreSetting(string name, string setting, string value)
         {
-            ConfigFile.AppSettings.Settings[setting].Value = value;
+            m_configFile.AppSettings.Settings[setting].Value = value;
         }
 
-        ///// <summary>
-        ///// Returns an enumerator that iterates through a collection of <see cref="KeyValueConfigurationElement"/> objects.
-        ///// </summary>
-        ///// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
-        //public override IEnumerator GetEnumerator()
-        //{
-        //    return ((IEnumerable)m_configFile.AppSettings.Settings).GetEnumerator();
-        //}
+        /// <summary>
+        /// Persist any pending changes to configuration file.
+        /// This method is for internal use.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void PersistSettings()
+        {
+            m_configFile.Save();
+        }
 
         #endregion
     }

@@ -28,6 +28,7 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Linq;
 using PCS.Reflection;
+using PCS.Security.Cryptography;
 
 namespace PCS.Configuration
 {
@@ -42,6 +43,9 @@ namespace PCS.Configuration
     public abstract class SettingsBase : IDisposable, IEnumerable
     {
         #region [ Members ]
+
+        // Constants
+        private const string InternalKey = "§g8J235:05Dr;£l8fL600C¡6duFn4?6c862870¤95%î]a4@³,ÜaD0{C[1P627_0854rËd8!75:10j0)Al6¦)a#2¦Ï3E?¤753dz£0¶TÁ+";
 
         // Fields
         private BindingFlags m_memberAccessBindingFlags;
@@ -167,37 +171,37 @@ namespace PCS.Configuration
         }
 
         /// <summary>
-        /// Create setting in configuration file.
-        /// This method is for internal use.
+        /// Implementor should create setting in configuration file (or other location).
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        internal abstract void CreateSetting(string name, string setting, string value);
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected abstract void CreateSetting(string name, string setting, string value);
 
         /// <summary>
-        /// Retrieves setting from configuration file.
-        /// This method is for internal use.
+        /// Implementor should retrieve setting from configuration file (or other location).
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
-        internal abstract string RetrieveSetting(string name, string setting);
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected abstract string RetrieveSetting(string name, string setting);
 
         /// <summary>
-        /// Stores setting to configuration file.
-        /// This method is for internal use.
+        /// Implementor should store setting to configuration file (or other location).
         /// </summary>
         /// <param name="name">Field or property name, if useful (can be different from setting name).</param>
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
-        internal abstract void StoreSetting(string name, string setting, string value);
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected abstract void StoreSetting(string name, string setting, string value);
 
         /// <summary>
-        /// Persist any pending changes to configuration file.
-        /// This method is for internal use.
+        /// Implementor should persist any pending changes to configuration file (or other location).
         /// </summary>
-        internal abstract void PersistSettings();
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected abstract void PersistSettings();
 
         /// <summary>
         /// Gets setting name to use for specified field or property. 
@@ -232,6 +236,34 @@ namespace PCS.Configuration
         }
 
         /// <summary>
+        /// Gets the encryption status specified by <see cref="EncryptSettingAttribute"/>, if any, applied to the specified field or property. 
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Encryption status applied to specified field or property; or <c>false</c> if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public bool GetEncryptStatus(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
+            return GetAttributeValue<EncryptSettingAttribute, bool>(name, false, attribute => attribute.Encrypt);
+        }
+
+        /// <summary>
+        /// Gets the optional private encryption key specified by <see cref="EncryptSettingAttribute"/>, if any, applied to the specified field or property. 
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Encryption private key applied to specified field or property; or <c>null</c> if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public string GetEncryptKey(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
+            return GetAttributeValue<EncryptSettingAttribute, string>(name, null, attribute => attribute.PrivateKey);
+        }
+
+        /// <summary>
         /// Adds a setting to the application's configuration file, if it doesn't already exist.
         /// </summary>
         /// <param name="name">Field or property name.</param>
@@ -240,11 +272,13 @@ namespace PCS.Configuration
         /// Use this function to ensure a setting exists, it will not override an existing value.
         /// </remarks>
         public void CreateValue(string name, object value)
-        {            
+        {
+            string setting = GetSettingName(name);
+
             if (value == null)
-                CreateSetting(name, GetSettingName(name), "");
+                CreateSetting(name, setting, EncryptValue(name, setting, ""));
             else
-                CreateSetting(name, GetSettingName(name), Common.TypeConvertToString(value));
+                CreateSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value)));
         }
 
         /// <summary>
@@ -254,10 +288,12 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         public void SetValue(string name, object value)
         {
+            string setting = GetSettingName(name);
+
             if (value == null)
-                StoreSetting(name, GetSettingName(name), "");
+                StoreSetting(name, setting, EncryptValue(name, setting, ""));
             else
-                StoreSetting(name, GetSettingName(name), Common.TypeConvertToString(value));
+                StoreSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value)));
         }
 
         /// <summary>
@@ -268,7 +304,9 @@ namespace PCS.Configuration
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public T GetValue<T>(string name)
         {
-            return RetrieveSetting(name, GetSettingName(name)).ConvertToType<T>();
+            string setting = GetSettingName(name);
+
+            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>();
         }
 
         /// <summary>
@@ -279,7 +317,9 @@ namespace PCS.Configuration
         /// <returns>Value of specified configuration file setting converted to the given type.</returns>
         public object GetValue(string name, Type type)
         {
-            return RetrieveSetting(name, GetSettingName(name)).ConvertToType(type);
+            string setting = GetSettingName(name);
+
+            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType(type);
         }
 
         /// <summary>
@@ -290,7 +330,35 @@ namespace PCS.Configuration
         /// <param name="value">Setting value.</param>
         public void GetValue<T>(string name, out T value)
         {
-            value = RetrieveSetting(name, GetSettingName(name)).ConvertToType<T>();
+            string setting = GetSettingName(name);
+
+            value = DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>();
+        }
+
+        // Encrypt setting value and return a base64 encoded value
+        private string EncryptValue(string name, string setting, string value)
+        {
+            // If encrypt attribute has been applied, encrypt value
+            if (GetEncryptStatus(name))
+                return value.Encrypt(GenerateEncryptionKey(name), CipherStrength.Level5);
+
+            return value;
+        }
+
+        // Decrypt setting value
+        private string DecryptValue(string name, string setting, string value)
+        {
+            // If encrypt attribute has been applied, decrypt value
+            if (GetEncryptStatus(name))
+                return value.Decrypt(GenerateEncryptionKey(name), CipherStrength.Level5);
+
+            return value;
+        }
+
+        // Generate encryption key based on any applied private encryption key in field or property attributes plus internal key
+        private string GenerateEncryptionKey(string name)
+        {
+            return GetEncryptKey(name).ToNonNullString() + InternalKey;
         }
 
         /// <summary>

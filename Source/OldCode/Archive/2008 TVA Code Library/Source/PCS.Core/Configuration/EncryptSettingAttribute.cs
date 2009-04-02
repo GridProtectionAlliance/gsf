@@ -32,6 +32,7 @@ namespace PCS.Configuration
 
         // Fields
         private bool m_encrypt;
+        private string m_privateKey;
 
         #endregion
 
@@ -74,6 +75,21 @@ namespace PCS.Configuration
             set
             {
                 m_encrypt = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets optional encryption key that will be used on a setting for added security.
+        /// </summary>
+        public string PrivateKey
+        {
+            get
+            {
+                return m_privateKey;
+            }
+            set
+            {
+                m_privateKey = value;
             }
         }
 

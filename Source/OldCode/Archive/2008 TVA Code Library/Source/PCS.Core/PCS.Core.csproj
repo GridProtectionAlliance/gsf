@@ -90,6 +90,7 @@
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
     <Compile Include="Configuration\CategorizedSettingsBase.cs" />
     <Compile Include="Configuration\AppSettingsBase.cs" />
+    <Compile Include="Configuration\RegistrySettingsBase.cs" />
     <Compile Include="Configuration\IniSettingsBase.cs" />
     <Compile Include="Configuration\EncryptSettingAttribute.cs" />
     <Compile Include="Configuration\SettingNameAttribute.cs" />
