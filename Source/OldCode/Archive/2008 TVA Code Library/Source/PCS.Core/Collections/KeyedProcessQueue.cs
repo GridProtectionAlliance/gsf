@@ -345,7 +345,7 @@ namespace PCS.Collections
         //    TValue[] values = new TValue[items.Length];
         //    KeyValuePair<TKey, TValue> kvPair;
 
-        //    for (int x = 0; x <= items.Length - 1; x++)
+        //    for (int x = 0; x < items.Length; x++)
         //    {
         //        kvPair = items[x];
         //        keys[x] = kvPair.Key;

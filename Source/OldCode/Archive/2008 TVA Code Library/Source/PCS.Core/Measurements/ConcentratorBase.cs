@@ -333,7 +333,7 @@ namespace PCS.Measurements
                 // Calculate new wait time periods for new number of frames per second
                 int[] framePeriods = new int[m_framesPerSecond];
 
-                for (int frameIndex = 0; frameIndex <= m_framesPerSecond - 1; frameIndex++)
+                for (int frameIndex = 0; frameIndex < m_framesPerSecond; frameIndex++)
                 {
                     framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(m_framesPerSecond, frameIndex);
                 }

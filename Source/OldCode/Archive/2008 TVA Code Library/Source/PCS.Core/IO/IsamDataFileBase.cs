@@ -975,7 +975,7 @@ namespace PCS.IO
                         {
                             if (recordIndex > lastRecordIndex + 1)
                             {
-                                for (int i = lastRecordIndex + 1; i <= recordIndex - 1; i++)
+                                for (int i = lastRecordIndex + 1; i < recordIndex; i++)
                                 {
                                     Write(i, CreateNewRecord(i));
                                 }

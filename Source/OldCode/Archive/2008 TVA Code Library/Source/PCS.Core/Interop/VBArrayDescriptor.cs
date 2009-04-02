@@ -97,7 +97,7 @@ namespace PCS.Interop
 
                 Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2);
 
-                for (int i = 0; i <= m_arrayDimensionDescriptors.Count - 1; i++)
+                for (int i = 0; i < m_arrayDimensionDescriptors.Count; i++)
                 {
                     Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].Length), 0, image, (i * DimensionDescriptor.BinaryLength) + 2, 4);
                     Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].LowerBound), 0, image, (i * DimensionDescriptor.BinaryLength) + 6, 4);

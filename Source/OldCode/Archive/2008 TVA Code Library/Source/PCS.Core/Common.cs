@@ -141,7 +141,7 @@ namespace PCS
             T[] typedArray = CreateArray<T>(length);
 
             // Initializes all elements with the default value.
-            for (int x = 0; x <= typedArray.Length - 1; x++)
+            for (int x = 0; x < typedArray.Length; x++)
             {
                 typedArray[x] = initialValue;
             }

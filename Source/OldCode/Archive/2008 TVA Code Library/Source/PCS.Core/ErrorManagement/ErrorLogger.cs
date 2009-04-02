@@ -1624,7 +1624,7 @@ namespace PCS.ErrorManagement
         {
             StringBuilder trace = new StringBuilder();
             StackTrace stack = new StackTrace(ex, true);
-            for (int i = 0; i <= stack.FrameCount - 1; i++)
+            for (int i = 0; i < stack.FrameCount; i++)
             {
                 StackFrame stackFrame = stack.GetFrame(i);
                 MemberInfo method = stackFrame.GetMethod();

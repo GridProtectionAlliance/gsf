@@ -183,7 +183,7 @@ namespace PCS
             int totalSegments = (int)Math.Ceiling(value.Length / (double)segmentSize);
             string[] segments = new string[totalSegments];
 
-            for (int x = 0; x <= segments.Length - 1; x++)
+            for (int x = 0; x < segments.Length; x++)
             {
                 if (x * segmentSize + segmentSize >= value.Length)
                     segments[x] = value.Substring(x * segmentSize);
@@ -439,7 +439,7 @@ namespace PCS
 			StringBuilder result = new StringBuilder();
 			char character;
 			
-			for (int x = 0; x <= value.Length - 1; x++)
+			for (int x = 0; x < value.Length; x++)
 			{
 				character = value[x];
 				
@@ -465,7 +465,7 @@ namespace PCS
 			StringBuilder result = new StringBuilder();
 			char character;
 			
-			for (int x = 0; x <= value.Length - 1; x++)
+			for (int x = 0; x < value.Length; x++)
 			{
 				character = value[x];
 				
@@ -615,7 +615,7 @@ namespace PCS
 			bool lastCharWasSpace = false;
             char character;
 			
-			for (int x = 0; x <= value.Length - 1; x++)
+			for (int x = 0; x < value.Length; x++)
 			{
 				character = value[x];
 				
@@ -648,7 +648,7 @@ namespace PCS
 
             int total = 0;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (value[x] == characterToCount)
                     total++;
@@ -670,7 +670,7 @@ namespace PCS
             value = value.Trim();
             if (value.Length == 0) return false;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (!char.IsDigit(value[x]))
                     return false;
@@ -692,7 +692,7 @@ namespace PCS
             value = value.Trim();
             if (value.Length == 0) return false;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (!char.IsNumber(value[x]))
                     return false;
@@ -713,7 +713,7 @@ namespace PCS
             value = value.Trim();
             if (value.Length == 0) return false;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (char.IsLetter(value[x]) && !char.IsUpper(value[x]))
                     return false;
@@ -734,7 +734,7 @@ namespace PCS
             value = value.Trim();
             if (value.Length == 0) return false;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (char.IsLetter(value[x]) && !char.IsLower(value[x]))
                     return false;
@@ -768,7 +768,7 @@ namespace PCS
             value = value.Trim();
             if (value.Length == 0) return false;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (ignorePunctuation)
                 {
@@ -810,7 +810,7 @@ namespace PCS
             value = value.Trim();
             if (value.Length == 0) return false;
 
-            for (int x = 0; x <= value.Length - 1; x++)
+            for (int x = 0; x < value.Length; x++)
             {
                 if (ignorePunctuation)
                 {

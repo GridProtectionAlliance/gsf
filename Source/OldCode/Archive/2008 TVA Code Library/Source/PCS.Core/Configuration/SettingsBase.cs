@@ -47,7 +47,9 @@ namespace PCS.Configuration
         #region [ Members ]
 
         // Constants
-        private const string InternalKey = "§g8J235:05Dr;£l8fL600C¡6duFn4?6c862870¤95%î]a4@³,ÜaD0{C[1P627_0854rËd8!75:10j0)Al6¦)a#2¦Ï3E?¤753dz£0¶TÁ+";
+
+        // IMPORTANT! Never change the following constant or you will break backwards compatibility
+        private const string InternalKey = "§g¥J2&5:0xDr;£l8fL?C¡dF4?6c«u%ª±n¤9µ%î]a4@³,ÜaD*{©[1P.¢7_~`4rËd®!5:1j=)Al6¦)a#2¦Ï3E?¤(^\\dz$|¶TÁ+";
 
         // Fields
         private BindingFlags m_memberAccessBindingFlags;

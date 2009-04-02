@@ -22,6 +22,8 @@
 //       Edited Code Comments.
 //  02/20/2009 - J. Ritchie Carroll
 //       Added predicate based IndexOf that extends IList<T>.
+//  04/02/2009 - J. Ritchie Carroll
+//       Added seed based scramble and unscramble IList<T> extensions.
 //
 //*******************************************************************************************************
 
@@ -44,7 +46,7 @@ namespace PCS.Collections
         /// <typeparam name="T">The type of the elements of <paramref name="source"/>.</typeparam>
         public static int IndexOf<T>(this IList<T> source, Func<T, bool> predicate)
         {
-            for (int index = 0; index <= source.Count - 1; index++)
+            for (int index = 0; index < source.Count; index++)
             {
                 if (predicate(source[index]))
                     return index;
@@ -258,23 +260,95 @@ namespace PCS.Collections
             }
         }
 
-        /// <summary>Rearranges all the elements in the list into a random order.</summary>
+        /// <summary>
+        /// Rearranges all the elements in the list into a random order.
+        /// </summary>
         /// <typeparam name="TSource">The generic type of the list.</typeparam>
         /// <param name="source">The input list of generic types to scramble.</param>
         /// <remarks>This function uses a cryptographically strong random number generator to perform the scramble.</remarks>
         public static void Scramble<TSource>(this IList<TSource> source)
         {
-            if (source.IsReadOnly) throw new ArgumentException("Cannot modify items in a read only list");
+            if (source.IsReadOnly)
+                throw new ArgumentException("Cannot modify items in a read only list");
 
-            int x;
-            int y;
+            int x, y;
             TSource currentItem;
 
             // Mixes up the data in random order.
-            for (x = 0; x <= source.Count - 1; x++)
+            for (x = 0; x < source.Count; x++)
             {
-                // Calls random function in Math namespace.
+                // Calls random function from PCS namespace.
                 y = Random.Int32Between(0, source.Count - 1);
+
+                if (x != y)
+                {
+                    // Swaps items
+                    currentItem = source[x];
+                    source[x] = source[y];
+                    source[y] = currentItem;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rearranges all the elements in the list into a repeatable pseudo-random order.
+        /// </summary>
+        /// <param name="source">The input list of generic types to scramble.</param>
+        /// <param name="seed">A number used to calculate a starting value for the pseudo-random number sequence.</param>
+        /// <typeparam name="TSource">The generic type of the list.</typeparam>
+        /// <remarks>This function uses the <see cref="System.Random"/> generator to perform the scramble using a sequence that is repeatable.</remarks>
+        public static void Scramble<TSource>(this IList<TSource> source, int seed)
+        {
+            if (source.IsReadOnly)
+                throw new ArgumentException("Cannot modify items in a read only list");
+
+            System.Random random = new System.Random(seed);
+            int x, y;
+            TSource currentItem;
+
+            // Mixes up the data in random order.
+            for (x = 0; x < source.Count; x++)
+            {
+                // Calls random function from System namespace.
+                y = random.Next(source.Count);
+
+                if (x != y)
+                {
+                    // Swaps items
+                    currentItem = source[x];
+                    source[x] = source[y];
+                    source[y] = currentItem;
+                }
+            }
+        }
+        /// <summary>
+        /// Rearranges all the elements in the list previously scrambled with <see cref="Scramble{TSource}(IList{TSource},int)"/> back into their original order.
+        /// </summary>
+        /// <param name="source">The input list of generic types to unscramble.</param>
+        /// <param name="seed">The same number used in <see cref="Scramble{TSource}(IList{TSource},int)"/> call to scramble original list.</param>
+        /// <typeparam name="TSource">The generic type of the list.</typeparam>
+        /// <remarks>This function uses the <see cref="System.Random"/> generator to perform the unscramble using a sequence that is repeatable.</remarks>
+        public static void Unscramble<TSource>(this IList<TSource> source, int seed)
+        {
+            if (source.IsReadOnly)
+                throw new ArgumentException("Cannot modify items in a read only list");
+
+            System.Random random = new System.Random(seed);
+            List<int> sequence = new List<int>();
+            int x, y;
+            TSource currentItem;
+
+            // Generate original scramble sequence.
+            for (x = 0; x < source.Count; x++)
+            {
+                // Calls random function from System namespace.
+                sequence.Add(random.Next(source.Count));
+            }
+
+            // Unmix the data order (traverse same sequence in reverse order).
+            for (x = source.Count - 1; x >= 0 ; x--)
+            {
+                y = sequence[x];
 
                 if (x != y)
                 {
@@ -323,7 +397,7 @@ namespace PCS.Collections
                     {
                         int comparison = 0;
 
-                        for (int x = 0; x <= array1.Length - 1; x++)
+                        for (int x = 0; x < array1.Length; x++)
                         {
                             if (comparer == null)
                                 comparison = Common.CompareObjects(array1.GetValue(x), array2.GetValue(x));

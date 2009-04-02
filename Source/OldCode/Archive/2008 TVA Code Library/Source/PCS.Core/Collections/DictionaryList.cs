@@ -215,7 +215,7 @@ namespace PCS.Collections
         /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            for (int x = 0; x <= m_list.Count - 1; x++)
+            for (int x = 0; x < m_list.Count; x++)
             {
                 array[arrayIndex + x] = new KeyValuePair<TKey, TValue>(m_list.Keys[x], m_list.Values[x]);
             }

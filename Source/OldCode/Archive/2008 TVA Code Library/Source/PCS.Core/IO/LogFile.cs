@@ -702,7 +702,7 @@ namespace PCS.IO
                 currentFileSize = m_fileStream.Length;
             }
 
-            for (int i = 0; i <= items.Length - 1; i++)
+            for (int i = 0; i < items.Length; i++)
             {
                 if (!string.IsNullOrEmpty(items[i]))
                 {

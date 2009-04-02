@@ -168,7 +168,7 @@ namespace PCS
             MemoryStream combinedBuffer = new MemoryStream();
 
             // Combine all currently queued buffers
-            for (int x = 0; x <= buffers.Length - 1; x++)
+            for (int x = 0; x < buffers.Length; x++)
             {
                 combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
             }
@@ -324,7 +324,7 @@ namespace PCS
                     int comparision = 0;
 
                     // Compares elements of buffers that are of equal size.
-                    for (int x = 0; x <= length1 - 1; x++)
+                    for (int x = 0; x < length1; x++)
                     {
                         comparision = source[x].CompareTo(other[x]);
 
@@ -423,7 +423,7 @@ namespace PCS
                 int comparision = 0;
 
                 // Compares elements of buffers that are of equal size.
-                for (int x = 0; x <= count - 1; x++)
+                for (int x = 0; x < count; x++)
                 {
                     comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
 

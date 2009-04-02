@@ -252,7 +252,7 @@ namespace PCS.Net.Ftp
                     string[] paths = fullPath.Split('/');
                     int i;
 
-                    for (i = 0; i <= paths.Length - 2; i++)
+                    for (i = 0; i < paths.Length - 1; i++)
                     {
                         if (paths[i].Length == 0)
                         {

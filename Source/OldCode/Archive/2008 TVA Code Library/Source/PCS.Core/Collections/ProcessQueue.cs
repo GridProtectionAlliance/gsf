@@ -1950,7 +1950,7 @@ namespace PCS.Collections
 
                     bool found = false;
 
-                    for (int x = 0; x <= m_processQueue.Count - 1; x++)
+                    for (int x = 0; x < m_processQueue.Count; x++)
                     {
                         if (match(m_processQueue[x]))
                         {
@@ -2092,7 +2092,7 @@ namespace PCS.Collections
 
                     int foundindex = -1;
 
-                    for (int x = startIndex; x <= startIndex + count - 1; x++)
+                    for (int x = startIndex; x < startIndex + count; x++)
                     {
                         if (match(m_processQueue[x]))
                         {
@@ -2266,7 +2266,7 @@ namespace PCS.Collections
 
                     List<T> items = new List<T>();
 
-                    for (int x = index; x <= index + count - 1; x++)
+                    for (int x = index; x < index + count; x++)
                     {
                         items.Add(m_processQueue[x]);
                     }
@@ -2318,7 +2318,7 @@ namespace PCS.Collections
                     int foundindex = -1;
                     Comparer<T> comparer = Comparer<T>.Default;
 
-                    for (int x = index; x <= index + count - 1; x++)
+                    for (int x = index; x < index + count; x++)
                     {
                         if (comparer.Compare(item, m_processQueue[x]) == 0)
                         {
@@ -2536,7 +2536,7 @@ namespace PCS.Collections
                     T item;
                     int stopIndex = index + count - 1;
 
-                    for (int x = index; x <= (index + count - 1) / 2; x++)
+                    for (int x = index; x < (index + count) / 2; x++)
                     {
                         if (x < stopIndex)
                         {
@@ -2665,7 +2665,7 @@ namespace PCS.Collections
                     // We manually implement this feature, if process queue is not a List(Of T).
                     T[] items = new T[m_processQueue.Count];
 
-                    for (int x = 0; x <= m_processQueue.Count - 1; x++)
+                    for (int x = 0; x < m_processQueue.Count; x++)
                     {
                         items[x] = m_processQueue[x];
                     }

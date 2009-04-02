@@ -562,7 +562,7 @@ namespace PCS.Net.Ftp
                     }
 
                     // Check for removed files
-                    for (x = 0; x <= m_currentFiles.Count - 1; x++)
+                    for (x = 0; x < m_currentFiles.Count; x++)
                     {
                         if (m_session.CurrentDirectory.FindFile(m_currentFiles[x].Name) == null)
                         {

@@ -29,15 +29,18 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.VisualBasic;
+using PCS.Collections;
 
 namespace PCS.Security.Cryptography
 {
     #region [ Enumerations ]
 
-    /// <summary>Enumerates cryptographic strength.</summary>
+    /// <summary>
+    /// Cryptographic strength enumeration.
+    /// </summary>
     /// <remarks>
     /// <para>
     /// Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
@@ -63,29 +66,39 @@ namespace PCS.Security.Cryptography
 
     #endregion
 
-    /// <summary>Performs common cryptographic functions.</summary>
+    /// <summary>
+    /// Performs common cryptographic functions.
+    /// </summary>
     public static class Cipher
     {
         // IMPORTANT! Never change the following constants, or you will break cross-application crypto operability:
-        private const string StandardKey = "{&-<%=($#/T.V:A!\\,@[20O3]*^_j`|?)>+~}";
+        private const string StandardKey = "{§&-<«%=£($#/P.C:S!\\_¤,@[20O9¡]*ªn^±j`&|?)>+~¥}";
         private const int BufferSize = 262144; // 256K
 
-        /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
-        /// the given parameter, using the standard encryption key and encryption level 1,</summary>
+        private static byte[] m_standardKey = GetBinaryKeyFromString(StandardKey);
+
+        /// <summary>
+        /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
+        /// the given parameter, using the standard encryption key and encryption level 1.
+        /// </summary>
         public static string Encrypt(this string source)
         {
             return source.Encrypt(null, CipherStrength.Level1);
         }
 
-        /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
-        /// the given parameters using standard encryption.</summary>
+        /// <summary>
+        /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
+        /// the given parameters using standard encryption.
+        /// </summary>
         public static string Encrypt(this string source, CipherStrength strength)
         {
             return source.Encrypt(null, strength);
         }
 
-        /// <summary>Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
-        /// the given parameters.</summary>
+        /// <summary>
+        /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
+        /// the given parameters.
+        /// </summary>
         public static string Encrypt(this string source, string encryptionKey, CipherStrength strength)
         {
             if (string.IsNullOrEmpty(source))
@@ -94,30 +107,38 @@ namespace PCS.Security.Cryptography
             if (string.IsNullOrEmpty(encryptionKey))
                 encryptionKey = StandardKey;
 
-            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = GetBinaryKeyFromString(encryptionKey);
 
             return Convert.ToBase64String(Encoding.Unicode.GetBytes(source).Encrypt(key, key, strength));
         }
 
-        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of encrypted data for the given parameters.
+        /// </summary>
         public static byte[] Encrypt(this byte[] source, byte[] key, CipherStrength strength)
         {
             return source.Encrypt(0, source.Length, key, key, strength);
         }
 
-        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of encrypted data for the given parameters.
+        /// </summary>
         public static byte[] Encrypt(this byte[] source, byte[] key, byte[] IV, CipherStrength strength)
         {
             return source.Encrypt(0, source.Length, key, IV, strength);
         }
 
-        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of encrypted data for the given parameters.
+        /// </summary>
         public static byte[] Encrypt(this byte[] source, int startIndex, int length, byte[] key, CipherStrength strength)
         {
             return source.Encrypt(startIndex, length, key, key, strength);
         }
 
-        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of encrypted data for the given parameters.
+        /// </summary>
         public static byte[] Encrypt(this byte[] source, int startIndex, int length, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
@@ -182,7 +203,9 @@ namespace PCS.Security.Cryptography
 
         #endregion
 
-        /// <summary>Returns a stream of encrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a stream of encrypted data for the given parameters.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the encrypted results, if the incoming stream is
         /// very large this will consume a large amount memory.  In this case use the overload
@@ -198,7 +221,9 @@ namespace PCS.Security.Cryptography
             return destination;
         }
 
-        /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
+        /// <summary>
+        /// Encrypts input stream onto output stream for the given parameters.
+        /// </summary>
         public static void Encrypt(this Stream source, Stream destination, byte[] key, byte[] IV, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
@@ -253,7 +278,9 @@ namespace PCS.Security.Cryptography
             }
         }
 
-        /// <summary>Returns a binary array of encrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of encrypted data for the given parameters.
+        /// </summary>
         public static byte[] Encrypt(this SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] IV)
         {
             MemoryStream inStream = new MemoryStream(data, startIndex, length);
@@ -265,7 +292,9 @@ namespace PCS.Security.Cryptography
             return outStream.ToArray();
         }
 
-        /// <summary>Encrypts input stream onto output stream for the given parameters.</summary>
+        /// <summary>
+        /// Encrypts input stream onto output stream for the given parameters.
+        /// </summary>
         public static void Encrypt(this SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
         {
             // This is the root encryption function. Eventually, all the symmetric algorithm based encryption
@@ -288,20 +317,22 @@ namespace PCS.Security.Cryptography
             encodeStream.FlushFinalBlock();
         }
 
-        /// <summary>Creates an encrypted file from source file data.</summary>
+        /// <summary>
+        /// Creates an encrypted file from source file data.
+        /// </summary>
         public static void EncryptFile(string sourceFilename, string destinationFilename, CipherStrength strength)
         {
             EncryptFile(sourceFilename, destinationFilename, null, strength, null);
         }
 
-        /// <summary>Creates an encrypted file from source file data.</summary>
+        /// <summary>
+        /// Creates an encrypted file from source file data.
+        /// </summary>
         public static void EncryptFile(string sourceFilename, string destinationFilename, string encryptionKey, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
-
             FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destinationFilename);
-            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = GetBinaryKeyFromString(encryptionKey);
 
             sourceFileStream.Encrypt(destFileStream, key, key, strength, progressHandler);
 
@@ -310,51 +341,65 @@ namespace PCS.Security.Cryptography
             sourceFileStream.Close();
         }
 
-        /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
-        /// parameter using the standard encryption key and encryption level 1.</summary>
+        /// <summary>
+        /// Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
+        /// parameter using the standard encryption key and encryption level 1.
+        /// </summary>
         public static string Decrypt(this string source)
         {
             return source.Decrypt(null, CipherStrength.Level1);
         }
 
-        /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
-        /// parameters using the standard encryption key.</summary>
+        /// <summary>
+        /// Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
+        /// parameters using the standard encryption key.
+        /// </summary>
         public static string Decrypt(this string source, CipherStrength strength)
         {
             return source.Decrypt(null, strength);
         }
 
-        /// <summary>Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
-        /// parameters.</summary>
+        /// <summary>
+        /// Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
+        /// parameters.
+        /// </summary>
         public static string Decrypt(this string source, string encryptionKey, CipherStrength strength)
         {
-            if (string.IsNullOrEmpty(source)) return null;
-            if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
+            if (string.IsNullOrEmpty(source))
+                return null;
 
-            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = GetBinaryKeyFromString(encryptionKey);
 
             return Encoding.Unicode.GetString(Convert.FromBase64String(source).Decrypt(key, key, strength));
         }
 
-        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of decrypted data for the given parameters.
+        /// </summary>
         public static byte[] Decrypt(this byte[] source, byte[] key, CipherStrength strength)
         {
             return source.Decrypt(0, source.Length, key, key, strength);
         }
 
-        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of decrypted data for the given parameters.
+        /// </summary>
         public static byte[] Decrypt(this byte[] source, byte[] key, byte[] IV, CipherStrength strength)
         {
             return source.Decrypt(0, source.Length, key, IV, strength);
         }
 
-        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of decrypted data for the given parameters.
+        /// </summary>
         public static byte[] Decrypt(this byte[] source, int startIndex, int length, byte[] key, CipherStrength strength)
         {
             return source.Decrypt(startIndex, length, key, key, strength);
         }
 
-        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of decrypted data for the given parameters.
+        /// </summary>
         public static byte[] Decrypt(this byte[] source, int startIndex, int length, byte[] key, byte[] IV, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
@@ -422,7 +467,9 @@ namespace PCS.Security.Cryptography
 
         #endregion
 
-        /// <summary>Returns a stream of decrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a stream of decrypted data for the given parameters.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the decrypted results, if the incoming stream is
         /// very large this will consume a large amount memory.  In this case use the overload
@@ -438,7 +485,9 @@ namespace PCS.Security.Cryptography
             return destination;
         }
 
-        /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
+        /// <summary>
+        /// Decrypts input stream onto output stream for the given parameters.
+        /// </summary>
         public static void Decrypt(this Stream source, Stream destination, byte[] key, byte[] IV, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
@@ -505,7 +554,9 @@ namespace PCS.Security.Cryptography
             }
         }
 
-        /// <summary>Returns a binary array of decrypted data for the given parameters.</summary>
+        /// <summary>
+        /// Returns a binary array of decrypted data for the given parameters.
+        /// </summary>
         public static byte[] Decrypt(this SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] IV)
         {
             MemoryStream inStream = new MemoryStream(data, startIndex, length);
@@ -517,7 +568,9 @@ namespace PCS.Security.Cryptography
             return outStream.ToArray();
         }
 
-        /// <summary>Decrypts input stream onto output stream for the given parameters.</summary>
+        /// <summary>
+        /// Decrypts input stream onto output stream for the given parameters.
+        /// </summary>
         public static void Decrypt(this SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
         {
             // This is the root decryption function. Eventually, all the symmetric algorithm based decryption
@@ -540,20 +593,22 @@ namespace PCS.Security.Cryptography
             decodeStream.FlushFinalBlock();
         }
 
-        /// <summary>Creates a decrypted file from source file data.</summary>
+        /// <summary>
+        /// Creates a decrypted file from source file data.
+        /// </summary>
         public static void DecryptFile(string sourceFilename, string destinationFilename, CipherStrength strength)
         {
             DecryptFile(sourceFilename, destinationFilename, null, strength, null);
         }
 
-        /// <summary>Creates a decrypted file from source file data.</summary>
+        /// <summary>
+        /// Creates a decrypted file from source file data.
+        /// </summary>
         public static void DecryptFile(string sourceFilename, string destinationFilename, string encryptionKey, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            if (string.IsNullOrEmpty(encryptionKey)) encryptionKey = StandardKey;
-
             FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destinationFilename);
-            byte[] key = Encoding.ASCII.GetBytes(encryptionKey);
+            byte[] key = GetBinaryKeyFromString(encryptionKey);
 
             sourceFileStream.Decrypt(destFileStream, key, key, strength, progressHandler);
 
@@ -562,40 +617,52 @@ namespace PCS.Security.Cryptography
             sourceFileStream.Close();
         }
 
-        /// <summary>Coerces key to maximum legal bit length for given encryption algorithm.</summary>
+        /// <summary>
+        /// Coerces key to maximum legal bit length for given encryption algorithm.
+        /// </summary>
         public static byte[] GetLegalKey(this SymmetricAlgorithm algorithm, byte[] key)
         {
-            byte[] rgbKey = new byte[algorithm.LegalKeySizes[0].MaxSize / 8];
+            List<byte> rgbKey = new List<byte>();
+            int length = algorithm.LegalKeySizes[0].MaxSize / 8;
 
-            for (int x = 0; x <= rgbKey.Length - 1; x++)
+            for (int x = 0; x < length; x++)
             {
                 if (x < key.Length)
-                    rgbKey[x] = key[x];
+                    rgbKey.Add(key[x]);
                 else
-                    rgbKey[x] = Encoding.ASCII.GetBytes(StandardKey.Substring(x % StandardKey.Length, 1))[0];
+                    rgbKey.Add(m_standardKey[x % m_standardKey.Length]);
             }
 
-            return rgbKey;
+            rgbKey.Scramble(rgbKey[0]);
+
+            return rgbKey.ToArray();
         }
 
-        /// <summary>Coerces initialization vector to legal block size for given encryption algorithm.</summary>
+        /// <summary>
+        /// Coerces initialization vector to legal block size for given encryption algorithm.
+        /// </summary>
         public static byte[] GetLegalIV(this SymmetricAlgorithm algorithm, byte[] IV)
         {
-            byte[] rgbIV = new byte[algorithm.LegalBlockSizes[0].MinSize / 8];
+            List<byte> rgbIV = new List<byte>();
+            int length = algorithm.LegalBlockSizes[0].MinSize / 8;
 
-            for (int x = 0; x <= rgbIV.Length - 1; x++)
+            for (int x = 0; x < length; x++)
             {
                 if (x < IV.Length)
-                    rgbIV[x] = IV[IV.Length - 1 - x];
+                    rgbIV.Add(IV[IV.Length - 1 - x]);
                 else
-                    rgbIV[x] = Encoding.ASCII.GetBytes(StandardKey.Substring(x % StandardKey.Length, 1))[0];
+                    rgbIV.Add(m_standardKey[x % m_standardKey.Length]);
             }
 
-            return rgbIV;
+            rgbIV.Scramble(rgbIV[0]);
+
+            return rgbIV.ToArray();
         }
 
-        /// <summary>Returns an encrypted or decrypted stream using XOR based algorithms. Call once to
-        /// encrypt, call again with same key to decrypt.</summary>
+        /// <summary>
+        /// Returns an encrypted or decrypted stream using XOR based algorithms. Call once to
+        /// encrypt, call again with same key to decrypt.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the encrypted or decrypted results, if the incoming
         /// stream is very large this will consume a large amount memory.  In this case use the
@@ -611,8 +678,10 @@ namespace PCS.Security.Cryptography
             return destination;
         }
 
-        /// <summary>Encrypts or decrypts input stream onto output stream using XOR based algorithms. Call once to
-        /// encrypt, call again with same key to decrypt.</summary>
+        /// <summary>
+        /// Encrypts or decrypts input stream onto output stream using XOR based algorithms. Call once to
+        /// encrypt, call again with same key to decrypt.
+        /// </summary>
         public static void Crypt(Stream source, Stream destination, byte[] encryptionKey)
         {
             byte[] buffer = new byte[BufferSize], results;
@@ -626,8 +695,9 @@ namespace PCS.Security.Cryptography
             }
         }
 
-        /// <summary>Encrypts or decrypts data using XOR based algorithms. Call once to encrypt; call again with same
-        /// key to decrypt.</summary>
+        /// <summary>
+        /// Encrypts or decrypts data using XOR based algorithms. Call once to encrypt; call again with same key to decrypt.
+        /// </summary>
         public static byte[] Crypt(byte[] source, int startIndex, int length, byte[] encryptionKey)
         {
             if (source == null)
@@ -651,9 +721,6 @@ namespace PCS.Security.Cryptography
             if (encryptionKey.Length == 0)
                 throw new ArgumentOutOfRangeException("encryptionKey", "encryptionKey must contain at least one byte");
 
-            // For backwards compatibility with older Visual Basic versions of the code library this
-            // function replicates the original code along with proper calls to VB intrinsic functions...
-
             // The longer the encryption key, the better the encryption.
             // Repeated encryption sequences do not occur for (3 * encryptionKey.Length) unique bytes.
             byte[] cryptData = new byte[length];
@@ -662,9 +729,8 @@ namespace PCS.Security.Cryptography
             int cryptKey;
             byte cryptByte;
 
-            // Re-seeds Visual Basic random number generator.            
-            VBMath.Rnd(-1);
-            VBMath.Randomize(encryptionKey[0]);
+            // Seeds random number generator
+            System.Random random = new System.Random(encryptionKey[0]);
 
             for (int x = startIndex; x < startIndex + length; x++)
             {
@@ -679,11 +745,11 @@ namespace PCS.Security.Cryptography
                             if (cryptByte != cryptKey) cryptByte = (byte)(cryptByte ^ cryptKey);
                             break;
                         case 1:
-                            cryptKey = (int)Math.Round(Conversion.Int(VBMath.Rnd() * (encryptionKey[keyIndex] + 1)));
+                            cryptKey = (int)(random.NextDouble() * (encryptionKey[keyIndex] + 1));
                             if (cryptByte != cryptKey) cryptByte = (byte)(cryptByte ^ cryptKey);
                             break;
                         case 2:
-                            cryptKey = (int)Math.Round(Conversion.Int(VBMath.Rnd() * 256.0F));
+                            cryptKey = (int)(random.NextDouble() * 256.0D);
                             if (cryptByte != cryptKey) cryptByte = (byte)(cryptByte ^ cryptKey);
                             break;
                     }
@@ -709,7 +775,9 @@ namespace PCS.Security.Cryptography
             return cryptData;
         }
 
-        /// <summary>Returns an obfuscated stream using bit-rotation algorithms.</summary>
+        /// <summary>
+        /// Returns an obfuscated stream using bit-rotation algorithms.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the encrypted results, if the incoming stream is
         /// very large this will consume a large amount memory.  In this case use the overload
@@ -725,7 +793,9 @@ namespace PCS.Security.Cryptography
             return destination;
         }
 
-        /// <summary>Obfuscates input stream onto output stream using bit-rotation algorithms.</summary>
+        /// <summary>
+        /// Obfuscates input stream onto output stream using bit-rotation algorithms.
+        /// </summary>
         public static void Obfuscate(Stream source, Stream destination, byte[] encryptionKey)
         {
             byte[] buffer = new byte[BufferSize], results;
@@ -739,7 +809,9 @@ namespace PCS.Security.Cryptography
             }
         }
 
-        /// <summary>Obfuscates data using bit-rotation algorithms.</summary>
+        /// <summary>
+        /// Obfuscates data using bit-rotation algorithms.
+        /// </summary>
         public static byte[] Obfuscate(byte[] source, int startIndex, int length, byte[] encryptionKey)
         {
             if (source == null)
@@ -788,7 +860,9 @@ namespace PCS.Security.Cryptography
             return cryptData;
         }
 
-        /// <summary>Returns a deobfuscated stream using bit-rotation algorithms.</summary>
+        /// <summary>
+        /// Returns a deobfuscated stream using bit-rotation algorithms.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the decrypted results, if the incoming stream is
         /// very large this will consume a large amount memory.  In this case use the overload
@@ -804,7 +878,9 @@ namespace PCS.Security.Cryptography
             return destination;
         }
 
-        /// <summary>Deobfuscates input stream onto output stream using bit-rotation algorithms.</summary>
+        /// <summary>
+        /// Deobfuscates input stream onto output stream using bit-rotation algorithms.
+        /// </summary>
         public static void Deobfuscate(Stream source, Stream destination, byte[] encryptionKey)
         {
             byte[] buffer = new byte[BufferSize], results;
@@ -818,7 +894,9 @@ namespace PCS.Security.Cryptography
             }
         }
 
-        /// <summary>Deobfuscates data using bit-rotation algorithms.</summary>
+        /// <summary>
+        /// Deobfuscates data using bit-rotation algorithms.
+        /// </summary>
         public static byte[] Deobfuscate(byte[] source, int startIndex, int length, byte[] encryptionKey)
         {
             if (source == null)
@@ -867,12 +945,45 @@ namespace PCS.Security.Cryptography
             return cryptData;
         }
 
-        /// <summary>Generates a random key useful for cryptographic functions.</summary>
+        /// <summary>
+        /// Generates a binary encryption key from given string.
+        /// </summary>
+        /// <param name="encryptionKey">String based sequence to convert to an encryption key.</param>
+        /// <returns>Binary encryption key from given string.</returns>
+        public static byte[] GetBinaryKeyFromString(string encryptionKey)
+        {
+            if (string.IsNullOrEmpty(encryptionKey))
+                return m_standardKey;
+
+            List<byte> key = new List<byte>();
+            ushort keyValue;
+
+            for (int i = 0; i < encryptionKey.Length; i++)
+            {
+                keyValue = (ushort)encryptionKey[i];
+
+                // Get all the relevant bytes from the Unicode character
+                if (keyValue < 256)
+                    key.Add((byte)keyValue);
+                else
+                {
+                    key.Add(keyValue.LoByte());
+                    key.Add(keyValue.HiByte());
+                }
+            }
+
+            // Perform repeatable scramble on key sequence
+            key.Scramble((int)encryptionKey[0]);
+           
+            return key.ToArray();
+        }
+
+        /// <summary>
+        /// Generates a random key useful for cryptographic functions.
+        /// </summary>
         public static string GenerateKey()
         {
             char[] keyChars;
-            char keyChar;
-            int x, y;
 
             // Generates a character array of unique values.
             StringBuilder result = new StringBuilder();
@@ -881,38 +992,26 @@ namespace PCS.Security.Cryptography
             result.Append(Guid.NewGuid().ToString().ToLower().Replace("-", "©ª¦"));
             result.Append(DateTime.UtcNow.Ticks);
 
-            for (x = 1; x <= 50; x++)
+            for (int x = 1; x <= 75; x++)
             {
                 result.Append(Convert.ToChar(Random.Int32Between(33, 255)));
             }
 
             result.Append(Environment.MachineName);
-            result.Append(GetKeyFromSeed((Int24)DateAndTime.Timer));
             result.Append(Environment.UserDomainName);
             result.Append(Environment.UserName);
             result.Append(Common.SystemTimer);
             result.Append(DateTime.Now.ToString().Replace("/", "¡¤¥").Replace(" ", "°"));
-            result.Append(Guid.NewGuid().ToString().ToUpper().Replace("-", "£§"));
 
             keyChars = result.ToString().ToCharArray();
-
-            // Swaps values around in array at random.
-            for (x = 0; x <= keyChars.Length - 1; x++)
-            {
-                y = Random.Int32Between(1, keyChars.Length) - 1;
-                if (x != y)
-                {
-                    keyChar = keyChars[x];
-                    keyChars[x] = keyChars[y];
-                    keyChars[y] = keyChar;
-                }
-            }
+            keyChars.Scramble();
 
             return new string(keyChars);
         }
 
-        /// <summary>Returns a simple encoded string representing a number which can later be decoded
-        /// with <see cref="GetSeedFromKey" />.</summary>
+        /// <summary>
+        /// Returns a simple encoded string representing a number which can later be decoded with <see cref="GetSeedFromKey"/>.
+        /// </summary>
         /// <remarks>This function was designed for 24-bit values.</remarks>
         public static string GetKeyFromSeed(Int24 seed)
         {
@@ -921,30 +1020,27 @@ namespace PCS.Security.Cryptography
 
             // This is a handy algorithm for encoding an integer value, use GetSeedFromKey to decode.
             int seedValue = (int)seed;
-            byte[] seedBytes = new byte[4];
+            byte[] seedBytes = seed.GetBytes();
             int alphaIndex;
-            int asciiA = Strings.Asc('A');
-
-            // Breaks seed into its component bytes.
-            seedBytes[0] = Bit.LoByte(Bit.LoWord(seedValue));
-            seedBytes[1] = Bit.HiByte(Bit.LoWord(seedValue));
-            seedBytes[2] = Bit.LoByte(Bit.HiWord(seedValue));
+            int asciiA = (int)'A';
 
             // Creates alpha-numeric key string.
             StringBuilder result = new StringBuilder();
 
-            for (int x = 0; x <= 2; x++)
+            for (int x = 0; x < 3; x++)
             {
                 alphaIndex = Random.Int32Between(0, 25);
                 if (x > 0) result.Append('-');
-                result.Append(Convert.ToChar(asciiA + (25 - alphaIndex)));
+                result.Append((char)(asciiA + (25 - alphaIndex)));
                 result.Append(seedBytes[x] + alphaIndex);
             }
 
             return result.ToString();
         }
 
-        /// <summary>Returns the number from a string encoded with <see cref="GetKeyFromSeed" />.</summary>
+        /// <summary>
+        /// Returns the number from a string encoded with <see cref="GetKeyFromSeed" />.
+        /// </summary>
         public static Int24 GetSeedFromKey(string key)
         {
             if (string.IsNullOrEmpty(key))
@@ -962,10 +1058,10 @@ namespace PCS.Security.Cryptography
             if (key.Length > 5 && key.Length < 15)
             {
                 // Gets Delimiter positions.
-                delimeter1 = Strings.InStr(key, "-", 0);
-                delimeter2 = Strings.InStr(delimeter1 + 1, key, "-", 0);
+                delimeter1 = key.IndexOf('-');
+                delimeter2 = key.IndexOf('-', delimeter1 + 1);
 
-                if (delimeter1 > 0 && delimeter2 > 0)
+                if (delimeter1 > -1 && delimeter2 > -1)
                 {
                     for (int x = 0; x <= 2; x++)
                     {
@@ -973,34 +1069,28 @@ namespace PCS.Security.Cryptography
                         switch (x)
                         {
                             case 0:
-                                code = key.Substring(0, delimeter1 - 1);
+                                code = key.Substring(0, delimeter1);
                                 break;
                             case 1:
-                                code = key.Substring(delimeter1 + 1 - 1, delimeter2 - delimeter1 - 1);
+                                code = key.Substring(delimeter1 + 1, delimeter2 - delimeter1 - 1);
                                 break;
                             case 2:
-                                code = key.Substring(key.Length - key.Length - delimeter2, key.Length - delimeter2);
+                                code = key.Substring(delimeter2 + 1, key.Length - delimeter2 - 1);
                                 break;
                         }
 
                         // Calculates byte.
-                        value = (int)Conversion.Val(code.Substring(code.Length - code.Length - 1, code.Length - 1)) -
-                            (25 - (Strings.Asc(code.Substring(0, 1)) - Strings.Asc("A")));
+                        value = int.Parse(code.Substring(1, code.Length - 1)) - (25 - (code.Substring(0, 1)[0] - 'A'));
 
                         // Validates calculation.
                         if (value >= 0 && value <= 255)
-                        {
                             seedBytes[x] = (byte)value;
-                        }
-                        else
-                        {
-                            // Determines the key is invalid and exits with -1.
-                            return -1;
-                        }
+                        else                            
+                            return -1; // Determines the key is invalid and exits with -1.
                     }
 
                     // Creates seed from its component bytes.
-                    return (Int24)Bit.MakeDWord(Bit.MakeWord(0, seedBytes[2]), Bit.MakeWord(seedBytes[1], seedBytes[0]));
+                    return Int24.GetValue(seedBytes, 0);
                 }
             }
 

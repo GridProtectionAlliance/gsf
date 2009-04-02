@@ -706,7 +706,7 @@ namespace PCS.IO
             }
 
             // Loop through each defined export file
-            for (int x = 0; x <= destinations.Count - 1; x++)
+            for (int x = 0; x < destinations.Count; x++)
             {
                 try
                 {

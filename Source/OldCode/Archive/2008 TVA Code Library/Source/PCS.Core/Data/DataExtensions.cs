@@ -1106,7 +1106,7 @@ namespace PCS.Data
                     // We assume the command to be of type Text if it begins with one of the common SQL keywords.
                     command.CommandType = CommandType.Text;
 
-                    for (int i = 0; i <= parameters.Length - 1; i++)
+                    for (int i = 0; i < parameters.Length; i++)
                     {
                         command.Parameters.Add(parameters[i]);
                     }
@@ -1147,7 +1147,7 @@ namespace PCS.Data
                     }
 
                     // Assigns the values to the the Parameters.
-                    for (int i = 0; i <= command.Parameters.Count - 1; i++)
+                    for (int i = 0; i < command.Parameters.Count; i++)
                     {
                         command.Parameters[i] = parameters[i];
                     }
@@ -1188,7 +1188,7 @@ namespace PCS.Data
             if (header)
             {
                 // Uses the first row as header row.
-                for (int i = 0; i <= headers.Length - 1; i++)
+                for (int i = 0; i < headers.Length; i++)
                 {
                     table.Columns.Add(new DataColumn(headers[i].Trim(new char[] { '\"' }))); //Remove any leading and trailing quotes from the column name.
                 }
@@ -1196,21 +1196,21 @@ namespace PCS.Data
             }
             else
             {
-                for (int i = 0; i <= headers.Length - 1; i++)
+                for (int i = 0; i < headers.Length; i++)
                 {
                     table.Columns.Add(new DataColumn());
                 }
             }
 
             // Populates the data table with csv data.
-            for (; cursor <= lines.Length - 1; cursor++)
+            for (; cursor < lines.Length; cursor++)
             {
                 // Creates new row.
                 DataRow row = table.NewRow();
 
                 // Populates the new row.
                 string[] fields = Regex.Split(lines[cursor], pattern);
-                for (int i = 0; i <= fields.Length - 1; i++)
+                for (int i = 0; i < fields.Length; i++)
                 {
                     // Removes any leading and trailing quotes from the data.
                     row[i] = fields[i].Trim(new char[] { '\"' });
@@ -1238,7 +1238,7 @@ namespace PCS.Data
             //Uses the column names as the headers if headers are requested.
             if (header)
             {
-                for (int i = 0; i <= table.Columns.Count - 1; i++)
+                for (int i = 0; i < table.Columns.Count; i++)
                 {
                     data.Append((quoted ? "\"" : "") + table.Columns[i].ColumnName + (quoted ? "\"" : ""));
 
@@ -1250,10 +1250,10 @@ namespace PCS.Data
                 data.Append("\r\n");
             }
 
-            for (int i = 0; i <= table.Rows.Count - 1; i++)
+            for (int i = 0; i < table.Rows.Count; i++)
             {
                 //Converts data table's data to delimited data.
-                for (int j = 0; j <= table.Columns.Count - 1; j++)
+                for (int j = 0; j < table.Columns.Count; j++)
                 {
                     data.Append((quoted ? "\"" : "") + table.Rows[i][j].ToString() + (quoted ? "\"" : ""));
 
