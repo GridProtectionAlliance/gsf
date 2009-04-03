@@ -44,7 +44,7 @@ namespace PCS.Security.Cryptography
     /// <remarks>
     /// <para>
     /// Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
-    /// will have the fastest encryption speed with the simplest encryption strength, and level 5 will have the
+    /// will have the fastest encryption speed with the simplest encryption strength, and level 6 will have the
     /// strongest cumulative encryption strength with the slowest encryption speed.
     /// </para>
     /// </remarks>
@@ -61,7 +61,9 @@ namespace PCS.Security.Cryptography
         /// <summary>Adds RijndaelManaged based enryption.</summary>
         Level4,
         /// <summary>Adds simple bit-rotation based enryption.</summary>
-        Level5
+        Level5,
+        /// <summary>Adds classic pkzip based enryption.</summary>
+        Level6
     }
 
     #endregion
@@ -76,6 +78,7 @@ namespace PCS.Security.Cryptography
         private const int BufferSize = 262144; // 256K
 
         private static byte[] m_standardKey = GetBinaryKeyFromString(StandardKey);
+        private static List<int> m_excludedCharacters;
 
         /// <summary>
         /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
@@ -158,6 +161,10 @@ namespace PCS.Security.Cryptography
                         if (strength >= CipherStrength.Level5)
                         {
                             source = Obfuscate(source, 0, source.Length, key);
+                            if (strength >= CipherStrength.Level6)
+                            {
+                                source = new Pkzip.PkzipClassicManaged().Encrypt(source, 0, source.Length, key, IV);
+                            }
                         }
                     }
                 }
@@ -406,6 +413,14 @@ namespace PCS.Security.Cryptography
                 return source;
 
             // Performs requested levels of decryption.
+
+            if (strength >= CipherStrength.Level6)
+            {
+                source = new Pkzip.PkzipClassicManaged().Decrypt(source, startIndex, length, key, IV);
+                startIndex = 0;
+                length = source.Length;
+            }
+
             if (strength >= CipherStrength.Level5)
             {
                 source = Deobfuscate(source, startIndex, length, key);
@@ -981,32 +996,91 @@ namespace PCS.Security.Cryptography
         /// <summary>
         /// Generates a random key useful for cryptographic functions.
         /// </summary>
-        public static string GenerateKey()
+        /// <param name="size">Length of key to generate.</param>
+        public static string GenerateKey(int size)
         {
-            char[] keyChars;
-
             // Generates a character array of unique values.
-            StringBuilder result = new StringBuilder();
+            List<char> keyChars = new List<char>();
 
-            result.Append(StandardKey);
-            result.Append(Guid.NewGuid().ToString().ToLower().Replace("-", "©ª¦"));
-            result.Append(DateTime.UtcNow.Ticks);
-
-            for (int x = 1; x <= 75; x++)
+            for (int x = 0; x < size; x++)
             {
-                result.Append(Convert.ToChar(Random.Int32Between(33, 255)));
+                keyChars.Add((char)Random.Int32Between(1, 255));
             }
 
-            result.Append(Environment.MachineName);
-            result.Append(Environment.UserDomainName);
-            result.Append(Environment.UserName);
-            result.Append(Common.SystemTimer);
-            result.Append(DateTime.Now.ToString().Replace("/", "¡¤¥").Replace(" ", "°"));
+            return new string(keyChars.ToArray());
+        }
 
-            keyChars = result.ToString().ToCharArray();
+        /// <summary>
+        /// Generates a text based random key with no control characters useful for cryptographic functions.
+        /// </summary>
+        /// <param name="size">Length of key to generate.</param>
+        public static string GenerateTextFriendlyKey(int size)
+        {
+            // Initialize excluded characters
+            if (m_excludedCharacters == null)
+            {
+                m_excludedCharacters = new List<int>();
+
+                m_excludedCharacters.Add(0x7F);
+
+                for (int i = 0x81; i < 0xA0; i++)
+                {
+                    m_excludedCharacters.Add(i);
+                }
+            }
+            
+            // Generates a character array of unique text friendly values.
+            List<char> keyChars = new List<char>();
+            int character;
+
+            for (int x = 0; x < size; x++)
+            {
+                do
+                {
+                    character = Random.Int32Between(33, 255);
+                }
+                while (m_excludedCharacters.BinarySearch(character) >= 0);
+
+                keyChars.Add((char)character);
+            }
+
+            return new string(keyChars.ToArray());
+        }
+
+        /// <summary>
+        /// Generates a text based random key that could be easily typed useful for cryptographic functions.
+        /// </summary>
+        /// <param name="size">Length of key to generate.</param>
+        public static string GenerateHumanReadableKey(int size)
+        {
+            // Generates a character array of unique human readable/typeable values.
+            List<char> keyChars = new List<char>();
+            char character;
+
+            for (int x = 0; x < size / 2; x++)
+            {
+                // Add a number (0 - 9)
+                keyChars.Add((char)Random.Int32Between(0x30, 0x39));
+
+                // Add a letter (A - Z)
+                character = (char)Random.Int32Between(0x41, 0x5A);
+
+                // Make every other letter lower case
+                if (x % 2 == 0)
+                    keyChars.Add(character);
+                else
+                    keyChars.Add(char.ToLower(character));
+            }
+
+            // Make sure length comes out as specified
+            if (size % 2 != 0)
+                keyChars.Add((char)Random.Int32Between(0x30, 0x39));
+
+
+            // Mix up letters and numbers randomly
             keyChars.Scramble();
 
-            return new string(keyChars);
+            return new string(keyChars.ToArray());
         }
 
         /// <summary>
@@ -1044,7 +1118,7 @@ namespace PCS.Security.Cryptography
         public static Int24 GetSeedFromKey(string key)
         {
             if (string.IsNullOrEmpty(key))
-                throw (new ArgumentNullException("key", "key cannot be null"));
+                throw new ArgumentNullException("key", "key cannot be null");
 
             byte[] seedBytes = new byte[3];
             int delimeter1;
