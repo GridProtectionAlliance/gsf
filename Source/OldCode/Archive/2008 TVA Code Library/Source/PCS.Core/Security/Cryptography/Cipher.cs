@@ -53,16 +53,22 @@ namespace PCS.Security.Cryptography
         /// <summary>Uses no encryption.</summary>
         None,
         /// <summary>Adds simple multi-alogorithm XOR based encryption.</summary>
+        /// <remarks>This is a proprietary encryption algorithm.</remarks>
         Level1,
         /// <summary>Adds TripleDES based encryption.</summary>
+        /// <remarks>This is a standard encryption algorithm.</remarks>
         Level2,
         /// <summary>Adds RC2 based encryption.</summary>
+        /// <remarks>This is a standard encryption algorithm.</remarks>
         Level3,
-        /// <summary>Adds RijndaelManaged based enryption.</summary>
+        /// <summary>Adds RijndaelManaged based encryption.</summary>
+        /// <remarks>This is a standard encryption algorithm.</remarks>
         Level4,
-        /// <summary>Adds simple bit-rotation based enryption.</summary>
+        /// <summary>Adds simple bit-rotation based encryption.</summary>
+        /// <remarks>This is a proprietary encryption algorithm.</remarks>
         Level5,
-        /// <summary>Adds classic pkzip based enryption.</summary>
+        /// <summary>Adds classic pkzip based encryption.</summary>
+        /// <remarks>This is a standard encryption algorithm.</remarks>
         Level6
     }
 
@@ -413,7 +419,6 @@ namespace PCS.Security.Cryptography
                 return source;
 
             // Performs requested levels of decryption.
-
             if (strength >= CipherStrength.Level6)
             {
                 source = new Pkzip.PkzipClassicManaged().Decrypt(source, startIndex, length, key, IV);
