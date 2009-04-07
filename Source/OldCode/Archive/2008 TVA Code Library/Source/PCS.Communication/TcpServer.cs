@@ -501,7 +501,7 @@ namespace PCS.Communication
                             if (SecureSession)
                             {
                                 // Create a secret key for ciphering client data.
-                                tcpClient.Passphrase = Cipher.GenerateKey();
+                                tcpClient.Passphrase = Cipher.GenerateKey(260);
                                 handshake.Passphrase = tcpClient.Passphrase;
                             }
 

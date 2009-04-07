@@ -432,7 +432,7 @@ namespace PCS.Communication
                         if (SecureSession)
                         {
                             // Create a secret key for ciphering client data.
-                            udpClient.Passphrase = Cipher.GenerateKey();
+                            udpClient.Passphrase = Cipher.GenerateKey(260);
                             handshake.Passphrase = udpClient.Passphrase;
                         }
 
