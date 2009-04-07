@@ -667,7 +667,7 @@ namespace PCS.Measurements
                 {
                     status.Append(Measurement.ToString(m_lastDiscardedMeasurement));
                     status.Append(" - ");
-                    status.Append(m_lastDiscardedMeasurement.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                    status.Append(((DateTime)m_lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 }
                 status.AppendLine();
                 status.Append("    Total sorts by arrival: ");
@@ -717,7 +717,7 @@ namespace PCS.Measurements
                 }
                 else
                 {
-                    status.Append(lastFrame.Timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                    status.Append(((DateTime)lastFrame.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                     status.AppendLine();
                     status.Append("   Last sorted measurement: ");
                     status.Append(Measurement.ToString(lastFrame.LastSortedMeasurement));

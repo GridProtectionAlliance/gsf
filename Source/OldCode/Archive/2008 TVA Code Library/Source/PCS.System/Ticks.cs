@@ -72,9 +72,7 @@ namespace System
     /// act like a long integer but handle time conversions. <see cref="Ticks"/> can also represent a "time period" (e.g., the
     /// number of ticks elapsed since a process started) and thus can also be used like a <see cref="TimeSpan"/>; when used in
     /// this manner the <see cref="Ticks.ToString()"/> method can be used to convert the <see cref="Ticks"/> value into a handy
-    /// textual representation of elapsed years, days, hours, minutes and seconds. <see cref="Ticks.ToString(string)"/> overload
-    /// behaves as <see cref="DateTime.ToString(string)"/>, all other numeric methods act according to <see cref="System.Int64"/>
-    /// value that <see cref="Ticks"/> represents.
+    /// textual representation of elapsed years, days, hours, minutes and seconds.
     /// </para>
     /// <para>
     /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implictly castable to and from
@@ -747,7 +745,7 @@ namespace System
         }
 
         /// <summary>
-        /// Converts this value as a <see cref="DateTime"/> to its equivalent string representation, using
+        /// Converts this value to its equivalent string representation, using
         /// the specified format.
         /// </summary>
         /// <param name="format">A format string.</param>
@@ -756,11 +754,11 @@ namespace System
         /// </returns>
         public string ToString(string format)
         {
-            return ((DateTime)this).ToString(format);
+            return m_value.ToString(format);
         }
 
         /// <summary>
-        /// Converts this value as a <see cref="DateTime"/> to its equivalent string representation, using
+        /// Converts this value to its equivalent string representation, using
         /// the specified culture-specific format information.
         /// </summary>
         /// <param name="provider">
@@ -771,11 +769,11 @@ namespace System
         /// </returns>
         public string ToString(IFormatProvider provider)
         {
-            return ((DateTime)this).ToString(provider);
+            return m_value.ToString(provider);
         }
 
         /// <summary>
-        /// Converts this value as a <see cref="DateTime"/> to its equivalent string representation, using
+        /// Converts this value to its equivalent string representation, using
         /// specified format and culture-specific format information.
         /// </summary>
         /// <param name="format">A format specification.</param>
@@ -787,151 +785,7 @@ namespace System
         /// </returns>
         public string ToString(string format, IFormatProvider provider)
         {
-            return ((DateTime)this).ToString(format, provider);
-        }
-
-        /// <summary>
-        /// Converts the string representation of a number to its <see cref="Ticks"/> equivalent.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <returns>
-        /// A <see cref="Ticks"/> equivalent to the number contained in s.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
-        /// </exception>
-        /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Ticks Parse(string s)
-        {
-            return (Ticks)long.Parse(s);
-        }
-
-        /// <summary>
-        /// Converts the string representation of a number in a specified style to its <see cref="Ticks"/> equivalent.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="style">
-        /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
-        /// </param>
-        /// <returns>
-        /// A <see cref="Ticks"/> equivalent to the number contained in s.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
-        /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
-        /// </exception>
-        /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Ticks Parse(string s, NumberStyles style)
-        {
-            return (Ticks)long.Parse(s, style);
-        }
-
-        /// <summary>
-        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Ticks"/> equivalent.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="provider">
-        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
-        /// </param>
-        /// <returns>
-        /// A <see cref="Ticks"/> equivalent to the number contained in s.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
-        /// </exception>
-        /// <exception cref="FormatException">s is not in the correct format.</exception>
-        public static Ticks Parse(string s, IFormatProvider provider)
-        {
-            return (Ticks)long.Parse(s, provider);
-        }
-
-        /// <summary>
-        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Ticks"/> equivalent.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="style">
-        /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
-        /// </param>
-        /// <param name="provider">
-        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
-        /// </param>
-        /// <returns>
-        /// A <see cref="Ticks"/> equivalent to the number contained in s.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
-        /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">s is null.</exception>
-        /// <exception cref="OverflowException">
-        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
-        /// </exception>
-        /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        public static Ticks Parse(string s, NumberStyles style, IFormatProvider provider)
-        {
-            return (Ticks)long.Parse(s, style, provider);
-        }
-
-        /// <summary>
-        /// Converts the string representation of a number to its <see cref="Ticks"/> equivalent. A return value
-        /// indicates whether the conversion succeeded or failed.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="result">
-        /// When this method returns, contains the <see cref="Ticks"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not of the correct format, or represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
-        /// This parameter is passed uninitialized.
-        /// </param>
-        /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        public static bool TryParse(string s, out Ticks result)
-        {
-            long parseResult;
-            bool parseResponse;
-
-            parseResponse = long.TryParse(s, out parseResult);
-            result = parseResult;
-
-            return parseResponse;
-        }
-
-        /// <summary>
-        /// Converts the string representation of a number in a specified style and culture-specific format to its
-        /// <see cref="Ticks"/> equivalent. A return value indicates whether the conversion succeeded or failed.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="style">
-        /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
-        /// </param>
-        /// <param name="result">
-        /// When this method returns, contains the <see cref="Ticks"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not in a format compliant with style, or represents a number less than <see cref="Ticks.MinValue"/> or
-        /// greater than <see cref="Ticks.MaxValue"/>. This parameter is passed uninitialized.
-        /// </param>
-        /// <param name="provider">
-        /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
-        /// </param>
-        /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        /// <exception cref="ArgumentException">
-        /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
-        /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
-        /// </exception>
-        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Ticks result)
-        {
-            long parseResult;
-            bool parseResponse;
-
-            parseResponse = long.TryParse(s, style, provider, out parseResult);
-            result = parseResult;
-
-            return parseResponse;
+            return m_value.ToString(format, provider);
         }
 
         /// <summary>
@@ -1299,6 +1153,150 @@ namespace System
         public static Ticks FromMilliseconds(double value)
         {
             return new Ticks((long)(value * Ticks.PerMillisecond));
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number to its <see cref="Ticks"/> equivalent.
+        /// </summary>
+        /// <param name="s">A string containing a number to convert.</param>
+        /// <returns>
+        /// A <see cref="Ticks"/> equivalent to the number contained in s.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">s is null.</exception>
+        /// <exception cref="OverflowException">
+        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
+        /// </exception>
+        /// <exception cref="FormatException">s is not in the correct format.</exception>
+        public static Ticks Parse(string s)
+        {
+            return (Ticks)long.Parse(s);
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number in a specified style to its <see cref="Ticks"/> equivalent.
+        /// </summary>
+        /// <param name="s">A string containing a number to convert.</param>
+        /// <param name="style">
+        /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Ticks"/> equivalent to the number contained in s.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
+        /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">s is null.</exception>
+        /// <exception cref="OverflowException">
+        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
+        /// </exception>
+        /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
+        public static Ticks Parse(string s, NumberStyles style)
+        {
+            return (Ticks)long.Parse(s, style);
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number in a specified culture-specific format to its <see cref="Ticks"/> equivalent.
+        /// </summary>
+        /// <param name="s">A string containing a number to convert.</param>
+        /// <param name="provider">
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Ticks"/> equivalent to the number contained in s.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">s is null.</exception>
+        /// <exception cref="OverflowException">
+        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
+        /// </exception>
+        /// <exception cref="FormatException">s is not in the correct format.</exception>
+        public static Ticks Parse(string s, IFormatProvider provider)
+        {
+            return (Ticks)long.Parse(s, provider);
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number in a specified style and culture-specific format to its <see cref="Ticks"/> equivalent.
+        /// </summary>
+        /// <param name="s">A string containing a number to convert.</param>
+        /// <param name="style">
+        /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
+        /// </param>
+        /// <param name="provider">
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information about s.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Ticks"/> equivalent to the number contained in s.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
+        /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">s is null.</exception>
+        /// <exception cref="OverflowException">
+        /// s represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
+        /// </exception>
+        /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
+        public static Ticks Parse(string s, NumberStyles style, IFormatProvider provider)
+        {
+            return (Ticks)long.Parse(s, style, provider);
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number to its <see cref="Ticks"/> equivalent. A return value
+        /// indicates whether the conversion succeeded or failed.
+        /// </summary>
+        /// <param name="s">A string containing a number to convert.</param>
+        /// <param name="result">
+        /// When this method returns, contains the <see cref="Ticks"/> value equivalent to the number contained in s,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
+        /// is not of the correct format, or represents a number less than <see cref="Ticks.MinValue"/> or greater than <see cref="Ticks.MaxValue"/>.
+        /// This parameter is passed uninitialized.
+        /// </param>
+        /// <returns>true if s was converted successfully; otherwise, false.</returns>
+        public static bool TryParse(string s, out Ticks result)
+        {
+            long parseResult;
+            bool parseResponse;
+
+            parseResponse = long.TryParse(s, out parseResult);
+            result = parseResult;
+
+            return parseResponse;
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number in a specified style and culture-specific format to its
+        /// <see cref="Ticks"/> equivalent. A return value indicates whether the conversion succeeded or failed.
+        /// </summary>
+        /// <param name="s">A string containing a number to convert.</param>
+        /// <param name="style">
+        /// A bitwise combination of System.Globalization.NumberStyles values that indicates the permitted format of s.
+        /// </param>
+        /// <param name="result">
+        /// When this method returns, contains the <see cref="Ticks"/> value equivalent to the number contained in s,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
+        /// is not in a format compliant with style, or represents a number less than <see cref="Ticks.MinValue"/> or
+        /// greater than <see cref="Ticks.MaxValue"/>. This parameter is passed uninitialized.
+        /// </param>
+        /// <param name="provider">
+        /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
+        /// </param>
+        /// <returns>true if s was converted successfully; otherwise, false.</returns>
+        /// <exception cref="ArgumentException">
+        /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
+        /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
+        /// </exception>
+        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out Ticks result)
+        {
+            long parseResult;
+            bool parseResponse;
+
+            parseResponse = long.TryParse(s, style, provider, out parseResult);
+            result = parseResult;
+
+            return parseResponse;
         }
 
         #endregion        
