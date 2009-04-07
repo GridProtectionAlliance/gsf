@@ -1098,7 +1098,6 @@ namespace PCS.Security.Cryptography
                 throw new ArgumentException("Cannot calculate key from negative seed");
 
             // This is a handy algorithm for encoding an integer value, use GetSeedFromKey to decode.
-            int seedValue = (int)seed;
             byte[] seedBytes = seed.GetBytes();
             int alphaIndex;
             int asciiA = (int)'A';
@@ -1126,8 +1125,7 @@ namespace PCS.Security.Cryptography
                 throw new ArgumentNullException("key", "key cannot be null");
 
             byte[] seedBytes = new byte[3];
-            int delimeter1;
-            int delimeter2;
+            int delimeter1, delimeter2;
             string code = "";
             int value;
 
