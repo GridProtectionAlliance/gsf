@@ -66,8 +66,16 @@ namespace System
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds and fractional seconds since 1/1/1900.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
         /// <param name="fractionalSeconds">Fractional seconds.</param>
-        public NtpTimeTag(long seconds, long fractionalSeconds)
-            : base(m_ntpDateOffsetTicks, seconds + (fractionalSeconds / (double)long.MaxValue))
+        [CLSCompliant(false)]
+        public NtpTimeTag(int seconds, uint fractionalSeconds)
+            : base(m_ntpDateOffsetTicks, seconds + (fractionalSeconds / (double)uint.MaxValue))
+        {
+        }
+
+        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given 64-bit NTP timestamp.</summary>
+        /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in hi-word and fractional seconds in lo-word.</param>
+        public NtpTimeTag(long timestamp)
+            : this((int)(((ulong)timestamp >> 32) & 0xffffffffL), (uint)(timestamp & 0xffffffffL))
         {
         }
 
