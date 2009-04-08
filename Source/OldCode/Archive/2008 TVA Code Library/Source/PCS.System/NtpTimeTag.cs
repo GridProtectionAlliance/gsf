@@ -29,15 +29,24 @@
 \**************************************************************************/
 
 using System.Runtime.Serialization;
+using System.Units;
 
 namespace System
 {
     /// <summary>Standard Network Time Protocol Timetag.</summary>
     public class NtpTimeTag : TimeTagBase
     {
-        // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this
-        // date to get offset in ticks for later conversion.
+        // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this date to
+        // get offset in ticks for later conversion.
         private static long m_ntpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+
+        // According to RFC-2030, NTP dates can also be measured as the number of seconds since 2/7/2036
+        // at 6h 28m 16s UTC if bit 0 is set, so we also calculate this date to get offset in ticks
+        // for later conversion.
+        private static long m_ntpDateOffsetTicksAlt = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
+
+        // Bit mask to test for proper NTP base offset
+        private static long m_offsetMask = 0x80000000L;
 
         /// <summary>
         /// Creates a new <see cref="NtpTimeTag"/> from serialization parameters.
@@ -52,38 +61,96 @@ namespace System
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
         public NtpTimeTag(double seconds)
-            : base(m_ntpDateOffsetTicks, seconds)
+            : base(GetBaseOffsetTicks((long)seconds), seconds)
         {
         }
 
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
         public NtpTimeTag(int seconds)
-            : base(m_ntpDateOffsetTicks, (double)seconds)
+            : base(GetBaseOffsetTicks(seconds), (double)seconds)
         {
         }
 
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds and fractional seconds since 1/1/1900.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
-        /// <param name="fractionalSeconds">Fractional seconds.</param>
-        [CLSCompliant(false)]
-        public NtpTimeTag(int seconds, uint fractionalSeconds)
-            : base(m_ntpDateOffsetTicks, seconds + (fractionalSeconds / (double)uint.MaxValue))
+        /// <param name="fractionalSeconds">Number of fractional seconds, in whole picoseconds.</param>
+        public NtpTimeTag(int seconds, int fractionalSeconds)
+            : base(GetBaseOffsetTicks(seconds), seconds + (fractionalSeconds * SI.Pico))
         {
         }
 
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given 64-bit NTP timestamp.</summary>
         /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in hi-word and fractional seconds in lo-word.</param>
         public NtpTimeTag(long timestamp)
-            : this((int)(((ulong)timestamp >> 32) & 0xffffffffL), (uint)(timestamp & 0xffffffffL))
+            : this(HiDWord(timestamp), LoDWord(timestamp))
         {
         }
 
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given specified <see cref="Ticks"/>.</summary>
         /// <param name="timestamp">Timestamp in <see cref="Ticks"/> to create Unix timetag from (minimum valid date is 1/1/1900).</param>
         public NtpTimeTag(Ticks timestamp)
-            : base(m_ntpDateOffsetTicks, timestamp)
+            : base(GetBaseOffsetTicks((long)timestamp.ToSeconds()), timestamp)
         {
+        }
+
+        /// <summary>
+        /// Gets 64-bit NTP timestamp.
+        /// </summary>
+        public long Timestamp
+        {
+            get
+            {
+                return MakeQWord((int)Math.Floor(Value), (int)(Ticks.ToSeconds(((Ticks)ToDateTime().Ticks).DistanceBeyondSecond()) / SI.Pico));
+            }
+        }
+
+        /// <summary>
+        /// Gets proper NTP offset based on most significant bit (MSB), see RFC-2030.
+        /// </summary>
+        /// <param name="seconds">Seconds value used to test MSB.</param>
+        /// <returns>Proper NTP offset.</returns>
+        public static long GetBaseOffsetTicks(long seconds)
+        {
+            if ((seconds & m_offsetMask) == 0L)
+                return m_ntpDateOffsetTicksAlt;
+            else
+                return m_ntpDateOffsetTicks;
+        }
+
+        // TODO: Convert to extension functions from Bit once available...
+        private static int LoDWord(long quadWord)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 0);
+            else
+                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 4);
+        }
+
+        private static int HiDWord(long quadWord)
+        {
+            if (BitConverter.IsLittleEndian)
+                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 4);
+            else
+                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 0);
+        }
+
+        private static long MakeQWord(int high, int low)
+        {
+            byte[] bytes = new byte[8];
+
+            if (BitConverter.IsLittleEndian)
+            {
+                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 4, 4);
+            }
+            else
+            {
+                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 4, 4);
+            }
+
+            return BitConverter.ToInt64(bytes, 0);
         }
     }
 }
