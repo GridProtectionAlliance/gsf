@@ -83,7 +83,7 @@ namespace System
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given 64-bit NTP timestamp.</summary>
         /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in hi-word and fractional seconds in lo-word.</param>
         public NtpTimeTag(long timestamp)
-            : this(HiDWord(timestamp), LoDWord(timestamp))
+            : this(timestamp.HiDWord(), timestamp.LoDWord())
         {
         }
 
@@ -101,7 +101,7 @@ namespace System
         {
             get
             {
-                return MakeQWord((int)Math.Floor(Value), (int)(Ticks.ToSeconds(((Ticks)ToDateTime().Ticks).DistanceBeyondSecond()) / SI.Pico));
+                return Bit.MakeQWord((int)Math.Floor(Value), (int)(Ticks.ToSeconds(((Ticks)ToDateTime().Ticks).DistanceBeyondSecond()) / SI.Pico));
             }
         }
 
@@ -116,41 +116,6 @@ namespace System
                 return m_ntpDateOffsetTicksAlt;
             else
                 return m_ntpDateOffsetTicks;
-        }
-
-        // TODO: Convert to extension functions from Bit once available...
-        private static int LoDWord(long quadWord)
-        {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 0);
-            else
-                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 4);
-        }
-
-        private static int HiDWord(long quadWord)
-        {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 4);
-            else
-                return BitConverter.ToInt32(BitConverter.GetBytes(quadWord), 0);
-        }
-
-        private static long MakeQWord(int high, int low)
-        {
-            byte[] bytes = new byte[8];
-
-            if (BitConverter.IsLittleEndian)
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 4, 4);
-            }
-            else
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 4, 4);
-            }
-
-            return BitConverter.ToInt64(bytes, 0);
         }
     }
 }
