@@ -56,6 +56,21 @@ namespace System
         {
         }
 
+        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.</summary>
+        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
+        public NtpTimeTag(int seconds)
+            : base(m_ntpDateOffsetTicks, (double)seconds)
+        {
+        }
+
+        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds and fractional seconds since 1/1/1900.</summary>
+        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
+        /// <param name="fractionalSeconds">Fractional seconds.</param>
+        public NtpTimeTag(long seconds, long fractionalSeconds)
+            : base(m_ntpDateOffsetTicks, seconds + (fractionalSeconds / (double)long.MaxValue))
+        {
+        }
+
         /// <summary>Creates a new <see cref="NtpTimeTag"/>, given specified <see cref="Ticks"/>.</summary>
         /// <param name="timestamp">Timestamp in <see cref="Ticks"/> to create Unix timetag from (minimum valid date is 1/1/1900).</param>
         public NtpTimeTag(Ticks timestamp)

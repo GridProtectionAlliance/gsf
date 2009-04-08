@@ -90,7 +90,6 @@ namespace System
             set
             {
                 m_seconds = value;
-                if (m_seconds < 0) m_seconds = 0;
             }
         }
 
