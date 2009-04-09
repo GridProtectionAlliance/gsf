@@ -73,7 +73,7 @@ namespace System
         {
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = Ticks.ToSeconds(timestamp - m_baseDateOffsetTicks);
+            Value = (timestamp - m_baseDateOffsetTicks).ToSeconds();
         }
 
         #endregion
@@ -190,7 +190,7 @@ namespace System
         /// <remarks>Hash code based on number of seconds timetag represents.</remarks>
         public override int GetHashCode()
         {
-            return (int)(m_seconds * 1000);
+            return m_seconds.GetHashCode();
         }
 
         /// <summary>
