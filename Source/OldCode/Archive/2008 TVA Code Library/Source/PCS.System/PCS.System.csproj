@@ -41,12 +41,16 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />
     <Compile Include="Bit.cs" />
+    <Compile Include="BitExtensions.cs" />
+    <Compile Include="Bits.cs" />
     <Compile Include="BitwiseCast.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="ComplexNumber.cs" />
