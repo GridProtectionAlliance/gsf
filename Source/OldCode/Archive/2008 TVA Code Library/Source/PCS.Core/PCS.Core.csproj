@@ -229,7 +229,6 @@
     </Compile>
     <Compile Include="Measurements\FrameQueue.cs" />
     <Compile Include="Measurements\MeasurementKey.cs" />
-    <Compile Include="PrecisionTimer.cs" />
     <Compile Include="Net\Ftp\FtpAsyncResult.cs" />
     <Compile Include="Net\Ftp\FtpControlChannel.cs" />
     <Compile Include="Net\Ftp\FtpDataStream.cs" />
