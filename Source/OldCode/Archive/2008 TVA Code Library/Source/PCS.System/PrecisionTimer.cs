@@ -1,65 +1,89 @@
-//*******************************************************************************************************
-//  PrecisionTimer.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
-//
-//  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
-//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
-//       Phone: 423/751-2827
-//       Email: jrcarrol@tva.gov
-//
-//  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
-//  11/22/2003 - Leslie Sanford (Multimedia.Timer)
-//       Original version of source code.
-//  04/10/2008 - James Brock (DateTimePrecise)
-//       Original version of source code.
-//  08/21/2008 - J. Ritchie Carroll
-//       Integrated, merged and adapted for PCS Code Library use as PrecisionTimer.
-//  09/12/2008 - J. Ritchie Carroll
-//      Converted to C#.
-//
-//*******************************************************************************************************
+/**********************************************************************************\
+   Copyright © 2009 for combined work, Gbtc - 
+        James Ritchie Carroll, Leslie Sanford and James Brock
+ 
+   All rights reserved.
+  
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+  
+      * Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+       
+      * Redistributions in binary form must reproduce the above
+        copyright notice, this list of conditions and the following
+        disclaimer in the documentation and/or other materials provided
+        with the distribution.
+  
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY
+   EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+   OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+   ------------------------------------------------------------------------------
+
+   Multimedia.Timer class adaptation:
+   Copyright (c) 2006 Leslie Sanford
+
+   * Permission is hereby granted, free of charge, to any person obtaining a copy
+   * of this software and associated documentation files (the "Software"), to
+   * deal in the Software without restriction, including without limitation the
+   * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+   * sell copies of the Software, and to permit persons to whom the Software is
+   * furnished to do so, subject to the following conditions:
+   *
+   * The above copyright notice and this permission notice shall be included in
+   * all copies or substantial portions of the Software.
+   *
+   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+   * THE SOFTWARE.
+    
+   * Leslie Sanford
+   * Email: jabberdabber@hotmail.com  
+
+   ------------------------------------------------------------------------------
+
+   DateTimePrecise adpatation:
+   Copyright James Brock
+  
+   The Code Project Open License (CPOL):
+        http://www.codeproject.com/info/cpol10.aspx
+
+   ------------------------------------------------------------------------------
+
+   Code Modification History:
+   ------------------------------------------------------------------------------
+   11/22/2003 - Leslie Sanford (Multimedia.Timer)
+        Original version of source code.
+   04/10/2008 - James Brock (DateTimePrecise)
+        Original version of source code.
+   08/21/2008 - J. Ritchie Carroll
+        Integrated, merged and adapted for general use as PrecisionTimer.
+
+\**********************************************************************************/
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace PCS
+namespace System
 {
-    #region [ Original Copyright Notices ]
-
-    // Copyright (c) 2006 Leslie Sanford
-    // *
-    // * Permission is hereby granted, free of charge, to any person obtaining a copy
-    // * of this software and associated documentation files (the "Software"), to
-    // * deal in the Software without restriction, including without limitation the
-    // * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-    // * sell copies of the Software, and to permit persons to whom the Software is
-    // * furnished to do so, subject to the following conditions:
-    // *
-    // * The above copyright notice and this permission notice shall be included in
-    // * all copies or substantial portions of the Software.
-    // *
-    // * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    // * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    // * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    // * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    // * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    // * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    // * THE SOFTWARE.
-    //
-    // * Leslie Sanford
-    // * Email: jabberdabber@hotmail.com
-    //
-
-    // See also: The Code Project Open License (CPOL)
-    // http://www.codeproject.com/info/cpol10.aspx
-
-    #endregion
-
-    /// <summary>Represents information about the multimedia Timer's capabilities.</summary>
+    /// <summary>
+    /// Represents information about the system's multimedia timer capabilities.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct TimerCapabilities
     {
@@ -70,10 +94,14 @@ namespace PCS
         public int PeriodMaximum;
     }
 
-    /// <summary>The exception that is thrown when a timer fails to start.</summary>
+    /// <summary>
+    /// Represents an exception that is thrown when a <see cref="PrecisionTimer"/> fails to start.
+    /// </summary>
     public class TimerStartException : ApplicationException
     {
-        /// <summary>Initializes a new instance of the TimerStartException class.</summary>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TimerStartException"/> class.
+        /// </summary>
         /// <param name="message">The error message that explains the reason for the exception.</param>
         public TimerStartException(string message)
             : base(message)
@@ -81,7 +109,9 @@ namespace PCS
         }
     }
 
-    /// <summary>High-resolution Timer and Timestamp Class.</summary>
+    /// <summary>
+    /// Represents a high-resolution timer and timestamp class.
+    /// </summary>
     /// <remarks>Implementation based on Windows multimedia timer.</remarks>
     public class PrecisionTimer : IDisposable
     {
@@ -175,13 +205,19 @@ namespace PCS
         // Represents the method that is called by Windows when a timer event occurs.
         private delegate void TimerProc(int id, int msg, int user, int param1, int param2);
 
-        /// <summary>Occurs when the Timer has started.</summary>
+        /// <summary>
+        /// Occurs when the <see cref="PrecisionTimer"/> has started.
+        /// </summary>
         public event EventHandler Started;
 
-        /// <summary>Occurs when the Timer has stopped.</summary>
+        /// <summary>
+        /// Occurs when the <see cref="PrecisionTimer"/> has stopped.
+        /// </summary>
         public event EventHandler Stopped;
 
-        /// <summary>Occurs when the time period has elapsed.</summary>
+        /// <summary>
+        /// Occurs when the <see cref="PrecisionTimer"/> period has elapsed.
+        /// </summary>
         public event EventHandler Tick;
 
         // Fields
@@ -199,7 +235,7 @@ namespace PCS
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the Timer class.
+        /// Initializes a new instance of the <see cref="PrecisionTimer"/> class.
         /// </summary>
         public PrecisionTimer()
         {
@@ -224,7 +260,7 @@ namespace PCS
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the time between Tick events, in milliseconds.
+        /// Gets or sets the time between <see cref="Tick"/> events, in milliseconds.
         /// </summary>
         /// <exception cref="ObjectDisposedException">
         /// If the timer has already been disposed.
@@ -257,7 +293,7 @@ namespace PCS
         }
 
         /// <summary>
-        /// Gets or sets the timer resolution, in milliseconds.
+        /// Gets or sets the <see cref="PrecisionTimer"/> resolution, in milliseconds.
         /// </summary>
         /// <exception cref="ObjectDisposedException">
         /// If the timer has already been disposed.
@@ -296,17 +332,17 @@ namespace PCS
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the PrecisionTimer should raise the Tick event each time
-        /// the specified period elapses or only after the first time it elapses.
+        /// Gets or sets a value indicating whether the <see cref="PrecisionTimer"/> should raise the
+        /// <see cref="Tick"/> event each time the specified period elapses or only after the first
+        /// time it elapses.
         /// </summary>
         /// <remarks>
         /// </remarks>
         /// <returns>
-        /// true if the PrecisionTimer should raise the Tick event each time the interval elapses;
-        /// false if it should raise the Tick event only once, after the first time the interval elapses.
-        /// The default is true.
+        /// <c>true</c>true if the <see cref="PrecisionTimer"/> should raise the <see cref="Ticks"/>
+        /// event each time the interval elapses; <c>false</c> if it should raise the event only once
+        /// after the first time the interval elapses. The default is <c>true</c>.
         /// </returns>
-        [DefaultValue(true), Description("Gets or sets a value indicating whether the PrecisionTimer should raise the Tick event each time the specified period elapses or only after the first time it elapses."), Category("Behavior")]
         public bool AutoReset
         {
             get
@@ -332,7 +368,7 @@ namespace PCS
         }
 
         /// <summary>
-        /// Gets a value indicating whether the Timer is running.
+        /// Gets a value indicating whether the <see cref="PrecisionTimer"/> is running.
         /// </summary>
         public bool IsRunning
         {
@@ -379,7 +415,7 @@ namespace PCS
         }
 
         /// <summary>
-        /// Starts the timer.
+        /// Starts the <see cref="PrecisionTimer"/>.
         /// </summary>
         /// <exception cref="ObjectDisposedException">
         /// The timer has already been disposed.
@@ -393,9 +429,9 @@ namespace PCS
         }
 
         /// <summary>
-        /// Starts the timer.
+        /// Starts the <see cref="PrecisionTimer"/> with the specified <see cref="EventArgs"/>.
         /// </summary>
-        /// <param name="userArgs">User defined event arguments to pass into raised Tick event</param>
+        /// <param name="userArgs">User defined event arguments to pass into raised <see cref="Ticks"/> event.</param>
         /// <exception cref="ObjectDisposedException">
         /// The timer has already been disposed.
         /// </exception>
@@ -430,7 +466,7 @@ namespace PCS
         }
 
         /// <summary>
-        /// Stops timer.
+        /// Stops <see cref="PrecisionTimer"/>.
         /// </summary>
         /// <exception cref="ObjectDisposedException">
         /// If the timer has already been disposed.
@@ -475,22 +511,25 @@ namespace PCS
             // Get multimedia timer capabilities
             timeGetDevCaps(ref m_capabilities, Marshal.SizeOf(m_capabilities));
 
-            // We just use the recommended synchronization period for general purpose PCS use
+            // We just use the recommended synchronization period for general purpose use
             m_preciseTime = new PreciseTime(10);
         }
 
         // Static Properties
 
-        /// <summary>Gets a high-resolution DateTime value of the current time on this computer, expressed in Coordinated Universal Time (UTC).</summary>
+        /// <summary>
+        /// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
+        /// expressed in Coordinated Universal Time (UTC).
+        /// </summary>
         /// <remarks>
         /// <para>
-        /// This shared property provides a way to get a DateTime that exhibits the relative precision of
-        /// System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.UtcNow.
+        /// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
+        /// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.UtcNow"/>.
         /// </para>
         /// <para>
         /// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
         /// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        /// Note that the normal DateTime.UtcNow property has a maximum resolution of ~16 milliseconds.
+        /// Note that the normal <see cref="DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
         /// </para>
         /// </remarks>
         public static DateTime UtcNow
@@ -501,16 +540,19 @@ namespace PCS
             }
         }
 
-        /// <summary>Gets a high-resolution DateTime value of the current time on this computer, expressed in the local time zone.</summary>
+        /// <summary>
+        /// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
+        /// expressed in the local time zone.
+        /// </summary>
         /// <remarks>
         /// <para>
-        /// This shared property provides a way to get a DateTime that exhibits the relative precision of
-        /// System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.Now.
+        /// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
+        /// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.Now"/>.
         /// </para>
         /// <para>
         /// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
         /// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        /// Note that the normal DateTime.Now property has a maximum resolution of ~16 milliseconds.
+        /// Note that the normal <see cref="DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
         /// </para>
         /// </remarks>
         public static DateTime Now
