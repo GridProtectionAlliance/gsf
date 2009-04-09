@@ -153,7 +153,7 @@ namespace System
             timestamp -= GetBaseDateOffsetTicks(timestamp);
 
             uint seconds = (uint)Math.Truncate(timestamp.ToSeconds());
-            uint fraction = (uint)(Ticks.ToSeconds(timestamp.DistanceBeyondSecond()) * uint.MaxValue);
+            uint fraction = (uint)(timestamp.DistanceBeyondSecond().ToSeconds() * uint.MaxValue);
 
             return MakeUQWord(seconds, fraction);
         }
