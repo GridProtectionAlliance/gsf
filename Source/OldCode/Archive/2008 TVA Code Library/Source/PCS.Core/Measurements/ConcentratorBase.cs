@@ -26,7 +26,7 @@
 //  02/19/2008 - J. Ritchie Carroll
 //       Added code to detect and avoid redundant calls to Dispose().
 //  08/22/2008 - J. Ritchie Carroll
-//       Replaced timing code using PCS.DateTime.PrecisionTimer
+//       Replaced timing code using PrecisionTimer
 //  09/16/2008 - J. Ritchie Carroll
 //      Converted to C#.
 //
