@@ -66,16 +66,15 @@
 
    Code Modification History:
    ------------------------------------------------------------------------------
-   11/22/2003 - Leslie Sanford (Multimedia.Timer)
-        Original version of source code.
-   04/10/2008 - James Brock (DateTimePrecise)
-        Original version of source code.
+   11/22/2003 - Leslie Sanford
+        Original version of source code for Multimedia.Timer class.
+   04/10/2008 - James Brock
+        Original version of source code for DateTimePrecise class.
    08/21/2008 - J. Ritchie Carroll
         Integrated, merged and adapted for general use as PrecisionTimer.
 
 \**********************************************************************************/
 
-using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
