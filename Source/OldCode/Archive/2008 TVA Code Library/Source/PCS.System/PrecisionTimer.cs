@@ -77,6 +77,7 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Timers;
 
 namespace System
 {
@@ -503,15 +504,13 @@ namespace System
         // Static Fields
         private static TimerCapabilities m_capabilities;    // Multimedia timer capabilities.
         private static PreciseTime m_preciseTime;           // Precise time implementation.
+        private static Timer m_synchronizer;                // Lightweight timer used for precise time synchronization.
 
         // Static Constructor
         static PrecisionTimer()
         {
             // Get multimedia timer capabilities
             timeGetDevCaps(ref m_capabilities, Marshal.SizeOf(m_capabilities));
-
-            // We just use the recommended synchronization period for general purpose use
-            m_preciseTime = new PreciseTime(10);
         }
 
         // Static Properties
@@ -535,6 +534,10 @@ namespace System
         {
             get
             {
+                // Setup a new precise time class at first call
+                if (m_preciseTime == null)
+                    InitializePreciseTime();
+
                 return m_preciseTime.UtcNow;
             }
         }
@@ -574,6 +577,28 @@ namespace System
         }
 
         // Static Methods
+
+        // Initializes the the precise timing mechanism
+        private static void InitializePreciseTime()
+        {
+            // We just use the recommended synchronization period for general purpose use
+            const int synchronizationPeriod = 10;
+
+            // Create a new precise time class
+            m_preciseTime = new PreciseTime(synchronizationPeriod);
+
+            // We setup a lightweight timer that will make sure precise time mechanism gets
+            // called regularly, in case user doesn't, so it can maintain synchronization
+            m_synchronizer = new Timer(synchronizationPeriod * 1000.0D);
+            m_synchronizer.Elapsed += m_synchronizer_Elapsed;
+            m_synchronizer.Start();
+        }
+
+        // We make sure and call PreciseTime.UtcNow regularly so it can maintain synchronization
+        private static void m_synchronizer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            DateTime now = m_preciseTime.UtcNow;
+        }
 
         // Gets timer capabilities.
         [DllImport("winmm.dll")]
