@@ -746,7 +746,7 @@ namespace PCS.Security.Cryptography
             byte[] cryptData = new byte[length];
             int algorithm = 0;
             int keyIndex = 0;
-            int cryptKey;
+            byte cryptKey;
             byte cryptByte;
 
             // Seeds random number generator
@@ -762,15 +762,18 @@ namespace PCS.Security.Cryptography
                     {
                         case 0:
                             cryptKey = encryptionKey[keyIndex];
-                            if (cryptByte != cryptKey) cryptByte = (byte)(cryptByte ^ cryptKey);
+                            if (cryptByte != cryptKey)
+                                cryptByte = cryptByte.ToggleBits(cryptKey);
                             break;
                         case 1:
-                            cryptKey = (int)(random.NextDouble() * (encryptionKey[keyIndex] + 1));
-                            if (cryptByte != cryptKey) cryptByte = (byte)(cryptByte ^ cryptKey);
+                            cryptKey = (byte)(random.NextDouble() * (encryptionKey[keyIndex] + 1));
+                            if (cryptByte != cryptKey)
+                                cryptByte = cryptByte.ToggleBits(cryptKey);
                             break;
                         case 2:
-                            cryptKey = (int)(random.NextDouble() * 256.0D);
-                            if (cryptByte != cryptKey) cryptByte = (byte)(cryptByte ^ cryptKey);
+                            cryptKey = (byte)(random.NextDouble() * 256.0D);
+                            if (cryptByte != cryptKey)
+                                cryptByte = cryptByte.ToggleBits(cryptKey);
                             break;
                     }
 
@@ -987,8 +990,8 @@ namespace PCS.Security.Cryptography
                     key.Add((byte)keyValue);
                 else
                 {
-                    key.Add(keyValue.LoByte());
-                    key.Add(keyValue.HiByte());
+                    key.Add(keyValue.LowByte());
+                    key.Add(keyValue.HighByte());
                 }
             }
 
