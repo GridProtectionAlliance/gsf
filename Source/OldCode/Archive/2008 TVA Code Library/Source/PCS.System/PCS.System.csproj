@@ -48,6 +48,9 @@
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />
+    <Compile Include="Bit.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BitExtensions.cs" />
     <Compile Include="BitwiseCast.cs" />
     <Compile Include="ByteEncoding.cs" />
