@@ -700,6 +700,14 @@ namespace System
         /// <summary>
         /// Explicitly converts value to an <see cref="UInt24"/>.
         /// </summary>
+        public static explicit operator UInt24(Enum value)
+        {
+            return new UInt24(Convert.ToUInt32(value));
+        }
+
+        /// <summary>
+        /// Explicitly converts value to an <see cref="UInt24"/>.
+        /// </summary>
         public static explicit operator UInt24(string value)
         {
             return new UInt24(Convert.ToUInt32(value));

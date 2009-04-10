@@ -349,6 +349,17 @@ namespace System
         /// Returns value with specified <paramref name="bit"/> set.
         /// </summary>
         /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 6) to set.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> set.</returns>
+        public static sbyte SetBit(this sbyte source, byte bit)
+        {
+            return SetBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 7) to set.</param>
         /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> set.</returns>
         public static byte SetBit(this byte source, byte bit)
@@ -375,6 +386,29 @@ namespace System
         /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> set.</returns>
         [CLSCompliant(false)]
         public static ushort SetBit(this ushort source, byte bit)
+        {
+            return SetBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 22) to set.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bit"/> set.</returns>
+        public static Int24 SetBit(this Int24 source, byte bit)
+        {
+            return SetBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 23) to set.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bit"/> set.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 SetBit(this UInt24 source, byte bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -423,6 +457,32 @@ namespace System
         public static ulong SetBit(this ulong source, byte bit)
         {
             return SetBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to set.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> set.</returns>
+        [CLSCompliant(false)]
+        public static sbyte SetBits(this sbyte source, Bits bits)
+        {
+            checked
+            {
+                return SetBits(source, (sbyte)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to set.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> set.</returns>
+        public static sbyte SetBits(this sbyte source, sbyte bits)
+        {
+            return ((sbyte)(source | bits));
         }
 
         /// <summary>
@@ -502,6 +562,58 @@ namespace System
         public static ushort SetBits(this ushort source, ushort bits)
         {
             return ((ushort)(source | bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to set.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> set.</returns>
+        [CLSCompliant(false)]
+        public static Int24 SetBits(this Int24 source, Bits bits)
+        {
+            checked
+            {
+                return SetBits(source, (Int24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to set.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> set.</returns>
+        public static Int24 SetBits(this Int24 source, Int24 bits)
+        {
+            return (source | bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to set.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> set.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 SetBits(this UInt24 source, Bits bits)
+        {
+            checked
+            {
+                return SetBits(source, (UInt24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to set.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> set.</returns>
+        public static UInt24 SetBits(this UInt24 source, UInt24 bits)
+        {
+            return (source | bits);
         }
 
         /// <summary>
@@ -618,6 +730,17 @@ namespace System
         /// Returns value with specified <paramref name="bit"/> cleared.
         /// </summary>
         /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 6) to clear.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> cleared.</returns>
+        public static sbyte ClearBit(this sbyte source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 7) to clear.</param>
         /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> cleared.</returns>
         public static byte ClearBit(this byte source, byte bit)
@@ -644,6 +767,29 @@ namespace System
         /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> cleared.</returns>
         [CLSCompliant(false)]
         public static ushort ClearBit(this ushort source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 22) to clear.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bit"/> cleared.</returns>
+        public static Int24 ClearBit(this Int24 source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 23) to clear.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bit"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 ClearBit(this UInt24 source, byte bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -692,6 +838,32 @@ namespace System
         public static ulong ClearBit(this ulong source, byte bit)
         {
             return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static sbyte ClearBits(this sbyte source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (sbyte)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> cleared.</returns>
+        public static sbyte ClearBits(this sbyte source, sbyte bits)
+        {
+            return ((sbyte)(source & ~bits));
         }
 
         /// <summary>
@@ -771,6 +943,59 @@ namespace System
         public static ushort ClearBits(this ushort source, ushort bits)
         {
             return ((ushort)(source & ~bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static Int24 ClearBits(this Int24 source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (Int24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> cleared.</returns>
+        public static Int24 ClearBits(this Int24 source, Int24 bits)
+        {
+            return (source & ~bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 ClearBits(this UInt24 source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (UInt24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 ClearBits(this UInt24 source, UInt24 bits)
+        {
+            return (source & ~bits);
         }
 
         /// <summary>
@@ -887,6 +1112,17 @@ namespace System
         /// Determines if specified <paramref name="bit"/> is set.
         /// </summary>
         /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 6) to check.</param>
+        /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
+        public static bool CheckBit(this sbyte source, byte bit)
+        {
+            return CheckBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bit"/> is set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 7) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBit(this byte source, byte bit)
@@ -913,6 +1149,29 @@ namespace System
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
         public static bool CheckBit(this ushort source, byte bit)
+        {
+            return CheckBits(source, BitVal(bit), true);
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bit"/> is set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 22) to check.</param>
+        /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
+        public static bool CheckBit(this Int24 source, byte bit)
+        {
+            return CheckBits(source, BitVal(bit), true);
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bit"/> is set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit index (0 - 23) to check.</param>
+        /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBit(this UInt24 source, byte bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -961,6 +1220,60 @@ namespace System
         public static bool CheckBit(this ulong source, byte bit)
         {
             return CheckBits(source, BitVal(bit), true);
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to check.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this sbyte source, Bits bits)
+        {
+            checked
+            {
+                return CheckBits(source, (sbyte)bits);
+            }
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to check.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        public static bool CheckBits(this sbyte source, sbyte bits)
+        {
+            return CheckBits(source, bits, true);
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to check.</param>
+        /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this sbyte source, Bits bits, bool allBits)
+        {
+            checked
+            {
+                return CheckBits(source, (sbyte)bits, allBits);
+            }
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to check.</param>
+        /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        public static bool CheckBits(this sbyte source, sbyte bits, bool allBits)
+        {
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1123,6 +1436,116 @@ namespace System
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
         public static bool CheckBits(this ushort source, ushort bits, bool allBits)
+        {
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to check.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this Int24 source, Bits bits)
+        {
+            checked
+            {
+                return CheckBits(source, (Int24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to check.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        public static bool CheckBits(this Int24 source, Int24 bits)
+        {
+            return CheckBits(source, bits, true);
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to check.</param>
+        /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this Int24 source, Bits bits, bool allBits)
+        {
+            checked
+            {
+                return CheckBits(source, (Int24)bits, allBits);
+            }
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to check.</param>
+        /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        public static bool CheckBits(this Int24 source, Int24 bits, bool allBits)
+        {
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to check.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this UInt24 source, Bits bits)
+        {
+            checked
+            {
+                return CheckBits(source, (UInt24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to check.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this UInt24 source, UInt24 bits)
+        {
+            return CheckBits(source, bits, true);
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to check.</param>
+        /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this UInt24 source, Bits bits, bool allBits)
+        {
+            checked
+            {
+                return CheckBits(source, (UInt24)bits, allBits);
+            }
+        }
+
+        /// <summary>
+        /// Determines if specified <paramref name="bits"/> are set.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to check.</param>
+        /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
+        /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
+        public static bool CheckBits(this UInt24 source, UInt24 bits, bool allBits)
         {
             return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
@@ -1355,6 +1778,17 @@ namespace System
         /// Returns value with specified <paramref name="bit"/> toggled.
         /// </summary>
         /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 6) to toggle.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> toggled.</returns>
+        public static sbyte ToggleBit(this sbyte source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 7) to toggle.</param>
         /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> toggled.</returns>
         public static byte ToggleBit(this byte source, byte bit)
@@ -1381,6 +1815,29 @@ namespace System
         /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> toggled.</returns>
         [CLSCompliant(false)]
         public static ushort ToggleBit(this ushort source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 22) to toggle.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bit"/> toggled.</returns>
+        public static Int24 ToggleBit(this Int24 source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 31) to toggle.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bit"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 ToggleBit(this UInt24 source, byte bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1429,6 +1886,32 @@ namespace System
         public static ulong ToggleBit(this ulong source, byte bit)
         {
             return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static sbyte ToggleBits(this sbyte source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (sbyte)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> toggled.</returns>
+        public static sbyte ToggleBits(this sbyte source, sbyte bits)
+        {
+            return ((sbyte)(source ^ bits));
         }
 
         /// <summary>
@@ -1508,6 +1991,59 @@ namespace System
         public static ushort ToggleBits(this ushort source, ushort bits)
         {
             return ((ushort)(source ^ bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static Int24 ToggleBits(this Int24 source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (Int24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> toggled.</returns>
+        public static Int24 ToggleBits(this Int24 source, Int24 bits)
+        {
+            return (source ^ bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 ToggleBits(this UInt24 source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (UInt24)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 ToggleBits(this UInt24 source, UInt24 bits)
+        {
+            return (source ^ bits);
         }
 
         /// <summary>
@@ -1623,6 +2159,482 @@ namespace System
         #endregion
 
         #region [ SetMaskedValue Extensions ]
+
+        #endregion
+
+        #region [ Bit Rotation Extensions ]
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static byte BitRotL(this byte value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 8); x++)
+            {
+                hiBitSet = value.CheckBit(7);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static sbyte BitRotL(this sbyte value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 8); x++)
+            {
+                hiBitSet = value.CheckBit(7);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static short BitRotL(this short value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 16); x++)
+            {
+                hiBitSet = value.CheckBit(15);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static ushort BitRotL(this ushort value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 16); x++)
+            {
+                hiBitSet = value.CheckBit(15);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static Int24 BitRotL(this Int24 value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 24); x++)
+            {
+                hiBitSet = value.CheckBit(23);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static UInt24 BitRotL(this UInt24 value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 24); x++)
+            {
+                hiBitSet = value.CheckBit(23);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static int BitRotL(this int value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 32); x++)
+            {
+                hiBitSet = value.CheckBit(31);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static uint BitRotL(this uint value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 32); x++)
+            {
+                hiBitSet = value.CheckBit(31);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBit(0);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static byte BitRotR(this byte value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 8); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(7);
+                else
+                    value = value.ClearBit(7);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static sbyte BitRotR(this sbyte value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 8); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(7);
+                else
+                    value = value.ClearBit(7);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static short BitRotR(this short value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 16); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(15);
+                else
+                    value = value.ClearBit(15);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static ushort BitRotR(this ushort value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 16); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(15);
+                else
+                    value = value.ClearBit(15);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static Int24 BitRotR(this Int24 value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 24); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(23);
+                else
+                    value = value.ClearBit(23);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static UInt24 BitRotR(this UInt24 value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 24); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(23);
+                else
+                    value = value.ClearBit(23);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static int BitRotR(this int value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 32); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(31);
+                else
+                    value = value.ClearBit(31);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static uint BitRotR(this uint value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 32); x++)
+            {
+                loBitSet = value.CheckBit(0);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBit(31);
+                else
+                    value = value.ClearBit(31);
+            }
+
+            return value;
+        }
 
         #endregion
     }

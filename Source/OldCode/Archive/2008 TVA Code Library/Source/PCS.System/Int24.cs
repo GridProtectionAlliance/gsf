@@ -697,6 +697,14 @@ namespace System
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        public static explicit operator Int24(Enum value)
+        {
+            return new Int24(Convert.ToInt32(value));
+        }
+
+        /// <summary>
+        /// Explicitly converts value to an <see cref="Int24"/>.
+        /// </summary>
         public static explicit operator Int24(string value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -1080,7 +1088,7 @@ namespace System
         }
 
         // Integer division operators
-        
+
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
