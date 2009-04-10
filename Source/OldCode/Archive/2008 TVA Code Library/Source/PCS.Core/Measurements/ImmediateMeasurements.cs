@@ -25,7 +25,10 @@ using System.Data;
 
 namespace PCS.Measurements
 {
-    /// <summary>Represents the absolute latest measurement values received by a <see cref="ConcentratorBase"/> implementation.</summary>
+    /// <summary>
+    /// Represents the absolute latest measurement values received by a <see cref="ConcentratorBase"/> implementation.
+    /// </summary>
+    [CLSCompliant(false)]
     public class ImmediateMeasurements : IDisposable
     {
         #region [ Members ]
@@ -62,7 +65,7 @@ namespace PCS.Measurements
         #region [ Properties ]
 
         /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
-        public double this[int measurementID, string source]
+        public double this[uint measurementID, string source]
         {
             get
             {
@@ -218,7 +221,7 @@ namespace PCS.Measurements
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
-        public TemporalMeasurement Measurement(int measurementID, string source)
+        public TemporalMeasurement Measurement(uint measurementID, string source)
         {
             return Measurement(new MeasurementKey(measurementID, source));
         }
@@ -247,7 +250,7 @@ namespace PCS.Measurements
         {
             foreach (DataRow row in taggedMeasurements.Rows)
             {
-                AddTaggedMeasurement(row["Tag"].ToString(), new MeasurementKey(Convert.ToInt32(row["ID"]), row["Source"].ToString()));
+                AddTaggedMeasurement(row["Tag"].ToString(), new MeasurementKey(Convert.ToUInt32(row["ID"]), row["Source"].ToString()));
             }
         }
 

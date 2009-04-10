@@ -25,6 +25,7 @@ namespace PCS.Measurements
     /// <summary>
     /// Abstract frame interface representing a collection of measurements at an exact moment in time.
     /// </summary>
+    [CLSCompliant(false)]
     public interface IFrame : IEquatable<IFrame>, IComparable<IFrame>, IComparable
     {
         /// <summary>

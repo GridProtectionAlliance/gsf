@@ -59,6 +59,7 @@ namespace PCS.Measurements
     /// trust that your local clock is within plus or minus 2 seconds of real-time.)
     /// </para>
     /// </remarks>
+    [CLSCompliant(false)]
     public abstract class ConcentratorBase : IDisposable
     {        
         #region [ Members ]

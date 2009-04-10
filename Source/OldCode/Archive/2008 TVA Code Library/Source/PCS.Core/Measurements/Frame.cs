@@ -28,6 +28,7 @@ namespace PCS.Measurements
     /// <remarks>
     /// A frame represents a collection of measurements at a given time.
     /// </remarks>
+    [CLSCompliant(false)]
     public class Frame : IFrame
     {
         #region [ Members ]

@@ -24,6 +24,7 @@ namespace PCS.Measurements
     /// <summary>
     /// Represents a time constrained measured value.
     /// </summary>
+    [CLSCompliant(false)]
     public class TemporalMeasurement : Measurement
     {
         #region [ Members ]
@@ -42,7 +43,7 @@ namespace PCS.Measurements
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         public TemporalMeasurement(double lagTime, double leadTime)
-            : this(-1, null, double.NaN, 0, lagTime, leadTime)
+            : this(uint.MaxValue, null, double.NaN, 0, lagTime, leadTime)
         {
         }
 
@@ -55,7 +56,7 @@ namespace PCS.Measurements
         /// <param name="timestamp">Timestamp of the <see cref="TemporalMeasurement"/>.</param>
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
-        public TemporalMeasurement(int id, string source, double value, Ticks timestamp, double lagTime, double leadTime)
+        public TemporalMeasurement(uint id, string source, double value, Ticks timestamp, double lagTime, double leadTime)
             : base(id, source, value, timestamp)
         {
             if (lagTime <= 0)

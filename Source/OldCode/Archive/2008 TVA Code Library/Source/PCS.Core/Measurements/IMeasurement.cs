@@ -28,6 +28,7 @@ namespace PCS.Measurements
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
     /// </remarks>
+    [CLSCompliant(false)]
     public interface IMeasurement : IEquatable<IMeasurement>, IComparable<IMeasurement>, IComparable
     {
         /// <summary>
@@ -37,7 +38,7 @@ namespace PCS.Measurements
         /// <para>In most implementations, this will be a required field.</para>
         /// <para>Note that this field, in addition to Source, typically creates the primary key for a measurement.</para>
         /// </remarks>
-        int ID { get; set; }
+        uint ID { get; set; }
 
         /// <summary>
         /// Gets or sets the source of this measurement.
@@ -80,7 +81,6 @@ namespace PCS.Measurements
         /// <remarks>
         /// Implementors should make sure this value defaults to zero.
         /// </remarks>
-        [DefaultValue(0.0D)]
         double Adder { get; set; }
 
         /// <summary>
@@ -89,7 +89,6 @@ namespace PCS.Measurements
         /// <remarks>
         /// Implementors should make sure this value defaults to one.
         /// </remarks>
-        [DefaultValue(1.0D)]
         double Multiplier { get; set; }
 
         /// <summary>

@@ -25,6 +25,7 @@ namespace PCS.Measurements
     /// <summary>
     /// Represents a real-time queue of <see cref="IFrame"/> instances used by the <see cref="ConcentratorBase"/> class.
     /// </summary>
+    [CLSCompliant(false)]
     public class FrameQueue : IDisposable
     {            
         #region [ Members ]

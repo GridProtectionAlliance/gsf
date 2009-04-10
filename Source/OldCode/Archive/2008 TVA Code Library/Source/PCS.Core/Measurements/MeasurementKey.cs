@@ -21,13 +21,16 @@ using System;
 
 namespace PCS.Measurements
 {
-    /// <summary>Represents a primary key for a measurement.</summary>
+    /// <summary>
+    /// Represents a primary key for a measurement.
+    /// </summary>
+    [CLSCompliant(false)]
     public struct MeasurementKey : IEquatable<MeasurementKey>, IComparable<MeasurementKey>, IComparable
     {
         #region [ Members ]
 
         // Fields
-        private int m_id;
+        private uint m_id;
         private string m_source;
         private int m_hashCode;
 
@@ -41,7 +44,7 @@ namespace PCS.Measurements
         /// <param name="id">Numeric ID of the measurement that this <see cref="MeasurementKey"/> represents.</param>
         /// <param name="source">Source of the measurement that this <see cref="MeasurementKey"/> represents (e.g., name of archive).</param>
         /// <exception cref="ArgumentNullException">source cannot be null.</exception>
-        public MeasurementKey(int id, string source)
+        public MeasurementKey(uint id, string source)
         {
             if (string.IsNullOrEmpty(source))
                 throw new ArgumentNullException("source", "MeasurementKey source cannot be null");
@@ -60,7 +63,7 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.
         /// </summary>
-        public int ID
+        public uint ID
         {
             get
             {

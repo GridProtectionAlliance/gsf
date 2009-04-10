@@ -25,12 +25,13 @@ namespace PCS.Measurements
     /// <summary>
     /// Implementation of a basic measurement.
     /// </summary>
+    [CLSCompliant(false)]
     public class Measurement : IMeasurement
     {
         #region [ Members ]
 
         // Fields
-        private int m_id;
+        private uint m_id;
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
@@ -49,7 +50,7 @@ namespace PCS.Measurements
         /// Constructs a new <see cref="Measurement"/> using default settings.
         /// </summary>
         public Measurement()
-            : this(-1, "__", double.NaN, 0.0, 1.0, 0)
+            : this(uint.MaxValue, "__", double.NaN, 0.0, 1.0, 0)
         {
         }
 
@@ -58,7 +59,7 @@ namespace PCS.Measurements
         /// </summary>
         /// <param name="id">Numeric ID of the new measurement.</param>
         /// <param name="source">Source name of the new measurement.</param>
-        public Measurement(int id, string source)
+        public Measurement(uint id, string source)
             : this(id, source, double.NaN, 0.0, 1.0, 0)
         {
         }
@@ -70,7 +71,7 @@ namespace PCS.Measurements
         /// <param name="source">Source name of the new measurement.</param>
         /// <param name="value">Value of the new measurement.</param>
         /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        public Measurement(int id, string source, double value, Ticks timestamp)
+        public Measurement(uint id, string source, double value, Ticks timestamp)
             : this(id, source, value, 0.0, 1.0, timestamp)
         {
         }
@@ -83,7 +84,7 @@ namespace PCS.Measurements
         /// <param name="tagName">Text based tag name of the new measurement.</param>
         /// <param name="adder">Defined adder to apply to the new measurement.</param>
         /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
-        public Measurement(int id, string source, string tagName, double adder, double multiplier)
+        public Measurement(uint id, string source, string tagName, double adder, double multiplier)
             : this(id, source, double.NaN, adder, multiplier, 0)
         {
             m_tagName = tagName;
@@ -98,7 +99,7 @@ namespace PCS.Measurements
         /// <param name="adder">Defined adder to apply to the new measurement.</param>
         /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
         /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        public Measurement(int id, string source, double value, double adder, double multiplier, Ticks timestamp)
+        public Measurement(uint id, string source, double value, double adder, double multiplier, Ticks timestamp)
         {
             m_id = id;
             m_source = source;
@@ -122,7 +123,7 @@ namespace PCS.Measurements
         /// <para>In most implementations, this will be a required field.</para>
         /// <para>Note that this field, in addition to <see cref="Source"/>, typically creates the primary key for a <see cref="Measurement"/>.</para>
         /// </remarks>
-        public virtual int ID
+        public virtual uint ID
         {
             get
             {
