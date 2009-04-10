@@ -30,8 +30,10 @@
 
 namespace System
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// Represents bits in a integer value.
+    /// Represents bits in a signed or unsigned integer value.
     /// </summary>
     [CLSCompliant(false)]
     [Flags()]
@@ -249,6 +251,8 @@ namespace System
         Bit63 = Bit62 << 1
     }
 
+    #endregion
+
     /// <summary>
     /// Defines extension methods related to bit operations.
     /// </summary>
@@ -338,6 +342,8 @@ namespace System
                     throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 63.");
             }
         }
+
+        #region [ SetBit(s) Extensions ]
 
         /// <summary>
         /// Returns value with specified <paramref name="bit"/> set.
@@ -444,7 +450,7 @@ namespace System
         {
             return ((byte)(source | bits));
         }
-        
+
         /// <summary>
         /// Returns value with specified <paramref name="bits"/> set.
         /// </summary>
@@ -603,6 +609,283 @@ namespace System
         {
             return (source | bits);
         }
+
+        #endregion
+
+        #region [ GetBit(s) Extensions ]
+
+        #endregion
+
+        #region [ ClearBit(s) Extensions ]
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 7) to clear.</param>
+        /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> cleared.</returns>
+        public static byte ClearBit(this byte source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 14) to clear.</param>
+        /// <returns><see cref="short"/> value with specified <paramref name="bit"/> cleared.</returns>
+        public static short ClearBit(this short source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 15) to clear.</param>
+        /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static ushort ClearBit(this ushort source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 30) to clear.</param>
+        /// <returns><see cref="int"/> value with specified <paramref name="bit"/> cleared.</returns>
+        public static int ClearBit(this int source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 31) to clear.</param>
+        /// <returns><see cref="uint"/> value with specified <paramref name="bit"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static uint ClearBit(this uint source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 62) to clear.</param>
+        /// <returns><see cref="long"/> value with specified <paramref name="bit"/> cleared.</returns>
+        public static long ClearBit(this long source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 63) to clear.</param>
+        /// <returns><see cref="ulong"/> value with specified <paramref name="bit"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static ulong ClearBit(this ulong source, byte bit)
+        {
+            return ClearBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static byte ClearBits(this byte source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (byte)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> cleared.</returns>
+        public static byte ClearBits(this byte source, byte bits)
+        {
+            return ((byte)(source & ~bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="short"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static short ClearBits(this short source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (short)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="short"/> value with specified <paramref name="bits"/> cleared.</returns>
+        public static short ClearBits(this short source, short bits)
+        {
+            return ((short)(source & ~bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static ushort ClearBits(this ushort source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (ushort)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static ushort ClearBits(this ushort source, ushort bits)
+        {
+            return ((ushort)(source & ~bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="int"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static int ClearBits(this int source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (int)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="int"/> value with specified <paramref name="bits"/> cleared.</returns>
+        public static int ClearBits(this int source, int bits)
+        {
+            return (source & ~bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static uint ClearBits(this uint source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (uint)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static uint ClearBits(this uint source, uint bits)
+        {
+            return (source & ~bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="long"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static long ClearBits(this long source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (long)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="long"/> value with specified <paramref name="bits"/> cleared.</returns>
+        public static long ClearBits(this long source, long bits)
+        {
+            return (source & ~bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to clear.</param>
+        /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static ulong ClearBits(this ulong source, Bits bits)
+        {
+            checked
+            {
+                return ClearBits(source, (ulong)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> cleared.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to clear.</param>
+        /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
+        public static ulong ClearBits(this ulong source, ulong bits)
+        {
+            return (source & ~bits);
+        }
+
+        #endregion
+
+        #region [ CheckBit(s) Extensions ]
 
         /// <summary>
         /// Determines if specified <paramref name="bit"/> is set.
@@ -1088,5 +1371,7 @@ namespace System
             else
                 return ((source & bits) != 0);
         }
+
+        #endregion
     }
 }
