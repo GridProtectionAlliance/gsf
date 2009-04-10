@@ -1706,12 +1706,6 @@ namespace System
 
         #region [ GetMaskedValue Extensions ]
 
-        /// <summary>
-        /// Returns value stored in the bits represented by the <paramref name="bitMask"/>.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="sbyte"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static sbyte GetMaskedValue(this sbyte source, Bits bitMask)
         {
@@ -1721,24 +1715,12 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="sbyte"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static sbyte GetMaskedValue(this sbyte source, sbyte bitMask)
         {
             return ((sbyte)(source & bitMask));
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="byte"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static byte GetMaskedValue(this byte source, Bits bitMask)
         {
@@ -1748,23 +1730,11 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="byte"/> value with specified <paramref name="bitMask"/> set.</returns>
         public static byte GetMaskedValue(this byte source, byte bitMask)
         {
             return ((byte)(source & bitMask));
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="short"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static short GetMaskedValue(this short source, Bits bitMask)
         {
@@ -1774,23 +1744,11 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="short"/> value with specified <paramref name="bitMask"/> set.</returns>
         public static short GetMaskedValue(this short source, short bitMask)
         {
             return ((short)(source & bitMask));
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="ushort"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static ushort GetMaskedValue(this ushort source, Bits bitMask)
         {
@@ -1800,24 +1758,12 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="ushort"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static ushort GetMaskedValue(this ushort source, ushort bitMask)
         {
             return ((ushort)(source & bitMask));
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="Int24"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static Int24 GetMaskedValue(this Int24 source, Bits bitMask)
         {
@@ -1827,23 +1773,11 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="Int24"/> value with specified <paramref name="bitMask"/> set.</returns>
         public static Int24 GetMaskedValue(this Int24 source, Int24 bitMask)
         {
             return (source & bitMask);
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="UInt24"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static UInt24 GetMaskedValue(this UInt24 source, Bits bitMask)
         {
@@ -1853,24 +1787,12 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="UInt24"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static UInt24 GetMaskedValue(this UInt24 source, UInt24 bitMask)
         {
             return (source & bitMask);
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="int"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static int GetMaskedValue(this int source, Bits bitMask)
         {
@@ -1880,23 +1802,11 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="int"/> value with specified <paramref name="bitMask"/> set.</returns>
         public static int GetMaskedValue(this int source, int bitMask)
         {
             return (source & bitMask);
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="uint"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static uint GetMaskedValue(this uint source, Bits bitMask)
         {
@@ -1906,24 +1816,12 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="uint"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static uint GetMaskedValue(this uint source, uint bitMask)
         {
             return (source & bitMask);
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="long"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static long GetMaskedValue(this long source, Bits bitMask)
         {
@@ -1933,23 +1831,11 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="long"/> value with specified <paramref name="bitMask"/> set.</returns>
         public static long GetMaskedValue(this long source, long bitMask)
         {
             return (source & bitMask);
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask"><see cref="Bits"/> to set.</param>
-        /// <returns><see cref="ulong"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static ulong GetMaskedValue(this ulong source, Bits bitMask)
         {
@@ -1959,12 +1845,6 @@ namespace System
             }
         }
 
-        /// <summary>
-        /// Returns value with specified <paramref name="bits"/> set.
-        /// </summary>
-        /// <param name="source">Value source.</param>
-        /// <param name="bitMask">Bit-mask of the bits to set.</param>
-        /// <returns><see cref="ulong"/> value with specified <paramref name="bitMask"/> set.</returns>
         [CLSCompliant(false)]
         public static ulong GetMaskedValue(this ulong source, ulong bitMask)
         {
@@ -1974,6 +1854,151 @@ namespace System
         #endregion
 
         #region [ SetMaskedValue Extensions ]
+
+        [CLSCompliant(false)]
+        public static sbyte SetMaskedValue(this sbyte source, Bits bitMask, sbyte value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (sbyte)bitMask, value);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static sbyte SetMaskedValue(this sbyte source, sbyte bitMask, sbyte value)
+        {
+            return ((sbyte)((sbyte)(source & ~bitMask) | value));
+        }
+
+        [CLSCompliant(false)]
+        public static byte SetMaskedValue(this byte source, Bits bitMask, byte value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (byte)bitMask, value);
+            }
+        }
+
+        public static byte SetMaskedValue(this byte source, byte bitMask, byte value)
+        {
+            return ((byte)((source & ~bitMask) | value));
+        }
+
+        [CLSCompliant(false)]
+        public static short SetMaskedValue(this short source, Bits bitMask, short value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (short)bitMask, value);
+            }
+        }
+
+        public static short SetMaskedValue(this short source, short bitMask, short value)
+        {
+            return ((short)((short)(source & ~bitMask) | value));
+        }
+
+        [CLSCompliant(false)]
+        public static ushort SetMaskedValue(this ushort source, Bits bitMask, ushort value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (ushort)bitMask, value);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static ushort SetMaskedValue(this ushort source, ushort bitMask, ushort value)
+        {
+            return ((ushort)((source & ~bitMask) | value));
+        }
+
+        [CLSCompliant(false)]
+        public static Int24 SetMaskedValue(this Int24 source, Bits bitMask, Int24 value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (Int24)bitMask, value);
+            }
+        }
+
+        public static Int24 SetMaskedValue(this Int24 source, Int24 bitMask, Int24 value)
+        {
+            return ((source & ~bitMask) | value);
+        }
+
+        [CLSCompliant(false)]
+        public static UInt24 SetMaskedValue(this UInt24 source, Bits bitMask, UInt24 value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (UInt24)bitMask, value);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static UInt24 SetMaskedValue(this UInt24 source, UInt24 bitMask, UInt24 value)
+        {
+            return ((source & ~bitMask) | value);
+        }
+
+        [CLSCompliant(false)]
+        public static int SetMaskedValue(this int source, Bits bitMask, int value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (int)bitMask, value);
+            }
+        }
+
+        public static int SetMaskedValue(this int source, int bitMask, int value)
+        {
+            return ((source & ~bitMask) | value);
+        }
+
+        [CLSCompliant(false)]
+        public static uint SetMaskedValue(this uint source, Bits bitMask, uint value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (uint)bitMask, value);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static uint SetMaskedValue(this uint source, uint bitMask, uint value)
+        {
+            return ((source & ~bitMask) | value);
+        }
+
+        [CLSCompliant(false)]
+        public static long SetMaskedValue(this long source, Bits bitMask, long value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (long)bitMask, value);
+            }
+        }
+
+        public static long SetMaskedValue(this long source, long bitMask, long value)
+        {
+            return ((source & ~bitMask) | value);
+        }
+
+        [CLSCompliant(false)]
+        public static ulong SetMaskedValue(this ulong source, Bits bitMask, ulong value)
+        {
+            checked
+            {
+                return SetMaskedValue(source, (ulong)bitMask, value);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static ulong SetMaskedValue(this ulong source, ulong bitMask, ulong value)
+        {
+            return ((source & ~bitMask) | value);
+        }
 
         #endregion
 
