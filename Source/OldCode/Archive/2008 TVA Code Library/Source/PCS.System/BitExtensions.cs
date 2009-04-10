@@ -265,7 +265,7 @@ namespace System
         /// <returns>Value of the specified <paramref name="bit"/>.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 63.</exception>
         [CLSCompliant(false)]
-        public static Bits BitVal(this byte bit)
+        public static Bits BitVal(int bit)
         {
             switch (bit)
             {
@@ -352,7 +352,7 @@ namespace System
         /// <param name="bit">Bit (0 - 6) to set.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> set.</returns>
         [CLSCompliant(false)]
-        public static sbyte SetBit(this sbyte source, byte bit)
+        public static sbyte SetBit(this sbyte source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -363,7 +363,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 7) to set.</param>
         /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> set.</returns>
-        public static byte SetBit(this byte source, byte bit)
+        public static byte SetBit(this byte source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -374,7 +374,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 14) to set.</param>
         /// <returns><see cref="short"/> value with specified <paramref name="bit"/> set.</returns>
-        public static short SetBit(this short source, byte bit)
+        public static short SetBit(this short source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -386,7 +386,7 @@ namespace System
         /// <param name="bit">Bit (0 - 15) to set.</param>
         /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> set.</returns>
         [CLSCompliant(false)]
-        public static ushort SetBit(this ushort source, byte bit)
+        public static ushort SetBit(this ushort source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -397,7 +397,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 22) to set.</param>
         /// <returns><see cref="Int24"/> value with specified <paramref name="bit"/> set.</returns>
-        public static Int24 SetBit(this Int24 source, byte bit)
+        public static Int24 SetBit(this Int24 source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -409,7 +409,7 @@ namespace System
         /// <param name="bit">Bit (0 - 23) to set.</param>
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bit"/> set.</returns>
         [CLSCompliant(false)]
-        public static UInt24 SetBit(this UInt24 source, byte bit)
+        public static UInt24 SetBit(this UInt24 source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -420,7 +420,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 30) to set.</param>
         /// <returns><see cref="int"/> value with specified <paramref name="bit"/> set.</returns>
-        public static int SetBit(this int source, byte bit)
+        public static int SetBit(this int source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -432,7 +432,7 @@ namespace System
         /// <param name="bit">Bit (0 - 31) to set.</param>
         /// <returns><see cref="uint"/> value with specified <paramref name="bit"/> set.</returns>
         [CLSCompliant(false)]
-        public static uint SetBit(this uint source, byte bit)
+        public static uint SetBit(this uint source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -443,7 +443,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 62) to set.</param>
         /// <returns><see cref="long"/> value with specified <paramref name="bit"/> set.</returns>
-        public static long SetBit(this long source, byte bit)
+        public static long SetBit(this long source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -455,7 +455,7 @@ namespace System
         /// <param name="bit">Bit (0 - 63) to set.</param>
         /// <returns><see cref="ulong"/> value with specified <paramref name="bit"/> set.</returns>
         [CLSCompliant(false)]
-        public static ulong SetBit(this ulong source, byte bit)
+        public static ulong SetBit(this ulong source, int bit)
         {
             return SetBits(source, BitVal(bit));
         }
@@ -736,7 +736,7 @@ namespace System
         /// <param name="bit">Bit (0 - 6) to clear.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> cleared.</returns>
         [CLSCompliant(false)]
-        public static sbyte ClearBit(this sbyte source, byte bit)
+        public static sbyte ClearBit(this sbyte source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -747,7 +747,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 7) to clear.</param>
         /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> cleared.</returns>
-        public static byte ClearBit(this byte source, byte bit)
+        public static byte ClearBit(this byte source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -758,7 +758,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 14) to clear.</param>
         /// <returns><see cref="short"/> value with specified <paramref name="bit"/> cleared.</returns>
-        public static short ClearBit(this short source, byte bit)
+        public static short ClearBit(this short source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -770,7 +770,7 @@ namespace System
         /// <param name="bit">Bit (0 - 15) to clear.</param>
         /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> cleared.</returns>
         [CLSCompliant(false)]
-        public static ushort ClearBit(this ushort source, byte bit)
+        public static ushort ClearBit(this ushort source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -781,7 +781,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 22) to clear.</param>
         /// <returns><see cref="Int24"/> value with specified <paramref name="bit"/> cleared.</returns>
-        public static Int24 ClearBit(this Int24 source, byte bit)
+        public static Int24 ClearBit(this Int24 source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -793,7 +793,7 @@ namespace System
         /// <param name="bit">Bit (0 - 23) to clear.</param>
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bit"/> cleared.</returns>
         [CLSCompliant(false)]
-        public static UInt24 ClearBit(this UInt24 source, byte bit)
+        public static UInt24 ClearBit(this UInt24 source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -804,7 +804,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 30) to clear.</param>
         /// <returns><see cref="int"/> value with specified <paramref name="bit"/> cleared.</returns>
-        public static int ClearBit(this int source, byte bit)
+        public static int ClearBit(this int source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -816,7 +816,7 @@ namespace System
         /// <param name="bit">Bit (0 - 31) to clear.</param>
         /// <returns><see cref="uint"/> value with specified <paramref name="bit"/> cleared.</returns>
         [CLSCompliant(false)]
-        public static uint ClearBit(this uint source, byte bit)
+        public static uint ClearBit(this uint source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -827,7 +827,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 62) to clear.</param>
         /// <returns><see cref="long"/> value with specified <paramref name="bit"/> cleared.</returns>
-        public static long ClearBit(this long source, byte bit)
+        public static long ClearBit(this long source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -839,7 +839,7 @@ namespace System
         /// <param name="bit">Bit (0 - 63) to clear.</param>
         /// <returns><see cref="ulong"/> value with specified <paramref name="bit"/> cleared.</returns>
         [CLSCompliant(false)]
-        public static ulong ClearBit(this ulong source, byte bit)
+        public static ulong ClearBit(this ulong source, int bit)
         {
             return ClearBits(source, BitVal(bit));
         }
@@ -1120,7 +1120,7 @@ namespace System
         /// <param name="bit">Bit index (0 - 6) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
-        public static bool CheckBit(this sbyte source, byte bit)
+        public static bool CheckBit(this sbyte source, int bit)
         {
             return CheckBits(source, BitVal(bit));
         }
@@ -1131,7 +1131,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 7) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
-        public static bool CheckBit(this byte source, byte bit)
+        public static bool CheckBit(this byte source, int bit)
         {
             return CheckBits(source, BitVal(bit));
         }
@@ -1142,7 +1142,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 14) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
-        public static bool CheckBit(this short source, byte bit)
+        public static bool CheckBit(this short source, int bit)
         {
             return CheckBits(source, BitVal(bit));
         }
@@ -1154,7 +1154,7 @@ namespace System
         /// <param name="bit">Bit index (0 - 15) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
-        public static bool CheckBit(this ushort source, byte bit)
+        public static bool CheckBit(this ushort source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1165,7 +1165,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 22) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
-        public static bool CheckBit(this Int24 source, byte bit)
+        public static bool CheckBit(this Int24 source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1177,7 +1177,7 @@ namespace System
         /// <param name="bit">Bit index (0 - 23) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
-        public static bool CheckBit(this UInt24 source, byte bit)
+        public static bool CheckBit(this UInt24 source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1188,7 +1188,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 30) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
-        public static bool CheckBit(this int source, byte bit)
+        public static bool CheckBit(this int source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1200,7 +1200,7 @@ namespace System
         /// <param name="bit">Bit index (0 - 31) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
-        public static bool CheckBit(this uint source, byte bit)
+        public static bool CheckBit(this uint source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1211,7 +1211,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 62) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
-        public static bool CheckBit(this long source, byte bit)
+        public static bool CheckBit(this long source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1223,7 +1223,7 @@ namespace System
         /// <param name="bit">Bit index (0 - 63) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
         [CLSCompliant(false)]
-        public static bool CheckBit(this ulong source, byte bit)
+        public static bool CheckBit(this ulong source, int bit)
         {
             return CheckBits(source, BitVal(bit), true);
         }
@@ -1789,7 +1789,7 @@ namespace System
         /// <param name="bit">Bit (0 - 6) to toggle.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> toggled.</returns>
         [CLSCompliant(false)]
-        public static sbyte ToggleBit(this sbyte source, byte bit)
+        public static sbyte ToggleBit(this sbyte source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1800,7 +1800,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 7) to toggle.</param>
         /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> toggled.</returns>
-        public static byte ToggleBit(this byte source, byte bit)
+        public static byte ToggleBit(this byte source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1811,7 +1811,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 14) to toggle.</param>
         /// <returns><see cref="short"/> value with specified <paramref name="bit"/> toggled.</returns>
-        public static short ToggleBit(this short source, byte bit)
+        public static short ToggleBit(this short source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1823,7 +1823,7 @@ namespace System
         /// <param name="bit">Bit (0 - 15) to toggle.</param>
         /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> toggled.</returns>
         [CLSCompliant(false)]
-        public static ushort ToggleBit(this ushort source, byte bit)
+        public static ushort ToggleBit(this ushort source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1834,7 +1834,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 22) to toggle.</param>
         /// <returns><see cref="Int24"/> value with specified <paramref name="bit"/> toggled.</returns>
-        public static Int24 ToggleBit(this Int24 source, byte bit)
+        public static Int24 ToggleBit(this Int24 source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1846,7 +1846,7 @@ namespace System
         /// <param name="bit">Bit (0 - 31) to toggle.</param>
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bit"/> toggled.</returns>
         [CLSCompliant(false)]
-        public static UInt24 ToggleBit(this UInt24 source, byte bit)
+        public static UInt24 ToggleBit(this UInt24 source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1857,7 +1857,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 30) to toggle.</param>
         /// <returns><see cref="int"/> value with specified <paramref name="bit"/> toggled.</returns>
-        public static int ToggleBit(this int source, byte bit)
+        public static int ToggleBit(this int source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1869,7 +1869,7 @@ namespace System
         /// <param name="bit">Bit (0 - 31) to toggle.</param>
         /// <returns><see cref="uint"/> value with specified <paramref name="bit"/> toggled.</returns>
         [CLSCompliant(false)]
-        public static uint ToggleBit(this uint source, byte bit)
+        public static uint ToggleBit(this uint source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1880,7 +1880,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 62) to toggle.</param>
         /// <returns><see cref="long"/> value with specified <paramref name="bit"/> toggled.</returns>
-        public static long ToggleBit(this long source, byte bit)
+        public static long ToggleBit(this long source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
@@ -1892,7 +1892,7 @@ namespace System
         /// <param name="bit">Bit (0 - 63) to toggle.</param>
         /// <returns><see cref="ulong"/> value with specified <paramref name="bit"/> toggled.</returns>
         [CLSCompliant(false)]
-        public static ulong ToggleBit(this ulong source, byte bit)
+        public static ulong ToggleBit(this ulong source, int bit)
         {
             return ToggleBits(source, BitVal(bit));
         }
