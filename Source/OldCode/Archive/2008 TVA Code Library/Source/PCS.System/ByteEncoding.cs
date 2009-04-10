@@ -252,25 +252,25 @@ namespace System
 
                             if (m_reverse)
                             {
-                                if (binaryData[x + 7] == '1') bytes[index] = bytes[index].SetBit(0);
-                                if (binaryData[x + 6] == '1') bytes[index] = bytes[index].SetBit(1);
-                                if (binaryData[x + 5] == '1') bytes[index] = bytes[index].SetBit(2);
-                                if (binaryData[x + 4] == '1') bytes[index] = bytes[index].SetBit(3);
-                                if (binaryData[x + 3] == '1') bytes[index] = bytes[index].SetBit(4);
-                                if (binaryData[x + 2] == '1') bytes[index] = bytes[index].SetBit(5);
-                                if (binaryData[x + 1] == '1') bytes[index] = bytes[index].SetBit(6);
-                                if (binaryData[x + 0] == '1') bytes[index] = bytes[index].SetBit(7);
+                                if (binaryData[x + 7] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit0);
+                                if (binaryData[x + 6] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit1);
+                                if (binaryData[x + 5] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit2);
+                                if (binaryData[x + 4] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit3);
+                                if (binaryData[x + 3] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit4);
+                                if (binaryData[x + 2] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit5);
+                                if (binaryData[x + 1] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit6);
+                                if (binaryData[x + 0] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit7);
                             }
                             else
                             {
-                                if (binaryData[x + 0] == '1') bytes[index] = bytes[index].SetBit(0);
-                                if (binaryData[x + 1] == '1') bytes[index] = bytes[index].SetBit(1);
-                                if (binaryData[x + 2] == '1') bytes[index] = bytes[index].SetBit(2);
-                                if (binaryData[x + 3] == '1') bytes[index] = bytes[index].SetBit(3);
-                                if (binaryData[x + 4] == '1') bytes[index] = bytes[index].SetBit(4);
-                                if (binaryData[x + 5] == '1') bytes[index] = bytes[index].SetBit(5);
-                                if (binaryData[x + 6] == '1') bytes[index] = bytes[index].SetBit(6);
-                                if (binaryData[x + 7] == '1') bytes[index] = bytes[index].SetBit(7);
+                                if (binaryData[x + 0] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit0);
+                                if (binaryData[x + 1] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit1);
+                                if (binaryData[x + 2] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit2);
+                                if (binaryData[x + 3] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit3);
+                                if (binaryData[x + 4] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit4);
+                                if (binaryData[x + 5] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit5);
+                                if (binaryData[x + 6] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit6);
+                                if (binaryData[x + 7] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit7);
                             }
 
                             index++;
@@ -312,25 +312,25 @@ namespace System
 
                         if (m_reverse)
                         {
-                            if (imageByte.CheckBit(7)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(6)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(5)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(4)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(3)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(2)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(1)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(0)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit7)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit6)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit5)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit4)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit3)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit2)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit1)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit0)) byteImage.Append('1'); else byteImage.Append('0');
                         }
                         else
                         {
-                            if (imageByte.CheckBit(0)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(1)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(2)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(3)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(4)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(5)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(6)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBit(7)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit0)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit1)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit2)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit3)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit4)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit5)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit6)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit7)) byteImage.Append('1'); else byteImage.Append('0');
                         }
 
                         m_byteImages[imageByte] = byteImage.ToString();
