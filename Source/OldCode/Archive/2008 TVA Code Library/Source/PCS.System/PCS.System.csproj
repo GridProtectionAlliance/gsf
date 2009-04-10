@@ -50,7 +50,6 @@
     <Compile Include="BinaryValueBase.cs" />
     <Compile Include="Bit.cs" />
     <Compile Include="BitExtensions.cs" />
-    <Compile Include="Bits.cs" />
     <Compile Include="BitwiseCast.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="ComplexNumber.cs" />
