@@ -612,10 +612,6 @@ namespace System
 
         #endregion
 
-        #region [ GetBit(s) Extensions ]
-
-        #endregion
-
         #region [ ClearBit(s) Extensions ]
 
         /// <summary>
@@ -1018,10 +1014,7 @@ namespace System
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this byte source, byte bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1075,10 +1068,7 @@ namespace System
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this short source, short bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1134,10 +1124,7 @@ namespace System
         [CLSCompliant(false)]
         public static bool CheckBits(this ushort source, ushort bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1191,10 +1178,7 @@ namespace System
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this int source, int bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1250,10 +1234,7 @@ namespace System
         [CLSCompliant(false)]
         public static bool CheckBits(this uint source, uint bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1307,10 +1288,7 @@ namespace System
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this long source, long bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         /// <summary>
@@ -1366,10 +1344,7 @@ namespace System
         [CLSCompliant(false)]
         public static bool CheckBits(this ulong source, ulong bits, bool allBits)
         {
-            if (allBits)
-                return ((source & bits) == bits);
-            else
-                return ((source & bits) != 0);
+            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
         }
 
         #endregion
@@ -1640,6 +1615,14 @@ namespace System
         {
             return (source ^ bits);
         }
+
+        #endregion
+
+        #region [ GetMaskedValue Extensions ]
+
+        #endregion
+
+        #region [ SetMaskedValue Extensions ]
 
         #endregion
     }
