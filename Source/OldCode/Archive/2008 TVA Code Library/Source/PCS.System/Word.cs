@@ -23,7 +23,7 @@ using System.Text;
 namespace System
 {
     /// <summary>
-    /// Represents functions and extensions related to bytes, words, double words and quad words.
+    /// Represents functions and extensions related to 16-bit words, 32-bit double words and 64-bit quad words.
     /// </summary>
     [CLSCompliant(false)]
     public static class Word
