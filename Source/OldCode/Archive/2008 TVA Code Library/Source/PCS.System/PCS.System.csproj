@@ -98,6 +98,7 @@
     <Compile Include="Units\SI.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="UnixTimeTag.cs" />
+    <Compile Include="Word.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Media\Wavefile Information\IFF.txt" />
