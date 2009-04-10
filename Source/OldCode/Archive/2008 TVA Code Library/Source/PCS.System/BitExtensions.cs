@@ -1373,5 +1373,274 @@ namespace System
         }
 
         #endregion
+
+        #region [ ToggleBit(s) Extensions ]
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 7) to toggle.</param>
+        /// <returns><see cref="byte"/> value with specified <paramref name="bit"/> toggled.</returns>
+        public static byte ToggleBit(this byte source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 14) to toggle.</param>
+        /// <returns><see cref="short"/> value with specified <paramref name="bit"/> toggled.</returns>
+        public static short ToggleBit(this short source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 15) to toggle.</param>
+        /// <returns><see cref="ushort"/> value with specified <paramref name="bit"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static ushort ToggleBit(this ushort source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 30) to toggle.</param>
+        /// <returns><see cref="int"/> value with specified <paramref name="bit"/> toggled.</returns>
+        public static int ToggleBit(this int source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 31) to toggle.</param>
+        /// <returns><see cref="uint"/> value with specified <paramref name="bit"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static uint ToggleBit(this uint source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 62) to toggle.</param>
+        /// <returns><see cref="long"/> value with specified <paramref name="bit"/> toggled.</returns>
+        public static long ToggleBit(this long source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bit"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bit">Bit (0 - 63) to toggle.</param>
+        /// <returns><see cref="ulong"/> value with specified <paramref name="bit"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static ulong ToggleBit(this ulong source, byte bit)
+        {
+            return ToggleBits(source, BitVal(bit));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static byte ToggleBits(this byte source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (byte)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> toggled.</returns>
+        public static byte ToggleBits(this byte source, byte bits)
+        {
+            return ((byte)(source ^ bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="short"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static short ToggleBits(this short source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (short)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="short"/> value with specified <paramref name="bits"/> toggled.</returns>
+        public static short ToggleBits(this short source, short bits)
+        {
+            return ((short)(source ^ bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static ushort ToggleBits(this ushort source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (ushort)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static ushort ToggleBits(this ushort source, ushort bits)
+        {
+            return ((ushort)(source ^ bits));
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="int"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static int ToggleBits(this int source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (int)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="int"/> value with specified <paramref name="bits"/> toggled.</returns>
+        public static int ToggleBits(this int source, int bits)
+        {
+            return (source ^ bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static uint ToggleBits(this uint source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (uint)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static uint ToggleBits(this uint source, uint bits)
+        {
+            return (source ^ bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="long"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static long ToggleBits(this long source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (long)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="long"/> value with specified <paramref name="bits"/> toggled.</returns>
+        public static long ToggleBits(this long source, long bits)
+        {
+            return (source ^ bits);
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits"><see cref="Bits"/> to toggle.</param>
+        /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static ulong ToggleBits(this ulong source, Bits bits)
+        {
+            checked
+            {
+                return ToggleBits(source, (ulong)bits);
+            }
+        }
+
+        /// <summary>
+        /// Returns value with specified <paramref name="bits"/> toggled.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bits">Bit-mask of the bits to toggle.</param>
+        /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
+        public static ulong ToggleBits(this ulong source, ulong bits)
+        {
+            return (source ^ bits);
+        }
+
+        #endregion
     }
 }
