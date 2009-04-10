@@ -351,6 +351,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 6) to set.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> set.</returns>
+        [CLSCompliant(false)]
         public static sbyte SetBit(this sbyte source, byte bit)
         {
             return SetBits(source, BitVal(bit));
@@ -480,6 +481,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bits">Bit-mask of the bits to set.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> set.</returns>
+        [CLSCompliant(false)]
         public static sbyte SetBits(this sbyte source, sbyte bits)
         {
             return ((sbyte)(source | bits));
@@ -611,6 +613,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bits">Bit-mask of the bits to set.</param>
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> set.</returns>
+        [CLSCompliant(false)]
         public static UInt24 SetBits(this UInt24 source, UInt24 bits)
         {
             return (source | bits);
@@ -732,6 +735,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 6) to clear.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> cleared.</returns>
+        [CLSCompliant(false)]
         public static sbyte ClearBit(this sbyte source, byte bit)
         {
             return ClearBits(source, BitVal(bit));
@@ -861,6 +865,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bits">Bit-mask of the bits to clear.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> cleared.</returns>
+        [CLSCompliant(false)]
         public static sbyte ClearBits(this sbyte source, sbyte bits)
         {
             return ((sbyte)(source & ~bits));
@@ -1114,6 +1119,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit index (0 - 6) to check.</param>
         /// <returns>true if specified <paramref name="bit"/> is set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
         public static bool CheckBit(this sbyte source, byte bit)
         {
             return CheckBits(source, BitVal(bit));
@@ -1243,6 +1249,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bits">Bit-mask of the bits to check.</param>
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
         public static bool CheckBits(this sbyte source, sbyte bits)
         {
             return CheckBits(source, bits, true);
@@ -1271,6 +1278,7 @@ namespace System
         /// <param name="bits">Bit-mask of the bits to check.</param>
         /// <param name="allBits">true to check if all <paramref name="bits"/> are set; otherwise false.</param>
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
+        [CLSCompliant(false)]
         public static bool CheckBits(this sbyte source, sbyte bits, bool allBits)
         {
             return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
@@ -1780,6 +1788,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bit">Bit (0 - 6) to toggle.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bit"/> toggled.</returns>
+        [CLSCompliant(false)]
         public static sbyte ToggleBit(this sbyte source, byte bit)
         {
             return ToggleBits(source, BitVal(bit));
@@ -1909,6 +1918,7 @@ namespace System
         /// <param name="source">Value source.</param>
         /// <param name="bits">Bit-mask of the bits to toggle.</param>
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> toggled.</returns>
+        [CLSCompliant(false)]
         public static sbyte ToggleBits(this sbyte source, sbyte bits)
         {
             return ((sbyte)(source ^ bits));
