@@ -248,7 +248,7 @@ namespace System
 
                         for (int x = 0; x <= binaryData.Length - 1; x += 8)
                         {
-                            bytes[index] = (byte)Bits.Nill;
+                            bytes[index] = (byte)Bits.Nil;
 
                             if (m_reverse)
                             {

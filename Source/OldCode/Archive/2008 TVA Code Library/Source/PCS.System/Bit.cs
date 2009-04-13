@@ -23,6 +23,9 @@ namespace System
     [CLSCompliant(false)]
     public static class Bit
     {
+        /// <summary>No bits set (0x00000000)</summary>
+        public const byte Nil = 0x0;
+
         // Byte 0, Bits 0-7
 
         /// <summary>Bit 0 (0x00000001)</summary>

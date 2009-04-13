@@ -39,7 +39,7 @@ namespace System
     public enum Bits : ulong
     {
         /// <summary>No bits set (0x0000000000000000)</summary>
-        Nill = 0x0000000000000000,
+        Nil = 0x0000000000000000,
 
         // Byte 0, Bits 0-7
 
