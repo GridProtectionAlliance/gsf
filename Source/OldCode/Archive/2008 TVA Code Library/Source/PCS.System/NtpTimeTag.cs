@@ -82,7 +82,7 @@ namespace System
         /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in hi-word and fractional seconds in lo-word.</param>
         [CLSCompliant(false)]
         public NtpTimeTag(ulong timestamp)
-            : this(HiUDWord(timestamp), LoUDWord(timestamp))
+            : this(timestamp.HighDword(), timestamp.LowDword())
         {
         }
 
@@ -155,42 +155,7 @@ namespace System
             uint seconds = (uint)Math.Truncate(timestamp.ToSeconds());
             uint fraction = (uint)(timestamp.DistanceBeyondSecond().ToSeconds() * uint.MaxValue);
 
-            return MakeUQWord(seconds, fraction);
-        }
-
-        // TODO: Replace with proper extension functions...
-        private static uint LoUDWord(ulong quadWord)
-        {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 0);
-            else
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 4);
-        }
-
-        private static uint HiUDWord(ulong quadWord)
-        {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 4);
-            else
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 0);
-        }
-
-        private static ulong MakeUQWord(uint high, uint low)
-        {
-            byte[] bytes = new byte[8];
-
-            if (BitConverter.IsLittleEndian)
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 4, 4);
-            }
-            else
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 4, 4);
-            }
-
-            return BitConverter.ToUInt64(bytes, 0);
+            return Word.MakeQword(seconds, fraction);
         }
     }
 }

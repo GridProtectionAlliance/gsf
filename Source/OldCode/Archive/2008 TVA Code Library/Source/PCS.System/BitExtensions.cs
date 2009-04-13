@@ -39,44 +39,44 @@ namespace System
     public enum Bits : ulong
     {
         /// <summary>No bits set (0x0000000000000000)</summary>
-        Nil = 0x0000000000000000,
+        Nil = 0x00000000,
 
         // Byte 0, Bits 0-7
 
         /// <summary>Bit 00 (0x0000000000000001)</summary>
-        Bit0 = 0x0000000000000001,
+        Bit00 = 0x00000001,     // 00000001 = 1
 
         /// <summary>Bit 01 (0x0000000000000002)</summary>
-        Bit1 = Bit0 << 1,
+        Bit01 = Bit00 << 1,     // 00000010 = 2
 
         /// <summary>Bit 02 (0x0000000000000004)</summary>
-        Bit2 = Bit1 << 1,
+        Bit02 = Bit01 << 1,     // 00000100 = 4
 
         /// <summary>Bit 03 (0x0000000000000008)</summary>
-        Bit3 = Bit2 << 1,
+        Bit03 = Bit02 << 1,     // 00001000 = 8
 
         /// <summary>Bit 04 (0x0000000000000010)</summary>
-        Bit4 = Bit3 << 1,
+        Bit04 = Bit03 << 1,     // 00010000 = 16
 
         /// <summary>Bit 05 (0x0000000000000020)</summary>
-        Bit5 = Bit4 << 1,
+        Bit05 = Bit04 << 1,     // 00100000 = 32
 
         /// <summary>Bit 06 (0x0000000000000040)</summary>
-        Bit6 = Bit5 << 1,
+        Bit06 = Bit05 << 1,     // 01000000 = 64
 
         /// <summary>Bit 07 (0x0000000000000080)</summary>
-        Bit7 = Bit6 << 1,
+        Bit07 = Bit06 << 1,     // 10000000 = 128
 
         // Byte 1, Bits 8-15
 
         /// <summary>Bit 08 (0x0000000000000100)</summary>
-        Bit8 = Bit7 << 1,
+        Bit08 = Bit07 << 1,
 
         /// <summary>Bit 09 (0x0000000000000200)</summary>
-        Bit9 = Bit8 << 1,
+        Bit09 = Bit08 << 1,
 
         /// <summary>Bit 10 (0x0000000000000400)</summary>
-        Bit10 = Bit9 << 1,
+        Bit10 = Bit09 << 1,
 
         /// <summary>Bit 11 (0x0000000000000800)</summary>
         Bit11 = Bit10 << 1,
@@ -270,16 +270,16 @@ namespace System
             {
                 #region [ Bit Cases (0 - 63) ]
 
-                case 00: return Bits.Bit0;
-                case 01: return Bits.Bit1;
-                case 02: return Bits.Bit2;
-                case 03: return Bits.Bit3;
-                case 04: return Bits.Bit4;
-                case 05: return Bits.Bit5;
-                case 06: return Bits.Bit6;
-                case 07: return Bits.Bit7;
-                case 08: return Bits.Bit8;
-                case 09: return Bits.Bit9;
+                case 00: return Bits.Bit00;
+                case 01: return Bits.Bit01;
+                case 02: return Bits.Bit02;
+                case 03: return Bits.Bit03;
+                case 04: return Bits.Bit04;
+                case 05: return Bits.Bit05;
+                case 06: return Bits.Bit06;
+                case 07: return Bits.Bit07;
+                case 08: return Bits.Bit08;
+                case 09: return Bits.Bit09;
                 case 10: return Bits.Bit10;
                 case 11: return Bits.Bit11;
                 case 12: return Bits.Bit12;
@@ -2140,12 +2140,12 @@ namespace System
 
             for (int x = 1; x <= (rotations % 8); x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit7);
+                hiBitSet = value.CheckBits(Bits.Bit07);
 
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2169,12 +2169,12 @@ namespace System
 
             for (int x = 1; x <= (rotations % 8); x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit7);
+                hiBitSet = value.CheckBits(Bits.Bit07);
 
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2202,7 +2202,7 @@ namespace System
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2231,7 +2231,7 @@ namespace System
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2259,7 +2259,7 @@ namespace System
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2288,7 +2288,7 @@ namespace System
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2316,7 +2316,7 @@ namespace System
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2345,7 +2345,7 @@ namespace System
                 value <<= 1;
 
                 if (hiBitSet)
-                    value = value.SetBits(Bits.Bit0);
+                    value = value.SetBits(Bits.Bit00);
             }
 
             return value;
@@ -2368,14 +2368,14 @@ namespace System
 
             for (int x = 1; x <= (rotations % 8); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
                 if (loBitSet)
-                    value = value.SetBits(Bits.Bit7);
+                    value = value.SetBits(Bits.Bit07);
                 else
-                    value = value.ClearBits(Bits.Bit7);
+                    value = value.ClearBits(Bits.Bit07);
             }
 
             return value;
@@ -2399,14 +2399,14 @@ namespace System
 
             for (int x = 1; x <= (rotations % 8); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
                 if (loBitSet)
-                    value = value.SetBits(Bits.Bit7);
+                    value = value.SetBits(Bits.Bit07);
                 else
-                    value = value.ClearBits(Bits.Bit7);
+                    value = value.ClearBits(Bits.Bit07);
             }
 
             return value;
@@ -2429,7 +2429,7 @@ namespace System
 
             for (int x = 1; x <= (rotations % 16); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
@@ -2460,7 +2460,7 @@ namespace System
 
             for (int x = 1; x <= (rotations % 16); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
@@ -2490,7 +2490,7 @@ namespace System
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
@@ -2521,7 +2521,7 @@ namespace System
 
             for (int x = 1; x <= (rotations % 24); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
@@ -2551,7 +2551,7 @@ namespace System
 
             for (int x = 1; x <= (rotations % 32); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
@@ -2582,7 +2582,7 @@ namespace System
 
             for (int x = 1; x <= (rotations % 32); x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit0);
+                loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
