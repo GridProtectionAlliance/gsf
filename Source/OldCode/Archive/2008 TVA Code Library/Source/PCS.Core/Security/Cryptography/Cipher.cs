@@ -763,17 +763,17 @@ namespace PCS.Security.Cryptography
                         case 0:
                             cryptKey = encryptionKey[keyIndex];
                             if (cryptByte != cryptKey)
-                                cryptByte = cryptByte.ToggleBits(cryptKey);
+                                cryptByte ^= cryptKey;
                             break;
                         case 1:
                             cryptKey = (byte)(random.NextDouble() * (encryptionKey[keyIndex] + 1));
                             if (cryptByte != cryptKey)
-                                cryptByte = cryptByte.ToggleBits(cryptKey);
+                                cryptByte ^= cryptKey;
                             break;
                         case 2:
                             cryptKey = (byte)(random.NextDouble() * 256.0D);
                             if (cryptByte != cryptKey)
-                                cryptByte = cryptByte.ToggleBits(cryptKey);
+                                cryptByte ^= cryptKey;
                             break;
                     }
 
