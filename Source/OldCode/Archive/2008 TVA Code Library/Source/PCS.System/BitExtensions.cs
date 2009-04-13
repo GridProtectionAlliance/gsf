@@ -35,45 +35,44 @@ namespace System
     /// <summary>
     /// Represents bits in a signed or unsigned integer value.
     /// </summary>
-    [CLSCompliant(false)]
-    [Flags()]
+    [Flags(), CLSCompliant(false)]
     public enum Bits : ulong
     {
-        /// <summary>No bits set (8-bit)</summary>
-        Nill = 0x00000000,
+        /// <summary>No bits set (0x0000000000000000)</summary>
+        Nill = 0x0000000000000000,
 
         // Byte 0, Bits 0-7
 
-        /// <summary>Bit 0 (0x0000000000000001)</summary>
-        Bit0 = 0x00000001,
+        /// <summary>Bit 00 (0x0000000000000001)</summary>
+        Bit0 = 0x0000000000000001,
 
-        /// <summary>Bit 1 (0x0000000000000002)</summary>
+        /// <summary>Bit 01 (0x0000000000000002)</summary>
         Bit1 = Bit0 << 1,
 
-        /// <summary>Bit 2 (0x0000000000000004)</summary>
+        /// <summary>Bit 02 (0x0000000000000004)</summary>
         Bit2 = Bit1 << 1,
 
-        /// <summary>Bit 3 (0x0000000000000008)</summary>
+        /// <summary>Bit 03 (0x0000000000000008)</summary>
         Bit3 = Bit2 << 1,
 
-        /// <summary>Bit 4 (0x0000000000000010)</summary>
+        /// <summary>Bit 04 (0x0000000000000010)</summary>
         Bit4 = Bit3 << 1,
 
-        /// <summary>Bit 5 (0x0000000000000020)</summary>
+        /// <summary>Bit 05 (0x0000000000000020)</summary>
         Bit5 = Bit4 << 1,
 
-        /// <summary>Bit 6 (0x0000000000000040)</summary>
+        /// <summary>Bit 06 (0x0000000000000040)</summary>
         Bit6 = Bit5 << 1,
 
-        /// <summary>Bit 7 (0x0000000000000080)</summary>
+        /// <summary>Bit 07 (0x0000000000000080)</summary>
         Bit7 = Bit6 << 1,
 
         // Byte 1, Bits 8-15
 
-        /// <summary>Bit 8 (0x0000000000000100)</summary>
+        /// <summary>Bit 08 (0x0000000000000100)</summary>
         Bit8 = Bit7 << 1,
 
-        /// <summary>Bit 9 (0x0000000000000200)</summary>
+        /// <summary>Bit 09 (0x0000000000000200)</summary>
         Bit9 = Bit8 << 1,
 
         /// <summary>Bit 10 (0x0000000000000400)</summary>
