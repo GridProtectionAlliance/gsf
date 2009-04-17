@@ -50,7 +50,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DataFrame"/> from the given <paramref name="binaryImage"/>.
+        /// Creates a new <see cref="CommandFrame"/> from the given <paramref name="binaryImage"/>.
         /// </summary>
         /// <param name="binaryImage">Binary image to parse.</param>
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
