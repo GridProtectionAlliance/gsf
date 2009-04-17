@@ -359,27 +359,27 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Absolute maximum number of possible phasor values that could fit into a data frame.
         /// </summary>
-        public const uint MaximumPhasorValues = ushort.MaxValue / 4U - CommonFrameHeader.FixedLength - 8U;
+        public const ushort MaximumPhasorValues = (ushort)(ushort.MaxValue / 4 - CommonFrameHeader.FixedLength - 8);
 
         /// <summary>
         /// Absolute maximum number of possible analog values that could fit into a data frame.
         /// </summary>
-        public const uint MaximumAnalogValues = ushort.MaxValue / 2U - CommonFrameHeader.FixedLength - 8U;
+        public const ushort MaximumAnalogValues = (ushort)(ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8);
 
         /// <summary>
         /// Absolute maximum number of possible digital values that could fit into a data frame.
         /// </summary>
-        public const uint MaximumDigitalValues = ushort.MaxValue / 2U - CommonFrameHeader.FixedLength - 8U;
+        public const ushort MaximumDigitalValues = (ushort)(ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8);
 
         /// <summary>
         /// Absolute maximum number of bytes of data that could fit into a header frame.
         /// </summary>
-        public const uint MaximumHeaderDataLength = ushort.MaxValue - CommonFrameHeader.FixedLength - 2U;
+        public const ushort MaximumHeaderDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 2);
 
         /// <summary>
         /// Absolute maximum number of bytes of extended data that could fit into a command frame.
         /// </summary>
-        public const uint MaximumExtendedDataLength = ushort.MaxValue - CommonFrameHeader.FixedLength - 4U;
+        public const ushort MaximumExtendedDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 4);
 
         /// <summary>
         /// Time quality flags mask.

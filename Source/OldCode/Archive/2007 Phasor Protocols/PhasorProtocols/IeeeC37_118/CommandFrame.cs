@@ -38,7 +38,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         // Fields
         private CommonFrameHeader m_frameHeader;
-        private byte m_version;
 
         #endregion
 
@@ -70,6 +69,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             if (length < m_frameHeader.FrameLength)
                 throw new ArgumentOutOfRangeException("length");
 
+            CommonHeader = m_frameHeader;
             Initialize(binaryImage, startIndex, length);
         }
 
@@ -87,7 +87,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             base.IDCode = idCode;
             base.Timestamp = DateTime.UtcNow.Ticks;
-            m_version = version;
+            this.Version = version;
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             : base(info, context)
         {
             // Deserialize command frame
-            m_version = info.GetByte("version");
+            m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
         }
 
         #endregion
@@ -115,7 +115,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(IeeeC37_118.FrameType.CommandFrame, base.Timestamp, m_version);
+                    m_frameHeader = new CommonFrameHeader(IeeeC37_118.FrameType.CommandFrame, base.Timestamp);
 
                 return m_frameHeader;
             }
@@ -124,7 +124,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 m_frameHeader = value;
 
                 if (m_frameHeader != null)
+                {
                     State = m_frameHeader.State as ICommandFrameParsingState;
+                    base.IDCode = m_frameHeader.IDCode;
+                    base.Timestamp = m_frameHeader.Timestamp;
+                }
             }
         }
 
@@ -155,11 +159,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return m_version;
+                return CommonHeader.Version;
             }
             set
             {
-                m_version = value;
+                CommonHeader.Version = value;
             }
         }
 
@@ -247,7 +251,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             base.GetObjectData(info, context);
 
             // Serialize command frame
-            info.AddValue("version", m_version);
+            info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
         }
 
         #endregion
