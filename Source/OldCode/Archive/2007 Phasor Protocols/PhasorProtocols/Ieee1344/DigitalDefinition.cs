@@ -146,8 +146,16 @@ namespace PCS.PhasorProtocols.Ieee1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
+                byte[] normalStatusBytes = BitConverter.GetBytes(NormalStatus);
+                byte[] validInputBytes = BitConverter.GetBytes(ValidInput);
+
                 baseAttributes.Add("Normal Status", NormalStatus.ToString());
+                baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes));
+                baseAttributes.Add("Normal Status (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(normalStatusBytes));
+
                 baseAttributes.Add("Valid Input", ValidInput.ToString());
+                baseAttributes.Add("Valid Input (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputBytes));
+                baseAttributes.Add("Valid Input (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(validInputBytes));
 
                 return baseAttributes;
             }
