@@ -263,7 +263,9 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         #region [ Methods ]
 
-        /// <summary>Gets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.</summary>
+        /// <summary>
+        /// Gets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.
+        /// </summary>
         /// <param name="index">Index of desired bit label to access.</param>
         /// <remarks>
         /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
@@ -277,7 +279,9 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             return Label.PadRight(MaximumLabelLength).Substring(index * 16, 16).GetValidLabel();
         }
 
-        /// <summary>Sets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.</summary>
+        /// <summary>
+        /// Sets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.
+        /// </summary>
         /// <param name="index">Index of desired bit label to access.</param>
         /// <remarks>
         /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
