@@ -125,7 +125,7 @@ namespace System
         /// <returns>An unsigned 16-bit word made from the two specified bytes.</returns>
         public static ushort MakeWord(byte high, byte low)
         {
-            return (ushort)((ushort)low + ((ushort)high << 8));
+            return (ushort)(low + ((ushort)high << 8));
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace System
         /// <returns>An unsigned 32-bit double-word made from the two specified unsigned 16-bit words.</returns>
         public static uint MakeDword(ushort high, ushort low)
         {
-            return (uint)((uint)low + ((uint)high << 16));
+            return (uint)(low + ((uint)high << 16));
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace System
         /// <returns>An unsigned 64-bit quad-word made from the two specified unsigned 32-bit double-words.</returns>
         public static ulong MakeQword(uint high, uint low)
         {
-            return (ulong)((ulong)low + ((ulong)high << 32));
+            return (ulong)(low + ((ulong)high << 32));
         }
     }
 }
