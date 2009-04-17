@@ -139,14 +139,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (StatusFlags & Bit.Bit14) == 0;
+                return (StatusFlags & (ushort)Bits.Bit14) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = (short)(StatusFlags & ~Bit.Bit14);
+                    StatusFlags = (ushort)(StatusFlags & ~(ushort)Bits.Bit14);
                 else
-                    StatusFlags = (short)(StatusFlags | Bit.Bit14);
+                    StatusFlags = (ushort)(StatusFlags | (ushort)Bits.Bit14);
             }
         }
 
@@ -157,14 +157,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (StatusFlags & Bit.Bit15) == 0;
+                return (StatusFlags & (ushort)Bits.Bit15) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = (short)(StatusFlags & ~Bit.Bit15);
+                    StatusFlags = (ushort)(StatusFlags & ~(ushort)Bits.Bit15);
                 else
-                    StatusFlags = (short)(StatusFlags | Bit.Bit15);
+                    StatusFlags = (ushort)(StatusFlags | (ushort)Bits.Bit15);
             }
         }
 
@@ -207,11 +207,11 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (TriggerStatus)(StatusFlags & PhasorProtocols.Ieee1344.Common.TriggerMask);
+                return (TriggerStatus)(StatusFlags & Common.TriggerMask);
             }
             set
             {
-                StatusFlags = (short)((StatusFlags & ~PhasorProtocols.Ieee1344.Common.TriggerMask) | (ushort)value);
+                StatusFlags = (ushort)((StatusFlags & ~Common.TriggerMask) | (ushort)value);
             }
         }
 

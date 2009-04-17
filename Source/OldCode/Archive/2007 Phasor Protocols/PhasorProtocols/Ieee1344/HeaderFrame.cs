@@ -120,7 +120,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Gets the identifier that can is used to identify the IEEE 1344 frame.
+        /// Gets the identifier that is used to identify the IEEE 1344 frame.
         /// </summary>
         public FrameType TypeID
         {

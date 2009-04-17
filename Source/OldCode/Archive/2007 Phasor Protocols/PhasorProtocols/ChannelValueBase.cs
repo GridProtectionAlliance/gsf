@@ -126,15 +126,12 @@ namespace PCS.PhasorProtocols
         public abstract bool IsEmpty { get; }
 
         /// <summary>
-        /// Gets the composite values of this <see cref="ChannelValueBase{T}"/>.
+        /// Gets total number of composite values that this <see cref="ChannelValueBase{T}"/> provides.
         /// </summary>
-        /// <remarks>
-        /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this property is used to abstractly expose each value.
-        /// </remarks>
-        public abstract double[] CompositeValues { get; }
+        public abstract int CompositeValueCount { get; }
 
         /// <summary>
-        /// Gets the <see cref="CompositeValues"/> of this <see cref="ChannelValueBase{T}"/> as an array of <see cref="IMeasurement"/> values.
+        /// Gets the composite values of this <see cref="ChannelValueBase{T}"/> as an array of <see cref="IMeasurement"/> values.
         /// </summary>
         public virtual IMeasurement[] Measurements
         {
@@ -143,7 +140,7 @@ namespace PCS.PhasorProtocols
                 // Create a measurement instance for each composite value the derived channel value exposes
                 if (m_measurements == null)
                 {
-                    m_measurements = new IMeasurement[CompositeValues.Length];
+                    m_measurements = new IMeasurement[CompositeValueCount];
 
                     for (int x = 0; x < m_measurements.Length; x++)
                     {
@@ -164,16 +161,16 @@ namespace PCS.PhasorProtocols
             get
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
-                double[] compositeValues = CompositeValues;
+                int compositeValues = CompositeValueCount;
 
                 baseAttributes.Add("Label", Label);
                 baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
                 baseAttributes.Add("Is Empty", IsEmpty.ToString());
-                baseAttributes.Add("Total Composite Values", compositeValues.Length.ToString());
+                baseAttributes.Add("Total Composite Values", compositeValues.ToString());
 
-                for (int x = 0; x < compositeValues.Length; x++)
+                for (int x = 0; x < compositeValues; x++)
                 {
-                    baseAttributes.Add("     Composite Value " + x, " => " + compositeValues[x].ToString());
+                    baseAttributes.Add("     Composite Value " + x, " => " + GetCompositeValue(x).ToString());
                 }
 
                 return baseAttributes;
@@ -183,6 +180,15 @@ namespace PCS.PhasorProtocols
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets the specified composite value of this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
+        /// <param name="index">Index of composite value to retrieve.</param>
+        /// <remarks>
+        /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
+        /// </remarks>
+        public abstract double GetCompositeValue(int index);
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.

@@ -334,7 +334,7 @@ namespace PCS.PhasorProtocols
                 baseAttributes.Add("Is Partial Frame", IsPartial.ToString());
                 baseAttributes.Add("Published", Published.ToString());
                 baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
-                baseAttributes.Add("Timestamp", Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                baseAttributes.Add("Timestamp", ((DateTime)Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 return baseAttributes;
             }

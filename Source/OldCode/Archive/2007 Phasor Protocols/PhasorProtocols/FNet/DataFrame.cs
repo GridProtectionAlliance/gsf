@@ -110,7 +110,7 @@ namespace PCS.PhasorProtocols.FNet
         }
 
         /// <summary>
-        /// Gets the identifier that can is used to identify the F-NET frame.
+        /// Gets the identifier that is used to identify the F-NET frame.
         /// </summary>
         public int TypeID
         {

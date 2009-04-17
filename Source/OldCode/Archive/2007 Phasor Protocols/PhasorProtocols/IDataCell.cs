@@ -26,7 +26,7 @@ namespace PCS.PhasorProtocols
     /// Data sorting types enumeration.
     /// </summary>
     [Serializable()]
-    public enum DataSortingType : int
+    public enum DataSortingType
     {
         /// <summary>
         /// Data sorted by timestamp (typical situation).
@@ -78,12 +78,12 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets 16-bit status flags of this <see cref="IDataCell"/>.
         /// </summary>
-        short StatusFlags { get; set; }
+        ushort StatusFlags { get; set; }
 
         /// <summary>
         /// Gets or sets command status flags of this <see cref="IDataCell"/>.
         /// </summary>
-        int CommonStatusFlags { get; set; }
+        uint CommonStatusFlags { get; set; }
 
         /// <summary>
         /// Gets flag that determines if all values of this <see cref="IDataCell"/> have been assigned.

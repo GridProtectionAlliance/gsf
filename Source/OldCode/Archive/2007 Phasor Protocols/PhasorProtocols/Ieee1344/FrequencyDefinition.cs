@@ -31,7 +31,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         #region [ Members ]
 
         // Fields
-        private short m_statusFlags;
+        private ushort m_statusFlags;
 
         #endregion
 
@@ -67,7 +67,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             : base(info, context)
         {
             // Deserialize frequency definition
-            m_statusFlags = info.GetInt16("statusFlags");
+            m_statusFlags = info.GetUInt16("statusFlags");
         }
 
         #endregion
@@ -96,14 +96,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (m_statusFlags & Bit.Bit8) == 0;
+                return (m_statusFlags & (ushort)Bits.Bit08) == 0;
             }
             set
             {
                 if (value)
-                    m_statusFlags = (short)(m_statusFlags & ~Bit.Bit8);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit08);
                 else
-                    m_statusFlags = (short)(m_statusFlags | Bit.Bit8);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit08);
             }
         }
 
@@ -114,14 +114,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (m_statusFlags & Bit.Bit9) == 0;
+                return (m_statusFlags & (ushort)Bits.Bit09) == 0;
             }
             set
             {
                 if (value)
-                    m_statusFlags = (short)(m_statusFlags & ~Bit.Bit9);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit09);
                 else
-                    m_statusFlags = (short)(m_statusFlags | Bit.Bit9);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit09);
             }
         }
 
@@ -144,9 +144,9 @@ namespace PCS.PhasorProtocols.Ieee1344
             get
             {
                 if (NominalFrequency == LineFrequency.Hz50)
-                    m_statusFlags = (short)(m_statusFlags | Bit.Bit0);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit00);
                 else
-                    m_statusFlags = (short)(m_statusFlags & ~Bit.Bit0);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit00);
 
                 return EndianOrder.BigEndian.GetBytes(m_statusFlags);
             }
@@ -185,9 +185,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            m_statusFlags = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
 
-            Parent.NominalFrequency = ((m_statusFlags & Bit.Bit0) > 0) ? LineFrequency.Hz50 : LineFrequency.Hz60;
+            Parent.NominalFrequency = ((m_statusFlags & (ushort)Bits.Bit00) > 0) ? LineFrequency.Hz50 : LineFrequency.Hz60;
 
             return 2;
         }

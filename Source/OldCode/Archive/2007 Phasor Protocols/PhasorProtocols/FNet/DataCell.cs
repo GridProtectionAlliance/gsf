@@ -172,7 +172,7 @@ namespace PCS.PhasorProtocols.FNet
         {
             get
             {
-                return Parent.Timestamp.ToString("MMddyy");
+                return ((DateTime)Parent.Timestamp).ToString("MMddyy");
             }
         }
 
@@ -183,7 +183,7 @@ namespace PCS.PhasorProtocols.FNet
         {
             get
             {
-                return Parent.Timestamp.ToString("HHmmss");
+                return ((DateTime)Parent.Timestamp).ToString("HHmmss");
             }
         }
 

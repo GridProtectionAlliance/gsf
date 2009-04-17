@@ -31,7 +31,7 @@ namespace PCS.PhasorProtocols
 
         // Fields
         private IChannelValue<T> m_parent;
-        private int m_id;
+        private uint m_id;
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
@@ -50,12 +50,12 @@ namespace PCS.PhasorProtocols
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
         /// <param name="parent">The reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.</param>
-        /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.CompositeValues"/> that this measurement derives its value from.</param>
+        /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
         public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
         {
             m_parent = parent;
             m_valueIndex = valueIndex;
-            m_id = -1;
+            m_id = uint.MaxValue;
             m_source = "__";
             m_key = Common.UndefinedKey;
             m_timestamp = -1;
@@ -90,7 +90,7 @@ namespace PCS.PhasorProtocols
         /// <para>In most implementations, this will be a required field.</para>
         /// <para>Note that this field, in addition to <see cref="Source"/>, typically creates the primary key for a <see cref="ChannelValueMeasurement{T}"/>.</para>
         /// </remarks>
-        public virtual int ID
+        public virtual uint ID
         {
             get
             {
@@ -152,7 +152,7 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets index into the <see cref="IChannelValue{T}.CompositeValues"/> that this measurement derives its value from.
+        /// Gets or sets index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.
         /// </summary>
         public virtual int ValueIndex
         {
@@ -174,11 +174,11 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_parent.CompositeValues[m_valueIndex];
+                return m_parent.GetCompositeValue(m_valueIndex);
             }
             set
             {
-                m_parent.CompositeValues[m_valueIndex] = value;
+                throw new NotImplementedException("Cannot update derived phasor measurement, composite values are read-only");
             }
         }
 
@@ -193,7 +193,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_parent.CompositeValues[m_valueIndex] * m_multiplier + m_adder;
+                return m_parent.GetCompositeValue(m_valueIndex) * m_multiplier + m_adder;
             }
         }
 
@@ -242,7 +242,7 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                m_timeQualityIsGood = value ? 1 : 0;
+                m_timeQualityIsGood = (value ? 1 : 0);
             }
         }
 
@@ -261,7 +261,7 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                m_dataQualityIsGood = value ? 1 : 0;
+                m_dataQualityIsGood = (value ? 1 : 0);
             }
         }
 

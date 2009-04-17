@@ -42,8 +42,8 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         // Fields
         private FrameImageCollector m_frameImages;
-        private short m_sampleCount;
-        private short m_statusFlags;
+        private ushort m_sampleCount;
+        private ushort m_statusFlags;
         private Ticks m_timestamp;
         private IChannelParsingState m_state;
         private Dictionary<string, string> m_attributes;
@@ -75,22 +75,24 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
         public CommonFrameHeader(ConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
         {
-            uint secondOfCentury;
-
-            secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex);
-            m_sampleCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 4);
+            uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex);
+            m_sampleCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 4);
 
             // We go ahead and pre-grab cell's status flags so we can determine framelength - we
             // leave startindex at 6 so that cell will be able to parse flags as needed - note
             // this increases needed common frame header size by 2 (i.e., BinaryLength + 2)
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + FixedLength);
+            m_statusFlags = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + FixedLength);
 
+            // NTP timestamps based on NtpTimeTag class are designed to work for dates between
+            // 1968-01-20 and 2104-02-26 based on recommended bit interpretation in RFC-2030.
+            NtpTimeTag timetag = new NtpTimeTag(secondOfCentury, 0);
+
+            // Data frames have subsecond time information, so we add this fraction of time to current seconds value
             if (TypeID == Ieee1344.FrameType.DataFrame && configurationFrame != null)
-                // Data frames have subsecond time information
-                m_timestamp = (new NtpTimeTag((double)secondOfCentury + (double)SampleCount / System.Math.Floor((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate)).ToDateTime().Ticks;
-            else
-                // For other frames, the best timestamp you can get is down to the whole second
-                m_timestamp = (new NtpTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
+                timetag.Value += SampleCount / Math.Truncate((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate;
+
+            // Cache timestamp value
+            m_timestamp = timetag.ToDateTime().Ticks;
         }
 
         /// <summary>
@@ -153,7 +155,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
             set
             {
-                m_sampleCount = (short)((m_sampleCount & ~Common.FrameTypeMask) | (ushort)value);
+                m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameTypeMask) | (ushort)value);
             }
         }
 
@@ -164,14 +166,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (m_sampleCount & Bit.Bit12) == 0;
+                return (m_sampleCount & (ushort)Bits.Bit12) == 0;
             }
             set
             {
                 if (value)
-                    m_sampleCount = (short)(m_sampleCount & ~Bit.Bit12);
+                    m_sampleCount = (ushort)(m_sampleCount & ~(ushort)Bits.Bit12);
                 else
-                    m_sampleCount = (short)(m_sampleCount | Bit.Bit12);
+                    m_sampleCount = (ushort)(m_sampleCount | (ushort)Bits.Bit12);
             }
         }
 
@@ -182,32 +184,32 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (m_sampleCount & Bit.Bit11) == 0;
+                return (m_sampleCount & (ushort)Bits.Bit11) == 0;
             }
             set
             {
                 if (value)
-                    m_sampleCount = (short)(m_sampleCount & ~Bit.Bit11);
+                    m_sampleCount = (ushort)(m_sampleCount & ~(ushort)Bits.Bit11);
                 else
-                    m_sampleCount = (short)(m_sampleCount | Bit.Bit11);
+                    m_sampleCount = (ushort)(m_sampleCount | (ushort)Bits.Bit11);
             }
         }
 
         /// <summary>
         /// Gets or sets the total frame count.
         /// </summary>
-        public short FrameCount
+        public ushort FrameCount
         {
             get
             {
-                return (short)(m_sampleCount & Common.FrameCountMask);
+                return (ushort)(m_sampleCount & Common.FrameCountMask);
             }
             set
             {
                 if (value > Common.MaximumFrameCount)
                     throw new OverflowException("Frame count value cannot exceed " + Common.MaximumFrameCount);
                 else
-                    m_sampleCount = (short)((m_sampleCount & ~Common.FrameCountMask) | (ushort)value);
+                    m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameCountMask) | value);
             }
         }
         
@@ -293,7 +295,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                 if (value > Common.MaximumFrameLength)
                     throw new OverflowException("Frame length value cannot exceed " + Common.MaximumFrameLength);
                 else
-                    m_statusFlags = (short)((m_statusFlags & ~Common.FrameLengthMask) | (ushort)value);
+                    m_statusFlags = (ushort)((m_statusFlags & ~Common.FrameLengthMask) | value);
             }
         }
 
@@ -319,18 +321,18 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets or sets the sample number (i.e., frame count) of this frame.
         /// </summary>
-        public short SampleCount
+        public ushort SampleCount
         {
             get
             {
-                return (short)(m_sampleCount & ~Common.FrameTypeMask);
+                return (ushort)(m_sampleCount & ~Common.FrameTypeMask);
             }
             set
             {
                 if (value > Common.MaximumSampleCount)
                     throw new OverflowException("Sample count value cannot exceed " + Common.MaximumSampleCount);
                 else
-                    m_sampleCount = (short)((m_sampleCount & Common.FrameTypeMask) | (ushort)value);
+                    m_sampleCount = (ushort)((m_sampleCount & Common.FrameTypeMask) | value);
             }
         }
 
@@ -448,7 +450,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             get
             {
                 // IChannelFrame expects timestamp in Unix timetag format
-                return new UnixTimeTag(0);
+                return new UnixTimeTag(Timestamp);
             }
         }
 

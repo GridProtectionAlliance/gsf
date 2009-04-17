@@ -58,16 +58,19 @@ namespace PCS.PhasorProtocols
         bool IsEmpty { get; }
 
         /// <summary>
-        /// Gets the composite values of this <see cref="IChannelValue{T}"/>.
-        /// </summary>
-        /// <remarks>
-        /// Since some channel values (e.g., phasors) can contain more than one value, this property is used to abstractly expose each value.
-        /// </remarks>
-        double[] CompositeValues { get; }
-
-        /// <summary>
-        /// Gets the <see cref="CompositeValues"/> of this <see cref="IChannelValue{T}"/> as an array of <see cref="IMeasurement"/> values.
+        /// Gets the composite values of this <see cref="IChannelValue{T}"/> as an array of <see cref="IMeasurement"/> values.
         /// </summary>
         IMeasurement[] Measurements { get; }
+
+        /// <summary>
+        /// Gets total number of composite values that this <see cref="IChannelValue{T}"/> provides.
+        /// </summary>
+        int CompositeValueCount { get; }
+
+        /// <summary>
+        /// Gets the specified composite value of this <see cref="IChannelValue{T}"/>.
+        /// </summary>
+        /// <param name="index">Index of composite value to retrieve.</param>
+        double GetCompositeValue(int index);
     }
 }

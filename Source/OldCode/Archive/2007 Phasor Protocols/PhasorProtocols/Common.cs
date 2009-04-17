@@ -34,7 +34,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Undefined measurement key.
         /// </summary>
-        internal static MeasurementKey UndefinedKey = new MeasurementKey(-1, "__");
+        internal static MeasurementKey UndefinedKey = new MeasurementKey(uint.MaxValue, "__");
 
         /// <summary>
         /// This is a common optimized block copy function for any kind of data.

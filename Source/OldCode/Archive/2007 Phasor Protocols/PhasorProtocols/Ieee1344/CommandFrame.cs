@@ -212,7 +212,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
         {
-            Timestamp = (new NtpTimeTag((double)EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex))).ToDateTime().Ticks;
+            Timestamp = (new NtpTimeTag(EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex), 0)).ToDateTime().Ticks;
             m_idCode = EndianOrder.BigEndian.ToUInt64(binaryImage, startIndex + 4);
             return 12;
         }

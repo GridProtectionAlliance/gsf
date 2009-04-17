@@ -107,13 +107,13 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the composite values of this <see cref="DigitalValueBase"/>.
+        /// Gets total number of composite values that this <see cref="DigitalValueBase"/> provides.
         /// </summary>
-        public override double[] CompositeValues
+        public override int CompositeValueCount
         {
             get
             {
-                return new double[] { m_value };
+                return 1;
             }
         }
 
@@ -164,6 +164,21 @@ namespace PCS.PhasorProtocols
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets the specified composite value of this <see cref="DigitalValueBase"/>.
+        /// </summary>
+        /// <param name="index">Index of composite value to retrieve.</param>
+        /// <remarks>
+        /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
+        /// </remarks>
+        public override double GetCompositeValue(int index)
+        {
+            if (index == 0)
+                return m_value;
+            else
+                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+        }
 
         /// <summary>
         /// Parses the binary body image.

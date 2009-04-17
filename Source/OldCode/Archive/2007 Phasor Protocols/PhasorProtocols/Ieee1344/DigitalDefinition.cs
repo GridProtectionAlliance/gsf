@@ -34,7 +34,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         internal const int ConversionFactorLength = 2;
 
         // Fields
-        private short m_statusFlags;
+        private ushort m_statusFlags;
 
         #endregion
 
@@ -68,7 +68,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             : base(info, context)
         {
             // Deserialize digital definition
-            m_statusFlags = info.GetInt16("statusFlags");
+            m_statusFlags = info.GetUInt16("statusFlags");
         }
 
         #endregion
@@ -93,36 +93,36 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets or sets normal status for this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public short NormalStatus
+        public ushort NormalStatus
         {
             get
             {
-                return (short)(m_statusFlags & Bit.Bit4);
+                return (ushort)(m_statusFlags & (ushort)Bits.Bit04);
             }
             set
             {
                 if (value > 0)
-                    m_statusFlags = (short)(m_statusFlags | Bit.Bit4);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit04);
                 else
-                    m_statusFlags = (short)(m_statusFlags & ~Bit.Bit4);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit04);
             }
         }
 
         /// <summary>
         /// Gets or sets valid input for this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public short ValidInput
+        public ushort ValidInput
         {
             get
             {
-                return (short)(m_statusFlags & Bit.Bit0);
+                return (ushort)(m_statusFlags & (ushort)Bits.Bit00);
             }
             set
             {
                 if (value > 0)
-                    m_statusFlags = (short)(m_statusFlags | Bit.Bit0);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit00);
                 else
-                    m_statusFlags = (short)(m_statusFlags & ~Bit.Bit0);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit00);
             }
         }
 
@@ -164,7 +164,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
         internal int ParseConversionFactor(byte[] binaryImage, int startIndex)
         {
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            m_statusFlags = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
             return ConversionFactorLength;
         }
 

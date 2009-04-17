@@ -124,13 +124,13 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the composite values of this <see cref="AnalogValueBase"/>.
+        /// Gets total number of composite values that this <see cref="AnalogValueBase"/> provides.
         /// </summary>
-        public override double[] CompositeValues
+        public override int CompositeValueCount
         {
             get
             {
-                return new double[] { m_value };
+                return 1;
             }
         }
 
@@ -171,9 +171,9 @@ namespace PCS.PhasorProtocols
                 // exposing values as double / int when protocols typically use float / short for
                 // transmission. Exposing values as double / int makes class more versatile by
                 // allowing future protocol implementations to support higher resolution values
-                // simply by overriding BodyLength, BodyImage and ParseBodyImage. Exposing class
-                // values as double / int runs the risk of providing values that are outside the
-                // data type limitations, hence the unchecked section below. However, risk should
+                // simply by overriding BodyLength, BodyImage and ParseBodyImage. However, exposing
+                // the double / int values runs the risk of providing values that are outside the
+                // data type limitations, hence the unchecked section below. Risk should generally
                 // be low in typical usage scenarios since values being transmitted via a generated
                 // image were likely parsed previously from a binary image with the same constraints.
                 unchecked
@@ -206,6 +206,21 @@ namespace PCS.PhasorProtocols
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets the specified composite value of this <see cref="AnalogValueBase"/>.
+        /// </summary>
+        /// <param name="index">Index of composite value to retrieve.</param>
+        /// <remarks>
+        /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
+        /// </remarks>
+        public override double GetCompositeValue(int index)
+        {
+            if (index == 0)
+                return m_value;
+            else
+                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+        }
 
         /// <summary>
         /// Parses the binary body image.

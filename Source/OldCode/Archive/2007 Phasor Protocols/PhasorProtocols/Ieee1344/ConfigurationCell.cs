@@ -33,7 +33,7 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         // Fields
         private CoordinateFormat m_coordinateFormat;
-        private short m_statusFlags;
+        private ushort m_statusFlags;
 
         #endregion
 
@@ -77,7 +77,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             // Deserialize configuration cell
             m_coordinateFormat = (CoordinateFormat)info.GetValue("coordinateFormat", typeof(CoordinateFormat));
-            m_statusFlags = info.GetInt16("statusFlags");
+            m_statusFlags = info.GetUInt16("statusFlags");
         }
 
         #endregion
@@ -106,7 +106,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// These are bit flags, use properties to change basic values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public short StatusFlags
+        public ushort StatusFlags
         {
             get
             {
@@ -144,14 +144,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (StatusFlags & Bit.Bit15) == 0;
+                return (m_statusFlags & (ushort)Bits.Bit15) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = (short)(StatusFlags & ~Bit.Bit15);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit15);
                 else
-                    StatusFlags = (short)(StatusFlags | Bit.Bit15);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit15);
             }
         }
 
@@ -162,14 +162,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (StatusFlags & Bit.Bit14) == 0;
+                return (m_statusFlags & (ushort)Bits.Bit14) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = (short)(StatusFlags & ~Bit.Bit14);
+                    m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit14);
                 else
-                    StatusFlags = (short)(StatusFlags | Bit.Bit14);
+                    m_statusFlags = (ushort)(m_statusFlags | (ushort)Bits.Bit14);
             }
         }
 
@@ -180,11 +180,13 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (TriggerStatus)(StatusFlags & PhasorProtocols.Ieee1344.Common.TriggerMask);
+                return (TriggerStatus)(m_statusFlags & Common.TriggerMask);
+                //return (TriggerStatus)m_statusFlags.GetBits(Common.TriggerMask);
             }
             set
             {
-                StatusFlags = (short)((StatusFlags & ~Common.TriggerMask) | (ushort)value);
+                m_statusFlags = (ushort)((m_statusFlags & ~Common.TriggerMask) | (ushort)value);
+                //m_statusFlags = m_statusFlags.SetBits(value, Common.TriggerMask);
             }
         }
 
@@ -293,8 +295,8 @@ namespace PCS.PhasorProtocols.Ieee1344
                 base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
 
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index);
-                EndianOrder.BigEndian.CopyBytes((short)PhasorDefinitions.Count, buffer, index + 8);
-                EndianOrder.BigEndian.CopyBytes((short)DigitalDefinitions.Count, buffer, index + 10);
+                EndianOrder.BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 8);
+                EndianOrder.BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 10);
 
                 return buffer;
             }
@@ -381,7 +383,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             IConfigurationCellParsingState state = State;
             int index = startIndex;
 
-            m_statusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, index);
+            m_statusFlags = EndianOrder.BigEndian.ToUInt16(binaryImage, index);
             index += 2;
 
             // Parse out station name
@@ -390,8 +392,8 @@ namespace PCS.PhasorProtocols.Ieee1344
             IDCode = EndianOrder.BigEndian.ToUInt64(binaryImage, index);
 
             // Parse out total phasors and digitals defined for this device
-            state.PhasorCount = EndianOrder.BigEndian.ToInt16(binaryImage, index + 8);
-            state.DigitalCount = EndianOrder.BigEndian.ToInt16(binaryImage, index + 10);
+            state.PhasorCount = EndianOrder.BigEndian.ToUInt16(binaryImage, index + 8);
+            state.DigitalCount = EndianOrder.BigEndian.ToUInt16(binaryImage, index + 10);
             index += 12;
 
             return (index - startIndex);

@@ -25,36 +25,36 @@ namespace PCS.PhasorProtocols
     /// Phasor enabled device commands enumeration.
     /// </summary>
     [Serializable()]
-    public enum DeviceCommand : short
+    public enum DeviceCommand : ushort
     {
         /// <summary>
         /// 0001 Turn off transmission of data frames.
         /// </summary>
-        DisableRealTimeData = Bit.Bit0,
+        DisableRealTimeData = (ushort)Bits.Bit00,
         /// <summary>
         /// 0010 Turn on transmission of data frames.
         /// </summary>
-        EnableRealTimeData = Bit.Bit1,
+        EnableRealTimeData = (ushort)Bits.Bit01,
         /// <summary>
         /// 0011 Send header file.
         /// </summary>
-        SendHeaderFrame = Bit.Bit0 | Bit.Bit1,
+        SendHeaderFrame = (ushort)Bits.Bit00 | (ushort)Bits.Bit01,
         /// <summary>
         /// 0100 Send configuration file 1.
         /// </summary>
-        SendConfigurationFrame1 = Bit.Bit2,
+        SendConfigurationFrame1 = (ushort)Bits.Bit02,
         /// <summary>
         /// 0101 Send configuration file 2.
         /// </summary>
-        SendConfigurationFrame2 = Bit.Bit0 | Bit.Bit2,
+        SendConfigurationFrame2 = (ushort)Bits.Bit00 | (ushort)Bits.Bit02,
         /// <summary>
         /// 1000 Receive extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344.
         /// </summary>
-        ReceiveExtendedFrame = Bit.Bit3,
+        ReceiveExtendedFrame = (ushort)Bits.Bit03,
         /// <summary>
         /// Reserved bits.
         /// </summary>
-        ReservedBits = short.MaxValue & ~(Bit.Bit0 | Bit.Bit1 | Bit.Bit2 | Bit.Bit3)
+        ReservedBits = ushort.MaxValue & ~((ushort)Bits.Bit00 | (ushort)Bits.Bit01 | (ushort)Bits.Bit02 | (ushort)Bits.Bit03)
     }
 
     #endregion

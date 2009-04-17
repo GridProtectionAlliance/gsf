@@ -29,32 +29,32 @@ namespace PCS.PhasorProtocols
     /// Protocol independent common status flags enumeration.
     /// </summary>
     /// <remarks>
-    /// These flags are expected to exist in the hi-word of a double-word flag set such that original word flags remain in-tact
-    /// in lo-word of double-word flag set.
+    /// These flags are expected to exist in the high-word of a double-word flag set such that original word flags remain in-tact
+    /// in low-word of double-word flag set.
     /// </remarks>
     [Flags(), Serializable()]
-    public enum CommonStatusFlags
+    public enum CommonStatusFlags : uint
     {
         /// <summary>
         /// Data is valid (0 when device data is valid, 1 when invalid or device is in test mode).
         /// </summary>
-        DataIsValid = Bit.Bit19,
+        DataIsValid = (uint)Bits.Bit19,
         /// <summary>
         /// Synchronization is valid (0 when in device is in sync, 1 when it is not).
         /// </summary>
-        SynchronizationIsValid = Bit.Bit18,
+        SynchronizationIsValid = (uint)Bits.Bit18,
         /// <summary>
         /// Data sorting type, 0 by timestamp, 1 by arrival.
         /// </summary>
-        DataSortingType = Bit.Bit17,
+        DataSortingType = (uint)Bits.Bit17,
         /// <summary>
         /// Device error (including configuration error), 0 when no error.
         /// </summary>
-        DeviceError = Bit.Bit16,
+        DeviceError = (uint)Bits.Bit16,
         /// <summary>
         /// Reserved bits for future common flags, presently set to 0.
         /// </summary>
-        ReservedFlags = Bit.Bit20 | Bit.Bit21 | Bit.Bit22 | Bit.Bit23 | Bit.Bit24 | Bit.Bit25 | Bit.Bit26 | Bit.Bit27 | Bit.Bit28 | Bit.Bit29 | Bit.Bit30 | Bit.Bit31
+        ReservedFlags = (uint)(Bits.Bit20 | Bits.Bit21 | Bits.Bit22 | Bits.Bit23 | Bits.Bit24 | Bits.Bit25 | Bits.Bit26 | Bits.Bit27 | Bits.Bit28 | Bits.Bit29 | Bits.Bit30 | Bits.Bit31)
     }
 
     #endregion
@@ -69,14 +69,14 @@ namespace PCS.PhasorProtocols
 
         // Fields
         private IConfigurationCell m_configurationCell;
-        private short m_statusFlags;
+        private ushort m_statusFlags;
         private PhasorValueCollection m_phasorValues;
         private IFrequencyValue m_frequencyValue;
         private AnalogValueCollection m_analogValues;
         private DigitalValueCollection m_digitalValues;
 
         // IMeasurement implementation fields
-        private int m_id;
+        private uint m_id;
         private string m_source;
         private MeasurementKey m_key;
         private string m_tagName;
@@ -101,13 +101,13 @@ namespace PCS.PhasorProtocols
             : base(parent, alignOnDWordBoundary, 0)
         {
             m_configurationCell = configurationCell;
-            m_statusFlags = -1;
+            m_statusFlags = ushort.MaxValue;
             m_phasorValues = new PhasorValueCollection(maximumPhasors);
             m_analogValues = new AnalogValueCollection(maximumAnalogs);
             m_digitalValues = new DigitalValueCollection(maximumDigitals);
 
             // Initialize IMeasurement members
-            m_id = -1;
+            m_id = uint.MaxValue;
             m_source = "__";
             m_key = PhasorProtocols.Common.UndefinedKey;
             m_timestamp = -1;
@@ -124,7 +124,7 @@ namespace PCS.PhasorProtocols
         {
             // Deserialize data cell values
             m_configurationCell = (IConfigurationCell)info.GetValue("configurationCell", typeof(IConfigurationCell));
-            m_statusFlags = info.GetInt16("statusFlags");
+            m_statusFlags = info.GetUInt16("statusFlags");
             m_phasorValues = (PhasorValueCollection)info.GetValue("phasorValues", typeof(PhasorValueCollection));
             m_frequencyValue = (IFrequencyValue)info.GetValue("frequencyValue", typeof(IFrequencyValue));
             m_analogValues = (AnalogValueCollection)info.GetValue("analogValues", typeof(AnalogValueCollection));
@@ -205,7 +205,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets 16-bit status flags of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual short StatusFlags
+        public virtual ushort StatusFlags
         {
             get
             {
@@ -240,39 +240,39 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets common status flags of this <see cref="DataCellBase"/>.
         /// </summary>
-        public int CommonStatusFlags
+        public uint CommonStatusFlags
         {
             get
             {
                 // Start with lo-word protocol specific flags
-                int commonFlags = StatusFlags;
+                uint commonFlags = StatusFlags;
 
                 // Add hi-word protocol independent common flags
                 if (!DataIsValid)
-                    commonFlags |= (int)PhasorProtocols.CommonStatusFlags.DataIsValid;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataIsValid;
 
                 if (!SynchronizationIsValid)
-                    commonFlags |= (int)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid;
 
                 if (DataSortingType != PhasorProtocols.DataSortingType.ByTimestamp)
-                    commonFlags |= (int)PhasorProtocols.CommonStatusFlags.DataSortingType;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataSortingType;
 
                 if (DeviceError)
-                    commonFlags |= (int)PhasorProtocols.CommonStatusFlags.DeviceError;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DeviceError;
 
                 return commonFlags;
             }
             set
             {
                 // Deriving common states requires clearing of base status flags...
-                if (value != -1)
+                if (value != uint.MaxValue)
                     StatusFlags = 0;
 
                 // Derive common states via common status flags
-                DataIsValid = (value & (int)PhasorProtocols.CommonStatusFlags.DataIsValid) == 0;
-                SynchronizationIsValid = (value & (int)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) == 0;
-                DataSortingType = ((value & (int)PhasorProtocols.CommonStatusFlags.DataSortingType) == 0) ? PhasorProtocols.DataSortingType.ByTimestamp : PhasorProtocols.DataSortingType.ByArrival;
-                DeviceError = (value & (int)PhasorProtocols.CommonStatusFlags.DeviceError) > 0;
+                DataIsValid = (value & (uint)PhasorProtocols.CommonStatusFlags.DataIsValid) == 0;
+                SynchronizationIsValid = (value & (uint)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) == 0;
+                DataSortingType = ((value & (uint)PhasorProtocols.CommonStatusFlags.DataSortingType) == 0) ? PhasorProtocols.DataSortingType.ByTimestamp : PhasorProtocols.DataSortingType.ByArrival;
+                DeviceError = ((value & (uint)PhasorProtocols.CommonStatusFlags.DeviceError) > 0 );
             }
         }
 
@@ -448,7 +448,7 @@ namespace PCS.PhasorProtocols
             IDigitalValue digitalValue;
             int x, parsedLength, index = startIndex;
 
-            StatusFlags = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            StatusFlags = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
             index += 2;
 
             // By the very nature of the major phasor protocols supporting the same order of phasors, frequency, df/dt, analog and digitals
@@ -522,7 +522,7 @@ namespace PCS.PhasorProtocols
             }
             set
             {
-                CommonStatusFlags = (int)value;
+                CommonStatusFlags = (uint)value;
             }
         }
 
@@ -576,7 +576,7 @@ namespace PCS.PhasorProtocols
             }
         }
 
-        int IMeasurement.ID
+        uint IMeasurement.ID
         {
             get
             {
