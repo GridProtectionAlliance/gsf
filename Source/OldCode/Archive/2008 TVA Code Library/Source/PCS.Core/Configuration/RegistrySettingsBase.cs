@@ -124,10 +124,10 @@ namespace PCS.Configuration
         /// <remarks>
         /// <para>
         /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
-        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// <paramref name="keyName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
         /// property then the member value will serialized into the registry in a section labeled the same
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
-        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
+        /// will serialized into the section labeled by the <paramref name="keyName"/> value.
         /// </para>
         /// <para>
         /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constuctor,
