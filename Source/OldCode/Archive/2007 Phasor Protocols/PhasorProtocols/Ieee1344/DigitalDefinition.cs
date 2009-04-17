@@ -111,7 +111,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets or sets valid input for this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public ushort ValidInput
+        public ushort ValidInputs
         {
             get
             {
@@ -147,15 +147,15 @@ namespace PCS.PhasorProtocols.Ieee1344
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 byte[] normalStatusBytes = BitConverter.GetBytes(NormalStatus);
-                byte[] validInputBytes = BitConverter.GetBytes(ValidInput);
+                byte[] validInputsBytes = BitConverter.GetBytes(ValidInputs);
 
                 baseAttributes.Add("Normal Status", NormalStatus.ToString());
                 baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes));
                 baseAttributes.Add("Normal Status (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(normalStatusBytes));
 
-                baseAttributes.Add("Valid Input", ValidInput.ToString());
-                baseAttributes.Add("Valid Input (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputBytes));
-                baseAttributes.Add("Valid Input (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(validInputBytes));
+                baseAttributes.Add("Valid Inputs", ValidInputs.ToString());
+                baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes));
+                baseAttributes.Add("Valid Inputs (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(validInputsBytes));
 
                 return baseAttributes;
             }
