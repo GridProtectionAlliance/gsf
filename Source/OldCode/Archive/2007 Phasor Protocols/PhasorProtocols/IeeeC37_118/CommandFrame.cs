@@ -1,249 +1,255 @@
-using System.Diagnostics;
-using System;
-////using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-////using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using PhasorProtocols.IeeeC37_118.Common;
-
 //*******************************************************************************************************
-//  CommandFrame.vb - IEEE C37.118 command frame
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  CommandFrame.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
+using PCS.IO.Checksums;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.IeeeC37_118
 {
-    namespace IeeeC37_118
+    /// <summary>
+    /// Represents the IEEE C37.118 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
+    /// </summary>
+    /// <remarks>
+    /// IEEE C37.118 command frames are designed only to be sent to a device, not received from a device. As a result
+    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing. This class
+    /// exposes a constructor that accepts a binary image in order to manually parse a command frame.
+    /// </remarks>
+    [Serializable()]
+    public class CommandFrame : CommandFrameBase
     {
+        #region [ Members ]
 
-        [CLSCompliant(false), Serializable()]
-        public class CommandFrame : CommandFrameBase, ICommonFrameHeader
+        // Fields
+        private CommonFrameHeader m_frameHeader;
+        private byte m_version;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="CommandFrame"/> from the given <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to parse a received IEEE C37.118 command frame. Typically
+        /// command frames are sent to a device. This constructor would used if this code was being used
+        /// inside of a phasor measurement device.
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is not large enough to parse frame.</exception>
+        public CommandFrame(byte[] binaryImage, int startIndex, int length)
+            : base(new CommandCellCollection(0), DeviceCommand.ReservedBits)
         {
+            if (length < CommonFrameHeader.FixedLength)
+                throw new ArgumentOutOfRangeException("length");
 
+            m_frameHeader = new CommonFrameHeader(null, binaryImage, startIndex);
 
+            if (m_frameHeader.TypeID != IeeeC37_118.FrameType.CommandFrame)
+                throw new InvalidOperationException("Binary image does not represent an IEEE C37.118 command frame");
 
-            private byte m_version;
+            if (length < m_frameHeader.FrameLength)
+                throw new ArgumentOutOfRangeException("length");
 
-            protected CommandFrame()
-            {
-            }
-
-            protected CommandFrame(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-                // Deserialize command frame
-                m_version = info.GetByte("version");
-
-            }
-
-            public CommandFrame(ushort idCode, DeviceCommand command, byte version)
-                : base(new CommandCellCollection(Common.MaximumExtendedDataLength), command)
-            {
-
-                base.IDCode = idCode;
-                m_version = version;
-
-            }
-
-            public CommandFrame(ICommonFrameHeader parsedFrameHeader, byte[] binaryImage, int startIndex)
-                : base(new CommandFrameParsingState(new CommandCellCollection(Common.MaximumExtendedDataLength), parsedFrameHeader.FrameLength, (short)(parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 4)), binaryImage, startIndex)
-            {
-
-
-                CommonFrameHeader.Clone(parsedFrameHeader, this);
-
-            }
-
-            public CommandFrame(ICommandFrame commandFrame)
-                : base(commandFrame)
-            {
-
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public FrameType FrameType
-            {
-                get
-                {
-                    return IeeeC37_118.FrameType.CommandFrame;
-                }
-                set
-                {
-                    // Frame type is readonly for command frames - we don't throw an exception here if someone attempts to change
-                    // the frame type on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                    // but we don't do anything with the value either.
-                }
-            }
-
-            FundamentalFrameType ICommonFrameHeader.FundamentalFrameType
-            {
-                get
-                {
-                    return base.FundamentalFrameType;
-                }
-            }
-
-            public byte Version
-            {
-                get
-                {
-                    return m_version;
-                }
-                set
-                {
-                    m_version = CommonFrameHeader.Version(value);
-                }
-            }
-
-            public ushort FrameLength
-            {
-                get
-                {
-                    return base.BinaryLength;
-                }
-                set
-                {
-                    base.ParsedBinaryLength = value;
-                }
-            }
-
-            public int TimeBase
-            {
-                get
-                {
-                    // Command frame doesn't need subsecond time resolution - so this factor is just defaulted to max...
-                    return int.MaxValue & ~Common.TimeQualityFlagsMask;
-                }
-            }
-
-            public int InternalTimeQualityFlags
-            {
-                get
-                {
-                    return 0;
-                }
-                set
-                {
-                    // Time quality flags are readonly for command frames - we don't throw an exception here if someone attempts to change
-                    // the time quality on a command frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                    // but we don't do anything with the value either.
-                }
-            }
-
-            public uint SecondOfCentury
-            {
-                get
-                {
-                    return CommonFrameHeader.SecondOfCentury(this);
-                }
-            }
-
-            public int FractionOfSecond
-            {
-                get
-                {
-                    return CommonFrameHeader.FractionOfSecond(this);
-                }
-            }
-
-            public TimeQualityFlags TimeQualityFlags
-            {
-                get
-                {
-                    return CommonFrameHeader.TimeQualityFlags(this);
-                }
-                set
-                {
-                    // Nothing to do - time quality flags is readonly for command frames
-                }
-            }
-
-            public TimeQualityIndicatorCode TimeQualityIndicatorCode
-            {
-                get
-                {
-                    return CommonFrameHeader.TimeQualityIndicatorCode(this);
-                }
-                set
-                {
-                    // Nothing to do - time quality flags is readonly for command frames
-                }
-            }
-
-            protected override ushort HeaderLength
-            {
-                get
-                {
-                    return CommonFrameHeader.BinaryLength;
-                }
-            }
-
-            protected override byte[] HeaderImage
-            {
-                get
-                {
-                    return CommonFrameHeader.BinaryImage(this);
-                }
-            }
-
-            public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            {
-
-                base.GetObjectData(info, context);
-
-                // Serialize command frame
-                info.AddValue("version", m_version);
-
-            }
-
-            public override Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    Dictionary<string, string> baseAttributes = base.Attributes;
-
-                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
-                    baseAttributes.Add("Frame Length", FrameLength.ToString());
-                    baseAttributes.Add("Version", Version.ToString());
-                    baseAttributes.Add("Second of Century", SecondOfCentury.ToString());
-                    baseAttributes.Add("Fraction of Second", FractionOfSecond.ToString());
-                    baseAttributes.Add("Time Quality Flags", (int)TimeQualityFlags + ": " + TimeQualityFlags);
-                    baseAttributes.Add("Time Quality Indicator Code", (int)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
-                    baseAttributes.Add("Time Base", TimeBase.ToString());
-
-                    return baseAttributes;
-                }
-            }
-
+            Initialize(binaryImage, startIndex, length);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="CommandFrame"/> from specified parameters.
+        /// </summary>
+        /// <param name="idCode">The ID code of this <see cref="CommandFrame"/>.</param>
+        /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
+        /// <param name="version">IEEE C37.118 revision number.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE 1344 command frame.
+        /// </remarks>
+        public CommandFrame(ushort idCode, DeviceCommand command, byte version)
+            : base(new CommandCellCollection(Common.MaximumExtendedDataLength), command)
+        {
+            base.IDCode = idCode;
+            base.Timestamp = DateTime.UtcNow.Ticks;
+            m_version = version;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CommandFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected CommandFrame(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize command frame
+            m_version = info.GetByte("version");
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets current <see cref="CommonFrameHeader"/>.
+        /// </summary>
+        public CommonFrameHeader CommonHeader
+        {
+            get
+            {
+                // Make sure frame header exists
+                if (m_frameHeader == null)
+                    m_frameHeader = new CommonFrameHeader(IeeeC37_118.FrameType.CommandFrame, base.Timestamp, m_version);
+
+                return m_frameHeader;
+            }
+            set
+            {
+                m_frameHeader = value;
+
+                if (m_frameHeader != null)
+                    State = m_frameHeader.State as ICommandFrameParsingState;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="DataFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public override Ticks Timestamp
+        {
+            get
+            {
+                return CommonHeader.Timestamp;
+            }
+            set
+            {
+                // Keep timestamp updates synchrnonized...
+                CommonHeader.Timestamp = value;
+                base.Timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the IEEE C37.118 protocol version of this <see cref="CommandFrame"/>.
+        /// </summary>
+        public byte Version
+        {
+            get
+            {
+                return m_version;
+            }
+            set
+            {
+                m_version = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
+        protected override int HeaderLength
+        {
+            get
+            {
+                return CommonFrameHeader.FixedLength;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary header image of the <see cref="DataFrame"/> object.
+        /// </summary>
+        protected override byte[] HeaderImage
+        {
+            get
+            {
+                // Make sure to provide proper frame length for use in the common header image
+                unchecked
+                {
+                    CommonHeader.FrameLength = (ushort)BinaryLength;
+                }
+
+                return CommonHeader.BinaryImage;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                CommonHeader.AppendHeaderAttributes(baseAttributes);
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // We already parsed the frame header, so we just skip past it...
+            return CommonFrameHeader.FixedLength;
+        }
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE C37.118 uses CRC-CCITT to calculate checksum for frames
+            return buffer.CrcCCITTChecksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize command frame
+            info.AddValue("version", m_version);
+        }
+
+        #endregion
     }
 }
