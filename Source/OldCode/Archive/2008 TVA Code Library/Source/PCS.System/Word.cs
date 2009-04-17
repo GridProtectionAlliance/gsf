@@ -39,10 +39,7 @@ namespace System
         /// </remarks>
         public static byte HighByte(this ushort word)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.GetBytes(word)[1];
-            else
-                return BitConverter.GetBytes(word)[0];
+            return (byte)((word & (ushort)0xFF00) >> 8);
         }
 
         /// <summary>
@@ -57,10 +54,7 @@ namespace System
         /// </remarks>
         public static ushort HighWord(this uint doubleWord)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 2);
-            else
-                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 0);
+            return (ushort)((doubleWord & (uint)0xFFFF0000) >> 16);
         }
 
         /// <summary>
@@ -75,10 +69,7 @@ namespace System
         /// </remarks>
         public static uint HighDword(this ulong quadWord)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 4);
-            else
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 0);
+            return (uint)((quadWord & (ulong)0xFFFFFFFF00000000) >> 32);
         }
 
         /// <summary>
@@ -93,10 +84,7 @@ namespace System
         /// </remarks>
         public static byte LowByte(this ushort word)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.GetBytes(word)[0];
-            else
-                return BitConverter.GetBytes(word)[1];
+            return (byte)(word & (ushort)0x00FF);
         }
 
         /// <summary>
@@ -111,10 +99,7 @@ namespace System
         /// </remarks>
         public static ushort LowWord(this uint doubleWord)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 0);
-            else
-                return BitConverter.ToUInt16(BitConverter.GetBytes(doubleWord), 2);
+            return (ushort)(doubleWord & (uint)0x0000FFFF);
         }
 
         /// <summary>
@@ -129,10 +114,7 @@ namespace System
         /// </remarks>
         public static uint LowDword(this ulong quadWord)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 0);
-            else
-                return BitConverter.ToUInt32(BitConverter.GetBytes(quadWord), 4);
+            return (uint)(quadWord & (ulong)0x00000000FFFFFFFF);
         }
 
         /// <summary>
@@ -143,10 +125,7 @@ namespace System
         /// <returns>An unsigned 16-bit word made from the two specified bytes.</returns>
         public static ushort MakeWord(byte high, byte low)
         {
-            if (BitConverter.IsLittleEndian)
-                return BitConverter.ToUInt16(new byte[] { low, high }, 0);
-            else
-                return BitConverter.ToUInt16(new byte[] { high, low }, 0);
+            return (ushort)((ushort)low + ((ushort)high << 8));
         }
 
         /// <summary>
@@ -157,20 +136,7 @@ namespace System
         /// <returns>An unsigned 32-bit double-word made from the two specified unsigned 16-bit words.</returns>
         public static uint MakeDword(ushort high, ushort low)
         {
-            byte[] bytes = new byte[4];
-
-            if (BitConverter.IsLittleEndian)
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 2, 2);
-            }
-            else
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 2, 2);
-            }
-
-            return BitConverter.ToUInt32(bytes, 0);
+            return (uint)((uint)low + ((uint)high << 16));
         }
 
         /// <summary>
@@ -181,20 +147,7 @@ namespace System
         /// <returns>An unsigned 64-bit quad-word made from the two specified unsigned 32-bit double-words.</returns>
         public static ulong MakeQword(uint high, uint low)
         {
-            byte[] bytes = new byte[8];
-
-            if (BitConverter.IsLittleEndian)
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 4, 4);
-            }
-            else
-            {
-                Buffer.BlockCopy(BitConverter.GetBytes(high), 0, bytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(low), 0, bytes, 4, 4);
-            }
-
-            return BitConverter.ToUInt64(bytes, 0);
+            return (ulong)((ulong)low + ((ulong)high << 32));
         }
     }
 }
