@@ -97,7 +97,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 byte[] buffer = new byte[ConversionFactorLength];
                 UInt24 scalingFactor = (ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue);
 
-                buffer[0] = (byte)(Type == PhasorType.Voltage ? 0 : 1);
+                buffer[0] = (byte)Type;
 
                 EndianOrder.BigEndian.CopyBytes(scalingFactor, buffer, 1);
 
