@@ -134,11 +134,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (StatusFlags)base.StatusFlags & ~(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask);
+                return (StatusFlags)(base.StatusFlags & ~(ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask));
             }
             set
             {
-                base.StatusFlags = (short)((base.StatusFlags & (short)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
+                base.StatusFlags = (ushort)((base.StatusFlags & (ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
             }
         }
 
@@ -149,11 +149,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (UnlockedTime)(base.StatusFlags & (short)StatusFlags.UnlockedTimeMask);
+                return (UnlockedTime)(base.StatusFlags & (ushort)StatusFlags.UnlockedTimeMask);
             }
             set
             {
-                base.StatusFlags = (short)((base.StatusFlags & ~(short)StatusFlags.UnlockedTimeMask) | (ushort)value);
+                base.StatusFlags = (ushort)((base.StatusFlags & ~(ushort)StatusFlags.UnlockedTimeMask) | (ushort)value);
                 SynchronizationIsValid = (value == IeeeC37_118.UnlockedTime.SyncLocked);
             }
         }
@@ -169,7 +169,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             }
             set
             {
-                base.StatusFlags = (short)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
+                base.StatusFlags = (ushort)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
                 DeviceTriggerDetected = (value != IeeeC37_118.TriggerReason.Manual);
             }
         }
