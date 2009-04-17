@@ -30,7 +30,8 @@ namespace PCS.PhasorProtocols.Ieee1344
     /// </summary>
     /// <remarks>
     /// IEEE 1344 command frames are designed only to be sent to a device, not received from a device. As a result
-    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing.
+    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing. This class
+    /// exposes a constructor that accepts a binary image in order to manually parse a command frame.
     /// </remarks>
     [Serializable()]
     public class CommandFrame : CommandFrameBase
