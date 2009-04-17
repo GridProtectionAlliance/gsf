@@ -56,7 +56,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
         /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
         /// <remarks>
-        /// This constructor is used by a consumer to parse a received IEEE 1344 data frame. Typically
+        /// This constructor is used by a consumer to parse a received IEEE 1344 command frame. Typically
         /// command frames are sent to a device. This constructor would used if this code was being used
         /// inside of a phasor measurement device.
         /// </remarks>
