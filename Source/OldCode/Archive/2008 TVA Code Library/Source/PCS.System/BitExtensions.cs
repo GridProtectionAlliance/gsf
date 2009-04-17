@@ -2499,6 +2499,63 @@ namespace System
         /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
         /// <remarks>
         /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        public static long BitRotL(this long value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 64); x++)
+            {
+                hiBitSet = value.CheckBits(Bits.Bit63);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBits(Bits.Bit00);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate right on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static ulong BitRotL(this ulong value, int rotations)
+        {
+            bool hiBitSet;
+
+            for (int x = 1; x <= (rotations % 64); x++)
+            {
+                hiBitSet = value.CheckBits(Bits.Bit63);
+
+                value <<= 1;
+
+                if (hiBitSet)
+                    value = value.SetBits(Bits.Bit00);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
         /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
         /// architectures.
         /// </remarks>
@@ -2730,6 +2787,67 @@ namespace System
                     value = value.SetBits(Bits.Bit31);
                 else
                     value = value.ClearBits(Bits.Bit31);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        public static long BitRotR(this long value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 64); x++)
+            {
+                loBitSet = value.CheckBits(Bits.Bit00);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBits(Bits.Bit63);
+                else
+                    value = value.ClearBits(Bits.Bit63);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// </summary>
+        /// <param name="value">Value used for bit-rotation.</param>
+        /// <param name="rotations">Number of rotations to perform.</param>
+        /// <returns>Value that has its bits rotated to the right the specified number of times.</returns>
+        /// <remarks>
+        /// Actual rotation direction is from a big-endian perspective - this is an artifact of the native
+        /// .NET bit shift operators. As a result bits may actually appear to rotate left on little-endian
+        /// architectures.
+        /// </remarks>
+        [CLSCompliant(false)]
+        public static ulong BitRotR(this ulong value, int rotations)
+        {
+            bool loBitSet;
+
+            for (int x = 1; x <= (rotations % 64); x++)
+            {
+                loBitSet = value.CheckBits(Bits.Bit00);
+
+                value >>= 1;
+
+                if (loBitSet)
+                    value = value.SetBits(Bits.Bit63);
+                else
+                    value = value.ClearBits(Bits.Bit63);
             }
 
             return value;
