@@ -83,6 +83,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             : base(new CommandCellCollection(0), command)
         {
             m_idCode = idCode;
+            Timestamp = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>

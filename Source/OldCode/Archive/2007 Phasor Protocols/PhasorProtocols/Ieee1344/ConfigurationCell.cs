@@ -181,12 +181,10 @@ namespace PCS.PhasorProtocols.Ieee1344
             get
             {
                 return (TriggerStatus)(m_statusFlags & Common.TriggerMask);
-                //return (TriggerStatus)m_statusFlags.GetBits(Common.TriggerMask);
             }
             set
             {
                 m_statusFlags = (ushort)((m_statusFlags & ~Common.TriggerMask) | (ushort)value);
-                //m_statusFlags = m_statusFlags.SetBits(value, Common.TriggerMask);
             }
         }
 
