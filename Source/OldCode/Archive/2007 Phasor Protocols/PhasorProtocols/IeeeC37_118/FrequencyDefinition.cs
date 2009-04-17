@@ -98,7 +98,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return EndianOrder.BigEndian.GetBytes((short)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bit.Bit0 : Bit.Nill));
+                return EndianOrder.BigEndian.GetBytes((ushort)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
             }
         }
 
@@ -119,7 +119,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// </remarks>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            Parent.NominalFrequency = ((EndianOrder.BigEndian.ToInt16(binaryImage, startIndex) & Bit.Bit0) > 0) ? LineFrequency.Hz50 : LineFrequency.Hz60;
+            Parent.NominalFrequency = ((EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex) & (ushort)Bits.Bit00) > 0) ? LineFrequency.Hz50 : LineFrequency.Hz60;
             return 2;
         }
 
