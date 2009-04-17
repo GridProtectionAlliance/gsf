@@ -73,6 +73,8 @@ namespace PCS.PhasorProtocols.Ieee1344
         protected DataFrame(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+            // Deserialize data frame
+            m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
         }
 
         #endregion
@@ -177,7 +179,10 @@ namespace PCS.PhasorProtocols.Ieee1344
                 m_frameHeader = value;
 
                 if (m_frameHeader != null)
+                {
                     State = m_frameHeader.State as IDataFrameParsingState;
+                    base.Timestamp = m_frameHeader.Timestamp;
+                }
             }
         }
 
@@ -231,8 +236,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                if (CommonHeader != null)
-                    CommonHeader.AppendHeaderAttributes(baseAttributes);
+                CommonHeader.AppendHeaderAttributes(baseAttributes);
                 
                 baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
                 
@@ -279,6 +283,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
+
+            // Serialize data frame
+            info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
         }
 
         #endregion

@@ -63,6 +63,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             : base(info, context)
         {
             // Deserialize header frame
+            m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
             m_idCode = info.GetUInt64("idCode64Bit");
         }
 
@@ -147,7 +148,12 @@ namespace PCS.PhasorProtocols.Ieee1344
             set
             {
                 m_frameHeader = value;
-                State = m_frameHeader.State as IHeaderFrameParsingState;
+
+                if (m_frameHeader != null)
+                {
+                    State = m_frameHeader.State as IHeaderFrameParsingState;
+                    base.Timestamp = m_frameHeader.Timestamp;
+                }
             }
         }
 
@@ -201,8 +207,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                if (m_frameHeader != null)
-                    m_frameHeader.AppendHeaderAttributes(baseAttributes);
+                CommonHeader.AppendHeaderAttributes(baseAttributes);
 
                 baseAttributes.Add("64-Bit ID Code", IDCode.ToString());
 
@@ -297,6 +302,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             base.GetObjectData(info, context);
 
             // Serialize configuration frame
+            info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
             info.AddValue("idCode64Bit", m_idCode);
         }
 
