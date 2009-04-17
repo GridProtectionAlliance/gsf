@@ -1974,6 +1974,13 @@ namespace System
 
         #region [ SetMaskedValue Extensions ]
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="sbyte"/> value.</returns>
         [CLSCompliant(false)]
         public static sbyte SetMaskedValue(this sbyte source, Bits bitMask, sbyte value)
         {
@@ -1983,12 +1990,26 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="sbyte"/> value.</returns>
         [CLSCompliant(false)]
         public static sbyte SetMaskedValue(this sbyte source, sbyte bitMask, sbyte value)
         {
             return ((sbyte)((sbyte)(source & ~bitMask) | value));
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="byte"/> value.</returns>
         [CLSCompliant(false)]
         public static byte SetMaskedValue(this byte source, Bits bitMask, byte value)
         {
@@ -1998,11 +2019,25 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="byte"/> value.</returns>
         public static byte SetMaskedValue(this byte source, byte bitMask, byte value)
         {
             return ((byte)((source & ~bitMask) | value));
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="short"/> value.</returns>
         [CLSCompliant(false)]
         public static short SetMaskedValue(this short source, Bits bitMask, short value)
         {
@@ -2012,11 +2047,25 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="short"/> value.</returns>
         public static short SetMaskedValue(this short source, short bitMask, short value)
         {
             return ((short)((short)(source & ~bitMask) | value));
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="ushort"/> value.</returns>
         [CLSCompliant(false)]
         public static ushort SetMaskedValue(this ushort source, Bits bitMask, ushort value)
         {
@@ -2026,12 +2075,26 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="ushort"/> value.</returns>
         [CLSCompliant(false)]
         public static ushort SetMaskedValue(this ushort source, ushort bitMask, ushort value)
         {
             return ((ushort)((source & ~bitMask) | value));
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="Int24"/> value.</returns>
         [CLSCompliant(false)]
         public static Int24 SetMaskedValue(this Int24 source, Bits bitMask, Int24 value)
         {
@@ -2041,11 +2104,25 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="Int24"/> value.</returns>
         public static Int24 SetMaskedValue(this Int24 source, Int24 bitMask, Int24 value)
         {
             return ((source & ~bitMask) | value);
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="UInt24"/> value.</returns>
         [CLSCompliant(false)]
         public static UInt24 SetMaskedValue(this UInt24 source, Bits bitMask, UInt24 value)
         {
@@ -2055,12 +2132,26 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="UInt24"/> value.</returns>
         [CLSCompliant(false)]
         public static UInt24 SetMaskedValue(this UInt24 source, UInt24 bitMask, UInt24 value)
         {
             return ((source & ~bitMask) | value);
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="int"/> value.</returns>
         [CLSCompliant(false)]
         public static int SetMaskedValue(this int source, Bits bitMask, int value)
         {
@@ -2070,11 +2161,25 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="int"/> value.</returns>
         public static int SetMaskedValue(this int source, int bitMask, int value)
         {
             return ((source & ~bitMask) | value);
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="uint"/> value.</returns>
         [CLSCompliant(false)]
         public static uint SetMaskedValue(this uint source, Bits bitMask, uint value)
         {
@@ -2084,12 +2189,26 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="uint"/> value.</returns>
         [CLSCompliant(false)]
         public static uint SetMaskedValue(this uint source, uint bitMask, uint value)
         {
             return ((source & ~bitMask) | value);
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="long"/> value.</returns>
         [CLSCompliant(false)]
         public static long SetMaskedValue(this long source, Bits bitMask, long value)
         {
@@ -2099,11 +2218,25 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="long"/> value.</returns>
         public static long SetMaskedValue(this long source, long bitMask, long value)
         {
             return ((source & ~bitMask) | value);
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask"><see cref="Bits"/> that make-up the bit-mask.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="ulong"/> value.</returns>
         [CLSCompliant(false)]
         public static ulong SetMaskedValue(this ulong source, Bits bitMask, ulong value)
         {
@@ -2113,6 +2246,13 @@ namespace System
             }
         }
 
+        /// <summary>
+        /// Returns value after setting a new <paramref name="value"/> for the bits specified by the <paramref name="bitMask"/>.
+        /// </summary>
+        /// <param name="source">Value source.</param>
+        /// <param name="bitMask">Bit-mask of the bits involved.</param>
+        /// <param name="value">New value.</param>
+        /// <returns><see cref="ulong"/> value.</returns>
         [CLSCompliant(false)]
         public static ulong SetMaskedValue(this ulong source, ulong bitMask, ulong value)
         {
