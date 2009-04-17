@@ -102,8 +102,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected CommonFrameHeader(SerializationInfo info, StreamingContext context)
         {
-            // It is not exepcted that common frame header will be serialized or deserialized since it's only a partial frame,
-            // but its implementation is required via IChannelFrame
+            // Deserialize common frame header
+            m_sampleCount = info.GetUInt16("sampleCount");
+            m_statusFlags = info.GetUInt16("statusFlags");
         }
 
         #endregion
@@ -591,7 +592,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            throw new NotImplementedException();
+            // Serialize unique common frame header values
+            info.AddValue("sampleCount", m_sampleCount);
+            info.AddValue("statusFlags", m_statusFlags);
         }
 
         #endregion
