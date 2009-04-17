@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 using PCS.IO.Checksums;
 using PCS.Parsing;
 
@@ -72,6 +73,8 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         protected DataFrame(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+            // Deserialize data frame
+            m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
         }
 
         #endregion
@@ -145,7 +148,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp, ConfigurationFrame.Version);
+                    m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp);
 
                 return m_frameHeader;
             }
@@ -154,7 +157,10 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 m_frameHeader = value;
 
                 if (m_frameHeader != null)
+                {
                     State = m_frameHeader.State as IDataFrameParsingState;
+                    base.Timestamp = m_frameHeader.Timestamp;
+                }
             }
         }
 
@@ -185,11 +191,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets the IEEE C37.118 timebase of this <see cref="DataFrame"/> as specified by the associated <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public int TimeBase
+        public UInt24 TimeBase
         {
             get
             {
-                return ConfigurationFrame.TimeBase;
+                return ConfigurationFrame.Timebase;
             }
         }
 
@@ -294,6 +300,20 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             // IEEE C37.118 uses CRC-CCITT to calculate checksum for frames
             return buffer.CrcCCITTChecksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize data frame
+            info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
         }
 
         #endregion
