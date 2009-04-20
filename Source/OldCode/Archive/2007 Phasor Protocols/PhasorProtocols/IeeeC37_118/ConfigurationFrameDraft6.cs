@@ -17,6 +17,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace PCS.PhasorProtocols.IeeeC37_118
 {

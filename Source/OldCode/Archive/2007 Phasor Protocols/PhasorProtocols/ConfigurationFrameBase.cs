@@ -31,7 +31,7 @@ namespace PCS.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private short m_frameRate;
+        private ushort m_frameRate;
         private decimal m_ticksPerFrame;
 
         #endregion
@@ -45,7 +45,7 @@ namespace PCS.PhasorProtocols
         /// <param name="cells">The reference to the collection of cells for this <see cref="ConfigurationFrameBase"/>.</param>
         /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrameBase"/>.</param>
         /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrameBase"/>.</param>
-        protected ConfigurationFrameBase(ushort idCode, ConfigurationCellCollection cells, Ticks timestamp, short frameRate)
+        protected ConfigurationFrameBase(ushort idCode, ConfigurationCellCollection cells, Ticks timestamp, ushort frameRate)
             : base(idCode, cells, timestamp)
         {
             FrameRate = frameRate;
@@ -60,7 +60,7 @@ namespace PCS.PhasorProtocols
             : base(info, context)
         {
             // Deserialize configuration frame
-            FrameRate = info.GetInt16("frameRate");
+            FrameRate = info.GetUInt16("frameRate");
         }
 
         #endregion
@@ -107,7 +107,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets defined frame rate of this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public virtual short FrameRate
+        public virtual ushort FrameRate
         {
             get
             {

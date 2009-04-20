@@ -62,7 +62,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <remarks>
         /// This constructor is used by a consumer to generate an IEEE 1344 configuration frame.
         /// </remarks>
-        public ConfigurationFrame(ulong idCode, Ticks timestamp, short frameRate)
+        public ConfigurationFrame(ulong idCode, Ticks timestamp, ushort frameRate)
             : base(0, new ConfigurationCellCollection(), timestamp, frameRate)
         {
             IDCode = idCode;
@@ -165,15 +165,15 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets or sets the IEEE 1344 period value.
         /// </summary>
-        public short Period
+        public ushort Period
         {
             get
             {
-                return (short)((double)NominalFrequency / (double)FrameRate * 100.0D);
+                return (ushort)((double)NominalFrequency / (double)FrameRate * 100.0D);
             }
             set
             {
-                FrameRate = (short)((double)NominalFrequency * 100.0D / (double)value);
+                FrameRate = (ushort)((double)NominalFrequency * 100.0D / (double)value);
             }
         }
 
@@ -371,7 +371,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             // with first (and only) configuration cell, since cell was added during ParseBodyImage
             // of ChannelFrameBase, performing the following succeeds since parsing the footer
             // follows parsing the body :)
-            Period = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            Period = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
             return 2;
         }
 

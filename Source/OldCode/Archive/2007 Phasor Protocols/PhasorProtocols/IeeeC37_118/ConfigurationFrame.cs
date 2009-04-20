@@ -1,356 +1,405 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-//using PhasorProtocols.Common;
-//using PhasorProtocols.IeeeC37_118.Common;
-
 //*******************************************************************************************************
-//  ConfigurationFrame.vb - IEEE C37.118 Configuration Frame
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  ConfigurationFrame.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
+using PCS.IO.Checksums;
+using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.IeeeC37_118
 {
-    namespace IeeeC37_118
+    /// <summary>
+    /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
+    public class ConfigurationFrame : ConfigurationFrameBase, ISupportFrameImage<FrameType>
     {
+        #region [ Members ]
 
-        [CLSCompliant(false), Serializable()]
-        public class ConfigurationFrame : ConfigurationFrameBase, ICommonFrameHeader
+        // Constants
+        private const ushort FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
+
+        // Fields
+        private CommonFrameHeader m_frameHeader;
+        private FrameType m_typeID;
+        private uint m_timebase;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 configuration frame.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected ConfigurationFrame()
+            : base(0, new ConfigurationCellCollection(), 0, 0)
         {
-
-
-
-            private FrameType m_frameType;
-            private byte m_version;
-            private int m_timeBase;
-            private int m_timeQualityFlags;
-
-            protected ConfigurationFrame()
-            {
-            }
-
-            protected ConfigurationFrame(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-                // Deserialize configuration frame
-                m_frameType = (FrameType)info.GetValue("frameType", typeof(FrameType));
-                m_version = info.GetByte("version");
-                m_timeBase = info.GetInt32("timeBase");
-                m_timeQualityFlags = info.GetInt32("timeQualityFlags");
-
-            }
-
-            public ConfigurationFrame(FrameType frameType, int timeBase, ushort idCode, long ticks, short frameRate, byte version)
-                : base(idCode, new ConfigurationCellCollection(), ticks, frameRate)
-            {
-
-                this.FrameType = frameType;
-                m_timeBase = timeBase;
-                m_version = version;
-
-            }
-
-            public ConfigurationFrame(ICommonFrameHeader parsedFrameHeader, byte[] binaryImage, int startIndex)
-                : base(new ConfigurationFrameParsingState(new ConfigurationCellCollection(), parsedFrameHeader.FrameLength, IeeeC37_118.ConfigurationCell.CreateNewConfigurationCell), binaryImage, startIndex)
-            {
-
-
-                CommonFrameHeader.Clone(parsedFrameHeader, this);
-
-            }
-
-            public ConfigurationFrame(IConfigurationFrame configurationFrame)
-                : base(configurationFrame)
-            {
-
-
-                // Assign default values for a 37.118 configuration frame
-                m_frameType = IeeeC37_118.FrameType.ConfigurationFrame2;
-                m_version = 1;
-                m_timeBase = 100000;
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ConfigurationCellCollection Cells
-            {
-                get
-                {
-                    return (ConfigurationCellCollection)base.Cells;
-                }
-            }
-
-            public virtual DraftRevision DraftRevision
-            {
-                get
-                {
-                    return IeeeC37_118.DraftRevision.Draft7;
-                }
-            }
-
-            public FrameType FrameType
-            {
-                get
-                {
-                    return m_frameType;
-                }
-                set
-                {
-                    if (value == IeeeC37_118.FrameType.ConfigurationFrame2 || value == IeeeC37_118.FrameType.ConfigurationFrame1)
-                    {
-                        m_frameType = value;
-                    }
-                    else
-                    {
-                        throw (new InvalidCastException("Invalid frame type specified for configuration frame.  Can only be ConfigurationFrame1 or ConfigurationFrame2"));
-                    }
-                }
-            }
-
-            FundamentalFrameType ICommonFrameHeader.FundamentalFrameType
-            {
-                get
-                {
-                    return base.FundamentalFrameType;
-                }
-            }
-
-            public byte Version
-            {
-                get
-                {
-                    return m_version;
-                }
-                set
-                {
-                    m_version = CommonFrameHeader.Version(value);
-                }
-            }
-
-            public ushort FrameLength
-            {
-                get
-                {
-                    return base.BinaryLength;
-                }
-                set
-                {
-                    base.ParsedBinaryLength = value;
-                }
-            }
-
-            public int TimeBase
-            {
-                get
-                {
-                    return m_timeBase;
-                }
-                set
-                {
-                    if (value == 0)
-                    {
-                        m_timeBase = 1000000;
-                    }
-                    else
-                    {
-                        m_timeBase = value;
-                    }
-                }
-            }
-
-            int ICommonFrameHeader.TimeBase
-            {
-                get
-                {
-                    return m_timeBase;
-                }
-            }
-
-            public int InternalTimeQualityFlags
-            {
-                get
-                {
-                    return m_timeQualityFlags;
-                }
-                set
-                {
-                    m_timeQualityFlags = value;
-                }
-            }
-
-            public uint SecondOfCentury
-            {
-                get
-                {
-                    return CommonFrameHeader.SecondOfCentury(this);
-                }
-            }
-
-            public int FractionOfSecond
-            {
-                get
-                {
-                    return CommonFrameHeader.FractionOfSecond(this);
-                }
-            }
-
-            public TimeQualityFlags TimeQualityFlags
-            {
-                get
-                {
-                    return CommonFrameHeader.TimeQualityFlags(this);
-                }
-                set
-                {
-                    CommonFrameHeader.SetTimeQualityFlags(this, value);
-                }
-            }
-
-            public TimeQualityIndicatorCode TimeQualityIndicatorCode
-            {
-                get
-                {
-                    return CommonFrameHeader.TimeQualityIndicatorCode(this);
-                }
-                set
-                {
-                    CommonFrameHeader.SetTimeQualityIndicatorCode(this, value);
-                }
-            }
-
-            protected override ushort HeaderLength
-            {
-                get
-                {
-                    return CommonFrameHeader.BinaryLength + 6;
-                }
-            }
-
-            protected override byte[] HeaderImage
-            {
-                get
-                {
-                    byte[] buffer = new byte[HeaderLength];
-                    int index = 0;
-
-                    PhasorProtocols.Common.CopyImage(CommonFrameHeader.BinaryImage(this), buffer, ref index, CommonFrameHeader.BinaryLength);
-                    EndianOrder.BigEndian.CopyBytes(m_timeBase, buffer, index);
-                    EndianOrder.BigEndian.CopyBytes((short)Cells.Count, buffer, index + 4);
-
-                    return buffer;
-                }
-            }
-
-            protected override void ParseHeaderImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-            {
-
-                // We parse the C37.18 stream specific header image here...
-                IConfigurationFrameParsingState parsingState = (IConfigurationFrameParsingState)state;
-
-                m_timeBase = EndianOrder.BigEndian.ToInt32(binaryImage, startIndex + 14);
-                parsingState.CellCount = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 18);
-
-            }
-
-            protected override ushort FooterLength
-            {
-                get
-                {
-                    if (DraftRevision == DraftRevision.Draft6)
-                    {
-                        return 2;
-                    }
-                    else
-                    {
-                        return 4;
-                    }
-                }
-            }
-
-            protected override byte[] FooterImage
-            {
-                get
-                {
-                    byte[] buffer = new byte[FooterLength];
-
-                    EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0);
-
-                    return buffer;
-                }
-            }
-
-            protected override void ParseFooterImage(IChannelParsingState state, byte[] binaryImage, int startIndex)
-            {
-
-                FrameRate = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-
-            }
-
-            public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            {
-
-                base.GetObjectData(info, context);
-
-                // Serialize configuration frame
-                info.AddValue("frameType", m_frameType, typeof(FrameType));
-                info.AddValue("version", m_version);
-                info.AddValue("timeBase", m_timeBase);
-                info.AddValue("timeQualityFlags", m_timeQualityFlags);
-
-            }
-
-            public override Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    Dictionary<string, string> baseAttributes = base.Attributes;
-
-                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
-                    baseAttributes.Add("Frame Length", FrameLength.ToString());
-                    baseAttributes.Add("Version", Version.ToString());
-                    baseAttributes.Add("Second of Century", SecondOfCentury.ToString());
-                    baseAttributes.Add("Fraction of Second", FractionOfSecond.ToString());
-                    baseAttributes.Add("Time Quality Flags", (int)TimeQualityFlags + ": " + TimeQualityFlags);
-                    baseAttributes.Add("Time Quality Indicator Code", (int)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
-                    baseAttributes.Add("Time Base", TimeBase.ToString());
-                    baseAttributes.Add("Draft Revision", (int)DraftRevision + ": " + DraftRevision);
-
-                    return baseAttributes;
-                }
-            }
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrame"/> from specified parameters.
+        /// </summary>
+        /// <param name="typeID">Type of configuration frame to create (1 or 2).</param>
+        /// <param name="timebase">Timebase to use for fraction second resolution.</param>
+        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrame"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame"/>.</param>
+        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE C37.118 configuration frame.
+        /// </remarks>
+        public ConfigurationFrame(FrameType typeID, uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
+            : base(idCode, new ConfigurationCellCollection(), timestamp, frameRate)
+        {
+            this.TypeID = typeID;
+            this.Timebase = timebase;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ConfigurationFrame(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            // Deserialize configuration frame
+            m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+            m_typeID = (FrameType)info.GetValue("frameType", typeof(FrameType));
+            m_timebase = info.GetUInt32("timebase");
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public new ConfigurationCellCollection Cells
+        {
+            get
+            {
+                return base.Cells as ConfigurationCellCollection;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public virtual DraftRevision DraftRevision
+        {
+            get
+            {
+                return IeeeC37_118.DraftRevision.Draft7;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public override Ticks Timestamp
+        {
+            get
+            {
+                return CommonHeader.Timestamp;
+            }
+            set
+            {
+                // Keep timestamp updates synchrnonized...
+                CommonHeader.Timestamp = value;
+                base.Timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame"/>, i.e.,
+        /// <see cref="IeeeC37_118.FrameType.ConfigurationFrame1"/> or <see cref="IeeeC37_118.FrameType.ConfigurationFrame2"/>.
+        /// </summary>
+        public FrameType TypeID
+        {
+            get
+            {
+                return m_typeID;
+            }
+            set
+            {
+                if (value == IeeeC37_118.FrameType.ConfigurationFrame2 || value == IeeeC37_118.FrameType.ConfigurationFrame1)
+                {                 
+                    m_typeID = value;
+                    CommonHeader.TypeID = m_typeID;
+                }
+                else
+                    throw new InvalidCastException("Invalid frame type specified for configuration frame.  Can only be ConfigurationFrame1 or ConfigurationFrame2");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets current <see cref="CommonFrameHeader"/>.
+        /// </summary>
+        public CommonFrameHeader CommonHeader
+        {
+            get
+            {
+                // Make sure frame header exists
+                if (m_frameHeader == null)
+                    m_frameHeader = new CommonFrameHeader(m_typeID, base.Timestamp);
+
+                return m_frameHeader;
+            }
+            set
+            {
+                m_frameHeader = value;
+
+                if (m_frameHeader != null)
+                {
+                    State = m_frameHeader.State as IConfigurationFrameParsingState;
+                    base.IDCode = m_frameHeader.IDCode;
+                    base.Timestamp = m_frameHeader.Timestamp;
+                    m_typeID = m_frameHeader.TypeID;
+                    m_timebase = m_frameHeader.Timebase;
+                }
+            }
+        }
+
+        // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
+        ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
+        {
+            get
+            {
+                return CommonHeader;
+            }
+            set
+            {
+                CommonHeader = value as CommonFrameHeader;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the IEEE C37.118 protocol version of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public byte Version
+        {
+            get
+            {
+                return CommonHeader.Version;
+            }
+            set
+            {
+                CommonHeader.Version = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the IEEE C37.118 resolution of fractional time stamps of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public uint Timebase
+        {
+            get
+            {
+                return m_timebase;
+            }
+            set
+            {
+                m_timebase = (value & ~Common.TimeQualityFlagsMask);
+                CommonHeader.Timebase = (UInt24)m_timebase;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeQualityFlags"/> of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public TimeQualityFlags TimeQualityFlags
+        {
+            get
+            {
+                return CommonHeader.TimeQualityFlags;
+            }
+            set
+            {
+                CommonHeader.TimeQualityFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> of this <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public TimeQualityIndicatorCode TimeQualityIndicatorCode
+        {
+            get
+            {
+                return CommonHeader.TimeQualityIndicatorCode;
+            }
+            set
+            {
+                CommonHeader.TimeQualityIndicatorCode = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
+        protected override int HeaderLength
+        {
+            get
+            {
+                return FixedHeaderLength;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary header image of the <see cref="ConfigurationFrame"/> object.
+        /// </summary>
+        protected override byte[] HeaderImage
+        {
+            get
+            {
+                // Make sure to provide proper frame length for use in the common header image
+                unchecked
+                {
+                    CommonHeader.FrameLength = (ushort)BinaryLength;
+                }
+
+                byte[] buffer = new byte[FixedHeaderLength];
+                int index = 0;
+
+                CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
+                EndianOrder.BigEndian.CopyBytes(m_timebase, buffer, index);
+                EndianOrder.BigEndian.CopyBytes((ushort)Cells.Count, buffer, index + 4);
+
+                return buffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="FooterImage"/>.
+        /// </summary>
+        protected override ushort FooterLength
+        {
+            get
+            {
+                return 2;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary footer image of the <see cref="ConfigurationFrame"/> object.
+        /// </summary>
+        protected override byte[] FooterImage
+        {
+            get
+            {
+                byte[] buffer = new byte[2];
+
+                EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0);
+
+                return buffer;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                CommonHeader.AppendHeaderAttributes(baseAttributes);
+                baseAttributes.Add("Draft Revision", (int)DraftRevision + ": " + DraftRevision);
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // Skip past header that was already parsed...
+            startIndex += CommonFrameHeader.FixedLength;
+
+            m_timebase = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex);
+            State.CellCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 4);
+
+            return FixedHeaderLength;
+        }
+
+        /// <summary>
+        /// Parses the binary footer image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseFooterImage(byte[] binaryImage, int startIndex, int length)
+        {
+            FrameRate = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
+            return 2;
+        }
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE C37.118 uses CRC-CCITT to calculate checksum for frames
+            return buffer.CrcCCITTChecksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize configuration frame
+            info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
+            info.AddValue("frameType", m_typeID, typeof(FrameType));
+            info.AddValue("timebase", m_timebase);
+        }
+
+        #endregion
     }
 }
