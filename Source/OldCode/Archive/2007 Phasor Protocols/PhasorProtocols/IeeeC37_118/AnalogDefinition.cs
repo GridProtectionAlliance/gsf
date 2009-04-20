@@ -50,13 +50,13 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Creates a new <see cref="AnalogDefintion"/> from specified parameters.
+        /// Creates a new <see cref="AnalogDefinition"/> from specified parameters.
         /// </summary>
-        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefintion"/>.</param>
-        /// <param name="label">The label of this <see cref="AnalogDefintion"/>.</param>
-        /// <param name="scale">The integer scaling value of this <see cref="AnalogDefintion"/>.</param>
-        /// <param name="offset">The offset of this <see cref="AnalogDefintion"/>.</param>
-        /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefintion"/>.</param>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="AnalogDefinition"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinition"/>.</param>
+        /// <param name="offset">The offset of this <see cref="AnalogDefinition"/>.</param>
+        /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.</param>
         public AnalogDefinition(ConfigurationCell parent, string label, uint scale, double offset, AnalogType type)
             : base(parent, label, scale, offset)
         {
@@ -64,7 +64,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Creates a new <see cref="AnalogDefintion"/> from serialization parameters.
+        /// Creates a new <see cref="AnalogDefinition"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
@@ -95,7 +95,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefintion"/>.
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.
         /// </summary>
         public virtual new ConfigurationCell Parent
         {
@@ -110,7 +110,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets conversion factor image of this <see cref="AnalogDefintion"/>.
+        /// Gets conversion factor image of this <see cref="AnalogDefinition"/>.
         /// </summary>
         internal byte[] ConversionFactorImage
         {

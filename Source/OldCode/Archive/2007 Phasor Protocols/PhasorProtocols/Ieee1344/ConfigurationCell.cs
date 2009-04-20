@@ -46,7 +46,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         public ConfigurationCell(IConfigurationFrame parent)
             : base(parent, false, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
-            // Define new parsing state which defines contructors for key configuration values
+            // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
                 Ieee1344.PhasorDefinition.CreateNewDefinition,
                 Ieee1344.FrequencyDefinition.CreateNewDefinition,

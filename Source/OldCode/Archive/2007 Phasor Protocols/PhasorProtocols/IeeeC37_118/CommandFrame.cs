@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.IO.Checksums;
+using PCS.Parsing;
 
 namespace PCS.PhasorProtocols.IeeeC37_118
 {

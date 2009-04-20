@@ -50,7 +50,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public HeaderFrame()
-            : base(new HeaderCellCollection(Ieee1344.Common.MaximumHeaderDataLength))
+            : base(new HeaderCellCollection(Common.MaximumDataLength - 1))
         {
         }
 

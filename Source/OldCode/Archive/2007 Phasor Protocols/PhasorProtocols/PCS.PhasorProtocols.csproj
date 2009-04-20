@@ -191,6 +191,9 @@
     <Compile Include="IeeeC37_118\DataFrame.cs" />
     <Compile Include="IeeeC37_118\DigitalDefinition.cs" />
     <Compile Include="IeeeC37_118\DigitalValue.cs" />
+    <Compile Include="IeeeC37_118\FrameParser.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="IeeeC37_118\FrequencyDefinition.cs" />
     <Compile Include="IeeeC37_118\FrequencyValue.cs" />
     <Compile Include="IeeeC37_118\HeaderFrame.cs" />

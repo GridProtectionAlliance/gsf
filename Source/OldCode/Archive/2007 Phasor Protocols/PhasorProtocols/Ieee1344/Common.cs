@@ -144,7 +144,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         public const ushort MaximumFrameLength = FrameLengthMask;
 
         /// <summary>
-        /// Absolute maximum data length (within a frame) constant.
+        /// Absolute maximum data length (in bytes) that could fit into any frame.
         /// </summary>
         public const ushort MaximumDataLength = (ushort)(MaximumFrameLength - CommonFrameHeader.FixedLength - 2);
 
@@ -163,10 +163,5 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// Absolute maximum number of possible digital values that could fit into a data frame constant.
         /// </summary>
         public const int MaximumDigitalValues = MaximumDataLength / 2 - 6;
-
-        /// <summary>
-        /// Absolute maximum number of bytes of data that could fit into a header frame constant.
-        /// </summary>
-        public const int MaximumHeaderDataLength = MaximumFrameLength - CommonFrameHeader.FixedLength - 2;
     }
 }

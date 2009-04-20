@@ -299,6 +299,8 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         #region [ Static ]
 
+        // Static Methods
+        
         // Cumulates frame images
         internal static void CumulateFrameImage(CommonFrameHeader parsedFrameHeader, byte[] buffer, int offset, ref FrameImageCollector frameImages)
         {

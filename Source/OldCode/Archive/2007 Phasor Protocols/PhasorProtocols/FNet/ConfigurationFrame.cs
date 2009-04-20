@@ -44,7 +44,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <remarks>
         /// This constructor is used by a consumer to generate an F-NET configuration frame.
         /// </remarks>
-        public ConfigurationFrame(ushort idCode, Ticks timestamp, short frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
+        public ConfigurationFrame(ushort idCode, Ticks timestamp, ushort frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
             : base(idCode, new ConfigurationCellCollection(), timestamp, frameRate)
         {
             ConfigurationCell configCell = new ConfigurationCell(this, nominalFrequency, timeOffset);

@@ -372,14 +372,14 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         public const ushort MaximumDigitalValues = (ushort)(ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8);
 
         /// <summary>
-        /// Absolute maximum number of bytes of data that could fit into a header frame.
+        /// Absolute maximum data length (in bytes) that could fit into any frame.
         /// </summary>
-        public const ushort MaximumHeaderDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 2);
+        public const ushort MaximumDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 2);
 
         /// <summary>
         /// Absolute maximum number of bytes of extended data that could fit into a command frame.
         /// </summary>
-        public const ushort MaximumExtendedDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 4);
+        public const ushort MaximumExtendedDataLength = (ushort)(MaximumDataLength - 2);
 
         /// <summary>
         /// Time quality flags mask.

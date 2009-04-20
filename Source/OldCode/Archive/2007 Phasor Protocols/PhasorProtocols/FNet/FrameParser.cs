@@ -53,7 +53,7 @@ namespace PCS.PhasorProtocols.FNet
         // Fields
         private ConfigurationFrame m_configurationFrame;
         private Ticks m_timeOffset;
-        private short m_frameRate;
+        private ushort m_frameRate;
         private LineFrequency m_nominalFrequency;
         private string m_stationName;
 
@@ -74,7 +74,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.</param>
         /// <param name="timeOffset">The time offset of F-NET device in <see cref="Ticks"/>.</param>
         /// <param name="stationName">The station name of the F-NET device.</param>
-        public FrameParser(short frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
+        public FrameParser(ushort frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
         {
             m_frameRate = frameRate;
             m_nominalFrequency = nominalFrequency;
@@ -156,7 +156,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <remarks>
         /// This is typically set to 10 frames per second.
         /// </remarks>
-        public short FrameRate
+        public ushort FrameRate
         {
             get
             {

@@ -29,6 +29,16 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <param name="parsedBinaryLength">Binary length of the <see cref="IConfigurationFrame"/> being parsed.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IConfigurationCell"/> instances.</param>
+        public ConfigurationFrameParsingState(int parsedBinaryLength, CreateNewCellFunction<IConfigurationCell> createNewCellFunction)
+            : base(parsedBinaryLength, createNewCellFunction)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurationFrameParsingState"/> from specified parameters.
+        /// </summary>
+        /// <param name="parsedBinaryLength">Binary length of the <see cref="IConfigurationFrame"/> being parsed.</param>
+        /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IConfigurationCell"/> instances.</param>
         /// <param name="cellCount">Number of cells that exist in the frame to be parsed.</param>
         public ConfigurationFrameParsingState(int parsedBinaryLength, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, int cellCount)
             : base(parsedBinaryLength, createNewCellFunction)

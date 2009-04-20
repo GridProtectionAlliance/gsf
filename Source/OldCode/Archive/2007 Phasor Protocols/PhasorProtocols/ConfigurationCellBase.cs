@@ -89,7 +89,7 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="IConfigurationFrame"/> for this <see cref="ConfigurationCellBase"/>.
+        /// Gets or sets a reference to the parent <see cref="IConfigurationFrame"/> for this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual new IConfigurationFrame Parent
         {
@@ -299,7 +299,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the specified frame rate of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual short FrameRate
+        public virtual ushort FrameRate
         {
             get
             {

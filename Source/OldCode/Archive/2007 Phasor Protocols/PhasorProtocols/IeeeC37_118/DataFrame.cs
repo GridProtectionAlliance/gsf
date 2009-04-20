@@ -184,7 +184,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return ConfigurationFrame.Version;
+                return CommonHeader.Version;
             }
         }
 
@@ -195,7 +195,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return ConfigurationFrame.Timebase;
+                return CommonHeader.Timebase;
             }
         }
 

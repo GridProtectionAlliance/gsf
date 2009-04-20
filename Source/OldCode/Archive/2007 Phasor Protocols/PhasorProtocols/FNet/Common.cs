@@ -75,7 +75,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <summary>
         /// Default frame rate for F-NET devices is 10 frames per second.
         /// </summary>
-        public const short DefaultFrameRate = 10;
+        public const ushort DefaultFrameRate = 10;
 
         /// <summary>
         /// Default nominal frequency for F-NET devices is 60Hz.

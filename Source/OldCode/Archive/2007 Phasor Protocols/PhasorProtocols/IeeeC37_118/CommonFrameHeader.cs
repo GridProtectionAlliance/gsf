@@ -60,7 +60,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// </summary>
         /// <param name="typeID">The IEEE C37.118 specific frame type of this frame.</param>
         /// <param name="timestamp">The timestamp of this frame.</param>
-        /// <param name="version">IEEE C37.118 revision number.</param>
         public CommonFrameHeader(FrameType typeID, Ticks timestamp)
         {
             m_frameType = typeID;
@@ -99,8 +98,8 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             else
             {
                 // If config frame is available, frames have enough information for subsecond time resolution
-                m_timebase = configurationFrame.Timebase;
-                m_timestamp = (new UnixTimeTag((double)secondOfCentury + (((fractionOfSecond & ~Common.TimeQualityFlagsMask)) / (double)m_timebase))).ToDateTime().Ticks;
+                m_timebase = (UInt24)configurationFrame.Timebase;
+                m_timestamp = (new UnixTimeTag((double)secondOfCentury + ((fractionOfSecond & ~Common.TimeQualityFlagsMask) / (double)m_timebase))).ToDateTime().Ticks;
             }
 
             m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
@@ -195,6 +194,25 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
+        /// Gets or sets the length of the data in the IEEE C37.118 frame (i.e., the <see cref="FrameLength"/> minus the header length and checksum: <see cref="FrameLength"/> - 8).
+        /// </summary>
+        public ushort DataLength
+        {
+            get
+            {
+                // Data length will be frame length minus common header length minus crc16
+                return (ushort)(FrameLength - FixedLength - 2);
+            }
+            set
+            {
+                if (value > Common.MaximumDataLength)
+                    throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
+                else
+                    FrameLength = (ushort)(value + FixedLength + 2);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the IEEE C37.118 ID code of this frame.
         /// </summary>
         public ushort IDCode
@@ -279,11 +297,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets time as a <see cref="UnixTimeTag"/> representing seconds of current <see cref="Timestamp"/>.
         /// </summary>
-        UnixTimeTag TimeTag
+        public UnixTimeTag TimeTag
         {
             get
             {
-                return new UnixTimeTag(Timestamp);
+                return new UnixTimeTag(m_timestamp);
             }
         }
         
@@ -361,7 +379,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                byte[] buffer = new byte[BinaryLength];
+                byte[] buffer = new byte[FixedLength];
 
                 buffer[0] = PhasorProtocols.Common.SyncByte;
                 buffer[1] = (byte)((byte)TypeID | Version);

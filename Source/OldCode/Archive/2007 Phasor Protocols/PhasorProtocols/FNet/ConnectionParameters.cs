@@ -37,7 +37,7 @@ namespace PCS.PhasorProtocols.FNet
 
         // Fields
         private long m_timeOffset;
-        private short m_frameRate;
+        private ushort m_frameRate;
         private LineFrequency m_nominalFrequency;
         private string m_stationName;
 
@@ -65,7 +65,7 @@ namespace PCS.PhasorProtocols.FNet
         {
             // Deserialize connection parameters
             m_timeOffset = info.GetInt64("timeOffset");
-            m_frameRate = info.GetInt16("frameRate");
+            m_frameRate = info.GetUInt16("frameRate");
             m_nominalFrequency = (LineFrequency)info.GetValue("nominalFrequency", typeof(LineFrequency));
             m_stationName = info.GetString("stationName");
         }
@@ -105,7 +105,7 @@ namespace PCS.PhasorProtocols.FNet
         [Category("Optional Connection Parameters"),
         Description("Configured frame rate for F-NET device."),
         DefaultValue(Common.DefaultFrameRate)]
-        public short FrameRate
+        public ushort FrameRate
         {
             get
             {

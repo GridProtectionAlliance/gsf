@@ -297,7 +297,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override ushort FooterLength
+        protected override int FooterLength
         {
             get
             {
@@ -352,7 +352,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             // Skip past header that was already parsed...
             startIndex += CommonFrameHeader.FixedLength;
 
-            m_timebase = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex);
+            m_timebase = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex) & ~Common.TimeQualityFlagsMask;
             State.CellCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 4);
 
             return FixedHeaderLength;

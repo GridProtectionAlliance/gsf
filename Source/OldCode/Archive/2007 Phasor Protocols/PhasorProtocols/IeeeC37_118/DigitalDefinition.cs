@@ -283,6 +283,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// Sets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.
         /// </summary>
         /// <param name="index">Index of desired bit label to access.</param>
+        /// <param name="value">Value of the bit label to assign.</param>
         /// <remarks>
         /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
         /// <para>Note that the draft 6 implementation of the protocol supports one label for all 16-bits, however draft 7 (i.e., version 1) supports a label for each of the 16 bits.</para>

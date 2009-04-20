@@ -38,7 +38,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
             : base(parent, configurationCell, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
-            // Define new parsing state which defines contructors for key data values
+            // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(
                 configurationCell,
                 IeeeC37_118.PhasorValue.CreateNewValue,

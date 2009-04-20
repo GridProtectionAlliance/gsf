@@ -112,7 +112,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets the specified frame rate of this <see cref="IConfigurationCell"/>.
         /// </summary>
-        short FrameRate { get; }
+        ushort FrameRate { get; }
 
         /// <summary>
         /// Gets or sets the revision count of this <see cref="IConfigurationCell"/>.

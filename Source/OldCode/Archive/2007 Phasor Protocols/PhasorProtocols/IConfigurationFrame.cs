@@ -38,7 +38,7 @@ namespace PCS.PhasorProtocols
             /// <summary>
         /// Gets or sets defined frame rate of this <see cref="IConfigurationFrame"/>.
         /// </summary>
-        short FrameRate { get; set; }
+        ushort FrameRate { get; set; }
 
         /// <summary>
         /// Gets the defined <see cref="Ticks"/> per frame of this <see cref="IConfigurationFrame"/>.

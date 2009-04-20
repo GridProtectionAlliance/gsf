@@ -1,251 +1,248 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-//using PhasorProtocols.IeeeC37_118.Common;
-
 //*******************************************************************************************************
-//  HeaderFrame.vb - IEEE C37.118 header frame
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  HeaderFrame.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//  11/12/2004 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
+using PCS.IO.Checksums;
+using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.IeeeC37_118
 {
-    namespace IeeeC37_118
+    /// <summary>
+    /// Represents the IEEE C37.118 implementation of a <see cref="IHeaderFrame"/> that can be sent or received.
+    /// </summary>
+    [Serializable()]
+    public class HeaderFrame : HeaderFrameBase, ISupportFrameImage<FrameType>
     {
+        #region [ Members ]
 
-        [CLSCompliant(false), Serializable()]
-        public class HeaderFrame : HeaderFrameBase, ICommonFrameHeader
+        // Fields
+        private CommonFrameHeader m_frameHeader;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="HeaderFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used by a consumer or by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to generate or parse an IEEE C37.118 header frame.
+        /// </remarks>
+        public HeaderFrame()
+            : base(new HeaderCellCollection(Common.MaximumDataLength - 1))
         {
-
-
-
-            private byte m_version;
-
-            public HeaderFrame()
-                : this((byte)IeeeC37_118.DraftRevision.Draft7)
-            {
-
-
-            }
-
-            protected HeaderFrame(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-                // Deserialize header frame
-                m_version = info.GetByte("version");
-
-            }
-
-            public HeaderFrame(byte version)
-                : base(new HeaderCellCollection(Common.MaximumHeaderDataLength))
-            {
-
-                m_version = version;
-
-            }
-
-            public HeaderFrame(ICommonFrameHeader parsedFrameHeader, byte[] binaryImage, int startIndex)
-                : base(new HeaderFrameParsingState(new HeaderCellCollection(Common.MaximumHeaderDataLength), parsedFrameHeader.FrameLength, (short)(parsedFrameHeader.FrameLength - CommonFrameHeader.BinaryLength - 2)), binaryImage, startIndex)
-            {
-
-
-                CommonFrameHeader.Clone(parsedFrameHeader, this);
-
-            }
-
-            public HeaderFrame(IHeaderFrame headerFrame)
-                : base(headerFrame)
-            {
-
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public FrameType FrameType
-            {
-                get
-                {
-                    return IeeeC37_118.FrameType.HeaderFrame;
-                }
-                set
-                {
-                    // Frame type is readonly for header frames - we don't throw an exception here if someone attempts to change
-                    // the frame type on a header frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                    // but we don't do anything with the value either.
-                }
-            }
-
-            FundamentalFrameType ICommonFrameHeader.FundamentalFrameType
-            {
-                get
-                {
-                    return base.FundamentalFrameType;
-                }
-            }
-
-            public byte Version
-            {
-                get
-                {
-                    return m_version;
-                }
-                set
-                {
-                    m_version = CommonFrameHeader.Version(value);
-                }
-            }
-
-            public ushort FrameLength
-            {
-                get
-                {
-                    return base.BinaryLength;
-                }
-                set
-                {
-                    base.ParsedBinaryLength = value;
-                }
-            }
-
-            public int TimeBase
-            {
-                get
-                {
-                    // Header frame doesn't need subsecond time resolution - so this factor is just defaulted to max...
-                    return int.MaxValue & ~Common.TimeQualityFlagsMask;
-                }
-            }
-
-            public int InternalTimeQualityFlags
-            {
-                get
-                {
-                    return 0;
-                }
-                set
-                {
-                    // Time quality flags are readonly for header frames - we don't throw an exception here if someone attempts to change
-                    // the time quality on a header frame (e.g., the CommonFrameHeader.Clone method will attempt to copy this property)
-                    // but we don't do anything with the value either.
-                }
-            }
-
-            public uint SecondOfCentury
-            {
-                get
-                {
-                    return CommonFrameHeader.SecondOfCentury(this);
-                }
-            }
-
-            public int FractionOfSecond
-            {
-                get
-                {
-                    return CommonFrameHeader.FractionOfSecond(this);
-                }
-            }
-
-            public TimeQualityFlags TimeQualityFlags
-            {
-                get
-                {
-                    return CommonFrameHeader.TimeQualityFlags(this);
-                }
-                set
-                {
-                    // Nothing to do - time quality flags is readonly for header frames
-                }
-            }
-
-            public TimeQualityIndicatorCode TimeQualityIndicatorCode
-            {
-                get
-                {
-                    return CommonFrameHeader.TimeQualityIndicatorCode(this);
-                }
-                set
-                {
-                    // Nothing to do - time quality flags is readonly for header frames
-                }
-            }
-
-            protected override ushort HeaderLength
-            {
-                get
-                {
-                    return CommonFrameHeader.BinaryLength;
-                }
-            }
-
-            protected override byte[] HeaderImage
-            {
-                get
-                {
-                    return CommonFrameHeader.BinaryImage(this);
-                }
-            }
-
-            public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            {
-
-                base.GetObjectData(info, context);
-
-                // Serialize header frame
-                info.AddValue("version", m_version);
-
-            }
-
-            public override Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    Dictionary<string, string> baseAttributes = base.Attributes;
-
-                    baseAttributes.Add("Frame Type", (int)FrameType + ": " + FrameType);
-                    baseAttributes.Add("Frame Length", FrameLength.ToString());
-                    baseAttributes.Add("Version", Version.ToString());
-                    baseAttributes.Add("Second of Century", SecondOfCentury.ToString());
-                    baseAttributes.Add("Fraction of Second", FractionOfSecond.ToString());
-                    baseAttributes.Add("Time Quality Flags", (int)TimeQualityFlags + ": " + TimeQualityFlags);
-                    baseAttributes.Add("Time Quality Indicator Code", (int)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
-                    baseAttributes.Add("Time Base", TimeBase.ToString());
-
-                    return baseAttributes;
-                }
-            }
-
         }
 
+        /// <summary>
+        /// Creates a new <see cref="HeaderFrame"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected HeaderFrame(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="DataFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public override Ticks Timestamp
+        {
+            get
+            {
+                return CommonHeader.Timestamp;
+            }
+            set
+            {
+                // Keep timestamp updates synchrnonized...
+                CommonHeader.Timestamp = value;
+                base.Timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the identifier that is used to identify the IEEE C37.118 frame.
+        /// </summary>
+        public FrameType TypeID
+        {
+            get
+            {
+                return IeeeC37_118.FrameType.DataFrame;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets current <see cref="CommonFrameHeader"/>.
+        /// </summary>
+        public CommonFrameHeader CommonHeader
+        {
+            get
+            {
+                // Make sure frame header exists - using base class timestamp to
+                // prevent recursion (m_frameHeader doesn't exist yet)
+                if (m_frameHeader == null)
+                    m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp);
+
+                return m_frameHeader;
+            }
+            set
+            {
+                m_frameHeader = value;
+
+                if (m_frameHeader != null)
+                {
+                    State = m_frameHeader.State as IHeaderFrameParsingState;
+                    base.Timestamp = m_frameHeader.Timestamp;
+                }
+            }
+        }
+
+        // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
+        ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
+        {
+            get
+            {
+                return CommonHeader;
+            }
+            set
+            {
+                CommonHeader = value as CommonFrameHeader;
+            }
+        }
+
+        /// <summary>
+        /// Gets the IEEE C37.118 protocol version of this <see cref="DataFrame"/> as specified by the associated <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public byte Version
+        {
+            get
+            {
+                return CommonHeader.Version;
+            }
+        }
+
+        /// <summary>
+        /// Gets the IEEE C37.118 timebase of this <see cref="DataFrame"/> as specified by the associated <see cref="ConfigurationFrame"/>.
+        /// </summary>
+        public UInt24 TimeBase
+        {
+            get
+            {
+                return CommonHeader.Timebase;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeQualityFlags"/> associated with this <see cref="DataFrame"/>.
+        /// </summary>
+        public TimeQualityFlags TimeQualityFlags
+        {
+            get
+            {
+                return CommonHeader.TimeQualityFlags;
+            }
+            set
+            {
+                CommonHeader.TimeQualityFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> associated with this <see cref="DataFrame"/>.
+        /// </summary>
+        public TimeQualityIndicatorCode TimeQualityIndicatorCode
+        {
+            get
+            {
+                return CommonHeader.TimeQualityIndicatorCode;
+            }
+            set
+            {
+                CommonHeader.TimeQualityIndicatorCode = value;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                CommonHeader.AppendHeaderAttributes(baseAttributes);
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
+        {
+            // We already parsed the frame header, so we just skip past it...
+            return CommonFrameHeader.FixedLength;
+        }
+
+        /// <summary>
+        /// Calculates checksum of given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer image over which to calculate checksum.</param>
+        /// <param name="offset">Start index into <paramref name="buffer"/> to calculate checksum.</param>
+        /// <param name="length">Length of data within <paramref name="buffer"/> to calculate checksum.</param>
+        /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
+        protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
+        {
+            // IEEE C37.118 uses CRC-CCITT to calculate checksum for frames
+            return buffer.CrcCCITTChecksum(offset, length);
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+        }
+
+        #endregion
     }
 }
