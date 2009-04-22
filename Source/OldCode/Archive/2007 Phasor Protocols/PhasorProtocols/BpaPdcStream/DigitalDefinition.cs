@@ -1,119 +1,134 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-using System.Runtime.Serialization;
-
 //*******************************************************************************************************
-//  DigitalDefinition.vb - PDCstream Digital definition
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  DigitalDefinition.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.BpaPdcStream
 {
-    namespace BpaPdcStream
+    /// <summary>
+    /// Represents the BPA PDCstream implementation of an <see cref="IDigitalDefinition"/>.
+    /// </summary>
+    [Serializable()]
+    public class DigitalDefinition : DigitalDefinitionBase
     {
+        #region [ Constructors ]
 
-        [CLSCompliant(false), Serializable()]
-        public class DigitalDefinition : DigitalDefinitionBase
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
+        public DigitalDefinition(IConfigurationCell parent)
+            : base(parent)
         {
-
-
-
-            protected DigitalDefinition()
-            {
-            }
-
-            protected DigitalDefinition(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-
-
-            }
-
-            public DigitalDefinition(ConfigurationCell parent)
-                : base(parent)
-            {
-
-
-            }
-
-            public DigitalDefinition(ConfigurationCell parent, int index, string label)
-                : base(parent, index, label)
-            {
-
-
-            }
-
-            public DigitalDefinition(ConfigurationCell parent, IDigitalDefinition digitalDefinition)
-                : base(parent, digitalDefinition)
-            {
-
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ConfigurationCell Parent
-            {
-                get
-                {
-                    return (ConfigurationCell)base.Parent;
-                }
-            }
-
-            public override int MaximumLabelLength
-            {
-                get
-                {
-                    return int.MaxValue;
-                }
-            }
-
-            protected override ushort BodyLength
-            {
-                get
-                {
-                    return 0;
-                }
-            }
-
-            /// <remarks>BPA PDCstream does not include digital definition in descriptor packet.  Only a count of available values is defined in the data frame.</remarks>
-            protected override byte[] BodyImage
-            {
-                get
-                {
-                    return null;
-                }
-            }
-
         }
 
-    }
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinition"/> from specified parameters.
+        /// </summary>
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="DigitalDefinition"/>.</param>
+        public DigitalDefinition(ConfigurationCell parent, string label)
+            : base(parent, label)
+        {
+        }
 
+        /// <summary>
+        /// Creates a new <see cref="DigitalDefinition"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected DigitalDefinition(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.
+        /// </summary>
+        public virtual new ConfigurationCell Parent
+        {
+            get
+            {
+                return base.Parent as ConfigurationCell;
+            }
+            set
+            {
+                base.Parent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="DigitalDefinition"/>.
+        /// </summary>
+        public override int MaximumLabelLength
+        {
+            get
+            {
+                return 256;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="BodyImage"/>.
+        /// </summary>
+        protected override int BodyLength
+        {
+            get
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary body image of the <see cref="DigitalDefinition"/> object.
+        /// </summary>
+        /// <remarks>
+        /// BPA PDCstream does not include analog definition in descriptor packet.  Only a count of available values is defined in the data frame.
+        /// </remarks>
+        protected override byte[] BodyImage
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Delegate handler to create a new BPA PDCstream analog definition
+        internal static IDigitalDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
+        {
+            IDigitalDefinition digitalDefinition = new DigitalDefinition(parent);
+
+            parsedLength = digitalDefinition.Initialize(binaryImage, startIndex, 0);
+
+            return digitalDefinition;
+        }
+
+        #endregion
+    }
 }

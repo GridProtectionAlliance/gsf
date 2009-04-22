@@ -80,6 +80,17 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
+        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="AnalogDefinition"/>.
+        /// </summary>
+        public override int MaximumLabelLength
+        {
+            get
+            {
+                return 256;
+            }
+        }
+
+        /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
         protected override int BodyLength
