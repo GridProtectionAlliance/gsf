@@ -204,6 +204,7 @@ namespace PCS.Services
         public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
         // Fields
+        private string m_telnetPassword;
 		private bool m_logStatusUpdates;
 		private bool m_monitorServiceHealth;
 		private int m_requestHistoryLimit;
@@ -224,8 +225,7 @@ namespace PCS.Services
         private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
         private bool m_enabled;
         private bool m_disposed;
-        private bool m_initialized;
-        private string m_pursip;
+        private bool m_initialized;       
         private bool m_suppressUpdates;
         private Guid m_remoteCommandClientID;
         private Process m_remoteCommandProcess;	
@@ -252,7 +252,7 @@ namespace PCS.Services
 			m_serviceComponents = new List<ISupportLifecycle>();
 			m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
-			m_pursip = "s3cur3";
+			m_telnetPassword = "s3cur3";
 
 			// Components
 			m_statusLog = new LogFile();
@@ -714,7 +714,7 @@ namespace PCS.Services
             m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
             m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
             m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Command", "Allows for a telnet-like remote command session", RemoteCommandSession, false));
+            m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
 
             // Define "Health" command only if monitoring service health is enabled.
             if (m_monitorServiceHealth)
@@ -1025,7 +1025,7 @@ namespace PCS.Services
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["Pursip", true].Update(m_pursip, "", true);
+                settings["TelnetPassword", true].Update(m_telnetPassword, "Password for telnet-like remote command session.", true);
                 settings["LogStatusUpdates", true].Update(m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
                 settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
@@ -1048,7 +1048,7 @@ namespace PCS.Services
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                m_pursip = settings["Pursip", true].ValueAs(m_pursip);
+                m_telnetPassword = settings["TelnetPassword", true].ValueAs(m_telnetPassword);
                 LogStatusUpdates = settings["LogStatusUpdates", true].ValueAs(m_logStatusUpdates);
                 MonitorServiceHealth = settings["MonitorServiceHealth", true].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit", true].ValueAs(m_requestHistoryLimit);
@@ -1426,7 +1426,7 @@ namespace PCS.Services
                 {
                     try
                     {
-                        RemoteCommandSession(new ClientRequest.Info(disconnectedClient, ClientRequest.Parse("Command -disconnect")));
+                        RemoteTelnetSession(new ClientRequest.Info(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
                     }
                     catch (Exception ex)
                     {
@@ -1500,7 +1500,7 @@ namespace PCS.Services
                         else if (requestSender.ClientID == m_remoteCommandClientID)
                         {
                             // Redirect requests to remote command session if requests are from its originator.
-                            RemoteCommandSession(requestInfo);
+                            RemoteTelnetSession(requestInfo);
                         }
                         else
                         {
@@ -2817,18 +2817,18 @@ namespace PCS.Services
             }
         }
 
-        private void RemoteCommandSession(ClientRequest.Info requestinfo)
+        private void RemoteTelnetSession(ClientRequest.Info requestinfo)
         {
             if (m_remoteCommandProcess == null && requestinfo.Request.Arguments.ContainsHelpRequest)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
-                helpMessage.Append("Allows for a telnet-like remote command session.");
+                helpMessage.Append("Allows for a telnet session to the service server.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       Command -options");
+                helpMessage.Append("       Telnet -options");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
@@ -2837,10 +2837,10 @@ namespace PCS.Services
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -connect".PadRight(20));
-                helpMessage.Append("Establishes a remote command session (requires password)");
+                helpMessage.Append("Establishes a telnet session (requires password)");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -disconnect".PadRight(20));
-                helpMessage.Append("Terminates established remote command session");
+                helpMessage.Append("Terminates established telnet session");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
@@ -2856,7 +2856,7 @@ namespace PCS.Services
                     // User wants to establish a remote command session.
                     string password = requestinfo.Request.Arguments["connect"];
 
-                    if (password == m_pursip)
+                    if (password == m_telnetPassword)
                     {
                         // Establish remote command session
                         m_remoteCommandProcess = new Process();
@@ -2907,8 +2907,8 @@ namespace PCS.Services
                 else
                 {
                     // User has provided insufficient information.
-                    requestinfo.Request = ClientRequest.Parse("Command /?");
-                    RemoteCommandSession(requestinfo);
+                    requestinfo.Request = ClientRequest.Parse("Telnet /?");
+                    RemoteTelnetSession(requestinfo);
                 }
             }
         }
