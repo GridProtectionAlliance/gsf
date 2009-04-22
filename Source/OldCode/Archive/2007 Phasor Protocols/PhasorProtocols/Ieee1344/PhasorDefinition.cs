@@ -97,7 +97,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                 byte[] buffer = new byte[ConversionFactorLength];
                 UInt24 scalingFactor = (ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue);
 
-                buffer[0] = (byte)(Type == PhasorType.Voltage ? 0 : 1);
+                buffer[0] = (byte)(PhasorType == PhasorType.Voltage ? 0 : 1);
 
                 EndianOrder.BigEndian.CopyBytes(scalingFactor, buffer, 1);
 
@@ -117,7 +117,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         internal int ParseConversionFactor(byte[] binaryImage, int startIndex)
         {
             // Get phasor type from first byte
-            Type = (binaryImage[startIndex] == 0) ? PhasorType.Voltage : PhasorType.Current;
+            PhasorType = (binaryImage[startIndex] == 0) ? PhasorType.Voltage : PhasorType.Current;
 
             // Last three bytes represent scaling factor
             ScalingValue = EndianOrder.BigEndian.ToUInt24(binaryImage, startIndex + 1);

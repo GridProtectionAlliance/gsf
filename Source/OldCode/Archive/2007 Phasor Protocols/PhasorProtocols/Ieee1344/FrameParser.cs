@@ -344,7 +344,7 @@ namespace PCS.PhasorProtocols.Ieee1344
                     // Create equivalent derived phasor definitions
                     foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
                     {
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.Type, null));
+                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
                     }
 
                     // Create equivalent dervied frequency definition
