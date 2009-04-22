@@ -31,7 +31,7 @@ namespace PCS.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private short m_value;
+        private ushort m_value;
         private bool m_valueAssigned;
 
         #endregion
@@ -53,12 +53,12 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValueBase"/>.</param>
         /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValueBase"/>.</param>
-        /// <param name="value">The 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.</param>
-        protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition, short value)
+        /// <param name="value">The unsigned 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.</param>
+        protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition, ushort value)
             : base(parent, digitalDefinition)
         {
             m_value = value;
-            m_valueAssigned = (value != -1);
+            m_valueAssigned = (value != ushort.MaxValue);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace PCS.PhasorProtocols
             : base(info, context)
         {
             // Deserialize digital value
-            m_value = info.GetInt16("value");
+            m_value = info.GetUInt16("value");
             m_valueAssigned = true;
         }
 
@@ -79,9 +79,9 @@ namespace PCS.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.
+        /// Gets or sets the unsigned 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValueBase"/>.
         /// </summary>
-        public virtual short Value
+        public virtual ushort Value
         {
             get
             {
@@ -192,7 +192,7 @@ namespace PCS.PhasorProtocols
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
 
-            m_value = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+            m_value = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
             m_valueAssigned = true;
 
             return 2;

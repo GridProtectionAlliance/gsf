@@ -43,8 +43,8 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// </summary>
         /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="DigitalValue"/>.</param>
         /// <param name="digitalDefinition">The <see cref="DigitalDefinition"/> associated with this <see cref="DigitalValue"/>.</param>
-        /// <param name="value">The 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValue"/>.</param>
-        public DigitalValue(DataCell parent, DigitalDefinition digitalDefinition, short value)
+        /// <param name="value">The unsigned 16-bit integer value (composed of digital bits) that represents this <see cref="DigitalValue"/>.</param>
+        public DigitalValue(DataCell parent, DigitalDefinition digitalDefinition, ushort value)
             : base(parent, digitalDefinition, value)
         {
         }

@@ -103,7 +103,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// Gets the binary body image of the <see cref="DigitalDefinition"/> object.
         /// </summary>
         /// <remarks>
-        /// BPA PDCstream does not include analog definition in descriptor packet.  Only a count of available values is defined in the data frame.
+        /// BPA PDCstream does not include digital definition in descriptor packet.  Only a count of available values is defined in the data frame.
         /// </remarks>
         protected override byte[] BodyImage
         {
@@ -119,7 +119,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
         // Static Methods
 
-        // Delegate handler to create a new BPA PDCstream analog definition
+        // Delegate handler to create a new BPA PDCstream digital definition
         internal static IDigitalDefinition CreateNewDefinition(IConfigurationCell parent, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             IDigitalDefinition digitalDefinition = new DigitalDefinition(parent);
