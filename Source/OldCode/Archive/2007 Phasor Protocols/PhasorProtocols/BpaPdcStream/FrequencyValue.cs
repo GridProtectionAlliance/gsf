@@ -176,8 +176,8 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
         // Static Methods
 
-        // Calculates binary length of frequency value based on its definition
-        internal static ushort CalculateBinaryLength(IFrequencyDefinition definition)
+        // Calculates binary length of a frequency value based on its definition
+        internal static int CalculateBinaryLength(IFrequencyDefinition definition)
         {
             // The frequency definition will determine the binary length based on data format
             return (new FrequencyValue(null as DataCell, definition, 0.0D, 0.0D)).BinaryLength;

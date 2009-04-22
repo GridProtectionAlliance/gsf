@@ -196,15 +196,15 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
         // Static Methods
 
-        // Creates frequency information INI based BPA PDCstream configuration file
+        // Creates frequency information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IFrequencyDefinition definition)
         {
             FrequencyDefinition frequency = definition as FrequencyDefinition;
 
             if (frequency != null)
                 return "F," + frequency.ScalingValue + "," + frequency.Offset + "," + frequency.DfDtScalingValue + "," + frequency.DfDtOffset + "," + frequency.m_dummy + "," + frequency.Label;
-            else
-                return "";
+            
+            return "";
         }
 
         // Delegate handler to create a new BPA PDCstream frequency definition
