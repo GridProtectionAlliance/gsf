@@ -203,5 +203,10 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// Absolute maximum number of possible digital values that could fit into a data frame.
         /// </summary>
         public const ushort MaximumDigitalValues = (ushort)IEEEFormatFlags.DigitalWordsMask;
+
+        /// <summary>
+        /// Absolute maximum data length (in bytes) that could fit into any frame.
+        /// </summary>
+        public const ushort MaximumDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 2);
     }
 }
