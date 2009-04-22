@@ -130,7 +130,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return Definition.Type;
+                return Definition.PhasorType;
             }
         }
 

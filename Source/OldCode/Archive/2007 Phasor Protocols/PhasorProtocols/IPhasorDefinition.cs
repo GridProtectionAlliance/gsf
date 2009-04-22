@@ -68,7 +68,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="PhasorType"/> of this <see cref="IPhasorDefinition"/>.
         /// </summary>
-        PhasorType Type { get; set; }
+        PhasorType PhasorType { get; set; }
 
         /// <summary>
         /// Gets or sets the associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).

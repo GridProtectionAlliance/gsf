@@ -109,7 +109,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="PhasorType"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
-        public virtual PhasorType Type
+        public virtual PhasorType PhasorType
         {
             get
             {
@@ -151,7 +151,7 @@ namespace PCS.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Phasor Type", (int)Type + ": " + Type);
+                baseAttributes.Add("Phasor Type", (int)PhasorType + ": " + PhasorType);
 
                 return baseAttributes;
             }
