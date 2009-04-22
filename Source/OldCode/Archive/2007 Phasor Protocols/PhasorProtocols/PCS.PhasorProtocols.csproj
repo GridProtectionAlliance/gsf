@@ -83,6 +83,25 @@
     <Compile Include="AnalogDefinitionCollection.cs" />
     <Compile Include="AnalogValueBase.cs" />
     <Compile Include="AnalogValueCollection.cs" />
+    <Compile Include="BpaPdcStream\AnalogDefinition.cs" />
+    <Compile Include="BpaPdcStream\AnalogValue.cs" />
+    <Compile Include="BpaPdcStream\Common.cs" />
+    <Compile Include="BpaPdcStream\CommonFrameHeader.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationCell.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationCellCollection.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationFrame.cs" />
+    <Compile Include="BpaPdcStream\ConnectionParameters.cs" />
+    <Compile Include="BpaPdcStream\DataCell.cs" />
+    <Compile Include="BpaPdcStream\DataCellCollection.cs" />
+    <Compile Include="BpaPdcStream\DataCellParsingState.cs" />
+    <Compile Include="BpaPdcStream\DataFrame.cs" />
+    <Compile Include="BpaPdcStream\DigitalDefinition.cs" />
+    <Compile Include="BpaPdcStream\DigitalValue.cs" />
+    <Compile Include="BpaPdcStream\FrameParser.cs" />
+    <Compile Include="BpaPdcStream\FrequencyDefinition.cs" />
+    <Compile Include="BpaPdcStream\FrequencyValue.cs" />
+    <Compile Include="BpaPdcStream\PhasorDefinition.cs" />
+    <Compile Include="BpaPdcStream\PhasorValue.cs" />
     <Compile Include="ChannelBase.cs" />
     <Compile Include="ChannelCellBase.cs" />
     <Compile Include="ChannelCellCollectionBase.cs" />
@@ -283,6 +302,9 @@
     <None Include="Relationship Diagrams\HeaderFrame Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Definition Relationships.cd" />
     <None Include="Relationship Diagrams\Phasor Value Relationships.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SelFastMessage\" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

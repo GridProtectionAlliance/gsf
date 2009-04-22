@@ -645,6 +645,14 @@ namespace PCS.PhasorProtocols
                     throw (new InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" + phasors + ") does not match defined count in configuration file (" + ConfigurationCell.PhasorDefinitions.Count + ") for " + ConfigurationCell.IDLabel));
                 }
 
+                // TODO: Evaluate case of "new PMU added to stream" for which we do not have defined number of phasors...
+                // Perhaps some kind of warning would be better than throwing an exception (raise a OnParseWarning event?)
+                // This just happened with NYPA:
+                        // [P1]: WARNING: NYPA data stream exception: Stream/Config File Mismatch: Phasor
+                        // value count in stream (6) does not match defined count in configuration file (0)
+                        // for EGC
+
+
                 // If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
                 //If analogWords > ConfigurationCell.AnalogDefinitions.Count Then
                 //    Throw New InvalidOperationException("Stream/Config File Mismatch: Analog value count in stream (" analogWords & ") does not match defined count in configuration file (" & ConfigurationCell.AnalogDefinitions.Count & ")")
