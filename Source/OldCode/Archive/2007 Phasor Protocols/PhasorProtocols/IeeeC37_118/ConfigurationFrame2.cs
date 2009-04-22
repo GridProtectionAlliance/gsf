@@ -37,7 +37,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 configuration frame, type 2.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected ConfigurationFrame2()
+        public ConfigurationFrame2()
         {
         }
 
