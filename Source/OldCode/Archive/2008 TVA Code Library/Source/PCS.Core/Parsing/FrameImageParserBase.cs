@@ -265,19 +265,19 @@ namespace PCS.Parsing
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFrame(byte[] buffer, int offset, int length)
         {
-            int parsedHeaderLength, parsedFrameLength;
             ICommonHeader<TTypeIdentifier> commonHeader;
             TypeInfo outputType;
             TOutputType instance;
+            int parsedLength;
 
             // Extract the common header from the buffer image which includes the output type ID.
             // For any protocol data that is represented as frames of data in a stream, there will
             // be some set of common identification properties in the frame image, usually at the
             // top, that is common for all frame types.
-            parsedHeaderLength = ParseCommonHeader(buffer, offset, length, out commonHeader);
+            commonHeader = ParseCommonHeader(buffer, offset, length);
 
             // See if there was enough buffer to parse common header, if not exit and wait for more data
-            if (parsedHeaderLength == 0 && commonHeader == null)
+            if (commonHeader == null)
                 return 0;
 
             // Lookup TypeID to see if it is a known type
@@ -285,10 +285,10 @@ namespace PCS.Parsing
             {
                 instance = outputType.CreateNew();
                 instance.CommonHeader = commonHeader;
-                parsedFrameLength = instance.Initialize(buffer, offset, length);
+                parsedLength = instance.Initialize(buffer, offset, length);
 
                 // Expose parsed type to consumer
-                if (parsedFrameLength > 0)
+                if (parsedLength > 0)
                     OnDataParsed(instance);
             }
             else
@@ -305,12 +305,12 @@ namespace PCS.Parsing
                 }
                 
                 // Without synchronization bytes we have no choice but to move onto the next buffer of data :(
-                parsedFrameLength = length;
+                parsedLength = length;
                 OnOutputTypeNotFound(commonHeader.TypeID);
                 OnDataDiscarded(buffer.BlockCopy(offset, length));
             }
 
-            return parsedFrameLength;
+            return parsedLength;
         }
         
         /// <summary>
@@ -320,29 +320,21 @@ namespace PCS.Parsing
         /// <param name="buffer">Buffer containing data to parse.</param>
         /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
         /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <param name="commonHeader">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</param>
-        /// <returns>The length of the data that was parsed.</returns>
+        /// <returns>The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</returns>
         /// <remarks>
         /// <para>
-        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
-        /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
-        /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
-        /// <see cref="ISupportBinaryImage.Initialize"/> method. This header image should also be used to add needed complex state information
-        /// about the output type being parsed if needed.
+        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>)
+        /// for the output types; this will primarily include an ID of the <see cref="Type"/> that the data image represents.  This parsing is
+        /// only for common header information, actual parsing will be handled by output type via its <see cref="ISupportBinaryImage.Initialize"/>
+        /// method. This header image should also be used to add needed complex state information about the output type being parsed if needed.
         /// </para>
         /// <para>
-        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output
-        /// type <see cref="ISupportBinaryImage.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
-        /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
-        /// </para>
-        /// <para>
-        /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), set <paramref name="commonHeader"/>
-        /// to null and return 0.  If the protocol allows frame length to be determined at the time common header is being parsed and there is not enough
-        /// buffer to parse the entire frame, it will be optimal to prevent further parsing by executing the same action, that is set
-        /// <paramref name="commonHeader"/> = null and return 0.
+        /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), return null.  Also, if
+        /// the protocol allows frame length to be determined at the time common header is being parsed and there is not enough buffer to parse
+        /// the entire frame, it will be optimal to prevent further parsing by returning null.
         /// </para>
         /// </remarks>
-        protected abstract int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<TTypeIdentifier> commonHeader);
+        protected abstract ICommonHeader<TTypeIdentifier> ParseCommonHeader(byte[] buffer, int offset, int length);
 
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
