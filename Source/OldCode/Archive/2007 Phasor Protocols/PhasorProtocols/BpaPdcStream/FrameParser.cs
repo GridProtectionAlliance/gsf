@@ -21,6 +21,7 @@ using System.IO;
 using System.Text;
 using PCS.Parsing;
 using PCS.IO;
+using System.Threading;
 
 namespace PCS.PhasorProtocols.BpaPdcStream
 {
@@ -57,7 +58,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         private string m_configurationFileName;
         private bool m_refreshConfigurationFileOnChange;
         private bool m_parseWordCountFromByte;
-        private long m_lastUpdateNotification;
         private FileSystemWatcher m_configurationFileWatcher;
         private bool m_disposed;
 
@@ -340,19 +340,18 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         // Handler for file watcher - we notify consumer when changes have occured to configuration file
-        private void m_configurationFileWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
+        private void m_configurationFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            // File watcher sends several notifications for file change - we only want to report one,
-            // so we ignore repeated file change notifications that occur within 1/2 a second
-            if (m_lastUpdateNotification == 0 || Ticks.ToSeconds(DateTime.Now.Ticks - m_lastUpdateNotification) > 0.5)
+            // We synchronize change actions - don't want more than one refresh happening at a time...
+            lock (m_configurationFileWatcher)
             {
+                // Notify consumer of change in configuration
+                OnConfigurationChanged();
+
+                // Reload configuration...
                 if (m_configurationFrame != null)
                     m_configurationFrame.Refresh();
-
-                OnConfigurationChanged();
             }
-
-            m_lastUpdateNotification = DateTime.Now.Ticks;
         }
 
         // Reset file watcher
@@ -365,13 +364,15 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             }
             m_configurationFileWatcher = null;
 
-            if (m_refreshConfigurationFileOnChange && !string.IsNullOrEmpty(m_configurationFileName) && File.Exists(m_configurationFileName))
+            string configurationFile = ConfigurationFileName;
+
+            if (m_refreshConfigurationFileOnChange && !string.IsNullOrEmpty(configurationFile) && File.Exists(configurationFile))
             {
                 try
                 {
                     // Create a new file watcher for configuration file - we'll automatically refresh configuration file
                     // when this file gets updated...
-                    m_configurationFileWatcher = new FileSystemWatcher(Path.GetFullPath(m_configurationFileName), FilePath.GetFileName(m_configurationFileName));
+                    m_configurationFileWatcher = new FileSystemWatcher(Path.GetFullPath(configurationFile), FilePath.GetFileName(configurationFile));
                     m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
                     m_configurationFileWatcher.EnableRaisingEvents = true;
                     m_configurationFileWatcher.IncludeSubdirectories = false;
