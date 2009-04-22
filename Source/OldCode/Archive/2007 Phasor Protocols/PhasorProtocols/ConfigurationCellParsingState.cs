@@ -25,10 +25,10 @@ namespace PCS.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private CreateNewDefinitionFunction<IPhasorDefinition> m_createNewPhasorDefinitionFunction;
-        private CreateNewDefinitionFunction<IFrequencyDefinition> m_createNewFrequencyDefinitionFunction;
-        private CreateNewDefinitionFunction<IAnalogDefinition> m_createNewAnalogDefinitionFunction;
-        private CreateNewDefinitionFunction<IDigitalDefinition> m_createNewDigitalDefinitionFunction;
+        private CreateNewDefinitionFunction<IPhasorDefinition> m_createNewPhasorDefinition;
+        private CreateNewDefinitionFunction<IFrequencyDefinition> m_createNewFrequencyDefinition;
+        private CreateNewDefinitionFunction<IAnalogDefinition> m_createNewAnalogDefinition;
+        private CreateNewDefinitionFunction<IDigitalDefinition> m_createNewDigitalDefinition;
 
         #endregion
 
@@ -37,16 +37,16 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="ConfigurationCellParsingState"/> from specified parameters.
         /// </summary>
-        /// <param name="createNewPhasorDefinitionFunction">Reference to delegate to create new <see cref="IPhasorDefinition"/> instances.</param>
-        /// <param name="createNewFrequencyDefinitionFunction">Reference to delegate to create new <see cref="IFrequencyDefinition"/> instances.</param>
-        /// <param name="createNewAnalogDefinitionFunction">Reference to delegate to create new <see cref="IAnalogDefinition"/> instances.</param>
-        /// <param name="createNewDigitalDefinitionFunction">Reference to delegate to create new <see cref="IDigitalDefinition"/> instances.</param>
-        public ConfigurationCellParsingState(CreateNewDefinitionFunction<IPhasorDefinition> createNewPhasorDefinitionFunction, CreateNewDefinitionFunction<IFrequencyDefinition> createNewFrequencyDefinitionFunction, CreateNewDefinitionFunction<IAnalogDefinition> createNewAnalogDefinitionFunction, CreateNewDefinitionFunction<IDigitalDefinition> createNewDigitalDefinitionFunction)
+        /// <param name="createNewPhasorDefinition">Reference to delegate to create new <see cref="IPhasorDefinition"/> instances.</param>
+        /// <param name="createNewFrequencyDefinition">Reference to delegate to create new <see cref="IFrequencyDefinition"/> instances.</param>
+        /// <param name="createNewAnalogDefinition">Reference to delegate to create new <see cref="IAnalogDefinition"/> instances.</param>
+        /// <param name="createNewDigitalDefinition">Reference to delegate to create new <see cref="IDigitalDefinition"/> instances.</param>
+        public ConfigurationCellParsingState(CreateNewDefinitionFunction<IPhasorDefinition> createNewPhasorDefinition, CreateNewDefinitionFunction<IFrequencyDefinition> createNewFrequencyDefinition, CreateNewDefinitionFunction<IAnalogDefinition> createNewAnalogDefinition, CreateNewDefinitionFunction<IDigitalDefinition> createNewDigitalDefinition)
         {
-            m_createNewPhasorDefinitionFunction = createNewPhasorDefinitionFunction;
-            m_createNewFrequencyDefinitionFunction = createNewFrequencyDefinitionFunction;
-            m_createNewAnalogDefinitionFunction = createNewAnalogDefinitionFunction;
-            m_createNewDigitalDefinitionFunction = createNewDigitalDefinitionFunction;
+            m_createNewPhasorDefinition = createNewPhasorDefinition;
+            m_createNewFrequencyDefinition = createNewFrequencyDefinition;
+            m_createNewAnalogDefinition = createNewAnalogDefinition;
+            m_createNewDigitalDefinition = createNewDigitalDefinition;
         }
 
         #endregion
@@ -60,7 +60,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewPhasorDefinitionFunction;
+                return m_createNewPhasorDefinition;
             }
         }
 
@@ -71,7 +71,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewFrequencyDefinitionFunction;
+                return m_createNewFrequencyDefinition;
             }
         }
 
@@ -82,7 +82,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewAnalogDefinitionFunction;
+                return m_createNewAnalogDefinition;
             }
         }
 
@@ -93,7 +93,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewDigitalDefinitionFunction;
+                return m_createNewDigitalDefinition;
             }
         }
 

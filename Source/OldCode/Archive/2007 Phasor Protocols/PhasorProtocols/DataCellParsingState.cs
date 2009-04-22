@@ -26,10 +26,10 @@ namespace PCS.PhasorProtocols
 
         // Fields
         private IConfigurationCell m_configurationCell;
-        private CreateNewValueFunction<IPhasorDefinition, IPhasorValue> m_createNewPhasorValueFunction;
-        private CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValueFunction;
-        private CreateNewValueFunction<IAnalogDefinition, IAnalogValue> m_createNewAnalogValueFunction;
-        private CreateNewValueFunction<IDigitalDefinition, IDigitalValue> m_createNewDigitalValueFunction;
+        private CreateNewValueFunction<IPhasorDefinition, IPhasorValue> m_createNewPhasorValue;
+        private CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValue;
+        private CreateNewValueFunction<IAnalogDefinition, IAnalogValue> m_createNewAnalogValue;
+        private CreateNewValueFunction<IDigitalDefinition, IDigitalValue> m_createNewDigitalValue;
 
         #endregion
 
@@ -39,17 +39,17 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="DataCellParsingState"/> from specified parameters.
         /// </summary>
         /// <param name="configurationCell">Reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.</param>
-        /// <param name="createNewPhasorValueFunction">Reference to delegate to create new <see cref="IPhasorValue"/> instances.</param>
-        /// <param name="createNewFrequencyValueFunction">Reference to delegate to create new <see cref="IFrequencyValue"/> instances.</param>
-        /// <param name="createNewAnalogValueFunction">Reference to delegate to create new <see cref="IAnalogValue"/> instances.</param>
-        /// <param name="createNewDigitalValueFunction">Reference to delegate to create new <see cref="IDigitalValue"/> instances.</param>
-        public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValueFunction, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValueFunction, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValueFunction, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValueFunction)
+        /// <param name="createNewPhasorValue">Reference to delegate to create new <see cref="IPhasorValue"/> instances.</param>
+        /// <param name="createNewFrequencyValue">Reference to delegate to create new <see cref="IFrequencyValue"/> instances.</param>
+        /// <param name="createNewAnalogValue">Reference to delegate to create new <see cref="IAnalogValue"/> instances.</param>
+        /// <param name="createNewDigitalValue">Reference to delegate to create new <see cref="IDigitalValue"/> instances.</param>
+        public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValue, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValue, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValue, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValue)
         {
             m_configurationCell = configurationCell;
-            m_createNewPhasorValueFunction = createNewPhasorValueFunction;
-            m_createNewFrequencyValueFunction = createNewFrequencyValueFunction;
-            m_createNewAnalogValueFunction = createNewAnalogValueFunction;
-            m_createNewDigitalValueFunction = createNewDigitalValueFunction;
+            m_createNewPhasorValue = createNewPhasorValue;
+            m_createNewFrequencyValue = createNewFrequencyValue;
+            m_createNewAnalogValue = createNewAnalogValue;
+            m_createNewDigitalValue = createNewDigitalValue;
 
             PhasorCount = m_configurationCell.PhasorDefinitions.Count;
             AnalogCount = m_configurationCell.AnalogDefinitions.Count;
@@ -78,7 +78,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewPhasorValueFunction;
+                return m_createNewPhasorValue;
             }
         }
 
@@ -89,7 +89,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewFrequencyValueFunction;
+                return m_createNewFrequencyValue;
             }
         }
 
@@ -100,7 +100,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewAnalogValueFunction;
+                return m_createNewAnalogValue;
             }
         }
 
@@ -111,7 +111,7 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                return m_createNewDigitalValueFunction;
+                return m_createNewDigitalValue;
             }
         }
 

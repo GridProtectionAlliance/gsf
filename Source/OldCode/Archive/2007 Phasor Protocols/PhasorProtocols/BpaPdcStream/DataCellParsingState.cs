@@ -1,98 +1,107 @@
-using System.Diagnostics;
-using System;
-//using PCS.Common;
-using System.Collections;
-using PCS.Interop;
-using Microsoft.VisualBasic;
-using PCS;
-using System.Collections.Generic;
-//using PCS.Interop.Bit;
-using System.Linq;
-
 //*******************************************************************************************************
-//  DataCellParsingState.vb - BPA PDCstream specific data frame cell parsing state class
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  DataCellParsingState.cs
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
-//  Build Environment: VB.NET, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll, Operations Data Architecture [TVA]
-//      Office: COO - TRNS/PWR ELEC SYS O, CHATTANOOGA, TN - MR 2W-C
-//       Phone: 423/751-2827
+//  Build Environment: C#, Visual Studio 2008
+//  Primary Developer: James R Carroll
+//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/14/2005 - J. Ritchie Carroll
-//       Initial version of source generated
+//  01/14/2005 - James R Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
-namespace PCS.PhasorProtocols
+namespace PCS.PhasorProtocols.BpaPdcStream
 {
-    namespace BpaPdcStream
+    /// <summary>
+    /// Represents the BPA PDCstream protocol implementation of the parsing state used by a <see cref="DataCell"/>.
+    /// </summary>
+    public class DataCellParsingState : PhasorProtocols.DataCellParsingState
     {
+        #region [ Members ]
 
-        /// <summary>This class represents the BPA PDCstream protocol implementation of the parsing state of a data frame cell that can be sent or received from a PMU.</summary>
-        [CLSCompliant(false)]
-        public class DataCellParsingState : PhasorProtocols.DataCellParsingState
+        // Fields
+        private int m_index;
+        private bool m_isPdcBlockPmu;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="DataCellParsingState"/> from specified parameters.
+        /// </summary>
+        /// <param name="configurationCell">Reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.</param>
+        /// <param name="createNewPhasorValue">Reference to delegate to create new <see cref="IPhasorValue"/> instances.</param>
+        /// <param name="createNewFrequencyValue">Reference to delegate to create new <see cref="IFrequencyValue"/> instances.</param>
+        /// <param name="createNewAnalogValue">Reference to delegate to create new <see cref="IAnalogValue"/> instances.</param>
+        /// <param name="createNewDigitalValue">Reference to delegate to create new <see cref="IDigitalValue"/> instances.</param>
+        /// <param name="index">Index of associated <see cref="DataCell"/> PMU.</param>
+        public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValue, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValue, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValue, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValue, int index)
+            : base(configurationCell, createNewPhasorValue, createNewFrequencyValue, createNewAnalogValue, createNewDigitalValue)
         {
 
 
-
-            private bool m_isPdcBlockPmu;
-            private int m_index;
-
-            public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunctionSignature<IPhasorDefinition, IPhasorValue> createNewPhasorValueFunction, CreateNewValueFunctionSignature<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValueFunction, CreateNewValueFunctionSignature<IAnalogDefinition, IAnalogValue> createNewAnalogValueFunction, CreateNewValueFunctionSignature<IDigitalDefinition, IDigitalValue> createNewDigitalValueFunction, int index)
-                : base(configurationCell, createNewPhasorValueFunction, createNewFrequencyValueFunction, createNewAnalogValueFunction, createNewDigitalValueFunction)
-            {
-
-
-                m_index = index;
-
-            }
-
-            public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunctionSignature<IPhasorDefinition, IPhasorValue> createNewPhasorValueFunction, CreateNewValueFunctionSignature<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValueFunction, CreateNewValueFunctionSignature<IAnalogDefinition, IAnalogValue> createNewAnalogValueFunction, CreateNewValueFunctionSignature<IDigitalDefinition, IDigitalValue> createNewDigitalValueFunction, bool isPdcBlockPmu)
-                : base(configurationCell, createNewPhasorValueFunction, createNewFrequencyValueFunction, createNewAnalogValueFunction, createNewDigitalValueFunction)
-            {
-
-
-                m_isPdcBlockPmu = isPdcBlockPmu;
-
-            }
-
-            public override System.Type DerivedType
-            {
-                get
-                {
-                    return this.GetType();
-                }
-            }
-
-            public new ConfigurationCell ConfigurationCell
-            {
-                get
-                {
-                    return (ConfigurationCell)base.ConfigurationCell;
-                }
-            }
-
-            public bool IsPdcBlockPmu
-            {
-                get
-                {
-                    return m_isPdcBlockPmu;
-                }
-            }
-
-            public int Index
-            {
-                get
-                {
-                    return m_index;
-                }
-            }
+            m_index = index;
 
         }
 
-    }
+        /// <summary>
+        /// Creates a new <see cref="DataCellParsingState"/> from specified parameters.
+        /// </summary>
+        /// <param name="configurationCell">Reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.</param>
+        /// <param name="createNewPhasorValue">Reference to delegate to create new <see cref="IPhasorValue"/> instances.</param>
+        /// <param name="createNewFrequencyValue">Reference to delegate to create new <see cref="IFrequencyValue"/> instances.</param>
+        /// <param name="createNewAnalogValue">Reference to delegate to create new <see cref="IAnalogValue"/> instances.</param>
+        /// <param name="createNewDigitalValue">Reference to delegate to create new <see cref="IDigitalValue"/> instances.</param>
+        /// <param name="isPdcBlockPmu">Flag that determines if associated <see cref="DataCell"/> PMU is in a PDC block.</param>
+        public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValue, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValue, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValue, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValue, bool isPdcBlockPmu)
+            : base(configurationCell, createNewPhasorValue, createNewFrequencyValue, createNewAnalogValue, createNewDigitalValue)
+        {
+            m_isPdcBlockPmu = isPdcBlockPmu;
+        }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets reference to the <see cref="ConfigurationCell"/> associated with the <see cref="DataCell"/> being parsed.
+        /// </summary>
+        public new ConfigurationCell ConfigurationCell
+        {
+            get
+            {
+                return base.ConfigurationCell as ConfigurationCell;
+            }
+        }
+
+        /// <summary>
+        /// Gets index of associated <see cref="DataCell"/> PMU.
+        /// </summary>
+        public int Index
+        {
+            get
+            {
+                return m_index;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if associated <see cref="DataCell"/> PMU is in a PDC block.
+        /// </summary>
+        public bool IsPdcBlockPmu
+        {
+            get
+            {
+                return m_isPdcBlockPmu;
+            }
+        }
+
+        #endregion
+    }
 }
