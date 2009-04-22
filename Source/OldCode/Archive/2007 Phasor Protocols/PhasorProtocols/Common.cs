@@ -47,7 +47,7 @@ namespace PCS.PhasorProtocols
         /// <remarks>
         /// This function automatically advances index for convenience.
         /// </remarks>
-        public static void CopyImage(this IChannel channel, byte[] destination, ref int index)
+        public static void CopyImage(this ISupportBinaryImage channel, byte[] destination, ref int index)
         {
             CopyImage(channel.BinaryImage, destination, ref index, channel.BinaryLength);
         }

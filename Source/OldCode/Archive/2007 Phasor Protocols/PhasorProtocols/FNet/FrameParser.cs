@@ -61,6 +61,9 @@ namespace PCS.PhasorProtocols.FNet
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="FrameParser"/>.
+        /// </summary>
         public FrameParser()
             : this(Common.DefaultFrameRate, Common.DefaultNominalFrequency, Common.DefaultTimeOffset, Common.DefaultStationName)
         {
@@ -68,7 +71,7 @@ namespace PCS.PhasorProtocols.FNet
         }
 
         /// <summary>
-        /// 
+        /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
         /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame"/>.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.</param>

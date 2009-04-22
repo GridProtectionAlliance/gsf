@@ -109,6 +109,9 @@ namespace PCS.PhasorProtocols
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="FrameParserBase{TypeIndentifier}"/>.
+        /// </summary>
         protected FrameParserBase()
         {
             // We attach to base class DataParsed event to automatically redirect and cast channel frames to their specific output events

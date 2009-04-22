@@ -35,20 +35,20 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         // Events
 
         /// <summary>
-        /// Occurs when an IEEE C37.118 <see cref="ConfigurationFrame"/> type 1 has been received.
+        /// Occurs when an IEEE C37.118 <see cref="ConfigurationFrame1"/> has been received.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ConfigurationFrame"/> that was received.
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ConfigurationFrame1"/> that was received.
         /// </remarks>
         public event EventHandler<EventArgs<ConfigurationFrame1>> ReceivedConfigurationFrame1;
 
         /// <summary>
-        /// Occurs when an IEEE C37.118 <see cref="ConfigurationFrame"/> type 2 has been received.
+        /// Occurs when an IEEE C37.118 <see cref="ConfigurationFrame2"/> has been received.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ConfigurationFrame"/> that was received.
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ConfigurationFrame2"/> that was received.
         /// </remarks>
-        public event EventHandler<EventArgs<ConfigurationFrame1>> ReceivedConfigurationFrame2;
+        public event EventHandler<EventArgs<ConfigurationFrame2>> ReceivedConfigurationFrame2;
 
         /// <summary>
         /// Occurs when an IEEE C37.118 <see cref="DataFrame"/> has been received.
@@ -86,6 +86,10 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="FrameParser"/> from specified parameters.
+        /// </summary>
+        /// <param name="draftRevision">The <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.</param>
         public FrameParser(DraftRevision draftRevision)
         {
             // Initialize protocol synchronization bytes for this frame parser
@@ -118,7 +122,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.
+        /// Gets or sets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.
         /// </summary>
         public DraftRevision DraftRevision
         {
@@ -248,11 +252,8 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                             // Assign data frame parsing state
                             parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame2, DataCell.CreateNewCell);
                             break;
-                        case FrameType.ConfigurationFrame2:
-                            // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell);
-                            break;
                         case FrameType.ConfigurationFrame1:
+                        case FrameType.ConfigurationFrame2:
                             // Assign configuration frame parsing state
                             parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell);
                             break;
@@ -271,9 +272,25 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Raises the <see cref="ReceivedDataFrame"/> event.
+        /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.
         /// </summary>
-        /// <param name="frame"><see cref="IDataFrame"/> to send to <see cref="ReceivedDataFrame"/> event.</param>
+        /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
+        protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
+        {
+            // We override this method so we can cache configuration 2 frame when it's received
+            base.OnReceivedConfigurationFrame(frame);
+
+            // Cache new configuration frame for parsing subsequent data frames...
+            ConfigurationFrame2 configurationFrame2 = frame as ConfigurationFrame2;
+
+            if (configurationFrame2 != null)
+                m_configurationFrame2 = configurationFrame2;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedDataFrame"/> event.
+        /// </summary>
+        /// <param name="frame"><see cref="IDataFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedDataFrame"/> event.</param>
         protected override void OnReceivedDataFrame(IDataFrame frame)
         {
             // We override this method so we can detect and respond to a configuration change notification
@@ -330,42 +347,41 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 }
                 else
                 {
-                    ConfigurationFrame1 configFrame = frame as ConfigurationFrame1;
+                    // Configuration frame type 2 is more specific than type 1 (and more common), so we check it first
+                    ConfigurationFrame2 configFrame2 = frame as ConfigurationFrame2;
 
-                    if (configFrame != null)
+                    if (configFrame2 != null)
                     {
-                        // Distinguish config frame type 1 from type 2
-                        switch (configFrame.TypeID)
-                        {
-                            case FrameType.ConfigurationFrame2:
-                                if (ReceivedConfigurationFrame2 != null)
-                                    ReceivedConfigurationFrame2(this, new EventArgs<ConfigurationFrame1>(configFrame));
-                                break;
-                            case FrameType.ConfigurationFrame1:
-                                if (ReceivedConfigurationFrame1 != null)
-                                    ReceivedConfigurationFrame1(this, new EventArgs<ConfigurationFrame1>(configFrame));
-                                break;
-                            default:
-                                break;
-                        }
+                        if (ReceivedConfigurationFrame2 != null)
+                            ReceivedConfigurationFrame2(this, new EventArgs<ConfigurationFrame2>(configFrame2));
                     }
                     else
                     {
-                        HeaderFrame headerFrame = frame as HeaderFrame;
+                        ConfigurationFrame1 configFrame1 = frame as ConfigurationFrame1;
 
-                        if (headerFrame != null)
+                        if (configFrame1 != null)
                         {
-                            if (ReceivedHeaderFrame != null)
-                                ReceivedHeaderFrame(this, new EventArgs<HeaderFrame>(headerFrame));
+                            if (ReceivedConfigurationFrame1 != null)
+                                ReceivedConfigurationFrame1(this, new EventArgs<ConfigurationFrame1>(configFrame1));
                         }
                         else
                         {
-                            CommandFrame commandFrame = frame as CommandFrame;
+                            HeaderFrame headerFrame = frame as HeaderFrame;
 
-                            if (commandFrame != null)
+                            if (headerFrame != null)
                             {
-                                if (ReceivedCommandFrame != null)
-                                    ReceivedCommandFrame(this, new EventArgs<CommandFrame>(commandFrame));
+                                if (ReceivedHeaderFrame != null)
+                                    ReceivedHeaderFrame(this, new EventArgs<HeaderFrame>(headerFrame));
+                            }
+                            else
+                            {
+                                CommandFrame commandFrame = frame as CommandFrame;
+
+                                if (commandFrame != null)
+                                {
+                                    if (ReceivedCommandFrame != null)
+                                        ReceivedCommandFrame(this, new EventArgs<CommandFrame>(commandFrame));
+                                }
                             }
                         }
                     }

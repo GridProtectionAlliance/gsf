@@ -202,9 +202,9 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// Raises the <see cref="ReceivedConfigurationFrame"/> event.
+        /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.
         /// </summary>
-        /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="ReceivedConfigurationFrame"/> event.</param>
+        /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
             // IEEE 1344 configuration frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
@@ -219,16 +219,18 @@ namespace PCS.PhasorProtocols.Ieee1344
                     base.OnReceivedConfigurationFrame(frame);
 
                     // Cache new configuration frame for parsing subsequent data frames...
-                    if (m_configurationFrame == null)
-                        m_configurationFrame = frame as ConfigurationFrame;
+                    ConfigurationFrame configurationFrame = frame as ConfigurationFrame;
+
+                    if (configurationFrame != null)
+                        m_configurationFrame = configurationFrame;
                 }
             }
         }
 
         /// <summary>
-        /// Raises the <see cref="ReceivedHeaderFrame"/> event.
+        /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedHeaderFrame"/> event.
         /// </summary>
-        /// <param name="frame"><see cref="IHeaderFrame"/> to send to <see cref="ReceivedHeaderFrame"/> event.</param>
+        /// <param name="frame"><see cref="IHeaderFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedHeaderFrame"/> event.</param>
         protected override void OnReceivedHeaderFrame(IHeaderFrame frame)
         {
             // IEEE 1344 header frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...

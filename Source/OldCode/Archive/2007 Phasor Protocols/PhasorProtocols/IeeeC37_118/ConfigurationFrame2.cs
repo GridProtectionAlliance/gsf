@@ -34,7 +34,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// Creates a new <see cref="ConfigurationFrame2"/>.
         /// </summary>
         /// <remarks>
-        /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 draft 6 configuration frame.
+        /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 configuration frame, type 2.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected ConfigurationFrame2()
@@ -49,7 +49,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame2"/>.</param>
         /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame2"/>.</param>
         /// <remarks>
-        /// This constructor is used by a consumer to generate an IEEE C37.118 draft 6 configuration frame.
+        /// This constructor is used by a consumer to generate an IEEE C37.118 configuration frame, type 2.
         /// </remarks>
         public ConfigurationFrame2(uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
             : base(timebase, idCode, timestamp, frameRate)

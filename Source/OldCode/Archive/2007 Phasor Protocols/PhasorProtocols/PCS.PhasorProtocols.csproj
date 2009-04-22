@@ -29,12 +29,13 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\</OutputPath>
-    <DocumentationFile>PCS.PhasorProtocols.XML</DocumentationFile>
-    <NOWARN>1591</NOWARN>
+    <DocumentationFile>bin\PCS.PhasorProtocols.XML</DocumentationFile>
+    <NOWARN>
+    </NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1021;-Microsoft.Design#CA1011;-Microsoft.Design#CA1031;-Microsoft.Design#CA1045;-Microsoft.Design#CA1008;-Microsoft.Design#CA1028;-Microsoft.Design#CA1033;-Microsoft.Design#CA1027;-Microsoft.Design#CA1036;-Microsoft.Design#CA1030;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Naming#CA1702;-Microsoft.Naming#CA1700;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1710;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1707;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1721;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1819;-Microsoft.Usage#CA2214;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2233</CodeAnalysisRules>
-    <DefineConstants>CODE_ANALYSIS;</DefineConstants>
+    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1021;-Microsoft.Design#CA1031;-Microsoft.Design#CA1045;-Microsoft.Design#CA1008;-Microsoft.Design#CA1028;-Microsoft.Design#CA1033;-Microsoft.Design#CA1027;-Microsoft.Design#CA1036;-Microsoft.Design#CA1030;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Naming#CA1702;-Microsoft.Naming#CA1700;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1710;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1707;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1819;-Microsoft.Usage#CA2214;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2233</CodeAnalysisRules>
+    <DefineConstants>DEBUG</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -43,7 +44,8 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\</OutputPath>
     <DocumentationFile>PCS.PhasorProtocols.XML</DocumentationFile>
-    <NOWARN>1591</NOWARN>
+    <NOWARN>
+    </NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <DefineConstants>
     </DefineConstants>

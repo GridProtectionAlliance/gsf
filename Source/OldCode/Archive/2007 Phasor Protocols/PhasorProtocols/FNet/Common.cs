@@ -25,9 +25,10 @@ namespace PCS.PhasorProtocols.FNet
     /// <summary>
     /// F-NET data elements enumeration structure.
     /// </summary>
-    [SuppressMessage("Microsoft.Performance", "CA1815")] // This is a structure to avoid having to cast when using elements as an index
-    public struct Element
+    [SuppressMessage("Microsoft.Performance", "CA1815")]
+    internal struct Element
     {
+        // This is a structure to avoid having to cast when using elements as an index
         public const int UnitID = 0;
         public const int Date = 1;
         public const int Time = 2;

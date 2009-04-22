@@ -82,7 +82,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets or sets <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.
         /// </summary>
-        public AnalogType Type
+        public AnalogType AnalogType
         {
             get
             {
@@ -138,7 +138,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Analog Type", (int)Type + ": " + Type);
+                baseAttributes.Add("Analog Type", (int)AnalogType + ": " + AnalogType);
 
                 return baseAttributes;
             }
