@@ -40,8 +40,11 @@ namespace PCS.PhasorProtocols
         public DataFrameParsingState(int parsedBinaryLength, IConfigurationFrame configurationFrame, CreateNewCellFunction<IDataCell> createNewCellFunction)
             : base(parsedBinaryLength, createNewCellFunction)
         {
-            CellCount = configurationFrame.Cells.Count;
-            m_configurationFrame = configurationFrame;
+            if (configurationFrame != null)
+            {
+                CellCount = configurationFrame.Cells.Count;
+                m_configurationFrame = configurationFrame;
+            }
         }
 
         #endregion

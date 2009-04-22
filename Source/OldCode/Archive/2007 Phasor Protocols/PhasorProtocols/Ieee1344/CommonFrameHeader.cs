@@ -564,7 +564,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
         internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
         {
-            attributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
+            attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
 
             if (FrameImages != null)
             {

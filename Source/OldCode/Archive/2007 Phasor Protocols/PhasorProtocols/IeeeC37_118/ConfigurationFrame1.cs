@@ -209,7 +209,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             set
             {
                 m_timebase = (value & ~Common.TimeQualityFlagsMask);
-                CommonHeader.Timebase = (UInt24)m_timebase;
+                CommonHeader.Timebase = m_timebase;
             }
         }
 

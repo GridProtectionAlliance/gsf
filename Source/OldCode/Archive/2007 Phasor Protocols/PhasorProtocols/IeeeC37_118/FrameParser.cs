@@ -207,29 +207,21 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="buffer">Buffer containing data to parse.</param>
         /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
         /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <param name="commonHeader">The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</param>
-        /// <returns>The length of the data that was parsed.</returns>
+        /// <returns>The <see cref="ICommonHeader{TTypeIdentifier}"/> which includes a type ID for the <see cref="Type"/> to be parsed.</returns>
         /// <remarks>
         /// <para>
-        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>) for
-        /// the output types via the <paramref name="commonHeader"/> parameter; this will primarily include an ID of the <see cref="Type"/> that the
-        /// data image represents.  This parsing is only for common header information, actual parsing will be handled by output type via its
-        /// <see cref="ISupportBinaryImage.Initialize"/> method. This header image should also be used to add needed complex state information
-        /// about the output type being parsed if needed.
+        /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>)
+        /// for the output types; this will primarily include an ID of the <see cref="Type"/> that the data image represents.  This parsing is
+        /// only for common header information, actual parsing will be handled by output type via its <see cref="ISupportBinaryImage.Initialize"/>
+        /// method. This header image should also be used to add needed complex state information about the output type being parsed if needed.
         /// </para>
         /// <para>
-        /// This function should return total number of bytes that were parsed from the buffer. Consumers can choose to return "zero" if the output
-        /// type <see cref="ISupportBinaryImage.Initialize"/> implementation expects the entire buffer image, however it will be optimal if
-        /// the ParseCommonHeader method parses the header, and the Initialize method only parses the body of the image.
-        /// </para>
-        /// <para>
-        /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), set <paramref name="commonHeader"/>
-        /// to null and return 0.  If the protocol allows frame length to be determined at the time common header is being parsed and there is not enough
-        /// buffer to parse the entire frame, it will be optimal to prevent further parsing by executing the same action, that is set
-        /// <paramref name="commonHeader"/> = null and return 0.
+        /// If there is not enough buffer available to parse common header (as determined by <paramref name="length"/>), return null.  Also, if
+        /// the protocol allows frame length to be determined at the time common header is being parsed and there is not enough buffer to parse
+        /// the entire frame, it will be optimal to prevent further parsing by returning null.
         /// </para>
         /// </remarks>
-        protected override int ParseCommonHeader(byte[] buffer, int offset, int length, out ICommonHeader<FrameType> commonHeader)
+        protected override ICommonHeader<FrameType> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
             // See if there is enough data in the buffer to parse the common frame header.
             if (length >= CommonFrameHeader.FixedLength)
@@ -243,7 +235,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 {
                     // Expose the frame buffer image in case client needs this data for any reason
                     OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
-                    commonHeader = parsedFrameHeader as ICommonHeader<FrameType>;
 
                     // Handle special parsing states
                     switch (parsedFrameHeader.TypeID)
@@ -263,12 +254,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                             break;
                     }
 
-                    return CommonFrameHeader.FixedLength;
+                    return parsedFrameHeader;
                 }
             }
 
-            commonHeader = null;
-            return 0;
+            return null;
         }
 
         /// <summary>

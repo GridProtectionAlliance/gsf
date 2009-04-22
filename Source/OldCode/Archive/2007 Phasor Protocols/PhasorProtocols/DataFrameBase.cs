@@ -153,10 +153,19 @@ namespace PCS.PhasorProtocols
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             // Make sure configuration frame gets assigned before parsing begins...
-            ConfigurationFrame = State.ConfigurationFrame;
+            IDataFrameParsingState state = State;
+            IConfigurationFrame configurationFrame = state.ConfigurationFrame;
 
-            // Handle normal parsing
-            return base.Initialize(binaryImage, startIndex, length);
+            if (configurationFrame != null)
+            {
+                ConfigurationFrame = configurationFrame;
+
+                // Handle normal parsing
+                return base.Initialize(binaryImage, startIndex, length);
+            }
+
+            // Otherwise we just skip parsing this frame...
+            return state.ParsedBinaryLength;
         }
 
         /// <summary>

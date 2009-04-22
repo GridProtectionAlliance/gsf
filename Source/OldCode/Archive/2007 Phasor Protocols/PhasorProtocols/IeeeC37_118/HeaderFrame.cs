@@ -149,7 +149,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets the IEEE C37.118 timebase of this <see cref="HeaderFrame"/>.
         /// </summary>
-        public UInt24 TimeBase
+        public uint TimeBase
         {
             get
             {

@@ -45,7 +45,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         private ushort m_frameLength;
         private ushort m_idCode;
         private Ticks m_timestamp;
-        private UInt24 m_timebase;
+        private uint m_timebase;
         private uint m_timeQualityFlags;
         private IChannelParsingState m_state;
         private Dictionary<string, string> m_attributes;
@@ -98,7 +98,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             else
             {
                 // If config frame is available, frames have enough information for subsecond time resolution
-                m_timebase = (UInt24)configurationFrame.Timebase;
+                m_timebase = configurationFrame.Timebase;
                 m_timestamp = (new UnixTimeTag((double)secondOfCentury + ((fractionOfSecond & ~Common.TimeQualityFlagsMask) / (double)m_timebase))).ToDateTime().Ticks;
             }
 
@@ -116,7 +116,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             m_frameType = (FrameType)info.GetValue("frameType", typeof(IeeeC37_118.FrameType));
             m_version = info.GetByte("version");
             m_frameLength = info.GetUInt16("frameLength");
-            m_timebase = (UInt24)info.GetUInt32("timebase");
+            m_timebase = info.GetUInt32("timebase");
             m_timeQualityFlags = info.GetUInt32("timeQualityFlags");
         }
 
@@ -230,7 +230,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets or sets the IEEE C37.118 resolution of fractional time stamps.
         /// </summary>
-        public UInt24 Timebase
+        public uint Timebase
         {
             get
             {
@@ -580,13 +580,22 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
         internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
         {
-            attributes.Add("Frame Type", (int)TypeID + ": " + TypeID);
+            attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
             attributes.Add("Frame Length", FrameLength.ToString());
             attributes.Add("Version", Version.ToString());
             attributes.Add("Second of Century", SecondOfCentury.ToString());
             attributes.Add("Fraction of Second", FractionOfSecond.ToString());
-            attributes.Add("Time Quality Flags", (int)TimeQualityFlags + ": " + TimeQualityFlags);
-            attributes.Add("Time Quality Indicator Code", (int)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
+
+            uint timeQualityFlags = (uint)TimeQualityFlags;
+
+            attributes.Add("Time Quality Flags", timeQualityFlags.ToString());
+
+            if (timeQualityFlags > 0)
+                attributes.Add("Leap Second State", TimeQualityFlags.ToString());
+            else
+                attributes.Add("Leap Second State", "No leap second is currently pending");
+
+            attributes.Add("Time Quality Indicator Code", (uint)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
             attributes.Add("Time Base", Timebase.ToString());
         }
 
@@ -602,7 +611,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             info.AddValue("frameType", m_frameType, typeof(IeeeC37_118.FrameType));
             info.AddValue("version", m_version);
             info.AddValue("frameLength", m_frameLength);
-            info.AddValue("timebase", (uint)m_timebase);
+            info.AddValue("timebase", m_timebase);
             info.AddValue("timeQualityFlags", m_timeQualityFlags);
         }
 
