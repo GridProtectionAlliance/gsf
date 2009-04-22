@@ -79,6 +79,9 @@ namespace PCS.PhasorProtocols.FNet
         /// <param name="stationName">The station name of the F-NET device.</param>
         public FrameParser(ushort frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
         {
+            // Initialize protocol synchronization bytes for this frame parser
+            base.ProtocolSyncBytes = new byte[] { Common.StartByte };
+
             m_frameRate = frameRate;
             m_nominalFrequency = nominalFrequency;
             m_timeOffset = timeOffset;
@@ -117,21 +120,6 @@ namespace PCS.PhasorProtocols.FNet
             {
                 return true;
             }
-        }
-
-        /// <summary>
-        /// Gets the synchronization bytes for the F-NET protocol.
-        /// </summary>
-        public override byte[] ProtocolSyncBytes
-        {
-	        get 
-	        { 
-		         return new byte[] { Common.StartByte };
-	        }
-	        set 
-	        { 
-		        throw new NotImplementedException();
-	        }
         }
 
         /// <summary>
