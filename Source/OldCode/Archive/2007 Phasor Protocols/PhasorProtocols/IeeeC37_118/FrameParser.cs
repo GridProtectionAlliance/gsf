@@ -86,13 +86,12 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         #region [ Constructors ]
 
-        public FrameParser()
+        public FrameParser(DraftRevision draftRevision)
         {
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new byte[] { PhasorProtocols.Common.SyncByte };
 
-            // We default to IEEE C37.118 draft 7 / version 1
-            m_draftRevision = IeeeC37_118.DraftRevision.Draft7;
+            m_draftRevision = draftRevision;
         }
 
         #endregion

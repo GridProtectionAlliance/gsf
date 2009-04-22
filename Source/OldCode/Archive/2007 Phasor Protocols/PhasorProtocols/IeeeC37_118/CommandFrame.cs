@@ -81,7 +81,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="command">The <see cref="DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
         /// <param name="version">IEEE C37.118 revision number.</param>
         /// <remarks>
-        /// This constructor is used by a consumer to generate an IEEE 1344 command frame.
+        /// This constructor is used by a consumer to generate an IEEE C37.118 command frame.
         /// </remarks>
         public CommandFrame(ushort idCode, DeviceCommand command, byte version)
             : base(new CommandCellCollection(Common.MaximumExtendedDataLength), command)
