@@ -13,7 +13,7 @@ using System.Security.Permissions;
 [assembly: AssemblyDescription(".NET Phasor Protocol Library")]
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyProduct("TVA Phasor Tools")]
-[assembly: AssemblyCopyright("Copyright © 2006-2008, TVA - All rights reserved")]
+[assembly: AssemblyCopyright("Copyright © 2006-2009, TVA - All rights reserved")]
 [assembly: AssemblyTrademark("Author: J. Ritchie Carroll")]
 
 [assembly: ComVisible(false)]
