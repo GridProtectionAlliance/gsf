@@ -298,10 +298,10 @@ namespace PCS.Parsing
                 {
                     // Protocol uses synchronization bytes so we scan for them in the current buffer. This effectively
                     // scans through buffer to next frame...
-                    int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, length);
+                    int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset + 1, length - 1);
 
                     if (syncBytesPosition > -1)
-                        return (syncBytesPosition - offset + 1);
+                        return syncBytesPosition - offset;
                 }
                 
                 // Without synchronization bytes we have no choice but to move onto the next buffer of data :(
