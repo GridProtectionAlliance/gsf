@@ -74,7 +74,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="configurationFrame">IEEE C37.118 <see cref="ConfigurationFrame"/> if already parsed.</param>
         /// <param name="binaryImage">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
-        public CommonFrameHeader(ConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
+        public CommonFrameHeader(ConfigurationFrame1 configurationFrame, byte[] binaryImage, int startIndex)
         {
             if (binaryImage[startIndex] != PhasorProtocols.Common.SyncByte)
                 throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));

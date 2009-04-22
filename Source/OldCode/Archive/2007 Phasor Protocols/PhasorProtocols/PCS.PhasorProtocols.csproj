@@ -184,7 +184,7 @@
     <Compile Include="IeeeC37_118\CommonFrameHeader.cs" />
     <Compile Include="IeeeC37_118\ConfigurationCell.cs" />
     <Compile Include="IeeeC37_118\ConfigurationCellCollection.cs" />
-    <Compile Include="IeeeC37_118\ConfigurationFrame.cs" />
+    <Compile Include="IeeeC37_118\ConfigurationFrame1.cs" />
     <Compile Include="IeeeC37_118\ConfigurationFrameDraft6.cs" />
     <Compile Include="IeeeC37_118\DataCell.cs" />
     <Compile Include="IeeeC37_118\DataCellCollection.cs" />

@@ -59,7 +59,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="parent">The reference to parent <see cref="ConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
         /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCell"/>.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
-        public ConfigurationCell(ConfigurationFrame parent, ushort idCode, LineFrequency nominalFrequency)
+        public ConfigurationCell(ConfigurationFrame1 parent, ushort idCode, LineFrequency nominalFrequency)
             : this(parent)
         {
             IDCode = idCode;
@@ -85,11 +85,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets a reference to the parent <see cref="ConfigurationFrame"/> for this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public new ConfigurationFrame Parent
+        public new ConfigurationFrame1 Parent
         {
             get
             {
-                return base.Parent as ConfigurationFrame;
+                return base.Parent as ConfigurationFrame1;
             }
             set
             {
