@@ -29,7 +29,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
     [Serializable()]
-    public class ConfigurationFrame : ConfigurationFrameBase, ISupportFrameImage<FrameType>
+    public class ConfigurationFrame1 : ConfigurationFrameBase, ISupportFrameImage<FrameType>
     {
         #region [ Members ]
 
@@ -52,7 +52,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 configuration frame.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected ConfigurationFrame()
+        protected ConfigurationFrame1()
             : base(0, new ConfigurationCellCollection(), 0, 0)
         {
         }
@@ -68,7 +68,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <remarks>
         /// This constructor is used by a consumer to generate an IEEE C37.118 configuration frame.
         /// </remarks>
-        public ConfigurationFrame(FrameType typeID, uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
+        public ConfigurationFrame1(FrameType typeID, uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
             : base(idCode, new ConfigurationCellCollection(), timestamp, frameRate)
         {
             this.TypeID = typeID;
@@ -80,7 +80,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationFrame(SerializationInfo info, StreamingContext context)
+        protected ConfigurationFrame1(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             // Deserialize configuration frame

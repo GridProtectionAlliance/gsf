@@ -60,7 +60,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <remarks>
         /// This constructor is used by a consumer to generate an IEEE C37.118 data frame.
         /// </remarks>
-        public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame)
+        public DataFrame(Ticks timestamp, ConfigurationFrame1 configurationFrame)
             : base(new DataCellCollection(), timestamp, configurationFrame)
         {
         }
@@ -95,11 +95,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
-        public new ConfigurationFrame ConfigurationFrame
+        public new ConfigurationFrame1 ConfigurationFrame
         {
             get
             {
-                return base.ConfigurationFrame as ConfigurationFrame;
+                return base.ConfigurationFrame as ConfigurationFrame1;
             }
             set
             {

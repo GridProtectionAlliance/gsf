@@ -26,7 +26,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
     /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
     [Serializable()]
-    public class ConfigurationFrameDraft6 : ConfigurationFrame
+    public class ConfigurationFrameDraft6 : ConfigurationFrame1
     {
         #region [ Constructors ]
 
