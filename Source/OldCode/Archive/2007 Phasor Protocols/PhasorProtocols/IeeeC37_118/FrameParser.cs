@@ -79,7 +79,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         // Fields
         private DraftRevision m_draftRevision;
-        private ConfigurationFrame1 m_configurationFrame2;
+        private ConfigurationFrame2 m_configurationFrame2;
         private bool m_configurationChangeHandled;
 
         #endregion
@@ -191,9 +191,9 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
             // We narrow down parsing types to just those needed...
             if (m_draftRevision == DraftRevision.Draft7)
-                base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(HeaderFrame) });
+                base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(HeaderFrame) });
             else
-                base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrameDraft6), typeof(HeaderFrame) });
+                base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame1Draft6), typeof(ConfigurationFrame2Draft6), typeof(HeaderFrame) });
         }
 
         /// <summary>
@@ -381,10 +381,10 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         // Attempts to cast given frame into an IEEE C37.118 configuration frame - theoretically this will
         // allow the same configuration frame to be used for any protocol implementation
-        internal static ConfigurationFrame1 CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, DraftRevision draftRevision)
+        internal static ConfigurationFrame2 CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, DraftRevision draftRevision)
         {
-            // See if frame is already an IEEE C37.118 frame (if so, we don't need to do any work)
-            ConfigurationFrame1 derivedFrame = sourceFrame as ConfigurationFrame1;
+            // See if frame is already an IEEE C37.118 configuration frame, type 2 (if so, we don't need to do any work)
+            ConfigurationFrame2 derivedFrame = sourceFrame as ConfigurationFrame2;
 
             if (derivedFrame == null)
             {
@@ -394,9 +394,9 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 
                 // Assuming configuration frame 2 and timebase = 100000
                 if (draftRevision == DraftRevision.Draft7)
-                    derivedFrame = new ConfigurationFrame1(FrameType.ConfigurationFrame2, 100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                    derivedFrame = new ConfigurationFrame2(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
                 else
-                    derivedFrame = new ConfigurationFrameDraft6(FrameType.ConfigurationFrame2, 100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                    derivedFrame = new ConfigurationFrame2Draft6(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
 
                 foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
                 {

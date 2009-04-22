@@ -26,7 +26,7 @@ using PCS.Parsing;
 namespace PCS.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
-    /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
+    /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.
     /// </summary>
     [Serializable()]
     public class ConfigurationFrame1 : ConfigurationFrameBase, ISupportFrameImage<FrameType>
@@ -38,7 +38,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         // Fields
         private CommonFrameHeader m_frameHeader;
-        private FrameType m_typeID;
         private uint m_timebase;
 
         #endregion
@@ -46,7 +45,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame"/>.
+        /// Creates a new <see cref="ConfigurationFrame1"/>.
         /// </summary>
         /// <remarks>
         /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 configuration frame.
@@ -58,25 +57,23 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame"/> from specified parameters.
+        /// Creates a new <see cref="ConfigurationFrame1"/> from specified parameters.
         /// </summary>
-        /// <param name="typeID">Type of configuration frame to create (1 or 2).</param>
         /// <param name="timebase">Timebase to use for fraction second resolution.</param>
-        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrame"/>.</param>
-        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame"/>.</param>
-        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame"/>.</param>
+        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrame1"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame1"/>.</param>
+        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame1"/>.</param>
         /// <remarks>
         /// This constructor is used by a consumer to generate an IEEE C37.118 configuration frame.
         /// </remarks>
-        public ConfigurationFrame1(FrameType typeID, uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
+        public ConfigurationFrame1(uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
             : base(idCode, new ConfigurationCellCollection(), timestamp, frameRate)
         {
-            this.TypeID = typeID;
             this.Timebase = timebase;
         }
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame"/> from serialization parameters.
+        /// Creates a new <see cref="ConfigurationFrame1"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
@@ -85,7 +82,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             // Deserialize configuration frame
             m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
-            m_typeID = (FrameType)info.GetValue("frameType", typeof(FrameType));
             m_timebase = info.GetUInt32("timebase");
         }
 
@@ -94,7 +90,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
+        /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public new ConfigurationCellCollection Cells
         {
@@ -105,7 +101,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame"/>.
+        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public virtual DraftRevision DraftRevision
         {
@@ -116,7 +112,18 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ConfigurationFrame"/>.
+        /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame1"/>.
+        /// </summary>
+        public virtual FrameType TypeID
+        {
+            get
+            {
+                return IeeeC37_118.FrameType.ConfigurationFrame1;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -136,28 +143,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame"/>, i.e.,
-        /// <see cref="IeeeC37_118.FrameType.ConfigurationFrame1"/> or <see cref="IeeeC37_118.FrameType.ConfigurationFrame2"/>.
-        /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return m_typeID;
-            }
-            set
-            {
-                if (value == IeeeC37_118.FrameType.ConfigurationFrame2 || value == IeeeC37_118.FrameType.ConfigurationFrame1)
-                {                 
-                    m_typeID = value;
-                    CommonHeader.TypeID = m_typeID;
-                }
-                else
-                    throw new InvalidCastException("Invalid frame type specified for configuration frame.  Can only be ConfigurationFrame1 or ConfigurationFrame2");
-            }
-        }
-
-        /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
@@ -166,7 +151,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(m_typeID, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp);
 
                 return m_frameHeader;
             }
@@ -179,7 +164,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                     State = m_frameHeader.State as IConfigurationFrameParsingState;
                     base.IDCode = m_frameHeader.IDCode;
                     base.Timestamp = m_frameHeader.Timestamp;
-                    m_typeID = m_frameHeader.TypeID;
                     m_timebase = m_frameHeader.Timebase;
                 }
             }
@@ -199,7 +183,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the IEEE C37.118 protocol version of this <see cref="ConfigurationFrame"/>.
+        /// Gets or sets the IEEE C37.118 protocol version of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public byte Version
         {
@@ -214,7 +198,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the IEEE C37.118 resolution of fractional time stamps of this <see cref="ConfigurationFrame"/>.
+        /// Gets or sets the IEEE C37.118 resolution of fractional time stamps of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public uint Timebase
         {
@@ -230,7 +214,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeQualityFlags"/> of this <see cref="ConfigurationFrame"/>.
+        /// Gets or sets the <see cref="TimeQualityFlags"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
@@ -245,7 +229,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> of this <see cref="ConfigurationFrame"/>.
+        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
@@ -271,7 +255,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the binary header image of the <see cref="ConfigurationFrame"/> object.
+        /// Gets the binary header image of the <see cref="ConfigurationFrame1"/> object.
         /// </summary>
         protected override byte[] HeaderImage
         {
@@ -306,7 +290,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the binary footer image of the <see cref="ConfigurationFrame"/> object.
+        /// Gets the binary footer image of the <see cref="ConfigurationFrame1"/> object.
         /// </summary>
         protected override byte[] FooterImage
         {
@@ -396,7 +380,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
             // Serialize configuration frame
             info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
-            info.AddValue("frameType", m_typeID, typeof(FrameType));
             info.AddValue("timebase", m_timebase);
         }
 

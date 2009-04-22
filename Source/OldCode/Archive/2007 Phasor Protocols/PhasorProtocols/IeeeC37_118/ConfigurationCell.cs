@@ -56,7 +56,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Creates a new <see cref="ConfigurationCell"/> from specified parameters.
         /// </summary>
-        /// <param name="parent">The reference to parent <see cref="ConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
+        /// <param name="parent">The reference to parent <see cref="ConfigurationFrame1"/> of this <see cref="ConfigurationCell"/>.</param>
         /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCell"/>.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
         public ConfigurationCell(ConfigurationFrame1 parent, ushort idCode, LineFrequency nominalFrequency)
@@ -83,7 +83,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="ConfigurationFrame"/> for this <see cref="ConfigurationCell"/>.
+        /// Gets a reference to the parent <see cref="ConfigurationFrame1"/> for this <see cref="ConfigurationCell"/>.
         /// </summary>
         public new ConfigurationFrame1 Parent
         {

@@ -71,7 +71,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Creates a new <see cref="CommonFrameHeader"/> from given <paramref name="binaryImage"/>.
         /// </summary>
-        /// <param name="configurationFrame">IEEE C37.118 <see cref="ConfigurationFrame"/> if already parsed.</param>
+        /// <param name="configurationFrame">IEEE C37.118 <see cref="ConfigurationFrame1"/> if already parsed.</param>
         /// <param name="binaryImage">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
         public CommonFrameHeader(ConfigurationFrame1 configurationFrame, byte[] binaryImage, int startIndex)

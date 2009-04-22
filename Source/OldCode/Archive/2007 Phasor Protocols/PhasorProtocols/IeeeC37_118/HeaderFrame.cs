@@ -66,7 +66,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="DataFrame"/>.
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="HeaderFrame"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -92,7 +92,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return IeeeC37_118.FrameType.DataFrame;
+                return IeeeC37_118.FrameType.HeaderFrame;
             }
         }
 
@@ -136,7 +136,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the IEEE C37.118 protocol version of this <see cref="DataFrame"/> as specified by the associated <see cref="ConfigurationFrame"/>.
+        /// Gets the IEEE C37.118 protocol version of this <see cref="HeaderFrame"/>.
         /// </summary>
         public byte Version
         {
@@ -147,7 +147,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the IEEE C37.118 timebase of this <see cref="DataFrame"/> as specified by the associated <see cref="ConfigurationFrame"/>.
+        /// Gets the IEEE C37.118 timebase of this <see cref="HeaderFrame"/>.
         /// </summary>
         public UInt24 TimeBase
         {
@@ -158,7 +158,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeQualityFlags"/> associated with this <see cref="DataFrame"/>.
+        /// Gets or sets the <see cref="TimeQualityFlags"/> associated with this <see cref="HeaderFrame"/>.
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
@@ -173,7 +173,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> associated with this <see cref="DataFrame"/>.
+        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> associated with this <see cref="HeaderFrame"/>.
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
@@ -188,7 +188,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="HeaderFrame"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {

@@ -333,7 +333,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         // allow the same configuration frame to be used for any protocol implementation
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
-            // See if frame is already an IEEE 1344 frame (if so, we don't need to do any work)
+            // See if frame is already an IEEE 1344 configuration frame (if so, we don't need to do any work)
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
             if (derivedFrame == null)

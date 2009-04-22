@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  ConfigurationFrame1Draft6.cs
+//  ConfigurationFrame2Draft6.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -17,51 +17,52 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using PCS.Parsing;
 
 namespace PCS.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
-    /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.
+    /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 2, that can be sent or received.
     /// </summary>
-    [Serializable()]
-    public class ConfigurationFrame1Draft6 : ConfigurationFrame1
+    [Serializable(), SuppressMessage("Microsoft.Maintainability", "CA1501")]
+    public class ConfigurationFrame2Draft6 : ConfigurationFrame2
     {
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame1Draft6"/>.
+        /// Creates a new <see cref="ConfigurationFrame2Draft6"/>.
         /// </summary>
         /// <remarks>
         /// This constructor is used by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> to parse an IEEE C37.118 draft 6 configuration frame.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected ConfigurationFrame1Draft6()
+        protected ConfigurationFrame2Draft6()
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame1Draft6"/> from specified parameters.
+        /// Creates a new <see cref="ConfigurationFrame2Draft6"/> from specified parameters.
         /// </summary>
         /// <param name="timebase">Timebase to use for fraction second resolution.</param>
-        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrame1Draft6"/>.</param>
-        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame1Draft6"/>.</param>
-        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame1Draft6"/>.</param>
+        /// <param name="idCode">The ID code of this <see cref="ConfigurationFrame2Draft6"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame2Draft6"/>.</param>
+        /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame2Draft6"/>.</param>
         /// <remarks>
         /// This constructor is used by a consumer to generate an IEEE C37.118 draft 6 configuration frame.
         /// </remarks>
-        public ConfigurationFrame1Draft6(uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
+        public ConfigurationFrame2Draft6(uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
             : base(timebase, idCode, timestamp, frameRate)
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame1Draft6"/> from serialization parameters.
+        /// Creates a new <see cref="ConfigurationFrame2Draft6"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationFrame1Draft6(SerializationInfo info, StreamingContext context)
+        protected ConfigurationFrame2Draft6(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -71,7 +72,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1Draft6"/>.
+        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame2Draft6"/>.
         /// </summary>
         public override DraftRevision DraftRevision
         {
